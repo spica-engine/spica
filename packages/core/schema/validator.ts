@@ -1,13 +1,21 @@
-import { Inject, Injectable } from '@nestjs/common';
-import * as ajv from 'ajv';
-import * as request from 'request-promise';
-import { from } from 'rxjs';
-import { Default, Format, Keyword, LOCAL_SCHEMAS, SCHEMA_DEFAULT, SCHEMA_FORMAT, SCHEMA_KEYWORD, UriResolver } from './interface';
-export { ValidationError } from 'ajv';
+import {Inject, Injectable} from "@nestjs/common";
+import * as ajv from "ajv";
+import * as request from "request-promise";
+import {from} from "rxjs";
+import {
+  Default,
+  Format,
+  Keyword,
+  LOCAL_SCHEMAS,
+  SCHEMA_DEFAULT,
+  SCHEMA_FORMAT,
+  SCHEMA_KEYWORD,
+  UriResolver
+} from "./interface";
+export {ValidationError} from "ajv";
 
 @Injectable()
 export class Validator {
-
   private _ajv: ajv.Ajv;
   private _resolvers = new Set<UriResolver>();
   private _defaults: Map<string, Default>;
@@ -20,7 +28,8 @@ export class Validator {
     @Inject(SCHEMA_KEYWORD) keywords: Keyword[] = [],
     @Inject(SCHEMA_FORMAT) formats: Format[] = [],
     @Inject(SCHEMA_DEFAULT) defaults: Default[] = [],
-    @Inject(LOCAL_SCHEMAS) schemas: Object[] = []) {
+    @Inject(LOCAL_SCHEMAS) schemas: Object[] = []
+  ) {
     this._defaults = new Map<string, Default>(defaults.map(def => [def.keyword, def] as any));
     this._ajv = new ajv({
       removeAdditional: true,
@@ -32,80 +41,82 @@ export class Validator {
         formats[format.name] = format;
         return formats;
       }, {}),
-      schemas,
+      schemas
     });
     keywords.forEach(keyword => this.registerKeyword(keyword.name, keyword));
-    this.registerKeyword('default', {
+    this.registerKeyword("default", {
       modifying: true,
       compile: (schema, parentSchema, it) => {
         return (data, dataPath, parentData) => {
           const defaultValueHandler = this._defaults.get(schema);
           // TODO(thesayyn): Check type of the default value handler against schema type;
           if (defaultValueHandler) {
-            const propertyName = dataPath.split('.').filter(r => !!r)[it.dataLevel - 1];
-            parentData[propertyName] = defaultValueHandler.create(data == defaultValueHandler.keyword ? undefined : data);
+            const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
+            parentData[propertyName] = defaultValueHandler.create(
+              data == defaultValueHandler.keyword ? undefined : data
+            );
           }
           return true;
         };
       }
     });
 
-    
-    this.registerKeyword('format', {
+    this.registerKeyword("format", {
       modifying: true,
       errors: true,
       compile: (schema, parentSchema, it) => {
-
         return function validateFn(data, dataPath, parentData) {
-
-          if ( !data ) {
+          if (!data) {
             return true;
           }
 
           const format = it.formats[schema];
-          if (it.opts.format === 'false') {
+          if (it.opts.format === "false") {
             return true;
           }
 
-          if (!format && it.opts.unknownFormats != 'ignore') {
+          if (!format && it.opts.unknownFormats != "ignore") {
             throw new Error(`unknown format "${schema}" used in schema at path ${it.schemaPath}`);
-          } else if (!format && it.opts.logger != false && it.opts.unknownFormats == 'ignore') {
-            it.opts.logger.warn(`unknown format "${schema}" ignored in schema at path "${it['errSchemaPath']}"`);
+          } else if (!format && it.opts.logger != false && it.opts.unknownFormats == "ignore") {
+            it.opts.logger.warn(
+              `unknown format "${schema}" ignored in schema at path "${it["errSchemaPath"]}"`
+            );
             return true;
           }
 
-          if (parentSchema['type'] != ((typeof format == 'object' && format.type) || 'string')) {
+          if (parentSchema["type"] != ((typeof format == "object" && format.type) || "string")) {
             return true;
           }
 
           let validate: any = format.validate ? format.validate : format;
 
-          if (typeof validate == 'string') {
+          if (typeof validate == "string") {
             validate = new RegExp(validate);
           }
 
           let passed = false;
           if (format instanceof RegExp) {
             passed = format.test(data);
-          } else if (typeof validate == 'function') {
+          } else if (typeof validate == "function") {
             passed = validate(data);
           }
 
           if (!passed) {
-            validateFn['errors'] = [{
-              keyword: 'format',
-              message: `should match format '${schema}'`
-            }];
-          } else if (typeof format == 'object' && format['coerce']) {
-            const propertyName = dataPath.split('.').filter(r => !!r)[it.dataLevel - 1];
+            validateFn["errors"] = [
+              {
+                keyword: "format",
+                message: `should match format '${schema}'`
+              }
+            ];
+          } else if (typeof format == "object" && format["coerce"]) {
+            const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
             parentData[propertyName] = (format as Format).coerce(data);
           }
           return passed;
-        }
+        };
       }
-    })
+    });
   }
-
 
   private _fetch(uri: string): Promise<Object> {
     for (const interceptor of this._resolvers) {
@@ -114,7 +125,9 @@ export class Validator {
         return from(result).toPromise();
       }
     }
-    return request({ uri, json: true }).catch(() => Promise.reject(new Error(`Cannot resolve the schema ${uri}`)));
+    return request({uri, json: true}).catch(() =>
+      Promise.reject(new Error(`Cannot resolve the schema ${uri}`))
+    );
   }
 
   registerUriResolver(uriResolver: UriResolver) {
@@ -136,7 +149,8 @@ export class Validator {
 
   async validate(schema: object, value?: any) {
     const validate = await this._ajv.compileAsync(schema);
-    return Promise.resolve(validate(value))
-      .then(valid => valid ? valid : Promise.reject(new ajv.ValidationError(validate.errors)));
+    return Promise.resolve(validate(value)).then(valid =>
+      valid ? valid : Promise.reject(new ajv.ValidationError(validate.errors))
+    );
   }
 }
