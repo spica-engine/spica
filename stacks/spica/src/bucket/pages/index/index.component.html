@@ -19,6 +19,18 @@
 
   <span class="space-between"></span>
 
+  <button
+    *ngIf="selectedItems.length > 0"
+    class="delete-button mat-elevation-z0"
+    mat-icon-button
+    mat-raised-button
+    color="warn"
+    (click)="deleteSelectedItems()"
+    [matTooltip]="'Delete ' + selectedItems.length + ' item.'"
+  >
+    <mat-icon>delete</mat-icon>
+  </button>
+
   <button mat-icon-button *ngIf="$meta | async; let meta" [matMenuTriggerFor]="titleMenu">
     <mat-icon>view_column</mat-icon>
     <mat-menu class="displayed-properties-menu" xPosition="before" #titleMenu="matMenu">
@@ -91,9 +103,31 @@
       matSortDisableClear="true"
       (matSortChange)="sortData($event)"
     >
+      <ng-container matColumnDef="select">
+        <mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            *ngIf="dataIds?.length > 0"
+            color="primary"
+            [indeterminate]="selectedItems.length < dataIds.length && selectedItems.length > 0"
+            [ngModel]="selectedItems.length == dataIds.length"
+            (ngModelChange)="selectedItems = $event ? [].concat(dataIds) : []"
+          ></mat-checkbox>
+        </mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <mat-checkbox
+            color="primary"
+            (ngModelChange)="
+              $event
+                ? selectedItems.push(row._id)
+                : selectedItems.splice(selectedItems.indexOf(row._id), 1)
+            "
+            [ngModel]="selectedItems.indexOf(row._id) > -1"
+          ></mat-checkbox>
+        </mat-cell>
+      </ng-container>
       <ng-container matColumnDef="actions">
-        <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="actions-content" *matCellDef="let row">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let row">
           <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
             <mat-icon>edit</mat-icon>
           </button>

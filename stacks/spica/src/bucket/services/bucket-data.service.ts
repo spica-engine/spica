@@ -65,6 +65,10 @@ export class BucketDataService {
     return this.http.delete(`api:/bucket/${bucketId}/data/${id}`);
   }
 
+  deleteMany(bucketId: string, idArray: Array<string>): Observable<any> {
+    return this.http.request("delete", `api:/bucket/${bucketId}/data`, {body: idArray});
+  }
+
   replaceOne(bucketId: string, data: any): Observable<any> {
     return this.http.post(`api:/bucket/${bucketId}/data`, data);
   }

@@ -26,9 +26,11 @@ export class IndexComponent implements OnInit {
   public aggregations: BucketAggregations = {...emptyBucketAggregations()};
 
   public displayedProperties: Array<string> = [];
-
   public $preferences: Observable<BucketSettings>;
   public language: string;
+
+  public selectedItems: Array<string> = [];
+  public dataIds: Array<string> = [];
 
   constructor(
     private bs: BucketService,
@@ -52,6 +54,7 @@ export class IndexComponent implements OnInit {
             .filter(([, value]) => value.options.visible)
             .map(([key]) => key)
             .concat("actions");
+          this.displayedProperties = ["select", ...this.displayedProperties];
         }
       })
     );
@@ -59,9 +62,9 @@ export class IndexComponent implements OnInit {
 
   toggleDisplayAll(display: boolean, schema: Bucket) {
     if (display) {
-      this.displayedProperties = Object.keys(schema.properties).concat("actions");
+      this.displayedProperties = ["select", ...Object.keys(schema.properties), "actions"];
     } else {
-      this.displayedProperties = [schema.primary, "actions"];
+      this.displayedProperties = ["select", schema.primary, "actions"];
     }
   }
 
@@ -75,14 +78,17 @@ export class IndexComponent implements OnInit {
           skip: this.paginator.pageSize * this.paginator.pageIndex
         })
       ),
-      map(buckets => {
-        this.paginator.length = 0;
-        if (buckets.meta && buckets.meta.total) {
-          this.paginator.length = buckets.meta.total;
-        }
-        return buckets.data;
+      map(response => {
+        this.paginator.length = (response.meta && response.meta.total) || 0;
+        this.dataIds = response.data.map(d => d._id);
+        return response.data;
       })
     );
+  }
+
+  sortData(sort: Sort) {
+    this.aggregations.sort = {active: sort.active, direction: sort.direction === "asc" ? 1 : -1};
+    this.fetchData();
   }
 
   delete(id: string): void {
@@ -92,9 +98,9 @@ export class IndexComponent implements OnInit {
       .then(() => this.fetchData());
   }
 
-  // Sort on Server-side
-  sortData(sort: Sort) {
-    this.aggregations.sort = {active: sort.active, direction: sort.direction === "asc" ? 1 : -1};
+  async deleteSelectedItems() {
+    await this.bds.deleteMany(this.bucketId, this.selectedItems).toPromise();
     this.fetchData();
+    this.selectedItems = [];
   }
 }
