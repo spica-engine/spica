@@ -24,11 +24,11 @@ export class StrategiesComponent implements OnInit {
 
   ngOnInit() {
     this.strategies$ = merge(this.paginator.page, of(null), this.refresh).pipe(
-      switchMap(() => this.strategiesService.getStrategies())
+      switchMap(() => this.strategiesService.getStrategies().toPromise())
     );
   }
 
   delete(id: string) {
-    this.strategiesService.deleteStrategy(id).then(() => this.refresh.next());
+    this.strategiesService.deleteStrategy(id).toPromise().then(() => this.refresh.next());
   }
 }

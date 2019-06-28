@@ -1,4 +1,14 @@
-import {Body, Controller, Delete, Get, Param, Post, UseGuards} from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+  HttpException,
+  HttpStatus
+} from "@nestjs/common";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import * as pem from "pem";
 import * as util from "util";
@@ -20,7 +30,12 @@ export class StrategyController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.strategy.findOne({_id: id});
+    return this.strategy.findOne({_id: id}).then(strategy => {
+      strategy[
+        "callbackUrl"
+      ] = `${process.env.PUBLIC_HOST}/passport/strategy/${strategy.name}/complete`;
+      return strategy;
+    });
   }
 
   @Delete(":id")
@@ -44,6 +59,22 @@ export class StrategyController {
         private_key: certificate.serviceKey
       };
     }
-    return this.strategy.replaceOne(body);
+
+    const checkCertificate = util.promisify(pem.checkCertificate);
+    return await checkCertificate(body.options.ip.certificate)
+      .then(result => {
+        if (result) {
+          return this.strategy.replaceOne(body);
+        }
+      })
+      .catch(err => {
+        throw new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            error: "Invalid Certificate"
+          },
+          400
+        );
+      });
   }
 }
