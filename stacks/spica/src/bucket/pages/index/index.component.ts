@@ -26,14 +26,11 @@ export class IndexComponent implements OnInit {
   public aggregations: BucketAggregations = {...emptyBucketAggregations()};
 
   public displayedProperties: Array<string> = [];
-
   public $preferences: Observable<BucketSettings>;
   public language: string;
 
-  public selectAll: boolean = false;
-  public doClick: boolean = false;
-  public arrayToDelete: Array<string> = [];
-  public totalPageItem: number = 0;
+  public selectedItems: Array<string> = [];
+  public dataIds: Array<string> = [];
 
   constructor(
     private bs: BucketService,
@@ -57,7 +54,7 @@ export class IndexComponent implements OnInit {
             .filter(([, value]) => value.options.visible)
             .map(([key]) => key)
             .concat("actions");
-          this.displayedProperties = ["select"].concat(this.displayedProperties);
+          this.displayedProperties = ["select", ...this.displayedProperties];
         }
       })
     );
@@ -65,11 +62,9 @@ export class IndexComponent implements OnInit {
 
   toggleDisplayAll(display: boolean, schema: Bucket) {
     if (display) {
-      this.displayedProperties = ["select"].concat(
-        Object.keys(schema.properties).concat("actions")
-      );
+      this.displayedProperties = ["select", ...Object.keys(schema.properties), "actions"];
     } else {
-      this.displayedProperties = ["select"].concat([schema.primary, "actions"]);
+      this.displayedProperties = ["select", schema.primary, "actions"];
     }
   }
 
@@ -83,28 +78,17 @@ export class IndexComponent implements OnInit {
           skip: this.paginator.pageSize * this.paginator.pageIndex
         })
       ),
-      map(buckets => {
-        this.totalPageItem = 0;
-        this.paginator.length = 0;
-        if (buckets.meta && buckets.meta.total) {
-          this.paginator.length = buckets.meta.total;
-        }
-        buckets.data.forEach(element => {
-          this.totalPageItem++;
-        });
-
-        if (this.selectAll === true) {
-          if (this.arrayToDelete.length > 0) {
-            this.arrayToDelete = [];
-          }
-          buckets.data.forEach(element => {
-            this.totalPageItem++;
-            this.arrayToDelete.push(element._id);
-          });
-        }
-        return buckets.data;
+      map(response => {
+        this.paginator.length =  response.meta && response.meta.total || 0;
+        this.dataIds = response.data.map( d => d._id );
+        return response.data;
       })
     );
+  }
+
+  sortData(sort: Sort) {
+    this.aggregations.sort = {active: sort.active, direction: sort.direction === "asc" ? 1 : -1};
+    this.fetchData();
   }
 
   delete(id: string): void {
@@ -114,43 +98,11 @@ export class IndexComponent implements OnInit {
       .then(() => this.fetchData());
   }
 
-  // Sort on Server-side
-  sortData(sort: Sort) {
-    this.aggregations.sort = {active: sort.active, direction: sort.direction === "asc" ? 1 : -1};
+  async deleteSelectedItems() {
+    await this.bds
+      .deleteMany(this.bucketId, this.selectedItems)
+      .toPromise();
     this.fetchData();
-  }
-
-  // All select checkbox
-  allSelect(id) {
-    this.doClick = !id;
-    this.selectAll = id;
-    if (this.selectAll == false) {
-      this.arrayToDelete = [];
-    }
-    this.fetchData();
-  }
-  // Add one checkbox item
-  addDeleteList(id) {
-    let inArray: boolean = false;
-    this.arrayToDelete.forEach((element, key) => {
-      if (element == id) {
-        this.arrayToDelete.splice(key, 1);
-        inArray = true;
-        this.doClick = false;
-      }
-    });
-    if (inArray == false) {
-      this.arrayToDelete.push(id);
-    }
-  }
-  deleteArrayItems() {
-    this.bds
-      .deleteMany(this.bucketId, this.arrayToDelete)
-      .toPromise()
-      .then(() => {
-        this.fetchData();
-        this.arrayToDelete = [];
-        this.totalPageItem = 0;
-      });
+    this.selectedItems = [];
   }
 }
