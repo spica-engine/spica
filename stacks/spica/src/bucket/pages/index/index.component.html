@@ -26,7 +26,7 @@
     mat-raised-button
     color="warn"
     (click)="deleteSelectedItems()"
-    [matTooltip]="'Delete ' + selectedItems.length +' item.'"
+    [matTooltip]="'Delete ' + selectedItems.length + ' item.'"
   >
     <mat-icon>delete</mat-icon>
   </button>
@@ -109,14 +109,18 @@
             *ngIf="dataIds?.length > 0"
             color="primary"
             [indeterminate]="selectedItems.length < dataIds.length && selectedItems.length > 0"
-            [ngModel]="selectedItems.length  == dataIds.length"
+            [ngModel]="selectedItems.length == dataIds.length"
             (ngModelChange)="selectedItems = $event ? [].concat(dataIds) : []"
           ></mat-checkbox>
         </mat-header-cell>
         <mat-cell *matCellDef="let row">
           <mat-checkbox
             color="primary"
-            (ngModelChange)="$event ? selectedItems.push(row._id) : selectedItems.splice(selectedItems.indexOf(row._id), 1)"
+            (ngModelChange)="
+              $event
+                ? selectedItems.push(row._id)
+                : selectedItems.splice(selectedItems.indexOf(row._id), 1)
+            "
             [ngModel]="selectedItems.indexOf(row._id) > -1"
           ></mat-checkbox>
         </mat-cell>

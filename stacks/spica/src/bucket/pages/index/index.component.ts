@@ -79,8 +79,8 @@ export class IndexComponent implements OnInit {
         })
       ),
       map(response => {
-        this.paginator.length =  response.meta && response.meta.total || 0;
-        this.dataIds = response.data.map( d => d._id );
+        this.paginator.length = (response.meta && response.meta.total) || 0;
+        this.dataIds = response.data.map(d => d._id);
         return response.data;
       })
     );
@@ -99,9 +99,7 @@ export class IndexComponent implements OnInit {
   }
 
   async deleteSelectedItems() {
-    await this.bds
-      .deleteMany(this.bucketId, this.selectedItems)
-      .toPromise();
+    await this.bds.deleteMany(this.bucketId, this.selectedItems).toPromise();
     this.fetchData();
     this.selectedItems = [];
   }
