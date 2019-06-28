@@ -5,11 +5,11 @@ import {PreferencesService} from "@spica-client/core";
 import * as BSON from "bson";
 import {from, Observable} from "rxjs";
 import {flatMap, map, tap} from "rxjs/operators";
-import {Storage} from "../storage/interfaces/storage";
-import * as fromBucket from "./bucket.reducer";
-import {Bucket, BucketTemplate} from "./interfaces/bucket";
-import {BucketSettings} from "./interfaces/bucket-settings";
-import {PredefinedDefault} from "./interfaces/predefined-default";
+import {Storage} from "../../storage/interfaces/storage";
+import * as fromBucket from "../bucket.reducer";
+import {Bucket, BucketTemplate} from "../interfaces/bucket";
+import {BucketSettings} from "../interfaces/bucket-settings";
+import {PredefinedDefault} from "../interfaces/predefined-default";
 
 @Injectable()
 export class BucketService {

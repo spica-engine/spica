@@ -1,7 +1,7 @@
 import {Component, OnInit} from "@angular/core";
 import {saveAs} from "file-saver";
 import {switchMap, tap} from "rxjs/operators";
-import {BucketService} from "../../bucket.service";
+import {BucketService} from "../../services/bucket.service";
 import {Bucket, BucketTemplate} from "../../interfaces/bucket";
 
 @Component({

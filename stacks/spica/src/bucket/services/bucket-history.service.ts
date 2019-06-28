@@ -1,8 +1,8 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {Observable} from "rxjs";
-import {BucketEntry} from "./interfaces/bucket-entry";
-import {BucketHistory} from "./interfaces/bucket-history";
+import {BucketEntry} from "../interfaces/bucket-entry";
+import {BucketHistory} from "../interfaces/bucket-history";
 
 @Injectable()
 export class BucketHistoryService {

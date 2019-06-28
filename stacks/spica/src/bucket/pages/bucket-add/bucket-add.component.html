@@ -263,11 +263,10 @@
           <input
             matInput
             name="property-name"
-            #propertyName
             placeholder="Enter a property name"
             #pnm="ngModel"
             (keyup.enter)="
-              pnm.valid && !propertyError && addField(pnm.value);
+              pnm.valid && !bucket.properties[pnm?.value?.toLowerCase()] && addField(pnm.value);
               pnm.reset();
               pnm.control.markAsUntouched()
             "
@@ -282,22 +281,22 @@
           </mat-error>
           <mat-error *ngIf="pnm?.errors?.minlength">
             Length of the property name must be greater than
-            {{ pnm?.errors?.minlength?.requiredLength }} character.
+            {{ propertyName?.errors?.minlength?.requiredLength }} character.
           </mat-error>
           <mat-error *ngIf="pnm?.errors?.maxlength">
             Length of the property name must be less than
-            {{ pnm?.errors?.maxlength?.requiredLength }} character.
+            {{ propertyName?.errors?.maxlength?.requiredLength }} character.
           </mat-error>
-          <mat-error *ngIf="propertyError">
-            {{ propertyError }}
+          <mat-error *ngIf="bucket.properties[pnm?.value?.toLowerCase()]">
+            {{ pnm?.value | lowercase }} already exists.
           </mat-error>
         </mat-form-field>
         <button
           mat-button
-          [disabled]="pnm.invalid || propertyError != undefined"
+          [disabled]="pnm.invalid || bucket.properties[pnm?.value?.toLowerCase()]"
           (click)="addField(pnm.value); pnm.reset(); pnm.control.markAsUntouched()"
         >
-          Add <mat-icon>add</mat-icon>
+          <mat-icon>add</mat-icon> Add new property
         </button>
       </mat-list-item>
       <h4 mat-subheader><mat-icon>view_module</mat-icon> View</h4>

@@ -2,7 +2,7 @@ import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnDestroy} from "@angular/core";
 import {Observable, Subject} from "rxjs";
 import {takeUntil} from "rxjs/operators";
-import {BucketService} from "../../bucket.service";
+import {BucketService} from "../../services/bucket.service";
 import {Bucket} from "../../interfaces/bucket";
 
 @Component({

@@ -1,4 +1,4 @@
-import {emptyBucket} from "./interfaces/bucket";
+import {emptyBucket} from "../interfaces/bucket";
 
 describe("Bucket", () => {
   describe("emptyBucket", () => {
