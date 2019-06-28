@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core";
-import {PassportService} from "../passport";
+import {PassportService} from "../../passport";
 import {BucketService} from "./bucket.service";
 
 @Injectable()
@@ -32,6 +32,9 @@ export class BucketInitializer {
       (await this.passport.checkAllowed("bucket:index").toPromise())
     ) {
       this.bs.retrieve().toPromise();
+    } else {
+      // Clean up the content category if the user has no permission to see.
+      this.routeService.dispatch(new RemoveCategory(RouteCategory.Content));
     }
   }
 }

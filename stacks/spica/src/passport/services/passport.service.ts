@@ -42,9 +42,12 @@ export class PassportService {
   }
 
   identify(identity: IdentifyParams): Observable<any> {
-    return this.http
-      .get(`api:/passport/identify`, {params: identity})
-      .pipe(tap(response => (this.token = response.token)));
+    return this.http.get(`api:/passport/identify`, {params: identity}).pipe(
+      tap(response => {
+        this.token = response.token;
+        this._statements = undefined;
+      })
+    );
   }
 
   identifyWith(strategy: string): Observable<any> {
@@ -57,7 +60,10 @@ export class PassportService {
           window.open(res.url, "_blank");
           return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
         }),
-        tap(response => (this.token = response.token))
+        tap(response => {
+          this.token = response.token;
+          this._statements = undefined;
+        })
       );
   }
 
