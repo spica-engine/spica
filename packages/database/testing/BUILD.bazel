@@ -1,0 +1,22 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+
+ts_library(
+    name = "testing",
+    srcs = [
+        "index.ts",
+        "testing.module.ts",
+    ],
+    module_name = "@spica-server/database/testing",
+    tsconfig = "//:tsconfig.json",
+    deps = [
+        "//packages/database",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/core",
+        "@npm//@types/mongodb",
+        "@npm//@types/node",
+        "@npm//mongodb",
+        "@npm//mongodb-memory-server",
+    ],
+)

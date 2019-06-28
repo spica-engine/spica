@@ -1,0 +1,52 @@
+<button
+  mat-icon-button
+  [matMenuTriggerFor]="filterMenu"
+  *ngIf="$meta"
+  [color]="filter ? 'accent' : ''"
+>
+  <mat-icon>filter_list</mat-icon>
+  <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+    <mat-form-field (click)="$event.stopPropagation()">
+      <mat-select placeholder="Attribute to Filter" name="target" #target>
+        <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
+          {{ propertyKv.value.title }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <ng-container *ngIf="target.value">
+      <mat-form-field
+        *ngIf="filterableTypes[properties[target.value].type].origin === 'string'"
+        (click)="$event.stopPropagation()"
+      >
+        <input matInput name="value" placeholder="Value" [(ngModel)]="value" />
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="filterableTypes[properties[target.value].type].origin === 'number'"
+        (click)="$event.stopPropagation()"
+      >
+        <input matInput name="value" type="number" placeholder="Value" [(ngModel)]="value" />
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="filterableTypes[properties[target.value].type].origin === 'boolean'"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-select placeholder="Select a value" name="value" [(ngModel)]="value">
+          <mat-option [value]="true">
+            True
+          </mat-option>
+          <mat-option [value]="false">
+            False
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </ng-container>
+    <div class="filter-buttons">
+      <button mat-button (click)="applyFilter(target.value)">
+        Apply
+      </button>
+      <button mat-button color="warn" (click)="clearFilter(); $event.stopPropagation()">
+        Clear
+      </button>
+    </div>
+  </mat-menu>
+</button>

@@ -1,0 +1,46 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+
+ts_library(
+    name = "trigger",
+    srcs = ["base.ts"],
+    deps = [
+        "@npm//@nestjs/common",
+        "@npm//@types/json-schema",
+    ],
+)
+
+ts_library(
+    name = "http",
+    srcs = ["http.ts"],
+    data = ["http.d.ts"],
+    deps = [
+        ":trigger",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/core",
+        "@npm//@types/node",
+        "@npm//express",
+    ],
+)
+
+ts_library(
+    name = "database",
+    srcs = ["database.ts"],
+    deps = [
+        ":trigger",
+        "//packages/database",
+        "@npm//@nestjs/common",
+        "@npm//@types/mongodb",
+    ],
+)
+
+ts_library(
+    name = "schedule",
+    srcs = ["schedule.ts"],
+    deps = [
+        ":trigger",
+        "@npm//@nestjs/common",
+        "@npm//cron",
+    ],
+)

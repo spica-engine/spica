@@ -1,0 +1,12 @@
+{
+  "$schema": "http://spica.internal/passport/service",
+  "$id": "http://spica.internal/subscription",
+  "$resource": "passport:strategy",
+  "title": "Passport Strategy",
+  "actions": [
+    "passport:strategy:index",
+    "passport:strategy:show",
+    "passport:strategy:update",
+    "passport:strategy:delete"
+  ]
+}

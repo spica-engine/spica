@@ -1,0 +1,11 @@
+{
+	"$schema": "http://spica.internal/passport/service",
+	"$id": "http://spica.internal/preference",
+	"$resource": "preference",
+	"$arguments": "/:scope",
+	"title": "System Preferences",
+	"actions": [
+		"preference:show",
+		"preference:update"
+	]
+}

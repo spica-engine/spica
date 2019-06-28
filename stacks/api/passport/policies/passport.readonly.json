@@ -1,0 +1,26 @@
+{
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "PassportReadOnlyAccess",
+  "name": "Passport Read Only Access",
+  "description": "Read only access to passport identity service and policy service.",
+  "statement": [
+    {
+      "effect": "allow",
+      "action": "passport:identity:index",
+      "resource": "*",
+      "service": "passport:identity"
+    },
+    {
+      "effect": "allow",
+      "action": "passport:policy:index",
+      "resource": "*",
+      "service": "passport:policy"
+    },
+    {
+      "effect": "allow",
+      "action": "passport:strategy:index",
+      "resource": "*",
+      "service": "passport:strategy"
+    }
+  ]
+}

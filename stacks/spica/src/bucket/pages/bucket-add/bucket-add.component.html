@@ -1,0 +1,419 @@
+<mat-toolbar color="primary">
+  <h4 class="mat-h4 bucket-title">
+    <button
+      mat-icon-button
+      menu-icon
+      matTooltip="You can select a icon by clicking here."
+      [matMenuTriggerFor]="iconSelector"
+    >
+      <mat-icon>{{ bucket?.icon }}</mat-icon>
+      <mat-menu #iconSelector="matMenu">
+        <ng-container matMenuContent>
+          <button
+            *ngFor="let icon of visibleIcons"
+            mat-icon-button
+            [matTooltip]="icon"
+            (click)="bucket.icon = icon"
+          >
+            <mat-icon>{{ icon }}</mat-icon>
+          </button>
+          <mat-paginator
+            (page)="
+              this.visibleIcons = this.icons.slice(
+                $event.pageIndex * $event.pageSize,
+                ($event.pageIndex + 1) * $event.pageSize
+              )
+            "
+            (click)="$event.stopPropagation()"
+            [length]="icons.length"
+            [pageSize]="iconPageSize"
+          >
+          </mat-paginator>
+        </ng-container>
+      </mat-menu>
+    </button>
+    <span>{{ bucket?.title }}</span>
+  </h4>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25 margin-5">
+  <mat-card-content>
+    <mat-list>
+      <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
+      <mat-divider></mat-divider>
+      <mat-list-item>
+        <form id="describeForm" #describeForm="ngForm" class="title-description-form">
+          <mat-form-field>
+            <input
+              matInput
+              name="title"
+              placeholder="Title"
+              #tm="ngModel"
+              [(ngModel)]="bucket.title"
+              required
+              minlength="4"
+              maxlength="30"
+            />
+            <mat-hint align="end">{{ tm.value?.length || 0 }} / 15</mat-hint>
+            <mat-error *ngIf="tm?.errors?.required">This field is required.</mat-error>
+            <mat-error *ngIf="tm?.errors?.minlength">
+              Length of the name must be greater than
+              {{ tm?.errors?.minlength?.requiredLength }} character.
+            </mat-error>
+            <mat-error *ngIf="tm?.errors?.maxlength">
+              Length of the name must be less than
+              {{ tm?.errors?.maxlength?.requiredLength }} character.
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <textarea
+              matInput
+              name="description"
+              placeholder="Description"
+              #dm="ngModel"
+              [(ngModel)]="bucket.description"
+              required
+              minlength="5"
+              maxlength="250"
+              rows="3"
+            ></textarea>
+            <mat-hint align="end"> {{ dm.value?.length || 0 }} / 250 </mat-hint>
+            <mat-error *ngIf="dm?.errors?.required">This field is required.</mat-error>
+            <mat-error *ngIf="dm?.errors?.minlength">
+              Length of the description must be greater than
+              {{ dm?.errors.minlength?.requiredLength }} character.
+            </mat-error>
+            <mat-error *ngIf="dm?.errors?.maxlength">
+              Length of the description must be less than
+              {{ dm?.errors.maxlength?.requiredLength }} character.
+            </mat-error>
+          </mat-form-field>
+        </form>
+      </mat-list-item>
+      <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
+      <mat-divider></mat-divider>
+      <mat-list-item>
+        <mat-vertical-stepper #propertyStepper [linear]="false">
+          <ng-template *ngFor="let iconKv of bIcons | keyvalue" [matStepperIcon]="iconKv.key">
+            <mat-icon>{{ iconKv.value }}</mat-icon>
+          </ng-template>
+          <mat-step
+            *ngFor="let propertyKv of bucket.properties | keyvalue; let index = index"
+            [state]="propertyKv.value.type"
+            [completed]="false"
+          >
+            <ng-template matStepLabel>
+              <span title>
+                <span>{{ propertyKv.value.title | titlecase }}</span>
+                <mat-hint class="mat-step-optional">{{ propertyKv.key }}</mat-hint>
+              </span>
+
+              <button
+                mat-icon-button
+                *ngIf="propertyStepper.selectedIndex == index"
+                [matMenuTriggerFor]="settingsMenu"
+                [matMenuTriggerData]="{propertyKv: propertyKv}"
+              >
+                <mat-icon>settings</mat-icon>
+                <mat-menu #settingsMenu="matMenu">
+                  <ng-template matMenuContent let-propertyKv="propertyKv">
+                    <div
+                      mat-menu-item
+                      *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+                      role="menuitemcheckbox"
+                      disableRipple
+                      matTooltip="To change primary property select another property as primary"
+                      [matTooltipDisabled]="bucket.primary != key"
+                      (click)="$event.stopImmediatePropagation()"
+                    >
+                      <mat-checkbox
+                        [disabled]="bucket.primary == propertyKv.key"
+                        [checked]="bucket.primary == propertyKv.key"
+                        [indeterminate]="bucket.primary != propertyKv.key"
+                        (change)="$event.checked ? (bucket.primary = propertyKv.key) : undefined"
+                      >
+                        Primary field
+                      </mat-checkbox>
+                    </div>
+                    <div
+                      mat-menu-item
+                      *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+                      role="menuitemcheckbox"
+                      disableRipple
+                      (click)="$event.stopImmediatePropagation()"
+                    >
+                      <mat-checkbox
+                        [(ngModel)]="propertyKv.value.options.visible"
+                        (change)="bucketVisible()"
+                      >
+                        Visible on list
+                      </mat-checkbox>
+                    </div>
+                    <div
+                      mat-menu-item
+                      *ngIf="translatableTypes.includes(propertyKv.value.type)"
+                      role="menuitemcheckbox"
+                      disableRipple
+                      (click)="$event.stopImmediatePropagation()"
+                      matTooltip="You can't change this property after creation."
+                    >
+                      <mat-checkbox
+                        [disabled]="immutableProperties.includes(key)"
+                        [(ngModel)]="propertyKv.value.options.translate"
+                      >
+                        Translate
+                      </mat-checkbox>
+                    </div>
+
+                    <div
+                      mat-menu-item
+                      role="menuitemcheckbox"
+                      disableRipple
+                      (click)="$event.stopImmediatePropagation()"
+                    >
+                      <mat-checkbox [(ngModel)]="propertyKv.value.readOnly">
+                        Read-only
+                      </mat-checkbox>
+                    </div>
+
+                    <div
+                      mat-menu-item
+                      role="menuitemcheckbox"
+                      disableRipple
+                      (click)="$event.stopImmediatePropagation()"
+                    >
+                      <mat-checkbox
+                        [ngModel]="bucket.required?.includes(propertyKv.key)"
+                        (ngModelChange)="
+                          bucket.required = bucket.required || [];
+                          $event
+                            ? bucket.required.push(propertyKv.key)
+                            : bucket.required.splice(bucket.required.indexOf(propertyKv.key), 1)
+                        "
+                      >
+                        Required
+                      </mat-checkbox>
+                    </div>
+                  </ng-template>
+                </mat-menu>
+              </button>
+
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="
+                  $event.stopImmediatePropagation();
+                  deleteProperty(propertyKv.key);
+                  bucket.primary == propertyKv.key ? (bucket.primary = undefined) : null
+                "
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+
+              <span class="space-between"></span>
+
+              <mat-icon
+                *ngIf="bucket.primary == propertyKv.key"
+                matTooltip="This property is the primary property."
+                >label_important</mat-icon
+              >
+              <mat-icon
+                *ngIf="propertyKv.value.options?.translate"
+                matTooltip="This property is translatable."
+                >translate</mat-icon
+              >
+              <mat-icon
+                *ngIf="propertyKv.value.options?.visible"
+                matTooltip="This property will be visible on list by default."
+                >visibility</mat-icon
+              >
+              <mat-icon *ngIf="propertyKv.value.readOnly" matTooltip="This property is read-only."
+                >format_clear</mat-icon
+              >
+            </ng-template>
+
+            <span
+              [inputSchemaPlacer]="propertyKv.value.type"
+              [(ngModel)]="bucket.properties[propertyKv.key]"
+            ></span>
+            <div
+              class="input-defaults"
+              *ngIf="predefinedDefaults && predefinedDefaults.hasOwnProperty(propertyKv.value.type)"
+            >
+              <mat-form-field *ngIf="predefinedDefaults">
+                <mat-label>Default</mat-label>
+                <mat-select [(ngModel)]="propertyKv.value.default">
+                  <mat-option>None</mat-option>
+                  <ng-container *ngFor="let predef of predefinedDefaults[propertyKv.value.type]">
+                    <mat-option [value]="predef.keyword">
+                      {{ predef.keyword }}
+                    </mat-option>
+                  </ng-container>
+                </mat-select>
+                <mat-hint
+                  >You can select a prdefined default value for
+                  {{ propertyKv.value.type }}.</mat-hint
+                >
+              </mat-form-field>
+            </div>
+          </mat-step>
+        </mat-vertical-stepper>
+      </mat-list-item>
+      <mat-list-item class="add-property">
+        <mat-form-field>
+          <input
+            matInput
+            name="property-name"
+            #propertyName
+            placeholder="Enter a property name"
+            #pnm="ngModel"
+            (keyup.enter)="
+              pnm.valid && !propertyError && addField(pnm.value);
+              pnm.reset();
+              pnm.control.markAsUntouched()
+            "
+            ngModel
+            required
+            minlength="3"
+            maxlength="25"
+          />
+
+          <mat-error *ngIf="pnm.value && pnm?.errors?.required">
+            Property name is required.
+          </mat-error>
+          <mat-error *ngIf="pnm?.errors?.minlength">
+            Length of the property name must be greater than
+            {{ pnm?.errors?.minlength?.requiredLength }} character.
+          </mat-error>
+          <mat-error *ngIf="pnm?.errors?.maxlength">
+            Length of the property name must be less than
+            {{ pnm?.errors?.maxlength?.requiredLength }} character.
+          </mat-error>
+          <mat-error *ngIf="propertyError">
+            {{ propertyError }}
+          </mat-error>
+        </mat-form-field>
+        <button
+          mat-button
+          [disabled]="pnm.invalid || propertyError != undefined"
+          (click)="addField(pnm.value); pnm.reset(); pnm.control.markAsUntouched()"
+        >
+          Add <mat-icon>add</mat-icon>
+        </button>
+      </mat-list-item>
+      <h4 mat-subheader><mat-icon>view_module</mat-icon> View</h4>
+      <mat-divider></mat-divider>
+      <mat-list-item>
+        <mat-grid-list [cols]="4" gutterSize="10px" rowHeight="200px">
+          <mat-grid-tile
+            [colspan]="4"
+            #nonPositioned="cdkDropList"
+            cdkDropList
+            cdkDropListSortingDisabled
+            [cdkDropListData]="nonPositionedProperties"
+            [cdkDropListConnectedTo]="[rightList, leftList, bottomList]"
+            (cdkDropListDropped)="setPosition($event)"
+          >
+            <mat-card
+              class="mat-elevation-z0"
+              *ngFor="let propertyKv of nonPositionedProperties"
+              cdkDrag
+            >
+              <mat-icon>{{ bIcons[propertyKv.value.type] }}</mat-icon>
+              <span>{{ propertyKv.value.title }}</span>
+            </mat-card>
+            <span>No position</span>
+          </mat-grid-tile>
+          <mat-grid-tile
+            [colspan]="2"
+            #leftList="cdkDropList"
+            cdkDropList
+            cdkDropListSortingDisabled
+            [cdkDropListData]="propertyPositionMap.left"
+            [cdkDropListConnectedTo]="[rightList, bottomList, nonPositioned]"
+            (cdkDropListDropped)="setPosition($event, 'left')"
+          >
+            <mat-card
+              class="mat-elevation-z0"
+              *ngFor="let propertyKv of propertyPositionMap.left"
+              cdkDrag
+            >
+              <mat-icon>{{ bIcons[propertyKv.value.type] }}</mat-icon>
+              <span>{{ propertyKv.value.title }}</span>
+            </mat-card>
+            <span>Left</span>
+          </mat-grid-tile>
+          <mat-grid-tile
+            [colspan]="2"
+            #rightList="cdkDropList"
+            cdkDropList
+            cdkDropListSortingDisabled
+            [cdkDropListData]="propertyPositionMap.right"
+            [cdkDropListConnectedTo]="[leftList, bottomList, nonPositioned]"
+            (cdkDropListDropped)="setPosition($event, 'right')"
+          >
+            <mat-card
+              class="mat-elevation-z0"
+              *ngFor="let propertyKv of propertyPositionMap.right"
+              cdkDrag
+            >
+              <mat-icon>{{ bIcons[propertyKv.value.type] }}</mat-icon>
+              <span>{{ propertyKv.value.title }}</span>
+            </mat-card>
+            <span>Right</span>
+          </mat-grid-tile>
+          <mat-grid-tile
+            [colspan]="4"
+            #bottomList="cdkDropList"
+            cdkDropList
+            cdkDropListSortingDisabled
+            [cdkDropListData]="propertyPositionMap.bottom"
+            [cdkDropListConnectedTo]="[rightList, leftList, nonPositioned]"
+            (cdkDropListDropped)="setPosition($event, 'bottom')"
+          >
+            <mat-card
+              class="mat-elevation-z0"
+              *ngFor="let propertyKv of propertyPositionMap.bottom"
+              cdkDrag
+            >
+              <mat-icon>{{ bIcons[propertyKv.value.type] }}</mat-icon>
+              <span>{{ propertyKv.value.title }}</span>
+            </mat-card>
+            <span>Bottom</span>
+          </mat-grid-tile>
+        </mat-grid-list>
+      </mat-list-item>
+      <mat-list-item>
+        <mat-error *ngIf="describeForm.invalid">Please correctly fill the describe form.</mat-error>
+        <mat-error *ngIf="nonPositionedProperties.length > 0"
+          >Please place all the properties above.</mat-error
+        >
+        <mat-error *ngIf="(bucket.properties | keyvalue)?.length < 1"
+          >Please add at least one property.</mat-error
+        >
+        <mat-error *ngIf="bucket.primary == undefined"
+          >Please select the primary property.</mat-error
+        >
+        <mat-error *ngIf="!isThereVisible"
+          >You have to select at least a visible field on list.</mat-error
+        >
+      </mat-list-item>
+    </mat-list>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      mat-button
+      canInteract="bucket:update"
+      form="describeForm"
+      [disabled]="
+        describeForm.invalid ||
+        nonPositionedProperties.length > 0 ||
+        (bucket.properties | keyvalue)?.length < 1 ||
+        !isThereVisible ||
+        bucket.primary == undefined
+      "
+      (click)="saveBucket()"
+    >
+      <mat-icon>add</mat-icon> Save
+    </button>
+  </mat-card-actions>
+</mat-card>

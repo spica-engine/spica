@@ -1,0 +1,31 @@
+:host {
+  display: inline-block;
+
+  /deep/.mat-form-field-flex-outline .mat-form-field-outline {
+    border: 21px red solid;
+  }
+
+  /deep/.mat-form-field-appearance-outline
+    .mat-form-field-outline-thick
+    .mat-form-field-outline-start {
+    border-width: 1px;
+  }
+  /deep/.mat-form-field-appearance-outline
+    .mat-form-field-outline-thick
+    .mat-form-field-outline-gap {
+    border-width: 1px;
+  }
+  /deep/.mat-form-field-appearance-outline
+    .mat-form-field-outline-thick
+    .mat-form-field-outline-end {
+    border-width: 1px;
+  }
+
+  mat-form-field {
+    min-width: 150px;
+    width: 100%;
+    /deep/.mat-form-field-label-wrapper {
+      padding-top: 1.54375em !important;
+    }
+  }
+}

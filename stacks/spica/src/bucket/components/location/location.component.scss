@@ -1,0 +1,30 @@
+:host {
+  display: inline-block;
+  mat-form-field {
+    width: 50%;
+    margin-top: 10px;
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    &:not(:first-of-type) {
+      padding: 0 5px;
+    }
+  }
+  ::ng-deep .leaflet-container {
+    border-radius: 5px;
+    .leaflet-control-container {
+      .leaflet-control-zoom {
+        border: none;
+        a {
+          border-radius: 50%;
+          line-height: 26px;
+          &:first-of-type {
+            margin-bottom: 5px;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  .enum-item {
+    display: inline-flex;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    .field-container {
+      /deep/.input-placer-input {
+        .mat-form-field {
+          .mat-form-field-wrapper {
+            .mat-form-field-subscript-wrapper {
+              display: none;
+            }
+          }
+        }
+      }
+    }
+    .null-option {
+      width: 100%;
+      padding-left: 15px;
+    }
+  }
+}

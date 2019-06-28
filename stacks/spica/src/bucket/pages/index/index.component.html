@@ -1,0 +1,136 @@
+<mat-toolbar color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>{{ ($meta | async)?.icon }}</mat-icon>
+    <span>{{ ($meta | async)?.title }}</span>
+    <button
+      mat-icon-button
+      class="id-icon"
+      #clipboard="matClipboard"
+      [matClipboard]="bucketId"
+      [matTooltip]="'Copied!'"
+      (mouseenter)="$event.stopImmediatePropagation()"
+      (click)="tooltip.toggle()"
+      #tooltip="matTooltip"
+    >
+      <mat-icon>{{ clipboard.icon }}</mat-icon>
+    </button>
+    <span class="description">{{ ($meta | async)?.description }}</span>
+  </h4>
+
+  <span class="space-between"></span>
+
+  <button mat-icon-button *ngIf="$meta | async; let meta" [matMenuTriggerFor]="titleMenu">
+    <mat-icon>view_column</mat-icon>
+    <mat-menu class="displayed-properties-menu" xPosition="before" #titleMenu="matMenu">
+      <button mat-menu-item (click)="$event.stopPropagation()">
+        <mat-checkbox
+          [ngModel]="(meta.properties | keyvalue).length == displayedProperties.length - 1"
+          [indeterminate]="
+            displayedProperties.length > 1 &&
+            displayedProperties.length - 1 < (meta.properties | keyvalue).length
+          "
+          (ngModelChange)="toggleDisplayAll($event, meta)"
+        >
+          Display all
+        </mat-checkbox>
+      </button>
+      <mat-divider></mat-divider>
+      <button
+        mat-menu-item
+        *ngFor="let property of meta.properties | keyvalue"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-checkbox
+          [ngModel]="displayedProperties.indexOf(property.key) > -1"
+          (ngModelChange)="
+            $event
+              ? displayedProperties.splice(displayedProperties.length - 1, 0, property.key)
+              : displayedProperties.splice(displayedProperties.indexOf(property.key), 1)
+          "
+        >
+          {{ property.value.title }}
+        </mat-checkbox>
+      </button>
+    </mat-menu>
+  </button>
+
+  <button
+    mat-icon-button
+    [matMenuTriggerFor]="languageMenu"
+    *ngIf="$preferences | async; let preferences"
+  >
+    <mat-icon>translate</mat-icon>
+    <mat-menu #languageMenu="matMenu">
+      <button
+        mat-menu-item
+        *ngFor="let lang of preferences.language.supported_languages"
+        (click)="language = lang.code; refresh.next()"
+      >
+        {{ lang.name }} ({{ lang.code }})
+      </button>
+    </mat-menu>
+  </button>
+  <bucket-filter
+    *ngIf="$meta"
+    [meta]="$meta"
+    [(filter)]="aggregations.filter"
+    (filterChange)="fetchData()"
+  ></bucket-filter>
+  <button mat-icon-button (click)="refresh.next()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button canInteract="bucket:data:update" mat-icon-button routerLink="add">
+    <mat-icon>add</mat-icon>
+  </button>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-table
+      [dataSource]="$data"
+      matSort
+      matSortDisableClear="true"
+      (matSortChange)="sortData($event)"
+    >
+      <ng-container matColumnDef="actions">
+        <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell class="actions-content" *matCellDef="let row">
+          <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            canInteract="bucket:data:update"
+            color="warn"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: 'yes'
+            }"
+            (confirm)="delete(row._id)"
+          >
+            <mat-icon delete-button>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+      <ng-container
+        *ngFor="let property of ($meta | async)?.properties | keyvalue"
+        [matColumnDef]="property.key"
+      >
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{
+          property.value.title
+        }}</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{ row[property.key] }}</mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedProperties"></mat-row>
+    </mat-table>
+    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </mat-card-content>
+</mat-card>
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action cannot be undone.</p>
+  <p>
+    This action will permanently delete the row and broke the all associations.
+  </p>
+  <p>Please type in <b>"yes"</b> to confirm.</p>
+</ng-template>

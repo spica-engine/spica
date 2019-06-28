@@ -1,0 +1,14 @@
+{
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "SubscriptionReadOnlyAccess",
+  "name": "Subscription Read Only Access",
+  "description": "Read only access to subscription service.",
+  "statement": [
+    {
+      "effect": "allow",
+      "action": "subscription:index",
+      "resource": "subscription/*",
+      "service": "subscription"
+    }
+  ]
+}

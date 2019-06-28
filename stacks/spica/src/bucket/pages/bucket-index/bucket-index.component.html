@@ -1,0 +1,67 @@
+<mat-toolbar color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>view_day</mat-icon>
+    <span>Buckets</span>
+  </h4>
+  <span class="space-between"></span>
+  <button canInteract="bucket:update" mat-icon-button routerLink="add">
+    <mat-icon>add</mat-icon>
+  </button>
+  <button mat-icon-button routerLink="settings">
+    <mat-icon>settings</mat-icon>
+  </button>
+  <button mat-button routerLink="import-export">
+    <mat-icon>import_export</mat-icon>
+  </button>
+</mat-toolbar>
+
+<mat-grid-list [cols]="columns" rowHeight="1:1" gutterSize="10px">
+  <mat-grid-tile *ngFor="let bucket of $buckets | async; let i = index">
+    <mat-card class="mat-elevation-z25">
+      <mat-card-title>
+        <mat-icon>{{ bucket.icon }}</mat-icon>
+        <span>{{ bucket.title }}</span>
+        <span class="space-between"></span>
+        <button
+          mat-icon-button
+          #clipboard="matClipboard"
+          [matClipboard]="bucket._id"
+          [matTooltip]="'Copied!'"
+          (mouseenter)="$event.stopImmediatePropagation()"
+          (click)="tooltip.toggle()"
+          #tooltip="matTooltip"
+        >
+          <mat-icon>{{ clipboard.icon }}</mat-icon>
+        </button>
+      </mat-card-title>
+      <mat-card-content>
+        <p>{{ bucket.description }}</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button canInteract="bucket:show" mat-icon-button [routerLink]="bucket._id">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          canInteract="bucket:update"
+          mat-icon-button
+          color="warn"
+          [matAwareDialog]="{
+            title: 'Confirmation',
+            templateOrDescription: dialogTemplate,
+            answer: 'yes'
+          }"
+          (confirm)="delete(bucket)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </mat-grid-tile>
+</mat-grid-list>
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action cannot be undone.</p>
+  <p>
+    This action will permanently delete the <b>"{{ answer }}"</b> and broke the all associations.
+  </p>
+  <p>Please type in the name of the bucket to confirm.</p>
+</ng-template>

@@ -1,0 +1,35 @@
+:host {
+  width: 100%;
+  height: 100%;
+  .sidenav-container {
+    height: 100vh;
+    .sidenav {
+      min-width: 250px;
+      mat-accordion {
+        mat-expansion-panel {
+          mat-nav-list {
+            padding-top: unset;
+            mat-list-item {
+              mat-icon {
+                vertical-align: middle;
+              }
+              h4 {
+                vertical-align: middle;
+                margin-left: 5px;
+                margin-bottom: unset;
+              }
+            }
+          }
+        }
+      }
+    }
+    .primary-content {
+      .top-toolbar {
+        background-color: var(--current-color, var(--primary-default, black));
+        .fill-between {
+          flex: 1 1 auto;
+        }
+      }
+    }
+  }
+}

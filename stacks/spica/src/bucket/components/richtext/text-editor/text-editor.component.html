@@ -1,0 +1,29 @@
+<div
+  (focus)="onEditorFocus()"
+  class="text-editor"
+  id="TextEditor"
+  [style.width]="config.width"
+  [style.minWidth]="config.minWidth"
+>
+  <text-editor-toolbar #editorToolbar (execute)="executeCommand($event)"></text-editor-toolbar>
+
+  <div class="text-editor-wrapper" #editorWrapper>
+    <div
+      #editor
+      id="editor"
+      class="text-editor-textarea"
+      [attr.contenteditable]="config.editable"
+      [attr.translate]="config.translate"
+      [attr.spellcheck]="config.spellcheck"
+      [style.height]="config.height"
+      [style.minHeight]="config.minHeight"
+      [style.maxHeight]="config.maxHeight"
+      (input)="onContentChange($event.target.innerHTML)"
+      (focus)="onTextAreaFocus()"
+      (blur)="onTextAreaBlur($event)"
+      (click)="exec()"
+      (keyup)="exec()"
+    ></div>
+    <span class="text-editor-placeholder">{{ placeholder || config["placeholder"] }}</span>
+  </div>
+</div>

@@ -1,0 +1,4 @@
+<mat-slide-toggle #isEnum [checked]="schema.enum?.length > 0"
+  >Make field enumerated</mat-slide-toggle
+>
+<enum-schema *ngIf="isEnum.checked"></enum-schema>

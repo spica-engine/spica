@@ -1,0 +1,120 @@
+:host {
+  .bucket-title {
+    display: flex;
+    align-items: center;
+  }
+  .input-defaults {
+    width: 50%;
+    margin-top: 20px;
+    ::ng-deep {
+      mat-menu {
+        padding: 10px;
+        mat-radio-group {
+          display: flex;
+          flex-direction: column;
+          margin: 15px 0;
+        }
+      }
+    }
+  }
+  mat-card {
+    &.margin-5 {
+      margin: 5%;
+    }
+    ::ng-deep {
+      mat-card-content {
+        mat-divider {
+          left: 5% !important;
+          width: 90% !important;
+        }
+        mat-list {
+          .mat-list-item {
+            height: auto;
+            padding-top: 34px;
+            padding-bottom: 10px;
+            .mat-list-item-content {
+              display: contents;
+              mat-form-field {
+                margin-left: 10px;
+              }
+              .title-description-form {
+                display: flex;
+              }
+            }
+
+            &.add-property {
+              margin-left: 60px;
+              input[name="property-name"] {
+                text-transform: lowercase;
+              }
+            }
+          }
+        }
+        mat-grid-list {
+          mat-grid-tile {
+            border: 1px solid rgba(var(--foreground-divider-rgb), 0.04);
+            .mat-figure {
+              flex-flow: column;
+              justify-content: unset;
+              padding: 5px;
+              background: var(--primary-50);
+              mat-card {
+                width: 100%;
+                padding: 12px;
+                border-radius: unset;
+                border-bottom: 1px solid var(--foreground-divider);
+                > * {
+                  vertical-align: middle;
+                }
+              }
+              > span {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                z-index: 0;
+                transform: translate(-50%, -50%);
+                font-size: 26px;
+                font-weight: 400;
+                color: var(--foreground-disabled-text);
+              }
+            }
+          }
+        }
+
+        mat-vertical-stepper {
+          .mat-step {
+            mat-step-header {
+              .mat-step-label {
+                display: flex;
+                width: 60%;
+                align-items: center;
+                span[title] {
+                  display: inline-block;
+                  vertical-align: middle;
+                  span {
+                    display: block;
+                  }
+                  mat-hint {
+                    display: block;
+                    font-weight: normal;
+                    text-align: center;
+                    padding-top: 2px;
+                  }
+                }
+                button {
+                  margin-left: 10px;
+                }
+                .space-between {
+                  flex: 1 1 auto;
+                }
+                > mat-icon {
+                  margin-right: 10px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

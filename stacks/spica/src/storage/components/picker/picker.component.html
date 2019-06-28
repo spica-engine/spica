@@ -1,0 +1,61 @@
+<mat-tab-group>
+  <mat-tab label="Storage">
+    <mat-grid-list cols="4" rowHeight="1:1" gutterSize="10px">
+      <span *ngIf="storages$ | async; let storages">
+        <mat-grid-tile *ngFor="let storage of storages">
+          <mat-card class="mat-elevation-z0" (click)="selected = storage; _onChange.next(selected)">
+            <div selected *ngIf="selected == storage.url">
+              <mat-icon>done</mat-icon>
+            </div>
+            <storage-view [storage]="storage" class="storage-view"></storage-view>
+          </mat-card>
+        </mat-grid-tile>
+      </span>
+    </mat-grid-list>
+    <mat-paginator [pageSize]="_pageSize" [pageSizeOptions]="[8, 12, 18, 20]"></mat-paginator>
+  </mat-tab>
+  <mat-tab label="Upload">
+    <mat-grid-list cols="4" rowHeight="1:1" gutterSize="10px">
+      <mat-grid-tile colspan="4" rowspan="2">
+        <mat-card class="mat-elevation-z0 upload-field">
+          <storage-view
+            *ngIf="selected != null"
+            [storage]="selected"
+            class="storage-view"
+          ></storage-view>
+          <button
+            mat-icon-button
+            ngfDrop
+            selectable="1"
+            [disabled]="progress"
+            [class.image-selected]="selected"
+            [(file)]="incomingFile"
+            (fileChange)="uploadStorage(incomingFile)"
+          >
+            <mat-icon class="save-alt" *ngIf="!progress">save_alt</mat-icon>
+            <mat-icon class="change" *ngIf="!progress">cached</mat-icon>
+            <div class="drag-text" *ngIf="!progress">Drag & Drop your file here</div>
+          </button>
+          <div class="progress-bar">
+            <mat-progress-bar
+              mode="determinate"
+              color="primary"
+              [value]="progress"
+            ></mat-progress-bar>
+          </div>
+        </mat-card>
+      </mat-grid-tile>
+    </mat-grid-list>
+    <div class="uploadable-text">
+      <p>Uploadable files: *</p>
+    </div>
+  </mat-tab>
+</mat-tab-group>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action cannot be undone.</p>
+  <p>
+    This action will permanently delete the <b>{{ answer }}</b> and broke the all associations.
+  </p>
+  <p>Please type in the name of the Storage to confirm.</p>
+</ng-template>

@@ -1,0 +1,5 @@
+{
+    "name": "@internal/schematics",
+    "version": "0.0.0",
+    "schematics": "./collection.json"
+}

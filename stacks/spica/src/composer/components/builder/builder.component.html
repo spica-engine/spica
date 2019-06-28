@@ -1,0 +1,115 @@
+<button mat-icon-button mat-dialog-close class="close-button">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="left-container">
+  <div class="banner">
+    <h2>Let's Build Your Website!</h2>
+    <h4>You do the talking and we'll do the designing</h4>
+
+    <mat-accordion>
+      <ng-template #addForOfTemplate>
+        <mat-expansion-panel class="mat-elevation-z0 add-for-of">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>view_week</mat-icon> <span>For each</span>
+            </mat-panel-title>
+            <mat-panel-description>Take data from somewhere else.</mat-panel-description>
+          </mat-expansion-panel-header>
+          <mat-form-field>
+            <mat-select
+              ngModel
+              required
+              #serviceModel="ngModel"
+              (ngModelChange)="forOfArguments = forOfArguments || {}"
+            >
+              <mat-select-trigger>
+                <mat-icon>{{ serviceModel?.value?.icon }}</mat-icon>
+                <span>{{ serviceModel?.value?.name }}</span>
+              </mat-select-trigger>
+              <mat-option *ngFor="let service of services | async" [value]="service">
+                <mat-icon>{{ service.icon }}</mat-icon>
+                <span>{{ service.name }}</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <span
+            *ngFor="let property of serviceModel?.value?.methods?.find?.parameters | keyvalue"
+            [inputPlacer]="property.value"
+            [(ngModel)]="forOfArguments[property.key]"
+            [name]="property.key"
+          ></span>
+          <button
+            mat-button
+            [disabled]="serviceModel.invalid"
+            (click)="addNgForOf(serviceModel.value)"
+          >
+            <mat-icon>add</mat-icon> Add
+          </button>
+        </mat-expansion-panel>
+      </ng-template>
+
+      <mat-expansion-panel
+        class="mat-elevation-z0"
+        *ngIf="forOf | async; let forOf; else: addForOfTemplate"
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon>view_week</mat-icon>
+            <span>For each</span>
+          </mat-panel-title>
+          <mat-panel-description>{{ forOf.name }}</mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <span
+          *ngFor="let property of forOf.properties | keyvalue"
+          [inputPlacer]="property.value"
+          [(ngModel)]="forOfArguments[property.key]"
+          [name]="property.key"
+        ></span>
+
+        <button mat-icon-button>
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel class="mat-elevation-z0">
+        <mat-expansion-panel-header>
+          <mat-panel-title> <mat-icon>link</mat-icon> <span>Link</span> </mat-panel-title>
+          <mat-panel-description>Navigate to anywhere else.</mat-panel-description>
+        </mat-expansion-panel-header>
+        <mat-form-field>
+          <input matInput [(ngModel)]="routerLink" type="text" />
+        </mat-form-field>
+        <mat-chip-list>
+          <mat-chip *ngFor="let propertyPair of (context | async)?.properties | keyvalue">
+            {{ propertyPair.value.title }}
+          </mat-chip>
+        </mat-chip-list>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+    <span
+      *ngFor="let property of (schema | async)?.properties | keyvalue"
+      [inputPlacer]="property.value"
+      [(ngModel)]="properties[property.key]"
+      [name]="property.key"
+    >
+      <mat-chip-list slot="after">
+        <mat-chip
+          *ngFor="let propertyPair of (context | async)?.properties | keyvalue"
+          (click)="properties[property.key] = 'context.$implicit.' + propertyPair.key"
+        >
+          {{ propertyPair.value.title }}
+        </mat-chip>
+      </mat-chip-list>
+    </span>
+  </div>
+</div>
+
+<div class="right-container">
+  <button mat-button class="finish-button" mat-dialog-close (click)="save()">
+    Save <mat-icon>arrow_right_alt</mat-icon>
+  </button>
+</div>

@@ -1,0 +1,41 @@
+:host {
+  mat-toolbar {
+    padding: 0 30px;
+    align-items: flex-start;
+    .space-between {
+      flex: 1 1 auto;
+    }
+    h4 {
+      mat-icon,
+      span {
+        vertical-align: middle;
+      }
+    }
+  }
+
+  mat-grid-list {
+    margin-left: 30px;
+    margin-right: 30px;
+    mat-grid-tile {
+      mat-card {
+        width: 250px;
+        margin: 5px;
+        float: left;
+        user-select: none;
+        mat-card-title {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-transform: capitalize;
+          font-size: 20px;
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          .space-between {
+            flex: 1 1 auto;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+:host ::ng-deep {
+  @import url(https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css);
+  display: block;
+  min-height: 400px;
+
+  .line-numbers {
+    color: rgba(151, 137, 152, 0.5) !important;
+  }
+
+  .mtk20 {
+    color: #dd6546;
+  }
+
+  .mtk1 {
+    color: #625666;
+  }
+  .mtk6 {
+    color: #4a91e2;
+  }
+}

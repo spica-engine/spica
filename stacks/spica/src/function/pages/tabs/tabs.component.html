@@ -1,0 +1,21 @@
+<ng-container *ngTemplateOutlet="outlet?.component?.toolbar"></ng-container>
+<mat-toolbar color="primary">
+  <nav mat-tab-nav-bar color="accent">
+    <a
+      mat-tab-link
+      routerLink="code"
+      routerLinkActive
+      #rla="routerLinkActive"
+      [active]="rla.isActive"
+    >
+      <mat-icon>code</mat-icon>
+      Code
+    </a>
+
+    <a mat-tab-link routerLink="logs" [active]="!rla.isActive">
+      <mat-icon>bug_report</mat-icon>
+      Logs
+    </a>
+  </nav>
+</mat-toolbar>
+<router-outlet #outlet="outlet"></router-outlet>

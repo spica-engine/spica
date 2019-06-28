@@ -1,0 +1,50 @@
+# A more useful default output mode for bazel query, which
+# prints "ts_library rule //foo:bar" instead of just "//foo:bar".
+query --output=label_kind
+
+# This allows us to avoid installing a second copy of node_modules
+common --experimental_allow_incremental_repository_updates
+
+# Show which actions are running under which workers and print all
+# the actions running in parallel. This shows that Bazel runs on all
+# cores of a CPU.
+build --experimental_ui
+test --experimental_ui
+
+
+# Make TypeScript compilation fast, by keeping a few
+# copies of the compiler running as daemons, and cache SourceFile
+# ASTs to reduce parse time.
+build --strategy=TypeScriptCompile=standalone
+
+# Turn off legacy external runfiles
+build --nolegacy_external_runfiles
+run --nolegacy_external_runfiles
+test --nolegacy_external_runfiles
+
+
+# Turn on --incompatible_strict_action_env which was on by default
+# in Bazel 0.21.0 but turned off again in 0.22.0. Follow
+# https://github.com/bazelbuild/bazel/issues/7026 for more details.
+# This flag is needed to so that the bazel cache is not invalidated
+# when running bazel via `yarn bazel`.
+build --incompatible_strict_action_env
+run --incompatible_strict_action_env
+test --incompatible_strict_action_env
+
+
+# These variables must be set in production deployments
+# In order to make things work as expected.
+build --define=DATABASE_URI=mongodb://localhost:27017,localhost:27018,localhost:27019
+build --define=REPLICA_SET=infra
+build --define=DATABASE_NAME=spica
+build --define=PUBLIC_HOST=http://localhost:4300
+build --define=PORT=4300
+build --define=PERSISTENT_PATH=/tmp #Very persistent!
+
+build:release --workspace_status_command="./tools/bazel_stamp_vars.sh"
+
+
+# Use phyton 2 instead of 3
+build --host_force_python=PY2
+run --host_force_python=PY2

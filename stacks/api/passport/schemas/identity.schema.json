@@ -1,0 +1,14 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "http://spica.internal/passport/identity",
+	"type": "object",
+	"title": "The identity schema",
+	"required": [ "identifier" ],
+	"properties": {
+		"identifier": {
+			"type": "string",
+			"title": "Identitifer of the identity"
+		}
+	},
+	"additionalProperties": true
+}

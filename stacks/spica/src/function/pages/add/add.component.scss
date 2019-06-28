@@ -1,0 +1,101 @@
+:host ::ng-deep {
+  .toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    .space-between {
+      flex: 1 1 auto;
+    }
+    h4 {
+      mat-icon,
+      span {
+        vertical-align: middle;
+        margin-left: 5px;
+      }
+    }
+  }
+  .toolbar-card {
+    margin: 30px;
+    margin-top: -110px;
+    // For proper border radius
+    overflow: hidden;
+  }
+
+  mat-card {
+    margin: 5%;
+    mat-card-header {
+      mat-card-title > * {
+        vertical-align: middle;
+      }
+    }
+
+    mat-card-content {
+      mat-form-field[description],
+      mat-form-field[name] {
+        width: 100%;
+      }
+      mat-divider {
+        left: 5% !important;
+        width: 90% !important;
+      }
+      .mat-list-item {
+        height: auto;
+        padding: 15px 0px;
+        .mat-list-item-content {
+          display: contents;
+        }
+      }
+      mat-list {
+        .editor {
+          .last-saved {
+            display: block;
+            text-align: right;
+            mat-hint {
+              height: 20px;
+              font-size: 12px;
+              text-align: right;
+              display: inline-block;
+            }
+            mat-progress-spinner {
+              display: inline-block;
+              vertical-align: middle;
+              margin-left: 5px;
+              transition: opacity 0.5s ease-in-out;
+            }
+          }
+        }
+        .run {
+          mat-expansion-panel {
+            mat-expansion-panel-header {
+              &[state="failed"] {
+                color: red;
+              }
+              &[state="succeeded"] {
+                color: green;
+              }
+              span {
+                margin-top: 3px;
+                padding-left: 3px;
+              }
+            }
+          }
+          .output {
+            mat-icon,
+            pre {
+              display: inline-block;
+              vertical-align: middle;
+            }
+          }
+        }
+        .triggers {
+          display: inline-table;
+          padding-bottom: 20px;
+          height: 80px;
+          mat-form-field {
+            margin-right: 20px;
+          }
+        }
+      }
+    }
+  }
+}

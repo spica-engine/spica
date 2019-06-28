@@ -1,0 +1,7 @@
+{
+  "dest": "../../../../dist/spica-client/material",
+  "lib": {
+    "entryFile": "src/public_api.ts"
+  },
+  "deleteDestPath": false
+}

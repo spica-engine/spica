@@ -1,0 +1,71 @@
+:host ::ng-deep {
+  position: relative;
+  display: block;
+  .pipe {
+    position: absolute;
+    z-index: 0;
+    background: var(--primary-200);
+    left: calc(50% - 2.5px);
+    top: 0;
+    width: 5px;
+    height: 100%;
+    border-radius: 20px;
+  }
+  > div:not(.pipe) {
+    padding: 10px 0px;
+    z-index: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition-duration: 0.3s;
+    cursor: pointer;
+
+    .history-select-button {
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      font-size: 11px;
+      background: var(--primary-500);
+      color: white;
+      transition-duration: 0.2s;
+    }
+
+    &:before {
+      content: "";
+      width: 25px;
+      height: 25px;
+      background: var(--primary-300);
+      position: absolute;
+      z-index: -1;
+      border-radius: 100%;
+    }
+    &:hover {
+      .history-select-button {
+        transform: scale(1.2);
+      }
+    }
+
+    &.active {
+      &:before {
+        width: 30px;
+        height: 30px;
+        background: var(--primary-300);
+      }
+      .history-select-button {
+        animation: beforeAnimation 0.3s;
+        @keyframes beforeAnimation {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.5);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+      }
+    }
+  }
+}

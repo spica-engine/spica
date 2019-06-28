@@ -1,0 +1,22 @@
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h4 {
+      mat-icon,
+      span {
+        vertical-align: middle;
+      }
+    }
+  }
+  mat-card {
+    margin: 30px;
+    margin-top: -150px;
+    // For proper border radius
+    overflow: hidden;
+  }
+  .hint-message {
+    margin-left: 10px;
+  }
+}

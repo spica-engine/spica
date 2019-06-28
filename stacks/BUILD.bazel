@@ -1,0 +1,56 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
+load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image")
+load("//tools/dgeni:index.bzl", "dgeni_api_docs")
+
+nodejs_binary(
+    name = "api_bin",
+    configuration_env_vars = [
+        "DATABASE_URI",
+        "DATABASE_NAME",
+        "REPLICA_SET",
+        "PUBLIC_HOST",
+        "PERSISTENT_PATH",
+        "PORT",
+    ],
+    data = ["//stacks/api"],
+    entry_point = "//stacks/api:main.ts",
+    node_modules = "@npm//:node_modules",
+)
+
+nodejs_image(
+    name = "api_image",
+    data = ["//stacks/api"],
+    entry_point = "//stacks/api:main.ts",
+    node_modules = "@npm//:node_modules",
+)
+
+container_image(
+    name = "spica_image",
+    base = "@nginx_image//image",
+    data_path = ".",
+    docker_run_flags = "-p 80:80",
+    files = [
+        "//:spica",
+        "//stacks/spica:nginx.conf",
+    ],
+    legacy_run_behavior = False,
+    symlinks = {
+        "/etc/nginx/nginx.conf": "/spica/nginx.conf",
+        "/usr/share/nginx/html": "/dist/spica",
+    },
+)
+
+# TODO(thesayyn): Activate this
+# dgeni_api_docs(
+#     name = "api-docs",
+#     srcs = [
+#         "//stacks/api/bucket:sources"
+#     ],
+#     entry_points = {
+#         "api": ["bucket"],
+#     },
+#     tags = ["docs-package"],
+# )

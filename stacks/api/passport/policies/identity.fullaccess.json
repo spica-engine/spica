@@ -1,0 +1,14 @@
+{
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "IdentityFullAccess",
+  "name": "Identity Full Access",
+  "description": "Full access to passport identity service.",
+  "statement": [
+    {
+      "effect": "allow",
+      "action": "passport:identity:*",
+      "resource": "passport:identity/*",
+      "service": "passport:identity"
+    }
+  ]
+}

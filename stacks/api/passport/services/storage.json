@@ -1,0 +1,13 @@
+{
+	"$schema": "http://spica.internal/passport/service",
+	"$id": "http://spica.internal/subscription",
+	"$resource": "storage",
+	"$arguments": "/:id",
+	"title": "Storage",
+	"actions": [
+		"storage:index",
+		"storage:show",
+		"storage:update",
+		"storage:delete"
+	]
+}

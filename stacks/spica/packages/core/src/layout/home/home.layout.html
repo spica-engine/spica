@@ -1,0 +1,55 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav
+    #drawer
+    class="sidenav"
+    fixedInViewport="true"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="!(isHandset$ | async)"
+  >
+    <mat-toolbar>
+      <h4 class="mat-h4">Spica</h4>
+    </mat-toolbar>
+
+    <mat-accordion displayMode="flat" multi="true">
+      <mat-expansion-panel
+        class="mat-elevation-z0"
+        *ngFor="let group of $routes | async"
+        [expanded]="group.value.length < 5"
+      >
+        <mat-expansion-panel-header expandedHeight="40px">
+          <mat-panel-title>{{ group.key }}</mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-nav-list role="list">
+          <mat-list-item
+            role="listitem"
+            *ngFor="let item of group.value"
+            routerLinkActive="active"
+            [routerLink]="item.path"
+          >
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <h4 class="mat-h4">{{ item.display }}</h4>
+          </mat-list-item>
+        </mat-nav-list>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </mat-sidenav>
+  <mat-sidenav-content class="primary-content">
+    <mat-toolbar color="primary" class="top-toolbar">
+      <button
+        type="button"
+        aria-label="Toggle sidenav"
+        mat-icon-button
+        (click)="drawer.toggle()"
+        *ngIf="isHandset$ | async"
+      >
+        <mat-icon aria-label="Side nav toggle icon">sort</mat-icon>
+      </button>
+      <span class="fill-between"></span>
+      <span class="custom-action" *ngFor="let component of components">
+        <ng-container *ngComponentOutlet="component"></ng-container>
+      </span>
+    </mat-toolbar>
+    <div slot="content"></div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

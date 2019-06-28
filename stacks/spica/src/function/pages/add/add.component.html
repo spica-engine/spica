@@ -1,0 +1,185 @@
+<mat-toolbar *ngIf="!function._id" class="toolbar" color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>functions_outline</mat-icon>
+    <span>New Function</span>
+  </h4>
+  <span class="space-between"></span>
+</mat-toolbar>
+
+<ng-template #toolbar>
+  <mat-toolbar color="primary">
+    <h4 class="mat-h4">
+      <mat-icon>functions</mat-icon>
+      <span>{{ function.name }}</span>
+    </h4>
+  </mat-toolbar>
+</ng-template>
+
+<mat-card [ngClass]="{'toolbar-card': !function._id}" class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-list>
+      <mat-list-item>
+        <mat-form-field name>
+          <input matInput placeholder="Name" [(ngModel)]="function.name" required />
+        </mat-form-field>
+        <mat-form-field description>
+          <textarea
+            matInput
+            placeholder="Description"
+            [(ngModel)]="function.description"
+            required
+          ></textarea>
+        </mat-form-field>
+      </mat-list-item>
+      <mat-divider></mat-divider>
+      <ng-container *ngIf="$run | async; let run">
+        <mat-list-item class="run">
+          <mat-expansion-panel class="mat-elevation-z0" [expanded]="run.state == 'running'">
+            <mat-expansion-panel-header [attr.state]="run.state">
+              <mat-icon *ngIf="run.state == 'succeeded' || run.state == 'failed'">
+                {{ run.state == "failed" ? "error" : "check_circle" }}
+              </mat-icon>
+              <mat-spinner *ngIf="run.state == 'running'" [diameter]="20"></mat-spinner>
+              <span> {{ run.state | titlecase }}</span>
+            </mat-expansion-panel-header>
+            <div class="output" *ngFor="let log of run.logs">
+              <mat-icon [style.color]="logLevelMapping[log.level]?.color"
+                >{{ logLevelMapping[log.level]?.icon }}
+              </mat-icon>
+              <pre>{{ log.message }}</pre>
+            </div>
+          </mat-expansion-panel>
+        </mat-list-item>
+        <mat-divider></mat-divider>
+      </ng-container>
+
+      <mat-list-item class="editor">
+        <div class="last-saved">
+          <mat-hint *ngIf="lastSaved"> Last saved: {{ lastSaved | date: "mediumTime" }} </mat-hint>
+          <mat-progress-spinner
+            [style.opacity]="isSaving ? 1 : 0"
+            color="primary"
+            mode="indeterminate"
+            [diameter]="18"
+          >
+          </mat-progress-spinner>
+        </div>
+
+        <function-editor
+          language
+          (save)="updateIndex()"
+          (run)="run($event)"
+          [(ngModel)]="index"
+          [options]="editorOptions"
+        >
+        </function-editor>
+      </mat-list-item>
+      <mat-divider></mat-divider>
+      <h4 mat-subheader>
+        <mat-icon>swap_horiz</mat-icon> Triggers
+        <button mat-icon-button matTooltip="Multiple trigger support is coming soon!">
+          <mat-icon>add</mat-icon>
+        </button>
+      </h4>
+      <mat-list-item class="trigger" *ngFor="let trigger of function.triggers | keyvalue">
+        <mat-form-field>
+          <mat-label>Handler</mat-label>
+          <mat-select [disabled]="true" value="trigger.key">
+            <mat-option value="trigger.key">{{ trigger.key }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <ng-container *ngIf="triggers | async; let triggers">
+          <mat-form-field>
+            <mat-label>Type</mat-label>
+            <mat-select
+              [(ngModel)]="trigger.value.type"
+              (ngModelChange)="trigger.value.options = {}"
+            >
+              <mat-option *ngFor="let triggerPair of triggers | keyvalue" [value]="triggerPair.key">
+                {{ triggerPair.value?.title || triggerPair.key }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <span
+            *ngFor="let propertyPair of triggers[trigger.value.type]?.properties | keyvalue"
+            [inputPlacer]="propertyPair.value"
+            [(ngModel)]="trigger.value.options[propertyPair.key]"
+            [name]="propertyPair.key"
+          >
+          </span>
+        </ng-container>
+      </mat-list-item>
+
+      <ng-container *ngIf="function?._id" class="dependencies">
+        <mat-divider></mat-divider>
+        <h4 mat-subheader><mat-icon>layers</mat-icon> Dependencies</h4>
+        <mat-list-item
+          class="dependency"
+          *ngFor="let data of dependencies | async | keyvalue; let index = index"
+        >
+          <span class="name">{{ data.key }}</span>
+          <span class="version">{{ data.value }}</span>
+          <button mat-icon-button class="delete" (click)="deleteDependency(index)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-list-item>
+
+        <mat-list-item>
+          <mat-form-field>
+            <input
+              matInput
+              ngModel
+              #dependencyModel="ngModel"
+              (keyup.enter)="addDependency(dependencyModel.value); dependencyModel.reset()"
+              required
+              placeholder="Dependency Name"
+            />
+
+            <mat-error *ngIf="dependencyModel?.errors?.required">This field is required.</mat-error>
+            <mat-progress-spinner
+              *ngIf="dependencyInstallPending"
+              matSuffix
+              diameter="25"
+              mode="indeterminate"
+            >
+            </mat-progress-spinner>
+          </mat-form-field>
+
+          <button
+            mat-icon-button
+            (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
+            [disabled]="dependencyModel.invalid"
+          >
+            <mat-icon>add</mat-icon> Add
+          </button>
+        </mat-list-item>
+      </ng-container>
+
+      <mat-divider></mat-divider>
+      <h4 mat-subheader>
+        <mat-icon>wrap_text</mat-icon> Environment Variables
+        <button mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
+          <mat-icon>add</mat-icon>
+        </button>
+      </h4>
+      <mat-list-item environment *ngFor="let env of function.env; let index = index">
+        <mat-form-field>
+          <input matInput placeholder="Name" [(ngModel)]="env.name" />
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Value" [(ngModel)]="env.value" />
+        </mat-form-field>
+        <button mat-icon-button color="warn" (click)="removeVariable(index)">
+          <mat-icon>remove</mat-icon>
+        </button>
+      </mat-list-item>
+    </mat-list>
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-button canInteract="function:update" (click)="save()">
+      <mat-icon>sync</mat-icon> Save
+    </button>
+  </mat-card-actions>
+</mat-card>

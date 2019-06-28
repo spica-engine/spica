@@ -1,0 +1,72 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "http://spica.internal/passport/policy",
+	"type": "object",
+	"title": "Passport policy",
+	"additionalProperties": false,
+	"required": [
+		"name",
+		"description",
+		"statement"
+	],
+	"properties": {
+		"name": {
+			"type": "string",
+			"title": "Name of the policy"
+		},
+		"description": {
+			"type": "string",
+			"title": "Description of the policy"
+		},
+		"statement": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": [
+					"effect",
+					"action",
+					"resource"
+				],
+				"properties": {
+					"effect": {
+						"type": "string",
+						"title": "Allow or deny the statement",
+						"enum": [
+							"allow",
+							"deny"
+						],
+						"default": "allow"
+					},
+					"action": {
+						"title": "The Action Schema",
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							}
+						]
+					},
+					"resource": {
+						"title": "The Resource Schema",
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "array",
+								"items": {
+									"type": "string"
+								}
+							}
+						]
+					}
+				}
+			}
+		}
+	}
+}

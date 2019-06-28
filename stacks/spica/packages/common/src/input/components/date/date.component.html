@@ -1,0 +1,15 @@
+<mat-form-field>
+  <mat-label>{{ schema.title }}</mat-label>
+  <input
+    matInput
+    type="datetime"
+    [matDatepicker]="picker"
+    [(ngModel)]="_value"
+    (ngModelChange)="callOnChange()"
+    (focus)="picker.open()"
+    [disabled]="_disabled"
+  />
+  <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="_disabled"></mat-datepicker-toggle>
+  <mat-datepicker #picker></mat-datepicker>
+  <mat-hint>{{ schema.description }}</mat-hint>
+</mat-form-field>

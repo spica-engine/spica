@@ -1,0 +1,4 @@
+<mat-slide-toggle [disabled]="disabled" [(ngModel)]="value" (ngModelChange)="callOnChange()">{{
+  schema.title
+}}</mat-slide-toggle>
+<mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>

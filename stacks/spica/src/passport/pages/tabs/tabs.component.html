@@ -1,0 +1,50 @@
+<mat-toolbar color="primary">
+  <ng-container *ngTemplateOutlet="outlet?.component?.toolbar"></ng-container>
+  <mat-toolbar-row>
+    <nav mat-tab-nav-bar color="accent">
+      <a
+        mat-tab-link
+        routerLink="identity"
+        routerLinkActive
+        #rlaIdentity="routerLinkActive"
+        [active]="rlaIdentity.isActive"
+      >
+        <mat-icon>account_circle</mat-icon>
+        Identities
+      </a>
+
+      <a
+        mat-tab-link
+        routerLink="policy"
+        routerLinkActive
+        #rlaPolicy="routerLinkActive"
+        [active]="rlaPolicy.isActive"
+      >
+        <mat-icon>layers</mat-icon>
+        Policies
+      </a>
+
+      <a
+        mat-tab-link
+        routerLink="settings"
+        routerLinkActive
+        #rlaSetting="routerLinkActive"
+        [active]="rlaSetting.isActive"
+      >
+        <mat-icon>settings</mat-icon>
+        Settings
+      </a>
+      <a
+        mat-tab-link
+        routerLink="strategies"
+        routerLinkActive
+        #rlaStrategies="routerLinkActive"
+        [active]="rlaStrategies.isActive"
+      >
+        <mat-icon>linear_scale</mat-icon>
+        Strategies
+      </a>
+    </nav>
+  </mat-toolbar-row>
+</mat-toolbar>
+<router-outlet #outlet="outlet"></router-outlet>

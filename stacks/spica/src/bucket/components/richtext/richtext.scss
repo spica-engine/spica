@@ -1,0 +1,42 @@
+$border-color: rgba(0, 0, 0, 0.42);
+
+:host {
+  padding: 5px 0px;
+  /deep/ {
+    &[fullscreen="true"] {
+      z-index: 10;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      .ui-editor-container,
+      .ui-editor-content {
+        height: 100% !important;
+      }
+    }
+    .ui-editor-container {
+      background: var(--primary-50);
+      border-radius: 5px;
+      .ui-editor-toolbar {
+        .custom-fullscreen {
+          font-size: 1.5rem;
+          outline: 0;
+          margin: 0;
+          padding: 0;
+          line-height: 1.5rem;
+          font-weight: bolder;
+        }
+        border: none;
+        background: none;
+        border-bottom: 1px solid $border-color;
+        border-radius: 0;
+      }
+
+      .ui-editor-content {
+        border: 0;
+      }
+    }
+  }
+}

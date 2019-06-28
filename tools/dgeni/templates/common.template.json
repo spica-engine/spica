@@ -1,0 +1,4 @@
+{
+    "type": "{$ doc.docType $}",
+    "displayName": "{$ doc.displayName $}"
+}

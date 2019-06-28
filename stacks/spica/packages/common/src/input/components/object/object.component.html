@@ -1,0 +1,15 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>{{ schema.title }}</mat-card-title>
+    <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content properties>
+    <span
+      *ngFor="let property of schema.properties | keyvalue"
+      [inputPlacer]="property.value"
+      [(ngModel)]="_value[property.key]"
+      (ngModelChange)="callOnChange()"
+      [disabled]="_disabled"
+    ></span>
+  </mat-card-content>
+</mat-card>

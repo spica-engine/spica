@@ -1,0 +1,30 @@
+:host {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-flow: column;
+  svg {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 15px;
+  }
+  mat-card {
+    width: 357px;
+    mat-card-content {
+      margin-top: 26px;
+      form {
+        mat-form-field {
+          width: 100%;
+        }
+      }
+    }
+    mat-card-actions {
+      display: flex;
+      .space-between {
+        flex: 1 1 auto;
+      }
+    }
+  }
+}

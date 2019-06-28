@@ -1,0 +1,14 @@
+{
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "StorageFullAccess",
+  "name": "Storage Full Access",
+  "description": "Full access to storage service.",
+  "statement": [
+    {
+      "effect": "allow",
+      "action": "storage:*",
+      "resource": "storage/*",
+      "service": "storage"
+    }
+  ]
+}

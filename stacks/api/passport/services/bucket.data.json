@@ -1,0 +1,13 @@
+{
+	"$schema": "http://spica.internal/passport/service",
+	"$id": "http://spica.internal/bucket/data",
+	"$resource": "bucket:data",
+	"$arguments": "/:id",
+	"title": "Bucket Data Service",
+	"actions": [
+		"bucket:data:index",
+		"bucket:data:show",
+		"bucket:data:delete",
+		"bucket:data:update"
+	]
+}

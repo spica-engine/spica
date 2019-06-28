@@ -1,0 +1,69 @@
+<mat-toolbar color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>http</mat-icon>
+    <span>{{ subscription._id || "New Subscription" }}</span>
+  </h4>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <form #form="ngForm">
+      <mat-list>
+        <mat-list-item>
+          <mat-form-field class="url">
+            <input
+              matInput
+              type="url"
+              name="url"
+              placeholder="Url"
+              #urlModel="ngModel"
+              [(ngModel)]="subscription.url"
+              required
+              pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?|^((http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+            />
+            <mat-hint>
+              When this subscription triggered, Spica will send a POST request to the URL above.
+            </mat-hint>
+            <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
+            <mat-error *ngIf="urlModel.errors?.required">Url is required.</mat-error>
+          </mat-form-field>
+        </mat-list-item>
+        <h4 mat-subheader>
+          Trigger
+        </h4>
+        <mat-list-item *ngIf="triggers | async; let triggers">
+          <mat-form-field type>
+            <mat-label>Type</mat-label>
+            <mat-select
+              name="type"
+              [(ngModel)]="subscription.trigger.type"
+              #typeModel="ngModel"
+              required
+            >
+              <mat-option
+                option
+                *ngFor="let triggerPair of triggers | keyvalue"
+                [value]="triggerPair.key"
+              >
+                {{ triggerPair.value?.title || triggerPair.key }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="typeModel.errors?.required">Type is required.</mat-error>
+          </mat-form-field>
+
+          <span
+            class="trigger-property"
+            *ngFor="let propertyPair of triggers[subscription.trigger.type]?.properties | keyvalue"
+            [inputPlacer]="propertyPair.value"
+            [(ngModel)]="subscription.trigger.options[propertyPair.key]"
+            [name]="propertyPair.key"
+          ></span>
+        </mat-list-item>
+      </mat-list>
+    </form>
+  </mat-card-content>
+  <mat-card-actions>
+    <button canInteract="subscription:update" mat-button [disabled]="form.invalid" (click)="add()">
+      <mat-icon>sync</mat-icon> Save
+    </button>
+  </mat-card-actions>
+</mat-card>

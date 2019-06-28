@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/bucket/schema",
+  "type": "object",
+  "title": "The Bucket Core Schema",
+  "description": "This schema used for validating bucket schemas.",
+  "$comment": "This schema still in draft state. Probably there is a lot optimization that we can make on this schema.",
+  "required": ["title", "description", "properties"],
+  "properties": {
+    "_id": {
+      "type": "string",
+      "title": "The _id Schema",
+      "description": "If you pass an existing bucket id your schema will be replaced with it.",
+      "examples": ["5cdd1222af4b96e97b3d7e91"],
+      "format": "bucketid"
+    },
+    "title": {
+      "type": "string",
+      "title": "Title of the bucket",
+      "description": "Title will appear within the related bucket pages.",
+      "examples": ["New bucket"],
+      "maxLength": 15,
+      "minLength": 4
+    },
+    "description": {
+      "type": "string",
+      "title": "Description of the bucket",
+      "description": "Description will appear within the related bucket pages.",
+      "examples": ["This bucket will dominate the content world!"],
+      "minLength": 5,
+      "maxLength": 250
+    },
+    "icon": {
+      "type": "string",
+      "title": "The icon of the bucket",
+      "description": "The icon will used to represent the bucket whereever representing the bucket wouldn't be possible with title.",
+      "default": "view_stream",
+      "examples": ["offline_bolt"]
+    },
+    "primary": {
+      "type": "string",
+      "description": "Specify the primary property of the bucket.",
+      "examples": ["title"]
+    },
+    "required": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "properties": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          { "$ref": "http://json-schema.org/draft-07/schema#" },
+          { "$ref": "http://spica.internal/bucket/schema/property-options"}
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,20 @@
+{
+	"$schema": "http://spica.internal/passport/policy",
+	"_id": "BucketFullAccess",
+	"name": "Bucket Full Access",
+	"description": "Full access to bucket service.",
+	"statement": [
+		{
+			"effect": "allow",
+			"action": "bucket:*",
+			"resource": "bucket/*",
+			"service": "bucket"
+		},
+		{
+			"effect": "allow",
+			"action": "bucket:data:*",
+			"resource": "bucket:data/*",
+			"service": "bucket:data"
+		}
+	]
+}

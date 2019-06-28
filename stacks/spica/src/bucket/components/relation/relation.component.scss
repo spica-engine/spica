@@ -1,0 +1,29 @@
+::ng-deep {
+  .relationPicker {
+    max-width: unset !important;
+    mat-header-row,
+    mat-row {
+      mat-header-cell,
+      mat-cell {
+        &:first-of-type,
+        &:nth-of-type(2) {
+          flex: 5;
+        }
+        &:last-of-type {
+          flex: 1;
+          button[mat-icon-button].selected {
+            color: #009688;
+            font-size: 20px;
+          }
+        }
+      }
+    }
+  }
+}
+
+:host {
+  display: inline-block;
+  border-bottom: 1px solid var(--primary-500);
+  padding-left: 1.3em !important;
+  padding-right: 1.3em !important;
+}

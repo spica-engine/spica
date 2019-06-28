@@ -1,0 +1,46 @@
+<span title>{{ schema.title }}</span>
+
+<button *ngIf="!($row | async)" mat-button [matMenuTriggerFor]="selector">
+  <mat-icon>{{ ($meta | async)?.icon }}</mat-icon> Select a
+  {{ ($meta | async)?.title }}
+</button>
+
+<ng-container *ngIf="$row | async; let $row">
+  <ng-container *ngIf="$meta | async; let $meta">
+    {{ $meta.primary }}:
+    {{ $row[$meta.primary] }}
+    <button mat-icon-button [matMenuTriggerFor]="selector">
+      <mat-icon>edit</mat-icon>
+    </button>
+  </ng-container>
+</ng-container>
+
+<mat-menu #selector overlapTrigger="false" classList="relationPicker">
+  <mat-table [dataSource]="$data" (click)="$event.stopPropagation()">
+    <ng-container
+      *ngFor="let input of ($meta | async)?.properties | keyvalue"
+      [matColumnDef]="input.key"
+    >
+      <mat-header-cell *matHeaderCellDef>
+        {{ input.value.title }}
+      </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{ row[input.key] }} </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <button mat-icon-button (click)="_selectRow(row)" [class.selected]="row._id == value">
+          <mat-icon>check</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+    <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedProperties"></mat-row>
+  </mat-table>
+  <mat-paginator
+    (click)="$event.stopPropagation()"
+    [length]="100"
+    [pageSize]="10"
+    [pageSizeOptions]="[5, 10, 25, 100]"
+  ></mat-paginator>
+</mat-menu>

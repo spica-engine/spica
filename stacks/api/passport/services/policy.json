@@ -1,0 +1,12 @@
+{
+	"$schema": "http://spica.internal/passport/service",
+	"$id": "http://spica.internal/passport/identity",
+	"$resource": "passport:policy",
+	"title": "Passport Policy",
+	"actions": [
+		"passport:policy:show",
+		"passport:policy:update",
+		"passport:policy:delete",
+		"passport:policy:index"
+	]
+}

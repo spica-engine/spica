@@ -1,0 +1,14 @@
+{
+	"$schema": "http://spica.internal/passport/service",
+	"$id": "http://spica.internal/function",
+	"$resource": "function",
+	"$arguments": "/:id",
+	"title": "Functions",
+	"actions": [
+		"function:create",
+		"function:update",
+		"function:delete",
+		"function:index",
+		"function:run"
+	]
+}

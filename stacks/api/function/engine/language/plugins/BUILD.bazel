@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+
+ts_library(
+    name = "plugins",
+    srcs = [
+        "declarations.ts",
+        "filter-native.ts",
+    ],
+    deps = [
+        "@npm//@types/node",
+        "@npm//fast-glob",
+        "@npm//typescript",
+    ],
+)

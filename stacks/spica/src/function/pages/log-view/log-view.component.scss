@@ -1,0 +1,69 @@
+:host {
+  mat-toolbar {
+    .space-between {
+      flex: 1 1 auto;
+    }
+  }
+  mat-card {
+    overflow: hidden;
+    margin: 5%;
+  }
+
+  table {
+    width: 100%;
+    tr.log-row {
+      th.mat-header-cell {
+        padding: 0 20px;
+        div {
+          justify-content: center;
+        }
+        &:first-of-type {
+          min-width: 130px;
+        }
+        &:nth-of-type(2) {
+          min-width: 60px;
+        }
+        &:nth-of-type(3) {
+          min-width: 185px;
+          text-align: center;
+          justify-content: center;
+        }
+        &:last-of-type {
+          width: 100%;
+          div {
+            justify-content: end;
+          }
+        }
+      }
+
+      td.mat-cell {
+        border-bottom-width: 0;
+        cursor: pointer;
+        &:not(:last-of-type) {
+          text-align: center;
+        }
+        &:first-of-type {
+          text-align: left;
+          font-weight: bold;
+        }
+        &:last-of-type {
+          max-width: 330px;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    tr.detail-row {
+      height: 0;
+      .element-detail {
+        overflow: hidden;
+        display: flex;
+        span {
+          padding: 24px 0;
+        }
+      }
+    }
+  }
+}

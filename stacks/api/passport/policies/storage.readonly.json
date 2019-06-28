@@ -1,0 +1,14 @@
+{
+	"$schema": "http://spica.internal/passport/policy",
+	"_id": "StorageReadOnlyAccess",
+	"name": "Storage Read Only Access",
+	"description": "Read only access to storage service.",
+	"statement": [
+		{
+			"effect": "allow",
+			"action": "storage:index",
+			"resource": "storage/*",
+			"service": "storage"
+		}
+	]
+}

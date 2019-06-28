@@ -1,0 +1,34 @@
+:host {
+  height: 100%;
+  display: block;
+  .storage-view {
+    max-height: 100%;
+    display: flex !important;
+    /deep/ {
+      img,
+      .unkown-file,
+      video {
+        max-height: unset;
+        min-height: unset;
+        max-width: 100%;
+        margin: 0;
+        object-fit: contain;
+      }
+    }
+  }
+  .close-window {
+    display: table;
+    position: absolute;
+    top: 0;
+    right: 0;
+    button {
+      color: #f44336;
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      .mat-icon {
+        font-size: 22px;
+      }
+    }
+  }
+}

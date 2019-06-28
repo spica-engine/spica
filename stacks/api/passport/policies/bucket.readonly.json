@@ -1,0 +1,26 @@
+{
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "BucketReadOnlyAccess",
+  "name": "Bucket Read Only Access",
+  "description": "Read only access to bucket service.",
+  "statement": [
+    {
+      "effect": "allow",
+      "action": [
+        "bucket:index",
+        "bucket:show"
+      ],
+      "resource": "bucket/*",
+      "service": "bucket"
+    },
+    {
+      "effect": "allow",
+      "action": [
+        "bucket:data:index",
+        "bucket:data:show"
+      ],
+      "resource": "bucket:data/*",
+      "service": "bucket:data"
+    }
+  ]
+}

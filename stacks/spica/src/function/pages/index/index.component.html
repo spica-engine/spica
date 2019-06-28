@@ -1,0 +1,73 @@
+<mat-toolbar color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>functions</mat-icon>
+    <span>Functions</span>
+  </h4>
+  <span class="space-between"></span>
+  <button mat-icon-button>
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button canInteract="function:create" mat-icon-button routerLink="add">
+    <mat-icon>add</mat-icon>
+  </button>
+</mat-toolbar>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-table [dataSource]="$data">
+      <ng-container matColumnDef="_id">
+        <mat-header-cell class="id-header" *matHeaderCellDef> # </mat-header-cell>
+        <mat-cell class="id-content" *matCellDef="let element">{{ element._id }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <mat-header-cell class="name-header" *matHeaderCellDef> Name </mat-header-cell>
+        <mat-cell class="name-content" *matCellDef="let element">{{ element.name }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="description">
+        <mat-header-cell class="description-header" *matHeaderCellDef>
+          Description
+        </mat-header-cell>
+        <mat-cell class="description-content" *matCellDef="let element">{{
+          element.description
+        }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell class="actions-content" *matCellDef="let element">
+          <button
+            canInteract="function:show"
+            mat-icon-button
+            [routerLink]="element._id"
+            matTooltip="Edit"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button [routerLink]="element._id + '/logs'" matTooltip="Logs">
+            <mat-icon>bug_report</mat-icon>
+          </button>
+          <button
+            canInteract="function:delete"
+            mat-icon-button
+            (click)="delete(element._id)"
+            color="warn"
+            matTooltip="Delete"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+  </mat-card-content>
+
+  <mat-card-footer>
+    <mat-paginator #paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </mat-card-footer>
+</mat-card>
+
+<ng-template #changeStatus let-answer="answer">
+  <p>This action will change the status of the user.</p>
+  <p>Please type "{{ answer }}" to confirm.</p>
+</ng-template>

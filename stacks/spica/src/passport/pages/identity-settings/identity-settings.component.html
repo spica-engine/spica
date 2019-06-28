@@ -1,0 +1,75 @@
+<ng-template #toolbar>
+  <mat-toolbar-row>
+    <h4>
+      <mat-icon>settings</mat-icon>
+      <span>Settings</span>
+    </h4>
+  </mat-toolbar-row>
+</ng-template>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content *ngIf="preferences">
+    <mat-hint>Custom Attributes</mat-hint>
+    <div class="field-container">
+      <div class="left">
+        <div
+          class="field-box"
+          [class.selected-property]="selectedInput == index"
+          *ngFor="let attribute of preferences.identity.custom_attributes; let index = index"
+        >
+          <div class="click" (click)="selectedInput = index"></div>
+          <div>
+            <button
+              delete
+              mat-icon-button
+              color="warn"
+              (click)="selectedInput = null; removeAttribute(index)"
+            >
+              <mat-icon> delete </mat-icon>
+            </button>
+          </div>
+          <div class="title" matTooltip="{{ attribute.name }}">
+            {{ attribute.name }}
+          </div>
+          <div class="action">
+            <button edit disabled mat-icon-button>
+              <mat-icon>edit</mat-icon>
+            </button>
+          </div>
+        </div>
+        <div class="field-box add-new">
+          <button mat-icon-button (click)="addAttribute()">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="right">
+        <form ngForm>
+          <div
+            field
+            ngModelGroup="fields"
+            *ngIf="selectedInput != null || selectedInput != undefined"
+          >
+            <h6 class="mat-h5 settings-field-text">Settings of Field</h6>
+            <div class="field-settings">
+              <span
+                [inputSchemaPlacer]="
+                  preferences.identity.custom_attributes[selectedInput].schema.type
+                "
+                [name]="preferences.identity.custom_attributes[selectedInput].name"
+                [ngModel]="preferences.identity.custom_attributes[selectedInput].schema"
+                (ngModelChange)="slugifyAttributeTitle($event, selectedInput)"
+                class="currentInputField"
+              ></span>
+              <mat-hint>
+                Will be shown as "{{ preferences.identity.custom_attributes[selectedInput].name }}"
+              </mat-hint>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-button (click)="saveSettings()"><mat-icon>save</mat-icon> Save</button>
+  </mat-card-actions>
+</mat-card>

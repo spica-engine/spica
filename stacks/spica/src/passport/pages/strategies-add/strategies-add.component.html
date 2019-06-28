@@ -1,0 +1,111 @@
+<ng-template #toolbar>
+  <mat-toolbar color="primary">
+    <h4 class="mat-h4">
+      <button
+        mat-icon-button
+        menu-icon
+        matTooltip="You can select a icon by clicking here."
+        [matMenuTriggerFor]="iconSelector"
+      >
+        <mat-icon>{{ strategy?.icon }}</mat-icon>
+        <mat-menu #iconSelector="matMenu">
+          <ng-container matMenuContent>
+            <button
+              *ngFor="let icon of visibleIcons"
+              mat-icon-button
+              [matTooltip]="icon"
+              (click)="strategy.icon = icon"
+            >
+              <mat-icon>{{ icon }}</mat-icon>
+            </button>
+            <mat-paginator
+              (page)="
+                this.visibleIcons = this.icons.slice(
+                  $event.pageIndex * $event.pageSize,
+                  ($event.pageIndex + 1) * $event.pageSize
+                )
+              "
+              (click)="$event.stopPropagation()"
+              [length]="icons.length"
+              [pageSize]="iconPageSize"
+            >
+            </mat-paginator>
+          </ng-container>
+        </mat-menu>
+      </button>
+      <span>{{ strategy.name || "Add Strategy" }}</span>
+    </h4>
+    <span class="space-between"></span>
+  </mat-toolbar>
+</ng-template>
+
+<mat-card>
+  <mat-card-content>
+    <mat-form-field>
+      <input matInput placeholder="Name" [(ngModel)]="strategy.name" required />
+    </mat-form-field>
+    <mat-form-field>
+      <input matInput placeholder="Type" [(ngModel)]="strategy.type" required />
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        matInput
+        placeholder="Login Url"
+        [(ngModel)]="strategy['options'].ip.login_url"
+        required
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        matInput
+        placeholder="Logout Url"
+        [(ngModel)]="strategy['options'].ip.logout_url"
+        required
+      />
+    </mat-form-field>
+    <mat-form-field>
+      <textarea
+        matInput
+        placeholder="Certificate"
+        [(ngModel)]="strategy['options'].ip.certificate"
+        required
+      ></textarea>
+    </mat-form-field>
+    <mat-accordion *ngIf="strategy['options'].sp">
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Service Provider Info
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-form-field>
+          <textarea
+            matInput
+            placeholder="Service Provider Certificate"
+            disabled
+            [(ngModel)]="strategy['options'].sp.certificate"
+            required
+          ></textarea>
+        </mat-form-field>
+        <mat-form-field>
+          <textarea
+            matInput
+            placeholder="Service Provider Private Key"
+            disabled
+            [(ngModel)]="strategy['options'].sp.private_key"
+            required
+          ></textarea>
+        </mat-form-field>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <button
+      canInteract="strategy:update"
+      mat-button
+      color="primary"
+      type="submit"
+      (click)="submitForm()"
+    >
+      Save strategy
+    </button>
+  </mat-card-content>
+</mat-card>

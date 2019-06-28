@@ -1,0 +1,46 @@
+<div *ngFor="let property of schema.properties | keyvalue">
+  <span
+    [name]="property.key"
+    [inputSchemaPlacer]="schema.properties[property.key]['type']"
+    [(ngModel)]="schema.properties[property.key]"
+  >
+    <button mat-icon-button (click)="removeProperty(property.key)">
+      <mat-icon>remove</mat-icon>
+    </button>
+  </span>
+</div>
+
+<mat-form-field>
+  <input
+    matInput
+    name="fieldname"
+    placeholder="Enter a field name"
+    #propertyNameModel="ngModel"
+    ngModel
+    (keyup.enter)="
+      !!schema.properties[propertyNameModel.value.toLowerCase()] &&
+        propertyNameModel.valid &&
+        addProperty(propertyNameModel.value);
+      propertyNameModel.reset();
+      propertyNameModel.control.markAsUntouched()
+    "
+    required
+  />
+  <mat-hint>
+    Once it is set, can't be changed in the future.
+  </mat-hint>
+  <mat-error *ngIf="propertyNameModel?.errors?.required">Property name is required.</mat-error>
+</mat-form-field>
+<button
+  mat-button
+  [disabled]="
+    !!schema.properties[propertyNameModel.value?.toLowerCase()] || propertyNameModel.invalid
+  "
+  (click)="
+    addProperty(propertyNameModel.value);
+    propertyNameModel.reset();
+    propertyNameModel.control.markAsUntouched()
+  "
+>
+  <mat-icon>add</mat-icon> Add new property
+</button>

@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://spica.internal/bucket/schema/property-options",
+    "type": "object",
+    "properties": {
+        "options": {
+            "type": "object",
+            "title": "Property configuration",
+            "description": "View and history options of this property",
+            "properties": {
+                "visible": {
+                    "type": "boolean",
+                    "title": "Visible",
+                    "description": "If true, this property will be shown by default when listing datas in list."
+                },
+                "translate": {
+                    "type": "boolean",
+                    "title": "Translate",
+                    "description": "If true, this property can be translated to other languages that defined by the system."
+                },
+                "history": {
+                    "type": "boolean",
+                    "title": "History",
+                    "description": "If true, change history of this property will be stored in database."
+                },
+                "position": {
+                    "type": "string",
+                    "title": "Position",
+                    "description": "Speicfy the position of this property.",
+                    "enum": [
+                        "left",
+                        "right",
+                        "bottom"
+                    ]
+                }
+            }
+        }
+    }
+}

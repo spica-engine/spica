@@ -1,0 +1,30 @@
+:host /deep/ {
+  mat-toolbar {
+    align-items: flex-end;
+    .space-between {
+      flex: 1 1 auto;
+    }
+    h4 {
+      mat-icon,
+      span {
+        margin-left: 5px;
+        vertical-align: middle;
+      }
+    }
+  }
+  mat-toolbar-row:last-of-type {
+    height: auto;
+    .mat-tab-link {
+      color: inherit;
+      mat-icon {
+        vertical-align: middle;
+        margin-right: 2px;
+      }
+    }
+  }
+
+  mat-card:first-of-type {
+    margin: 30px;
+    overflow: hidden;
+  }
+}

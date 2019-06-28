@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "noUnusedParameters": true,
+        "noUnusedLocals": true,
+        "lib": [
+            "es2015",
+            "dom",
+            "es2016.array.include"
+        ],
+        "moduleResolution": "node",
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "noImplicitThis": true,
+        "noImplicitAny": true,
+        "types": [
+            "node"
+        ]
+    }
+}

@@ -1,0 +1,66 @@
+<ng-template #toolbar>
+  <mat-toolbar-row>
+    <h4>
+      <mat-icon>layers</mat-icon>
+      <span>Identities</span>
+    </h4>
+    <span class="space-between"></span>
+    <button mat-icon-button>
+      <mat-icon>refresh</mat-icon>
+    </button>
+    <button mat-icon-button routerLink="/passport/identity/add">
+      <mat-icon>add</mat-icon>
+    </button>
+  </mat-toolbar-row>
+</ng-template>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-table [dataSource]="identities$">
+      <ng-container matColumnDef="_id">
+        <mat-header-cell class="id-header" *matHeaderCellDef> # </mat-header-cell>
+        <mat-cell class="id-content" *matCellDef="let element">{{ element._id }}</mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="identifier">
+        <mat-header-cell class="identifier-header" *matHeaderCellDef>Identifier</mat-header-cell>
+        <mat-cell class="identifier-content" *matCellDef="let element">{{
+          element.identifier
+        }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell class="actions-content" *matCellDef="let element">
+          <button mat-icon-button [routerLink]="element._id + '/edit'">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            [canInteract]="'passport:identity:delete'"
+            mat-icon-button
+            color="warn"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: 'yes'
+            }"
+            (confirm)="delete(element._id)"
+            *ngIf="element.system !== true"
+          >
+            <mat-icon delete-button>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+  </mat-card-content>
+
+  <mat-card-footer>
+    <mat-paginator #paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </mat-card-footer>
+</mat-card>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will delete the user.</p>
+  <p>Please type {{ answer }} to confirm.</p>
+</ng-template>

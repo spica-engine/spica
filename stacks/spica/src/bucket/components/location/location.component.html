@@ -1,0 +1,33 @@
+<mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+<div class="input-group">
+  <mat-form-field>
+    <mat-label>Latitude</mat-label>
+    <input
+      matInput
+      type="number"
+      aria-controls="none"
+      [disabled]="_disabled"
+      [(ngModel)]="value['lat']"
+      (ngModelChange)="callOnChange(); applyCoords()"
+    />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Longitude</mat-label>
+    <input
+      matInput
+      type="number"
+      [disabled]="_disabled"
+      [(ngModel)]="value['long']"
+      (ngModelChange)="callOnChange(); applyCoords()"
+    />
+  </mat-form-field>
+</div>
+<div
+  style="height: 300px;"
+  leaflet
+  (leafletClick)="applyCoords($event.latlng); callOnChange()"
+  [leafletCenter]="_center"
+  [leafletOptions]="_options"
+>
+  <div [leafletLayer]="_marker"></div>
+</div>

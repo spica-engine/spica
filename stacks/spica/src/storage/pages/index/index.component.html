@@ -1,0 +1,112 @@
+<mat-toolbar color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>filter_drama</mat-icon>
+    <span>Storage</span>
+  </h4>
+  <span class="space-between"></span>
+
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon>filter_list</mat-icon>
+    <mat-menu #menu="matMenu" class="storage-filter-menu">
+      <button mat-menu-item (click)="sortStorage({direction: 'asc', name: 'name'})">
+        Name (Descending)
+      </button>
+      <button mat-menu-item (click)="sortStorage({direction: 'desc', name: 'name'})">
+        Name (Ascending)
+      </button>
+      <button mat-menu-item (click)="sortStorage({direction: 'asc', name: '_id'})">
+        Date (Descending)
+      </button>
+      <button mat-menu-item (click)="sortStorage({direction: 'desc', name: '_id'})">
+        Date (Ascending)
+      </button>
+    </mat-menu>
+  </button>
+
+  <button mat-icon-button>
+    <mat-icon>refresh</mat-icon>
+  </button>
+
+  <button
+    mat-icon-button
+    [disabled]="progress"
+    (click)="!progress ? fileSelector?.click() : undefined"
+  >
+    <input
+      type="file"
+      accept="image/*,video/mp4,video/webm"
+      #fileSelector
+      #fileModel="ngModel"
+      [ngModel]="undefined"
+      (ngModelChange)="uploadStorage(fileSelector.files[0])"
+    />
+    <mat-icon *ngIf="!progress">add</mat-icon>
+    <mat-progress-spinner
+      color="accent"
+      *ngIf="progress"
+      [diameter]="18"
+      [value]="progress"
+    ></mat-progress-spinner>
+  </button>
+</mat-toolbar>
+
+<mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
+  <mat-grid-tile *ngFor="let storage of storages$ | async; let i = index">
+    <mat-card class="mat-elevation-z25">
+      <mat-card-content class="storageItems">
+        <label matTooltip="{{ storage.name }}">{{ storage.name }}</label>
+        <storage-view
+          [class.default-img]="panelOpenState && fabIndex == i"
+          class="img"
+          [storage]="storage"
+          (click)="openDialog(storage)"
+        >
+        </storage-view>
+        <button
+          class="fab-button"
+          (click)="panelOpenState = true; fabIndex = i"
+          mat-mini-fab
+          [matMenuTriggerFor]="menu"
+        >
+          <mat-icon>more_vert</mat-icon>
+
+          <mat-menu
+            class="fab-menu"
+            (closed)="panelOpenState = false"
+            #menu="matMenu"
+            yPosition="above"
+          >
+            <button
+              mat-icon-button
+              [routerLink]="storage._id"
+              *ngIf="storage.content?.type?.startsWith('image/')"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              [matAwareDialog]="{
+                title: 'Attention',
+                templateOrDescription: dialogTemplate,
+                answer: 'yes'
+              }"
+              (confirm)="delete(storage._id)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-menu>
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </mat-grid-tile>
+</mat-grid-list>
+<mat-paginator [pageSize]="12" [pageSizeOptions]="[12, 24, 46]"></mat-paginator>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action cannot be undone.</p>
+  <p>
+    This action will permanently delete the <b>"{{ answer }}"</b> and broke the all associations.
+  </p>
+  <p>Please type in the name of the storage to confirm.</p>
+</ng-template>

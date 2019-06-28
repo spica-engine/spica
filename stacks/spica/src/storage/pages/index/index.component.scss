@@ -1,0 +1,184 @@
+/deep/ .preview-file {
+  position: relative !important;
+  .mat-dialog-container {
+    height: unset;
+  }
+}
+/deep/.fab-menu {
+  background-color: transparent;
+  box-shadow: unset;
+  min-width: unset !important;
+  width: 30px;
+  .mat-menu-content:not(:empty) {
+    padding-bottom: 0px !important;
+  }
+  .mat-menu-content {
+    padding-bottom: 8px;
+    overflow: hidden;
+    text-align: center;
+    float: right;
+    width: 35px;
+  }
+  button {
+    width: 25px;
+    height: 25px;
+    background-color: var(--accent-50);
+    line-height: 25px;
+    margin-bottom: 4px;
+  }
+  /deep/span {
+    display: block;
+  }
+  mat-icon {
+    font-size: 20px;
+    line-height: 25px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    display: block;
+  }
+}
+
+/deep/.storage-filter-menu {
+  .mat-menu-content {
+    padding: 0px !important;
+    .mat-form-field-wrapper {
+      padding: 0px !important;
+      .mat-form-field-infix {
+        margin-top: 0px !important;
+      }
+    }
+  }
+}
+
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    display: flex;
+    justify-content: space-between;
+    .space-between {
+      flex: 1 1 auto;
+    }
+    h4 {
+      mat-icon,
+      span {
+        margin-left: 5px;
+        vertical-align: middle;
+      }
+    }
+    button {
+      padding: 0;
+      min-width: 40px;
+      input {
+        display: none;
+      }
+    }
+  }
+  .select-input {
+    margin-left: auto;
+    display: table;
+  }
+  mat-paginator {
+    margin-top: 10px;
+  }
+
+  mat-grid-list {
+    margin: 30px;
+    margin-top: -110px;
+    // For proper border radius
+    overflow: hidden;
+    mat-grid-tile {
+      mat-card {
+        width: 100%;
+        display: grid !important;
+        padding-top: 0px;
+        mat-card-subtitle {
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        [mat-card-image] {
+          margin-top: unset;
+        }
+        img {
+          object-fit: cover;
+          min-height: 120px;
+          max-height: 120px;
+        }
+        video {
+          object-fit: contain;
+          min-height: 120px;
+          max-height: 120px;
+        }
+      }
+    }
+  }
+  /deep/.default-img:after {
+    content: "";
+    width: 100%;
+    height: calc(100% - 32px);
+    background-color: #646060ad;
+    position: absolute;
+    animation: slip 0.3s;
+  }
+  .fab-button {
+    position: absolute;
+    bottom: 20px;
+    right: 5px;
+    width: 25px;
+    height: 25px;
+    line-height: 20px;
+    background-color: var(--primary-default);
+    color: var(--accent-50);
+    /deep/span {
+      line-height: 20px;
+      padding-top: 0 !important;
+    }
+    mat-icon {
+      font-size: 18px;
+      line-height: 25px;
+    }
+  }
+
+  .storageItems {
+    :hover {
+      opacity: 0.7;
+    }
+    .storage-view {
+      /deep/ p {
+        display: none;
+      }
+    }
+    .action-buttons {
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      button {
+        background: var(--primary);
+      }
+    }
+
+    label {
+      opacity: 0.7;
+      position: absolute;
+      bottom: 10px;
+      width: 71%;
+      padding-left: 5px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+@keyframes slip {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

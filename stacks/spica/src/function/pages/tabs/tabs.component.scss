@@ -1,0 +1,25 @@
+:host ::ng-deep {
+  mat-toolbar {
+    align-items: flex-end;
+    .mat-tab-link {
+      color: inherit;
+      mat-icon {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+      }
+    }
+
+    .space-between {
+      flex: 1 1 auto;
+    }
+    h4 {
+      mat-icon,
+      span {
+        margin-left: 5px;
+        vertical-align: middle;
+      }
+    }
+  }
+}

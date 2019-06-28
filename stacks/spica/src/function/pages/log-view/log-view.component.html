@@ -1,0 +1,89 @@
+<ng-template #toolbar>
+  <mat-toolbar color="primary">
+    <h4 class="mat-h4">
+      <mat-icon>functions</mat-icon>
+      <span>{{ (function | async)?.name }}</span>
+    </h4>
+    <span class="space-between"></span>
+
+    <!-- Use material date range picker once there is public one: https://github.com/angular/components/issues/4763 -->
+    <button mat-icon-button (click)="picker.open()">
+      <mat-icon>date_range</mat-icon>
+      <input
+        style="visibility:hidden"
+        placeholder="Choose a date"
+        [satDatepicker]="picker"
+        [value]="date"
+        [min]="minDate"
+        [max]="maxDate"
+        [(ngModel)]="dateRange"
+        (ngModelChange)="this.refresh.next()"
+      />
+      <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
+    </button>
+
+    <button mat-icon-button (click)="refresh.next()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+
+    <button mat-icon-button (click)="clearLogs()">
+      <mat-icon>clear_all</mat-icon>
+    </button>
+  </mat-toolbar>
+</ng-template>
+<mat-card class="mat-elevation-z25">
+  <table mat-table matSort [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z0">
+    <ng-container matColumnDef="execution">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Execution id</th>
+      <td mat-cell *matCellDef="let log">{{ log.execution }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="timestamp">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Execution Time</th>
+      <td mat-cell *matCellDef="let log">{{ log.timestamp | date: "medium" }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="level">
+      <th mat-header-cell *matHeaderCellDef>Level</th>
+      <td mat-cell *matCellDef="let log" [matTooltip]="log.level">
+        <mat-icon [style.color]="logLevelMapping[log.level]?.color">{{
+          logLevelMapping[log.level]?.icon
+        }}</mat-icon>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="message">
+      <th mat-header-cell *matHeaderCellDef>Message</th>
+      <td mat-cell *matCellDef="let log">
+        <span *ngIf="log.durationMs">
+          <mat-icon level>timer</mat-icon>
+          <b>{{ log.durationMs }}</b
+          >ms.
+        </span>
+        {{ log.message }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="expandedDetail">
+      <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+        <div
+          class="element-detail"
+          [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'"
+        >
+          <span>
+            {{ element.message }}
+          </span>
+        </div>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr
+      mat-row
+      class="log-row"
+      *matRowDef="let element; columns: displayedColumns"
+      (click)="expandedElement = expandedElement === element ? null : element"
+    ></tr>
+    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+  </table>
+</mat-card>

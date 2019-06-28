@@ -1,0 +1,111 @@
+<mat-toolbar class="bucket-add-toolbar mat-primary">
+  <div class="left">
+    <h1 class="title">
+      <mat-icon>{{ (bucket$ | async)?.icon }}</mat-icon>
+      {{ (bucket$ | async)?.title }}
+    </h1>
+    <h3 class="sub-title">
+      {{ (bucket$ | async)?.description }}
+    </h3>
+  </div>
+  <ng-container *ngIf="histories">
+    <button
+      [disabled]="histories.length == 0"
+      mat-icon-button
+      [matMenuTriggerFor]="windowWidth > 1010 ? listbig : list"
+      class="history-button"
+    >
+      <mat-icon> restore </mat-icon>
+    </button>
+    <mat-menu #listbig="matMenu" class="history-tree mat-elevation-z25" xPosition="before">
+      <history-timeline>
+        <div
+          *ngFor="let history of histories; let index = index"
+          [class.active]="selectedHistoryId == history._id"
+          (click)="getHistoryData(history._id)"
+          class="item"
+        >
+          <button
+            mat-icon-button
+            class="history-select-button"
+            [matTooltip]="history.date | date: 'MMM d y, h:mm:ss a'"
+            matTooltipPosition="before"
+          >
+            {{ index + 1 }}
+          </button>
+        </div>
+      </history-timeline>
+    </mat-menu>
+    <mat-menu #list="matMenu">
+      <button
+        mat-menu-item
+        *ngFor="let history of histories; let index = index"
+        (click)="getHistoryData(history._id)"
+      >
+        {{ history.date | date: "medium" }}
+      </button>
+    </mat-menu>
+  </ng-container>
+</mat-toolbar>
+
+<mat-card class="fields-card">
+  <mat-card-content>
+    <ng-container *ngIf="data">
+      <form ngForm #form="ngForm" *ngIf="bucket$ | async; let bucket" class="positions">
+        <div *ngFor="let division of divisionsOrder" [ngClass]="division">
+          <div
+            *ngFor="let fieldProps of postitioning[division]"
+            fieldsList
+            [class.className]="fieldProps.value.type"
+          >
+            <div
+              *ngIf="fieldProps.value.options.translate"
+              [inputPlacer]="fieldProps.value"
+              #selectedLanguage="language"
+              [language]="bucketSettings.language.default.code"
+              [(ngModel)]="data[fieldProps.key][selectedLanguage.language]"
+              [name]="fieldProps.key"
+              [disabled]="fieldProps.value.readOnly"
+              class="field-container"
+            >
+              <input-language-selection
+                translateContainer
+                [selectedLanguage]="selectedLanguage"
+                [fieldName]="fieldProps.key"
+                [languages]="bucketSettings.language.supported_languages"
+              ></input-language-selection>
+            </div>
+            <div
+              *ngIf="!fieldProps.value.options.translate"
+              [inputPlacer]="fieldProps.value"
+              [(ngModel)]="data[fieldProps.key]"
+              [disabled]="fieldProps.value.readOnly"
+              [name]="fieldProps.key"
+              class="field-container"
+            ></div>
+          </div>
+        </div>
+      </form>
+    </ng-container>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      canInteract="bucket:data:update"
+      *ngIf="!data?._id"
+      [disabled]="form?.invalid"
+      mat-button
+      (click)="saveBucketRow()"
+    >
+      <mat-icon>add</mat-icon> Add
+    </button>
+    <button
+      canInteract="bucket:data:update"
+      *ngIf="data?._id"
+      [disabled]="form?.invalid"
+      mat-button
+      (click)="saveBucketRow()"
+    >
+      <mat-icon>sync</mat-icon> Update
+    </button>
+  </mat-card-actions>
+</mat-card>

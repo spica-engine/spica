@@ -1,0 +1,83 @@
+<div class="container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>backup</mat-icon>
+        Export
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-form-field>
+        <mat-select placeholder="Bucket" #exportBucket multiple>
+          <mat-option *ngFor="let bucket of buckets" [value]="bucket._id">
+            {{ bucket.title }}
+          </mat-option>
+        </mat-select>
+        <mat-hint>Choose a bucket to export its data.</mat-hint>
+      </mat-form-field>
+      <mat-card-actions>
+        <button mat-button (click)="export(exportBucket.value)">
+          Export
+        </button>
+      </mat-card-actions>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>restore</mat-icon>
+        Import
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-form-field>
+        <mat-select placeholder="Bucket" #importBucket>
+          <mat-option *ngFor="let bucket of buckets" [value]="bucket._id">
+            {{ bucket.title }}
+          </mat-option>
+        </mat-select>
+        <mat-hint>Choose a bucket to import data.</mat-hint>
+      </mat-form-field>
+      <input
+        type="file"
+        accept="application/json"
+        #fileSelector
+        #fileModel="ngModel"
+        [ngModel]="undefined"
+      />
+      <mat-progress-spinner [diameter]="40"></mat-progress-spinner>
+      <mat-card-actions>
+        <button mat-button (click)="import(fileSelector.files[0], importBucket.value)">
+          Import
+        </button>
+      </mat-card-actions>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>create</mat-icon>
+        Create from Template
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-form-field>
+        <mat-select placeholder="Templates" #createBucket>
+          <mat-option
+            *ngFor="let template of (templates | keyvalue)"
+            [value]="template.key"
+          >
+            {{ template.value.title }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-card-actions>
+        <button mat-button (click)="create(createBucket.value)">
+          Create
+        </button>
+      </mat-card-actions>
+    </mat-card-content>
+  </mat-card> -->
+</div>

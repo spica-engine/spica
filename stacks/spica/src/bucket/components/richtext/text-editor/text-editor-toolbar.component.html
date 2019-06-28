@@ -1,0 +1,397 @@
+<div class="text-editor-toolbar" *ngIf="showToolbar">
+  <div class="text-editor-toolbar-set">
+    <label [for]="'fontSelector-' + id" class="block-label"></label>
+    <select
+      title="Font Name"
+      [id]="'fontSelector-' + id"
+      class="select-font"
+      [(ngModel)]="fontId"
+      (change)="setFontName(fontId)"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <optgroup label="Font Name"></optgroup>
+      <option *ngFor="let item of fonts; let i = index" [class]="item.class" [value]="i">{{
+        item.name
+      }}</option>
+    </select>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <label [for]="'heading-' + id" class="block-label" tabindex="-1"></label>
+    <select
+      title="Formatting"
+      [id]="'heading-' + id"
+      class="select-heading"
+      [(ngModel)]="block"
+      (change)="triggerCommand(block)"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <optgroup label="Formatting"></optgroup>
+      <option class="h1" value="h1">Heading 1</option>
+      <option class="h2" value="h2">Heading 2</option>
+      <option class="h3" value="h3">Heading 3</option>
+      <option class="h4" value="h4">Heading 4</option>
+      <option class="h5" value="h5">Heading 5</option>
+      <option class="h6" value="h6">Heading 6</option>
+      <option class="p" value="p">Paragraph</option>
+      <option class="pre" value="pre">Predefined</option>
+      <option class="div" value="div">Standard</option>
+      <option class="default" value="default">Default</option>
+    </select>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <label [for]="'fontSizeSelector-' + id" class="block-label"></label>
+    <select
+      title="Font Size"
+      [id]="'fontSizeSelector-' + id"
+      class="select-font-size"
+      [(ngModel)]="fontSize"
+      (change)="setFontSize(fontSize)"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <optgroup label="Font Sizing"></optgroup>
+      <option class="size1" value="1">1</option>
+      <option class="size2" value="2">2</option>
+      <option class="size3" value="3">3</option>
+      <option class="size4" value="4">4</option>
+      <option class="size5" value="5">5</option>
+      <option class="size6" value="6">6</option>
+      <option class="size7" value="7">7</option>
+      <option class="size8" value="8">8</option>
+      <option class="size9" value="9">9</option>
+      <option class="size10" value="10">10</option>
+    </select>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <input
+      style="display: none"
+      type="color"
+      (change)="insertColor(fgInput.value, 'textColor')"
+      #fgInput
+    />
+    <button
+      mat-button
+      [id]="'foregroundColorPicker-' + id"
+      type="button"
+      class="text-editor-button"
+      (click)="fgInput.click()"
+      title="Text Color"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_color_text</mat-icon>
+    </button>
+    <input
+      style="display: none"
+      type="color"
+      (change)="insertColor(bgInput.value, 'backgroundColor')"
+      #bgInput
+    />
+    <button
+      mat-button
+      [id]="'backgroundColorPicker-' + id"
+      type="button"
+      class="text-editor-button"
+      (click)="bgInput.click()"
+      title="Background Color"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_color_fill</mat-icon>
+    </button>
+  </div>
+  <div *ngIf="customClasses" class="text-editor-toolbar-set">
+    <label [for]="'customClassSelector-' + id" class="block-label"></label>
+    <select
+      title="Custom Style"
+      [id]="'customClassSelector-' + id"
+      class="select-custom-style"
+      [(ngModel)]="customClassId"
+      (change)="setCustomClass(customClassId)"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <optgroup label="Custom Class"></optgroup>
+      <option class="" value="-1">Clear Class</option>
+      <option *ngFor="let item of customClasses; let i = index" [class]="item.class" [value]="i">{{
+        item.name
+      }}</option>
+    </select>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      type="button"
+      title="Undo"
+      class="text-editor-button"
+      (click)="triggerCommand('undo')"
+      tabindex="-1"
+    >
+      <mat-icon>undo</mat-icon>
+    </button>
+    <button
+      mat-button
+      type="button"
+      title="Redo"
+      class="text-editor-button"
+      (click)="triggerCommand('redo')"
+      tabindex="-1"
+    >
+      <mat-icon>redo</mat-icon>
+    </button>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      [id]="'bold-' + id"
+      type="button"
+      title="Bold"
+      class="text-editor-button"
+      (click)="triggerCommand('bold')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_bold</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'italic-' + id"
+      type="button"
+      title="Italic"
+      class="text-editor-button"
+      (click)="triggerCommand('italic')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_italic</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'underline-' + id"
+      type="button"
+      title="Underline"
+      class="text-editor-button"
+      (click)="triggerCommand('underline')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_underlined</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'strikeThrough-' + id"
+      type="button"
+      title="Strikethrough"
+      class="text-editor-button"
+      (click)="triggerCommand('strikeThrough')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_strikethrough</mat-icon>
+    </button>
+    <!-- TODO: Uncomment above lines when you find proper icon for those operations -->
+    <!-- <button
+      mat-button
+      [id]="'subscript-' + id"
+      type="button"
+      title="Subscript"
+      class="text-editor-button"
+      (click)="triggerCommand('subscript')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <i class="fa fa-subscript"></i>
+    </button>
+    <button
+    mat-button
+      [id]="'superscript-' + id"
+      type="button"
+      title="Superscript"
+      class="text-editor-button"
+      (click)="triggerCommand('superscript')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <i class="fa fa-superscript"></i>
+    </button> -->
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      [id]="'justifyLeft-' + id"
+      type="button"
+      title="Justify Left"
+      class="text-editor-button"
+      (click)="triggerCommand('justifyLeft')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_align_left</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'justifyCenter-' + id"
+      type="button"
+      title="Justify Center"
+      class="text-editor-button"
+      (click)="triggerCommand('justifyCenter')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_align_center</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'justifyRight-' + id"
+      type="button"
+      title="Justify Right"
+      class="text-editor-button"
+      (click)="triggerCommand('justifyRight')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_align_right</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'justifyFull-' + id"
+      type="button"
+      title="Justify Full"
+      class="text-editor-button"
+      (click)="triggerCommand('justifyFull')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_align_justify</mat-icon>
+    </button>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      [id]="'indent-' + id"
+      type="button"
+      title="Indent"
+      class="text-editor-button"
+      (click)="triggerCommand('indent')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_indent_increase</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'outdent-' + id"
+      type="button"
+      title="Outdent"
+      class="text-editor-button"
+      (click)="triggerCommand('outdent')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_indent_decrease</mat-icon>
+    </button>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      [id]="'insertUnorderedList-' + id"
+      type="button"
+      title="Unordered List"
+      class="text-editor-button"
+      (click)="triggerCommand('insertUnorderedList')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_list_bulleted</mat-icon>
+    </button>
+    <button
+      mat-button
+      [id]="'insertOrderedList-' + id"
+      type="button"
+      title="Ordered List"
+      class="text-editor-button"
+      (click)="triggerCommand('insertOrderedList')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>format_list_numbered</mat-icon>
+    </button>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      [id]="'link-' + id"
+      type="button"
+      class="text-editor-button"
+      (click)="insertUrl()"
+      title="Insert Link"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>insert_link</mat-icon>
+    </button>
+    <button
+      mat-button
+      type="button"
+      class="text-editor-button"
+      (click)="triggerCommand('unlink')"
+      title="Unlink"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>link_off</mat-icon>
+    </button>
+    <button
+      mat-button
+      type="button"
+      class="text-editor-button"
+      [disabled]="htmlMode"
+      tabindex="-1"
+      [(ngModel)]="file"
+      #picker="storagePicker"
+      [storagePicker]="{closeOnChange: true}"
+      (ngModelChange)="onFileChanged($event)"
+    >
+      <mat-icon>image</mat-icon>
+    </button>
+    <button
+      mat-button
+      type="button"
+      title="Horizontal Line"
+      class="text-editor-button"
+      (click)="triggerCommand('insertHorizontalRule')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>remove</mat-icon>
+    </button>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      type="button"
+      title="Clear Formatting"
+      class="text-editor-button"
+      (click)="triggerCommand('removeFormat')"
+      [disabled]="htmlMode"
+      tabindex="-1"
+    >
+      <mat-icon>clear</mat-icon>
+    </button>
+  </div>
+  <div class="text-editor-toolbar-set">
+    <button
+      mat-button
+      [id]="'toggleEditorMode-' + id"
+      type="button"
+      title="HTML Code"
+      class="text-editor-button"
+      (click)="triggerCommand('toggleEditorMode')"
+      tabindex="-1"
+    >
+      <mat-icon>code</mat-icon>
+    </button>
+  </div>
+</div>

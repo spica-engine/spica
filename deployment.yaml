@@ -1,0 +1,149 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: default-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: database
+spec:
+  serviceName: mongo
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        role: mongo
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: mongo
+          image: mongo
+          command:
+            - mongod
+            - '--replSet'
+            - rs0
+            - '--bind_ip'
+            - 0.0.0.0
+            - '--smallfiles'
+            - '--noprealloc'
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: database-data
+              mountPath: /data/db
+        - name: sidecar
+          image: cvallance/mongo-k8s-sidecar
+          env:
+            - name: MONGO_SIDECAR_POD_LABELS
+              value: 'role=mongo'
+            - name: KUBERNETES_MONGO_SERVICE_NAME
+              value: mongo
+  volumeClaimTemplates:
+    - metadata:
+        name: database-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector:
+    role: mongo
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: spica
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: spica
+    spec:
+      volumes:
+        - name: data
+          emptyDir: {}
+      containers:
+        - name: spica
+          image: gcr.io/spica-239113/spica
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+        - name: api
+          image: gcr.io/spica-239113/api
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4300
+          env:
+            - name: PORT
+              value: '4300'
+            - name: DATABASE_URI
+              value: mongodb://database-0.mongo.default.svc.cluster.local,database-1.mongo.default.svc.cluster.local
+            - name: REPLICA_SET
+              value: rs0
+            - name: DATABASE_NAME
+              value: spica
+            - name: PUBLIC_HOST
+              # TODO(thesayyn): https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/          
+              value: 'https://35.239.247.158/api'
+            - name: PERSISTENT_PATH
+              value: /data
+          volumeMounts:
+            - name: data
+              mountPath: /data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spica
+spec:
+  type: NodePort
+  ports:
+    - name: spica
+      port: 80
+      targetPort: 80
+    - name: api
+      port: 4300
+      targetPort: 4300
+  selector:
+    app: spica
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gateway
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /spica/?(.*)
+            backend:
+              serviceName: spica
+              servicePort: 80
+          - path: /api/?(.*)
+            backend:
+              serviceName: spica
+              servicePort: 4300

@@ -1,0 +1,15 @@
+<div
+  class="image-picker"
+  [ngStyle]="{'background-image': 'url(' + image + ')'}"
+  (click)="$event.stopPropagation()"
+>
+  <input
+    type="file"
+    accept="image/png,image/x-png,image/jpg,image/jpeg,image/svg+xml"
+    required
+    (change)="preview($event)"
+  />
+  <div *ngIf="!image" class="upload">
+    <mat-icon>note_add</mat-icon>
+  </div>
+</div>

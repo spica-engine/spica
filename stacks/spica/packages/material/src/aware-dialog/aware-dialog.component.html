@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>{{ options.title }}</h2>
+<mat-dialog-content>
+  <ng-container *ngIf="isTemplate">
+    <ng-template
+      [ngTemplateOutlet]="options.templateOrDescription"
+      [ngTemplateOutletContext]="options"
+    >
+    </ng-template>
+  </ng-container>
+  <ng-container *ngIf="!isTemplate">{{ options.templateOrDescription }}</ng-container>
+  <mat-form-field>
+    <input
+      matInput
+      [placeholder]="options.answerHint || 'Answer'"
+      [ngModel]="undefined"
+      #answerModel="ngModel"
+      (keydown.enter)="answerModel.value == options.answer ? ref.close(true) : undefined"
+    />
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="false">
+    {{ options.cancelText || "Cancel" }}
+  </button>
+  <button
+    #confirmButton
+    mat-button
+    [disabled]="answerModel.value != options.answer"
+    [mat-dialog-close]="true"
+  >
+    {{ options.confirmText || "Confirm" }}
+  </button>
+</mat-dialog-actions>

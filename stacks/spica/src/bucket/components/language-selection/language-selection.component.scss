@@ -1,0 +1,70 @@
+:host {
+  position: absolute;
+  z-index: 2;
+  height: 100%;
+  width: 100%;
+  padding-top: 5px;
+  padding-bottom: calc(5px + 1.25em);
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+  overflow: hidden;
+  .controller {
+    pointer-events: all;
+    cursor: pointer;
+    user-select: none;
+    margin-right: 5px;
+    transition-duration: 0.5s;
+    &:hover {
+      transition-duration: 0.5s;
+      color: var(--primary-600);
+    }
+  }
+  .languages {
+    overflow: hidden;
+    pointer-events: all;
+    display: flex;
+    margin-right: 10px;
+    will-change: transform;
+    animation: languages-enter 0.5s;
+    .language-button {
+      margin-right: 4px;
+      transition-duration: 0.2s;
+      margin-top: -30px;
+      border-top-right-radius: 0;
+      border-top-left-radius: 0;
+      width: 25px;
+      height: 25px;
+      line-height: 25px;
+      box-shadow: 0px 1px 2px -1px rgba(0, 0, 0, 0.41);
+      /deep/ span {
+        font-size: 10px;
+      }
+    }
+    .language-button.active {
+      transition: 0.5s;
+      background: var(--primary-600);
+      color: var(--background-card);
+    }
+    &.active {
+      .language-button {
+        margin-top: 0px;
+      }
+    }
+    &.inactive {
+      .language-button {
+        margin-top: -30px;
+      }
+    }
+  }
+  @keyframes languages-enter {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}

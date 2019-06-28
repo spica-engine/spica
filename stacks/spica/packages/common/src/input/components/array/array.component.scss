@@ -1,0 +1,43 @@
+:host {
+  display: inline-block;
+  h3 {
+    margin-bottom: unset;
+  }
+  mat-hint {
+    font-size: 11px;
+    margin-bottom: 10px;
+  }
+  mat-card {
+    padding: 0px 14px;
+    mat-card-content {
+      margin-top: 16px;
+      display: flex;
+      div {
+        display: flex;
+        flex-flow: column;
+        &:first-of-type {
+          width: 40px;
+        }
+        &:last-of-type {
+          flex: 1 1 auto;
+          margin-top: unset;
+          margin-left: 10px;
+          display: flex;
+          flex-flow: row;
+          span {
+            flex: 1 1 auto;
+          }
+          button {
+            margin-left: 10px;
+            width: 25px;
+            height: 25px;
+            line-height: 21px;
+            ::ng-deep .mat-button-wrapper {
+              padding: unset;
+            }
+          }
+        }
+      }
+    }
+  }
+}
