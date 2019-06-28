@@ -3,6 +3,9 @@
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
+    .deleteMatTool {
+      margin-right: 20px;
+    }
     .space-between {
       flex: 1 1 auto;
     }
@@ -62,6 +65,10 @@
 
     .mat-header-row {
       mat-header-cell {
+        mat-checkbox {
+          height: 0px;
+          margin-bottom: 15px;
+        }
         &:first-of-type {
           padding-left: 10px;
         }
@@ -75,6 +82,10 @@
     }
     .mat-row {
       mat-cell {
+        mat-checkbox {
+          height: 0px;
+          margin-bottom: 15px;
+        }
         &:first-of-type {
           padding-left: 10px;
           white-space: nowrap;

@@ -19,6 +19,17 @@
 
   <span class="space-between"></span>
 
+  <button
+    class="deleteMatTool"
+    *ngIf="arrayToDelete.length > 0"
+    mat-icon-button
+    (click)="deleteArrayItems()"
+    matTooltip="delete {{ arrayToDelete.length }} item"
+    aria-label="Button that displays a tooltip when focused or hovered over"
+  >
+    <mat-icon>delete </mat-icon>
+  </button>
+
   <button mat-icon-button *ngIf="$meta | async; let meta" [matMenuTriggerFor]="titleMenu">
     <mat-icon>view_column</mat-icon>
     <mat-menu class="displayed-properties-menu" xPosition="before" #titleMenu="matMenu">
@@ -91,6 +102,24 @@
       matSortDisableClear="true"
       (matSortChange)="sortData($event)"
     >
+      <ng-container matColumnDef="select">
+        <mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+          *ngIf="totalPageItem > 0"
+            color="primary"
+            [indeterminate]="arrayToDelete.length >= 1 && arrayToDelete.length < totalPageItem"
+            (click)="allSelect(!selectAll)"
+            [(ngModel)]="doClick || arrayToDelete.length == totalPageItem  "
+          ></mat-checkbox>
+        </mat-header-cell>
+        <mat-cell class="actions-content" *matCellDef="let row">
+          <mat-checkbox
+            color="primary"
+            (click)="addDeleteList(row._id)"
+            [checked]="selectAll"
+          ></mat-checkbox>
+        </mat-cell>
+      </ng-container>
       <ng-container matColumnDef="actions">
         <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell class="actions-content" *matCellDef="let row">

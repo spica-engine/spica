@@ -70,6 +70,15 @@ export class BucketDataService {
   deleteAll(bucketId: string | ObjectId): Promise<boolean> {
     return this.db.collection(getBucketDataCollection(bucketId)).drop();
   }
+
+  deleteMany(
+    bucketId: string | ObjectId,
+    idArray: Array<string>
+  ): Promise<DeleteWriteOpResultObject> {
+    const collection = this.db.collection(getBucketDataCollection(bucketId));
+
+    return collection.deleteMany({_id: {$in: idArray.map(data => new ObjectId(data))}});
+  }
 }
 
 export function getBucketDataCollection(bucketId: string | ObjectId): string {

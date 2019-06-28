@@ -51,15 +51,38 @@ describe("bucket data service", () => {
         .insertMany(bucketId, [{platform: "ios"}, {platform: "android"}])
         .then(r => (insertedRows = r))
     ).toBeResolved();
+
     await expectAsync(bds.deleteOne(bucketId, {_id: insertedRows.insertedIds[0]})).toBeResolved();
     await expectAsync(bds.findOne(bucketId, {_id: insertedRows.insertedIds[0]})).toBeResolvedTo(
       null
     );
+
     return await expectAsync(
       bds.findOne(bucketId, {_id: insertedRows.insertedIds[1]}).then(r => {
         expect(r).not.toBeFalsy();
         expect(r.platform).toBe("android");
         return r;
+      })
+    ).toBeResolved();
+  });
+
+  it("should remove only many entries", async () => {
+    let insertedRows: InsertWriteOpResult;
+    let insertedRowArray = [];
+    await expectAsync(
+      bds
+        .insertMany(bucketId, [{platform: "ios"}, {platform: "android"}])
+        .then(r => (insertedRows = r))
+    ).toBeResolved();
+    insertedRowArray = [
+      insertedRows.insertedIds[0].toHexString(),
+      insertedRows.insertedIds[1].toHexString()
+    ];
+    await expectAsync(bds.deleteMany(bucketId, insertedRowArray)).toBeResolved();
+
+    return await expectAsync(
+      bds.find(bucketId, {_id: {$in: insertedRowArray}}).then(r => {
+        expect(r.length).toBe(0);
       })
     ).toBeResolved();
   });

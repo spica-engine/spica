@@ -30,6 +30,11 @@ export class IndexComponent implements OnInit {
   public $preferences: Observable<BucketSettings>;
   public language: string;
 
+  public selectAll: boolean = false;
+  public doClick: boolean = false;
+  public arrayToDelete: Array<string> = [];
+  public totalPageItem: number = 0;
+
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
@@ -52,6 +57,7 @@ export class IndexComponent implements OnInit {
             .filter(([, value]) => value.options.visible)
             .map(([key]) => key)
             .concat("actions");
+          this.displayedProperties = ["select"].concat(this.displayedProperties);
         }
       })
     );
@@ -59,9 +65,11 @@ export class IndexComponent implements OnInit {
 
   toggleDisplayAll(display: boolean, schema: Bucket) {
     if (display) {
-      this.displayedProperties = Object.keys(schema.properties).concat("actions");
+      this.displayedProperties = ["select"].concat(
+        Object.keys(schema.properties).concat("actions")
+      );
     } else {
-      this.displayedProperties = [schema.primary, "actions"];
+      this.displayedProperties = ["select"].concat([schema.primary, "actions"]);
     }
   }
 
@@ -76,9 +84,23 @@ export class IndexComponent implements OnInit {
         })
       ),
       map(buckets => {
+        this.totalPageItem = 0;
         this.paginator.length = 0;
         if (buckets.meta && buckets.meta.total) {
           this.paginator.length = buckets.meta.total;
+        }
+        buckets.data.forEach(element => {
+          this.totalPageItem++;
+        });
+
+        if (this.selectAll === true) {
+          if (this.arrayToDelete.length > 0) {
+            this.arrayToDelete = [];
+          }
+          buckets.data.forEach(element => {
+            this.totalPageItem++;
+            this.arrayToDelete.push(element._id);
+          });
         }
         return buckets.data;
       })
@@ -96,5 +118,39 @@ export class IndexComponent implements OnInit {
   sortData(sort: Sort) {
     this.aggregations.sort = {active: sort.active, direction: sort.direction === "asc" ? 1 : -1};
     this.fetchData();
+  }
+
+  // All select checkbox
+  allSelect(id) {
+    this.doClick = !id;
+    this.selectAll = id;
+    if (this.selectAll == false) {
+      this.arrayToDelete = [];
+    }
+    this.fetchData();
+  }
+  // Add one checkbox item
+  addDeleteList(id) {
+    let inArray: boolean = false;
+    this.arrayToDelete.forEach((element, key) => {
+      if (element == id) {
+        this.arrayToDelete.splice(key, 1);
+        inArray = true;
+        this.doClick = false;
+      }
+    });
+    if (inArray == false) {
+      this.arrayToDelete.push(id);
+    }
+  }
+  deleteArrayItems() {
+    this.bds
+      .deleteMany(this.bucketId, this.arrayToDelete)
+      .toPromise()
+      .then(() => {
+        this.fetchData();
+        this.arrayToDelete = [];
+        this.totalPageItem = 0;
+      });
   }
 }
