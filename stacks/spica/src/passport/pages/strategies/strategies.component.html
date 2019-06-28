@@ -8,7 +8,11 @@
     <button mat-icon-button>
       <mat-icon>refresh</mat-icon>
     </button>
-    <button mat-icon-button canInteract="strategy:update" routerLink="/passport/strategies/add">
+    <button
+      mat-icon-button
+      canInteract="passport:strategy:update"
+      routerLink="/passport/strategies/add"
+    >
       <mat-icon>add</mat-icon>
     </button>
   </mat-toolbar-row>
@@ -34,7 +38,7 @@
         <mat-cell *matCellDef="let element">
           <button
             mat-icon-button
-            canInteract="strategy:update"
+            canInteract="passport:strategy:update"
             [routerLink]="element._id + '/edit'"
             *ngIf="element.system !== true"
           >
@@ -42,7 +46,7 @@
           </button>
           <button
             mat-icon-button
-            canInteract="strategy:delete"
+            canInteract="passport:strategy:delete"
             color="warn"
             [matAwareDialog]="{
               title: 'Confirmation',

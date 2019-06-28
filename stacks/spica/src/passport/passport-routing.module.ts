@@ -71,6 +71,14 @@ const route: Route[] = [
     path: "/passport/policy",
     icon: "layers",
     data: {action: "passport:policy:index"}
+  },
+  {
+    id: "passport.strategy",
+    category: RouteCategory.System,
+    display: "Strategies",
+    path: "/passport/strategies",
+    icon: "linear_scale",
+    data: {action: "passport:strategy:index"}
   }
 ];
 

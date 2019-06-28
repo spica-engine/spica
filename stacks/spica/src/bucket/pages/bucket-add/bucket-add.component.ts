@@ -5,10 +5,11 @@ import {MatCheckboxChange} from "@angular/material";
 import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";
+import {ICONS} from "@spica-client/material";
 import {Observable, Subject} from "rxjs";
-import {filter, switchMap, takeUntil, tap, map} from "rxjs/operators";
+import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
 import {BucketService} from "../../bucket.service";
-import {ICONS, INPUT_ICONS} from "../../icons";
+import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 

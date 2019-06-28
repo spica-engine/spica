@@ -41,11 +41,18 @@
 
 <mat-card>
   <mat-card-content>
+    <mat-form-field *ngIf="callbackUrl">
+      <input matInput disabled placeholder="Callback Url" [ngModel]="callbackUrl" />
+    </mat-form-field>
     <mat-form-field>
       <input matInput placeholder="Name" [(ngModel)]="strategy.name" required />
     </mat-form-field>
     <mat-form-field>
-      <input matInput placeholder="Type" [(ngModel)]="strategy.type" required />
+      <input matInput placeholder="Title" [(ngModel)]="strategy.title" />
+      <mat-hint>Title will be shown in the Login page.</mat-hint>
+    </mat-form-field>
+    <mat-form-field>
+      <input matInput disabled placeholder="Type" [(ngModel)]="strategy.type" required />
     </mat-form-field>
     <mat-form-field>
       <input
@@ -65,11 +72,15 @@
     </mat-form-field>
     <mat-form-field>
       <textarea
+        #certificateModel="ngModel"
         matInput
         placeholder="Certificate"
         [(ngModel)]="strategy['options'].ip.certificate"
         required
       ></textarea>
+      <mat-error *ngIf="certificateModel?.errors?.invalid">
+        Certificate must match Pem format.
+      </mat-error>
     </mat-form-field>
     <mat-accordion *ngIf="strategy['options'].sp">
       <mat-expansion-panel>
@@ -99,11 +110,11 @@
       </mat-expansion-panel>
     </mat-accordion>
     <button
-      canInteract="strategy:update"
+      canInteract="passport:strategy:update"
       mat-button
       color="primary"
       type="submit"
-      (click)="submitForm()"
+      (click)="submitForm(certificateModel)"
     >
       Save strategy
     </button>

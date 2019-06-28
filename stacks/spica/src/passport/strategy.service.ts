@@ -11,14 +11,14 @@ export class StrategyService {
   }
 
   getStrategy(id: string) {
-    return this.http.get<Strategy>(`api:/strategies/${id}`).toPromise();
+    return this.http.get<Strategy>(`api:/strategies/${id}`);
   }
 
   updateStrategy(strategy: Strategy) {
-    return this.http.post<Strategy>(`api:/strategies`, strategy).toPromise();
+    return this.http.post<Strategy>(`api:/strategies`, strategy);
   }
 
-  deleteStrategy(id: string): Promise<void> {
-    return this.http.delete<void>(`api:/strategies/${id}`).toPromise();
+  deleteStrategy(id: string) {
+    return this.http.delete(`api:/strategies/${id}`);
   }
 }

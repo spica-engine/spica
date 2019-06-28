@@ -4,11 +4,12 @@ export interface Strategy {
   name: string;
   title: string;
   icon: string;
+  callbackUrl?: string;
   [index: string]: any;
 }
 
 export const EMPTY_STRATEGY: Strategy = {
-  type: undefined,
+  type: "saml",
   name: undefined,
   title: undefined,
   icon: undefined,
@@ -24,7 +25,7 @@ export const EMPTY_STRATEGY: Strategy = {
 
 export function emptyStrategy() {
   return {
-    type: undefined,
+    type: "saml",
     name: undefined,
     title: undefined,
     icon: undefined,
