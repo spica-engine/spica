@@ -30,12 +30,12 @@ import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
-import {BucketDataService} from "./bucket-data.service";
-import {BucketHistoryService} from "./bucket-history.service";
+import {BucketDataService} from "./services/bucket-data.service";
+import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketRoutingModule} from "./bucket-routing.module";
-import {BucketInitializer} from "./bucket.initializer";
+import {BucketInitializer} from "./services/bucket.initializer";
 import * as fromBucket from "./bucket.reducer";
-import {BucketService} from "./bucket.service";
+import {BucketService} from "./services/bucket.service";
 import {FilterComponent} from "./components/filter/filter.component";
 import {LanguageSelectionComponent} from "./components/language-selection/language-selection.component";
 import {LocationComponent} from "./components/location/location.component";
@@ -51,9 +51,6 @@ import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component"
 import {ImportExportComponent} from "./pages/import-export/import-export.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
-import {CallbackPipe} from "./pipes/callback.pipe";
-import {ConcatPipe} from "./pipes/concat.pipe";
-import {PlaintextPipe} from "./pipes/plaintext.pipe";
 
 @NgModule({
   imports: [
@@ -123,10 +120,7 @@ import {PlaintextPipe} from "./pipes/plaintext.pipe";
     RelationSchemaComponent,
     LocationComponent,
 
-    CallbackPipe,
-    ConcatPipe,
     LanguageDirective,
-    PlaintextPipe,
     SettingsComponent,
     TimelineComponent,
     LanguageSelectionComponent,

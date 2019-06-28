@@ -3,8 +3,8 @@ import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
 import {Observable} from "rxjs";
 
-import {BucketAggregations} from "./interfaces/bucket-aggregations";
-import {BucketEntry, BucketRow} from "./interfaces/bucket-entry";
+import {BucketAggregations} from "../interfaces/bucket-aggregations";
+import {BucketEntry, BucketRow} from "../interfaces/bucket-entry";
 
 interface FindOptions {
   limit?: number;

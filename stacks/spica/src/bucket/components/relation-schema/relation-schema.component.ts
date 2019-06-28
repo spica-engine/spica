@@ -1,7 +1,7 @@
 import {Component, Inject} from "@angular/core";
 import {INPUT_SCHEMA} from "@spica-client/common";
 import {Observable} from "rxjs";
-import {BucketService} from "../../bucket.service";
+import {BucketService} from "../../services/bucket.service";
 import {Bucket} from "../../interfaces/bucket";
 import {RelationSchema} from "../relation";
 

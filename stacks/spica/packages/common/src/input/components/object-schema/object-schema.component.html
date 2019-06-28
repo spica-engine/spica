@@ -18,7 +18,7 @@
     #propertyNameModel="ngModel"
     ngModel
     (keyup.enter)="
-      !!schema.properties[propertyNameModel.value.toLowerCase()] &&
+      !schema.properties[propertyNameModel.value.toLowerCase()] &&
         propertyNameModel.valid &&
         addProperty(propertyNameModel.value);
       propertyNameModel.reset();

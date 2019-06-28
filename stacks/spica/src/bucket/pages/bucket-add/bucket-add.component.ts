@@ -8,7 +8,7 @@ import {deepCopy} from "@spica-client/core";
 import {ICONS} from "@spica-client/material";
 import {Observable, Subject} from "rxjs";
 import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
-import {BucketService} from "../../bucket.service";
+import {BucketService} from "../../services/bucket.service";
 import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
@@ -41,7 +41,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   public predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
-  public propertyError = undefined;
   public immutableProperties: Array<string> = [];
 
   public nonPositionedProperties: Array<{[k: string]: any}> = [];
@@ -118,10 +117,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
           position: undefined
         }
       };
-      this.propertyError = undefined;
       this.updatePositionProperties();
-    } else {
-      this.propertyError = "Property name already exists.";
     }
   }
 

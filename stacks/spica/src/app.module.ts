@@ -11,11 +11,11 @@ import {LayoutModule} from "@spica-client/core";
 import {environment} from "../environments/environment";
 
 import {AppComponent} from "./app.component";
-import {BucketModule} from "./bucket/bucket.module";
+import {BucketModule} from "./bucket";
 import {ComposerModule} from "./composer/composer.module";
 import {DashboardModule} from "./dashboard/dashboard.module";
 import {FunctionModule} from "./function/function.module";
-import {PassportModule} from "./passport/passport.module";
+import {PassportModule} from "./passport";
 import {StorageModule} from "./storage/storage.module";
 
 @NgModule({
