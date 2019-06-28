@@ -317,13 +317,13 @@ export class BucketDataController {
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteOneData(@Param("bid", OBJECT_ID) bid: ObjectId, @Param("id", OBJECT_ID) id: ObjectId) {
+  deleteOne(@Param("bid", OBJECT_ID) bid: ObjectId, @Param("id", OBJECT_ID) id: ObjectId) {
     return this.bds.deleteOne(bid, {_id: id});
   }
 
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteManyData(@Param("bid", OBJECT_ID) bid: ObjectId, @Body() body) {
+  deleteMany(@Param("bid", OBJECT_ID) bid: ObjectId, @Body() body) {
     return this.bds.deleteMany(bid, body);
   }
 }
