@@ -29,6 +29,9 @@ export class StrategiesComponent implements OnInit {
   }
 
   delete(id: string) {
-    this.strategiesService.deleteStrategy(id).toPromise().then(() => this.refresh.next());
+    this.strategiesService
+      .deleteStrategy(id)
+      .toPromise()
+      .then(() => this.refresh.next());
   }
 }

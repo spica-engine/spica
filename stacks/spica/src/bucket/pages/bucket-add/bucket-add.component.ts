@@ -1,17 +1,17 @@
-import { CdkDragDrop } from "@angular/cdk/drag-drop";
-import { STEPPER_GLOBAL_OPTIONS } from "@angular/cdk/stepper";
-import { Component, OnDestroy, OnInit } from "@angular/core";
-import { MatCheckboxChange } from "@angular/material";
-import { ActivatedRoute, Router } from "@angular/router";
-import { InputResolver } from "@spica-client/common";
-import { deepCopy } from "@spica-client/core";
-import { ICONS } from "@spica-client/material";
-import { Observable, Subject } from "rxjs";
-import { filter, map, switchMap, takeUntil, tap } from "rxjs/operators";
-import { BucketService } from "../../bucket.service";
-import { INPUT_ICONS } from "../../icons";
-import { Bucket, emptyBucket } from "../../interfaces/bucket";
-import { PredefinedDefault } from "../../interfaces/predefined-default";
+import {CdkDragDrop} from "@angular/cdk/drag-drop";
+import {STEPPER_GLOBAL_OPTIONS} from "@angular/cdk/stepper";
+import {Component, OnDestroy, OnInit} from "@angular/core";
+import {MatCheckboxChange} from "@angular/material";
+import {ActivatedRoute, Router} from "@angular/router";
+import {InputResolver} from "@spica-client/common";
+import {deepCopy} from "@spica-client/core";
+import {ICONS} from "@spica-client/material";
+import {Observable, Subject} from "rxjs";
+import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
+import {BucketService} from "../../bucket.service";
+import {INPUT_ICONS} from "../../icons";
+import {Bucket, emptyBucket} from "../../interfaces/bucket";
+import {PredefinedDefault} from "../../interfaces/predefined-default";
 
 @Component({
   selector: "bucket-add",
