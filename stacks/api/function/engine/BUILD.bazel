@@ -21,7 +21,7 @@ ts_library(
         "@npm//request-promise",
         "@npm//short-id",
         "@npm//typescript",
-        "@npm//vm2",
+        "@npm//isolated-vm",
         "@npm//winston",
         "@npm//winston-daily-rotate-file",
     ],
