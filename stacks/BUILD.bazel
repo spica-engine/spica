@@ -3,7 +3,6 @@ package(default_visibility = ["//visibility:public"])
 load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 load("@io_bazel_rules_docker//container:container.bzl", "container_image")
-load("//tools/dgeni:index.bzl", "dgeni_api_docs")
 
 nodejs_binary(
     name = "api_bin",
@@ -42,15 +41,3 @@ container_image(
         "/usr/share/nginx/html": "/dist/spica",
     },
 )
-
-# TODO(thesayyn): Activate this
-# dgeni_api_docs(
-#     name = "api-docs",
-#     srcs = [
-#         "//stacks/api/bucket:sources"
-#     ],
-#     entry_points = {
-#         "api": ["bucket"],
-#     },
-#     tags = ["docs-package"],
-# )
