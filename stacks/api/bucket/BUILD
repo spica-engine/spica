@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "bucket",
@@ -29,7 +30,12 @@ ts_library(
     ],
 )
 
-filegroup(
-    name = "sources",
-    srcs = glob(["**/*.ts"]),
+docs(
+    name = "docs",
+    module_name = "@spica-server/bucket",
+    srcs = [
+        "bucket.controller.ts",
+        "bucket-data.controller.ts"
+    ],
+    tags = ["docs-package"],
 )
