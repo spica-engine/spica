@@ -1,6 +1,6 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {FunctionEngine} from "./engine";
-import {FunctionExecutor, VM2Executor} from "./executor";
+import {FunctionExecutor, IsolatedVMExecutor} from "./executor";
 import {FsHost, FunctionHost} from "./host";
 import {LoggerHost, WinstonLogger} from "./logger";
 import {EngineRegistry} from "./registry";
@@ -30,7 +30,7 @@ export class EngineModule {
         {provide: LoggerHost, useValue: new WinstonLogger(options.root)},
         {
           provide: FunctionExecutor,
-          useValue: new VM2Executor()
+          useValue: new IsolatedVMExecutor()
         },
         {
           provide: FunctionHost,

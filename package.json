@@ -47,6 +47,7 @@
     "fast-glob": "^2.2.6",
     "htmlparser": "^1.7.7",
     "http-proxy-middleware": "^0.19.1",
+    "isolated-vm": "^2.0.0",
     "locale": "^0.1.0",
     "matcher": "^1.1.1",
     "mongodb": "^3.1.13",
@@ -71,7 +72,6 @@
     "short-id": "^0.1.0-1",
     "typescript": "~3.4.2",
     "url": "^0.11.0",
-    "vm2": "^3.6.9",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^3.6.0"
   },
