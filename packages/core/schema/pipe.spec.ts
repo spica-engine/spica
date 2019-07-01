@@ -37,6 +37,29 @@ describe("schema pipe", () => {
     });
   });
 
+  describe("validation with dynamic schema", () => {
+    let dynamicSchema: jasmine.Spy;
+    let pipe;
+
+    beforeEach(() => {
+      dynamicSchema = jasmine.createSpy("dynamicSchema").and.returnValue({type: "string"});
+      const validatorMixin = Schema.validate(dynamicSchema);
+      pipe = new validatorMixin(new Validator(), {});
+    });
+
+    it("should pass validation", async () => {
+      await expectAsync(pipe.transform("")).toBeResolved();
+      expect(dynamicSchema).toHaveBeenCalledTimes(1);
+      expect(dynamicSchema.calls.first().args[0]).toEqual({});
+    });
+
+    it("should not pass validation", async () => {
+      await expectAsync(pipe.transform(true)).toBeRejected();
+      expect(dynamicSchema).toHaveBeenCalledTimes(1);
+      expect(dynamicSchema.calls.first().args[0]).toEqual({});
+    });
+  });
+
   describe("validation with dynamic uri", () => {
     let pipe;
     let uriResolver: jasmine.Spy;
