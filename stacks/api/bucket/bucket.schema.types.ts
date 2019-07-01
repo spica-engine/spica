@@ -12,7 +12,7 @@ export const CUSTOM_TYPES: Keyword = {
         return "string";
       case "relation":
         parentSchema["type"] = "string";
-        parentSchema["format"] = "bucketid";
+        parentSchema["format"] = "objectid";
         return "string";
       case "date":
         parentSchema["type"] = "string";
