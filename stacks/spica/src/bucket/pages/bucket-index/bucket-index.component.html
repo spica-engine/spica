@@ -15,7 +15,7 @@
   </button>
 </mat-toolbar>
 
-<mat-grid-list [cols]="columns" rowHeight="1:1" gutterSize="10px">
+<mat-grid-list [cols]="columns" rowHeight="1:0.6" gutterSize="10px">
   <mat-grid-tile *ngFor="let bucket of $buckets | async; let i = index">
     <mat-card class="mat-elevation-z25">
       <mat-card-title>
