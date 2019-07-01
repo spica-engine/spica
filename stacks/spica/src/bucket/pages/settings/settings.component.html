@@ -25,37 +25,19 @@
     <form ngForm #addForm="ngForm">
       <div class="hint-message">There goes language and other bucket settings</div>
       <mat-form-field>
-        <input
-          matInput
-          name="langName"
-          placeholder="Language Name"
-          ngModel
-          #nameModel="ngModel"
-          required
-          min="2"
-        />
-        <!-- TODO: Show validation errors -->
-      </mat-form-field>
-      <mat-form-field>
-        <input
-          matInput
-          name="langCode"
-          placeholder="Language Short Code"
-          ngModel
-          #codeModel="ngModel"
-          required
-          min="2"
-          max="2"
-        />
-        <!-- TODO: Show validation errors -->
-        <mat-hint> i.e. enter 'en' for English </mat-hint>
+        <mat-label>Choose Language</mat-label>
+        <mat-select ngModel #selectedLanguage="ngModel" name="lang">
+          <mat-option *ngFor="let lang of langs" [value]="lang">
+            {{ lang.short }} | {{ lang.long }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
     </form>
     <!-- TODO: Disable button if language already exists -->
     <button
       mat-button
       [disabled]="addForm.invalid"
-      (click)="addLanguage(nameModel.value, codeModel.value)"
+      (click)="addLanguage(selectedLanguage.viewModel.short, selectedLanguage.viewModel.long)"
     >
       <mat-icon>add</mat-icon> Add new language
     </button>
