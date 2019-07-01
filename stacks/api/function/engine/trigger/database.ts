@@ -23,10 +23,11 @@ export class DatabaseTrigger implements Trigger<DatabaseTriggerOptions> {
       .toArray()
       .then(collections => {
         const scheme: TriggerSchema = {
-          $id: "functions:triggers/database",
+          $id: "http://spica.internal/function/triggers/database/schema",
           title: "Database",
           description: "An database trigger for functions",
           type: "object",
+          required: ["collection", "type"],
           properties: {
             collection: {
               title: "Collection Name",
@@ -51,6 +52,10 @@ export class DatabaseTrigger implements Trigger<DatabaseTriggerOptions> {
       });
   }
 
+  stub(test: any, info: Function) {
+    return Promise.resolve([{}]);
+  }
+
   register(invoker: InvokerFn, target: Target, options: DatabaseTriggerOptions) {
     const targetKey = `${target.id}_${target.handler}`;
     if (invoker) {
@@ -72,11 +77,6 @@ export class DatabaseTrigger implements Trigger<DatabaseTriggerOptions> {
         `Deregistered ${target.id}.${target.handler} from the collection {${options.collection}, ${options.type}}`
       );
     }
-  }
-
-  //TODO(thesayyn): Implement
-  declarations(): Promise<string> {
-    return Promise.resolve("");
   }
 }
 

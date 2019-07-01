@@ -27,6 +27,7 @@ ts_library(
 ts_library(
     name = "database",
     srcs = ["database.ts"],
+    data = ["database.d.ts"],
     deps = [
         ":trigger",
         "//packages/database",
@@ -38,9 +39,11 @@ ts_library(
 ts_library(
     name = "schedule",
     srcs = ["schedule.ts"],
+    data = ["schedule.d.ts"],
     deps = [
         ":trigger",
         "@npm//@nestjs/common",
         "@npm//cron",
+        "@npm//moment-timezone",  # Not direct dependency
     ],
 )

@@ -1,6 +1,6 @@
 import {Logger, Module} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {InvokerFn, RunSchema, Target, Trigger, TriggerFlags, TriggerSchema} from "./base";
+import {InvokerFn, Target, Trigger, TriggerFlags, TriggerSchema} from "./base";
 import express = require("express");
 
 enum HttpMethod {
@@ -42,7 +42,7 @@ export class HttpTrigger implements Trigger<HttpTriggerOptions> {
 
   schema(): Promise<TriggerSchema> {
     const schema: TriggerSchema = {
-      $id: "functions:triggers/http",
+      $id: "http://spica.internal/function/triggers/http/schema",
       title: "Http",
       description: "An http trigger for functions",
       type: "object",
@@ -62,16 +62,6 @@ export class HttpTrigger implements Trigger<HttpTriggerOptions> {
       },
       additionalProperties: false
     };
-    return Promise.resolve(schema);
-  }
-
-  runSchema(options: HttpTriggerOptions): Promise<RunSchema> {
-    const schema: RunSchema = {
-      $id: "functions:triggers/http",
-      title: "Run http",
-      type: "object"
-    };
-
     return Promise.resolve(schema);
   }
 
@@ -103,18 +93,6 @@ export class HttpTrigger implements Trigger<HttpTriggerOptions> {
         );
       }
     }
-  }
-
-  declarations(): Promise<string> {
-    return Promise.resolve(`
-			export namespace Http {
-				export interface Request {
-
-				}
-				export interface Response {
-
-				}
-			}`);
   }
 }
 

@@ -25,7 +25,6 @@ export class EngineRegistry implements OnModuleInit {
           const instance = module.getProviderByKey<Trigger>(key).instance;
           this.triggers.set(triggerMetadata.name, {
             ...triggerMetadata,
-            declarations: instance.declarations.bind(instance),
             register: instance.register.bind(instance),
             schema: instance.schema.bind(instance),
             stub: instance.stub && instance.stub.bind(instance)

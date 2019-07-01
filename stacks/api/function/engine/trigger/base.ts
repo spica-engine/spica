@@ -1,5 +1,5 @@
 import {SetMetadata} from "@nestjs/common";
-import {JSONSchema6} from "json-schema";
+import {JSONSchema7} from "json-schema";
 
 export const TRIGGER_METADATA = "engineTrigger";
 
@@ -22,14 +22,13 @@ export const enum TriggerFlags {
 export interface Trigger<OptionsT = object> {
   register(invoker: InvokerFn | null, target: Target, options: OptionsT): any;
   schema(): Promise<TriggerSchema>;
-  declarations(): Promise<string>;
   stub?(test: any, info: Function): Promise<any[]>;
   runSchema?(options: OptionsT): Promise<RunSchema>;
 }
 
-export interface RunSchema extends JSONSchema6 {}
+export interface RunSchema extends JSONSchema7 {}
 
-export interface TriggerSchema extends JSONSchema6 {}
+export interface TriggerSchema extends JSONSchema7 {}
 
 export interface Target {
   id: string;
@@ -40,10 +39,6 @@ export type InvokerFn = (invocation: Invocation) => Promise<any>;
 export interface Invocation {
   target: Target;
   parameters: any[];
-}
-
-export interface Token {
-  [key: string]: any;
 }
 
 export interface Context {
