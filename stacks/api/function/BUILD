@@ -5,10 +5,12 @@ load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 # TODO: Add more build files to make incremental build
 ts_library(
     name = "function",
-    srcs = glob(["**/*.ts"]),
+    srcs = glob(["*.ts"]),
+    data = glob(["schemas/*.json"]),
     module_name = "@spica-server/function",
     deps = [
         "//packages/core",
+        "//packages/core/schema",
         "//packages/database",
         "//stacks/api/function/engine",
         "//stacks/api/function/engine/language",
