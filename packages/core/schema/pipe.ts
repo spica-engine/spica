@@ -8,7 +8,8 @@ abstract class MixinValidator {
   transform(value: any) {
     let schema: object;
     if (typeof this.uriSchemaOrResolver == "function") {
-      schema = {$ref: this.uriSchemaOrResolver(this.req)};
+      const res = this.uriSchemaOrResolver(this.req);
+      schema = typeof res == "object" ? res : {$ref: res};
     } else if (typeof this.uriSchemaOrResolver == "string") {
       schema = {$ref: this.uriSchemaOrResolver};
     } else {
@@ -35,6 +36,7 @@ export namespace Schema {
   export function validate(uri: string): Type<PipeTransform>;
   export function validate(schema: object): Type<PipeTransform>;
   export function validate(resolver: (req) => string): Type<PipeTransform>;
+  export function validate(resolver: (req) => object): Type<PipeTransform>;
   export function validate(uriSchemaOrResolver: object | Function | string): Type<PipeTransform> {
     const pipe = mixin(
       class extends MixinValidator {

@@ -6,7 +6,7 @@ describe("schema validator", () => {
   let validator: Validator;
 
   beforeEach(() => {
-    validator = new Validator([], [], []);
+    validator = new Validator();
   });
 
   it("should fail with invalid format", () => {
@@ -111,7 +111,7 @@ describe("schema validator", () => {
         type: "string",
         validate: spy
       };
-      validator = new Validator([], [format], []);
+      validator = new Validator({formats: [format]});
     });
 
     it("should work with regex formats", () => {
@@ -157,7 +157,7 @@ describe("schema validator", () => {
           type: "string",
           validate: spy
         };
-        const validator = new Validator([], [format], []);
+        const validator = new Validator({formats: [format]});
 
         const schema = {
           type: "object",
@@ -189,7 +189,7 @@ describe("schema validator", () => {
           coerce: coerceSpy,
           validate: validateSpy
         };
-        const validator = new Validator([], [format], []);
+        const validator = new Validator({formats: [format]});
         const data = {
           test: "formatted"
         };

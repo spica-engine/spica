@@ -6,11 +6,13 @@ ts_library(
     name = "api",
     srcs = [
         "app.module.ts",
+        "defaults.ts",
         "main.ts",
     ],
     tsconfig = "//:tsconfig.json",
     deps = [
         "//packages/core",
+        "//packages/core/schema",
         "//packages/database",
         "//stacks/api/bucket",
         "//stacks/api/composer",
