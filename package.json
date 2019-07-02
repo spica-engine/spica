@@ -2,7 +2,7 @@
   "name": "spica-sources",
   "version": "0.0.0",
   "private": true,
-  "license": "MIT",
+  "license": "AGPLv3",
   "author": {
     "name": "Spica",
     "email": "dev@spicaengine.com",
