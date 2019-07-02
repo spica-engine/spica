@@ -1,6 +1,6 @@
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {InputSchema, INPUT_SCHEMA} from "../../input";
+import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 import {InputResolver} from "../../input.resolver";
 
 @Component({
@@ -15,7 +15,10 @@ export class ArrayComponent implements ControlValueAccessor {
   _onTouchedFn: any;
   _activeIndex: number;
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema, private resolver: InputResolver) {}
+  constructor(
+    @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
+    private resolver: InputResolver
+  ) {}
 
   addItem() {
     this._values.push(this.resolver.coerce(this.schema.items["type"]));

@@ -20,8 +20,10 @@
     <div *ngIf="_activeIndex != undefined">
       <span
         [inputPlacer]="schema.items"
-        [(ngModel)]="_values[_activeIndex]"
+        [name]="schema.$name"
         [disabled]="_disabled"
+        ngModelParent
+        [(ngModel)]="_values[_activeIndex]"
         (ngModelChange)="callOnChange()"
       ></span>
       <button
