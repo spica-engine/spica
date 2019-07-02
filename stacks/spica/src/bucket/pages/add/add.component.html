@@ -52,7 +52,7 @@
             [inputPlacer]="propertyKv.value"
             class="property-translate"
             [disabled]="propertyKv.value.readOnly || !language.selected"
-            [required]="bucket.required.indexOf(propertyKv.key)"
+            [required]="bucket.required?.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
             [(ngModel)]="data[propertyKv.key][language.selected]"
           >
@@ -62,7 +62,7 @@
             *ngIf="!propertyKv.value.options.translate"
             [inputPlacer]="propertyKv.value"
             [disabled]="propertyKv.value.readOnly"
-            [required]="bucket.required.indexOf(propertyKv.key)"
+            [required]="bucket.required?.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
             [(ngModel)]="data[propertyKv.key]"
           ></div>
