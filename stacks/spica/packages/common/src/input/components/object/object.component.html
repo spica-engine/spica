@@ -7,6 +7,8 @@
     <span
       *ngFor="let property of schema.properties | keyvalue"
       [inputPlacer]="property.value"
+      [name]="property.key"
+      [required]="schema.required && schema.required.indexOf(property.key) > -1"
       [(ngModel)]="_value[property.key]"
       (ngModelChange)="callOnChange()"
       [disabled]="_disabled"

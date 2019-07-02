@@ -1,7 +1,6 @@
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-
-import {INPUT_OPTIONS, INPUT_SCHEMA, InputPlacerOptions, InputSchema} from "../../input";
+import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./string.component.html",
@@ -15,7 +14,7 @@ export class StringComponent implements ControlValueAccessor {
   _onTouchedFn: any;
 
   constructor(
-    @Inject(INPUT_SCHEMA) public schema: InputSchema,
+    @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
     @Inject(INPUT_OPTIONS) public options: InputPlacerOptions
   ) {}
 

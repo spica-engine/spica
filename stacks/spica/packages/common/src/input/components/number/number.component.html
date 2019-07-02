@@ -1,24 +1,24 @@
-<mat-form-field *ngIf="!schema.enum">
+<mat-form-field>
   <mat-label>{{ schema.title }}</mat-label>
   <input
     matInput
     type="number"
+    [name]="schema.$name"
     [disabled]="disabled"
-    #model="ngModel"
+    [required]="schema.$required"
     [min]="schema.minimum"
     [max]="schema.maximum"
+    ngModelParent
+    #model="ngModel"
     [(ngModel)]="value"
     (ngModelChange)="callOnChange()"
   />
   <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
-</mat-form-field>
-<mat-error *ngIf="numberValidator(schema.minimum, schema.maximum)"
-  >You can also set between {{ schema.minimum }} and {{ schema.maximum }}</mat-error
->
-<mat-form-field *ngIf="schema.enum">
-  <mat-label>{{ schema.title }}</mat-label>
-  <mat-select [disabled]="disabled" [(ngModel)]="value" (ngModelChange)="callOnChange()">
-    <mat-option *ngFor="let enum of schema.enum" [value]="enum">{{ enum }}</mat-option>
-  </mat-select>
-  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+  <mat-error *ngIf="model?.errors?.required">This property is required.</mat-error>
+  <mat-error *ngIf="model?.errors?.min">
+    This property must be greater than {{ model.errors.min.min }}.
+  </mat-error>
+  <mat-error *ngIf="model?.errors?.max">
+    This property must be less than {{ model.errors.max.max }}.
+  </mat-error>
 </mat-form-field>

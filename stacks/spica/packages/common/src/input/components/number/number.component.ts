@@ -1,7 +1,6 @@
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-
-import {INPUT_OPTIONS, INPUT_SCHEMA, InputPlacerOptions, InputSchema} from "../../input";
+import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./number.component.html",
@@ -15,7 +14,7 @@ export class NumberComponent implements ControlValueAccessor {
   _onTouchedFn: any;
 
   constructor(
-    @Inject(INPUT_SCHEMA) public schema: InputSchema,
+    @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
     @Inject(INPUT_OPTIONS) public options: InputPlacerOptions
   ) {}
 
@@ -26,13 +25,6 @@ export class NumberComponent implements ControlValueAccessor {
     }
   }
 
-  numberValidator(min, max) {
-    if (this.value > max || this.value < min) {
-      return true;
-    } else {
-      return false;
-    }
-  }
   callOnChange() {
     if (this._onChangeFn) {
       this._onChangeFn(this.value);
