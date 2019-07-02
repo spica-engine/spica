@@ -16,7 +16,7 @@ import {BucketService} from "../../services/bucket.service";
 })
 export class AddComponent implements OnInit {
   bucketId: string;
-  data: BucketRow;
+  data: BucketRow = {};
   now: BucketRow;
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
@@ -43,21 +43,19 @@ export class AddComponent implements OnInit {
         if (params.rid) {
           return this.bds.findOne(params.id, params.rid, true).pipe(
             tap(data => (this.data = data)),
-            switchMap(() => this.bs.getBucket(params.id)),
-            tap(schema => {
-              // What we do here is simply coercing the translated data
-              Object.keys(schema.properties).forEach(key => {
-                const property = schema.properties[key];
-                if (property.options && property.options.translate) {
-                  this.data[key] = this.data[key] || {};
-                }
-              });
-            })
+            switchMap(() => this.bs.getBucket(params.id))
           );
         }
         return this.bs.getBucket(params.id);
       }),
       map(schema => {
+        // What we do here is simply coercing the translated data
+        Object.keys(schema.properties).forEach(key => {
+          const property = schema.properties[key];
+          if (property.options && property.options.translate) {
+            this.data[key] = this.data[key] || {};
+          }
+        });
         schema["positioned"] = Object.entries(schema.properties).reduce(
           (accumulator, [key, value]) => {
             if (accumulator[value.options.position]) {

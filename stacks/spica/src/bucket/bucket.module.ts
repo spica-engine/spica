@@ -31,7 +31,6 @@ import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
 import {BucketRoutingModule} from "./bucket-routing.module";
-import * as fromBucket from "./bucket.reducer";
 import {FilterComponent} from "./components/filter/filter.component";
 import {PropertyLanguageComponent} from "./components/language/language.component";
 import {LocationComponent} from "./components/location/location.component";
@@ -48,6 +47,7 @@ import {SettingsComponent} from "./pages/settings/settings.component";
 import {BucketDataService} from "./services/bucket-data.service";
 import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketInitializer} from "./services/bucket.initializer";
+import * as fromBucket from "./services/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
 
 @NgModule({

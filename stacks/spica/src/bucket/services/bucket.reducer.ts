@@ -1,6 +1,6 @@
 import {createEntityAdapter, EntityState} from "@ngrx/entity";
-import {Action, createFeatureSelector} from "@ngrx/store";
-import {Bucket} from "./interfaces/bucket";
+import {Action, createFeatureSelector, createSelector} from "@ngrx/store";
+import {Bucket} from "../interfaces/bucket";
 
 export enum BucketActionTypes {
   RETRIEVE = "BUCKET_RETRIEVE",
@@ -37,11 +37,13 @@ export class Retrieve implements Action {
 
 export type BucketAction = Retrieve | Add | Update | Remove | Upsert;
 
-export interface State extends EntityState<Bucket> {}
+export interface State extends EntityState<Bucket> {
+  loaded: boolean;
+}
 
 export const adapter = createEntityAdapter<Bucket>({selectId: bucket => bucket._id});
 
-export const initialState: State = adapter.getInitialState({});
+export const initialState: State = adapter.getInitialState({loaded: false});
 
 export function reducer(state: State = initialState, action: BucketAction): State {
   switch (action.type) {
@@ -60,6 +62,21 @@ export function reducer(state: State = initialState, action: BucketAction): Stat
   }
 }
 
+export const bucketFeatureSelector = createFeatureSelector<State>("bucket");
+
 export const {selectIds, selectEntities, selectAll, selectTotal} = adapter.getSelectors(
-  createFeatureSelector<State>("bucket")
+  bucketFeatureSelector
+);
+
+export const selectLoaded = createSelector(
+  bucketFeatureSelector,
+  state => state.loaded
+);
+
+export const selectEmpty = createSelector(
+  bucketFeatureSelector,
+  selectTotal,
+  (state, total) => {
+    return state.loaded && total == 0;
+  }
 );
