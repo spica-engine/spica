@@ -76,7 +76,7 @@ export class BucketController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:add"))
   async import(@Param("id") bucketId: string, @Body() file: ImportFile) {
     try {
-      const result = {skippedDueToDUplication: 0, insertedToBucketCollection: 0};
+      const result = {skippedDueToDuplication: 0, insertedToBucketCollection: 0};
       // TODO(tolga): Validate each row before adding them.
       const dataArray = JSON.parse(file.content.data.toString()) as Array<BucketEntry>;
       for (let data of dataArray) {
@@ -87,7 +87,7 @@ export class BucketController {
           },
           (err: MongoError) => {
             if (err.code == 11000) {
-              result.skippedDueToDUplication = result.skippedDueToDUplication + 1;
+              result.skippedDueToDuplication = result.skippedDueToDuplication + 1;
             }
           }
         );
@@ -120,28 +120,25 @@ export class BucketController {
 
     for (let id of bucketIds) {
       let storageFields = [];
-      await this.bs.findOne({_id: new ObjectId(id)}).then(bucket => {
-        for (let propertyName in bucket.properties) {
-          if (bucket.properties[propertyName].type === "storage") {
-            storageFields.push(propertyName);
-          }
+      const bucket = await this.bs.findOne({_id: new ObjectId(id)});
+      for (let propertyName in bucket.properties) {
+        if (bucket.properties[propertyName].type === "storage") {
+          storageFields.push(propertyName);
         }
-      });
-      await this.bds.find(id).then(async data => {
-        for (let row of data) {
-          for (let storageFieldName of storageFields) {
-            await this.asyncFileRequest(row[storageFieldName]).then(response => {
-              archive.append(response.body, {
-                name: `assets/${row[storageFieldName].split("/").slice(-1)[0]}.${
-                  response.extension
-                }`
-              });
-            });
-          }
+      }
+
+      const data = await this.bds.find(id);
+      for (let row of data) {
+        for (let storageFieldName of storageFields) {
+          const response = await this.asyncFileRequest(row[storageFieldName]);
+          archive.append(response.body, {
+            name: `assets/${row[storageFieldName].split("/").slice(-1)[0]}.${response.extension}`
+          });
         }
+
         const stringifiedData = JSON.stringify(data);
         archive.append(stringifiedData, {name: `${id}.json`});
-      });
+      }
     }
 
     await archive.finalize();
