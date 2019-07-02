@@ -7,6 +7,7 @@ import {
   Optional
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
+import {MatMenuModule} from "@angular/material";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatChipsModule} from "@angular/material/chips";
@@ -58,6 +59,7 @@ export function coerceObject() {
     MatGridListModule,
     MatCardModule,
     MatListModule,
+    MatMenuModule,
     MatDatepickerModule,
     MatNativeDateModule
   ],
