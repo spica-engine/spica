@@ -31,15 +31,14 @@
     <mat-icon>delete</mat-icon>
   </button>
 
-  <button mat-icon-button *ngIf="$meta | async; let meta" [matMenuTriggerFor]="titleMenu">
+  <button mat-icon-button *ngIf="$meta | async; let meta" [matMenuTriggerFor]="propertiesMenu">
     <mat-icon>view_column</mat-icon>
-    <mat-menu class="displayed-properties-menu" xPosition="before" #titleMenu="matMenu">
+    <mat-menu class="displayed-properties-menu" xPosition="before" #propertiesMenu="matMenu">
       <button mat-menu-item (click)="$event.stopPropagation()">
         <mat-checkbox
-          [ngModel]="(meta.properties | keyvalue).length == displayedProperties.length - 2"
+          [ngModel]="properties.length == displayedProperties.length"
           [indeterminate]="
-            displayedProperties.length > 1 &&
-            displayedProperties.length - 1 < (meta.properties | keyvalue).length
+            displayedProperties.length > 1 && displayedProperties.length < properties.length
           "
           (ngModelChange)="toggleDisplayAll($event, meta)"
         >
@@ -49,18 +48,15 @@
       <mat-divider></mat-divider>
       <button
         mat-menu-item
-        *ngFor="let property of meta.properties | keyvalue"
+        disableRipple
+        *ngFor="let property of properties"
         (click)="$event.stopPropagation()"
       >
         <mat-checkbox
-          [ngModel]="displayedProperties.indexOf(property.key) > -1"
-          (ngModelChange)="
-            $event
-              ? displayedProperties.splice(displayedProperties.length - 1, 0, property.key)
-              : displayedProperties.splice(displayedProperties.indexOf(property.key), 1)
-          "
+          [ngModel]="displayedProperties.indexOf(property.name) > -1"
+          (ngModelChange)="toggleProperty(property.name, $event)"
         >
-          {{ property.value.title }}
+          {{ property.title }}
         </mat-checkbox>
       </button>
     </mat-menu>
@@ -103,7 +99,7 @@
       matSortDisableClear="true"
       (matSortChange)="sortData($event)"
     >
-      <ng-container matColumnDef="select">
+      <ng-container matColumnDef="$$spicainternal_select">
         <mat-header-cell *matHeaderCellDef>
           <mat-checkbox
             *ngIf="dataIds?.length > 0"
@@ -125,7 +121,7 @@
           ></mat-checkbox>
         </mat-cell>
       </ng-container>
-      <ng-container matColumnDef="actions">
+      <ng-container matColumnDef="$$spicainternal_actions">
         <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell *matCellDef="let row">
           <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
@@ -150,9 +146,9 @@
         *ngFor="let property of ($meta | async)?.properties | keyvalue"
         [matColumnDef]="property.key"
       >
-        <mat-header-cell *matHeaderCellDef mat-sort-header>{{
-          property.value.title
-        }}</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>
+          {{ property.value.title }}
+        </mat-header-cell>
         <mat-cell *matCellDef="let row">{{ row[property.key] }}</mat-cell>
       </ng-container>
       <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>
