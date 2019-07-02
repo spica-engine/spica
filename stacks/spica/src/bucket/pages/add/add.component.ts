@@ -1,15 +1,13 @@
-import {Component, HostListener, OnInit} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {PreferencesService} from "@spica-client/core";
-import {Observable, of} from "rxjs";
-import {switchMap, tap} from "rxjs/operators";
+import {Observable} from "rxjs";
+import {map, switchMap, tap} from "rxjs/operators";
+import {Bucket} from "../../interfaces/bucket";
+import {BucketRow} from "../../interfaces/bucket-entry";
+import {BucketHistory} from "../../interfaces/bucket-history";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
-import {Bucket, Property} from "../../interfaces/bucket";
-import {BucketRow, EMPTY_BUCKET_ROW} from "../../interfaces/bucket-entry";
-import {BucketHistory} from "../../interfaces/bucket-history";
-import {BucketSettings} from "../../interfaces/bucket-settings";
 
 @Component({
   selector: "bucket-add",
@@ -18,72 +16,67 @@ import {BucketSettings} from "../../interfaces/bucket-settings";
 })
 export class AddComponent implements OnInit {
   bucketId: string;
-  bucketRowId: string;
-  bucket$: Observable<Bucket>;
   data: BucketRow;
-  histories: Array<BucketHistory>;
-  selectedHistoryId: string;
-  bucketSettings: BucketSettings;
+  now: BucketRow;
+  bucket$: Observable<Bucket>;
+  histories$: Observable<Array<BucketHistory>>;
 
-  postitioning: {[key: string]: {key: string; value: Property}[]};
-
-  divisionsOrder = ["left", "right", "bottom"];
-
-  windowWidth;
+  layouts = ["left", "right", "bottom"];
 
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
     private bhs: BucketHistoryService,
-    private ss: PreferencesService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
 
-  @HostListener("window:resize")
-  onResize() {
-    this.windowWidth = window.innerWidth;
-  }
-
   ngOnInit(): void {
-    this.ss
-      .get<BucketSettings>("bucket")
-      .pipe(
-        tap(settings => (this.bucketSettings = settings)),
-        switchMap(() => this.route.params),
-        tap(params => {
-          this.bucketId = params.id;
-          this.bucketRowId = params.rid;
-          this.bucket$ = this.bs.getBucket(this.bucketId);
-        }),
-        switchMap(() => {
-          if (this.bucketRowId) {
-            return this.bhs.historyList(this.bucketId, this.bucketRowId).pipe(
-              tap(histories => {
-                this.histories = histories;
-              }),
-              switchMap(() => {
-                return this.bds.findOne(this.bucketId, this.bucketRowId);
-              })
-            );
-          } else {
-            return of({...EMPTY_BUCKET_ROW});
-          }
-        })
-      )
-      .subscribe(data => {
-        this.normalize(this.bucket$, data);
-        this.data = data;
-      });
-    this.windowWidth = window.innerWidth;
+    this.bucket$ = this.route.params.pipe(
+      tap(params => {
+        this.bucketId = params.id;
+        if (params.rid) {
+          this.histories$ = this.bhs.historyList(params.id, params.rid);
+        }
+      }),
+      switchMap(params => {
+        if (params.rid) {
+          return this.bds.findOne(params.id, params.rid, true).pipe(
+            tap(data => (this.data = data)),
+            switchMap(() => this.bs.getBucket(params.id)),
+            tap(schema => {
+              // What we do here is simply coercing the translated data
+              Object.keys(schema.properties).forEach(key => {
+                const property = schema.properties[key];
+                if (property.options && property.options.translate) {
+                  this.data[key] = this.data[key] || {};
+                }
+              });
+            })
+          );
+        }
+        return this.bs.getBucket(params.id);
+      }),
+      map(schema => {
+        schema["positioned"] = Object.entries(schema.properties).reduce(
+          (accumulator, [key, value]) => {
+            if (accumulator[value.options.position]) {
+              accumulator[value.options.position].push({key, value});
+            }
+            return accumulator;
+          },
+          {left: [], right: [], bottom: []}
+        );
+        return schema;
+      })
+    );
   }
 
-  getHistoryData(historyId) {
-    this.bhs.revertTo(this.bucketId, this.data._id, historyId).subscribe(data => {
-      this.normalize(this.bucket$, data);
-      this.data = data;
-      this.selectedHistoryId = historyId;
-    });
+  async revert(historyId: string) {
+    if (!this.now) {
+      this.now = this.data;
+    }
+    this.data = await this.bhs.revertTo(this.bucketId, this.data._id, historyId).toPromise();
   }
 
   saveBucketRow() {
@@ -91,32 +84,5 @@ export class AddComponent implements OnInit {
       .replaceOne(this.bucketId, this.data)
       .toPromise()
       .then(() => this.router.navigate(["bucket", this.bucketId]));
-  }
-
-  normalize(bucket: Observable<Bucket>, data: BucketRow): void {
-    bucket.subscribe(b => {
-      this.postitioning = Object.entries(b.properties).reduce(
-        (accumulator, [key, value]) => {
-          if (accumulator[value.options.position]) {
-            accumulator[value.options.position].push({key, value});
-          }
-          return accumulator;
-        },
-        {left: [], right: [], bottom: []}
-      );
-
-      for (const fieldName of Object.keys(b.properties)) {
-        if (data[fieldName] === undefined) {
-          data[fieldName] = {};
-          if (b.properties[fieldName].options.translate) {
-            for (const lang of this.bucketSettings.language.supported_languages) {
-              data[fieldName][lang.code] = undefined;
-            }
-          } else {
-            data[fieldName] = undefined;
-          }
-        }
-      }
-    });
   }
 }

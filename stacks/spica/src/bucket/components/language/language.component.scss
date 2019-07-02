@@ -1,0 +1,15 @@
+::ng-deep .language-menu {
+  width: 40px;
+  min-width: unset;
+  overflow: visible;
+  background: none;
+  .mat-menu-content {
+    padding: 0 !important;
+    button {
+      margin-top: 4px;
+    }
+  }
+}
+:host {
+  display: inline-block;
+}

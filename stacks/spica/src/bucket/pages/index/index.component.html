@@ -36,7 +36,7 @@
     <mat-menu class="displayed-properties-menu" xPosition="before" #titleMenu="matMenu">
       <button mat-menu-item (click)="$event.stopPropagation()">
         <mat-checkbox
-          [ngModel]="(meta.properties | keyvalue).length == displayedProperties.length - 1"
+          [ngModel]="(meta.properties | keyvalue).length == displayedProperties.length - 2"
           [indeterminate]="
             displayedProperties.length > 1 &&
             displayedProperties.length - 1 < (meta.properties | keyvalue).length
