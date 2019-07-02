@@ -30,27 +30,25 @@ import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
-import {BucketDataService} from "./services/bucket-data.service";
-import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketRoutingModule} from "./bucket-routing.module";
-import {BucketInitializer} from "./services/bucket.initializer";
 import * as fromBucket from "./bucket.reducer";
-import {BucketService} from "./services/bucket.service";
 import {FilterComponent} from "./components/filter/filter.component";
-import {LanguageSelectionComponent} from "./components/language-selection/language-selection.component";
+import {PropertyLanguageComponent} from "./components/language/language.component";
 import {LocationComponent} from "./components/location/location.component";
 import {RelationSchemaComponent} from "./components/relation-schema/relation-schema.component";
 import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
 import {TextEditorModule} from "./components/richtext/text-editor/text-editor.module";
-import {TimelineComponent} from "./components/timeline/timeline.component";
-import {LanguageDirective} from "./directives/language.directive";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
 import {ImportExportComponent} from "./pages/import-export/import-export.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
+import {BucketDataService} from "./services/bucket-data.service";
+import {BucketHistoryService} from "./services/bucket-history.service";
+import {BucketInitializer} from "./services/bucket.initializer";
+import {BucketService} from "./services/bucket.service";
 
 @NgModule({
   imports: [
@@ -120,10 +118,8 @@ import {SettingsComponent} from "./pages/settings/settings.component";
     RelationSchemaComponent,
     LocationComponent,
 
-    LanguageDirective,
+    PropertyLanguageComponent,
     SettingsComponent,
-    TimelineComponent,
-    LanguageSelectionComponent,
     FilterComponent
   ]
 })
