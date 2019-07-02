@@ -30,6 +30,24 @@
     [(ngModel)]="value"
     (ngModelChange)="callOnChange()"
   />
+  <button
+    *ngIf="schema.examples"
+    mat-icon-button
+    matSuffix
+    [matMenuTriggerFor]="exampleMenu"
+    (click)="$event.preventDefault()"
+  >
+    <mat-icon>attachment</mat-icon>
+    <mat-menu #exampleMenu>
+      <button
+        mat-menu-item
+        *ngFor="let example of schema.examples"
+        (click)="value = example; callOnChange()"
+      >
+        {{ example }}
+      </button>
+    </mat-menu>
+  </button>
   <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
   <mat-error *ngIf="model?.errors?.required">This property is required.</mat-error>
   <mat-error *ngIf="model?.errors?.minLength">
@@ -37,5 +55,8 @@
   </mat-error>
   <mat-error *ngIf="model?.errors?.maxLength">
     This property must be less than {{ model.errors.max.max }} characters.
+  </mat-error>
+  <mat-error *ngIf="model?.errors?.pattern">
+    This property must match the pattern.
   </mat-error>
 </mat-form-field>
