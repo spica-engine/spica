@@ -132,13 +132,13 @@
             canInteract="bucket:data:update"
             color="warn"
             [matAwareDialog]="{
-              title: 'Confirmation',
+              title: 'Attention',
               templateOrDescription: dialogTemplate,
-              answer: 'yes'
+              answer: 'agree'
             }"
             (confirm)="delete(row._id)"
           >
-            <mat-icon delete-button>delete</mat-icon>
+            <mat-icon>delete</mat-icon>
           </button>
         </mat-cell>
       </ng-container>
@@ -160,7 +160,9 @@
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>
   <p>
-    This action will permanently delete the row and broke the all associations.
+    This action will permanently delete the row and break the all relations.
   </p>
-  <p>Please type in <b>"yes"</b> to confirm.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
 </ng-template>
