@@ -38,12 +38,13 @@ export class HistoryController {
       })
       .forEach(history => {
         history.changes.forEach(change => {
-          const lhs = resolve(change.path, bucketEntry);
-          if (typeof lhs === "string") {
-            setPropertyByPath(bucketEntry, change.path, gDiff.patch_apply(change.patch, lhs)[0]);
-          } else if (typeof lhs === "object") {
-            // TODO: Handle non-primitives
-            // setPropertyByPath(bucketEntry, change.path, applyChange({}, bucketEntry, change))
+          const lhs = resolve(change.path, bucketEntry) || "";
+          if (typeof lhs != "object") {
+            setPropertyByPath(
+              bucketEntry,
+              change.path,
+              gDiff.patch_apply(change.patch, lhs.toString())[0]
+            );
           }
         });
       });
