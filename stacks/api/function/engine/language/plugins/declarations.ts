@@ -1,7 +1,7 @@
 import * as glob from "fast-glob";
 import * as path from "path";
-import * as tss from "typescript/lib/tsserverlibrary";
 import * as ts from "typescript";
+import * as tss from "typescript/lib/tsserverlibrary";
 
 function init(modules: {typescript: typeof tss}) {
   function create(info: tss.server.PluginCreateInfo): tss.LanguageService {

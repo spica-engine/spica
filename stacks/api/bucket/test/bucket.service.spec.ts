@@ -3,7 +3,6 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, InsertOneWriteOpResult} from "@spica-server/database/testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {Bucket} from "../bucket";
-import {CREATED_AT, CUSTOM_TYPES, UPDATED_AT} from "../bucket.schema.defaults";
 import {BucketService} from "../bucket.service";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
@@ -14,14 +13,7 @@ describe("bucket service", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        DatabaseTestingModule.create(),
-        PreferenceModule,
-        SchemaModule.forChild({
-          keywords: [CUSTOM_TYPES],
-          defaults: [CREATED_AT, UPDATED_AT]
-        })
-      ],
+      imports: [DatabaseTestingModule.create(), PreferenceModule, SchemaModule.forChild()],
       providers: [BucketService]
     }).compile();
     bs = module.get(BucketService);
@@ -70,5 +62,9 @@ describe("bucket service", () => {
     const insertOp = await bs.insertMany([{primary: "title"}, {primary: "descriptionn"}]);
     await expectAsync(bs.deleteOne({_id: insertOp.insertedIds[0]})).toBeResolved();
     return await expectAsync(bs.findOne({_id: insertOp[0]})).toBeResolvedTo(null);
+  });
+
+  it("should empty default predefined defaults", () => {
+    expect(bs.getPredefinedDefaults()).toEqual([]);
   });
 });

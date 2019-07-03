@@ -9,7 +9,7 @@ export interface Bucket {
   description?: string;
   required?: string[];
   properties?: {
-    [key: string]: InputSchema & PropertyOptions;
+    [key: string]: Property;
   };
 }
 

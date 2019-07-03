@@ -33,24 +33,29 @@
 
       <ng-container matColumnDef="actions">
         <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="actions-content" *matCellDef="let element">
+        <mat-cell class="actions-content" *matCellDef="let function">
           <button
-            canInteract="function:show"
+            canInteract="function:update"
             mat-icon-button
-            [routerLink]="element._id"
+            [routerLink]="function._id"
             matTooltip="Edit"
           >
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button [routerLink]="element._id + '/logs'" matTooltip="Logs">
+          <button mat-icon-button [routerLink]="function._id + '/logs'" matTooltip="Logs">
             <mat-icon>bug_report</mat-icon>
           </button>
           <button
             canInteract="function:delete"
             mat-icon-button
-            (click)="delete(element._id)"
             color="warn"
             matTooltip="Delete"
+            [matAwareDialog]="{
+              title: 'Attention',
+              templateOrDescription: dialogTemplate,
+              answer: function.name
+            }"
+            (confirm)="delete(function._id)"
           >
             <mat-icon>delete</mat-icon>
           </button>
@@ -67,7 +72,10 @@
   </mat-card-footer>
 </mat-card>
 
-<ng-template #changeStatus let-answer="answer">
-  <p>This action will change the status of the user.</p>
-  <p>Please type "{{ answer }}" to confirm.</p>
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action cannot be undone.</p>
+  <p>
+    This action will permanently delete the <code>{{ answer }}</code> function.
+  </p>
+  <p class="mat-body">Please type in the name of the function to confirm.</p>
 </ng-template>

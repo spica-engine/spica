@@ -1,13 +1,9 @@
-import {Observable} from "rxjs";
 import {FormatDefinition, KeywordDefinition} from "ajv";
+import {Observable} from "rxjs";
 
-export const SCHEMA_FORMAT = "SCHEMA_FORMAT";
+export const GLOBAL_SCHEMA_MODULE_OPTIONS = "GLOBAL_SCHEMA_MODULE_OPTIONS";
 
-export const SCHEMA_KEYWORD = "SCHEMA_KEYWORD";
-
-export const SCHEMA_DEFAULT = "SCHEMA_DEFAULT";
-
-export const LOCAL_SCHEMAS = "LOCAL_SCHEMAS";
+export const SCHEMA_MODULE_OPTIONS = "SCHEMA_MODULE_OPTIONS";
 
 export type UriResolver = (uri: string) => Observable<object> | Promise<object> | null | undefined;
 
@@ -28,5 +24,5 @@ export interface ModuleOptions {
   schemas?: Object[];
   defaults?: Default[];
   keywords?: Keyword[];
-  formats?: FormatDefinition[];
+  formats?: Format[];
 }

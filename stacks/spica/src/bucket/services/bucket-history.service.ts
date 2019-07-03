@@ -8,8 +8,8 @@ import {BucketHistory} from "../interfaces/bucket-history";
 export class BucketHistoryService {
   constructor(private http: HttpClient) {}
 
-  historyList(bucketId, bucketDataId): Observable<Array<BucketHistory>> {
-    return this.http.get<Array<BucketHistory>>(`api:/bucket/${bucketId}/history/${bucketDataId}`);
+  historyList(bucketId: string, rowId: string): Observable<Array<BucketHistory>> {
+    return this.http.get<Array<BucketHistory>>(`api:/bucket/${bucketId}/history/${rowId}`);
   }
 
   revertTo(bucketId: string, bucketDataId: string, historyId: string) {

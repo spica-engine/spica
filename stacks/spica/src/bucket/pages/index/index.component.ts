@@ -26,6 +26,8 @@ export class IndexComponent implements OnInit {
   public aggregations: BucketAggregations = {...emptyBucketAggregations()};
 
   public displayedProperties: Array<string> = [];
+  public properties: Array<{name: string; title: string}> = [];
+
   public $preferences: Observable<BucketSettings>;
   public language: string;
 
@@ -50,11 +52,22 @@ export class IndexComponent implements OnInit {
       switchMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
         if (schema) {
-          this.displayedProperties = Object.entries(schema.properties)
-            .filter(([, value]) => value.options.visible)
-            .map(([key]) => key)
-            .concat("actions");
-          this.displayedProperties = ["select", ...this.displayedProperties];
+          this.properties = [
+            {name: "$$spicainternal_select", title: "Select"},
+            ...Object.entries(schema.properties).map(([name, value]) => ({
+              name,
+              title: value.title
+            })),
+            {name: "$$spicainternal_actions", title: "Actions"}
+          ];
+
+          this.displayedProperties = [
+            "$$spicainternal_select",
+            ...Object.entries(schema.properties)
+              .filter(([, value]) => value.options.visible)
+              .map(([key]) => key),
+            "$$spicainternal_actions"
+          ];
         }
       })
     );
@@ -62,10 +75,30 @@ export class IndexComponent implements OnInit {
 
   toggleDisplayAll(display: boolean, schema: Bucket) {
     if (display) {
-      this.displayedProperties = ["select", ...Object.keys(schema.properties), "actions"];
+      this.displayedProperties = [
+        "$$spicainternal_select",
+        ...Object.keys(schema.properties),
+        "$$spicainternal_actions"
+      ];
     } else {
-      this.displayedProperties = ["select", schema.primary, "actions"];
+      this.displayedProperties = [
+        "$$spicainternal_select",
+        schema.primary,
+        "$$spicainternal_actions"
+      ];
     }
+  }
+
+  toggleProperty(name: string, selected: boolean) {
+    if (selected) {
+      this.displayedProperties.push(name);
+    } else {
+      this.displayedProperties.splice(this.displayedProperties.indexOf(name), 1);
+    }
+    this.displayedProperties = this.displayedProperties.sort(
+      (a, b) =>
+        this.properties.findIndex(p => p.name == a) - this.properties.findIndex(p => p.name == b)
+    );
   }
 
   fetchData(): void {

@@ -2,7 +2,7 @@
   "name": "spica-sources",
   "version": "0.0.0",
   "private": true,
-  "license": "MIT",
+  "license": "AGPLv3",
   "author": {
     "name": "Spica",
     "email": "dev@spicaengine.com",
@@ -49,6 +49,7 @@
     "http-proxy-middleware": "^0.19.1",
     "locale": "^0.1.0",
     "matcher": "^1.1.1",
+    "mime-types": "^2.1.24",
     "mongodb": "^3.1.13",
     "mongodb-memory-server-core": "^5.1.5",
     "multimatch": "^3.0.0",

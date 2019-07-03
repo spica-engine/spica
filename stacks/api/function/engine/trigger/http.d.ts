@@ -2,7 +2,7 @@
  * Typings for http trigger
  * @trigger http
  */
-declare namespace http {
+declare namespace triggers.http {
   /**
    * Request object
    */

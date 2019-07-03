@@ -1,5 +1,8 @@
-<h2 mat-dialog-title>{{ options.title }}</h2>
-<mat-dialog-content>
+<h4 mat-dialog-title>
+  <mat-icon>{{ options.icon || "error" }}</mat-icon>
+  <span>{{ options.title }}</span>
+</h4>
+<mat-dialog-content class="mat-body">
   <ng-container *ngIf="isTemplate">
     <ng-template
       [ngTemplateOutlet]="options.templateOrDescription"
@@ -14,7 +17,7 @@
       [placeholder]="options.answerHint || 'Answer'"
       [ngModel]="undefined"
       #answerModel="ngModel"
-      (keydown.enter)="answerModel.value == options.answer ? ref.close(true) : undefined"
+      (keydown.enter)="answerModel.value == options.answer && ref.close(true)"
     />
   </mat-form-field>
 </mat-dialog-content>
@@ -22,12 +25,7 @@
   <button mat-button [mat-dialog-close]="false">
     {{ options.cancelText || "Cancel" }}
   </button>
-  <button
-    #confirmButton
-    mat-button
-    [disabled]="answerModel.value != options.answer"
-    [mat-dialog-close]="true"
-  >
+  <button mat-button [disabled]="answerModel.value != options.answer" [mat-dialog-close]="true">
     {{ options.confirmText || "Confirm" }}
   </button>
 </mat-dialog-actions>

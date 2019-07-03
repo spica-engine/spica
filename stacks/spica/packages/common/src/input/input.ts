@@ -5,12 +5,16 @@ export interface InputSchema extends JSONSchema7 {
   type: JSONSchema7TypeName | any;
 }
 
+export interface InternalPropertySchema extends InputSchema {
+  $required: boolean;
+  $name: string;
+}
+
 export interface SchemaPlacerOptions {
   title: boolean;
 }
 
 export interface InputPlacerOptions {
-  class: string;
   [key: string]: any;
 }
 

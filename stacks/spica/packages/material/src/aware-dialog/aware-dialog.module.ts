@@ -4,8 +4,8 @@ import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
-
 import {MatAwareDialogComponent} from "./aware-dialog.component";
 import {MatAwareDialogDirective} from "./aware-dialog.directive";
 
@@ -16,7 +16,8 @@ import {MatAwareDialogDirective} from "./aware-dialog.directive";
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatIconModule
   ],
   declarations: [MatAwareDialogComponent, MatAwareDialogDirective],
   entryComponents: [MatAwareDialogComponent],

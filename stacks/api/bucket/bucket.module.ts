@@ -5,7 +5,7 @@ import {PreferenceModule, PreferenceService} from "@spica-server/preference";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
-import {BUCKET_ID, CREATED_AT, CUSTOM_TYPES, UPDATED_AT} from "./bucket.schema.defaults";
+import {CUSTOM_TYPES} from "./bucket.schema.types";
 import {SchemaCacheInvalidator} from "./bucket.schema.invalidator";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {BucketService} from "./bucket.service";
@@ -20,8 +20,6 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
     HistoryModule,
     SchemaModule.forChild({
       keywords: [CUSTOM_TYPES],
-      defaults: [CREATED_AT, UPDATED_AT],
-      formats: [BUCKET_ID],
       schemas: [BucketSchema, PropertyOptionsSchema]
     })
   ],
