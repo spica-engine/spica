@@ -57,7 +57,15 @@ export class HistoryService {
     return this.collection.deleteMany(filter);
   }
 
-  saveHistory(history: BucketHistory): Promise<ReplaceWriteOpResult> {
+  async saveHistory(history: BucketHistory): Promise<ReplaceWriteOpResult> {
+    const recordCount = await this.collection
+      .find({bucket_data_id: history.bucket_data_id})
+      .count();
+
+    if (recordCount >= 10) {
+      await this.collection.deleteOne({bucket_data_id: history.bucket_data_id});
+    }
+
     return this.collection.replaceOne({_id: history._id}, history, {
       upsert: true
     });

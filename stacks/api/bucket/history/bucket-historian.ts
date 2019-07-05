@@ -123,6 +123,15 @@ export class BucketHistorian {
             ({lhs, rhs, ...rest} = diff);
             result.push(rest);
           }
+        } // Handling Array Elements
+        else if (diff.kind === "A") {
+          if (diff.item.kind === "D") {
+            diff["patch"] = this.shallowDiff(diff.item.lhs, "");
+          } else if (diff.item.kind === "N") {
+            diff["patch"] = this.shallowDiff("", diff.item.rhs);
+          }
+          diff.path.push(diff.index);
+          result.push(diff as BucketChange);
         }
       });
     }
