@@ -1,0 +1,14 @@
+<article>
+  {% block header %}
+  <header class="api-header">
+    <h1>{$ doc.name $}</h1>
+    <label class="api-type-label {$ doc.docType $}">{$ doc.docType $}</label>
+    {% if doc.deprecated !== undefined %}<label class="api-status-label deprecated">deprecated</label>{% endif %} 
+    {% if doc.security !== undefined %}<label class="api-status-label security">security</label>{% endif %}
+  </header>
+  <section class="description">{$ doc.description | marked $}</section>
+  {% endblock %}
+  <div class="api-body">
+    {% block body %}{% endblock %}
+  </div>
+</article>

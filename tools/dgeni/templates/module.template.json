@@ -1,4 +1,0 @@
-{
-    "type": "{$ doc.docType $}",
-    "name": "{$ doc.name $}"
-}

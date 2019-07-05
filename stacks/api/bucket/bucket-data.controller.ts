@@ -14,27 +14,42 @@ import {
 } from "@nestjs/common";
 import {BOOLEAN, JSONP, NUMBER, JSONPV} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {FilterQuery, OBJECT_ID, ObjectId} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketEntry} from "./bucket";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {BucketService} from "./bucket.service";
-
+/**
+ * @name BucketData
+ * @description
+ * This controller responsible for data input/output for specific specific bucket.
+ * Also this will be displayed on docs page.
+ */
 @Controller("bucket/:bid/data")
 export class BucketDataController {
   constructor(private bs: BucketService, private bds: BucketDataService) {}
 
+  /**
+   * Returns the data on bucket
+   * @param acceptedLanguage Specify the content language
+   * @param bid BucketId that docs say that
+   * @param prune Apply aggregations to result
+   * @param filter Apply filter to result
+   * @param limit Limit the result
+   * @param skip Skip N item in the result
+   * @param sort Sort results
+   */
   @Get()
   async find(
     @Headers("accept-language") acceptedLanguage: string,
     @Param("bid", OBJECT_ID) bid: ObjectId,
     @Query("prune", BOOLEAN) prune: boolean = false,
     @Query("filter", JSONPV((key, value) => (key === "$lookup" ? undefined : value)))
-    filter: FilterQuery<BucketEntry>,
-    @Query("limit", NUMBER) limit: number,
-    @Query("skip", NUMBER) skip: number,
-    @Query("sort", JSONP) sort: object
+    filter: FilterQuery<any>,
+    @Query("limit", NUMBER) limit?: number,
+    @Query("skip", NUMBER) skip?: number,
+    @Query("sort", JSONP) sort?: object
   ) {
     limit = limit || 10;
     const schema = await this.bs.findOne({_id: bid});
@@ -307,7 +322,7 @@ export class BucketDataController {
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:add"))
+  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   replaceOne(
     @Param("bid", OBJECT_ID) bid: ObjectId,
     @Body(Schema.validate(req => `bucket:${req.params.bid}`)) body: BucketEntry

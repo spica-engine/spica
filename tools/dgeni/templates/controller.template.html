@@ -1,0 +1,90 @@
+{% import "route.macro.html" as routeMacros -%} {% extends 'base.template.html' -%} {% block body %}
+<style>
+  label {
+    display: block;
+    height: 25px;
+  }
+  .api-route {
+    float: left;
+  }
+  .api-route > * {
+    float: left;
+    width: 100%;
+  }
+  .api-route h1 {
+    text-transform: capitalize;
+  }
+  .api-route h1, h2, h3, h4, h5, h6 {
+    margin: 5px;
+    float: left;
+    width: 100%;
+  }
+  .api-route h2 > * {
+    float: left;
+    vertical-align: middle;
+  }
+
+  .api-route h2 .api-route-method{
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  .api-route h2 .api-route-path {
+    padding-left: 15px;
+    margin-top: 3px;
+    font-family: "Lucida Sans Typewriter", "Lucida Console", monaco, "Bitstream Vera Sans Mono",
+      monospace;
+    font-size: 14px;
+    font-weight: 500;
+    float: left;
+  }
+  .api-route h2 .api-route-path .route-path > span {
+    float: left;
+  }
+  .api-route h2 .api-route-path .seperator {
+    font-style: oblique;
+  }
+  .api-route h2 .api-route-path .param {
+    color: #16c98d;
+    font-weight: 700;
+  }
+
+  .api-route ul li .api-route-param-type {
+    text-transform: capitalize;
+    font-weight: bolder;
+  }
+</style>
+{%- for member in doc.members %}{% if member.docType == "route" %}
+<section class="api-route">
+  <h1>{$ member.name $}</h1>
+  <h2>
+    <span class="api-route-method">{$ member.type $}</span>
+    <span class="api-route-path">{$ routeMacros.renderRoute(member.route) $}</span>
+  </h2>
+  {% if member.description %}
+  <p>{$ member.description $}</p>
+  {% endif %}
+  <label class="api-route-authorization">Authorization: {%if member.authorization %}<b>required</b>{% else %}<b>not required</b>{% endif %}</label>
+  {% if member.actions.length %}
+  <label class="api-route-actions">Required actions: {$ member.actions | join  $}</label>
+  {% endif %}
+  <h4>Parameters</h4>
+  <ul>
+    {%- for param in member.parameterDocs %} {% if not param.private %}
+    <li>
+      <p>
+        <code class="api-route-param-type">{$ param.docType $}</code>
+        <span class="api-route-param-name">{$ param.name $}</span>
+        {% if param.isOptional %}
+        <small class="api-route-param-optional">optional</small>
+        {% endif %}
+        <code class="api-route-data-type">{$ param.type $}</code>
+      </p>
+      {% if param.description %}
+      <p>{$ param.description $}</p>
+      {% endif %}
+    </li>
+    {% endif %}{% endfor -%}
+  </ul>
+</section>
+{% endif %}{% endfor -%} {% endblock %}
