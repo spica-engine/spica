@@ -71,7 +71,7 @@ docs = rule(
         "module_name": attr.string(),
         "srcs": attr.label_list(
             doc = "The TypeScript source files to compile.",
-            allow_files = [".ts"],
+            allow_files = [".ts", ".md"],
             mandatory = True,
         ),
         "node_modules": attr.label(

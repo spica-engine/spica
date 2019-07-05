@@ -3,11 +3,14 @@ package(default_visibility = ["//visibility:public"])
 load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 
+exports_files(["tsconfig.json"])
+
 ts_library(
     name = "sources",
     srcs = glob(["**/*.ts"]),
     tsconfig = ":tsconfig.json",
     deps = [
+        "//tools/dgeni/remark",
         "@npm//@types/node",
         "@npm//dgeni",
         "@npm//dgeni-packages",

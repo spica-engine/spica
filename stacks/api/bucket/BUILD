@@ -36,6 +36,7 @@ docs(
         "bucket.controller.ts",
         "bucket.ts",
         "bucket-data.controller.ts",
+        "doc.md",
         "history/history.controller.ts",
     ],
     module_name = "@spica-server/bucket",

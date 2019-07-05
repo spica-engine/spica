@@ -14,7 +14,7 @@ export class ControllerProcessor implements Processor {
 
     return docs.map(doc => {
       if (doc.docType == "class") {
-        doc.decorators = doc.decorators || []
+        doc.decorators = doc.decorators || [];
         const controller = doc.decorators!.find((d: any) => d.name == "Controller");
         if (controller) {
           doc.docType = "controller";
@@ -23,7 +23,9 @@ export class ControllerProcessor implements Processor {
             .filter((member: any) => member.docType == "member")
             .map((member: any) => {
               member.decorators = member.decorators || [];
-              const methodDecorator = member.decorators.find((d: any) => this.httpMethods.indexOf(d.name) > -1);
+              const methodDecorator = member.decorators.find(
+                (d: any) => this.httpMethods.indexOf(d.name) > -1
+              );
               if (methodDecorator) {
                 member.docType = "route";
                 member.type = methodDecorator.name.toUpperCase();
