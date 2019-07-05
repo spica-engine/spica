@@ -160,7 +160,7 @@ export class BucketController {
     return new Promise(function(resolve, reject) {
       request.defaults({encoding: null}).get(url, (err, res, body) => {
         if (res) {
-          let extension = mime.extension(res.headers["content-type"]);
+          const extension = mime.extension(res.headers["content-type"]);
           resolve({extension: extension, body: body});
         } else {
           resolve(undefined);
