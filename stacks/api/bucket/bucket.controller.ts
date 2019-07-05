@@ -131,9 +131,11 @@ export class BucketController {
       for (let row of data) {
         for (let storageFieldName of storageFields) {
           const response = await this.asyncFileRequest(row[storageFieldName]);
-          archive.append(response.body, {
-            name: `assets/${row[storageFieldName].split("/").slice(-1)[0]}.${response.extension}`
-          });
+          if (response) {
+            archive.append(response.body, {
+              name: `assets/${row[storageFieldName].split("/").slice(-1)[0]}.${response.extension}`
+            });
+          }
         }
 
         const stringifiedData = JSON.stringify(data);
@@ -157,8 +159,12 @@ export class BucketController {
   private asyncFileRequest(url): any {
     return new Promise(function(resolve, reject) {
       request.defaults({encoding: null}).get(url, (err, res, body) => {
-        let extension = mime.extension(res.headers["content-type"]);
-        resolve({extension: extension, body: body});
+        if (res) {
+          const extension = mime.extension(res.headers["content-type"]);
+          resolve({extension: extension, body: body});
+        } else {
+          resolve(undefined);
+        }
       });
     });
   }
