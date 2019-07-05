@@ -3,6 +3,9 @@
   specified entry points and outputs the API docs into a package relative directory.
 """
 
+load("@build_bazel_rules_nodejs//internal/common:node_module_info.bzl", "NodeModuleSources", "collect_node_modules_aspect")
+load("@npm_bazel_typescript//internal:common/compilation.bzl", "DEPS_ASPECTS")
+
 def _dgeni_api_docs(ctx):
     doc_name = ctx.attr.name
     doc_label_directory = ctx.label.package
@@ -12,11 +15,12 @@ def _dgeni_api_docs(ctx):
     files = []
 
     for srcfile in ctx.files.srcs:
+        basename = srcfile.short_path.replace(ctx.label.package + "/", "")
         expected_docs += [
-            ctx.actions.declare_file( "%s/%s" % (doc_name, srcfile.basename.replace(srcfile.extension, 'json')) )
+            ctx.actions.declare_file("%s/%s.html" % (doc_name, basename[:-3])),
         ]
-        files += [srcfile.basename]
-    
+        files += [basename]
+
     args = ctx.actions.args()
 
     args.use_param_file(param_file_arg = "--param-file=%s")
@@ -27,13 +31,28 @@ def _dgeni_api_docs(ctx):
 
     args.add_joined(files, join_with = ",")
 
-    # print("Doc module %s" % (doc_name))
     # print("Doc name %s" % (doc_name))
     # print("Doc label directory %s" % (doc_label_directory))
     # print("Doc output directory %s" % (doc_output_directory))
 
+    sources = depset(ctx.files.node_modules)
+
+    mappings = dict()
+
+    for d in ctx.attr.deps:
+        if hasattr(d, "es6_module_mappings"):
+            mappings.update(d.es6_module_mappings)
+        if hasattr(d, "node_sources"):
+            sources = depset(transitive = [sources, d.node_sources])
+        if hasattr(d, "files"):
+            sources = depset(transitive = [sources, d.files])
+
+    args.add(mappings)
+    args.add(ctx.bin_dir.path)
+
     ctx.actions.run(
-        inputs = ctx.files.srcs + ctx.files._dgeni_templates,
+        inputs = ctx.files.srcs + ctx.files._dgeni_templates + sources.to_list(),
+        tools = sources,
         executable = ctx.executable._dgeni_bin,
         outputs = expected_docs,
         arguments = [args],
@@ -54,6 +73,14 @@ docs = rule(
             doc = "The TypeScript source files to compile.",
             allow_files = [".ts"],
             mandatory = True,
+        ),
+        "node_modules": attr.label(
+            doc = "The npm packages which should be available to `tsconfig.paths` during execution.",
+            default = Label("@npm//:node_modules"),
+        ),
+        "deps": attr.label_list(
+            aspects = DEPS_ASPECTS + [collect_node_modules_aspect],
+            doc = "Compile-time dependencies, typically other ts_library targets",
         ),
         "_dgeni_templates": attr.label(
             default = Label("//tools/dgeni/templates"),

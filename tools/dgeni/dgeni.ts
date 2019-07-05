@@ -21,20 +21,20 @@ export const defaultPackage = new Package("default", [
 defaultPackage.processor(new FilterProcessor());
 defaultPackage.processor(new ControllerProcessor());
 
-defaultPackage.config(function(log: any) {
-  log.level = "warning";
-});
-
 defaultPackage.config(function(readFilesProcessor: any) {
   readFilesProcessor.$enabled = false;
+});
+
+defaultPackage.config(function(readTypeScriptModules: ReadTypeScriptModules) {
+  readTypeScriptModules.hidePrivateMembers = true;
 });
 
 defaultPackage.config(function(computePathsProcessor: any) {
   computePathsProcessor.pathTemplates = [
     {
-      docTypes: ['class', 'module', 'controller', 'route'],
-      pathTemplate: "${name}",
-      outputPathTemplate: "${name}.json"
+      docTypes: ["module", "class", "interface", "controller"],
+      pathTemplate: "${originalModule}",
+      outputPathTemplate: "${originalModule}.html"
     }
   ];
 });
@@ -45,16 +45,16 @@ defaultPackage.config(function(tsHost: Host) {
 });
 
 defaultPackage.config(function(templateFinder: any, templateEngine: any) {
-  templateFinder.templatePatterns = [
-    '${ doc.docType }.template.json',
-    'common.template.json',
-  ];
+  templateFinder.templatePatterns = ["${ doc.docType }.template.html", "base.template.html"];
   templateEngine.config.tags = {
     variableStart: "{$",
     variableEnd: "$}"
   };
 });
 
+defaultPackage.config(function(log: any) {
+  log.level = "warn";
+});
 
 function getBazelActionArguments() {
   const args = process.argv.slice(2);
@@ -74,7 +74,9 @@ if (require.main === module) {
   const [
     docLabelDirectory, // Relative to process.cwd()
     docOutputDirectory, // Relative to process.cwd()
-    sourceFiles
+    sourceFiles,
+    mappings,
+    binDir
   ] = getBazelActionArguments();
 
   const cwd = process.cwd();
@@ -92,20 +94,27 @@ if (require.main === module) {
     writeFilesProcessor: any,
     readFilesProcessor: any
   ) {
-
+    writeFilesProcessor;
     readFilesProcessor.basePath = absoluteSourcePath;
 
     readTypeScriptModules.basePath = absoluteSourcePath;
     tsParser.options.baseUrl = absoluteSourcePath;
 
-    tsParser.options.paths = {};
-
     sourceFiles.split(",").forEach(file => {
       readTypeScriptModules.sourceFiles.push(file);
     });
 
+    tsParser.options.paths = {};
 
-    tsParser.options.paths!["*"] = [relative(absoluteSourcePath, "external/npm/node_modules/*")];
+    tsParser.options.paths!["*"] = [
+      relative(absoluteSourcePath, join(cwd, "external/npm/node_modules/@types/*")),
+      relative(absoluteSourcePath, join(cwd, "external/npm/node_modules/*"))
+    ];
+
+    for (const [moduleName, modulePath] of Object.entries<string>(JSON.parse(mappings))) {
+      tsParser.options.paths![moduleName] = [join(cwd, binDir, modulePath)];
+    }
+
     templateFinder.templateFolders = [join(cwd, "tools/dgeni/templates/")];
     writeFilesProcessor.outputFolder = absoluteOutputPath;
   });
