@@ -5,6 +5,8 @@ export class FilterProcessor implements Processor {
   $runBefore = ["docs-processed"];
 
   $process(docs: DocCollection) {
-    return docs.filter(doc => ["class", "controller", "interface"].indexOf(doc.docType) > -1);
+    return docs.filter(
+      doc => ["class", "controller", "interface", "markdown"].indexOf(doc.docType) > -1
+    );
   }
 }

@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "passport",
@@ -31,7 +32,16 @@ ts_library(
     ],
 )
 
-filegroup(
-    name = "sources",
-    srcs = glob(["**/*.ts"]),
+docs(
+    name = "docs",
+    srcs = [
+        "identity/identity.controller.ts",
+        "passport.controller.ts",
+        "policy/policy.controller.ts",
+    ],
+    module_name = "@spica-server/passport",
+    tags = ["passport-docs"],
+    deps = [
+        "//packages/database",
+    ],
 )

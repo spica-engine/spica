@@ -29,7 +29,13 @@ ts_library(
 
 docs(
     name = "docs",
-    srcs = glob(["**/*.controller.ts"]),
-    module_name = "@spica-server/passport",
-    tags = ["docs-package"],
+    srcs = [
+        "function.controller.ts",
+        "subscription.controller.ts",
+    ],
+    module_name = "@spica-server/function",
+    tags = ["function-docs"],
+    deps = [
+        "//packages/database",
+    ],
 )

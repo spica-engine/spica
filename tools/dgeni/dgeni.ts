@@ -7,6 +7,7 @@ import {readFileSync} from "fs";
 import {join, relative} from "path";
 import {ControllerProcessor} from "./processors/controller";
 import {FilterProcessor} from "./processors/filter";
+import {remarkPackage, ReadMarkdownFiles} from "./remark";
 
 const jsdocPackage = require("dgeni-packages/jsdoc");
 const nunjucksPackage = require("dgeni-packages/nunjucks");
@@ -15,7 +16,8 @@ const typescriptPackage = require("dgeni-packages/typescript");
 export const defaultPackage = new Package("default", [
   jsdocPackage,
   nunjucksPackage,
-  typescriptPackage
+  typescriptPackage,
+  remarkPackage
 ]);
 
 defaultPackage.processor(new FilterProcessor());
@@ -32,7 +34,7 @@ defaultPackage.config(function(readTypeScriptModules: ReadTypeScriptModules) {
 defaultPackage.config(function(computePathsProcessor: any) {
   computePathsProcessor.pathTemplates = [
     {
-      docTypes: ["module", "class", "interface", "controller"],
+      docTypes: ["module", "class", "interface", "controller", "markdown"],
       pathTemplate: "${originalModule}",
       outputPathTemplate: "${originalModule}.html"
     }
@@ -89,19 +91,23 @@ if (require.main === module) {
 
   defaultPackage.config(function(
     readTypeScriptModules: ReadTypeScriptModules,
+    readMarkdownFiles: ReadMarkdownFiles,
     tsParser: TsParser,
     templateFinder: any,
     writeFilesProcessor: any,
     readFilesProcessor: any
   ) {
-    writeFilesProcessor;
     readFilesProcessor.basePath = absoluteSourcePath;
-
+    readMarkdownFiles.basePath = absoluteSourcePath;
     readTypeScriptModules.basePath = absoluteSourcePath;
     tsParser.options.baseUrl = absoluteSourcePath;
 
     sourceFiles.split(",").forEach(file => {
-      readTypeScriptModules.sourceFiles.push(file);
+      if (file.endsWith(".ts")) {
+        readTypeScriptModules.sourceFiles.push(file);
+      } else {
+        readMarkdownFiles.files.push(file);
+      }
     });
 
     tsParser.options.paths = {};
