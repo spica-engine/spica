@@ -105,6 +105,8 @@ As we are publishing spica as container images, you need a container runtime in 
   # the second container (spica) is our client which communicates with api container.
   # the other ones (mongo-1, mongo-2, mongo-3) is our three-member replica set mongodb containers.
   ```
+- Open your browser and navigate to http://localhost:8080
+- The default `identifier` is `spica` and the password is `123`.
 
 ## More details
 ##### You can skip this part if you don't want to know detailed explanation of requirements.
