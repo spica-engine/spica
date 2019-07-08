@@ -92,6 +92,7 @@ jobs:
   deploy:
     <<: *job_defaults
     steps:
+      - setup_remote_docker
       - *attach_workspace
       - *setup_circleci_bazel_config
       - run:
