@@ -14,6 +14,7 @@ k8s_deploy(
     images = {
         "gcr.io/spica-239113/api": "//stacks:api_image",
         "gcr.io/spica-239113/spica": "//stacks:spica_image",
+        "gcr.io/spica-239113/initcontainer": "//tools/initcontainer",
     },
     template = ":deployment.yaml",
 )
