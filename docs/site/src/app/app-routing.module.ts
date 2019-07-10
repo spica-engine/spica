@@ -1,11 +1,16 @@
 import {NgModule} from "@angular/core";
-import {Routes, RouterModule} from "@angular/router";
-import {DocComponent} from "./pages/doc/doc.component";
+import {RouterModule, Routes} from "@angular/router";
+import {DocListComponent} from "./pages/doc-list/doc-list.component";
+import {DocsComponent} from "./pages/docs/docs.component";
 
 const routes: Routes = [
   {
     path: "docs",
-    component: DocComponent
+    component: DocsComponent
+  },
+  {
+    path: "docs/api/:name",
+    component: DocListComponent
   }
 ];
 

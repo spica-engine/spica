@@ -1,0 +1,6 @@
+<ul>
+  <li><h1>API Docs</h1></li>
+  <li *ngFor="let apiDoc of $apiDocs | async" [routerLink]="['api', apiDoc.path]">
+    {{ apiDoc.title }}
+  </li>
+</ul>

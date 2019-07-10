@@ -1,0 +1,12 @@
+ul {
+  display: inline-block;
+  list-style: none;
+  background: #dddd;
+  padding-inline-start: 1rem;
+  padding-inline-end: 1rem;
+  padding-block-end: 1rem;
+}
+
+ul li {
+  padding: 10px;
+}
