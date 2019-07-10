@@ -1,5 +1,6 @@
 const remark = require("remark");
 const remarkHtml = require("remark-html");
+const remarkToc = require("remark-toc");
 
 function code(h: any, node: any) {
   var value = node.value ? "\n" + node.value + "\n" : "";
@@ -15,7 +16,7 @@ function code(h: any, node: any) {
 
 export function renderMarkdown() {
   return function renderMarkdownImpl(content: any) {
-    const renderer = remark().use(remarkHtml, {handlers: {code}});
+    const renderer = remark().use(remarkToc).use(remarkHtml, {handlers: {code}});
     return renderer.processSync(content).toString();
   };
 }

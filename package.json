@@ -13,7 +13,8 @@
     "url": "https://github.com/spica-engine/spica.git"
   },
   "workspaces": [
-    "stacks/*"
+    "stacks/*",
+    "docs/site"
   ],
   "scripts": {
     "docs": "bazel query 'kind('docs', //...)' --output label | xargs bazel build",
@@ -100,6 +101,7 @@
     "jasmine": "^3.1.0",
     "prettier": "1.18.2",
     "remark": "^10.0.1",
-    "remark-html": "^9.0.1"
+    "remark-html": "^9.0.1",
+    "remark-toc": "^5.1.1"
   }
 }

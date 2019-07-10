@@ -3,7 +3,7 @@ import {parse, Token} from "path-to-regexp";
 
 export class ControllerProcessor implements Processor {
   httpMethods = ["Delete", "Get", "Post", "Patch"];
-  name = "controller";
+  name = "controller-processor";
   $runBefore = ["docs-processed"];
 
   $process(docs: DocCollection) {

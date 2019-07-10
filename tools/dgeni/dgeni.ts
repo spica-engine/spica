@@ -8,6 +8,7 @@ import {join, relative} from "path";
 import {ControllerProcessor} from "./processors/controller";
 import {FilterProcessor} from "./processors/filter";
 import {remarkPackage, ReadMarkdownFiles} from "./remark";
+import {ListProcessor} from "./processors/list";
 
 const jsdocPackage = require("dgeni-packages/jsdoc");
 const nunjucksPackage = require("dgeni-packages/nunjucks");
@@ -22,6 +23,7 @@ export const defaultPackage = new Package("default", [
 
 defaultPackage.processor(new FilterProcessor());
 defaultPackage.processor(new ControllerProcessor());
+defaultPackage.processor(new ListProcessor());
 
 defaultPackage.config(function(readFilesProcessor: any) {
   readFilesProcessor.$enabled = false;
@@ -37,6 +39,11 @@ defaultPackage.config(function(computePathsProcessor: any) {
       docTypes: ["module", "class", "interface", "controller", "markdown"],
       pathTemplate: "${originalModule}",
       outputPathTemplate: "${originalModule}.html"
+    },
+    {
+      docTypes: ["doc-list"],
+      pathTemplate: "${docType}",
+      outputPathTemplate: "${docType}.json"
     }
   ];
 });
@@ -47,7 +54,11 @@ defaultPackage.config(function(tsHost: Host) {
 });
 
 defaultPackage.config(function(templateFinder: any, templateEngine: any) {
-  templateFinder.templatePatterns = ["${ doc.docType }.template.html", "base.template.html"];
+  templateFinder.templatePatterns = [
+    "${ doc.docType }.template.html",
+    "${ doc.docType }.template.json",
+    "base.template.html"
+  ];
   templateEngine.config.tags = {
     variableStart: "{$",
     variableEnd: "$}"
@@ -58,20 +69,6 @@ defaultPackage.config(function(log: any) {
   log.level = "warn";
 });
 
-function getBazelActionArguments() {
-  const args = process.argv.slice(2);
-
-  // If Bazel uses a parameter file, we've specified that it passes the file in the following
-  // format: "arg0 arg1 --param-file={path_to_param_file}"
-  if (args[0].startsWith("--param-file=")) {
-    return readFileSync(args[0].split("=")[1], "utf8")
-      .trim()
-      .split("\n");
-  }
-
-  return args;
-}
-
 if (require.main === module) {
   const [
     docLabelDirectory, // Relative to process.cwd()
@@ -79,15 +76,13 @@ if (require.main === module) {
     sourceFiles,
     mappings,
     binDir
-  ] = getBazelActionArguments();
+  ] = readFileSync(process.argv.slice(2)[0], {encoding: "utf-8"})
+    .split("\n")
+    .map(s => s.replace(/^'(.*)'$/, "$1"));
 
   const cwd = process.cwd();
   const absoluteSourcePath = join(cwd, docLabelDirectory);
   const absoluteOutputPath = join(cwd, docOutputDirectory);
-
-  // console.warn(`Current directory is ${cwd}`);
-  // console.warn(`Source path is ${absoluteSourcePath}`);
-  // console.warn(`Output path is ${absoluteOutputPath}`);
 
   defaultPackage.config(function(
     readTypeScriptModules: ReadTypeScriptModules,

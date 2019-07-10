@@ -6,8 +6,13 @@ load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 exports_files(["tsconfig.json"])
 
 ts_library(
-    name = "sources",
-    srcs = glob(["**/*.ts"]),
+    name = "dgeni_sources",
+    srcs = [
+        "dgeni.ts",
+        "processors/controller.ts",
+        "processors/filter.ts",
+        "processors/list.ts",
+    ],
     tsconfig = ":tsconfig.json",
     deps = [
         "//tools/dgeni/remark",
@@ -21,9 +26,28 @@ ts_library(
 nodejs_binary(
     name = "dgeni",
     data = [
-        ":sources",
-        "@npm//dgeni",
-        "@npm//dgeni-packages",
+        ":dgeni_sources"
     ],
     entry_point = ":dgeni.ts",
+)
+
+
+
+ts_library(
+    name = "bundle_sources",
+    srcs = [
+        "bundle.ts",
+    ],
+    tsconfig = ":tsconfig.json",
+    deps = [
+        "@npm//@types/node"
+    ],
+)
+
+nodejs_binary(
+    name = "bundle",
+    data = [
+        ":bundle_sources"
+    ],
+    entry_point = ":bundle.ts",
 )
