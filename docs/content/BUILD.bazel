@@ -1,4 +1,5 @@
 package(default_visibility = ["//visibility:public"])
+
 load("//tools/dgeni:index.bzl", "bundle_docs")
 
 bundle_docs(
@@ -6,5 +7,5 @@ bundle_docs(
     docs = {
         "//docs/content/guide": "Guide",
         "//docs/content/concept": "Concept",
-    }
+    },
 )

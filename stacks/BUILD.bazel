@@ -10,7 +10,7 @@ bundle_docs(
     docs = {
         "//stacks/api/bucket:docs": "Bucket APIs",
         "//stacks/api/function:docs": "Function APIs",
-    }
+    },
 )
 
 nodejs_binary(

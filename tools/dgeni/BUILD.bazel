@@ -26,12 +26,10 @@ ts_library(
 nodejs_binary(
     name = "dgeni",
     data = [
-        ":dgeni_sources"
+        ":dgeni_sources",
     ],
     entry_point = ":dgeni.ts",
 )
-
-
 
 ts_library(
     name = "bundle_sources",
@@ -40,14 +38,14 @@ ts_library(
     ],
     tsconfig = ":tsconfig.json",
     deps = [
-        "@npm//@types/node"
+        "@npm//@types/node",
     ],
 )
 
 nodejs_binary(
     name = "bundle",
     data = [
-        ":bundle_sources"
+        ":bundle_sources",
     ],
     entry_point = ":bundle.ts",
 )

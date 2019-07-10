@@ -2,6 +2,7 @@
   Implementation of the "docs" rule. The implementation runs Dgeni with the
   specified entry points and outputs the API docs into a package relative directory.
 """
+
 load("@build_bazel_rules_nodejs//internal/common:node_module_info.bzl", "NodeModuleSources", "collect_node_modules_aspect")
 load("@npm_bazel_typescript//internal:common/compilation.bzl", "DEPS_ASPECTS")
 
@@ -10,7 +11,7 @@ DocSources = provider(
     fields = {
         "docs": "Output of docs",
         "name": "Name of the doc",
-        "list": "Json formatted doc list"
+        "list": "Json formatted doc list",
     },
 )
 
@@ -19,7 +20,7 @@ def _docs(ctx):
     doc_label_directory = ctx.label.package
     doc_output_directory = "%s/%s/%s" % (ctx.bin_dir.path, doc_label_directory, doc_name)
 
-    doc_list =  ctx.actions.declare_file("%s/%s" % (doc_name, 'doc-list.json'))
+    doc_list = ctx.actions.declare_file("%s/%s" % (doc_name, "doc-list.json"))
     expected_docs = []
     files = []
 
@@ -62,7 +63,7 @@ def _docs(ctx):
 
     generated_docs = depset(expected_docs)
 
-    return [DefaultInfo(files = generated_docs), DocSources( docs = generated_docs, name = ctx.attr.module_name, list = doc_list )]
+    return [DefaultInfo(files = generated_docs), DocSources(docs = generated_docs, name = ctx.attr.module_name, list = doc_list)]
 
 """
   Rule definition for the "docs" rule that can generate API documentation
@@ -73,7 +74,7 @@ docs = rule(
     attrs = {
         "module_name": attr.string(
             mandatory = True,
-            doc = ""
+            doc = "",
         ),
         "srcs": attr.label_list(
             doc = "The TypeScript and Markdown files to compile.",
@@ -99,8 +100,6 @@ docs = rule(
     },
 )
 
-
-
 def _bundle_docs(ctx):
     bundle_name = ctx.attr.name
     bundle_label_directory = ctx.label.package
@@ -110,7 +109,7 @@ def _bundle_docs(ctx):
 
     inputs = depset()
 
-    doc_list = ctx.actions.declare_file("%s/%s" % (bundle_name, 'doc-list.json'))
+    doc_list = ctx.actions.declare_file("%s/%s" % (bundle_name, "doc-list.json"))
 
     expected_docs = [doc_list]
 
@@ -119,13 +118,12 @@ def _bundle_docs(ctx):
             _doc = doc[DocSources]
             _path = "%s/%s" % (doc.label.package, doc.label.name)
             _docs = []
-            inputs = depset([_doc.list],transitive = [inputs, _doc.docs])
-            expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (bundle_name, _doc.name, _doc.list.short_path.replace(_path, ''))))
-            for _d in _doc.docs.to_list(): 
+            inputs = depset([_doc.list], transitive = [inputs, _doc.docs])
+            expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (bundle_name, _doc.name, _doc.list.short_path.replace(_path, ""))))
+            for _d in _doc.docs.to_list():
                 _docs.append(_d.short_path)
-                expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (bundle_name, _doc.name, _d.short_path.replace(_path, ''))))
-            docs.append(struct( title = ctx.attr.docs[doc], name = _doc.name, docs = _docs, list = _doc.list.short_path, path = _path, output = "%s/%s" % (bundle_output_directory, _doc.name) ))
-    
+                expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (bundle_name, _doc.name, _d.short_path.replace(_path, ""))))
+            docs.append(struct(title = ctx.attr.docs[doc], name = _doc.name, docs = _docs, list = _doc.list.short_path, path = _path, output = "%s/%s" % (bundle_output_directory, _doc.name)))
 
     args = ctx.actions.args()
     args.use_param_file("%s", use_always = True)
@@ -134,7 +132,6 @@ def _bundle_docs(ctx):
     args.add(bundle_output_directory)
     args.add(doc_list.path)
     args.add(struct(docs = docs).to_json())
-
 
     ctx.actions.run(
         inputs = inputs,
@@ -161,6 +158,5 @@ bundle_docs = rule(
             executable = True,
             cfg = "host",
         ),
-    }
+    },
 )
-
