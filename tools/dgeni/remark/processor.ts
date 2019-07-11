@@ -47,6 +47,6 @@ export class MarkdownDoc {
     this.aliases.push(this.originalModule);
     this.renderedContent = renderedContent;
     this.content = content;
-    this.name = (/^#[ \t]{0,}([^\r\n#]*)(?<=\S)\s+$/m.exec(this.content) || [])[1];
+    this.name = (/^#[ \t]{0,}([^\r\n#]*)(?<=\S)\s*?$/m.exec(this.content) || [])[1];
   }
 }

@@ -32,17 +32,15 @@ ts_library(
 
 docs(
     name = "docs",
-    srcs = [
-        "bucket.controller.ts",
-        "bucket.ts",
-        "bucket-data.controller.ts",
-        "history/history.controller.ts",
-    ],
-    module_name = "bucket",
+    srcs = glob(["**/*.ts"]),
     tags = ["bucket-docs"],
+    exports = [
+        "BucketController",
+        "BucketDataController",
+        "HistoryController",
+    ],
     deps = [
         "//packages/database",
         "//stacks/api/passport",
-        "//stacks/api/preference",
     ],
 )

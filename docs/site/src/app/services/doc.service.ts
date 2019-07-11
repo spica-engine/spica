@@ -15,7 +15,15 @@ export class DocService {
     return this.http.get(`/assets/docs/api/${name}/doc-list.json`);
   }
 
+  getApiDoc(name: string, docName: string) {
+    return this.http.get(`/assets/docs/api/${name}/${docName}.html`, {responseType: "text"});
+  }
+
   getContentDocs() {
-    return this.http.get("/assets/docs/content/doc-list.json");
+    return this.http.get<any[]>("/assets/docs/content/doc-list.json");
+  }
+
+  getContentDoc(name: string, docName: string) {
+    return this.http.get(`/assets/docs/content/${name}/${docName}.html`, {responseType: "text"});
   }
 }

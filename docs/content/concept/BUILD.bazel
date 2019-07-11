@@ -5,5 +5,4 @@ load("//tools/dgeni:index.bzl", "docs")
 docs(
     name = "concept",
     srcs = glob(["*.md"]),
-    module_name = "concept",
 )

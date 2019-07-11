@@ -4,3 +4,14 @@
     {{ apiDoc.title }}
   </li>
 </ul>
+<ul *ngFor="let contentDoc of $contentDocs | async">
+  <li>
+    <h1>{{ contentDoc.title }}</h1>
+  </li>
+  <li
+    *ngFor="let subDoc of contentDoc.docs"
+    [routerLink]="[contentDoc.path, subDoc.path]"
+  >
+    {{ subDoc.name }}
+  </li>
+</ul>

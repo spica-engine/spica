@@ -12,6 +12,8 @@ For API Docs, run: `yarn ibazel build //stacks:api_docs`
 
 For Content Docs (guide, concept eg.), run: `yarn ibazel build //docs/content`
 
+To Generate Them All run: `yarn docs` or `yarn docs:watch`
+
 After you serve the site, if you can change anything that triggers document generation, then your browser will refresh the spica site.
 
 ## Site

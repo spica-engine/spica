@@ -2,7 +2,7 @@
 
 Buckets are schemas of your data. They keep all the necessary information about your data such as their structure, validations.
 
-> TBC
+## Table of contents
 
 ## Configuring Bucket System
 
@@ -168,12 +168,12 @@ Once you save the Bucket, go to the Bucket Data Add page and you'll see a langua
 The final form of a multilingual property will be like this:
 
 ```json
-...
-"text": {
-  "en_US": "This is some text in English.",
-  "es_ES": "Este es un texto en Español."
-},
-...
+{
+  "text": {
+    "en_US": "This is some text in English.",
+    "es_ES": "Este es un texto en Español."
+  }
+}
 ```
 
 ### Getting Locals

@@ -1,5 +1,4 @@
 import {Component, OnInit} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {DocService} from "../../services/doc.service";
 
@@ -10,9 +9,11 @@ import {DocService} from "../../services/doc.service";
 })
 export class DocsComponent implements OnInit {
   $apiDocs: Observable<any>;
+  $contentDocs: Observable<any[]>;
 
-  constructor(private docs: DocService) {
+  constructor(docs: DocService) {
     this.$apiDocs = docs.getApiDocs();
+    this.$contentDocs = docs.getContentDocs();
   }
 
   ngOnInit() {}

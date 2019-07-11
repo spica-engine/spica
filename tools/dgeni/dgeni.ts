@@ -7,8 +7,9 @@ import {readFileSync} from "fs";
 import {join, relative} from "path";
 import {ControllerProcessor} from "./processors/controller";
 import {FilterProcessor} from "./processors/filter";
-import {remarkPackage, ReadMarkdownFiles} from "./remark";
 import {ListProcessor} from "./processors/list";
+import {SymbolFilterProcessor} from "./processors/symbol-filter";
+import {ReadMarkdownFiles, remarkPackage} from "./remark";
 
 const jsdocPackage = require("dgeni-packages/jsdoc");
 const nunjucksPackage = require("dgeni-packages/nunjucks");
@@ -25,18 +26,30 @@ defaultPackage.processor(new FilterProcessor());
 defaultPackage.processor(new ControllerProcessor());
 defaultPackage.processor(new ListProcessor());
 
-defaultPackage.config(function(readFilesProcessor: any) {
+defaultPackage.config(function(
+  readFilesProcessor: any,
+  tsHost: Host,
+  readTypeScriptModules: ReadTypeScriptModules,
+  computePathsProcessor: any,
+  templateFinder: any,
+  templateEngine: any,
+  log: any
+) {
   readFilesProcessor.$enabled = false;
-});
 
-defaultPackage.config(function(readTypeScriptModules: ReadTypeScriptModules) {
   readTypeScriptModules.hidePrivateMembers = true;
-});
 
-defaultPackage.config(function(computePathsProcessor: any) {
+  tsHost.concatMultipleLeadingComments = false;
+  tsHost.typeFormatFlags = TypeFormatFlags.NoTruncation;
+
   computePathsProcessor.pathTemplates = [
     {
-      docTypes: ["module", "class", "interface", "controller", "markdown"],
+      docTypes: ["module", "class", "interface", "controller"],
+      pathTemplate: "${name}",
+      outputPathTemplate: "${name}.html"
+    },
+    {
+      docTypes: ["markdown"],
       pathTemplate: "${originalModule}",
       outputPathTemplate: "${originalModule}.html"
     },
@@ -46,14 +59,6 @@ defaultPackage.config(function(computePathsProcessor: any) {
       outputPathTemplate: "${docType}.json"
     }
   ];
-});
-
-defaultPackage.config(function(tsHost: Host) {
-  tsHost.concatMultipleLeadingComments = false;
-  tsHost.typeFormatFlags = TypeFormatFlags.NoTruncation;
-});
-
-defaultPackage.config(function(templateFinder: any, templateEngine: any) {
   templateFinder.templatePatterns = [
     "${ doc.docType }.template.html",
     "${ doc.docType }.template.json",
@@ -63,26 +68,24 @@ defaultPackage.config(function(templateFinder: any, templateEngine: any) {
     variableStart: "{$",
     variableEnd: "$}"
   };
-});
 
-defaultPackage.config(function(log: any) {
   log.level = "warn";
 });
 
 if (require.main === module) {
   const [
-    docLabelDirectory, // Relative to process.cwd()
     docOutputDirectory, // Relative to process.cwd()
     sourceFiles,
+    expectedSymbols,
     mappings,
     binDir
-  ] = readFileSync(process.argv.slice(2)[0], {encoding: "utf-8"})
-    .split("\n")
-    .map(s => s.replace(/^'(.*)'$/, "$1"));
+  ] = readFileSync(process.argv.slice(2)[0], {encoding: "utf-8"}).split("\n");
 
   const cwd = process.cwd();
-  const absoluteSourcePath = join(cwd, docLabelDirectory);
+  const absoluteSourcePath = cwd;
   const absoluteOutputPath = join(cwd, docOutputDirectory);
+
+  defaultPackage.processor(new SymbolFilterProcessor(expectedSymbols.split(",")));
 
   defaultPackage.config(function(
     readTypeScriptModules: ReadTypeScriptModules,

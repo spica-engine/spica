@@ -3,7 +3,7 @@ import {DocCollection, Processor} from "dgeni";
 export class ListProcessor implements Processor {
   name = "list-processor";
   $runBefore = ["rendering-docs"];
-  outputFolder = null;
+
   $process(docs: DocCollection) {
     return docs.concat([
       {

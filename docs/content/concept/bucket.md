@@ -1,8 +1,6 @@
-
 # Bucket
 
 ## Table of Contents
-
 
 We always think developers should be free and do what they want. This is why we created a fully flexible data modeling system. One of the major features in Spica is the Bucket module. You can create your data models using Bucket module. Each step for creating a bucket has been given below;
 

@@ -12,6 +12,7 @@ ts_library(
         "processors/controller.ts",
         "processors/filter.ts",
         "processors/list.ts",
+        "processors/symbol-filter.ts",
     ],
     tsconfig = ":tsconfig.json",
     deps = [
