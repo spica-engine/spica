@@ -46,7 +46,7 @@ export class PolicyAddComponent implements OnInit {
     const editExisted$ = this.activatedRoute.params.pipe(
       filter(params => params.id),
       takeUntil(this.onDestroy),
-      switchMap(params => this.policyService.getPolicy(params.id))
+      switchMap(params => this.policyService.findOne(params.id))
     );
 
     this.policyService

@@ -15,6 +15,7 @@ import {
 } from "@nestjs/common";
 import {PassportService} from "../passport.service";
 import {Identity} from "./interface";
+import {IdentityService} from "./identity.service";
 import {NUMBER} from "@spica-server/core";
 import {AuthGuard} from "@nestjs/passport";
 import {ActionGuard, PolicyService} from "../policy";
@@ -22,7 +23,11 @@ import {OBJECT_ID, ObjectId} from "@spica-server/database";
 
 @Controller("passport/identity")
 export class IdentityController {
-  constructor(private passport: PassportService, private policy: PolicyService) {}
+  constructor(
+    private passport: PassportService,
+    private identity: IdentityService,
+    private policy: PolicyService
+  ) {}
 
   @Get("statements")
   @UseGuards(AuthGuard())
@@ -30,7 +35,7 @@ export class IdentityController {
     if (!req.user.policies) {
       return [];
     }
-    const policies = await this.policy.findAll();
+    const policies = await this.policy._findAll();
 
     const identityPolicies = req.user.policies.map(p => policies.find(pp => pp._id == p));
 
@@ -57,15 +62,15 @@ export class IdentityController {
         }
       }
     ];
-    return this.passport
-      .getIdentities(aggregate)
+    return this.identity
+      .find(aggregate)
       .then(result => (result && result[0]) || Promise.reject("Cannot found."));
   }
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:show"))
   async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const identity = await this.passport.getIdentity({_id: id});
+    const identity = await this.identity.findOne({_id: id});
     delete identity.password;
     return identity;
   }
@@ -90,13 +95,13 @@ export class IdentityController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/identity")) identity: Identity
   ) {
-    return this.passport.update(id, identity);
+    return this.identity.updateOne(id, identity);
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.passport.deleteOne({_id: id});
+    return this.identity.deleteOne({_id: id});
   }
 
   // TODO(thesayyn): Strictly check policies before attaching them
@@ -106,7 +111,7 @@ export class IdentityController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
   ) {
-    const identity = await this.passport.getIdentity({_id: id});
+    const identity = await this.identity.findOne({_id: id});
     delete identity.password;
     // Merge policies and remove duplicate policies.
     identity.policies = new Array(...identity.policies, ...policies).filter(
@@ -114,7 +119,7 @@ export class IdentityController {
         return array.indexOf(policy) === index;
       }
     );
-    await this.passport.update(id, identity);
+    await this.identity.updateOne(id, identity);
     return identity;
   }
 
@@ -124,13 +129,13 @@ export class IdentityController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
   ) {
-    const identity = await this.passport.getIdentity({_id: id});
+    const identity = await this.identity.findOne({_id: id});
     delete identity.password;
     // Filter policies that will be removed
     identity.policies = new Array(...identity.policies).filter(
       policy => policies.indexOf(policy) === -1
     );
-    await this.passport.update(id, identity);
+    await this.identity.updateOne(id, identity);
     return identity;
   }
 }

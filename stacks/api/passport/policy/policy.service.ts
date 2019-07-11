@@ -1,5 +1,10 @@
 import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, ObjectId} from "@spica-server/database";
+import {
+  Collection,
+  DatabaseService,
+  ObjectId,
+  InsertOneWriteOpResult
+} from "@spica-server/database";
 import {Policy, Service} from "./interface";
 
 @Injectable()
@@ -21,7 +26,8 @@ export class PolicyService {
     this.services = services;
   }
 
-  findAll(): Promise<Policy[]> {
+  // @internal
+  _findAll(): Promise<Policy[]> {
     return this._policyCollection
       .find()
       .toArray()
@@ -34,12 +40,21 @@ export class PolicyService {
       });
   }
 
+  find(limit: number, skip: number = 0) {
+    return {
+      meta: {
+        total: this.policies.length
+      },
+      data: this.policies.slice(skip || 0, (skip || 0) + (limit || this.policies.length))
+    };
+  }
+
   findOne(id: ObjectId): Promise<Policy | null> {
     return this._policyCollection.findOne({_id: new ObjectId(id)});
   }
 
-  insertOne(policy: Policy): Promise<Policy | null> {
-    return this._policyCollection.insertOne(policy).then(r => r.ops[0]);
+  insertOne(policy: Policy): Promise<InsertOneWriteOpResult> {
+    return this._policyCollection.insertOne(policy);
   }
 
   updateOne(id: ObjectId, policy: Policy): Promise<boolean> {
