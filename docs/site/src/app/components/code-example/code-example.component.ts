@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostBinding, Input, OnChanges, SimpleChanges } from "@angular/core";
+import {Component, ElementRef, HostBinding, Input, OnChanges, SimpleChanges} from "@angular/core";
 import hljs from "highlight.js/lib/highlight";
 import bash from "highlight.js/lib/languages/bash";
 import javascript from "highlight.js/lib/languages/javascript";

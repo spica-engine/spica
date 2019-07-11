@@ -15,6 +15,8 @@ export class DocListComponent implements OnInit {
   constructor(private doc: DocService, private router: ActivatedRoute) {}
 
   ngOnInit() {
-    this.$doc = this.router.params.pipe(switchMap(params => this.doc.getApiDocList(params.apiName)));
+    this.$doc = this.router.params.pipe(
+      switchMap(params => this.doc.getApiDocList(params.apiName))
+    );
   }
 }
