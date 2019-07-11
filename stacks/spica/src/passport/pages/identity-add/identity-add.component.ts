@@ -52,10 +52,10 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       });
 
     this.policyService
-      .getPolicies()
+      .find()
       .toPromise()
       .then(policies => {
-        this.policies = policies;
+        this.policies = policies.data;
       });
 
     this.preferencesService
