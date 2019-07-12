@@ -271,7 +271,6 @@ Example request body:
   "bucketPropertyKey": "new property value"
 }
 ```
-
 To edit an existing data, put `_id` of the data you would like to edit. To create, don't send `_id` in your request.
 
 ## Bucket History
@@ -292,12 +291,13 @@ Listing Histories:
 
 Request URL:
 
-> GET "{baseUrl}/bucket/{bucket \_id}/history/{bucket data \_id}"
+>GET "{baseUrl}/bucket/{bucket _id}/history/{bucket data _id}"
 
-Getting single history:
+Getting single history: 
 
 Request URL:
 
-> GET "{baseUrl}/bucket/{bucket \_id}/history/{bucket data \_id}/{history \_id}"
+>GET "{baseUrl}/bucket/{bucket _id}/history/{bucket data _id}/{history _id}"
+
 
 ## Importing and Exporting Bucket Data
