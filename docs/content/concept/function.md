@@ -18,8 +18,8 @@ HTTP request will trigger the function.
 ### Schedule
 You can run functions in time intervals. To set interval, you can use CRON base rules. As an example: if you set time interval "`* * * * *`", function will be executed in every minute.
 
-### Dependencies
+## Dependencies
 If your function needs another 3rd party package, you can include 3rd party package as a dependency. Each dependency will be imported before the system runs the function.
 
-### Environment Variables
+## Environment Variables
 Also, you can set environment variables and these variables will be passed to function as a global parameter. To get more detail please visit API reference.
