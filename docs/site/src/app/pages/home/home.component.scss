@@ -1,7 +1,10 @@
 :host {
+  display: block;
+  background-color: #1c1c50;
+
   .container {
     color: white;
-    margin: 20px;
+    padding: 20px;
     img {
       width: 20%;
       object-fit: contain;

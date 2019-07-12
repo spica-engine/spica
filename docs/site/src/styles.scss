@@ -115,6 +115,6 @@ $spica-app-theme: mat-dark-theme(
 
 @include angular-material-theme($spica-app-theme);
 
-html {
-  background-color: #1c1c50;
+body {
+  margin: 0;
 }
