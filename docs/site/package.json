@@ -24,7 +24,6 @@
     "@angular/router": "~8.0.1",
     "@angular/service-worker": "~8.0.1",
     "highlight.js": "^9.15.8",
-    "light-server": "^2.6.3",
     "rxjs": "~6.4.0",
     "tslib": "^1.9.0",
     "zone.js": "~0.9.1"
@@ -37,6 +36,7 @@
     "@types/node": "~8.9.4",
     "ts-node": "~7.0.0",
     "tslint": "~5.15.0",
+    "light-server": "^2.6.3",
     "typescript": "~3.4.3"
   }
 }

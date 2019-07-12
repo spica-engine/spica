@@ -1,22 +1,21 @@
 const remark = require("remark");
 const remarkHtml = require("remark-html");
 const remarkToc = require("remark-toc");
+const remarkHighlight = require("remark-highlight.js");
 
-function code(h: any, node: any) {
-  var value = node.value ? "\n" + node.value + "\n" : "";
-  var lang = node.lang && node.lang.match(/^[^ \t]+(?=[ \t]|$)/);
-  var props: any = {};
-
-  if (lang) {
-    props.language = lang;
+function anchor(h: any, node: any) {
+  if (!node.url.startsWith("#")) {
+    return h(node, "a", { href: node.url, target: '_blank' }, node.children);
   }
-
-  return h(node, "code-example", props, [{type: "text", value}]);
+  return h(node, "fragment-link", {url: node.url}, node.children);
 }
 
 export function renderMarkdown() {
   return function renderMarkdownImpl(content: any) {
-    const renderer = remark().use(remarkToc).use(remarkHtml, {handlers: {code}});
+    const renderer = remark()
+      .use(remarkToc)
+      .use(remarkHighlight)
+      .use(remarkHtml, {handlers: {link: anchor}});
     return renderer.processSync(content).toString();
   };
 }
