@@ -1,27 +1,29 @@
-# Getting started
+# Getting Started with Spica
 
-This tutorial will help you with how to install spica in different environments.
-First, we will explain a few things as spica has few requirements in order to work properly.
+This tutorial helps you to install Spica to different environments.
+First, we will explain a few things as Spica has few requirements in order to work.
+
+## Table of contents
 
 ## Requirements
 
 - **mongoDB** 4 and above
 - **nodeJS** 10 and above
 
-As spica does rely on **replica set** feature of MongoDB, you need to configure at least **3 members** replica set.
+As spica relies on **replica set** feature of MongoDB, you need to configure at least **3 members** of replica set.
 
-##### Important: One of the replica set members must have _slaveDelay_ enabled and delay time must be greater than 3 seconds. (5 seconds suggested.)
+> Important: One of the replica set members must have _slaveDelay_ enabled and delay time must be greater than 3 seconds. (5 seconds suggested.)
 
 ## Installation
 
-As we are publishing spica as container images, you need a container runtime in order to use official spica images.
+As we are publishing Spica as container images, you need a container runtime in order to use official Spica images.
 
-##### Note: If you are not familiar with containers, we highly recommend you to get familiar with them.
+> Note: If you are not familiar with containers, we highly recommend you to get familiar with them.
 
-#### Kubernetes (recommended.)
+### Kubernetes (recommended)
 
 - Install kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/
-- After, you'll need a kubernetes environment either it can be a local or a cloud kubernetes environment.
+- After, you'll need a kubernetes environment it can be either a local or a cloud kubernetes environment.
   - For local Kubernetes, you can use minikube: https://kubernetes.io/docs/tasks/tools/install-minikube/
   - For AWS, you can create an EKS cluster: https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html
   - For GCP, you can create a GKE cluster: https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster
@@ -30,13 +32,13 @@ As we are publishing spica as container images, you need a container runtime in 
 - The Cluster must have Nginx ingress controller enabled. You can follow https://kubernetes.github.io/ingress-nginx/deploy/ to install Nginx ingress on the cluster.
 - Just apply `kubectl apply -f https://raw.githubusercontent.com/spica-engine/spica/master/deployment.yaml`
 
-#### Docker
+### Docker
 
 - Install docker on your environment and ensure that you have installed docker correctly by running "`docker ps`" command.
   - For macOS: https://docs.docker.com/docker-for-mac/
   - For Windows: https://docs.docker.com/docker-for-windows/install/
   - For other platforms checkout docker webpage: https://docs.docker.com
-- Create a docker network for communication between spica services.
+- Create a docker network for communication between Spica services.
   ```sh
   docker network create spica
   ```
@@ -56,7 +58,7 @@ As we are publishing spica as container images, you need a container runtime in 
   34920d7d9124        mongo               "docker-entrypoint.s…"   10 minutes ago      Up 10 minutes       27017/tcp           mongo-2
   e73c9107d53d        mongo               "docker-entrypoint.s…"   10 minutes ago      Up 10 minutes       27017/tcp           mongo-1
   ```
-- Setup replication between members so they can elect an primary.
+- Setup replication between members so they can elect a primary.
   ```sh
   docker exec -it mongo-1 mongo admin --eval 'rs.initiate({
       _id: "rs0",
@@ -67,7 +69,7 @@ As we are publishing spica as container images, you need a container runtime in 
       ]
   })'
   ```
-- Additionally if you want keep your files on container update, you need to mount an docker volume to your **`api`** container and change `PERSISTENT_PATH` environment variable. For more info checkout: https://docs.docker.com/storage/volumes/
+- Additionally, if you want to keep your files on every container update, you need to mount a docker volume to your **`api`** container and change `PERSISTENT_PATH` environment variable. For more info checkout: https://docs.docker.com/storage/volumes/
 - Setup spica
   ```sh
   # Start spica (client) on port 8080
@@ -87,7 +89,7 @@ As we are publishing spica as container images, you need a container runtime in 
   # Important: you need to apply these two commands until
   # https://github.com/spica-engine/spica/issues/20 resolves.
   docker exec -it spica sed -i "s/\/spica\//\//g" /usr/share/nginx/html/index.html
-  # Basically this replaces /api with http://localhost:4300 which is our accesible api url.
+  # Basically, this replaces /api with http://localhost:4300 which is our accesible api url.
   docker exec -w /usr/share/nginx/html -it spica find . -type f -iname 'main-es\*.js' -exec sed -i 's/\"\/api\"/\"http:\/\/localhost:4300\"/g' {} \;
   ```
 - Ensure you have setup everything correctly
@@ -103,11 +105,15 @@ As we are publishing spica as container images, you need a container runtime in 
   a0ecdc3c6f68        mongo                       "docker-entrypoint.s…"   30 seconds ago      Up 28 seconds       27017/tcp                mongo-1
   # the first container (api) is our api service, core of our spica instance.
   # the second container (spica) is our client which communicates with api container.
-  # the other ones (mongo-1, mongo-2, mongo-3) is our three-member replica set mongodb containers.
+  # the other ones (mongo-1, mongo-2, mongo-3) is our three-member replica set mongodb containers.
   ```
 - Open your browser and navigate to http://localhost:8080
 - The default `identifier` is `spica` and the password is `123`.
 
 ## More details
-##### You can skip this part if you don't want to know detailed explanation of requirements.
-##TODO: Explain why do we need replica sets
+
+> You can skip this part if you don't want to know detailed explanation of requirements.
+
+> TODO: Explain why do we need replica sets
+
+> TODO: Explain how you can setup your default language and default users

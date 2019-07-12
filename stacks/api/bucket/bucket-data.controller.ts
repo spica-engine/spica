@@ -20,26 +20,11 @@ import * as locale from "locale";
 import {BucketEntry} from "./bucket";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {BucketService} from "./bucket.service";
-/**
- * @name BucketData
- * @description
- * This controller responsible for data input/output for specific specific bucket.
- * Also this will be displayed on docs page.
- */
+
 @Controller("bucket/:bid/data")
 export class BucketDataController {
   constructor(private bs: BucketService, private bds: BucketDataService) {}
 
-  /**
-   * Returns the data on bucket
-   * @param acceptedLanguage Specify the content language
-   * @param bid BucketId that docs say that
-   * @param prune Apply aggregations to result
-   * @param filter Apply filter to result
-   * @param limit Limit the result
-   * @param skip Skip N item in the result
-   * @param sort Sort results
-   */
   @Get()
   async find(
     @Headers("accept-language") acceptedLanguage: string,

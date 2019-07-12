@@ -7,7 +7,9 @@ import {readFileSync} from "fs";
 import {join, relative} from "path";
 import {ControllerProcessor} from "./processors/controller";
 import {FilterProcessor} from "./processors/filter";
-import {remarkPackage, ReadMarkdownFiles} from "./remark";
+import {ListProcessor} from "./processors/list";
+import {SymbolFilterProcessor} from "./processors/symbol-filter";
+import {ReadMarkdownFiles, remarkPackage} from "./remark";
 
 const jsdocPackage = require("dgeni-packages/jsdoc");
 const nunjucksPackage = require("dgeni-packages/nunjucks");
@@ -22,72 +24,68 @@ export const defaultPackage = new Package("default", [
 
 defaultPackage.processor(new FilterProcessor());
 defaultPackage.processor(new ControllerProcessor());
+defaultPackage.processor(new ListProcessor());
 
-defaultPackage.config(function(readFilesProcessor: any) {
+defaultPackage.config(function(
+  readFilesProcessor: any,
+  tsHost: Host,
+  readTypeScriptModules: ReadTypeScriptModules,
+  computePathsProcessor: any,
+  templateFinder: any,
+  templateEngine: any,
+  log: any
+) {
   readFilesProcessor.$enabled = false;
-});
 
-defaultPackage.config(function(readTypeScriptModules: ReadTypeScriptModules) {
   readTypeScriptModules.hidePrivateMembers = true;
-});
 
-defaultPackage.config(function(computePathsProcessor: any) {
-  computePathsProcessor.pathTemplates = [
-    {
-      docTypes: ["module", "class", "interface", "controller", "markdown"],
-      pathTemplate: "${originalModule}",
-      outputPathTemplate: "${originalModule}.html"
-    }
-  ];
-});
-
-defaultPackage.config(function(tsHost: Host) {
   tsHost.concatMultipleLeadingComments = false;
   tsHost.typeFormatFlags = TypeFormatFlags.NoTruncation;
-});
 
-defaultPackage.config(function(templateFinder: any, templateEngine: any) {
-  templateFinder.templatePatterns = ["${ doc.docType }.template.html", "base.template.html"];
+  computePathsProcessor.pathTemplates = [
+    {
+      docTypes: ["module", "class", "interface", "controller"],
+      pathTemplate: "${name}",
+      outputPathTemplate: "${name}.html"
+    },
+    {
+      docTypes: ["markdown"],
+      pathTemplate: "${originalModule}",
+      outputPathTemplate: "${originalModule}.html"
+    },
+    {
+      docTypes: ["doc-list"],
+      pathTemplate: "${docType}",
+      outputPathTemplate: "${docType}.json"
+    }
+  ];
+  templateFinder.templatePatterns = [
+    "${ doc.docType }.template.html",
+    "${ doc.docType }.template.json",
+    "base.template.html"
+  ];
   templateEngine.config.tags = {
     variableStart: "{$",
     variableEnd: "$}"
   };
-});
 
-defaultPackage.config(function(log: any) {
   log.level = "warn";
 });
 
-function getBazelActionArguments() {
-  const args = process.argv.slice(2);
-
-  // If Bazel uses a parameter file, we've specified that it passes the file in the following
-  // format: "arg0 arg1 --param-file={path_to_param_file}"
-  if (args[0].startsWith("--param-file=")) {
-    return readFileSync(args[0].split("=")[1], "utf8")
-      .trim()
-      .split("\n");
-  }
-
-  return args;
-}
-
 if (require.main === module) {
   const [
-    docLabelDirectory, // Relative to process.cwd()
     docOutputDirectory, // Relative to process.cwd()
     sourceFiles,
+    expectedSymbols,
     mappings,
     binDir
-  ] = getBazelActionArguments();
+  ] = readFileSync(process.argv.slice(2)[0], {encoding: "utf-8"}).split("\n");
 
   const cwd = process.cwd();
-  const absoluteSourcePath = join(cwd, docLabelDirectory);
+  const absoluteSourcePath = cwd;
   const absoluteOutputPath = join(cwd, docOutputDirectory);
 
-  // console.warn(`Current directory is ${cwd}`);
-  // console.warn(`Source path is ${absoluteSourcePath}`);
-  // console.warn(`Output path is ${absoluteOutputPath}`);
+  defaultPackage.processor(new SymbolFilterProcessor(expectedSymbols.split(",")));
 
   defaultPackage.config(function(
     readTypeScriptModules: ReadTypeScriptModules,

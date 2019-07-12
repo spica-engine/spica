@@ -17,5 +17,6 @@ ts_library(
         "@npm//dgeni",
         "@npm//remark",
         "@npm//remark-html",
+        "@npm//remark-toc",
     ],
 )

@@ -21,7 +21,11 @@ export class ReadMarkdownFiles implements Processor {
       const fpath = join(this.basePath, f);
       const content = readFileSync(fpath).toString();
       const rendered = this.renderMarkdown(content);
-      docs.push(new MarkdownDoc(fpath, rendered, content));
+      const doc = new MarkdownDoc(fpath, rendered, content);
+      if ( !doc.name ) {
+        this.log.warn(`Exported markdown doc ${f} has no heading`);
+      }
+      docs.push(doc);
       this.log.debug(`Exported markdown doc: ${f}`);
     });
     return docs;
@@ -30,6 +34,7 @@ export class ReadMarkdownFiles implements Processor {
 
 export class MarkdownDoc {
   id: string;
+  name: string;
   path: string;
   aliases: string[] = [];
   docType = "markdown";
@@ -38,10 +43,10 @@ export class MarkdownDoc {
   outputPath: string;
   originalModule: string;
   constructor(path: string, renderedContent: string, content: string) {
-    this.path = path;
-    this.id = this.originalModule = basename(path.replace(/(.*?)\.md$/, "$1"));
+    this.path = this.id = this.originalModule = basename(path.replace(/(.*?)\.md$/, "$1"));
     this.aliases.push(this.originalModule);
     this.renderedContent = renderedContent;
     this.content = content;
+    this.name = (/^#[ \t]{0,}([^\r\n#]*)(?<=\S)\s*?$/m.exec(this.content) || [])[1];
   }
 }

@@ -25,8 +25,10 @@ docs(
     srcs = [
         "storage.controller.ts",
     ],
-    module_name = "@spica-server/storage",
     tags = ["storage-docs"],
+    exports = [
+        "StorageController",
+    ],
     deps = [
         "//packages/database",
     ],

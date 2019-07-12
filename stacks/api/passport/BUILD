@@ -39,8 +39,12 @@ docs(
         "passport.controller.ts",
         "policy/policy.controller.ts",
     ],
-    module_name = "@spica-server/passport",
     tags = ["passport-docs"],
+    exports = [
+        "IdentityController",
+        "PassportController",
+        "PolicyController",
+    ],
     deps = [
         "//packages/database",
     ],

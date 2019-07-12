@@ -33,8 +33,11 @@ docs(
         "function.controller.ts",
         "subscription.controller.ts",
     ],
-    module_name = "@spica-server/function",
     tags = ["function-docs"],
+    exports = [
+        "FunctionController",
+        "SubscriptionController",
+    ],
     deps = [
         "//packages/database",
     ],

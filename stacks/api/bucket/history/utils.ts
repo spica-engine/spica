@@ -5,11 +5,25 @@
  * @param value
  * @returns
  */
-export function setPropertyByPath(object: any, path: Array<any>, value) {
+export function setPropertyByPath(object: any, path: Array<any>, value: string) {
   for (let i = 0; i < path.length - 1; i++) {
     object = object[path[i]];
   }
-  object[path[path.length - 1]] = value;
+
+  switch (typeof object[path[path.length - 1]]) {
+    case "string":
+      object[path[path.length - 1]] = value.toString();
+      break;
+    case "number":
+      object[path[path.length - 1]] = Number(value);
+      break;
+    case "boolean":
+      object[path[path.length - 1]] = value == "true";
+      break;
+    default:
+      object[path[path.length - 1]] = value;
+      break;
+  }
   return object;
 }
 

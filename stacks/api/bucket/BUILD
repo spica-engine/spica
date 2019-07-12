@@ -32,18 +32,15 @@ ts_library(
 
 docs(
     name = "docs",
-    srcs = [
-        "bucket.controller.ts",
-        "bucket.ts",
-        "bucket-data.controller.ts",
-        "doc.md",
-        "history/history.controller.ts",
-    ],
-    module_name = "@spica-server/bucket",
+    srcs = glob(["**/*.ts"]),
     tags = ["bucket-docs"],
+    exports = [
+        "BucketController",
+        "BucketDataController",
+        "HistoryController",
+    ],
     deps = [
         "//packages/database",
         "//stacks/api/passport",
-        "//stacks/api/preference",
     ],
 )
