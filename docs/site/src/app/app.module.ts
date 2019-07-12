@@ -8,9 +8,11 @@ import {DocsComponent} from "./pages/docs/docs.component";
 import {DocComponent} from "./pages/doc/doc.component";
 import {CodeExampleComponent} from "./components/code-example/code-example.component";
 import {createCustomElement} from "@angular/elements";
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
-  imports: [BrowserModule, HttpClientModule, AppRoutingModule],
+  imports: [BrowserModule, HttpClientModule, AppRoutingModule, ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })],
   declarations: [AppComponent, DocsComponent, DocListComponent, DocComponent, CodeExampleComponent],
   entryComponents: [CodeExampleComponent],
   providers: [],

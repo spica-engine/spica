@@ -6,6 +6,11 @@ import {DocsComponent} from "./pages/docs/docs.component";
 
 const routes: Routes = [
   {
+    pathMatch: "full",
+    path: "",
+    redirectTo: "docs"
+  },
+  {
     path: "docs",
     component: DocsComponent
   },

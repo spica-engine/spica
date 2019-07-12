@@ -53,7 +53,8 @@
                 "glob": "**/*",
                 "input": "../../bazel-bin/docs/content/content",
                 "output": "./assets/docs/content"
-              }
+              },
+              "src/manifest.webmanifest"
             ],
             "styles": [
               "src/styles.css",
@@ -84,7 +85,9 @@
                   "maximumWarning": "2mb",
                   "maximumError": "5mb"
                 }
-              ]
+              ],
+              "serviceWorker": true,
+              "ngswConfigPath": "ngsw-config.json"
             }
           }
         },
