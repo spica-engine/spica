@@ -1,9 +1,9 @@
+{{TOC}}
+
 # Getting Started with Spica
 
 This tutorial helps you to install Spica to different environments.
 First, we will explain a few things as Spica has few requirements in order to work.
-
-## Table of contents
 
 ## Requirements
 
@@ -12,15 +12,15 @@ First, we will explain a few things as Spica has few requirements in order to wo
 
 As spica relies on **replica set** feature of MongoDB, you need to configure at least **3 members** of replica set.
 
-> Important: One of the replica set members must have _slaveDelay_ enabled and delay time must be greater than 3 seconds. (5 seconds suggested.)
+>Important: One of the replica set members must have _slaveDelay_ enabled and delay time must be greater than 3 seconds. (5 seconds suggested.)
 
 ## Installation
 
 As we are publishing Spica as container images, you need a container runtime in order to use official Spica images.
 
-> Note: If you are not familiar with containers, we highly recommend you to get familiar with them.
+>Note: If you are not familiar with containers, we highly recommend you to get familiar with them.
 
-### Kubernetes (recommended)
+#### Kubernetes (recommended)
 
 - Install kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - After, you'll need a kubernetes environment it can be either a local or a cloud kubernetes environment.
@@ -32,7 +32,7 @@ As we are publishing Spica as container images, you need a container runtime in 
 - The Cluster must have Nginx ingress controller enabled. You can follow https://kubernetes.github.io/ingress-nginx/deploy/ to install Nginx ingress on the cluster.
 - Just apply `kubectl apply -f https://raw.githubusercontent.com/spica-engine/spica/master/deployment.yaml`
 
-### Docker
+#### Docker
 
 - Install docker on your environment and ensure that you have installed docker correctly by running "`docker ps`" command.
   - For macOS: https://docs.docker.com/docker-for-mac/
@@ -116,4 +116,4 @@ As we are publishing Spica as container images, you need a container runtime in 
 
 > TODO: Explain why do we need replica sets
 
-> TODO: Explain how you can setup your default language and default users
+>TODO: Explain how you can setup your default language and default users

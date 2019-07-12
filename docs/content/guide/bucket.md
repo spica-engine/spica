@@ -168,12 +168,12 @@ Once you save the Bucket, go to the Bucket Data Add page and you'll see a langua
 The final form of a multilingual property will be like this:
 
 ```json
-{
-  "text": {
-    "en_US": "This is some text in English.",
-    "es_ES": "Este es un texto en Español."
-  }
-}
+...
+"text": {
+  "en_US": "This is some text in English.",
+  "es_ES": "Este es un texto en Español."
+},
+...
 ```
 
 ### Getting Locals
@@ -271,7 +271,6 @@ Example request body:
   "bucketPropertyKey": "new property value"
 }
 ```
-
 To edit an existing data, put `_id` of the data you would like to edit. To create, don't send `_id` in your request.
 
 ## Bucket History
@@ -292,12 +291,13 @@ Listing Histories:
 
 Request URL:
 
-> GET "{baseUrl}/bucket/{bucket \_id}/history/{bucket data \_id}"
+>GET "{baseUrl}/bucket/{bucket _id}/history/{bucket data _id}"
 
-Getting single history:
+Getting single history: 
 
 Request URL:
 
-> GET "{baseUrl}/bucket/{bucket \_id}/history/{bucket data \_id}/{history \_id}"
+>GET "{baseUrl}/bucket/{bucket _id}/history/{bucket data _id}/{history _id}"
+
 
 ## Importing and Exporting Bucket Data
