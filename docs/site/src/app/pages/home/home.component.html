@@ -1,0 +1,56 @@
+<div class="container">
+  <div class="topSection" fxLayout="row" fxLayoutAlign="space-between">
+    <div class="news">
+      Don't miss:
+      <span class="announcement">
+        The authoring hub: a better way to create and unify content across
+        projects</span
+      >
+    </div>
+    <div class="topButtons">
+      <button mat-flat-button color="accent">
+        Login
+      </button>
+      <button mat-button>
+        Search
+        <mat-icon>
+          search
+        </mat-icon>
+      </button>
+    </div>
+  </div>
+  <div class="toolbar" fxLayout="row" fxLayoutAlign="space-between">
+    <div class="logo" fxFlex="0 0 50%">
+      <img class="logo" src="assets/images/logo-icon-white.png" />
+      <img class="typography" src="assets/images/logo-text-white.png" />
+    </div>
+    <div class="navbar" fxLayout="row" fxLayoutAlign="end center">
+      <ng-container>
+        <button mat-button [matMenuTriggerFor]="menu">Feature</button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>Item 1</button>
+          <button mat-menu-item>Item 2</button>
+        </mat-menu>
+      </ng-container>
+      <ng-container>
+        <button mat-button [matMenuTriggerFor]="menu">Feature</button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>Item 1</button>
+          <button mat-menu-item>Item 2</button>
+        </mat-menu>
+      </ng-container>
+      <ng-container>
+        <button mat-button [matMenuTriggerFor]="menu">Feature</button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>Item 1</button>
+          <button mat-menu-item>Item 2</button>
+        </mat-menu>
+      </ng-container>
+      <button mat-button color="accent">
+        Free Trial
+      </button>
+    </div>
+  </div>
+
+  <div fxLayout="row"></div>
+</div>

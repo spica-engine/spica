@@ -3,8 +3,13 @@ import {RouterModule, Routes} from "@angular/router";
 import {DocListComponent} from "./pages/doc-list/doc-list.component";
 import {DocComponent} from "./pages/doc/doc.component";
 import {DocsComponent} from "./pages/docs/docs.component";
+import { HomeComponent } from './pages/home/home.component';
 
 const routes: Routes = [
+  {
+    path: "",
+    component: HomeComponent
+  },
   {
     pathMatch: "full",
     path: "",

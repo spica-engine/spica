@@ -57,7 +57,7 @@
               "src/manifest.webmanifest"
             ],
             "styles": [
-              "src/styles.css",
+              "src/styles.scss",
               "../../node_modules/highlight.js/styles/github.css"
             ],
             "scripts": []

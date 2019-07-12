@@ -1,0 +1,20 @@
+:host {
+  .container {
+    color: white;
+    margin: 20px;
+    img {
+      width: 20%;
+      object-fit: contain;
+    }
+    .toolbar {
+      height: auto;
+      padding: 0 16px;
+      width: 100%;
+      .navbar {
+        button {
+          height: auto;
+        }
+      }
+    }
+  }
+}
