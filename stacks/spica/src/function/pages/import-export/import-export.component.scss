@@ -1,0 +1,15 @@
+:host {
+  .mat-progress-spinner {
+    display: inline-block !important;
+  }
+  .import-content {
+    margin-top: 30px;
+  }
+  .container {
+    display: flex;
+    mat-card {
+      width: 50%;
+      margin: 2%;
+    }
+  }
+}

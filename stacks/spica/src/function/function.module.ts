@@ -38,6 +38,7 @@ import {TabsComponent} from "./pages/tabs/tabs.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import * as fromFunction from "./reducers/function.reducer";
 import {SubscriptionModule} from "./subscription.module";
+import {ImportExportComponent} from "./pages/import-export/import-export.component";
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import {SubscriptionModule} from "./subscription.module";
     WelcomeComponent,
     TabsComponent,
     EditorComponent,
-    LanguageDirective
+    LanguageDirective,
+    ImportExportComponent
   ],
   imports: [
     CommonModule,

@@ -6,3 +6,11 @@ export interface Function extends EngineFunction {
   name: string;
   description: string;
 }
+
+export interface ImportFile {
+  content: {
+    data: Buffer;
+    type: string;
+    size?: number;
+  };
+}

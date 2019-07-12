@@ -19,7 +19,9 @@ export class ImportExportComponent implements OnInit {
     this.bucketService
       .getTemplates()
       .pipe(
-        tap(templates => (this.templates = templates)),
+        tap(templates => {
+          this.templates = templates;
+        }),
         switchMap(() => this.bucketService.getBuckets())
       )
       .subscribe(buckets => (this.buckets = buckets));
@@ -27,7 +29,6 @@ export class ImportExportComponent implements OnInit {
 
   export(bucketIds: Array<string>): void {
     this.bucketService.exportData(bucketIds).subscribe(data => {
-      console.log(data);
       saveAs(data, `export.zip`);
     });
   }

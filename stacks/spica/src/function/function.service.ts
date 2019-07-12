@@ -1,9 +1,9 @@
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpRequest, HttpHeaders} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
-import {Observable} from "rxjs";
-import {map, tap} from "rxjs/operators";
-
+import {Observable, from} from "rxjs";
+import {map, tap, flatMap} from "rxjs/operators";
+import * as BSON from "bson";
 import {
   AddFunction,
   DeleteFunction,
@@ -73,5 +73,36 @@ export class FunctionService {
     return this.http
       .delete(`api:/function/${id}`)
       .pipe(tap(() => this.store.dispatch(new DeleteFunction({id}))));
+  }
+  exportData(functionIds: Array<string>): Observable<any> {
+    return this.http.post(`api:/function/export`, functionIds, {responseType: "blob"});
+  }
+
+  importData(file: File): Observable<any> {
+    return from(this.fileToBuffer(file)).pipe(
+      flatMap(content => {
+        const data = BSON.serialize({
+          content: {
+            data: new BSON.Binary(content),
+            type: file.type
+          }
+        });
+        const request = new HttpRequest("POST", `api:/function/import`, data.buffer, {
+          reportProgress: true,
+          headers: new HttpHeaders({"Content-Type": "application/bson"})
+        });
+
+        return this.http.request<Storage>(request);
+      })
+    );
+  }
+
+  private fileToBuffer(file: File): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = () => resolve(new Buffer(reader.result as ArrayBuffer));
+      reader.onerror = error => reject(error);
+    });
   }
 }

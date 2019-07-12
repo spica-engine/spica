@@ -12,20 +12,26 @@ import {
   Post,
   Query,
   Res,
-  UseGuards
+  UseGuards,
+  HttpException
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ObjectId, OBJECT_ID, MongoError} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import * as archiver from "archiver";
 import * as npa from "npm-package-arg";
 import * as semver from "semver";
 import * as stream from "stream";
+import * as fss from "fs";
+// import * as mime from "mime-types";
+// import * as request from "request";
+
 import {FunctionEngine} from "./engine/engine";
 import {LoggerHost} from "./engine/logger";
 import {EngineRegistry} from "./engine/registry";
 import {TriggerFlags} from "./engine/trigger/base";
 import {FunctionService} from "./function.service";
-import {Function} from "./interface";
+import {Function, ImportFile} from "./interface";
 import {generate} from "./trigger.schema.resolver";
 
 @Controller("function")
@@ -175,5 +181,69 @@ export class FunctionController {
       throw new NotFoundException("Cannot find the function.");
     }
     return this.engine.host.getDependencies(fn);
+  }
+
+  @Post("import")
+  @UseGuards(AuthGuard(), ActionGuard("function:add"))
+  async import(@Body() file: ImportFile) {
+    try {
+      const result = {skippedDueToDuplication: 0, insertedToFunctionCollection: 0};
+      const data = JSON.parse(file.content.data.toString());
+
+      data._id = new ObjectId(data._id);
+      await this.fs.upsertOne(data).then(
+        () => {
+          result.insertedToFunctionCollection = result.insertedToFunctionCollection + 1;
+        },
+        (err: MongoError) => {
+          if (err.code == 11000) {
+            result.skippedDueToDuplication = result.skippedDueToDuplication + 1;
+          }
+        }
+      );
+
+      return result;
+    } catch (error) {
+      throw new HttpException("Invalid JSON", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post("export")
+  @UseGuards(AuthGuard(), ActionGuard("function:show"))
+  async export(@Body() functionIds: Array<string>, @Res() res) {
+    const path = "./temp";
+    const archiveName = Math.random()
+      .toString(36)
+      .substr(2, 9);
+
+    if (!fss.existsSync(path)) {
+      fss.mkdirSync(path);
+    }
+
+    const archive = archiver("zip", {
+      zlib: {level: -1}
+    });
+    const outputArch = fss.createWriteStream(`${path}/${archiveName}.zip`);
+
+    archive.pipe(outputArch);
+
+    for (let id of functionIds) {
+      const data = await this.fs.findOne({_id: new ObjectId(id)});
+      const stringifiedData = JSON.stringify(data);
+      archive.append(stringifiedData, {name: `${id}.json`});
+    }
+
+    await archive.finalize();
+
+    res.writeHead(200, {
+      "Content-Type": "application/json"
+    });
+
+    fss
+      .createReadStream(`${path}/${archiveName}.zip`)
+      .pipe(res)
+      .on("finish", function() {
+        fss.unlinkSync(`${path}/${archiveName}.zip`);
+      });
   }
 }

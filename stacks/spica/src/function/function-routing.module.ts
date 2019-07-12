@@ -8,6 +8,7 @@ import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {TabsComponent} from "./pages/tabs/tabs.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {FunctionIndexGuard} from "./resolvers/function.guard";
+import {ImportExportComponent} from "./pages/import-export/import-export.component";
 
 const routes: Routes = [
   {
@@ -15,6 +16,10 @@ const routes: Routes = [
     canActivateChild: [IdentityGuard, PolicyGuard],
     data: {service: "function"},
     children: [
+      {
+        path: "import-export",
+        component: ImportExportComponent
+      },
       {path: "welcome", component: WelcomeComponent},
       {
         canActivate: [FunctionIndexGuard],
