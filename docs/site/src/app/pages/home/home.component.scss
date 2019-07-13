@@ -2,22 +2,10 @@
   display: block;
   background-color: #1c1c50;
 
-  .container {
-    color: white;
-    padding: 20px;
-    img {
-      width: 20%;
-      object-fit: contain;
-    }
-    .toolbar {
-      height: auto;
-      padding: 0 16px;
-      width: 100%;
-      .navbar {
-        button {
-          height: auto;
-        }
-      }
-    }
+  color: white;
+  padding: 20px;
+  img {
+    width: 20%;
+    object-fit: contain;
   }
 }
