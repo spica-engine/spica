@@ -1,4 +1,4 @@
-# Getting Started with Spica
+# Getting Started
 
 This tutorial helps you to install Spica to different environments.
 First, we will explain a few things as Spica has few requirements in order to work.

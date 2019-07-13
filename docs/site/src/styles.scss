@@ -107,7 +107,7 @@ $spica-app-warn: mat-palette($mat-red);
 
 $spica-app-light: mat-palette($spica-light);
 
-$spica-app-theme: mat-dark-theme(
+$spica-app-theme: mat-light-theme(
   $spica-app-primary,
   $spica-app-accent,
   $spica-app-warn
@@ -118,5 +118,6 @@ $spica-app-theme: mat-dark-theme(
 body {
   margin: 0;
   font-family: 'Roboto', sans-serif;
-  font-size: .9rem;
+  font-size: .8rem;
+  box-sizing: border-box;
 }

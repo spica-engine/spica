@@ -1,11 +1,19 @@
 :host {
   display: block;
-  background-color: #1c1c50;
-
   color: white;
-  padding: 20px;
-  img {
-    width: 20%;
-    object-fit: contain;
+
+  header {
+    background-image: url("../../../assets/images/background.svg");
+    background-size: cover;
+    min-height: 300px;
+    padding: 30px 10%;
+    nav {
+      .logo {
+        height: 45px;
+        img {
+          height: 100%;
+        }
+      }
+    }
   }
 }

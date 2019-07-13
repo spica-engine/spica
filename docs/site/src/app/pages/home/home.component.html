@@ -1,27 +1,22 @@
-<nav>
-  <div class="toolbar" fxLayout="row" fxLayoutAlign="space-between">
+<header fxLayout="column" fxLayoutGap="20px">
+  <div class="toolbar" fxLayoutAlign="space-between">
     <span>
       Don't miss:
       <span>
         The authoring hub: a better way to create and unify content across projects
       </span>
     </span>
-    <div>
-      <button mat-flat-button color="accent">
-        Login
-      </button>
-      <button mat-button>
-        Search
-        <mat-icon>
-          search
-        </mat-icon>
-      </button>
-    </div>
+
+    <button mat-button>
+      Search
+      <mat-icon>
+        search
+      </mat-icon>
+    </button>
   </div>
-  <div class="navbar" fxLayout="row" fxLayoutAlign="space-between">
+  <nav class="navbar" fxLayoutAlign="space-between">
     <div class="logo" fxFlex="0 0 50%">
-      <img class="logo" src="assets/images/logo-icon-white.png" />
-      <img class="typography" src="assets/images/logo-text-white.png" />
+      <img src="assets/images/logo.svg" />
     </div>
     <div class="navs" fxLayout="row" fxLayoutAlign="end center">
       <button mat-button>Features</button>
@@ -38,7 +33,5 @@
         Free Trial
       </button>
     </div>
-  </div>
-</nav>
-
-<div fxLayout="row"></div>
+  </nav>
+</header>

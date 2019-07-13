@@ -1,26 +1,29 @@
-import { HttpClientModule } from "@angular/common/http";
-import { Injector, NgModule } from "@angular/core";
-import { createCustomElement } from "@angular/elements";
-import { FlexLayoutModule } from "@angular/flex-layout";
+import {HttpClientModule} from "@angular/common/http";
+import {Injector, NgModule} from "@angular/core";
+import {createCustomElement} from "@angular/elements";
+import {FlexLayoutModule} from "@angular/flex-layout";
 import {
   MatButtonModule,
   MatCardModule,
   MatGridListModule,
   MatIconModule,
+  MatListModule,
   MatMenuModule,
+  MatSidenavModule,
   MatToolbarModule
 } from "@angular/material";
-import { BrowserModule } from "@angular/platform-browser";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { ServiceWorkerModule } from "@angular/service-worker";
-import { environment } from "../environments/environment";
-import { AppRoutingModule } from "./app-routing.module";
-import { AppComponent } from "./app.component";
-import { FragmentLinkComponent } from "./components/fragment-link/fragment-link.component";
-import { DocListComponent } from "./pages/doc-list/doc-list.component";
-import { DocComponent } from "./pages/doc/doc.component";
-import { DocsComponent } from "./pages/docs/docs.component";
-import { HomeComponent } from "./pages/home/home.component";
+import {BrowserModule} from "@angular/platform-browser";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {ServiceWorkerModule} from "@angular/service-worker";
+import {environment} from "../environments/environment";
+import {AppRoutingModule} from "./app-routing.module";
+import {AppComponent} from "./app.component";
+import {FragmentLinkComponent} from "./components/fragment-link/fragment-link.component";
+import {DocListComponent} from "./pages/doc-list/doc-list.component";
+import {DocComponent} from "./pages/doc/doc.component";
+import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
+import {DocsComponent} from "./pages/docs/docs.component";
+import {HomeComponent} from "./pages/home/home.component";
 
 @NgModule({
   imports: [
@@ -38,7 +41,9 @@ import { HomeComponent } from "./pages/home/home.component";
     MatGridListModule,
     MatMenuModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    MatListModule,
+    MatSidenavModule
   ],
   declarations: [
     AppComponent,
@@ -46,7 +51,8 @@ import { HomeComponent } from "./pages/home/home.component";
     DocsComponent,
     DocListComponent,
     DocComponent,
-    FragmentLinkComponent
+    FragmentLinkComponent,
+    DocsLayoutComponent
   ],
   entryComponents: [FragmentLinkComponent],
   providers: [],
@@ -54,9 +60,6 @@ import { HomeComponent } from "./pages/home/home.component";
 })
 export class AppModule {
   constructor(injector: Injector) {
-    customElements.define(
-      "fragment-link",
-      createCustomElement(FragmentLinkComponent, { injector })
-    );
+    customElements.define("fragment-link", createCustomElement(FragmentLinkComponent, {injector}));
   }
 }

@@ -1,0 +1,46 @@
+<header fxLayout="column" fxLayoutGap="20px" fxLayoutAlign="center">
+  <nav class="navbar" fxLayoutAlign="space-between center">
+    <div class="logo" fxFlex="0 0 50%">
+      <button mat-icon-button (click)="sidenav.toggle()">
+        <mat-icon>sort</mat-icon>
+      </button>
+      <img src="assets/images/docs-logo.svg" />
+    </div>
+    <div class="navs" fxLayout="row" fxLayoutAlign="end center">
+      <button mat-button>Features</button>
+      <button mat-button [matMenuTriggerFor]="docsMenu">
+        Docs
+        <mat-menu #docsMenu="matMenu">
+          <button mat-menu-item>Guides</button>
+          <button mat-menu-item>Concept</button>
+          <button mat-menu-item>API</button>
+        </mat-menu>
+      </button>
+      <button mat-button>Feature</button>
+    </div>
+  </nav>
+</header>
+<mat-sidenav-container>
+  <mat-sidenav #sidenav mode="side">
+    <mat-nav-list *ngFor="let contentDoc of $contentDocs | async">
+      <h6 mat-subheader>{{ contentDoc.title }}</h6>
+      <a
+        mat-list-item
+        *ngFor="let subDoc of contentDoc.docs"
+        [routerLink]="[contentDoc.path, subDoc.path]"
+      >
+        {{ subDoc.name }}
+      </a>
+    </mat-nav-list>
+
+    <mat-nav-list>
+      <h6 mat-subheader>API</h6>
+      <a mat-list-item *ngFor="let apiDoc of $apiDocs | async" [routerLink]="['api', apiDoc.path]">
+        {{ apiDoc.title }}
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

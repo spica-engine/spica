@@ -1,9 +1,10 @@
-import { NgModule } from "@angular/core";
-import { RouterModule, Routes } from "@angular/router";
-import { DocListComponent } from "./pages/doc-list/doc-list.component";
-import { DocComponent } from "./pages/doc/doc.component";
-import { DocsComponent } from "./pages/docs/docs.component";
-import { HomeComponent } from "./pages/home/home.component";
+import {NgModule} from "@angular/core";
+import {RouterModule, Routes} from "@angular/router";
+import {DocListComponent} from "./pages/doc-list/doc-list.component";
+import {DocComponent} from "./pages/doc/doc.component";
+import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
+import {DocsComponent} from "./pages/docs/docs.component";
+import {HomeComponent} from "./pages/home/home.component";
 
 const routes: Routes = [
   {
@@ -11,25 +12,26 @@ const routes: Routes = [
     component: HomeComponent
   },
   {
-    pathMatch: "full",
-    path: "",
-    redirectTo: "docs"
-  },
-  {
     path: "docs",
-    component: DocsComponent
-  },
-  {
-    path: "docs/api/:apiName",
-    component: DocListComponent
-  },
-  {
-    path: "docs/api/:apiName/:docName",
-    component: DocComponent
-  },
-  {
-    path: "docs/:contentName/:docName",
-    component: DocComponent
+    component: DocsLayoutComponent,
+    children: [
+      {
+        path: "",
+        component: DocsComponent
+      },
+      {
+        path: "api/:apiName",
+        component: DocListComponent
+      },
+      {
+        path: "api/:apiName/:docName",
+        component: DocComponent
+      },
+      {
+        path: ":contentName/:docName",
+        component: DocComponent
+      }
+    ]
   }
 ];
 
