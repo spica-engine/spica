@@ -17,7 +17,7 @@ export function addInject<T>(
       if (
         ts.isCallExpression(node) &&
         ts.isPropertyAccessExpression(node.expression) &&
-        node.expression.name.text == "ɵdefineComponent"
+        node.expression.name.text == "ɵɵdefineComponent"
       ) {
         const [arg] = node.arguments;
         if (ts.isObjectLiteralExpression(arg)) {
@@ -30,7 +30,7 @@ export function addInject<T>(
           newExpr.arguments = ts.createNodeArray([
             ...newExpr.arguments,
             ts.createCall(
-              ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵdirectiveInject")),
+              ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵdirectiveInject")),
               undefined,
               ts.createNodeArray([ts.createPropertyAccess(namespaceIdentifier, importSpecifier)])
             )

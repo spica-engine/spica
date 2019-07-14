@@ -13,7 +13,7 @@ export class Project {
   constructor(public readonly options: ComposerOptions) {
     this.root = normalize(path.resolve(options.path, "composer"));
     this.schematic = new Schematic(this.root, {
-      packageManager: "npm",
+      packageManager: "yarn",
       version: this.options.version
     });
   }

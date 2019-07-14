@@ -14,7 +14,7 @@ export class ComposerModule {
         Viewport,
         {
           provide: COMPOSER_OPTIONS,
-          useValue: {version: "8.0.0-beta.7", ...options}
+          useValue: {version: "8.1.1", ...options}
         },
         {
           provide: Project,

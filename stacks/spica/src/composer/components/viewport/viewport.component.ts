@@ -69,7 +69,7 @@ export class ViewportComponent implements OnChanges, OnDestroy {
     private cdr: ChangeDetectorRef,
     private zone: NgZone
   ) {
-    document.domain = String(document.domain);
+    document.domain = "localhost";
     this._url = domSanitizer.bypassSecurityTrustResourceUrl("about:blank");
   }
 
@@ -238,6 +238,7 @@ export class ViewportComponent implements OnChanges, OnDestroy {
       }
     };
     const zone = this.getZone();
+    console.log(zone, this.routeChange);
     merge(zone.onStable, this.routeChange, this.hotreload, of(null))
       .pipe(
         map(() => {
@@ -347,8 +348,7 @@ export class ViewportComponent implements OnChanges, OnDestroy {
   }
 
   getRouter(): Router {
-    const window = this.getWindow();
-    return this.getInjector().get(window.ng.coreTokens.Router);
+    return this.getInjector().get(this.getToken("Router"));
   }
 
   getInjector(): Injector {
@@ -356,9 +356,28 @@ export class ViewportComponent implements OnChanges, OnDestroy {
     return window.ngRef.injector;
   }
 
-  getZone(): NgZone {
+  getToken(name: string) {
     const window = this.getWindow();
-    return this.getInjector().get(window.ng.coreTokens.NgZone);
+    const records: Set<any> = window.ngRef["_r3Injector"].records;
+    let val;
+    records.forEach((_, value) => {
+      if (value.name == name) {
+        val = value;
+      }
+    });
+    if (!val) {
+      const records: Set<any> = window.ngRef["_r3Injector"].parent._records;
+      records.forEach((_, value) => {
+        if (value.name == name) {
+          val = value;
+        }
+      });
+    }
+    return val;
+  }
+
+  getZone(): NgZone {
+    return this.getInjector().get(this.getToken("NgZone"));
   }
 }
 export interface Font {

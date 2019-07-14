@@ -207,7 +207,7 @@ export function createPropertyAccessFromString(val: string) {
 
 export function isInstructionCall(node: ts.Node): node is ts.CallExpression {
   if (ts.isCallExpression(node)) {
-    const instructionNames = ["ɵelement", "ɵelementStart", "ɵtemplate", "ɵpipe"];
+    const instructionNames = ["ɵɵelement", "ɵɵelementStart", "ɵɵtemplate", "ɵɵpipe"];
     const name = getName(node.expression);
     return instructionNames.indexOf(name && name.text) > -1;
   }
@@ -218,7 +218,7 @@ export function isInstructionCall(node: ts.Node): node is ts.CallExpression {
 export function isPropertyInstructionCall(node: ts.Node): node is ts.CallExpression {
   if (ts.isCallExpression(node)) {
     const name = getName(node.expression);
-    return name && name.text == "ɵelementProperty";
+    return name && name.text == "ɵɵelementProperty";
   }
   return false;
 }
@@ -332,9 +332,9 @@ export function collectInstructions(statements: ts.NodeArray<ts.Statement>, inde
     const statement = statements[i];
     if (ts.isExpressionStatement(statement) && ts.isCallExpression(statement.expression)) {
       const name = getCalle(statement.expression);
-      if (name == "ɵelementStart") {
+      if (name == "ɵɵelementStart") {
         depth++;
-      } else if (name == "ɵelementEnd") {
+      } else if (name == "ɵɵelementEnd") {
         depth--;
       }
       childs.push(statement);

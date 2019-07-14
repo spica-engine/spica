@@ -21,9 +21,9 @@
     "code:format-check": "yarn prettier --check 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}'"
   },
   "dependencies": {
-    "@angular-devkit/architect": "^0.800.0-beta.14",
-    "@angular-devkit/core": "^8.0.0-beta.14",
-    "@angular-devkit/schematics": "^8.0.0-beta.14",
+    "@angular-devkit/architect": "^0.801.1",
+    "@angular-devkit/core": "^8.1.1",
+    "@angular-devkit/schematics": "^8.1.1",
     "@nestjs/common": "^6.1.1",
     "@nestjs/core": "^6.1.1",
     "@nestjs/jwt": "^6.0.0",

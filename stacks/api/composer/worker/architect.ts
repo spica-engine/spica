@@ -4,6 +4,8 @@ import {experimental, normalize, json} from "@angular-devkit/core";
 import {createConsoleLogger, NodeJsSyncHost} from "@angular-devkit/core/node";
 import * as url from "url";
 
+console.log(process.cwd());
+
 let registry: json.schema.CoreSchemaRegistry;
 let host: WorkspaceNodeModulesArchitectHost;
 let workspace: experimental.workspace.Workspace;

@@ -5,14 +5,14 @@ import {
   WebSocketGateway,
   WsResponse
 } from "@nestjs/websockets";
-import {ChildProcess, fork} from "child_process";
+import {ChildProcess, spawn} from "child_process";
 import * as css from "css-tree";
 import {promises} from "fs";
 import {JSONSchema7} from "json-schema";
 import * as multimatch from "multimatch";
 import * as path from "path";
 import * as request from "request-promise";
-import {from, fromEvent, Subject, Observable} from "rxjs";
+import {from, fromEvent, Observable, Subject} from "rxjs";
 import {map, tap} from "rxjs/operators";
 import * as sharp from "sharp";
 import {CollectionDiscovery, CollectionRegistry, ElementFlags, ElementSchema} from "./collection";
@@ -550,11 +550,11 @@ export class ComposerGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage("serve")
   serve(): Observable<WsResponse> {
-    console.log("serve");
+    console.log("serve", this.project.root);
     if (!this.architect) {
-      this.architect = fork(path.resolve(__dirname, "worker", "architect.js"), undefined, {
+      this.architect = spawn("node", [path.resolve(__dirname, "worker", "architect.js")], {
         cwd: this.project.root,
-        stdio: "inherit"
+        stdio: ["inherit", "inherit", "inherit", "ipc"]
       });
     }
 

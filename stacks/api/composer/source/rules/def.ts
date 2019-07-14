@@ -16,7 +16,7 @@ export function addToComponentDef(
       if (
         ts.isCallExpression(node) &&
         ts.isPropertyAccessExpression(node.expression) &&
-        node.expression.name.text == "ɵdefineComponent"
+        node.expression.name.text == "ɵɵdefineComponent"
       ) {
         const arg = node.arguments[0] as ts.ObjectLiteralExpression;
 

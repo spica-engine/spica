@@ -14,7 +14,7 @@ export function empty(name: string, route: string) {
             import * as i0 from '@angular/core';
 
             export class ${classifiedName} {
-                static ngComponentDef = i0.ɵdefineComponent({
+                static ngComponentDef = i0.ɵɵdefineComponent({
                     type: ${classifiedName},
                     selectors: [ [ '${selector}' ] ],
                     factory: (type) => new (type || ${classifiedName})(),

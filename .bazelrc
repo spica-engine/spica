@@ -40,7 +40,7 @@ build --define=REPLICA_SET=infra
 build --define=DATABASE_NAME=spica
 build --define=PUBLIC_HOST=http://localhost:4300
 build --define=PORT=4300
-build --define=PERSISTENT_PATH=/tmp #Very persistent!
+build --define=PERSISTENT_PATH=/private/tmp #Very persistent!
 
 build:release --workspace_status_command="./tools/bazel_stamp_vars.sh"
 

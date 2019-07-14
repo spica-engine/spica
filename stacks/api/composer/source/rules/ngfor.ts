@@ -52,7 +52,7 @@ export function ngForOf() {
     const bindingArg = expr.arguments[2];
 
     // Find the most property access expr
-    // Example: i0.ɵbind(i0.ɵpipeBind1(3, 1, ctx.d_data))
+    // Example: i0.ɵɵbind(i0.ɵɵpipeBind1(3, 1, ctx.d_data))
     // Will match with ctx.d_data
     const propertyAccess = findAll(bindingArg, ts.isPropertyAccessExpression).pop();
 
@@ -105,7 +105,7 @@ export function addNgForOf(options: NgForOfOptions): Rule<template.Template> {
 
     // Create element instruction
     const newTemplateInstruction = ts.createCall(
-      ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵtemplate")),
+      ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵtemplate")),
       undefined,
       ts.createNodeArray([
         ts.createNumericLiteral(options.index),
@@ -132,7 +132,7 @@ export function addNgForOf(options: NgForOfOptions): Rule<template.Template> {
     const oldElementName = getInstructionName(oldInstruction);
     const instructionStatement = ts.createExpressionStatement(
       ts.createCall(
-        ts.createPropertyAccess(coreIdentifier, "ɵelement"),
+        ts.createPropertyAccess(coreIdentifier, "ɵɵelement"),
         undefined,
         ts.createNodeArray([ts.createNumericLiteral("0"), ts.createStringLiteral(oldElementName)])
       )
@@ -172,7 +172,7 @@ export function addNgForOf(options: NgForOfOptions): Rule<template.Template> {
       template.addInstruction(
         templ,
         ts.createCall(
-          ts.createPropertyAccess(coreIdentifier, "ɵpipe"),
+          ts.createPropertyAccess(coreIdentifier, "ɵɵpipe"),
           undefined,
           ts.createNodeArray([ts.createLiteral(pipeIndex), ts.createStringLiteral("async")])
         ),
@@ -193,7 +193,7 @@ export function addNgForOf(options: NgForOfOptions): Rule<template.Template> {
 
     // Add new property to instruction
     const pipeBind = ts.createCall(
-      ts.createPropertyAccess(coreIdentifier, "ɵpipeBind1"),
+      ts.createPropertyAccess(coreIdentifier, "ɵɵpipeBind1"),
       undefined,
       ts.createNodeArray([
         ts.createLiteral(pipeIndex),

@@ -107,7 +107,7 @@ export function getRouterLink(templ: template.Template, index: string): RouterLi
     const bindExpression = routerLinkProperty.arguments[2] as ts.CallExpression;
     const valueExpression = bindExpression.arguments[0];
 
-    //TODO: Handle this also; i0.ɵpureFunction1(1, _c3, ctx_r0.title)
+    //TODO: Handle this also; i0.ɵɵpureFunction1(1, _c3, ctx_r0.title)
     if (ts.isArrayLiteralExpression(valueExpression)) {
       for (let i = 0; i < valueExpression.elements.length; i++) {
         const elementExpr = valueExpression.elements[i];

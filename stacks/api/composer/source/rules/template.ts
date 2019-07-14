@@ -145,13 +145,13 @@ export namespace template {
 
         if (isUpdateBlock(node) && findAncestor(node, isFunctionBlock) == template.block) {
           const bindCall = ts.createCall(
-            ts.createPropertyAccess(coreIdentifier, "ɵbind"),
+            ts.createPropertyAccess(coreIdentifier, "ɵɵbind"),
             undefined,
             ts.createNodeArray([init])
           );
           const instPropStmt = ts.createExpressionStatement(
             ts.createCall(
-              ts.createPropertyAccess(coreIdentifier, "ɵelementProperty"),
+              ts.createPropertyAccess(coreIdentifier, "ɵɵelementProperty"),
               undefined,
               ts.createNodeArray([
                 ts.createNumericLiteral(index),
@@ -238,7 +238,7 @@ export namespace template {
           if (
             ts.isCallExpression(node) &&
             ts.isPropertyAccessExpression(node.expression) &&
-            node.expression.name.text == "ɵdefineComponent"
+            node.expression.name.text == "ɵɵdefineComponent"
           ) {
             const [arg] = node.arguments;
             if (ts.isObjectLiteralExpression(arg)) {
@@ -278,7 +278,7 @@ export namespace template {
           if (
             ts.isCallExpression(node) &&
             ts.isPropertyAccessExpression(node.expression) &&
-            node.expression.name.text == "ɵtemplate"
+            node.expression.name.text == "ɵɵtemplate"
           ) {
             const [indexArg, templateArg, , , ...args] = node.arguments;
             const declaration = getFunctionDeclaration(sf, (templateArg as ts.Identifier).text);
@@ -310,7 +310,7 @@ export namespace template {
       if (
         ts.isCallExpression(node) &&
         ts.isPropertyAccessExpression(node.expression) &&
-        node.expression.name.text == "ɵdefineComponent"
+        node.expression.name.text == "ɵɵdefineComponent"
       ) {
         const argument = node.arguments[0];
         if (!argument) {
@@ -367,7 +367,7 @@ export namespace template {
       addInstruction(
         template,
         ts.createCall(
-          ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵelement")),
+          ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵelement")),
           [],
           [ts.createLiteral(findSlot(template.block)), ts.createStringLiteral(name)]
         )
@@ -396,7 +396,7 @@ export namespace template {
         template,
         index,
         ts.createCall(
-          ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵelement")),
+          ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵelement")),
           [],
           [ts.createLiteral(findSlot(template.block)), ts.createStringLiteral(name)]
         )
@@ -424,7 +424,7 @@ export namespace template {
     const childIndex = findSlot(template.block, [parentIndex]);
 
     const containerElement = ts.createCall(
-      ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵelement")),
+      ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵelement")),
       [],
       [
         ts.createLiteral(parentIndex),
@@ -436,7 +436,7 @@ export namespace template {
       ]
     );
     const element = ts.createCall(
-      ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵelement")),
+      ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵelement")),
       [],
       [ts.createLiteral(childIndex), ts.createStringLiteral(name)]
     );
@@ -623,16 +623,16 @@ export namespace template {
     to: "down" | "up"
   ): ts.TransformerFactory<ts.SourceFile> {
     function findPrevSiblingStart(statements: ts.NodeArray<ts.Statement>, index: number) {
-      const validCalle = ["ɵelementStart", "ɵelement", "ɵtemplate"];
+      const validCalle = ["ɵɵelementStart", "ɵɵelement", "ɵɵtemplate"];
       let depth = 0;
       for (let i = index; i >= 0; i--) {
         const statement = statements[i];
 
         if (ts.isExpressionStatement(statement) && ts.isCallExpression(statement.expression)) {
           const calle = getCalle(statement.expression);
-          if (calle == "ɵelementStart") {
+          if (calle == "ɵɵelementStart") {
             depth++;
-          } else if (calle == "ɵelementEnd") {
+          } else if (calle == "ɵɵelementEnd") {
             depth--;
           }
           if (validCalle.indexOf(calle) != -1 && depth == 0) {
@@ -643,12 +643,12 @@ export namespace template {
     }
 
     function findNextSiblingStart(statements: ts.NodeArray<ts.Statement>, index: number) {
-      const validCalle = ["ɵelementStart", "ɵelement", "ɵtemplate"];
+      const validCalle = ["ɵɵelementStart", "ɵɵelement", "ɵɵtemplate"];
       for (let i = index; i < statements.length; i++) {
         const statement = statements[i];
         if (ts.isExpressionStatement(statement) && ts.isCallExpression(statement.expression)) {
           const calle = getCalle(statement.expression);
-          if (calle == "ɵelementEnd") {
+          if (calle == "ɵɵelementEnd") {
             break;
           }
           if (validCalle.indexOf(calle) != -1) {
@@ -740,16 +740,16 @@ export namespace template {
           const call = <ts.CallExpression>statement.expression;
           const calle = getCalle(<ts.CallExpression>statement.expression);
 
-          if (calle == "ɵelementStart") {
+          if (calle == "ɵɵelementStart") {
             const childs = collectInstructions(node.statements, sourceIndex);
             childs.splice(childs.length - 1, 0, ts.createExpressionStatement(expression));
             newStatements.splice(newStatements.indexOf(childs[0]), childs.length - 1, ...childs);
-          } else if (calle == "ɵelement") {
+          } else if (calle == "ɵɵelement") {
             const childs = [];
             childs.push(
               ts.createExpressionStatement(
                 ts.createCall(
-                  ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵelementStart")),
+                  ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵelementStart")),
                   call.typeArguments,
                   call.arguments
                 )
@@ -759,7 +759,7 @@ export namespace template {
             childs.push(
               ts.createExpressionStatement(
                 ts.createCall(
-                  ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵelementEnd")),
+                  ts.createPropertyAccess(coreIdentifier, ts.createIdentifier("ɵɵelementEnd")),
                   undefined,
                   undefined
                 )
@@ -826,7 +826,7 @@ export namespace template {
 
   export function getAllInstructions(node: ts.Block) {
     assertKind(node, ts.SyntaxKind.Block);
-    const instructionNames = ["ɵelement", "ɵelementStart", "ɵtemplate", "ɵpipe"];
+    const instructionNames = ["ɵɵelement", "ɵɵelementStart", "ɵɵtemplate", "ɵɵpipe"];
     return findAll(node, ts.isCallExpression).filter(
       n =>
         ts.isPropertyAccessExpression(n.expression) &&
