@@ -118,6 +118,6 @@ $spica-app-theme: mat-light-theme(
 body {
   margin: 0;
   font-family: 'Roboto', sans-serif;
-  font-size: .8rem;
   box-sizing: border-box;
+  text-size-adjust: none;
 }

@@ -24,6 +24,7 @@ import {DocComponent} from "./pages/doc/doc.component";
 import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
 import {DocsComponent} from "./pages/docs/docs.component";
 import {HomeComponent} from "./pages/home/home.component";
+import {TocComponent} from "./components/toc/toc.component";
 
 @NgModule({
   imports: [
@@ -52,14 +53,16 @@ import {HomeComponent} from "./pages/home/home.component";
     DocListComponent,
     DocComponent,
     FragmentLinkComponent,
-    DocsLayoutComponent
+    DocsLayoutComponent,
+    TocComponent
   ],
-  entryComponents: [FragmentLinkComponent],
+  entryComponents: [FragmentLinkComponent, TocComponent],
   providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {
   constructor(injector: Injector) {
     customElements.define("fragment-link", createCustomElement(FragmentLinkComponent, {injector}));
+    customElements.define("docs-table-of-contents", createCustomElement(TocComponent, {injector}));
   }
 }

@@ -1,14 +1,18 @@
 :host {
   display: block;
 
-  ::ng-deep span.doc-content {
-    h2#table-of-contents {
-      text-transform: uppercase;
-      & + ul {
+  ::ng-deep div.doc-content {
+    width: 60%;
+    padding: 0 4%;
+    docs-table-of-contents {
+      position: fixed;
+      right: 10px;
+      top: 60px;
+      > ul {
         padding-left: 0;
         list-style-type: none;
         ul {
-          list-style-type: none; 
+          list-style-type: none;
         }
         a {
           text-decoration: none;

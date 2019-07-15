@@ -20,7 +20,7 @@ As we are publishing Spica as container images, you need a container runtime in 
 
 > Note: If you are not familiar with containers, we highly recommend you to get familiar with them.
 
-### Kubernetes (recommended)
+### Kubernetes
 
 - Install kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - After, you'll need a kubernetes environment it can be either a local or a cloud kubernetes environment.

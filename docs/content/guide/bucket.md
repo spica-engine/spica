@@ -1,10 +1,7 @@
-# Bucket
-
-Buckets are schemas of your data. They keep all the necessary information about your data such as their structure, validations.
-
 ## Table of contents
 
-## Configuring Bucket System
+# Bucket
+Buckets are schemas of your data. They keep all the necessary information about your data such as their structure, validations.
 
 ## Create and Edit Buckets
 
@@ -74,7 +71,7 @@ Example request body:
 }
 ```
 
-### Bucket Property Options
+### Property Options
 
 `"positions"`: This option determines the input position of the related property on Bucket Data edit and create page. In this version, Spica supports `left`, `right` and `bottom` positions.
 
@@ -147,9 +144,9 @@ URL of request:
 
 > DELETE "{baseUrl}/bucket/{bucket \_id}"
 
-## Localization with Spica
+## Localization
 
-### Adding Language to Spica
+### Adding Language
 
 As default, the newly created Spica instance has only a language, English. If you want to add another language, you can go the Bucket Preferences and select the language you want from the select box and click the `Add Language` button.
 
@@ -300,4 +297,4 @@ Request URL:
 >GET "{baseUrl}/bucket/{bucket _id}/history/{bucket data _id}/{history _id}"
 
 
-## Importing and Exporting Bucket Data
+## Import & Export Data
