@@ -3,7 +3,7 @@
 
   header {
     height: 50px;
-    z-index: 2;
+    z-index: 3;
     position: relative;
     padding: 0 10%;
     box-shadow: rgba(2, 8, 20, 0.06) 0px 1px 3px, rgba(2, 8, 20, 0.04) 0px 1px 2px;
@@ -24,10 +24,17 @@
       width: 250px;
       mat-nav-list {
         h6 {
+          cursor: pointer;
+          outline: 0;
           text-transform: uppercase;
         }
         a.mat-list-item {
-            height: 28px;
+          height: 35px;
+        }
+
+        a.active {
+          background: #0000ff08;
+          border-left: 2px solid black;
         }
       }
     }

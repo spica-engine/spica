@@ -1,7 +1,9 @@
-import { toc } from "./toc";
+import {toc} from "./toc";
 
 const remark = require("remark");
+const remarkSlug = require("remark-slug");
 const remarkHtml = require("remark-html");
+const remarkFrontMatter = require("remark-frontmatter");
 const remarkHighlight = require("remark-highlight.js");
 
 function link(h: any, node: any) {
@@ -14,9 +16,18 @@ function link(h: any, node: any) {
 export function renderMarkdown() {
   return function renderMarkdownImpl(content: any) {
     const renderer = remark()
-      .use(toc, {maxDepth: 3})
+      .use(remarkFrontMatter)
       .use(remarkHighlight)
+      .use(remarkSlug)
+      .use(toc, {maxDepth: 2, tight: true})
       .use(remarkHtml, {handlers: {link}});
     return renderer.processSync(content).toString();
+  };
+}
+
+export function parseMarkdown() {
+  return function parseMarkdownImpl(content: any) {
+    const renderer = remark().use(remarkFrontMatter);
+    return renderer.parse(content);
   };
 }

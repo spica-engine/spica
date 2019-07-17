@@ -21,13 +21,16 @@
   </nav>
 </header>
 <mat-sidenav-container>
-  <mat-sidenav #sidenav mode="side">
+  <mat-sidenav #sidenav mode="side" fixedInViewport fixedTopGap="50">
     <mat-nav-list *ngFor="let contentDoc of $contentDocs | async">
-      <h6 mat-subheader>{{ contentDoc.title }}</h6>
+      <h6 mat-subheader [routerLink]="[contentDoc.path]" routerLinkActive="active">
+        {{ contentDoc.title }}
+      </h6>
       <a
         mat-list-item
         *ngFor="let subDoc of contentDoc.docs"
         [routerLink]="[contentDoc.path, subDoc.path]"
+        routerLinkActive="active"
       >
         {{ subDoc.name }}
       </a>
@@ -35,7 +38,12 @@
 
     <mat-nav-list>
       <h6 mat-subheader>API</h6>
-      <a mat-list-item *ngFor="let apiDoc of $apiDocs | async" [routerLink]="['api', apiDoc.path]">
+      <a
+        mat-list-item
+        *ngFor="let apiDoc of $apiDocs | async"
+        [routerLink]="['api', apiDoc.path]"
+        routerLinkActive="active"
+      >
         {{ apiDoc.title }}
       </a>
     </mat-nav-list>

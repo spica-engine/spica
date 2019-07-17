@@ -19,6 +19,9 @@ ts_library(
         "@npm//remark",
         "@npm//remark-highlight.js",
         "@npm//remark-html",
+        "@npm//remark-slug",
+        "@npm//remark-frontmatter",
+        "@npm//yaml",
         "@npm//mdast-util-toc",
     ],
 )

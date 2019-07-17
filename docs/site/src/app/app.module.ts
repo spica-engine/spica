@@ -18,13 +18,14 @@ import {ServiceWorkerModule} from "@angular/service-worker";
 import {environment} from "../environments/environment";
 import {AppRoutingModule} from "./app-routing.module";
 import {AppComponent} from "./app.component";
+import {DocCardComponent} from "./components/doc-card/doc-card.component";
 import {FragmentLinkComponent} from "./components/fragment-link/fragment-link.component";
+import {TocComponent} from "./components/toc/toc.component";
 import {DocListComponent} from "./pages/doc-list/doc-list.component";
 import {DocComponent} from "./pages/doc/doc.component";
 import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
 import {DocsComponent} from "./pages/docs/docs.component";
 import {HomeComponent} from "./pages/home/home.component";
-import {TocComponent} from "./components/toc/toc.component";
 
 @NgModule({
   imports: [
@@ -54,15 +55,17 @@ import {TocComponent} from "./components/toc/toc.component";
     DocComponent,
     FragmentLinkComponent,
     DocsLayoutComponent,
-    TocComponent
+    TocComponent,
+    DocCardComponent
   ],
-  entryComponents: [FragmentLinkComponent, TocComponent],
+  entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent],
   providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {
   constructor(injector: Injector) {
     customElements.define("fragment-link", createCustomElement(FragmentLinkComponent, {injector}));
-    customElements.define("docs-table-of-contents", createCustomElement(TocComponent, {injector}));
+    customElements.define("doc-toc", createCustomElement(TocComponent, {injector}));
+    customElements.define("doc-card", createCustomElement(DocCardComponent, {injector}));
   }
 }

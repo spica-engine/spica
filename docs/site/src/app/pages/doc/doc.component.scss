@@ -2,22 +2,65 @@
   display: block;
 
   ::ng-deep div.doc-content {
-    width: 60%;
-    padding: 0 4%;
-    docs-table-of-contents {
+    padding-bottom: 50px;
+    padding-left: 4%;
+    padding-right: 4%;
+    line-height: 2;
+    max-width: calc(92% - 150px);
+
+    doc-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.35rem 1.35rem;
+    }
+
+    table {
+      border-width: 1px 0 0 1px;
+      overflow-x: auto;
+      &,
+      td,
+      th {
+        border-collapse: collapse;
+        border-color: #ddd;
+        border-style: solid;
+      }
+      td,
+      th {
+        border-width: 0 1px 1px 0;
+        line-height: 1.5;
+        padding: 1em;
+        text-align: left;
+      }
+    }
+
+    blockquote {
+      border-left: 3px solid #ffa14b;
+      padding-left: 15px;
+    }
+
+    pre code.hljs {
+      padding: 1em;
+    }
+
+    doc-toc {
       position: fixed;
-      right: 10px;
-      top: 60px;
-      > ul {
-        padding-left: 0;
+      right: 60px;
+      top: 82px;
+      ul {
+        padding-left: 8px;
         list-style-type: none;
-        ul {
-          list-style-type: none;
+        li {
+          position: relative;
+          padding: 0;
+          a {
+            text-decoration: none;
+            color: black;
+          }
         }
-        a {
-          text-decoration: none;
-          font-size: 13px;
-        }
+      }
+      > ul {
+        padding: 0;
+        margin: 0;
       }
     }
   }

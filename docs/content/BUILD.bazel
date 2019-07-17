@@ -5,7 +5,7 @@ load("//tools/dgeni:index.bzl", "bundle_docs")
 bundle_docs(
     name = "content",
     docs = {
-        "//docs/content/guide": "Guide",
-        "//docs/content/concept": "Concept",
+        "//docs/content/guide": "Guides",
+        "//docs/content/concept": "Concepts",
     },
 )
