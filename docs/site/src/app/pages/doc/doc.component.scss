@@ -40,6 +40,9 @@
 
     pre code.hljs {
       padding: 1em;
+      font-size: 85%;
+      font-weight: 700;
+      font-family: Menlo, Courier, monospace;
     }
 
     doc-toc {
@@ -61,6 +64,50 @@
       > ul {
         padding: 0;
         margin: 0;
+      }
+    }
+
+    article.api-doc {
+      header {
+        h1.title,
+        label.type {
+          display: inline;
+        }
+        label.type.controller {
+          display: none;
+        }
+      }
+      div.body {
+        display: block;
+        section.resource {
+          &:not(:first-of-type) {
+            margin-top: 65px;
+          }
+
+          h3 {
+            span.method {
+              vertical-align: middle;
+              border: 2px solid #383838;
+              padding: 3px 15px;
+              border-radius: 23px;
+              font-size: 85%;
+            }
+            span.path {
+              margin-left: 6px;
+              span.route-path {
+                span {
+                  margin-left: -2px;
+                  &.separator {
+                    color: #ddd;
+                  }
+                  &.param {
+                    color: #16c98d;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

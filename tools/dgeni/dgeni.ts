@@ -33,11 +33,8 @@ defaultPackage.config(function(
   computePathsProcessor: any,
   templateFinder: any,
   templateEngine: any,
-  checkAnchorLinksProcessor: any,
   log: any
 ) {
-
-  checkAnchorLinksProcessor.$enabled = false;
 
   readFilesProcessor.$enabled = false;
 
