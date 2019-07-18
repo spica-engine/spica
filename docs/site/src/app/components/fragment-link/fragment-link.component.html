@@ -1,3 +1,8 @@
-<a [routerLink]="[]" [fragment]="url.replace('#', '')" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+<a
+  [routerLink]="[]"
+  [fragment]="url.replace('#', '')"
+  routerLinkActive="active"
+  [routerLinkActiveOptions]="{exact: true}"
+>
   <ng-content></ng-content>
 </a>

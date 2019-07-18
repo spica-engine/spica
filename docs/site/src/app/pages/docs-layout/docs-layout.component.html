@@ -4,16 +4,18 @@
       <button mat-icon-button (click)="sidenav.toggle()">
         <mat-icon>sort</mat-icon>
       </button>
-      <img src="assets/images/docs-logo.svg" />
+      <img src="assets/images/docs-logo.svg" routerLink="/docs" />
     </div>
     <div class="navs" fxLayout="row" fxLayoutAlign="end center">
       <button mat-button>Features</button>
       <button mat-button [matMenuTriggerFor]="docsMenu">
         Docs
         <mat-menu #docsMenu="matMenu">
-          <button mat-menu-item>Guides</button>
-          <button mat-menu-item>Concept</button>
-          <button mat-menu-item>API</button>
+          <button mat-menu-item routerLink="/docs/guide">
+            Guides
+          </button>
+          <button mat-menu-item routerLink="/docs/concept">Concept</button>
+          <button mat-menu-item routerLink="/docs/api">API</button>
         </mat-menu>
       </button>
       <button mat-button>Feature</button>
@@ -22,14 +24,14 @@
 </header>
 <mat-sidenav-container>
   <mat-sidenav #sidenav mode="side" fixedInViewport fixedTopGap="50">
-    <mat-nav-list *ngFor="let contentDoc of $contentDocs | async">
-      <h6 mat-subheader [routerLink]="[contentDoc.path]" routerLinkActive="active">
-        {{ contentDoc.title }}
+    <mat-nav-list *ngFor="let contentDoc of ($contentDocs | async)?.children">
+      <h6 mat-subheader [routerLink]="[contentDoc.name]" routerLinkActive="active">
+        {{ contentDoc.name }}
       </h6>
       <a
         mat-list-item
         *ngFor="let subDoc of contentDoc.docs"
-        [routerLink]="[contentDoc.path, subDoc.path]"
+        [routerLink]="[contentDoc.name, subDoc.path]"
         routerLinkActive="active"
       >
         {{ subDoc.name }}
@@ -40,11 +42,11 @@
       <h6 mat-subheader>API</h6>
       <a
         mat-list-item
-        *ngFor="let apiDoc of $apiDocs | async"
-        [routerLink]="['api', apiDoc.path]"
+        *ngFor="let apiDoc of ($apiDocs | async)?.children"
+        [routerLink]="['api', apiDoc.name]"
         routerLinkActive="active"
       >
-        {{ apiDoc.title }}
+        {{ apiDoc.name | titlecase }}
       </a>
     </mat-nav-list>
   </mat-sidenav>

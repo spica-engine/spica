@@ -16,8 +16,9 @@ DocSources = provider(
 )
 
 def _docs(ctx):
-    doc_name = ctx.attr.name
+    doc_name = ctx.label.name
     doc_label_directory = ctx.label.package
+
     doc_output_directory = "%s/%s/%s" % (ctx.bin_dir.path, doc_label_directory, doc_name)
 
     # sources will be available in building context.
@@ -66,14 +67,31 @@ def _docs(ctx):
                 ctx.actions.declare_file("%s/%s.html" % (doc_name, name)),
             ]
 
+    data = []
+
+    for doc in ctx.attr.data:
+        if DocSources in doc:
+            docSource = doc[DocSources]
+            docSourcePath = "%s/%s" % (doc.label.package, doc.label.name)
+
+            # Make docs available in execution context
+            sources = depset([docSource.list], transitive = [sources, docSource.docs])
+            docFiles = []
+            for docFile in docSource.docs.to_list():
+                docFiles.append(docFile.short_path)
+                expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (doc_name, docSource.name, docFile.short_path.replace(docSourcePath, ""))))
+            data.append(struct(name = docSource.name, list = docSource.list.short_path, docs = docFiles, path = docSourcePath))
+
     args = ctx.actions.args()
     args.use_param_file("%s", use_always = True)
     args.set_param_file_format(format = "multiline")
+    args.add(ctx.label.package.split("/")[-1])
     args.add(doc_output_directory)
     args.add_joined(ctx.files.srcs, join_with = ",", omit_if_empty = False)
     args.add_joined(expected_symbols, join_with = ",", omit_if_empty = False)
     args.add(mappings)
     args.add(ctx.bin_dir.path)
+    args.add(struct(data = data).to_json())
 
     ctx.actions.run(
         inputs = ctx.files._dgeni_templates + sources.to_list(),
@@ -95,84 +113,31 @@ def _docs(ctx):
 docs = rule(
     implementation = _docs,
     attrs = {
+        "data": attr.label_list(
+            default = [],
+            allow_files = True,
+            doc = "Other doc targets to bundle",
+        ),
         "exports": attr.string_list(
             doc = "Expected doc files to be built in this target",
         ),
         "srcs": attr.label_list(
             doc = "The TypeScript and Markdown files to compile.",
             allow_files = [".ts", ".md"],
-            mandatory = True,
         ),
         "deps": attr.label_list(
             aspects = DEPS_ASPECTS + [collect_node_modules_aspect],
             doc = "Compile-time dependencies, typically other ts_library targets",
+        ),
+        "flat": attr.bool(
+            doc = "Whether docs should be in package directory",
+            default = False,
         ),
         "_dgeni_templates": attr.label(
             default = Label("//tools/dgeni/templates"),
         ),
         "_dgeni_bin": attr.label(
             default = Label("//tools/dgeni"),
-            executable = True,
-            cfg = "host",
-        ),
-    },
-)
-
-def _bundle_docs(ctx):
-    bundle_name = ctx.attr.name
-    bundle_label_directory = ctx.label.package
-    bundle_output_directory = "%s/%s/%s" % (ctx.bin_dir.path, bundle_label_directory, bundle_name)
-
-    docs = []
-
-    inputs = depset()
-
-    doc_list = ctx.actions.declare_file("%s/%s" % (bundle_name, "doc-list.json"))
-
-    expected_docs = [doc_list]
-
-    for doc in ctx.attr.docs:
-        if DocSources in doc:
-            _doc = doc[DocSources]
-            _path = "%s/%s" % (doc.label.package, doc.label.name)
-            _docs = []
-            inputs = depset([_doc.list], transitive = [inputs, _doc.docs])
-            expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (bundle_name, _doc.name, _doc.list.short_path.replace(_path, ""))))
-            for _d in _doc.docs.to_list():
-                _docs.append(_d.short_path)
-                expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (bundle_name, _doc.name, _d.short_path.replace(_path, ""))))
-            docs.append(struct(title = ctx.attr.docs[doc], name = _doc.name, docs = _docs, list = _doc.list.short_path, path = _path, output = "%s/%s" % (bundle_output_directory, _doc.name)))
-
-    args = ctx.actions.args()
-    args.use_param_file("%s", use_always = True)
-    args.set_param_file_format(format = "multiline")
-    args.add(ctx.bin_dir.path)
-    args.add(bundle_output_directory)
-    args.add(doc_list.path)
-    args.add(struct(docs = docs).to_json())
-
-    ctx.actions.run(
-        inputs = inputs,
-        executable = ctx.executable._bundler,
-        outputs = expected_docs,
-        arguments = [args],
-        progress_message = "Bundle Docs %s" % (bundle_name),
-    )
-
-    return [DefaultInfo(files = depset(expected_docs))]
-
-"""
-  Rule definition for the "bundle_docs" rule that can generate bundled docs
-"""
-bundle_docs = rule(
-    implementation = _bundle_docs,
-    attrs = {
-        "docs": attr.label_keyed_string_dict(
-            mandatory = True,
-            doc = "Key-value of doc targets. Usually other docs target",
-        ),
-        "_bundler": attr.label(
-            default = Label("//tools/dgeni:bundle"),
             executable = True,
             cfg = "host",
         ),

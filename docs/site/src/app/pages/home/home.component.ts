@@ -11,15 +11,21 @@ export class HomeComponent {
   constructor(private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer) {
     this.matIconRegistry.addSvgIcon(
       "instagram",
-      this.domSanitizer.bypassSecurityTrustResourceUrl("../../../assets/icons/social/instagram-logo.svg")
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        "../../../assets/icons/social/instagram-logo.svg"
+      )
     );
     this.matIconRegistry.addSvgIcon(
       "twitter",
-      this.domSanitizer.bypassSecurityTrustResourceUrl("../../../assets/icons/social/twitter-logo.svg")
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        "../../../assets/icons/social/twitter-logo.svg"
+      )
     );
     this.matIconRegistry.addSvgIcon(
       "facebook",
-      this.domSanitizer.bypassSecurityTrustResourceUrl("../../../assets/icons/social/facebook-logo.svg")
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        "../../../assets/icons/social/facebook-logo.svg"
+      )
     );
   }
 }

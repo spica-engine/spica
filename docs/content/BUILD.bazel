@@ -1,11 +1,21 @@
 package(default_visibility = ["//visibility:public"])
 
-load("//tools/dgeni:index.bzl", "bundle_docs")
+load("//tools/dgeni:index.bzl", "docs")
 
-bundle_docs(
+docs(
     name = "content",
-    docs = {
-        "//docs/content/guide": "Guides",
-        "//docs/content/concept": "Concepts",
-    },
+    data = [
+        "//docs/content/concept",
+        "//docs/content/guide",
+    ],
+)
+
+docs(
+    name = "api",
+    data = [
+        "//stacks/api/bucket:docs",
+        "//stacks/api/function:docs",
+        "//stacks/api/passport:docs",
+        "//stacks/api/storage:docs",
+    ],
 )

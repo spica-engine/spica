@@ -1,6 +1,6 @@
 @import "~@angular/material/theming";
 
-@include mat-core();
+@include mat-core(mat-typography-config($font-family: '"Ubuntu", sans-serif'));
 
 $spica-primary: (
   50: #e4e4ea,
