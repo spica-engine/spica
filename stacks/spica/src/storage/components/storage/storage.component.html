@@ -10,8 +10,8 @@
   [(ngModel)]="selected"
   (ngModelChange)="callOnChange()"
   ngfDrop
-  [(file)]="incomingFile"
-  (fileChange)="uploadStorage(incomingFile)"
+  [(files)]="incomingFile"
+  (filesChange)="uploadStorage(incomingFile)"
   class="image-field"
 >
   <div *ngIf="!progress" class="display-container">
