@@ -1,19 +1,114 @@
 :host {
-  display: block;
   color: white;
+  display: block;
 
-  header {
+  .mat-raised-button {
+    color: white;
+  }
+
+  .accent {
+    color: #58bce4;
+  }
+
+  .space-back {
     background-image: url("../../../assets/images/background.svg");
     background-size: cover;
-    min-height: 300px;
-    padding: 30px 10%;
-    nav {
-      .logo {
-        height: 45px;
-        img {
-          height: 100%;
+  }
+
+  .font-light {
+    font-weight: 300;
+  }
+  .font-bold {
+    font-weight: bold;
+  }
+  header {
+    position: relative;
+    .header-container {
+      min-height: 800px;
+      padding: 30px 10%;
+      position: relative;
+      nav {
+        .logo {
+          height: 45px;
+          img {
+            height: 100%;
+          }
+        }
+        button[aria-expanded~="true"] {
+          color: #58bce4;
         }
       }
+      .spica-logo {
+        width: 500px;
+        padding-left: 95px;
+        z-index: 1;
+      }
+    }
+
+    .devider-wave {
+      bottom: 0;
+      position: absolute;
+    }
+  }
+
+  .headline {
+    padding: 70px 0;
+    color: white;
+    div {
+      padding: 10px;
+    }
+    .heading {
+      font-size: 5em;
+    }
+    .subheading {
+      font-size: 1.6em;
+    }
+  }
+
+  .features-container {
+    padding: 30px 10%;
+    background: white;
+    color: black;
+    .head {
+      .title {
+        font-size: 4em;
+      }
+      .subtitle {
+        font-size: 1.5em;
+      }
+    }
+    .content {
+      div {
+        padding: 10px;
+        .feat-description {
+          text-align: center;
+          .title {
+            font-size: 1.5em;
+          }
+          .subtitle {
+            font-size: 1.2em;
+          }
+        }
+      }
+    }
+  }
+
+  .projects-container {
+    padding: 30px 10%;
+    button {
+      font-size: 3em;
+      padding: 20px;
+      line-height: normal;
+    }
+  }
+
+  footer {
+    background-size: cover;
+    padding: 30px 10%;
+    color: black;
+    a {
+      text-decoration: none;
+      padding: 0 16px;
     }
   }
 }

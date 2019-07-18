@@ -1,4 +1,4 @@
-@import '~@angular/material/theming';
+@import "~@angular/material/theming";
 
 @include mat-core();
 
@@ -107,17 +107,18 @@ $spica-app-warn: mat-palette($mat-red);
 
 $spica-app-light: mat-palette($spica-light);
 
-$spica-app-theme: mat-light-theme(
-  $spica-app-primary,
-  $spica-app-accent,
-  $spica-app-warn
-);
+$spica-app-theme: mat-light-theme($spica-app-primary, $spica-app-accent, $spica-app-warn);
 
 @include angular-material-theme($spica-app-theme);
 
 body {
   margin: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 100;
   box-sizing: border-box;
   text-size-adjust: none;
+
+  .mat-raised-button {
+    border-radius: 20px;
+  }
 }

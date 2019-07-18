@@ -1,37 +1,161 @@
-<header fxLayout="column" fxLayoutGap="20px">
-  <div class="toolbar" fxLayoutAlign="space-between">
-    <span>
-      Don't miss:
+<header class="space-back" fxLayout="column" fxLayoutGap="20px">
+  <div class="header-container">
+    <div class="toolbar" fxLayoutAlign="space-between">
       <span>
-        The authoring hub: a better way to create and unify content across projects
+        Don't miss:
+        <span>
+          The authoring hub: a better way to create and unify content across projects
+        </span>
       </span>
-    </span>
 
-    <button mat-button>
-      Search
-      <mat-icon>
-        search
-      </mat-icon>
-    </button>
-  </div>
-  <nav class="navbar" fxLayoutAlign="space-between">
-    <div class="logo" fxFlex="0 0 50%">
-      <img src="assets/images/logo.svg" />
-    </div>
-    <div class="navs" fxLayout="row" fxLayoutAlign="end center">
-      <button mat-button>Features</button>
-      <button mat-button [matMenuTriggerFor]="docsMenu">
-        Docs
-        <mat-menu #docsMenu="matMenu">
-          <button mat-menu-item>Guides</button>
-          <button mat-menu-item>Concept</button>
-          <button mat-menu-item>API</button>
-        </mat-menu>
+      <button mat-button>
+        Search
+        <mat-icon>
+          search
+        </mat-icon>
       </button>
-      <button mat-button>Feature</button>
-      <button mat-button color="accent">
+    </div>
+    <nav class="navbar" fxLayoutAlign="space-between">
+      <div class="logo" fxFlex="0 0 50%">
+        <img src="assets/images/logo.svg" />
+      </div>
+      <div class="navs" fxLayout="row">
+        <button mat-button>Features <mat-icon>arrow_drop_down</mat-icon></button>
+        <button mat-button [matMenuTriggerFor]="docsMenu">
+          Docs <mat-icon>arrow_drop_down</mat-icon>
+          <mat-menu #docsMenu="matMenu">
+            <button mat-menu-item [routerLink]="['/docs']" routerLinkActive="router-link-active">
+              Guides
+            </button>
+            <button mat-menu-item [routerLink]="['/docs']">Concept</button>
+            <button mat-menu-item [routerLink]="['/docs']">API</button>
+          </mat-menu>
+        </button>
+        <button mat-button>Feature</button>
+        <!-- <button mat-button color="accent">
         Free Trial
-      </button>
+      </button> -->
+      </div>
+    </nav>
+    <div class="headline">
+      <div fxLayout="column" fxFlex="0 0 50%">
+        <div class="heading">Go beyond your dreams!</div>
+        <div class="subheading">
+          Now, you don’t need to spend tons of hours and money to make your projects.
+        </div>
+        <div fxLayout="row">
+          <button mat-raised-button color="accent">Get Started Now</button>
+          <div>
+            <a mat-button href="http://instagram.com">
+              <mat-icon svgIcon="instagram"></mat-icon>
+            </a>
+            <a mat-button href="http://twitter.com">
+              <mat-icon svgIcon="twitter"></mat-icon>
+            </a>
+            <a mat-button href="http://facebook.com">
+              <mat-icon svgIcon="facebook"></mat-icon>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div fxLayout="column" fxFlex="0 0 50%">
+        <img class="spica-logo" src="assets/images/spica-logo.svg" alt="" />
+      </div>
     </div>
-  </nav>
+  </div>
+  <img class="devider-wave" src="assets/images/wave.svg" alt="" />
 </header>
+
+<div class="features-container">
+  <div class="head">
+    <div class="title">Major Features</div>
+    <div class="subtitle">
+      It has many features that allows you to create contents simply.
+    </div>
+  </div>
+  <div class="content">
+    <div fxLayout="row" fxLayoutAlign="space-between">
+      <div class="features" fxLayout="column" fxLayoutAlign="center center">
+        <img src="assets/images/example-feat.png" />
+        <div class="feat-description">
+          <div class="title font-bold">
+            Bucket Architecture
+          </div>
+          <div class="subtitle">
+            It gives full data model customization. So you can ride wherever you want.
+          </div>
+        </div>
+      </div>
+      <div class="features" fxLayout="column" fxLayoutAlign="center center">
+        <img src="assets/images/example-feat.png" />
+        <div class="feat-description">
+          <div class="title font-bold">
+            Policy-Based Management
+          </div>
+          <div class="subtitle">
+            Instead of using pre-built roles, you can create your roles now!
+          </div>
+        </div>
+      </div>
+      <div class="features" fxLayout="column" fxLayoutAlign="center center">
+        <img src="assets/images/example-feat.png" />
+        <div class="feat-description">
+          <div class="title font-bold">
+            Functions
+          </div>
+          <div class="subtitle">
+            For developers, for creators, for crafters, you can apply any logic to your projects.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div fxLayout="row" fxLayoutAlign="center">
+      <div class="features" fxLayout="column" fxLayoutAlign="center center">
+        <img src="assets/images/example-feat.png" />
+        <div class="feat-description">
+          <div class="title font-bold">
+            Platform Agnostic
+          </div>
+          <div class="subtitle">
+            You can take mobile, PWA or web app builds with using build module.
+          </div>
+        </div>
+      </div>
+      <div class="features" fxLayout="column" fxLayoutAlign="center center">
+        <img src="assets/images/example-feat.png" />
+        <div class="feat-description">
+          <div class="title font-bold">
+            Frontend Composer
+          </div>
+          <div class="subtitle">
+            With component-based interface composer, you can make UI much faster.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="projects-container space-back">
+  <div fxLayout="column" fxFlex="0 0 80%" class="headline">
+    <div class="heading">Feel The Energy,</div>
+    <div class="heading">Join Our Creator World</div>
+    <div class="subheading">
+      Powered by DreamHarvesters®
+    </div>
+  </div>
+  <div fxLayout="column" fxFlex="0 0 20%" fxLayoutAlign="center center">
+    <button mat-raised-button color="accent">Projects</button>
+  </div>
+</div>
+
+<footer fxLayoutAlign="space-between">
+  <div class="copyright">
+    This site created by <span class="accent">DreamHarvesters</span> © 2019. All rights reserved.
+  </div>
+  <div>
+    <a [routerLink]="">Privacy Statement</a>
+    <a [routerLink]="">Cookie Notice</a>
+    <a [routerLink]="">Security</a>
+  </div>
+</footer>

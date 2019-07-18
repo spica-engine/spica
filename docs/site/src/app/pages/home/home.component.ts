@@ -1,4 +1,6 @@
-import { Component } from "@angular/core";
+import {Component} from "@angular/core";
+import {MatIconRegistry} from "@angular/material";
+import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
   selector: "spica-home",
@@ -6,5 +8,18 @@ import { Component } from "@angular/core";
   styleUrls: ["./home.component.scss"]
 })
 export class HomeComponent {
-  constructor() {}
+  constructor(private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer) {
+    this.matIconRegistry.addSvgIcon(
+      "instagram",
+      this.domSanitizer.bypassSecurityTrustResourceUrl("../../../assets/icons/social/instagram-logo.svg")
+    );
+    this.matIconRegistry.addSvgIcon(
+      "twitter",
+      this.domSanitizer.bypassSecurityTrustResourceUrl("../../../assets/icons/social/twitter-logo.svg")
+    );
+    this.matIconRegistry.addSvgIcon(
+      "facebook",
+      this.domSanitizer.bypassSecurityTrustResourceUrl("../../../assets/icons/social/facebook-logo.svg")
+    );
+  }
 }
