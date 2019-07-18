@@ -1,8 +1,8 @@
-import {Component, Input} from "@angular/core";
+import {ChangeDetectionStrategy, Component, Input} from "@angular/core";
 
 @Component({
   templateUrl: "./fragment-link.component.html",
-  styleUrls: ["./fragment-link.component.css"]
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FragmentLinkComponent {
   @Input() url: string;

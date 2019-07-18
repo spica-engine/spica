@@ -116,9 +116,7 @@ body {
   font-family: "Ubuntu", sans-serif;
   font-weight: 100;
   box-sizing: border-box;
+  font-size: 15px;
   text-size-adjust: none;
-
-  .mat-raised-button {
-    border-radius: 20px;
-  }
+  -webkit-font-smoothing: antialiased;
 }

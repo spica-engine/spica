@@ -58,7 +58,7 @@ export class ControllerProcessor implements Processor {
                   }
                 }
 
-                member.parameterDocs = member.parameterDocs.map((param: any) => {
+                member.parameterDocs.forEach((param: any) => {
                   const decorator = param.declaration.decorators![0];
                   const name = getDecoratorName(decorator);
                   if (
@@ -68,7 +68,7 @@ export class ControllerProcessor implements Processor {
                       decorator.expression.arguments[0].kind != 10)
                   ) {
                     param.private = true;
-                    return param;
+                    return;
                   }
                   if (!param.description && member.params) {
                     const taggedDesc = member.params.find((tag: any) => tag.name == param.name);
@@ -79,14 +79,11 @@ export class ControllerProcessor implements Processor {
 
                   param.docType = name.toLowerCase();
                   param.name = decorator.expression.arguments[0].text;
-                  // if (doc.originalModule == "bucket-data.controller" && member.name == "find") {
-                  //   console.log(member);
-                  // }
 
-                  return param;
+                  member[param.docType] = member[param.docType] || [];
+                  member[param.docType].push(param);
                 });
               }
-
               return member;
             });
         }

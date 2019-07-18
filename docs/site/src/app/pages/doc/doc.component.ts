@@ -1,8 +1,8 @@
 import {Component, OnInit} from "@angular/core";
 import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
 import {ActivatedRoute} from "@angular/router";
-import {Observable} from "rxjs";
-import {map, switchMap} from "rxjs/operators";
+import {merge, Observable} from "rxjs";
+import {delay, map, skip, switchMap, take, filter} from "rxjs/operators";
 import {DocService} from "../../services/doc.service";
 
 @Component({
@@ -24,9 +24,10 @@ export class DocComponent implements OnInit {
       switchMap(params =>
         params.apiName
           ? this.doc.getApiDoc(params.apiName, params.docName)
-          : this.doc.getContentDoc(params.contentName, params.docName)
+          : this.doc.getContentDoc(params.contentName, params.docName || "index")
       ),
       map(text => this.sanitizer.bypassSecurityTrustHtml(text))
     );
+
   }
 }

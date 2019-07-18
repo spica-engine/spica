@@ -20,7 +20,7 @@ export function toc(options: any) {
     const toc: any = {
       type: "tocList",
       data: {
-        hName: "docs-table-of-contents"
+        hName: "doc-toc"
       },
       children: [result.map]
     };

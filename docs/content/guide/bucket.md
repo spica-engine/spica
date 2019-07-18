@@ -1,9 +1,53 @@
 ## Table of contents
 
 # Bucket
+
 Buckets are schemas of your data. They keep all the necessary information about your data such as their structure, validations.
 
-## Create and Edit Buckets
+## List
+
+### With Client
+
+You can find the list of your Bucket by clicking on the **Bucket** from the side menu under the Developer section. If you've just initialized the Spica, the list would be empty.
+
+### With API
+
+URL of request:
+
+> GET "{baseUrl}/bucket"
+
+Example response:
+
+```json
+[
+  {
+    "_id": "5d1c60f9e3f4ee1a938c294c",
+    "title": "Example Bucket",
+    "description": "Example bucket for Documentation",
+    "primary": "title",
+    "properties": {
+      "title": {
+        "type": "string",
+        "title": "string",
+        "description": "Title of the row",
+        "options": {
+          "position": "left",
+          "visible": true,
+          "translate": true
+        }
+      },
+      "description": {
+        "type": "textarea",
+        "title": "",
+        "description": "Description of the row",
+        "options": {"position": "right"}
+      }
+    }
+  }
+]
+```
+
+## Create and Edit
 
 To define your data models on your application, you have to define your data models known as Buckets. You can create and edit directly from your Spica Client or via API calls.
 
@@ -37,7 +81,7 @@ You can drag and drop the Bucket Properties to desired division.
 
 > Remember: You can't save a Bucket if you left one or more Properties on `No Position` list.
 
-### With API Call
+### With API
 
 > Remember: If you want to create a new Bucket, don't include the `_id` property to the body of your request.
 
@@ -87,50 +131,7 @@ Example request body:
 
 `"readOnly"`: Also boolean. Makes its related property read only field. After it is set as `true`, you can't create/edit Bucket's that property.
 
-## List Buckets
-
-### With Client
-
-You can find the list of your Bucket by clicking on the **Bucket** from the side menu under the Developer section. If you've just initialized the Spica, the list would be empty.
-
-### With API
-
-URL of request:
-
-> GET "{baseUrl}/bucket"
-
-Example response:
-
-```json
-[
-  {
-    "_id": "5d1c60f9e3f4ee1a938c294c",
-    "title": "Example Bucket",
-    "description": "Example bucket for Documantation",
-    "primary": "title",
-    "properties": {
-      "title": {
-        "type": "string",
-        "title": "string",
-        "description": "Title of the row",
-        "options": {
-          "position": "left",
-          "visible": true,
-          "translate": true
-        }
-      },
-      "description": {
-        "type": "textarea",
-        "title": "",
-        "description": "Description of the row",
-        "options": {"position": "right"}
-      }
-    }
-  }
-]
-```
-
-## Delete Bucket
+## Delete
 
 > Remember: This action is irreversible. Bucket entries and their histories will be deleted along with the Bucket.
 
@@ -138,7 +139,7 @@ Example response:
 
 To delete Bucket; go to the Bucket listing page, find the Bucket you want to create and click on the red `trash` icon. A dialog will pop up to confirm this action. Follow the instruction on dialog and click on `Confirm` button.
 
-### With API Call
+### With API
 
 URL of request:
 
@@ -181,7 +182,7 @@ Getting the localized data from API call, add `Accept-Language` header and set i
 
 # Bucket Entries
 
-## List Bucket Data
+## List
 
 ### With Client
 
@@ -203,11 +204,11 @@ Left side of the top bar contains some buttons to change listing. From left to r
 
 `Add`: Opens Bucket Data Create page.
 
-### With API Call
+### With API
 
 URL of request:
 
-> GET "{baseUrl}/bucket/{bucket \_id}/data?{params}"
+> GET "{baseUrl}/bucket/:bucketId/data?{params}"
 
 Returns paginated `Bucket` array.
 
@@ -244,7 +245,7 @@ Example response:
 }
 ```
 
-## Create and Edit Bucket Data
+## Create and Edit
 
 > Remember: Spica analyzes the new data and validates it with main Bucket Properties. If the new data doesn't match with the schema, Spica won't save and returns validation error.
 
@@ -254,7 +255,7 @@ To edit an existing data, go to the Bucket Data Listing page and click the `edit
 
 Spica Client will generate the needed form for you. Fill the form and click on `Save` button.
 
-### With API Call
+### With API
 
 Request URL:
 
@@ -268,9 +269,10 @@ Example request body:
   "bucketPropertyKey": "new property value"
 }
 ```
+
 To edit an existing data, put `_id` of the data you would like to edit. To create, don't send `_id` in your request.
 
-## Bucket History
+## History
 
 If you have followed the Installation guide and set your MongoDB replica sets correctly, your Spica instance keeps bucket data changes. It doesn't matter if you changed the data from the client, API calls or directly from the database as Spica listens to your database changes.
 
@@ -282,19 +284,18 @@ Clicking to any of the numbers will revert your data to that date. You can save 
 
 > Note: Spica keeps ten latest history data. If you change the data more than that, oldest history data will be deleted.
 
-#### With API Call
+#### With API
 
 Listing Histories:
 
 Request URL:
 
->GET "{baseUrl}/bucket/{bucket _id}/history/{bucket data _id}"
+> GET "{baseUrl}/bucket/{bucket \_id}/history/{bucket data \_id}"
 
-Getting single history: 
+Getting single history:
 
 Request URL:
 
->GET "{baseUrl}/bucket/{bucket _id}/history/{bucket data _id}/{history _id}"
+> GET "{baseUrl}/bucket/{bucket \_id}/history/{bucket data \_id}/{history \_id}"
 
-
-## Import & Export Data
+## Import & Export

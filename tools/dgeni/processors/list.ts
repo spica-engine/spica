@@ -11,7 +11,7 @@ export class ListProcessor implements Processor {
         path: "doc-list.json",
         outputPath: "doc-list.json",
         docs: docs
-          .filter(doc => !!doc.name)
+          .filter(doc => !!doc.name && doc.originalModule != "index")
           .map(doc => ({
             name: doc.name,
             path: doc.path,

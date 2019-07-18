@@ -35,6 +35,7 @@ defaultPackage.config(function(
   templateEngine: any,
   log: any
 ) {
+
   readFilesProcessor.$enabled = false;
 
   readTypeScriptModules.hidePrivateMembers = true;
