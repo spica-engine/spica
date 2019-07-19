@@ -16,6 +16,7 @@ import {
 import {of, Subject} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {Identity} from "./identity";
+import {IdentityService} from "./identity";
 import {PassportService} from "./passport.service";
 import {SamlService} from "./saml.service";
 import {StrategyService} from "./strategies/strategy.service";
@@ -26,6 +27,7 @@ export class PassportController {
 
   constructor(
     private passport: PassportService,
+    private identity: IdentityService,
     private saml: SamlService,
     private strategy: StrategyService
   ) {}
@@ -72,8 +74,8 @@ export class PassportController {
       }
 
       identity =
-        (await this.passport.getIdentity({identifier: user.upn})) ||
-        (await this.passport.insertOne({
+        (await this.identity.findOne({identifier: user.upn})) ||
+        (await this.identity.insertOne({
           identifier: user.upn,
           password: undefined,
           policies: []

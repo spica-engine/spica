@@ -29,7 +29,7 @@
             selectable="1"
             [disabled]="progress"
             [class.image-selected]="selected"
-            [(file)]="incomingFile"
+            [(files)]="incomingFile"
             (fileChange)="uploadStorage(incomingFile)"
           >
             <mat-icon class="save-alt" *ngIf="!progress">save_alt</mat-icon>

@@ -2,12 +2,12 @@ import {Inject, Injectable} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
 import {ExtractJwt, Strategy} from "passport-jwt";
 import {PassportOptions, PASSPORT_OPTIONS} from "./interface";
-import {PassportService} from "./passport.service";
+import {IdentityService} from "./identity/identity.service";
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private passport: PassportService,
+    private identity: IdentityService,
     @Inject(PASSPORT_OPTIONS) options: PassportOptions
   ) {
     super({
@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const identity = await this.passport.getIdentity({identifier: payload.identifier});
+    const identity = await this.identity.findOne({identifier: payload.identifier});
     return identity;
   }
 }

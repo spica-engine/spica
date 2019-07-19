@@ -8,16 +8,16 @@
   <button mat-icon-button [matMenuTriggerFor]="menu">
     <mat-icon>filter_list</mat-icon>
     <mat-menu #menu="matMenu" class="storage-filter-menu">
-      <button mat-menu-item (click)="sortStorage({direction: 'asc', name: 'name'})">
+      <button mat-menu-item (click)="sortStorage({direction: 'desc', name: 'name'})">
         Name (Descending)
       </button>
-      <button mat-menu-item (click)="sortStorage({direction: 'desc', name: 'name'})">
+      <button mat-menu-item (click)="sortStorage({direction: 'asc', name: 'name'})">
         Name (Ascending)
       </button>
-      <button mat-menu-item (click)="sortStorage({direction: 'asc', name: '_id'})">
+      <button mat-menu-item (click)="sortStorage({direction: 'desc', name: '_id'})">
         Date (Descending)
       </button>
-      <button mat-menu-item (click)="sortStorage({direction: 'desc', name: '_id'})">
+      <button mat-menu-item (click)="sortStorage({direction: 'asc', name: '_id'})">
         Date (Ascending)
       </button>
     </mat-menu>
@@ -36,9 +36,10 @@
       type="file"
       accept="image/*,video/mp4,video/webm"
       #fileSelector
+      multiple
       #fileModel="ngModel"
       [ngModel]="undefined"
-      (ngModelChange)="uploadStorage(fileSelector.files[0])"
+      (ngModelChange)="uploadStorageMany(fileSelector.files)"
     />
     <mat-icon *ngIf="!progress">add</mat-icon>
     <mat-progress-spinner
