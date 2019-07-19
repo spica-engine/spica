@@ -26,6 +26,7 @@ import {DocComponent} from "./pages/doc/doc.component";
 import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
 import {DocsComponent} from "./pages/docs/docs.component";
 import {HomeComponent} from "./pages/home/home.component";
+import {InlineSVGModule} from "ng-inline-svg";
 
 @NgModule({
   imports: [
@@ -35,6 +36,7 @@ import {HomeComponent} from "./pages/home/home.component";
     ServiceWorkerModule.register("ngsw-worker.js", {
       enabled: environment.production
     }),
+    InlineSVGModule.forRoot(),
     FlexLayoutModule,
     BrowserAnimationsModule,
     HttpClientModule,

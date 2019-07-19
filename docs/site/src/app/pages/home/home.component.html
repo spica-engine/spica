@@ -1,5 +1,5 @@
 <header class="space-back" fxLayout="column" fxLayoutGap="20px">
-  <div class="header-container">
+  <div class="header-container container">
     <div class="toolbar" fxLayoutAlign="space-between">
       <span>
         Don't miss:
@@ -63,10 +63,10 @@
       </div>
     </div>
   </div>
-  <img class="devider-wave" src="assets/images/wave.svg" alt="" />
+  <div class="header-wave" [inlineSVG]="'/assets/images/wave.svg'"></div>
 </header>
 
-<div class="features-container">
+<div class="features-container container">
   <div class="head">
     <div class="title">Major Features</div>
     <div class="subtitle">
@@ -77,7 +77,7 @@
     <div fxLayout="row" fxLayoutAlign="space-between">
       <div class="features" fxLayout="column" fxLayoutAlign="center center">
         <img src="assets/images/example-feat.png" />
-        <div class="feat-description">
+        <div class="feat-description description">
           <div class="title font-bold">
             Bucket Architecture
           </div>
@@ -88,7 +88,7 @@
       </div>
       <div class="features" fxLayout="column" fxLayoutAlign="center center">
         <img src="assets/images/example-feat.png" />
-        <div class="feat-description">
+        <div class="feat-description description">
           <div class="title font-bold">
             Policy-Based Management
           </div>
@@ -99,7 +99,7 @@
       </div>
       <div class="features" fxLayout="column" fxLayoutAlign="center center">
         <img src="assets/images/example-feat.png" />
-        <div class="feat-description">
+        <div class="feat-description description">
           <div class="title font-bold">
             Functions
           </div>
@@ -112,7 +112,7 @@
     <div fxLayout="row" fxLayoutAlign="center">
       <div class="features" fxLayout="column" fxLayoutAlign="center center">
         <img src="assets/images/example-feat.png" />
-        <div class="feat-description">
+        <div class="feat-description description">
           <div class="title font-bold">
             Platform Agnostic
           </div>
@@ -123,7 +123,7 @@
       </div>
       <div class="features" fxLayout="column" fxLayoutAlign="center center">
         <img src="assets/images/example-feat.png" />
-        <div class="feat-description">
+        <div class="feat-description description">
           <div class="title font-bold">
             Frontend Composer
           </div>
@@ -136,16 +136,198 @@
   </div>
 </div>
 
-<div class="projects-container space-back">
-  <div fxLayout="column" fxFlex="0 0 80%" class="headline">
+<div class="divider-wave" [inlineSVG]="'/assets/images/SVG/wave.svg'"></div>
+
+<div class="discover-container container">
+  <div class="head">
+    <div class="title">Discover a New Type of Development</div>
+    <div class="subtitle">
+      It has many features that allows you to create contents simply.
+    </div>
+    <hr class="line" />
+  </div>
+  <div class="discover-content" fxLayout="row">
+    <div fxLayout="column" fxFlex="0 0 35%" fxLayoutAlign="center center">
+      <img src="assets/images/example-feat.png" />
+    </div>
+    <div fxLayout="column" fxFlex="0 0 65%" fxLayoutAlign="center">
+      <div class="discover-description description">
+        <div class="title font-bold">
+          Feel flexibility and have control
+        </div>
+        <div class="subtitle">
+          You will have full control as a developer and provide the most flexible project
+          infrastructure
+        </div>
+      </div>
+      <div class="discover-description description">
+        <div class="title font-bold">
+          Save time and money
+        </div>
+        <div class="subtitle">
+          Everything in Spica has been designed to save time and cost without losing quality. With
+          easy-to-use composer, you can display your data in sweet harmony.
+        </div>
+      </div>
+      <div class="discover-description description">
+        <div class="title font-bold">
+          Focus on your product designs
+        </div>
+        <div class="subtitle">
+          You can develop any kind of project in any shape. It is time to focus on the product now.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="projects-container container space-back">
+  <div fxLayout="column" fxFlex="0 0 80%" class="headline" fxLayoutAlign="start">
     <div class="heading">Feel The Energy,</div>
     <div class="heading">Join Our Creator World</div>
     <div class="subheading">
       Powered by DreamHarvesters®
     </div>
+    <hr class="line" />
   </div>
   <div fxLayout="column" fxFlex="0 0 20%" fxLayoutAlign="center center">
     <button mat-raised-button color="accent">Projects</button>
+  </div>
+</div>
+
+<div class="for-container container" fxLayout="column">
+  <div fxLayout="row">
+    <div fxLayout="column" fxFlex="0 0 60%" fxLayoutAlign="center">
+      <div class="head">
+        <div class="title">For Developers</div>
+        <div class="subtitle">
+          Our bucket module saves much time for you. You can customize your data models and we
+          handle REST API. Also you will have full control because of IAM.
+        </div>
+        <div class="subtitle">
+          [productname] provides webhooks, subscriptions and function management module. Apply your
+          own logic and define your key functions.
+        </div>
+        <div class="subtitle">
+          Once you need user interface for your project, you can develop your own UI components and
+          import into frontend composer or use ready one.
+        </div>
+      </div>
+    </div>
+    <div fxLayout="column" fxFlex="0 0 40%" fxLayoutAlign="center center">
+      <img src="assets/images/example-feat.png" />
+    </div>
+  </div>
+  <div fxLayout="row">
+    <div fxLayout="column" fxFlex="0 0 40%" fxLayoutAlign="center center">
+      <img src="assets/images/example-feat.png" />
+    </div>
+    <div fxLayout="column" fxFlex="0 0 60%" fxLayoutAlign="center">
+      <div class="head">
+        <div class="title">For Agencies</div>
+        <div class="subtitle">
+          You don’t need to have full stack team from now. Set the rules once, deploy for every
+          device. You can develop mobile application, website or PWA faster and secure.
+        </div>
+        <div class="subtitle">
+          With multi-tenant architecture, you can create many projects and handle all of them
+          easily. Just focus on your business.
+        </div>
+        <div class="subtitle">
+          Keep your technology stack up-to-date always. You will be behind of your competitors and
+          take the lead.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div fxLayout="row">
+    <div fxLayout="column" fxFlex="0 0 60%" fxLayoutAlign="center">
+      <div class="head">
+        <div class="title">For Marketers</div>
+        <div class="subtitle">
+          You don’t need to know coding. From scratch to end, there are many assets you can use. All
+          these assets are secure to use because we review all assets.
+        </div>
+        <div class="subtitle">
+          You can create a project in 15 minutes and close in a minute. You can connect every tool
+          you need into frontend composer.
+        </div>
+        <div class="subtitle">
+          We know, having personalized support is one of the best things for you. Contact with us
+          easily, we give extraordinary support services.
+        </div>
+      </div>
+    </div>
+    <div fxLayout="column" fxFlex="0 0 40%" fxLayoutAlign="center center">
+      <img src="assets/images/example-feat.png" />
+    </div>
+  </div>
+</div>
+
+<div class="newslatter-menu space-back">
+  <div class="wave" [inlineSVG]="'/assets/images/SVG/wave.svg'"></div>
+  <div class="container" fxLayout="column">
+    <div fxLayoutAlign="end">
+      <div fxLayout="row" fxFlex="0 0 40%">
+        <div class="newslatter">
+          Join other digital executives and digital agencies who get our best new content delivered
+          via email weekly.
+        </div>
+      </div>
+    </div>
+    <div fxLayout="row" class="menu" fxLayoutAlign="space-between">
+      <div fxLayout="column" fxFlex="0 0 20%">
+        <img class="menu-logo" src="assets/images/logo-2.svg" />
+      </div>
+      <div fxLayout="column" fxFlex="0 0 20%">
+        <div class="menu-title">
+          Product
+        </div>
+        <hr />
+        <div class="menu-items">
+          <div class="item">
+            Features
+          </div>
+          <div class="item">
+            Customers
+          </div>
+          <div class="item">
+            Why Spica?
+          </div>
+          <div class="item">
+            Pricing
+          </div>
+        </div>
+      </div>
+      <div fxLayout="column" fxFlex="0 0 20%">
+        <div class="menu-title">
+          Resources
+        </div>
+        <hr />
+        <div class="menu-items">
+          <div class="item">
+            Features
+          </div>
+          <div class="item">
+            Customers
+          </div>
+        </div>
+      </div>
+      <div fxLayout="column" fxFlex="0 0 20%">
+        <div class="menu-title">
+          About
+        </div>
+        <hr />
+        <div class="menu-items">
+          <div class="item">
+            Team
+          </div>
+          <div class="item">
+            Meets Up
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

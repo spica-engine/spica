@@ -27,6 +27,7 @@
     "@angular/service-worker": "~8.0.1",
     "core-js": "^2.5.4",
     "highlight.js": "^9.15.8",
+    "ng-inline-svg": "^8.5.1",
     "rxjs": "~6.5.2",
     "tslib": "^1.9.0",
     "zone.js": "~0.9.1"

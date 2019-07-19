@@ -9,6 +9,7 @@ import {DomSanitizer} from "@angular/platform-browser";
 })
 export class HomeComponent {
   constructor(private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer) {
+    // Register social media icons to the Icon Library
     this.matIconRegistry.addSvgIcon(
       "instagram",
       this.domSanitizer.bypassSecurityTrustResourceUrl("../../../assets/icons/social/instagram-logo.svg")

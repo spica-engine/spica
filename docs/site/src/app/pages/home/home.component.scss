@@ -22,12 +22,16 @@
   .font-bold {
     font-weight: bold;
   }
+
+  .container {
+    padding: 30px 10%;
+    position: relative;
+  }
+
   header {
     position: relative;
     .header-container {
       min-height: 800px;
-      padding: 30px 10%;
-      position: relative;
       nav {
         .logo {
           height: 45px;
@@ -46,9 +50,13 @@
       }
     }
 
-    .devider-wave {
-      bottom: 0;
-      position: absolute;
+    .header-wave {
+      ::ng-deep svg {
+        display: block;
+        fill: white;
+        bottom: 0;
+        position: absolute;
+      }
     }
   }
 
@@ -66,40 +74,116 @@
     }
   }
 
+  .head {
+    .title {
+      font-size: 4em;
+    }
+    .subtitle {
+      font-size: 1.5em;
+    }
+  }
+
   .features-container {
-    padding: 30px 10%;
     background: white;
     color: black;
-    .head {
-      .title {
-        font-size: 4em;
-      }
-      .subtitle {
-        font-size: 1.5em;
-      }
-    }
     .content {
       div {
         padding: 10px;
         .feat-description {
           text-align: center;
-          .title {
-            font-size: 1.5em;
-          }
-          .subtitle {
-            font-size: 1.2em;
-          }
         }
       }
     }
   }
 
+  .description {
+    .title {
+      font-size: 1.5em;
+    }
+    .subtitle {
+      font-size: 1.2em;
+    }
+  }
+
+  .divider-wave {
+    transform: scaleX(-1);
+    ::ng-deep svg {
+      display: block;
+      fill: #f2f1f0;
+    }
+  }
+
+  .discover-container {
+    color: black;
+    background-color: #f2f1f0;
+    .discover-content {
+      padding: 75px 0;
+      .discover-description {
+        padding: 20px;
+        div {
+          padding: 10px;
+        }
+      }
+    }
+  }
+
+  .line {
+    width: 10%;
+    margin: 10px;
+    height: 4px;
+    background-color: #58bce4;
+    border: 0 none;
+  }
+
   .projects-container {
-    padding: 30px 10%;
     button {
       font-size: 3em;
       padding: 20px;
       line-height: normal;
+    }
+  }
+
+  .for-container {
+    color: black;
+    div {
+      padding: 20px;
+    }
+  }
+
+  .newslatter-menu {
+    display: block;
+    .wave {
+      ::ng-deep svg {
+        height: 263px;
+        fill: white;
+        transform: scale(-1, -1);
+        display: block;
+      }
+    }
+    .newslatter {
+      font-size: 1.3em;
+      text-align: end;
+    }
+    .menu {
+      .menu-logo {
+        width: 50%;
+      }
+      padding: 10% 0;
+      hr {
+        width: 100%;
+        height: 4px;
+        background-color: #58bce4;
+        border: 0 none;
+      }
+      .menu-title {
+        font-size: 2em;
+      }
+      .menu-items {
+        font-size: 1.5em;
+        .item {
+          padding-top: 10%;
+        }
+      }
     }
   }
 
