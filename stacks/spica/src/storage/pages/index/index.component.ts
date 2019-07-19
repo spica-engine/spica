@@ -68,9 +68,9 @@ export class IndexComponent implements OnInit {
     );
   }
 
-  uploadStorage(file: File): void {
+  uploadStorageMany(file: FileList): void {
     if (file) {
-      this.storage.upsertOne({name: file.name}, file).subscribe(
+      this.storage.insertMany(file).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
             this.progress = Math.round((100 * event.loaded) / event.total);
@@ -80,6 +80,7 @@ export class IndexComponent implements OnInit {
           }
         },
         () => {
+          this.sortStorage({direction: "desc", name: "_id"});
           this.progress = undefined;
           this.refresh.next();
         }

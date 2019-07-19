@@ -16,7 +16,7 @@ export class PickerComponent implements OnInit {
   storages$: Observable<Storage[]>;
   progress: number;
   refresh: Subject<void> = new Subject<void>();
-  incomingFile: File;
+  incomingFile: FileList;
 
   @ViewChild(MatPaginator, {static: true}) private _paginator: MatPaginator;
 
@@ -44,15 +44,15 @@ export class PickerComponent implements OnInit {
       })
     );
   }
-  uploadStorage(file: File): void {
+  uploadStorage(file: FileList): void {
     if (file) {
-      this.storage.upsertOne({name: file.name}, file).subscribe(
+      this.storage.insertMany(file).subscribe(
         response => {
           if (response.type === HttpEventType.UploadProgress) {
             this.progress = Math.round((100 * response.loaded) / response.total);
           } else if (response.type === HttpEventType.Response) {
-            this.selected = response.body;
-            this.selected.url = response.url + "/" + response.body._id;
+            this.selected = response.body[0];
+            this.selected.url = response.url + "/" + response.body[0]._id;
             this._onChange.next(this.selected);
             this.progress = undefined;
             this.refresh.next();

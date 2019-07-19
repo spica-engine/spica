@@ -97,7 +97,7 @@ export class ImageEditorComponent implements OnInit {
     this.scaleImage().toBlob(blob => {
       const file = new File([blob], this.storage.name, {type: blob.type});
       this.storageService
-        .upsertOne(this.storage, file)
+        .updateOne(this.storage._id, file)
         .toPromise()
         .then(() => {
           this.router.navigate(["storage"]);

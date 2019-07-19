@@ -2,6 +2,7 @@ import {HttpClient, HttpHeaders, HttpRequest} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {PreferencesService} from "@spica-client/core";
+import {fileToBuffer} from "@spica-client/core";
 import * as BSON from "bson";
 import {from, Observable} from "rxjs";
 import {filter, flatMap, map, tap} from "rxjs/operators";
@@ -57,7 +58,7 @@ export class BucketService {
   }
 
   importData(file: File, bucketId: string): Observable<any> {
-    return from(this.fileToBuffer(file)).pipe(
+    return from(fileToBuffer(file)).pipe(
       flatMap(content => {
         const data = BSON.serialize({
           content: {
@@ -85,14 +86,5 @@ export class BucketService {
 
   createFromTemplate(template: BucketTemplate): Observable<any> {
     return this.http.post(`api:/bucket/templates`, template).pipe(tap(data => console.log(data)));
-  }
-
-  private fileToBuffer(file: File): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(file);
-      reader.onload = () => resolve(new Buffer(reader.result as ArrayBuffer));
-      reader.onerror = error => reject(error);
-    });
   }
 }
