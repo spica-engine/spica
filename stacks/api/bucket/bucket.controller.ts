@@ -99,6 +99,31 @@ export class BucketController {
     }
   }
 
+  @Post("import-schema")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:add"))
+  async importSchema(@Body() file: ImportFile) {
+    try {
+      const result = {skippedDueToDuplication: 0, insertedToBucket: 0};
+      const data = JSON.parse(file.content.data.toString());
+
+      data._id = new ObjectId(data._id);
+      await this.bs.insertOne(data).then(
+        () => {
+          result.insertedToBucket = result.insertedToBucket + 1;
+        },
+        (err: MongoError) => {
+          if (err.code == 11000) {
+            result.skippedDueToDuplication = result.skippedDueToDuplication + 1;
+          }
+        }
+      );
+
+      return result;
+    } catch (error) {
+      throw new HttpException("Invalid JSON", HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @Post("export")
   @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
   async export(@Body() bucketIds: Array<string>, @Res() res) {
@@ -142,6 +167,43 @@ export class BucketController {
         archive.append(stringifiedData, {name: `${id}.json`});
       }
     }
+
+    await archive.finalize();
+
+    res.writeHead(200, {
+      "Content-Type": "application/json"
+    });
+
+    fs.createReadStream(`${path}/${archiveName}.zip`)
+      .pipe(res)
+      .on("finish", function() {
+        fs.unlinkSync(`${path}/${archiveName}.zip`);
+      });
+  }
+
+  @Post("export-schema")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
+  async exportSchema(@Body() bucketId: string, @Res() res) {
+    const path = "./temp";
+    const archiveName = Math.random()
+      .toString(36)
+      .substr(2, 9);
+
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path);
+    }
+
+    const archive = archiver("zip", {
+      zlib: {level: -1}
+    });
+    const outputArch = fs.createWriteStream(`${path}/${archiveName}.zip`);
+
+    archive.pipe(outputArch);
+
+    const bucket = await this.bs.findOne({_id: new ObjectId(bucketId[0])});
+
+    const stringifiedData = JSON.stringify(bucket);
+    archive.append(stringifiedData, {name: `${bucketId}.json`});
 
     await archive.finalize();
 

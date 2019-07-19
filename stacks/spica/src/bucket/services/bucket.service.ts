@@ -76,10 +76,32 @@ export class BucketService {
     );
   }
 
+  importSchema(file: File): Observable<any> {
+    return from(fileToBuffer(file)).pipe(
+      flatMap(content => {
+        const data = BSON.serialize({
+          content: {
+            data: new BSON.Binary(content),
+            type: file.type
+          }
+        });
+        const request = new HttpRequest("POST", `api:/bucket/import-schema`, data.buffer, {
+          reportProgress: true,
+          headers: new HttpHeaders({"Content-Type": "application/bson"})
+        });
+
+        return this.http.request<Storage>(request);
+      })
+    );
+  }
+
   exportData(bucketIds: Array<string>): Observable<any> {
     return this.http.post(`api:/bucket/export`, bucketIds, {responseType: "blob"});
   }
 
+  exportSchema(bucketId: string): Observable<any> {
+    return this.http.post(`api:/bucket/export-schema`, bucketId, {responseType: "blob"});
+  }
   getTemplates(): Observable<any> {
     return this.http.get<any>(`api:/bucket/templates`);
   }

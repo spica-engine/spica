@@ -1,7 +1,13 @@
 :host {
+  h3 {
+    text-align: center;
+  }
   .container {
     display: flex;
     mat-card {
+      .custom-mat-hint {
+        font-size: 75%;
+      }
       width: 50%;
       margin: 2%;
     }
