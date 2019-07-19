@@ -68,15 +68,28 @@ export class Storage {
     return this._collection.deleteOne({_id: id}).then(() => undefined);
   }
 
-  upsertOne(object: StorageObject): Promise<StorageObject> {
-    object._id = new ObjectId(object._id);
+  updateOne(object: StorageObject): Promise<StorageObject> {
     if (object.content.data) {
       fs.writeFileSync(this.buildPath(object), object.content.data);
     }
     delete object.content.data;
+    object._id = new ObjectId(object._id);
     return this._collection
       .updateOne({_id: object._id}, {$set: object}, {upsert: true})
       .then(() => object);
+  }
+
+  insertMany(object: StorageObject[]): Promise<StorageObject[]> {
+    const data = Array.from(object);
+
+    Promise.all(
+      data.map(d => {
+        d._id = new ObjectId(d._id);
+        fs.writeFileSync(this.buildPath(d), d.content.data);
+      })
+    );
+
+    return this._collection.insertMany(data).then(() => object);
   }
 
   buildPath(object: StorageObject): string {

@@ -14,7 +14,7 @@ import {bufferToBase64} from "../../utils";
   styleUrls: ["./image-editor.component.scss"]
 })
 export class ImageEditorComponent implements OnInit {
-  @ViewChild("cropperComponent", {static: true}) public cropperComponent: CropperComponent;
+  @ViewChild("cropperComponent", {static: false}) public cropperComponent: CropperComponent;
   @ViewChild("canvas", {static: true}) canvas: ElementRef;
 
   public cropperOptions: CropperOptions = {
@@ -97,7 +97,7 @@ export class ImageEditorComponent implements OnInit {
     this.scaleImage().toBlob(blob => {
       const file = new File([blob], this.storage.name, {type: blob.type});
       this.storageService
-        .upsertOne(this.storage, file)
+        .updateOne(this.storage._id, file)
         .toPromise()
         .then(() => {
           this.router.navigate(["storage"]);

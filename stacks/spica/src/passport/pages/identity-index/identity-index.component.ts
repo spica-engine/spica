@@ -3,6 +3,7 @@ import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
 import {IdentityService} from "../../services/identity.service";
+import {Identity} from "../../interfaces/identity";
 
 @Component({
   selector: "function-identity-index",
@@ -13,7 +14,7 @@ export class IdentityIndexComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
-  identities$: Observable<any>;
+  identities$: Observable<Identity[]>;
   refresh: Subject<void> = new Subject<void>();
   displayedColumns = ["_id", "identifier", "actions"];
 

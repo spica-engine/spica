@@ -17,30 +17,32 @@ export class ReadMarkdownFiles implements Processor {
   constructor(private parseMarkdown: any, private renderMarkdown: any, private log: any) {}
 
   $process(docs: DocCollection): void | any[] | PromiseLike<any[]> {
-    this.files.forEach(f => {
-      this.log.debug(`Reading file: ${f}`);
-      const fpath = join(this.basePath, f);
-      const content = readFileSync(fpath).toString();
-      const rendered = this.renderMarkdown(content);
+    this.files
+      .filter(f => !!f)
+      .forEach(f => {
+        this.log.debug(`Reading file: ${f}`);
+        const fpath = join(this.basePath, f);
+        const content = readFileSync(fpath).toString();
+        const rendered = this.renderMarkdown(content);
 
-      const parsed = this.parseMarkdown(content);
-      const frontMatter = parsed.children.find((n: any) => n.type == "yaml");
+        const parsed = this.parseMarkdown(content);
+        const frontMatter = parsed.children.find((n: any) => n.type == "yaml");
 
-      if (frontMatter) {
-        frontMatter.value = YAML.parse(frontMatter.value);
-      }
-      const doc = new MarkdownDoc(
-        frontMatter && frontMatter.data && frontMatter.data.parsedValue,
-        fpath,
-        rendered,
-        content
-      );
-      if (!doc.name) {
-        this.log.warn(`Exported markdown doc ${f} has no heading.`);
-      }
-      docs.push(doc);
-      this.log.debug(`Exported markdown doc: ${f}`);
-    });
+        if (frontMatter) {
+          frontMatter.value = YAML.parse(frontMatter.value);
+        }
+        const doc = new MarkdownDoc(
+          frontMatter && frontMatter.data && frontMatter.data.parsedValue,
+          fpath,
+          rendered,
+          content
+        );
+        if (!doc.name) {
+          this.log.warn(`Exported markdown doc ${f} has no heading.`);
+        }
+        docs.push(doc);
+        this.log.debug(`Exported markdown doc: ${f}`);
+      });
     return docs;
   }
 }

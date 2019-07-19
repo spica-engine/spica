@@ -1,10 +1,11 @@
-import {Body, Controller, Delete, Get, Param, Post, UseGuards} from "@nestjs/common";
+import {Body, Controller, Delete, Get, Param, Post, UseGuards, Query} from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "./action.guard";
 import {Policy} from "./interface";
 import {PolicyService} from "./policy.service";
+import {NUMBER} from "@spica-server/core";
 
 @Controller("passport/policy")
 export class PolicyController {
@@ -12,14 +13,14 @@ export class PolicyController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:index"))
-  findAll() {
-    return this.policy.findAll();
+  find(@Query("limit", NUMBER) limit?: number, @Query("skip", NUMBER) skip?: number) {
+    return this.policy.find(limit, skip);
   }
 
   // TODO: use special action for this
   @Get("services")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:index"))
-  findAllPermissions() {
+  findPermissions() {
     return this.policy.services;
   }
 

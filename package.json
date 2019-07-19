@@ -1,6 +1,6 @@
 {
   "name": "spica-sources",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "license": "AGPLv3",
   "author": {
@@ -21,7 +21,8 @@
     "docs:watch": "bazel query 'kind('docs', //...)' --output label | xargs ibazel build",
     "bazel:format": "find . -type f \\( -name \"*.bzl\" -or -name WORKSPACE -or -name BUILD -or -name BUILD.bazel \\) ! -path \"*/node_modules/*\" | xargs buildifier -v --warnings=attr-cfg,attr-license,attr-non-empty,attr-output-default,attr-single-file,constant-glob,ctx-args,depset-iteration,depset-union,dict-concatenation,duplicated-name,filetype,git-repository,http-archive,integer-division,load,load-on-top,native-build,native-package,output-group,package-name,package-on-top,positional-args,redefined-variable,repository-name,same-origin-load,string-iteration,unused-variable",
     "code:format": "yarn prettier --write 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}' 'docs/site/**/*.{css,scss,ts,js,html}'",
-    "code:format-check": "yarn prettier --check 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}' 'docs/site/**/*.{css,scss,ts,js,html}'"
+    "code:format-check": "yarn prettier --check 'packages/**/*.{css,scss,ts,js,html}' 'stacks/**/*.{css,scss,ts,js,html}' 'docs/site/**/*.{css,scss,ts,js,html}'",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "dependencies": {
     "@angular-devkit/architect": "^0.800.0-beta.14",
@@ -97,6 +98,7 @@
     "@types/mongodb": "^3.1.27",
     "@types/node": "^12.0.10",
     "@types/saml2-js": "^1.6.7",
+    "conventional-changelog-cli": "^2.0.21",
     "dgeni": "^0.4.12",
     "dgeni-packages": "^0.27.3",
     "jasmine": "^3.1.0",

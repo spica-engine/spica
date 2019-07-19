@@ -6,6 +6,7 @@ import {DatabaseService} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference";
 import {readdirSync} from "fs";
 import {IdentityController} from "./identity/identity.controller";
+import {IdentityService} from "./identity";
 import {PassportOptions, PASSPORT_OPTIONS} from "./interface";
 import {JwtStrategy} from "./jwt.strategy";
 import {PassportController} from "./passport.controller";
@@ -29,7 +30,7 @@ class PassportCoreModule {
           signOptions: {audience: options.audience, issuer: options.issuer, expiresIn: "2 days"}
         })
       ],
-      exports: [PolicyService, JwtModule, CorePassportModule],
+      exports: [PolicyService, IdentityService, JwtModule, CorePassportModule],
       providers: [
         {
           provide: PolicyService,
@@ -37,6 +38,17 @@ class PassportCoreModule {
             return new PolicyService(
               db,
               readdirSync(`${__dirname}/policies`).map(f => require(`${__dirname}/policies/${f}`)),
+              readdirSync(`${__dirname}/services`).map(f => require(`${__dirname}/services/${f}`))
+            );
+          },
+          inject: [DatabaseService]
+        },
+        {
+          provide: IdentityService,
+          useFactory: db => {
+            return new IdentityService(
+              db,
+              readdirSync(`${__dirname}/identity`).map(f => require(`${__dirname}/identity/${f}`)),
               readdirSync(`${__dirname}/services`).map(f => require(`${__dirname}/services/${f}`))
             );
           },

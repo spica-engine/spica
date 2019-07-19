@@ -24,11 +24,9 @@
         <button mat-button [matMenuTriggerFor]="docsMenu">
           Docs <mat-icon>arrow_drop_down</mat-icon>
           <mat-menu #docsMenu="matMenu">
-            <button mat-menu-item [routerLink]="['/docs']" routerLinkActive="router-link-active">
-              Guides
-            </button>
-            <button mat-menu-item [routerLink]="['/docs']">Concept</button>
-            <button mat-menu-item [routerLink]="['/docs']">API</button>
+            <button mat-menu-item routerLink="/docs/guide">Guides</button>
+            <button mat-menu-item routerLink="/docs/concept">Concept</button>
+            <button mat-menu-item routerLink="/docs/api">API</button>
           </mat-menu>
         </button>
         <button mat-button>Feature</button>

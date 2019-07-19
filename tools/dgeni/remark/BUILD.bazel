@@ -10,18 +10,18 @@ ts_library(
         "package.ts",
         "processor.ts",
         "render.ts",
-        "toc.ts"
+        "toc.ts",
     ],
     tsconfig = "//tools/dgeni:tsconfig.json",
     deps = [
         "@npm//@types/node",
         "@npm//dgeni",
+        "@npm//mdast-util-toc",
         "@npm//remark",
+        "@npm//remark-frontmatter",
         "@npm//remark-highlight.js",
         "@npm//remark-html",
         "@npm//remark-slug",
-        "@npm//remark-frontmatter",
         "@npm//yaml",
-        "@npm//mdast-util-toc",
     ],
 )

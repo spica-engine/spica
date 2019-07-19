@@ -10,6 +10,7 @@ ts_library(
     srcs = [
         "dgeni.ts",
         "processors/controller.ts",
+        "processors/copydata.ts",
         "processors/filter.ts",
         "processors/list.ts",
         "processors/symbol-filter.ts",

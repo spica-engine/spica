@@ -4,16 +4,19 @@ import {Observable} from "rxjs";
 import {Identity} from "../interfaces/identity";
 import {Policy} from "../interfaces/policy";
 import {Service} from "../interfaces/service";
+import {IndexResult} from "@spica-client/core/interfaces";
 
 @Injectable({providedIn: "root"})
 export class PolicyService {
   constructor(private http: HttpClient) {}
 
-  getPolicies(pageSize?: number, skip?: number): Observable<Policy[]> {
-    return this.http.get<Policy[]>(`api:/passport/policy`);
+  find(limit?: number, skip?: number): Observable<IndexResult<Policy>> {
+    return this.http.get<IndexResult<Policy>>(`api:/passport/policy`, {
+      params: {limit: String(limit), skip: String(skip)}
+    });
   }
 
-  getPolicy(id: string): Observable<Policy> {
+  findOne(id: string): Observable<Policy> {
     return this.http.get<Policy>(`api:/passport/policy/${id}`);
   }
 

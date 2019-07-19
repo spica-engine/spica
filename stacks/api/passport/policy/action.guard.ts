@@ -44,7 +44,7 @@ function createActionGuard(actions: string | string[], format?: string): Type<Ca
         this.throwException();
       }
 
-      const policies = await this.policy.findAll();
+      const policies = await this.policy._findAll();
 
       const identityPolicies = request.user.policies.map(p => policies.find(pp => pp._id == p));
 

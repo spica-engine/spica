@@ -10,6 +10,7 @@ import {FilterProcessor} from "./processors/filter";
 import {ListProcessor} from "./processors/list";
 import {SymbolFilterProcessor} from "./processors/symbol-filter";
 import {ReadMarkdownFiles, remarkPackage} from "./remark";
+import { CopyDataProcessor } from "./processors/copydata";
 
 const jsdocPackage = require("dgeni-packages/jsdoc");
 const nunjucksPackage = require("dgeni-packages/nunjucks");
@@ -24,7 +25,6 @@ export const defaultPackage = new Package("default", [
 
 defaultPackage.processor(new FilterProcessor());
 defaultPackage.processor(new ControllerProcessor());
-defaultPackage.processor(new ListProcessor());
 
 defaultPackage.config(function(
   readFilesProcessor: any,
@@ -35,7 +35,6 @@ defaultPackage.config(function(
   templateEngine: any,
   log: any
 ) {
-
   readFilesProcessor.$enabled = false;
 
   readTypeScriptModules.hidePrivateMembers = true;
@@ -75,11 +74,13 @@ defaultPackage.config(function(
 
 if (require.main === module) {
   const [
+    docName,
     docOutputDirectory, // Relative to process.cwd()
     sourceFiles,
     expectedSymbols,
     mappings,
-    binDir
+    binDir,
+    dataRaw
   ] = readFileSync(process.argv.slice(2)[0], {encoding: "utf-8"}).split("\n");
 
   const cwd = process.cwd();
@@ -87,6 +88,8 @@ if (require.main === module) {
   const absoluteOutputPath = join(cwd, docOutputDirectory);
 
   defaultPackage.processor(new SymbolFilterProcessor(expectedSymbols.split(",")));
+  defaultPackage.processor(new ListProcessor(docName, join(cwd, binDir), JSON.parse(dataRaw).data));
+  defaultPackage.processor(new CopyDataProcessor(absoluteOutputPath, join(cwd, binDir), JSON.parse(dataRaw).data));
 
   defaultPackage.config(function(
     readTypeScriptModules: ReadTypeScriptModules,

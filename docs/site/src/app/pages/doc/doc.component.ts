@@ -28,6 +28,5 @@ export class DocComponent implements OnInit {
       ),
       map(text => this.sanitizer.bypassSecurityTrustHtml(text))
     );
-
   }
 }
