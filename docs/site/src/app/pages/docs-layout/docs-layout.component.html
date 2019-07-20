@@ -39,7 +39,7 @@
     </mat-nav-list>
 
     <mat-nav-list>
-      <h6 mat-subheader>API</h6>
+      <h6 mat-subheader routerLink="api" routerLinkActive="active">API</h6>
       <a
         mat-list-item
         *ngFor="let apiDoc of ($apiDocs | async)?.children"

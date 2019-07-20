@@ -47,12 +47,12 @@
               {
                 "glob": "**/*",
                 "input": "../../bazel-bin/docs/content/api",
-                "output": "./assets/docs/api"
+                "output": "./assets/docs"
               },
               {
                 "glob": "**/*",
                 "input": "../../bazel-bin/docs/content/content",
-                "output": "./assets/docs/content"
+                "output": "./assets/docs"
               },
               "src/manifest.webmanifest"
             ],

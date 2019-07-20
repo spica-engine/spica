@@ -1,0 +1,14 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools/dgeni:index.bzl", "docs")
+
+docs(
+    name = "api",
+    srcs = ["index.md"],
+    data = [
+        "//stacks/api/bucket:docs",
+        "//stacks/api/function:docs",
+        "//stacks/api/passport:docs",
+        "//stacks/api/storage:docs",
+    ],
+)

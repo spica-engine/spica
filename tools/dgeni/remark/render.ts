@@ -8,7 +8,7 @@ const remarkHighlight = require("remark-highlight.js");
 
 function link(h: any, node: any) {
   if (!node.url.startsWith("#")) {
-    return h(node, "a", {href: node.url, target: "_blank"}, node.children);
+    return h(node, "a", {href: node.url, target: "_blank", class: 'external-link'}, node.children);
   }
   return h(node, "fragment-link", {url: node.url}, node.children);
 }

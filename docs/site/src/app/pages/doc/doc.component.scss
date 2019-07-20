@@ -14,6 +14,20 @@
       gap: 1.35rem 1.35rem;
     }
 
+    a {
+      text-decoration: none;
+      color: rgb(28, 28, 80);
+      &.external-link::after {
+        content: "";
+        fill: currentColor;
+        background-image: url(../../../assets/icons/link.svg);
+        height: 20px;
+        width: 19px;
+        display: inline-block;
+        background-size: contain;
+      }
+    }
+
     table {
       border-width: 1px 0 0 1px;
       overflow-x: auto;
@@ -49,6 +63,7 @@
       position: fixed;
       right: 60px;
       top: 82px;
+
       ul {
         padding-left: 8px;
         list-style-type: none;

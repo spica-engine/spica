@@ -4,18 +4,10 @@ load("//tools/dgeni:index.bzl", "docs")
 
 docs(
     name = "content",
+    srcs = ["index.md"],
     data = [
         "//docs/content/concept",
-        "//docs/content/guide",
+        "//docs/content/guide"
     ],
 )
 
-docs(
-    name = "api",
-    data = [
-        "//stacks/api/bucket:docs",
-        "//stacks/api/function:docs",
-        "//stacks/api/passport:docs",
-        "//stacks/api/storage:docs",
-    ],
-)
