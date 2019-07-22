@@ -232,7 +232,7 @@ Content of `changes` variable with the `INSERT` event and `full document` option
 
 ### Schedule
 
-Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked in next tick.
+Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked at next tick.
 
 To create a scheduled function you need a CRON time expression and Time-zone because scheduler, schedules your function regarless of the Time-zone of host machine.
 
