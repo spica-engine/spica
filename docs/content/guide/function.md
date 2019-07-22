@@ -187,8 +187,50 @@ The payload can be everything in practice despite they need to be parsed to be u
 
 ### Database
 
-### Schedule
+Database trigger, invokes your function when a specific database event happens in a collection of database. Database trigger can invoke your function with `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP` events in a specific database collection. When the event happens your function will be invoked with the changes in the collection.
 
+To be able to create a function that triggered by database event, you need two required and one optional information about the event
+
+- **Collection:** Name of the collection where the set of documents stored
+- **Event Type:** Type of the event that happen in the collection
+- **Full Document:** Whether you want only full document or changes on passed data
+
+A basic database function looks like this:
+
+```typescript
+export default function(changes: triggers.database.Changes) {
+  console.log(changes);
+  // Business logic here
+}
+```
+
+In the example code above changes variable which passed to our function on first parameter contains all the information about the changes.
+
+Content of `changes` variable with `INSERT` event and `full document` option enabled will look like this;
+
+```typescript
+{
+  "operationType": "insert", // Type of the event
+  "clusterTime": 1563732441, // Time of the event occurrence
+  "fullDocument": {
+    // The newly inserted document
+    "_id": "5d34a9d957b31b06390788ec",
+    "wysiwyg": {"en_US": "dqwdwd"},
+    "relation": "5d132772d5869d9fd24c5985"
+  },
+  "ns": {
+    // database name and collection name
+    "db": "spica",
+    "coll": "bucket_5d15d8244a23f73a2a453770"
+  },
+  "documentKey": {
+    // the id of the inserted document (ObjectId string)
+    "_id": "5d34a9d957b31b06390788ec"
+  }
+}
+```
+
+### Schedule
 
 ## Modules
 
