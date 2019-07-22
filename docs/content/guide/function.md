@@ -232,26 +232,26 @@ Content of `changes` variable with the `INSERT` event and `full document` option
 
 ### Schedule
 
-Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the cron scheduler in case you don't want your function to be invoked after this invocation.
+Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked in next tick.
 
-Example
+To create a scheduled function you need a CRON time expression and Time-zone because scheduler, schedules your function regarless of the Time-zone of host machine.
+
+For example, if you want to run your function at every minute, you need a cron time expression like this [\* \* \* \* \*](https://crontab.guru/#*_*_*_*_*).
 
 ```typescript
 export default function(stop: triggers.schedule.Stop) {
-  if (3 > 5) {
-    // Scheduler will never stop
+  // Also, note that you do not have to stop your function
+  if (true) {
+    // Scheduler will stop after first invocation by scheduler
     stop();
   }
   // Your business logic
 }
 ```
 
-> Crontab is a good tool for learning cron expressions. Checkout [CronTab](https://crontab.guru)
+In the example, we have stopped scheduler so our function won't be invoked next time when scheduler ticks.
 
-To create a scheduled function you need a CRON time expression.
-For example, if you want to run your function at every minute, you need a cron time string like this [\* \* \* \* \*](https://crontab.guru/#*_*_*_*_*).
-
-#### Cron expression
+#### Cron Time expression
 
 Cron expression made of five-string separated with a whitespace character.
 
@@ -265,6 +265,8 @@ Cron expression made of five-string separated with a whitespace character.
  │ │ │ │ │
  * * * * *
 ```
+
+> Crontab is a good tool for learning cron expressions. Checkout [CronTab](https://crontab.guru)
 
 Here is some example of CRON expressions
 
