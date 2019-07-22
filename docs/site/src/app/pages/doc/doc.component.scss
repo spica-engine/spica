@@ -17,14 +17,19 @@
     a {
       text-decoration: none;
       color: rgb(28, 28, 80);
-      &.external-link::after {
-        content: "";
-        fill: currentColor;
-        background-image: url(../../../assets/icons/link.svg);
-        height: 20px;
-        width: 19px;
-        display: inline-block;
-        background-size: contain;
+      font-weight: 400;
+      &.external-link {
+        color: #ffa14b;
+        ::after {
+          content: "";
+          background-image: url(../../../assets/icons/link.svg);
+          background-size: contain;
+          height: 19px;
+          width: 19px;
+          vertical-align: middle;
+          display: inline-block;
+          margin-left: 3px;
+        }
       }
     }
 

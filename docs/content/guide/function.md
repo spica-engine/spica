@@ -192,7 +192,7 @@ Database trigger, invokes your function when a specific database event happens i
 To be able to create a function that triggered by database event, you need two required and one optional information about the event
 
 - **Collection:** Name of the collection where the set of documents stored
-- **Event Type:** Type of the event that happen in the collection
+- **Event Type:** Type of the event that happen in the collection. It can be `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 - **Full Document:** Whether you want only full document or changes on passed data
 
 A basic database function looks like this:
@@ -230,7 +230,41 @@ Content of `changes` variable with `INSERT` event and `full document` option ena
 }
 ```
 
+
 ### Schedule
+
+Schedule trigger, invokes your function in a specific time. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression.
+
+> Crontab is a good tool for learning cron expressions. Checkout [CronTab](https://crontab.guru)
+
+To create a scheduled function you need a CRON time expression. 
+For example if you want to run your function at every minute, you need a cron time string like this [* * * * *](https://crontab.guru/#*_*_*_*_*).
+
+#### Cron expression
+Cron expression made of five string field seperated with a whitespace character.
+
+```
+# ┌───────────── minute (0 - 59)
+# │ ┌───────────── hour (0 - 23)
+# │ │ ┌───────────── day of the month (1 - 31)
+# │ │ │ ┌───────────── month (1 - 12)
+# │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+# │ │ │ │ │
+# │ │ │ │ │
+# * * * * *
+```
+
+Here is some example for CRON expressions
+
+|  Expression 	| Description                                                	|
+|:-----------:	|------------------------------------------------------------	|
+| `0 0 1 1 *` 	| Run once a year at midnight of 1 January                   	|
+| `0 0 1 * *` 	| Run once a month at midnight of the first day of the month 	|
+| `0 0 * * 0` 	| Run once a week at midnight on Sunday morning              	|
+| `0 0 * * *` 	| Run once a day at midnight                                 	|
+| `0 * * * *` 	| Run once an hour at the beginning of the hour              	|
+| `* * * * *` 	| Run every minute                                           	|
+
 
 ## Modules
 
