@@ -70,7 +70,7 @@ Currently, there are few modules helps you to get information about your spica.
 
 #### Overview
 
-You can invoke your function with an HTTP request using the `POST`, `PUT`, `GET`, `DELETE`, `PATCH`, `HEAD` and `OPTIONS` http methods along with a path like `/books` or `/books/:id`.
+You can invoke your function with an HTTP request using the `POST`, `PUT`, `GET`, `DELETE`, `PATCH`, `HEAD` and `OPTIONS` HTTP methods along with a path like `/books` or `/books/:id`.
 
 To able to create a function with HTTP trigger, you need two information;
 Path and Method, the method must be one of the specified HTTP methods above also you need a path like above.
@@ -187,12 +187,12 @@ The payload can be everything in practice despite they need to be parsed to be u
 
 ### Database
 
-Database trigger, invokes your function when a specific database event happens in a collection of database. Database trigger can invoke your function with `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP` events in a specific database collection. When the event happens your function will be invoked with the changes in the collection.
+Database trigger, invokes your function when a specific database event happens in a collection of database. The database trigger can invoke your function with `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP` events in a specific database collection. When the event happens your function will be invoked with the changes in the collection.
 
 To be able to create a function that triggered by database event, you need two required and one optional information about the event
 
 - **Collection:** Name of the collection where the set of documents stored
-- **Event Type:** Type of the event that happen in the collection. It can be `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
+- **Event Type:** Type of the event that happens in the collection. It can be `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 - **Full Document:** Whether you want only full document or changes on passed data
 
 A basic database function looks like this:
@@ -204,9 +204,9 @@ export default function(changes: triggers.database.Changes) {
 }
 ```
 
-In the example code above changes variable which passed to our function on first parameter contains all the information about the changes.
+In the example code above changes variable which passed to our function on the first parameter contains all the information about the changes.
 
-Content of `changes` variable with `INSERT` event and `full document` option enabled will look like this;
+Content of `changes` variable with the `INSERT` event and `full document` option enabled will look like this;
 
 ```typescript
 {
@@ -230,41 +230,52 @@ Content of `changes` variable with `INSERT` event and `full document` option ena
 }
 ```
 
-
 ### Schedule
 
-Schedule trigger, invokes your function in a specific time. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression.
+Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the cron scheduler in case you don't want your function to be invoked after this invocation.
+
+Example
+
+```typescript
+export default function(stop: triggers.schedule.Stop) {
+  if (3 > 5) {
+    // Scheduler will never stop
+    stop();
+  }
+  // Your business logic
+}
+```
 
 > Crontab is a good tool for learning cron expressions. Checkout [CronTab](https://crontab.guru)
 
-To create a scheduled function you need a CRON time expression. 
-For example if you want to run your function at every minute, you need a cron time string like this [* * * * *](https://crontab.guru/#*_*_*_*_*).
+To create a scheduled function you need a CRON time expression.
+For example, if you want to run your function at every minute, you need a cron time string like this [\* \* \* \* \*](https://crontab.guru/#*_*_*_*_*).
 
 #### Cron expression
-Cron expression made of five string field seperated with a whitespace character.
+
+Cron expression made of five-string separated with a whitespace character.
 
 ```
-# ┌───────────── minute (0 - 59)
-# │ ┌───────────── hour (0 - 23)
-# │ │ ┌───────────── day of the month (1 - 31)
-# │ │ │ ┌───────────── month (1 - 12)
-# │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
-# │ │ │ │ │
-# │ │ │ │ │
-# * * * * *
+ ┌───────────── minute (0 - 59)
+ │ ┌───────────── hour (0 - 23)
+ │ │ ┌───────────── day of the month (1 - 31)
+ │ │ │ ┌───────────── month (1 - 12)
+ │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+ │ │ │ │ │
+ │ │ │ │ │
+ * * * * *
 ```
 
-Here is some example for CRON expressions
+Here is some example of CRON expressions
 
-|  Expression 	| Description                                                	|
-|:-----------:	|------------------------------------------------------------	|
-| `0 0 1 1 *` 	| Run once a year at midnight of 1 January                   	|
-| `0 0 1 * *` 	| Run once a month at midnight of the first day of the month 	|
-| `0 0 * * 0` 	| Run once a week at midnight on Sunday morning              	|
-| `0 0 * * *` 	| Run once a day at midnight                                 	|
-| `0 * * * *` 	| Run once an hour at the beginning of the hour              	|
-| `* * * * *` 	| Run every minute                                           	|
-
+| Expression  | Description                                                |
+| :---------: | ---------------------------------------------------------- |
+| `0 0 1 1 *` | Run once a year at midnight of 1 January                   |
+| `0 0 1 * *` | Run once a month at midnight of the first day of the month |
+| `0 0 * * 0` | Run once a week at midnight on Sunday morning              |
+| `0 0 * * *` | Run once a day at midnight                                 |
+| `0 * * * *` | Run once an hour at the beginning of the hour              |
+| `* * * * *` | Run every minute                                           |
 
 ## Modules
 
