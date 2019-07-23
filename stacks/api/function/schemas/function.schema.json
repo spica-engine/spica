@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/function/schema",
+  "type": "object",
+  "required": ["description", "env", "name"],
+  "properties": {
+    "_id": {
+      "type": "string",
+      "format": "objectid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "env": true,
+    "memoryLimit": {
+      "type": "number",
+      "default": 100
+    },
+    "timeout": {
+      "type": "number",
+      "default": 100
+    }
+  }
+}

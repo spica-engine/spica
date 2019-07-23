@@ -8,8 +8,8 @@ ts_library(
     srcs = [
         "index.ts",
         "interface.ts",
+        "module.ts",
         "pipe.ts",
-        "schema.ts",
         "validator.ts",
     ],
     module_name = "@spica-server/core/schema",

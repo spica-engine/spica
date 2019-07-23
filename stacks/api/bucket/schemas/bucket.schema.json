@@ -12,7 +12,7 @@
       "title": "The _id Schema",
       "description": "If you pass an existing bucket id your schema will be replaced with it.",
       "examples": ["5cdd1222af4b96e97b3d7e91"],
-      "format": "bucketid"
+      "format": "objectid"
     },
     "title": {
       "type": "string",

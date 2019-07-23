@@ -3,3 +3,9 @@ export interface Identity {
   password: string;
   policies: string[];
 }
+export interface Service {
+  $resource: string;
+  $format?: string;
+  title: string;
+  actions: string[];
+}

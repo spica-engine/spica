@@ -1,111 +1,58 @@
-:host {
-  /deep/ .input-placer-input {
-    width: 100%;
-    padding: 5px 0px;
+::ng-deep .history-tree {
+  min-width: unset !important;
+  overflow: unset !important;
+  width: 40px;
+  border-radius: 25px !important;
+  .mat-menu-content {
+    padding: 0 !important;
+    button:not(:first-child) {
+      margin-top: 4px;
+    }
   }
-  [fieldsList] {
-    &.array,
-    &.object {
-      [translateContainer] {
-        padding: 5px 0;
+}
+
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    .title {
+      h1 > * {
+        vertical-align: middle;
+      }
+      h6 {
+        font-size: 14px;
       }
     }
-    &.richtext {
-      [translateContainer] {
-        padding: 0;
-        align-items: flex-end;
-        /deep/ {
-          .languages {
-            align-items: flex-end;
-            button {
-              box-shadow: 0px -1px 2px -1px rgba(0, 0, 0, 0.41);
-              border-radius: 100% 100% 0% 0%;
-            }
-            &.active {
-              .language-button {
-                margin-top: 0;
-                margin-bottom: 0px;
-              }
-            }
-            &.inactive {
-              .language-button {
-                margin-top: 0;
-                margin-bottom: -30px;
-              }
+    .space-between {
+      flex: 1 1 auto;
+    }
+  }
+
+  mat-card {
+    width: calc(100% - 60px);
+    margin: 30px;
+    margin-top: -130px;
+    mat-card-content {
+      form {
+        > div {
+          padding: 10px;
+          &.left,
+          &.right {
+            float: left;
+            width: 50%;
+          }
+          // TODO(thesayyn): replace this with css variables
+          ::ng-deep .input-placer-input {
+            width: 100%;
+            padding: 10px 0px;
+            &.property-translate {
+              width: calc(100% - 45px);
+              margin-right: 5px;
             }
           }
         }
       }
     }
   }
-
-  /deep/ .mat-card-header-text {
-    margin: unset !important;
-  }
-  span[title] {
-    display: block;
-    padding: 10px 0;
-  }
-  mat-card-title[addContent] {
-    display: flex;
-    span {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-    }
-  }
-  .field-container {
-    position: relative;
-  }
-  .positions {
-    display: flex;
-    flex-wrap: wrap;
-    .left,
-    .right {
-      width: 50%;
-    }
-    .left {
-      padding-right: 8px;
-    }
-    .right {
-      padding-left: 8px;
-    }
-    .bottom {
-      width: 100%;
-    }
-  }
-  .fields-card {
-    width: calc(100% - 60px);
-    margin: 30px;
-    margin-top: -130px;
-  }
-  .bucket-add-toolbar {
-    min-height: 250px;
-    padding: 0 30px;
-    align-items: flex-start;
-    .left {
-      width: 100%;
-      .title {
-        display: flex;
-        align-items: center;
-        .mat-icon {
-          margin-right: 5px;
-        }
-      }
-      .sub-title {
-        font-size: 14px;
-        line-height: 14px;
-      }
-    }
-    .history-button {
-      width: 40px;
-      height: 40px;
-    }
-  }
-}
-/deep/ .history-tree {
-  min-width: unset !important;
-  overflow: unset !important;
-  width: 40px;
-  border-radius: 25px !important;
 }

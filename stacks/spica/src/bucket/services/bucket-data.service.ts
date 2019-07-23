@@ -2,7 +2,6 @@ import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
 import {Observable} from "rxjs";
-
 import {BucketAggregations} from "../interfaces/bucket-aggregations";
 import {BucketEntry, BucketRow} from "../interfaces/bucket-entry";
 
@@ -33,7 +32,9 @@ export class BucketDataService {
         filter.push({$sort: {[aggregations.sort.active]: aggregations.sort.direction}});
       }
 
-      params = params.set("filter", JSON.stringify(filter));
+      if (filter.length) {
+        params = params.set("filter", JSON.stringify(filter));
+      }
     }
 
     if (limit) {
@@ -55,9 +56,10 @@ export class BucketDataService {
   }
 
   findOne<T = BucketRow>(bucketId: string, id: string, prune: boolean = true): Observable<T> {
-    // To get whole data without touch
-    const params = new HttpParams().set("prune", prune.toString());
-
+    let params = new HttpParams();
+    if (prune) {
+      params = params.set("prune", String(prune));
+    }
     return this.http.get<T>(`api:/bucket/${bucketId}/data/${id}`, {params: params});
   }
 

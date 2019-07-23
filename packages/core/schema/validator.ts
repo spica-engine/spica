@@ -1,15 +1,13 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable, Optional} from "@nestjs/common";
 import * as ajv from "ajv";
 import * as request from "request-promise";
 import {from} from "rxjs";
 import {
   Default,
   Format,
-  Keyword,
-  LOCAL_SCHEMAS,
-  SCHEMA_DEFAULT,
-  SCHEMA_FORMAT,
-  SCHEMA_KEYWORD,
+  GLOBAL_SCHEMA_MODULE_OPTIONS,
+  ModuleOptions,
+  SCHEMA_MODULE_OPTIONS,
   UriResolver
 } from "./interface";
 export {ValidationError} from "ajv";
@@ -25,25 +23,27 @@ export class Validator {
   }
 
   constructor(
-    @Inject(SCHEMA_KEYWORD) keywords: Keyword[] = [],
-    @Inject(SCHEMA_FORMAT) formats: Format[] = [],
-    @Inject(SCHEMA_DEFAULT) defaults: Default[] = [],
-    @Inject(LOCAL_SCHEMAS) schemas: Object[] = []
+    @Inject(SCHEMA_MODULE_OPTIONS) local: ModuleOptions = {},
+    @Optional() @Inject(GLOBAL_SCHEMA_MODULE_OPTIONS) global: ModuleOptions = {}
   ) {
-    this._defaults = new Map<string, Default>(defaults.map(def => [def.keyword, def] as any));
+    this._defaults = new Map<string, Default>(
+      [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.keyword, def] as any)
+    );
     this._ajv = new ajv({
       removeAdditional: true,
       async: true,
       useDefaults: true,
       validateSchema: false,
       loadSchema: uri => this._fetch(uri),
-      formats: formats.reduce((formats, format) => {
+      formats: [...(local.formats || []), ...(global.formats || [])].reduce((formats, format) => {
         formats[format.name] = format;
         return formats;
       }, {}),
-      schemas
+      schemas: [...(local.schemas || []), ...(global.schemas || [])]
     });
-    keywords.forEach(keyword => this.registerKeyword(keyword.name, keyword));
+    [...(local.keywords || []), ...(global.keywords || [])].forEach(keyword =>
+      this.registerKeyword(keyword.name, keyword)
+    );
     this.registerKeyword("default", {
       modifying: true,
       compile: (schema, parentSchema, it) => {

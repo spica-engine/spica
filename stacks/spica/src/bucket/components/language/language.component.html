@@ -1,0 +1,21 @@
+<mat-menu #languageMenu class="mat-elevation-z0 language-menu">
+  <button
+    *ngFor="let language of languages$ | async"
+    mat-icon-button
+    mat-raised-button
+    [color]="(selected == language.code && 'accent') || 'primary'"
+    class="mat-elevation-z0"
+    (click)="selected = language.code; $event.stopPropagation()"
+  >
+    {{ language.name | slice: 0:2 | uppercase }}
+  </button>
+</mat-menu>
+<button
+  mat-icon-button
+  mat-raised-button
+  color="primary"
+  class="mat-elevation-z0"
+  [matMenuTriggerFor]="languageMenu"
+>
+  <mat-icon>translate</mat-icon>
+</button>

@@ -1,6 +1,7 @@
 import {Module} from "@nestjs/common";
 import * as cron from "cron";
 import {InvokerFn, Target, Trigger, TriggerFlags, TriggerSchema} from "./base";
+import * as moment from "moment-timezone";
 
 interface SchedulingOptions {
   frequency: string;
@@ -22,10 +23,9 @@ export class ScheduleTrigger implements Trigger<SchedulingOptions> {
         () => invoker({target, parameters: [job.stop]}),
         () => this.jobs.delete(targetKey),
         true,
-        "Europe/Istanbul"
+        options.timezone
       );
       this.jobs.set(targetKey, job);
-      job.start();
     } else {
       const job = this.jobs.get(targetKey);
       if (job) {
@@ -34,31 +34,37 @@ export class ScheduleTrigger implements Trigger<SchedulingOptions> {
       }
     }
   }
+
+  stub(test: any, info: Function) {
+    return Promise.resolve([() => info("ScheduleTrigger: Stopped.")]);
+  }
+
   schema(): Promise<TriggerSchema> {
     const schema: TriggerSchema = {
-      $id: "functions:triggers/schedule",
+      $id: "http://spica.internal/function/triggers/schedule/schema",
       title: "Scheduled",
       description: "An scheduled trigger for functions",
       type: "object",
+      required: ["frequency", "timezone"],
       properties: {
         frequency: {
-          title: "Frequency",
-          description:
-            "Schedules are specified using unix-cron format, e.g. every minute: '* * * * *', every 3 hours: '0 */3 * * *', every Monday at 9:00: '0 9 * * 1'.",
           type: "string",
-          pattern: "(28|*) +[2*] +[7*] +[1*] +[1*]"
+          pattern:
+            "^(\\*|([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])|\\*\\/([0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])) (\\*|([0-9]|1[0-9]|2[0-3])|\\*\\/([0-9]|1[0-9]|2[0-3])) (\\*|([1-9]|1[0-9]|2[0-9]|3[0-1])|\\*\\/([1-9]|1[0-9]|2[0-9]|3[0-1])) (\\*|([1-9]|1[0-2])|\\*\\/([1-9]|1[0-2])) (\\*|([0-6])|\\*\\/([0-6]))$",
+          title: "Frequency",
+          description: "Schedules are specified using unix-cron format.",
+          examples: ["* * * * *", "0 */3 * * *", "0 9 * * 1"]
         },
         timezone: {
+          type: "string",
           title: "Timezone",
-          enum: []
+          enum: moment.tz.names(),
+          default: "Europe/Istanbul"
         }
       },
       additionalProperties: false
     };
     return Promise.resolve(schema);
-  }
-  declarations(): Promise<string> {
-    return Promise.resolve("");
   }
 }
 

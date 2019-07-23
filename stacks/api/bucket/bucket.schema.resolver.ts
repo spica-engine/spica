@@ -38,7 +38,7 @@ export class BucketSchemaResolver {
               }
               return accumulator;
             },
-            {_id: {type: "string", options: {position: undefined}, format: "bucketid"}}
+            {_id: {type: "string", options: {position: undefined}, format: "objectid"}}
           ) as any;
           schema["additionalProperties"] = false;
         }

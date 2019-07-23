@@ -1,6 +1,6 @@
 import {HttpClient, HttpEvent, HttpHeaders, HttpParams, HttpRequest} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {IndexResult} from "@spica-client/core/interfaces";
+import {IndexResult, fileToBuffer} from "@spica-client/core";
 import * as BSON from "bson";
 import {Buffer} from "buffer";
 import {from, Observable} from "rxjs";
@@ -36,13 +36,36 @@ export class StorageService {
     return this.http.delete<void>(`api:/storage/${id}`);
   }
 
-  upsertOne(storage: Storage, file: File): Observable<HttpEvent<Storage>> {
+  updateOne(id: string, file: File): Observable<HttpEvent<Storage>> {
     return from(fileToBuffer(file)).pipe(
       flatMap(content => {
         const data = BSON.serialize({
-          ...storage,
+          _id: id,
           content: {data: new BSON.Binary(content), type: file.type}
         });
+        const request = new HttpRequest("PUT", "api:/storage", data.buffer, {
+          reportProgress: true,
+          headers: new HttpHeaders({"Content-Type": "application/bson"})
+        });
+
+        return this.http.request<Storage>(request);
+      })
+    );
+  }
+
+  insertMany(fileList: FileList): Observable<HttpEvent<Storage>> {
+    const files = Array.from(fileList);
+    return from(Promise.all(files.map(f => fileToBuffer(f)))).pipe(
+      flatMap(content => {
+        const data = BSON.serialize(
+          content.map((c, i) => ({
+            content: {
+              name: files[i].name,
+              data: new BSON.Binary(c),
+              type: files[i].type
+            }
+          }))
+        );
         const request = new HttpRequest("POST", "api:/storage", data.buffer, {
           reportProgress: true,
           headers: new HttpHeaders({"Content-Type": "application/bson"})
@@ -52,13 +75,4 @@ export class StorageService {
       })
     );
   }
-}
-
-function fileToBuffer(file: File): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsArrayBuffer(file);
-    reader.onload = () => resolve(new Buffer(reader.result as ArrayBuffer));
-    reader.onerror = error => reject(error);
-  });
 }

@@ -15,170 +15,217 @@
   </mat-toolbar>
 </ng-template>
 
-<mat-card [ngClass]="{'toolbar-card': !function._id}" class="mat-elevation-z25">
+<mat-card [class.toolbar-card]="!function._id" class="mat-elevation-z25">
   <mat-card-content>
-    <mat-list>
-      <mat-list-item>
-        <mat-form-field name>
-          <input matInput placeholder="Name" [(ngModel)]="function.name" required />
-        </mat-form-field>
-        <mat-form-field description>
-          <textarea
-            matInput
-            placeholder="Description"
-            [(ngModel)]="function.description"
-            required
-          ></textarea>
-        </mat-form-field>
-      </mat-list-item>
-      <mat-divider></mat-divider>
-      <ng-container *ngIf="$run | async; let run">
-        <mat-list-item class="run">
-          <mat-expansion-panel class="mat-elevation-z0" [expanded]="run.state == 'running'">
-            <mat-expansion-panel-header [attr.state]="run.state">
-              <mat-icon *ngIf="run.state == 'succeeded' || run.state == 'failed'">
-                {{ run.state == "failed" ? "error" : "check_circle" }}
-              </mat-icon>
-              <mat-spinner *ngIf="run.state == 'running'" [diameter]="20"></mat-spinner>
-              <span> {{ run.state | titlecase }}</span>
-            </mat-expansion-panel-header>
-            <div class="output" *ngFor="let log of run.logs">
-              <mat-icon [style.color]="logLevelMapping[log.level]?.color"
-                >{{ logLevelMapping[log.level]?.icon }}
-              </mat-icon>
-              <pre>{{ log.message }}</pre>
-            </div>
-          </mat-expansion-panel>
+    <form #form="ngForm">
+      <mat-list>
+        <mat-list-item>
+          <mat-form-field name>
+            <input
+              matInput
+              placeholder="Name"
+              #nameModel="ngModel"
+              [(ngModel)]="function.name"
+              name="name"
+              required
+              minlength="3"
+              maxlength="50"
+            />
+            <mat-error *ngIf="nameModel?.errors?.required">Name is required.</mat-error>
+            <mat-error *ngIf="nameModel?.errors?.minLength">
+              Name must be greater than {{ nameModel.errors.min.min }} characters.
+            </mat-error>
+            <mat-error *ngIf="nameModel?.errors?.maxLength">
+              Name must be less than {{ nameModel.errors.max.max }} characters.
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field description>
+            <textarea
+              matInput
+              placeholder="Description"
+              #descriptionModel="ngModel"
+              [(ngModel)]="function.description"
+              name="description"
+              required
+              minlength="3"
+              maxlength="250"
+            ></textarea>
+            <mat-hint>Simply describe what this function does.</mat-hint>
+            <mat-error *ngIf="descriptionModel?.errors?.required">Name is required.</mat-error>
+            <mat-error *ngIf="descriptionModel?.errors?.minLength">
+              Description must be greater than {{ descriptionModel.errors.min.min }} characters.
+            </mat-error>
+            <mat-error *ngIf="descriptionModel?.errors?.maxLength">
+              Description must be less than {{ descriptionModel.errors.max.max }} characters.
+            </mat-error>
+          </mat-form-field>
         </mat-list-item>
         <mat-divider></mat-divider>
-      </ng-container>
+        <ng-container *ngIf="$run | async; let run">
+          <mat-list-item class="run">
+            <mat-expansion-panel class="mat-elevation-z0" [expanded]="run.state == 'running'">
+              <mat-expansion-panel-header [attr.state]="run.state">
+                <mat-icon *ngIf="run.state == 'succeeded' || run.state == 'failed'">
+                  {{ run.state == "failed" ? "error" : "check_circle" }}
+                </mat-icon>
+                <mat-spinner *ngIf="run.state == 'running'" [diameter]="20"></mat-spinner>
+                <span> {{ run.state | titlecase }}</span>
+              </mat-expansion-panel-header>
+              <div class="output" *ngFor="let log of run.logs">
+                <mat-icon [style.color]="logLevelMapping[log.level]?.color"
+                  >{{ logLevelMapping[log.level]?.icon }}
+                </mat-icon>
+                <pre>{{ log.message }}</pre>
+              </div>
+            </mat-expansion-panel>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+        </ng-container>
 
-      <mat-list-item class="editor">
-        <div class="last-saved">
-          <mat-hint *ngIf="lastSaved"> Last saved: {{ lastSaved | date: "mediumTime" }} </mat-hint>
-          <mat-progress-spinner
-            [style.opacity]="isSaving ? 1 : 0"
-            color="primary"
-            mode="indeterminate"
-            [diameter]="18"
-          >
-          </mat-progress-spinner>
-        </div>
-
-        <function-editor
-          language
-          (save)="updateIndex()"
-          (run)="run($event)"
-          [(ngModel)]="index"
-          [options]="editorOptions"
-        >
-        </function-editor>
-      </mat-list-item>
-      <mat-divider></mat-divider>
-      <h4 mat-subheader>
-        <mat-icon>swap_horiz</mat-icon> Triggers
-        <button mat-icon-button matTooltip="Multiple trigger support is coming soon!">
-          <mat-icon>add</mat-icon>
-        </button>
-      </h4>
-      <mat-list-item class="trigger" *ngFor="let trigger of function.triggers | keyvalue">
-        <mat-form-field>
-          <mat-label>Handler</mat-label>
-          <mat-select [disabled]="true" value="trigger.key">
-            <mat-option value="trigger.key">{{ trigger.key }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <ng-container *ngIf="triggers | async; let triggers">
-          <mat-form-field>
-            <mat-label>Type</mat-label>
-            <mat-select
-              [(ngModel)]="trigger.value.type"
-              (ngModelChange)="trigger.value.options = {}"
+        <mat-list-item class="editor">
+          <div class="last-saved">
+            <mat-hint *ngIf="lastSaved">
+              Last saved: {{ lastSaved | date: "mediumTime" }}
+            </mat-hint>
+            <mat-progress-spinner
+              [style.opacity]="isSaving ? 1 : 0"
+              color="primary"
+              mode="indeterminate"
+              [diameter]="18"
             >
-              <mat-option *ngFor="let triggerPair of triggers | keyvalue" [value]="triggerPair.key">
-                {{ triggerPair.value?.title || triggerPair.key }}
-              </mat-option>
+            </mat-progress-spinner>
+          </div>
+
+          <function-editor
+            language
+            (save)="updateIndex()"
+            (run)="run($event)"
+            [(ngModel)]="index"
+            name="code"
+            [options]="editorOptions"
+          >
+          </function-editor>
+        </mat-list-item>
+        <mat-divider></mat-divider>
+        <h4 mat-subheader>
+          <mat-icon>swap_horiz</mat-icon> Triggers
+          <button mat-icon-button matTooltip="Multiple trigger support is coming soon!">
+            <mat-icon>add</mat-icon>
+          </button>
+        </h4>
+        <mat-list-item class="trigger" *ngFor="let trigger of function.triggers | keyvalue">
+          <mat-form-field>
+            <mat-label>Handler</mat-label>
+            <mat-select [disabled]="true" value="trigger.key">
+              <mat-option value="trigger.key">{{ trigger.key }}</mat-option>
             </mat-select>
           </mat-form-field>
 
-          <span
-            *ngFor="let propertyPair of triggers[trigger.value.type]?.properties | keyvalue"
-            [inputPlacer]="propertyPair.value"
-            [(ngModel)]="trigger.value.options[propertyPair.key]"
-            [name]="propertyPair.key"
-          >
-          </span>
-        </ng-container>
-      </mat-list-item>
+          <ng-container *ngIf="triggers | async; let triggers">
+            <mat-form-field>
+              <mat-label>Type</mat-label>
+              <mat-select
+                #typeModel="ngModel"
+                name="triggerType"
+                [(ngModel)]="trigger.value.type"
+                (ngModelChange)="trigger.value.options = {}"
+                required
+              >
+                <mat-option
+                  *ngFor="let triggerPair of triggers | keyvalue"
+                  [value]="triggerPair.key"
+                >
+                  {{ triggerPair.value?.title || triggerPair.key }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="typeModel.errors?.required">You must select a trigger.</mat-error>
+            </mat-form-field>
 
-      <ng-container *ngIf="function?._id" class="dependencies">
-        <mat-divider></mat-divider>
-        <h4 mat-subheader><mat-icon>layers</mat-icon> Dependencies</h4>
-        <mat-list-item
-          class="dependency"
-          *ngFor="let data of dependencies | async | keyvalue; let index = index"
-        >
-          <span class="name">{{ data.key }}</span>
-          <span class="version">{{ data.value }}</span>
-          <button mat-icon-button class="delete" (click)="deleteDependency(index)">
-            <mat-icon>delete</mat-icon>
-          </button>
+            <ng-container ngModelGroup="triggerOptions">
+              <span
+                *ngFor="let propertyKv of triggers[trigger.value.type]?.properties | keyvalue"
+                [inputPlacer]="propertyKv.value"
+                [(ngModel)]="trigger.value.options[propertyKv.key]"
+                [name]="propertyKv.key"
+                [required]="triggers[trigger.value.type]?.required.indexOf(propertyKv.key) > -1"
+              >
+              </span>
+            </ng-container>
+          </ng-container>
         </mat-list-item>
 
-        <mat-list-item>
-          <mat-form-field>
-            <input
-              matInput
-              ngModel
-              #dependencyModel="ngModel"
-              (keyup.enter)="addDependency(dependencyModel.value); dependencyModel.reset()"
-              required
-              placeholder="Dependency Name"
-            />
+        <ng-container *ngIf="function?._id" class="dependencies">
+          <mat-divider></mat-divider>
+          <h4 mat-subheader><mat-icon>layers</mat-icon> Dependencies</h4>
+          <mat-list-item
+            class="dependency"
+            *ngFor="let data of dependencies | async | keyvalue; let index = index"
+          >
+            <span class="name">{{ data.key }}</span>
+            <span class="version">{{ data.value }}</span>
+            <button mat-icon-button class="delete" (click)="deleteDependency(index)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-list-item>
 
-            <mat-error *ngIf="dependencyModel?.errors?.required">This field is required.</mat-error>
-            <mat-progress-spinner
-              *ngIf="dependencyInstallPending"
-              matSuffix
-              diameter="25"
-              mode="indeterminate"
+          <mat-list-item>
+            <mat-form-field>
+              <input
+                matInput
+                placeholder="Dependency Name"
+                (keyup.enter)="addDependency(dependencyModel.value); dependencyModel.reset()"
+                #dependencyModel="ngModel"
+                ngModel
+                name="dependencyName"
+                [ngModelOptions]="{standalone: true}"
+                required
+              />
+
+              <mat-error *ngIf="dependencyModel?.errors?.required"
+                >This field is required.</mat-error
+              >
+              <mat-progress-spinner
+                *ngIf="dependencyInstallPending"
+                matSuffix
+                diameter="25"
+                mode="indeterminate"
+              >
+              </mat-progress-spinner>
+            </mat-form-field>
+
+            <button
+              mat-icon-button
+              (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
+              [disabled]="dependencyModel.invalid"
             >
-            </mat-progress-spinner>
-          </mat-form-field>
+              <mat-icon>add</mat-icon> Add
+            </button>
+          </mat-list-item>
+        </ng-container>
 
-          <button
-            mat-icon-button
-            (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
-            [disabled]="dependencyModel.invalid"
-          >
-            <mat-icon>add</mat-icon> Add
+        <mat-divider></mat-divider>
+        <h4 mat-subheader>
+          <mat-icon>wrap_text</mat-icon> Environment Variables
+          <button mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
+            <mat-icon>add</mat-icon>
+          </button>
+        </h4>
+        <mat-list-item environment *ngFor="let env of function.env; let index = index">
+          <mat-form-field>
+            <input matInput placeholder="Name" [(ngModel)]="env.name" />
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Value" [(ngModel)]="env.value" />
+          </mat-form-field>
+          <button mat-icon-button color="warn" (click)="removeVariable(index)">
+            <mat-icon>remove</mat-icon>
           </button>
         </mat-list-item>
-      </ng-container>
-
-      <mat-divider></mat-divider>
-      <h4 mat-subheader>
-        <mat-icon>wrap_text</mat-icon> Environment Variables
-        <button mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
-          <mat-icon>add</mat-icon>
-        </button>
-      </h4>
-      <mat-list-item environment *ngFor="let env of function.env; let index = index">
-        <mat-form-field>
-          <input matInput placeholder="Name" [(ngModel)]="env.name" />
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput placeholder="Value" [(ngModel)]="env.value" />
-        </mat-form-field>
-        <button mat-icon-button color="warn" (click)="removeVariable(index)">
-          <mat-icon>remove</mat-icon>
-        </button>
-      </mat-list-item>
-    </mat-list>
+      </mat-list>
+    </form>
   </mat-card-content>
   <mat-card-actions>
-    <button mat-button canInteract="function:update" (click)="save()">
+    <button mat-button [disabled]="form.invalid" canInteract="function:update" (click)="save()">
       <mat-icon>sync</mat-icon> Save
     </button>
   </mat-card-actions>

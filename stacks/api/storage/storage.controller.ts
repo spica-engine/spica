@@ -8,7 +8,8 @@ import {
   Post,
   Query,
   Res,
-  UseGuards
+  UseGuards,
+  Put
 } from "@nestjs/common";
 import {BOOLEAN, NUMBER} from "@spica-server/core";
 import {OBJECT_ID} from "@spica-server/database";
@@ -53,9 +54,9 @@ export class StorageController {
     }
   }
 
-  @Post()
+  @Put()
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
-  async addOne(@Body() object: StorageObject) {
+  async updateOne(@Body() object: StorageObject) {
     if (!object.content.data) {
       throw new BadRequestException("No content specified.");
     }
@@ -63,7 +64,31 @@ export class StorageController {
     object.content.data = ((object.content.data as any) as Binary).buffer;
     object.content.size = object.content.data.byteLength;
 
-    return await this.storage.upsertOne(object);
+    return await this.storage.updateOne(object);
+  }
+  @Post()
+  @UseGuards(AuthGuard(), ActionGuard("storage:update"))
+  async insertMany(@Body() object: StorageObject[]) {
+    const insertData = [];
+
+    for (let obj of Object.keys(object)) {
+      if (!object[obj].content.data) {
+        throw new BadRequestException("No content specified.");
+      }
+
+      object[obj].content.data = ((object[obj].content.data as any) as Binary).buffer;
+      object[obj].content.size = object[obj].content.data.byteLength;
+
+      insertData.push({
+        content: {
+          type: object[obj].content.type,
+          data: object[obj].content.data,
+          size: object[obj].content.size
+        },
+        name: object[obj].content.name
+      });
+    }
+    return await this.storage.insertMany(insertData);
   }
 
   @Delete(":id")

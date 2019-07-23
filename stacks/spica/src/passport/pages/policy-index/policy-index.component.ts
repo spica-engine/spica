@@ -3,8 +3,8 @@ import {MatPaginator} from "@angular/material/paginator";
 import {Router} from "@angular/router";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
-import {Policy} from "../../interfaces/policy";
 import {PolicyService} from "../../services/policy.service";
+import {Policy} from "../../interfaces/policy";
 
 @Component({
   selector: "passport-policy-index",
@@ -25,16 +25,14 @@ export class PolicyIndexComponent implements OnInit {
   ngOnInit(): void {
     this.policies$ = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
-        this.policyService.getPolicies(
+        this.policyService.find(
           this.paginator.pageSize || 50,
           this.paginator.pageSize * this.paginator.pageIndex
         )
       ),
-      map(policies => {
-        // console.log(policies);
-        // this.paginator.length = policies.meta.total;
-        // return policies.data;
-        return policies;
+      map(response => {
+        this.paginator.length = response.meta.total;
+        return response.data;
       })
     );
   }

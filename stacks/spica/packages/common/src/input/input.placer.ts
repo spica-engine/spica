@@ -20,6 +20,7 @@ import {InputResolver} from "./input.resolver";
   template: `
     <ng-content></ng-content>
     <ng-container #inputPlace></ng-container>
+    <ng-content select="[slot=after]"></ng-content>
   `,
   providers: [
     {
@@ -30,13 +31,15 @@ import {InputResolver} from "./input.resolver";
   ]
 })
 export class InputPlacerComponent implements ControlValueAccessor, OnDestroy, OnInit {
+  @Input() name: string;
+  @Input() required: boolean;
   @Input("inputPlacer") inputProperty: any;
-  @Input("options")
-  options: InputPlacerOptions = {
-    class: "input-placer-input"
-  };
+  @Input() class: string;
+  @Input() options: InputPlacerOptions = {};
 
-  @ViewChild("inputPlace", {read: ViewContainerRef, static: true}) _viewContainerRef;
+  @ViewChild("inputPlace", {read: ViewContainerRef, static: true})
+  _viewContainerRef: ViewContainerRef;
+
   private _placerRef: ComponentRef<any>;
   private _accessor: ControlValueAccessor;
 
@@ -72,7 +75,13 @@ export class InputPlacerComponent implements ControlValueAccessor, OnDestroy, On
       [
         {
           provide: INPUT_SCHEMA,
-          useValue: this.inputProperty
+          useValue: {
+            ...this.inputProperty,
+            $required: this.required,
+            // Later we can make root properties to use
+            // different names rather than real property name
+            $name: `${this.name}_inner`
+          }
         },
         {
           provide: INPUT_OPTIONS,
@@ -84,7 +93,8 @@ export class InputPlacerComponent implements ControlValueAccessor, OnDestroy, On
     this._placerRef = this._viewContainerRef.createComponent(placerFactory, null, injector);
 
     this._accessor = this._placerRef.injector.get(NG_VALUE_ACCESSOR);
-    this._renderer.addClass(this._placerRef.location.nativeElement, this.options.class);
+    this._renderer.addClass(this._placerRef.location.nativeElement, this.class);
+    this._renderer.addClass(this._placerRef.location.nativeElement, "input-placer-input");
   }
 
   ngOnDestroy(): void {

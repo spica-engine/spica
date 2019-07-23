@@ -1,11 +1,10 @@
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {
   BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -15,6 +14,9 @@ import {
   Res,
   UseGuards
 } from "@nestjs/common";
+import {Schema} from "@spica-server/core/schema";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as npa from "npm-package-arg";
 import * as semver from "semver";
 import * as stream from "stream";
@@ -23,6 +25,8 @@ import {LoggerHost} from "./engine/logger";
 import {EngineRegistry} from "./engine/registry";
 import {TriggerFlags} from "./engine/trigger/base";
 import {FunctionService} from "./function.service";
+import {Function} from "./interface";
+import {generate} from "./trigger.schema.resolver";
 
 @Controller("function")
 export class FunctionController {
@@ -41,11 +45,9 @@ export class FunctionController {
 
   @Post("add")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
-  async add(@Body() body: any) {
-    body._id = new ObjectId(body._id);
-    const functionMeta = body;
-    await this.fs.upsertOne(functionMeta);
-    return functionMeta;
+  async add(@Body(Schema.validate(generate)) body: Function) {
+    body._id = body._id || new ObjectId();
+    return await this.fs.upsertOne(body);
   }
 
   @Get("trigger")
@@ -65,7 +67,7 @@ export class FunctionController {
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
-  async show(@Param("id", OBJECT_ID) id: ObjectId) {
+  show(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.fs.findOne({_id: id});
   }
 
@@ -82,10 +84,10 @@ export class FunctionController {
   }
 
   @Get(":id/run/:target")
+  @Header("X-Content-Type-Options", "nosniff")
   @UseGuards(AuthGuard(), ActionGuard("function:run", "function/:id"))
   async run(@Param("id", OBJECT_ID) id: ObjectId, @Param("target") target: string, @Res() res) {
     const fn = await this.fs.findOne({_id: id});
-    res.header("X-Content-Type-Options", "nosniff");
     const logStream = new stream.PassThrough();
     logStream.pipe(res);
     return this.engine.run(fn, {id: fn._id, handler: target}, logStream);

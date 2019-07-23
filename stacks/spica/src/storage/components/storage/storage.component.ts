@@ -21,7 +21,7 @@ export class StorageComponent implements ControlValueAccessor {
   onChangeFn: any;
   onTouchedFn: any;
   value: string;
-  incomingFile: File;
+  incomingFile: FileList;
 
   storageStyle: string;
   selected: Storage;
@@ -72,18 +72,18 @@ export class StorageComponent implements ControlValueAccessor {
   delete() {
     this.value = "";
   }
-  uploadStorage(file: File): void {
+  uploadStorage(file: FileList): void {
     if (file) {
-      this.storage.upsertOne({name: file.name}, file).subscribe(
+      this.storage.insertMany(file).subscribe(
         event => {
           if (event.type === HttpEventType.UploadProgress) {
             this.progress = Math.round((100 * event.loaded) / event.total);
           } else if (event.type === HttpEventType.Response) {
             this.selected = {
-              content: event.body.content,
-              name: event.body.name,
-              _id: event.body._id,
-              url: event.url + "/" + event.body._id
+              content: event.body[0].content,
+              name: event.body[0].name,
+              _id: event.body[0]._id,
+              url: event.url + "/" + event.body[0]._id
             };
             this.callOnChange();
             this.progress = undefined;

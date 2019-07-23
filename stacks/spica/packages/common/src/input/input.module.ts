@@ -7,6 +7,7 @@ import {
   Optional
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
+import {MatMenuModule} from "@angular/material";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatChipsModule} from "@angular/material/chips";
@@ -19,7 +20,6 @@ import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
-
 import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
 import {ArrayComponent} from "./components/array/array.component";
 import {BooleanComponent} from "./components/boolean/boolean.component";
@@ -32,15 +32,18 @@ import {ObjectComponent} from "./components/object/object.component";
 import {StringSchemaComponent} from "./components/string-schema/string-schema.component";
 import {StringComponent} from "./components/string/string.component";
 import {TextAreaComponent} from "./components/textarea/textarea.component";
-import {INPUT_PLACERS, InputPlacerWithMetaPlacer} from "./input";
+import {InputPlacerWithMetaPlacer, INPUT_PLACERS} from "./input";
 import {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 import {InputPlacerComponent} from "./input.placer";
 import {InputResolver} from "./input.resolver";
+import {NgModelParentDirective} from "./ngmodel.parent";
+import {MaxValidator, MinValidator} from "./validators";
 
 export function coerceObject() {
   return {};
 }
 
+// TODO(thesayyn): Rewrite the whole placer system when we switch to ivy.
 @NgModule({
   imports: [
     CommonModule,
@@ -56,6 +59,7 @@ export function coerceObject() {
     MatGridListModule,
     MatCardModule,
     MatListModule,
+    MatMenuModule,
     MatDatepickerModule,
     MatNativeDateModule
   ],
@@ -74,7 +78,10 @@ export function coerceObject() {
     ArrayComponent,
     ArraySchemaComponent,
     ObjectComponent,
-    ObjectSchemaComponent
+    ObjectSchemaComponent,
+    NgModelParentDirective,
+    MinValidator,
+    MaxValidator
   ],
   providers: [
     {

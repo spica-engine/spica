@@ -84,3 +84,11 @@ export function slugify(string: string): string {
     .replace(/^-+/, "") // Trim - from start of text
     .replace(/-+$/, ""); // Trim - from end of text
 }
+export function fileToBuffer(file: File): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+    reader.onload = () => resolve(new Buffer(reader.result as ArrayBuffer));
+    reader.onerror = error => reject(error);
+  });
+}

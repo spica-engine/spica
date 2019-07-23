@@ -15,7 +15,7 @@
   </button>
 </mat-toolbar>
 
-<mat-grid-list [cols]="columns" rowHeight="1:1" gutterSize="10px">
+<mat-grid-list [cols]="columns" rowHeight="1:0.6" gutterSize="10px">
   <mat-grid-tile *ngFor="let bucket of $buckets | async; let i = index">
     <mat-card class="mat-elevation-z25">
       <mat-card-title>
@@ -48,7 +48,7 @@
           [matAwareDialog]="{
             title: 'Confirmation',
             templateOrDescription: dialogTemplate,
-            answer: 'yes'
+            answer: bucket.title?.toLowerCase()
           }"
           (confirm)="delete(bucket)"
         >
@@ -61,7 +61,8 @@
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>
   <p>
-    This action will permanently delete the <b>"{{ answer }}"</b> and broke the all associations.
+    This action will permanently delete the <code>{{ answer }}</code> and
+    <b>break the all relations</b>.
   </p>
   <p>Please type in the name of the bucket to confirm.</p>
 </ng-template>
