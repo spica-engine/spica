@@ -4,31 +4,33 @@
 
 ## Overview
 
-### What are functions?
+### What is the "function"
 
 Functions is an event-driven execution context for your spica. Simply, you can attach an event to your function from other modules and services. Your function will be triggered _when the event occurs_.
 
-Within a function, you can do nearly everything that you do every day in node runtime.
+Within a function, you can do almost everything you want to do.
 
-> IMPORTANT: Currently the functions run under spica and not isolated from it. Which means your function may have state from the previous execution.
+> IMPORTANT: Currently the functions, run under the spica and not isolated from it. Which means your function may have stated from the previous execution.
 
 ### Use cases
 
 On-demand nature of functions makes it a perfect candidate for event-driven execution.
 
-See the following table for additional common `functions` use cases:
+See the following table for common `functions` use cases:
 
-| Use case        | Description                                                                                                                                                                                                                   |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Data processing | Listen and respond to storage events such as when a file is created, changed, or removed. Process images, perform video transcoding, validate and transform data, and invoke any service on the internet from your functions. |
-| Webhooks        | Via a simple HTTP trigger, respond to events originating from 3rd party systems like GitHub, Slack, Stripe, or from anywhere that can send HTTP requests.                                                                     |
-| APIs            | Compose applications from lightweight, loosely coupled bits of logic that are quick to build and that scale instantly. Your functions can be event-driven or invoked directly over HTTP/S.                                    |
+| Use case        | Description                                                                                                                                                                                                           |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data processing | Listen and respond to storage events when a file is created, changed, or removed. Process images, perform video transcoding, validate and transform data, and invoke any service on the internet from your functions. |
+| Webhooks        | With a simple HTTP call, respond to events originating from 3rd party systems like GitHub, Slack, Stripe.                                                                                                             |
+| APIs            | Compose applications from lightweight, quick and flexible.                                                                                                                                                            |
 
 ### Events and triggers
 
-Events are things that happen in your spica. These might be things like changes to data in a database, files added to a storage system or an HTTP request being received. If you attach a trigger to your function, your function will be executed by the time of the event happens.
+There are events in the Spica. As an example there is an event when there is a change in the database or receive an HTTP request
 
-Currently, Function supports following triggers:
+If you attach a trigger to your function, your function will be executed when the event raised.
+
+Currently, the Functions supports following triggers:
 
 - [HTTP](#http)
 - [Database](#database)
@@ -36,9 +38,9 @@ Currently, Function supports following triggers:
 
 ### Event Data
 
-When an event triggers the execution of your function, data associated with the event is passed via the function's parameters. The type of event determines the parameters passed to your function.
+Event trigger will pass the data as parameters to the function when the event raised. The parameters will be different related to the type of event.
 
-For example your function that has http trigger will look like this:
+For example a function which has http trigger will look like this:
 
 ```typescript
 export default function(request: triggers.http.Request, response: triggers.http.Response) {
@@ -49,14 +51,13 @@ export default function(request: triggers.http.Request, response: triggers.http.
 }
 ```
 
-See [triggers](#triggers) section for parameter types by trigger.
+See [triggers](#triggers) section for parameter types.
 
 ### Modules
 
-Modules are things provided by spica to your function in execution time. Modules may look like a usual module that appears in the node_modules directory in a typical node project but the fact is
-they are not a usual module nor they appear in your function's node_modules directory.
+Spica provides modules to your function in runtime. Modules work like a module in node_modules but not placed in node_modules directory.
 
-> Also they are not published to a registry like npmjs.com, so they can not be installed/used outside of a spica.
+> NOTE: Modules are not published in a registry like npmjs.com, so you can not install or use outside of a spica.
 
 Currently, there are few modules helps you to get information about your spica.
 
@@ -97,7 +98,7 @@ Also, you can use `ANY` method that covers all methods above which means your fu
 
 #### Path
 
-The path will be used when provisioning the trigger URL for your function. When you save your function the trigger URL will be provisioned under **`{API_URL}/fn-execute`** URL.
+Spica will use the path will use when reserve a trigger URL for your function. When you save your function, the trigger URL will be attached to **`{API_URL}/fn-execute`** as suffix URL.
 
 For example;
 
@@ -111,20 +112,20 @@ Example: **`/books/:bookId`** can match with these paths above:
 - `/books/mybookid`
 - `/books/getting started with spica`
 
-Despite the **`/books/:bookId`** path **do not** match with these paths:
+However the **`/books/:bookId`** path **will not** match with the paths below:
 
 - `/books/1/author`
 - `/books/1/update`
 
-Because the path has only one parameter that can only match with a sub-segment.
+Because the path has only one parameter which can match with a sub-segment.
 
 ##### Getting parameters in function code
 
-The parameters in the trigger path will be passed through the `request` parameter of your function. It's the first parameter of your function.
+The parameters in the trigger path will be passed through the `request` parameter to your function. It's the first parameter of your function.
 
 Example:
 
-For **`/books/:bookId`** path, the **bookId** parameter can be taken from **`request.params`**
+For **`/books/:bookId`** path, you can access the **bookId** parameter from **`request.params`** object.
 
 ```typescript
 export default function(request: triggers.http.Request, response: triggers.http.Response) {
@@ -172,7 +173,7 @@ If you send a `POST` request to this function with following `JSON` payload; You
 }
 ```
 
-The payload can be everything in practice despite they need to be parsed to be used by a function.
+You need to parse payload to be able to use it in a function.
 
 "Function" parses the following payload types by default:
 
@@ -187,7 +188,7 @@ The payload can be everything in practice despite they need to be parsed to be u
 
 ### Database
 
-Database trigger, invokes your function when a specific database event happens in a collection of database. The database trigger can invoke your function with `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP` events in a specific database collection. When the event happens your function will be invoked with the changes in the collection.
+Database trigger, invokes your function when a specific database event raised in a collection of database. The database trigger can invoke your function with `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP` events in a specific database collection. When the event raised, your function will be invoked with the changes in the collection.
 
 To be able to create a function that triggered by database event, you need two required and one optional information about the event
 
@@ -204,7 +205,7 @@ export default function(changes: triggers.database.Changes) {
 }
 ```
 
-In the example code above changes variable which passed to our function on the first parameter contains all the information about the changes.
+In the example code above, changes variable which passed to our function on the first parameter contains all the information about the changes.
 
 Content of `changes` variable with the `INSERT` event and `full document` option enabled will look like this;
 
@@ -234,7 +235,7 @@ Content of `changes` variable with the `INSERT` event and `full document` option
 
 Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked at next tick.
 
-To create a scheduled function you need a CRON time expression and Time-zone because scheduler, schedules your function regarless of the Time-zone of host machine.
+To create a scheduled function you need a CRON time expression and Time-zone because scheduler schedules your function regardless of the Time-zone of the host machine.
 
 For example, if you want to run your function at every minute, you need a cron time expression like this [\* \* \* \* \*](https://crontab.guru/#*_*_*_*_*).
 
@@ -283,4 +284,129 @@ Here is some example of CRON expressions
 
 ### Database
 
-## Errors
+The database module is an in-memory module that has public API for basic database operations like `FIND`, `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
+
+> Database module imported from `@internal/database`.
+
+#### Getting Database Service
+
+You can get database instance with `database()` function exported from `@internal/database` module.
+
+```typescript
+import {database, Database} from "@internal/database";
+
+const db: Database = database();
+// Type of db variable is  Database which exported from `@internal/database`
+```
+
+#### Getting the reference to a Collection
+
+To make changes in a collection you need to get it reference first. You can get reference for a specific collection with `Database.collection()` function exported by your database instance. For more information check [mongoDB API](https://mongodb.github.io/node-mongodb-native/3.2/api/Collection.html)
+
+```typescript
+import {database, Database, Collection} from "@internal/database";
+
+const db: Database = database();
+const collection: Collection = db.collection("persistent_collection");
+```
+
+#### Operations
+
+Here is some fundamental examples;
+
+#### Insert
+
+```typescript
+import {database, Database, Collection} from "@internal/database";
+
+export default async function() {
+  const db: Database = database();
+  const books: Collection = db.collection("books");
+
+  // insertOne will return Promise<void>
+  await books.insertOne({
+    name: "The Fall Of Leaves",
+    translator: "W. D. Halsey",
+    available_in: ["English", "Turkish"]
+    author: "Resat Nuri Guntekin",
+    year: 1930
+  });
+}
+```
+
+#### Find
+
+```typescript
+import {database, Database, Collection} from "@internal/database";
+
+export default async function() {
+  const db: Database = database();
+  const books: Collection = db.collection("books");
+
+  // Get all books
+  const allBooks = await books.find().toArray();
+  console.dir(allBooks);
+  // Above code will print [{ name: "The Fall Of Leaves", ... }]
+
+  const writtenAfter19StCentury = await books.find({year: {$gte: 2000}}).toArray();
+  console.dir(writtenAfter19StCentury);
+  // Result will be empty array.
+}
+```
+
+> NOTE: `find` method accepts [Query and Projection Operators](https://docs.mongodb.com/manual/reference/operator/query/)
+
+#### Find One
+
+```typescript
+import {database, Database, Collection} from "@internal/database";
+
+export default async function() {
+  const db: Database = database();
+  const books: Collection = db.collection("books");
+
+  // Find the book named The Fall Of Leaves
+  const book = await books.findOne({name: "The Fall Of Leaves"});
+  console.dir(book);
+  // Result will be { name: "The Fall Of Leaves", ... }
+}
+```
+
+#### Update
+
+```typescript
+import {database, Database, Collection} from "@internal/database";
+
+export default async function() {
+  const db: Database = database();
+  const books: Collection = db.collection("books");
+
+  // Find the book named The Fall Of Leaves
+  const book = await books.findOne({name: "The Fall Of Leaves"});
+
+  // If the book found then update it's published year
+  if (book) {
+    book.year = 2000;
+    // Update whole document with $set
+    await books.update({name: book.name}, {$set: book});
+  }
+}
+```
+
+## Debugging
+
+An unhandled error will crash your function, when the error happens it will be logged to function logs.
+
+### Executing
+
+A function can be executed standalone for testing. If your function saved, a button will appear above your function's code.
+
+The Run button executes your function with stub parameters. Stub parameters contains all common properties and functions from trigger.
+
+When you run a function, you will see whether the execution succeeded or failed. Also you will see all the logs from execution above your function editor.
+
+### Logging
+
+A function code can have statements like `console.log`, `console.warn`, `console.dir`, when a code calls a console function the output of log will be written to function's log file.
+
+You can see the logs in Logs tab in code edit page.

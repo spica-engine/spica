@@ -20,7 +20,7 @@
       font-weight: 400;
       &.external-link {
         color: #ffa14b;
-        ::after {
+        &::after {
           content: "";
           background-image: url(../../../assets/icons/link.svg);
           background-size: contain;
