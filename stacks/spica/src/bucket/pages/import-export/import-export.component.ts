@@ -36,6 +36,14 @@ export class ImportExportComponent implements OnInit {
     this.bucketService.importData(file, bucketId).subscribe(console.log);
   }
 
+  exportSchema(bucketId: string) {
+    this.bucketService.exportSchema(bucketId).subscribe(data => {
+      saveAs(data, `export.zip`);
+    });
+  }
+  importSchema(file: File) {
+    this.bucketService.importSchema(file).subscribe(console.log);
+  }
   // create(templateId: string): void {
   //   this.bucketService
   //     .createFromTemplate(this.templates[templateId])
