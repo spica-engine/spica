@@ -79,7 +79,8 @@ export class FunctionEngine {
         stream.write(JSON.stringify({type: "event", state: "succeeded"}));
         logger.dispose();
       })
-      .catch(() => {
+      .catch(error => {
+        console.log(error);
         stream.write(JSON.stringify({type: "event", state: "failed"}));
         logger.dispose();
       });
