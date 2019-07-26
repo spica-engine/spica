@@ -12,26 +12,23 @@ export const NUMBER: PipeTransform<string, number> = {
 
 export const JSONP: PipeTransform<string, object> = {
   transform: value => {
-    if (value) {
+    if (typeof value == "string") {
       return global.JSON.parse(value);
     }
+    return value;
   }
 };
 
-export function JSONPV(
-  reviver?: (this: any, key: string, value: any) => any
-): PipeTransform<string, object> {
+export function DEFAULT<T = any>(def: T): PipeTransform<any, T> {
   return {
     transform: value => {
-      if (value) {
-        return global.JSON.parse(value, reviver);
-      }
+      return value == undefined ? def : value;
     }
   };
 }
 
 export const BOOLEAN: PipeTransform<string, boolean> = {
   transform: value => {
-    return Boolean(value);
+    return /true|1/i.test(value);
   }
 };
