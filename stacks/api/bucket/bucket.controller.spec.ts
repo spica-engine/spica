@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {BucketController} from "../bucket.controller";
-import {BucketService} from "../bucket.service";
+import {BucketController} from "./bucket.controller";
+import {BucketService} from "./bucket.service";
 
 // TODO(thesayyn): complete this test
 describe("bucket controller", () => {

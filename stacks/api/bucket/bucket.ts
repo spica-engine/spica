@@ -23,7 +23,7 @@ interface PropertyOptions {
   };
 }
 
-export interface BucketEntry {
+export interface BucketDocument {
   _id?: ObjectId;
   [key: string]: any | undefined;
 }

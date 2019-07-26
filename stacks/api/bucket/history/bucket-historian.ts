@@ -2,7 +2,7 @@ import {DatabaseService, MongoClient, ObjectId, ReadPreference} from "@spica-ser
 import {Injectable} from "@nestjs/common";
 import * as deepDiff from "deep-diff";
 import * as diffMatchPatch from "diff-match-patch";
-import {BucketEntry} from "../bucket";
+import {BucketDocument} from "../bucket";
 import {HistoryService} from "./history.service";
 import {BucketChange, BucketHistory} from "./interfaces";
 
@@ -66,8 +66,8 @@ export class BucketHistorian {
           case "update":
           case "replace":
             const id = change.documentKey._id;
-            const newData = change.fullDocument as BucketEntry;
-            const oldData = await this.db.collection(change.ns.coll).findOne<BucketEntry>(
+            const newData = change.fullDocument as BucketDocument;
+            const oldData = await this.db.collection(change.ns.coll).findOne<BucketDocument>(
               {_id: new ObjectId(id)},
               {
                 readPreference: new ReadPreference(ReadPreference.SECONDARY_PREFERRED, [
@@ -84,6 +84,7 @@ export class BucketHistorian {
                   bucket_id: new ObjectId(change.ns.coll.replace("bucket_", "")),
                   bucket_data_id: new ObjectId(newData._id),
                   changes: diff,
+                  // TODO: _id already contains the creation time. Do we need this?
                   date: Date.now()
                 };
                 history._id = new ObjectId(history._id);
@@ -109,7 +110,7 @@ export class BucketHistorian {
    * @param rhs right-hand side operand
    * @returns Array<BucketHistory>
    */
-  differ(lhs: BucketEntry, rhs: BucketEntry): BucketChange[] {
+  differ(lhs: BucketDocument, rhs: BucketDocument): BucketChange[] {
     let result: BucketChange[] = [];
     const diffs = deepDiff.diff(lhs, rhs);
     if (diffs) {
