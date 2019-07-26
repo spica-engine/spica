@@ -2,8 +2,8 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, InsertOneWriteOpResult} from "@spica-server/database/testing";
 import {PreferenceModule} from "@spica-server/preference";
-import {Bucket} from "../bucket";
-import {BucketService} from "../bucket.service";
+import {Bucket} from "./bucket";
+import {BucketService} from "./bucket.service";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 

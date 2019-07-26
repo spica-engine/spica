@@ -18,7 +18,7 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {Bucket, BucketEntry, ImportFile} from "./bucket";
+import {Bucket, BucketDocument, ImportFile} from "./bucket";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketService} from "./bucket.service";
 
@@ -78,7 +78,7 @@ export class BucketController {
     try {
       const result = {skippedDueToDuplication: 0, insertedToBucketCollection: 0};
       // TODO(tolga): Validate each row before adding them.
-      const dataArray = JSON.parse(file.content.data.toString()) as Array<BucketEntry>;
+      const dataArray = JSON.parse(file.content.data.toString()) as Array<BucketDocument>;
       for (let data of dataArray) {
         data._id = new ObjectId(data._id);
         await this.bds.insertOne(bucketId, data).then(

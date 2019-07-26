@@ -25,13 +25,23 @@
     mat-icon-button
     mat-raised-button
     color="warn"
-    (click)="deleteSelectedItems()"
     [matTooltip]="'Delete ' + selectedItems.length + ' item.'"
+    [matAwareDialog]="{
+      title: 'Attention',
+      templateOrDescription: deleteRowsDialog,
+      answer: 'agree'
+    }"
+    (confirm)="deleteSelectedItems()"
   >
     <mat-icon>delete</mat-icon>
   </button>
 
-  <button mat-icon-button *ngIf="$meta | async; let meta" [matMenuTriggerFor]="propertiesMenu">
+  <button
+    *ngIf="$meta | async; let meta"
+    matTooltip="Toggle columns"
+    mat-icon-button
+    [matMenuTriggerFor]="propertiesMenu"
+  >
     <mat-icon>view_column</mat-icon>
     <mat-menu class="displayed-properties-menu" xPosition="before" #propertiesMenu="matMenu">
       <button mat-menu-item (click)="$event.stopPropagation()">
@@ -64,6 +74,7 @@
 
   <button
     mat-icon-button
+    matTooltip="Change language"
     [matMenuTriggerFor]="languageMenu"
     *ngIf="$preferences | async; let preferences"
   >
@@ -78,16 +89,27 @@
       </button>
     </mat-menu>
   </button>
-  <bucket-filter
-    *ngIf="$meta"
-    [meta]="$meta"
-    [(filter)]="aggregations.filter"
-    (filterChange)="fetchData()"
-  ></bucket-filter>
-  <button mat-icon-button (click)="refresh.next()">
+
+  <button
+    mat-icon-button
+    matTooltip="Filter data"
+    [matMenuTriggerFor]="filterMenu"
+    [color]="filterer.active ? 'accent' : ''"
+  >
+    <mat-icon>filter_list</mat-icon>
+    <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+      <bucket-filter
+        #filterer
+        [meta]="$meta | async"
+        (filterChange)="this.filter = $event; refresh.emit()"
+      ></bucket-filter>
+    </mat-menu>
+  </button>
+
+  <button mat-icon-button matTooltip="Refresh data" (click)="refresh.emit()">
     <mat-icon>refresh</mat-icon>
   </button>
-  <button canInteract="bucket:data:update" mat-icon-button routerLink="add">
+  <button canInteract="bucket:data:update" matTooltip="Add new" mat-icon-button routerLink="add">
     <mat-icon>add</mat-icon>
   </button>
 </mat-toolbar>
@@ -157,6 +179,18 @@
     <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
   </mat-card-content>
 </mat-card>
+
+<ng-template #deleteRowsDialog let-answer="answer">
+  <p>This action cannot be undone.</p>
+  <p>
+    This action will permanently delete selected <code>{{ selectedItems.length }}</code> rows and
+    break the all relations.
+  </p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
+
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>
   <p>

@@ -2,14 +2,18 @@ import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
 import {Observable} from "rxjs";
-import {BucketAggregations} from "../interfaces/bucket-aggregations";
 import {BucketEntry, BucketRow} from "../interfaces/bucket-entry";
 
 interface FindOptions {
   limit?: number;
   skip?: number;
-  aggregations?: BucketAggregations;
   language?: string;
+  sort?: {
+    [key: string]: number;
+  };
+  filter?: {
+    [key: string]: any;
+  };
 }
 
 @Injectable()
@@ -18,23 +22,17 @@ export class BucketDataService {
 
   find(
     bucketId: string,
-    {aggregations, language, limit, skip}: FindOptions = {}
+    {filter, sort, language, limit, skip}: FindOptions = {}
   ): Observable<IndexResult<BucketEntry>> {
-    let params = new HttpParams();
+    let params = new HttpParams({fromObject: {paginate: "true"}});
     let headers = new HttpHeaders();
-    if (aggregations) {
-      const filter = [];
-      if (aggregations.filter) {
-        filter.push({$match: JSON.parse(aggregations.filter)});
-      }
 
-      if (aggregations.sort.active && aggregations.sort.direction) {
-        filter.push({$sort: {[aggregations.sort.active]: aggregations.sort.direction}});
-      }
+    if (sort) {
+      params = params.set("sort", JSON.stringify(sort));
+    }
 
-      if (filter.length) {
-        params = params.set("filter", JSON.stringify(filter));
-      }
+    if (filter) {
+      params = params.set("filter", JSON.stringify(filter));
     }
 
     if (limit) {
@@ -55,12 +53,16 @@ export class BucketDataService {
     });
   }
 
-  findOne<T = BucketRow>(bucketId: string, id: string, prune: boolean = true): Observable<T> {
+  findOne<T = BucketRow>(
+    bucketId: string,
+    documentId: string,
+    prune: boolean = true
+  ): Observable<T> {
     let params = new HttpParams();
     if (prune) {
-      params = params.set("prune", String(prune));
+      params = params.set("localize", "false").set("relation", "false");
     }
-    return this.http.get<T>(`api:/bucket/${bucketId}/data/${id}`, {params: params});
+    return this.http.get<T>(`api:/bucket/${bucketId}/data/${documentId}`, {params: params});
   }
 
   findOneAndDelete(bucketId: string, id: string): Observable<any> {

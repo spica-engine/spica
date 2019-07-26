@@ -1,15 +1,14 @@
-import {Component, OnInit, ViewChild} from "@angular/core";
+import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
-import {merge, Observable, of, Subject} from "rxjs";
+import {merge, Observable, of} from "rxjs";
 import {map, switchMap, tap} from "rxjs/operators";
-import {BucketDataService} from "../../services/bucket-data.service";
-import {BucketService} from "../../services/bucket.service";
 import {Bucket} from "../../interfaces/bucket";
-import {BucketAggregations, emptyBucketAggregations} from "../../interfaces/bucket-aggregations";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
+import {BucketDataService} from "../../services/bucket-data.service";
+import {BucketService} from "../../services/bucket.service";
 
 @Component({
   selector: "bucket-index",
@@ -22,8 +21,10 @@ export class IndexComponent implements OnInit {
   public bucketId: string;
   public $meta: Observable<Bucket>;
   public $data: Observable<BucketData>;
-  public refresh: Subject<void> = new Subject<void>();
-  public aggregations: BucketAggregations = {...emptyBucketAggregations()};
+  public refresh = new EventEmitter();
+
+  public filter: {[key: string]: any} = {};
+  public sort: {[key: string]: number} = {};
 
   public displayedProperties: Array<string> = [];
   public properties: Array<{name: string; title: string}> = [];
@@ -45,8 +46,9 @@ export class IndexComponent implements OnInit {
       tap(params => {
         this.bucketId = params.id;
         this.paginator.pageIndex = 0;
-        this.aggregations = {...emptyBucketAggregations()};
-        this.fetchData();
+        this.filter = {};
+        this.sort = {};
+        this.getData();
         this.$preferences = this.bs.getPreferences();
       }),
       switchMap(() => this.bs.getBucket(this.bucketId)),
@@ -101,17 +103,19 @@ export class IndexComponent implements OnInit {
     );
   }
 
-  fetchData(): void {
+  getData(): void {
     this.$data = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
         this.bds.find(this.bucketId, {
           language: this.language,
-          aggregations: this.aggregations,
+          filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
+          sort: this.sort && Object.keys(this.sort).length > 0 && this.sort,
           limit: this.paginator.pageSize || 12,
           skip: this.paginator.pageSize * this.paginator.pageIndex
         })
       ),
       map(response => {
+        this.selectedItems = [];
         this.paginator.length = (response.meta && response.meta.total) || 0;
         this.dataIds = response.data.map(d => d._id);
         return response.data;
@@ -119,21 +123,22 @@ export class IndexComponent implements OnInit {
     );
   }
 
-  sortData(sort: Sort) {
-    this.aggregations.sort = {active: sort.active, direction: sort.direction === "asc" ? 1 : -1};
-    this.fetchData();
+  sortChange(sort: Sort) {
+    this.sort = {[sort.active]: sort.direction === "asc" ? 1 : -1};
+    this.refresh.emit();
   }
 
   delete(id: string): void {
     this.bds
       .findOneAndDelete(this.bucketId, id)
       .toPromise()
-      .then(() => this.fetchData());
+      .then(() => this.refresh.emit());
   }
 
-  async deleteSelectedItems() {
-    await this.bds.deleteMany(this.bucketId, this.selectedItems).toPromise();
-    this.fetchData();
-    this.selectedItems = [];
+  deleteSelectedItems() {
+    this.bds
+      .deleteMany(this.bucketId, this.selectedItems)
+      .toPromise()
+      .then(() => this.refresh.emit());
   }
 }
