@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Res,
+  Put,
   UseGuards
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
@@ -57,6 +58,17 @@ export class BucketController {
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     bucket._id = new ObjectId(bucket._id);
     return this.bs.replaceOne(bucket).then(() => bucket);
+  }
+
+  @Put("order")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  updateMany(@Body(Schema.validate("http://spica.internal/buckets/schema")) buckets: Bucket[]) {
+    const resultArray = [];
+    for (let bucket of buckets) {
+      bucket._id = new ObjectId(bucket._id);
+      resultArray.push(this.bs.updateOne(bucket).then(() => bucket));
+    }
+    return resultArray;
   }
 
   @Get(":id")

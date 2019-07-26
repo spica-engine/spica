@@ -15,9 +15,19 @@
   </button>
 </mat-toolbar>
 
-<mat-grid-list [cols]="columns" rowHeight="1:0.6" gutterSize="10px">
-  <mat-grid-tile *ngFor="let bucket of $buckets | async; let i = index">
-    <mat-card class="mat-elevation-z25">
+<div class="drag-container" cdkDropListGroup>
+  <div
+    cdkDropList
+    [cdkDropListEnterPredicate]="dropListEnterPredicate"
+    (cdkDropListDropped)="dropListDropped()"
+  ></div>
+  <div
+    cdkDropList
+    *ngFor="let bucket of buckets"
+    [cdkDropListEnterPredicate]="dropListEnterPredicate"
+    (cdkDropListDropped)="dropListDropped()"
+  >
+    <mat-card class="drag-box" cdkDrag (cdkDragMoved)="dragMoved($event)">
       <mat-card-title>
         <mat-icon>{{ bucket.icon }}</mat-icon>
         <span>{{ bucket.title }}</span>
@@ -56,8 +66,9 @@
         </button>
       </mat-card-actions>
     </mat-card>
-  </mat-grid-tile>
-</mat-grid-list>
+  </div>
+</div>
+
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>
   <p>

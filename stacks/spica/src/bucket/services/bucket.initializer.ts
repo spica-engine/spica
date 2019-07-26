@@ -12,17 +12,19 @@ export class BucketInitializer {
   ) {
     bs.getBuckets().subscribe(buckets => {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Content));
-      buckets.forEach(bucket => {
-        this.routeService.dispatch(
-          new Upsert({
-            category: RouteCategory.Content,
-            id: `bucket_${bucket._id}`,
-            icon: bucket.icon,
-            path: `/bucket/${bucket._id}`,
-            display: bucket.title
-          })
-        );
-      });
+      buckets
+        .sort((r1, r2) => r1.order - r2.order)
+        .forEach(bucket => {
+          this.routeService.dispatch(
+            new Upsert({
+              category: RouteCategory.Content,
+              id: `bucket_${bucket._id}`,
+              icon: bucket.icon,
+              path: `/bucket/${bucket._id}`,
+              display: bucket.title
+            })
+          );
+        });
     });
   }
 
