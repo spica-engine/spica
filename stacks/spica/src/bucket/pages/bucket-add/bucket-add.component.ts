@@ -10,8 +10,10 @@ import {Observable, Subject} from "rxjs";
 import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
 import {BucketService} from "../../services/bucket.service";
 import {INPUT_ICONS} from "../../icons";
-import {Bucket, emptyBucket} from "../../interfaces/bucket";
+import {Bucket, emptyBucket, Property} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
+import {moveItemInArray} from "@angular/cdk/drag-drop";
+import {KeyValue} from "@angular/common";
 
 @Component({
   selector: "bucket-add",
@@ -85,6 +87,24 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         this.predefinedDefaults = predefs;
       });
     this.updatePositionProperties();
+  }
+
+  sortProperties(a: KeyValue<string, Property>, b: KeyValue<string, Property>) {
+    return a.value.options.order - b.value.options.order;
+  }
+
+  cardDrop(event: CdkDragDrop<Bucket[]>) {
+    const properties = Object.entries(this.bucket.properties);
+
+    moveItemInArray(properties, event.previousIndex, event.currentIndex);
+
+    this.bucket.properties = properties.reduce((accumulator, [key, value], index) => {
+      value.options.order = index;
+      accumulator[key] = value;
+      return accumulator;
+    }, {});
+    this.bs.replaceOne(this.bucket).toPromise();
+    this.bs.retrieve().toPromise();
   }
 
   updatePositionProperties() {

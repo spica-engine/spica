@@ -1,8 +1,63 @@
+::ng-deep {
+  .mat-expansion-indicator {
+    height: 23px;
+  }
+  .mat-expansion-panel-header-description {
+    flex-grow: initial !important;
+  }
+  mat-expansion-panel {
+    mat-panel-title {
+      padding-top: 10px;
+    }
+    box-shadow: none;
+    margin-top: 10px;
+  }
+  mat-panel-description {
+    button {
+      flex: unset;
+      padding: 0;
+      min-width: 0;
+      width: auto;
+      height: auto;
+      flex-shrink: 0;
+      line-height: 0px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+  }
+  .drag-box {
+    cursor: move;
+    flex: unset;
+    padding-top: 10px;
+  }
+}
 :host {
+  .input-placer-area {
+    padding: 20px;
+  }
+  mat-expansion-panel {
+    box-shadow: none;
+    margin-top: 10px;
+  }
+  mat-panel-title {
+    mat-icon {
+      margin-right: 10px;
+    }
+  }
   .bucket-title {
     display: flex;
     align-items: center;
   }
+  .padding-24 {
+    padding: 24px;
+  }
+  mat-form-field.title {
+    width: 35%;
+  }
+  mat-form-field.description {
+    width: 65%;
+  }
+
   .input-defaults {
     width: 50%;
     margin-top: 20px;
@@ -43,7 +98,6 @@
             }
 
             &.add-property {
-              margin-left: 60px;
               input[name="property-name"] {
                 text-transform: lowercase;
               }
@@ -76,40 +130,6 @@
                 font-size: 26px;
                 font-weight: 400;
                 color: var(--foreground-disabled-text);
-              }
-            }
-          }
-        }
-
-        mat-vertical-stepper {
-          .mat-step {
-            mat-step-header {
-              .mat-step-label {
-                display: flex;
-                width: 60%;
-                align-items: center;
-                span[title] {
-                  display: inline-block;
-                  vertical-align: middle;
-                  span {
-                    display: block;
-                  }
-                  mat-hint {
-                    display: block;
-                    font-weight: normal;
-                    text-align: center;
-                    padding-top: 2px;
-                  }
-                }
-                button {
-                  margin-left: 10px;
-                }
-                .space-between {
-                  flex: 1 1 auto;
-                }
-                > mat-icon {
-                  margin-right: 10px;
-                }
               }
             }
           }

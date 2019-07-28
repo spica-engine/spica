@@ -41,8 +41,8 @@
       <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
       <mat-divider></mat-divider>
       <mat-list-item>
-        <form id="describeForm" #describeForm="ngForm" class="title-description-form">
-          <mat-form-field>
+        <form id="describeForm" #describeForm="ngForm" class="title-description-form padding-24">
+          <mat-form-field class="title">
             <input
               matInput
               name="title"
@@ -64,7 +64,8 @@
               {{ tm?.errors?.maxlength?.requiredLength }} character.
             </mat-error>
           </mat-form-field>
-          <mat-form-field>
+
+          <mat-form-field class="description">
             <textarea
               matInput
               name="description"
@@ -92,123 +93,124 @@
       <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
       <mat-divider></mat-divider>
       <mat-list-item>
-        <mat-vertical-stepper #propertyStepper [linear]="false">
-          <ng-template *ngFor="let iconKv of bIcons | keyvalue" [matStepperIcon]="iconKv.key">
-            <mat-icon>{{ iconKv.value }}</mat-icon>
-          </ng-template>
-          <mat-step
-            *ngFor="let propertyKv of bucket.properties | keyvalue; let index = index"
-            [state]="propertyKv.value.type"
-            [completed]="false"
+        <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
+          <mat-expansion-panel
+            *ngFor="
+              let propertyKv of bucket.properties | keyvalue: sortProperties;
+              let index = index
+            "
+            cdkDrag
           >
-            <ng-template matStepLabel>
-              <span title>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>{{ bIcons[propertyKv.value.type] }}</mat-icon>
                 <span>{{ propertyKv.value.title | titlecase }}</span>
-                <mat-hint class="mat-step-optional">{{ propertyKv.key }}</mat-hint>
-              </span>
-
-              <button
-                mat-icon-button
-                *ngIf="propertyStepper.selectedIndex == index"
-                [matMenuTriggerFor]="settingsMenu"
-                [matMenuTriggerData]="{propertyKv: propertyKv}"
-              >
-                <mat-icon>settings</mat-icon>
-                <mat-menu #settingsMenu="matMenu">
-                  <ng-template matMenuContent let-propertyKv="propertyKv">
-                    <div
-                      mat-menu-item
-                      *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
-                      role="menuitemcheckbox"
-                      disableRipple
-                      matTooltip="To change primary property select another property as primary"
-                      [matTooltipDisabled]="bucket.primary != key"
-                      (click)="$event.stopImmediatePropagation()"
-                    >
-                      <mat-checkbox
-                        [disabled]="bucket.primary == propertyKv.key"
-                        [checked]="bucket.primary == propertyKv.key"
-                        [indeterminate]="bucket.primary != propertyKv.key"
-                        (change)="$event.checked ? (bucket.primary = propertyKv.key) : undefined"
+              </mat-panel-title>
+              <mat-panel-description>
+                <button
+                  mat-icon-button
+                  [matMenuTriggerFor]="settingsMenu"
+                  [matMenuTriggerData]="{propertyKv: propertyKv}"
+                >
+                  <mat-icon>settings</mat-icon>
+                  <mat-menu #settingsMenu="matMenu">
+                    <ng-template matMenuContent let-propertyKv="propertyKv">
+                      <div
+                        mat-menu-item
+                        *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+                        role="menuitemcheckbox"
+                        disableRipple
+                        matTooltip="To change primary property select another property as primary"
+                        [matTooltipDisabled]="bucket.primary != key"
+                        (click)="$event.stopImmediatePropagation()"
                       >
-                        Primary field
-                      </mat-checkbox>
-                    </div>
-                    <div
-                      mat-menu-item
-                      *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
-                      role="menuitemcheckbox"
-                      disableRipple
-                      (click)="$event.stopImmediatePropagation()"
-                    >
-                      <mat-checkbox
-                        [(ngModel)]="propertyKv.value.options.visible"
-                        (change)="bucketVisible()"
+                        <mat-checkbox
+                          [disabled]="bucket.primary == propertyKv.key"
+                          [checked]="bucket.primary == propertyKv.key"
+                          [indeterminate]="bucket.primary != propertyKv.key"
+                          (change)="$event.checked ? (bucket.primary = propertyKv.key) : undefined"
+                        >
+                          Primary field
+                        </mat-checkbox>
+                      </div>
+                      <div
+                        mat-menu-item
+                        *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+                        role="menuitemcheckbox"
+                        disableRipple
+                        (click)="$event.stopImmediatePropagation()"
                       >
-                        Visible on list
-                      </mat-checkbox>
-                    </div>
-                    <div
-                      mat-menu-item
-                      *ngIf="translatableTypes.includes(propertyKv.value.type)"
-                      role="menuitemcheckbox"
-                      disableRipple
-                      (click)="$event.stopImmediatePropagation()"
-                      matTooltip="You can't change this property after creation."
-                    >
-                      <mat-checkbox
-                        [disabled]="immutableProperties.includes(key)"
-                        [(ngModel)]="propertyKv.value.options.translate"
+                        <mat-checkbox
+                          [(ngModel)]="propertyKv.value.options.visible"
+                          (change)="bucketVisible()"
+                        >
+                          Visible on list
+                        </mat-checkbox>
+                      </div>
+                      <div
+                        mat-menu-item
+                        *ngIf="translatableTypes.includes(propertyKv.value.type)"
+                        role="menuitemcheckbox"
+                        disableRipple
+                        (click)="$event.stopImmediatePropagation()"
+                        matTooltip="You can't change this property after creation."
                       >
-                        Translate
-                      </mat-checkbox>
-                    </div>
+                        <mat-checkbox
+                          [disabled]="immutableProperties.includes(key)"
+                          [(ngModel)]="propertyKv.value.options.translate"
+                        >
+                          Translate
+                        </mat-checkbox>
+                      </div>
 
-                    <div
-                      mat-menu-item
-                      role="menuitemcheckbox"
-                      disableRipple
-                      (click)="$event.stopImmediatePropagation()"
-                    >
-                      <mat-checkbox [(ngModel)]="propertyKv.value.readOnly">
-                        Read-only
-                      </mat-checkbox>
-                    </div>
-
-                    <div
-                      mat-menu-item
-                      role="menuitemcheckbox"
-                      disableRipple
-                      (click)="$event.stopImmediatePropagation()"
-                    >
-                      <mat-checkbox
-                        [ngModel]="bucket.required?.includes(propertyKv.key)"
-                        (ngModelChange)="
-                          bucket.required = bucket.required || [];
-                          $event
-                            ? bucket.required.push(propertyKv.key)
-                            : bucket.required.splice(bucket.required.indexOf(propertyKv.key), 1)
-                        "
+                      <div
+                        mat-menu-item
+                        role="menuitemcheckbox"
+                        disableRipple
+                        (click)="$event.stopImmediatePropagation()"
                       >
-                        Required
-                      </mat-checkbox>
-                    </div>
-                  </ng-template>
-                </mat-menu>
-              </button>
+                        <mat-checkbox [(ngModel)]="propertyKv.value.readOnly">
+                          Read-only
+                        </mat-checkbox>
+                      </div>
 
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="
-                  $event.stopImmediatePropagation();
-                  deleteProperty(propertyKv.key);
-                  bucket.primary == propertyKv.key ? (bucket.primary = undefined) : null
-                "
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
+                      <div
+                        mat-menu-item
+                        role="menuitemcheckbox"
+                        disableRipple
+                        (click)="$event.stopImmediatePropagation()"
+                      >
+                        <mat-checkbox
+                          [ngModel]="bucket.required?.includes(propertyKv.key)"
+                          (ngModelChange)="
+                            bucket.required = bucket.required || [];
+                            $event
+                              ? bucket.required.push(propertyKv.key)
+                              : bucket.required.splice(bucket.required.indexOf(propertyKv.key), 1)
+                          "
+                        >
+                          Required
+                        </mat-checkbox>
+                      </div>
+                    </ng-template>
+                  </mat-menu>
+                </button>
 
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="
+                    $event.stopImmediatePropagation();
+                    deleteProperty(propertyKv.key);
+                    bucket.primary == propertyKv.key ? (bucket.primary = undefined) : null
+                  "
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+                <mat-icon class="drag-box" cdkDragHandle>drag_handle</mat-icon>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            <div>
               <span class="space-between"></span>
 
               <mat-icon
@@ -229,12 +231,14 @@
               <mat-icon *ngIf="propertyKv.value.readOnly" matTooltip="This property is read-only."
                 >format_clear</mat-icon
               >
-            </ng-template>
-
+            </div>
             <span
+              class="input-placer-area"
               [inputSchemaPlacer]="propertyKv.value.type"
               [(ngModel)]="bucket.properties[propertyKv.key]"
-            ></span>
+            >
+            </span>
+
             <div
               class="input-defaults"
               *ngIf="predefinedDefaults && predefinedDefaults.hasOwnProperty(propertyKv.value.type)"
@@ -255,9 +259,10 @@
                 >
               </mat-form-field>
             </div>
-          </mat-step>
-        </mat-vertical-stepper>
+          </mat-expansion-panel>
+        </mat-accordion>
       </mat-list-item>
+
       <mat-list-item class="add-property">
         <mat-form-field>
           <input
@@ -301,7 +306,7 @@
       </mat-list-item>
       <h4 mat-subheader><mat-icon>view_module</mat-icon> View</h4>
       <mat-divider></mat-divider>
-      <mat-list-item>
+      <mat-list-item class="padding-24">
         <mat-grid-list [cols]="4" gutterSize="10px" rowHeight="200px">
           <mat-grid-tile
             [colspan]="4"
