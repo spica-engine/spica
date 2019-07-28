@@ -11,6 +11,7 @@ import {BucketService} from "./bucket.service";
 import {BucketCache, provideBucketCache} from "./cache";
 import {HistoryModule} from "./history/history.module";
 const BucketSchema = require("./schemas/bucket.schema.json");
+const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 
 @Module({
@@ -20,7 +21,7 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
     HistoryModule,
     SchemaModule.forChild({
       keywords: [CUSTOM_TYPES],
-      schemas: [BucketSchema, PropertyOptionsSchema]
+      schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
     })
   ],
   providers: [

@@ -5,6 +5,7 @@ export interface Bucket {
   _id?: string;
   primary: string;
   title?: string;
+  order?: number;
   icon?: string;
   description?: string;
   required?: string[];
@@ -20,6 +21,7 @@ export interface PropertyOptions {
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";
+    order?: number;
   };
 }
 

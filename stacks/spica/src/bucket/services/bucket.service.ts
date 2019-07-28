@@ -53,6 +53,9 @@ export class BucketService {
       .pipe(tap(b => this.store.dispatch(new fromBucket.Upsert(b))));
   }
 
+  updateMany(buckets: Bucket[]): Observable<Bucket[]> {
+    return this.http.put<Bucket[]>(`api:/bucket`, buckets);
+  }
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {
     return this.http.get<PredefinedDefault[]>(`api:/bucket/predefs`);
   }
