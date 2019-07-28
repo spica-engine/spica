@@ -1,4 +1,8 @@
 :host ::ng-deep {
+  .mat-list-item-content {
+    padding: 0px !important;
+  }
+
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
@@ -12,6 +16,7 @@
     }
   }
   mat-card {
+    padding: 25px;
     margin: 30px;
     margin-top: -110px;
     // For proper border radius

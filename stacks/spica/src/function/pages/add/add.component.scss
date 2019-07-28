@@ -1,4 +1,17 @@
 :host ::ng-deep {
+  mat-form-field.trigger,
+  span.margin {
+    margin: 10px 10px 0 0;
+  }
+  .mat-subheader {
+    padding: 0;
+  }
+  mat-divider {
+    width: 100% !important;
+    margin: 15px 0 15px 0;
+    position: relative !important;
+  }
+
   .toolbar {
     min-height: 250px;
     padding: 0 30px;
@@ -32,21 +45,29 @@
     mat-card-content {
       mat-form-field[description],
       mat-form-field[name] {
+        margin: 10px 0 10px 0;
         width: 100%;
       }
-      mat-divider {
-        left: 5% !important;
-        width: 90% !important;
-      }
+
       .mat-list-item {
         height: auto;
-        padding: 15px 0px;
+
         .mat-list-item-content {
           display: contents;
         }
       }
       mat-list {
         .editor {
+          .decorationsOverviewRuler {
+            display: none;
+          }
+          .overflow-guard {
+            padding-top: 10px;
+            border: 2px solid #0000000f;
+          }
+          .overflow-guard > .margin {
+            padding-top: 10px;
+          }
           .last-saved {
             display: block;
             text-align: right;
@@ -87,6 +108,7 @@
             }
           }
         }
+
         .triggers {
           display: inline-table;
           padding-bottom: 20px;

@@ -32,8 +32,8 @@
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="actions-content" *matCellDef="let function">
+        <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell class="action" class="actions-content" *matCellDef="let function">
           <button
             canInteract="function:update"
             mat-icon-button
