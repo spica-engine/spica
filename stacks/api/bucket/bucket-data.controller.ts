@@ -174,7 +174,7 @@ export class BucketDataController {
       aggregation.push({$limit: limit});
     }
 
-    const documents = this.bds
+    const documents = await this.bds
       .find(bucketId, aggregation)
       .catch((error: MongoError) =>
         Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
