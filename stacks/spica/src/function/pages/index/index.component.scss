@@ -14,6 +14,12 @@
       }
     }
   }
+  mat-header-cell.action {
+    .action {
+      max-width: 150px;
+    }
+    max-width: 150px;
+  }
   mat-card {
     margin: 30px;
     margin-top: -110px;

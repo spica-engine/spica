@@ -114,7 +114,7 @@
           </button>
         </h4>
         <mat-list-item class="trigger" *ngFor="let trigger of function.triggers | keyvalue">
-          <mat-form-field>
+          <mat-form-field class="trigger">
             <mat-label>Handler</mat-label>
             <mat-select [disabled]="true" value="trigger.key">
               <mat-option value="trigger.key">{{ trigger.key }}</mat-option>
@@ -122,7 +122,7 @@
           </mat-form-field>
 
           <ng-container *ngIf="triggers | async; let triggers">
-            <mat-form-field>
+            <mat-form-field class="trigger">
               <mat-label>Type</mat-label>
               <mat-select
                 #typeModel="ngModel"
@@ -143,6 +143,7 @@
 
             <ng-container ngModelGroup="triggerOptions">
               <span
+                class="margin"
                 *ngFor="let propertyKv of triggers[trigger.value.type]?.properties | keyvalue"
                 [inputPlacer]="propertyKv.value"
                 [(ngModel)]="trigger.value.options[propertyKv.key]"
@@ -211,10 +212,10 @@
           </button>
         </h4>
         <mat-list-item environment *ngFor="let env of function.env; let index = index">
-          <mat-form-field>
+          <mat-form-field class="trigger">
             <input matInput placeholder="Name" [(ngModel)]="env.name" />
           </mat-form-field>
-          <mat-form-field>
+          <mat-form-field class="trigger">
             <input matInput placeholder="Value" [(ngModel)]="env.value" />
           </mat-form-field>
           <button mat-icon-button color="warn" (click)="removeVariable(index)">
