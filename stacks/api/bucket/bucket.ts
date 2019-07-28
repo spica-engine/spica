@@ -11,11 +11,13 @@ export interface Bucket {
   properties?: {
     [key: string]: JSONSchema7 & PropertyOptions;
   };
+  order?: number;
 }
 
 interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
   options: {
+    order: number;
     visible?: boolean;
     translate?: boolean;
     history?: boolean;
