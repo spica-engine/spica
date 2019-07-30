@@ -13,7 +13,7 @@ spec:
       terminationGracePeriodSeconds: 10
       initContainers:
         - name: init
-          image: gcr.io/spica-239113/initcontainer:latest
+          image: gcr.io/spica-239113/initcontainer
           imagePullPolicy: Always
       containers:
         - name: mongo
@@ -65,12 +65,12 @@ spec:
     spec:
       containers:
         - name: spica
-          image: gcr.io/spica-239113/spica:latest
+          image: gcr.io/spica-239113/spica
           imagePullPolicy: Always
           ports:
             - containerPort: 80
         - name: api
-          image: gcr.io/spica-239113/api:latest
+          image: gcr.io/spica-239113/api
           imagePullPolicy: Always
           ports:
             - containerPort: 4300
