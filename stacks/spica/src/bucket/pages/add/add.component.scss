@@ -12,6 +12,11 @@
 }
 
 :host {
+  .flex-form {
+    display: block;
+    float: left;
+    width: 100%;
+  }
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
@@ -41,6 +46,10 @@
           &.right {
             float: left;
             width: 50%;
+          }
+          &.bottom {
+            float: left;
+            width: 100%;
           }
           // TODO(thesayyn): replace this with css variables
           ::ng-deep .input-placer-input {

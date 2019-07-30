@@ -1,10 +1,22 @@
 ::ng-deep {
+  .mat-subheader {
+    padding: 0 !important;
+  }
   .mat-expansion-indicator {
     height: 23px;
+  }
+  mat-list-item.validation {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .mat-card-actions {
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .mat-expansion-panel-header-description {
     flex-grow: initial !important;
   }
+
   mat-expansion-panel {
     mat-panel-title {
       padding-top: 10px;
@@ -33,6 +45,7 @@
 }
 :host {
   .input-placer-area {
+    display: flex;
     padding: 20px;
   }
   mat-expansion-panel {
@@ -48,9 +61,7 @@
     display: flex;
     align-items: center;
   }
-  .padding-24 {
-    padding: 24px;
-  }
+
   mat-form-field.title {
     width: 35%;
   }
@@ -74,13 +85,14 @@
   }
   mat-card {
     &.margin-5 {
-      margin: 5%;
+      margin: 30px;
     }
     ::ng-deep {
       mat-card-content {
+        margin-bottom: 0px;
         mat-divider {
-          left: 5% !important;
-          width: 90% !important;
+          position: relative !important;
+          width: 100% !important;
         }
         mat-list {
           .mat-list-item {

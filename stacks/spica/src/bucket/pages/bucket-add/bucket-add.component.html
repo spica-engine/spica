@@ -263,7 +263,7 @@
         </mat-accordion>
       </mat-list-item>
 
-      <mat-list-item class="add-property">
+      <mat-list-item class="property">
         <mat-form-field>
           <input
             matInput
@@ -386,7 +386,7 @@
           </mat-grid-tile>
         </mat-grid-list>
       </mat-list-item>
-      <mat-list-item>
+      <mat-list-item class="validation">
         <mat-error *ngIf="describeForm.invalid">Please correctly fill the describe form.</mat-error>
         <mat-error *ngIf="nonPositionedProperties.length > 0"
           >Please place all the properties above.</mat-error
