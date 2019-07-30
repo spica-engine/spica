@@ -2,7 +2,7 @@ import {Injectable} from "@nestjs/common";
 import * as shortId from "short-id";
 import {FunctionExecutor} from "./executor";
 import {FunctionHost} from "./host";
-import {Execution, Function} from "./interface";
+import {Execution, Function, FunctionInfo} from "./interface";
 import {LoggerHost} from "./logger";
 import {EngineRegistry} from "./registry";
 import {Context, InvokerFn, Target} from "./trigger/base";
@@ -83,6 +83,18 @@ export class FunctionEngine {
         stream.write(JSON.stringify({type: "event", state: "failed"}));
         logger.dispose();
       });
+  }
+
+  async info(fn: Function): Promise<FunctionInfo> {
+    return Object.keys(fn.triggers).reduce(
+      async (accumulator, handler) => {
+        const data = fn.triggers[handler];
+        const trigger = this.registry.getTrigger(data.type);
+        accumulator[handler] = await trigger.info(data.options);
+        return accumulator;
+      },
+      {} as any
+    );
   }
 
   // This function removes all triggers which able to trigger it.

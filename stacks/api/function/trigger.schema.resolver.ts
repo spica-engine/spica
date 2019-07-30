@@ -26,6 +26,7 @@ export async function provideTriggerSchemaResolver(validator: Validator, registr
 // Maybe later we can write a custom keyword for this
 export function generate({body}: {body: Function}) {
   return {
+    type: "object",
     allOf: [
       {$ref: "http://spica.internal/function/schema"},
       {

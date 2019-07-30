@@ -32,3 +32,9 @@ export const BOOLEAN: PipeTransform<string, boolean> = {
     return /true|1/i.test(value);
   }
 };
+
+export const DATE: PipeTransform<string, Date> = {
+  transform: value => {
+    return new Date(value);
+  }
+};
