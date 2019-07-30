@@ -44,6 +44,7 @@ ts_library(
         ":trigger",
         "@npm//@nestjs/common",
         "@npm//cron",
+        "@npm//cronstrue",
         "@npm//moment-timezone",  # Not direct dependency
     ],
 )
