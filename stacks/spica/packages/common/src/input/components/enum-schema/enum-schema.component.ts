@@ -1,5 +1,4 @@
 import {Component, Inject, OnDestroy} from "@angular/core";
-
 import {INPUT_SCHEMA, InputSchema} from "../../input";
 
 @Component({
@@ -9,14 +8,12 @@ import {INPUT_SCHEMA, InputSchema} from "../../input";
 })
 export class EnumSchemaComponent implements OnDestroy {
   _trackBy: (i) => any = i => i;
+
+  schemaWithoutEnum: InputSchema;
+
   constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
     this.schema.enum = this.schema.enum || [];
-  }
-
-  get schemaWithoutEnum(): InputSchema {
-    const schemaClone = {...this.schema};
-    delete schemaClone.enum;
-    return schemaClone;
+    this.schemaWithoutEnum = {...this.schema, enum: undefined};
   }
 
   addItem() {

@@ -11,7 +11,7 @@
 
   .drag-container {
     margin-top: 40px;
-    margin-left: 70px;
+    margin-left: 30px;
     display: flex;
     flex-wrap: wrap;
   }
@@ -65,9 +65,8 @@
   }
 
   mat-card {
-    width: 250px;
+    width: 280px;
     height: 180px;
-    margin: 5px;
     float: left;
     user-select: none;
     mat-card-title {
