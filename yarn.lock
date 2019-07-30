@@ -1504,6 +1504,11 @@ cron@^1.7.1:
   dependencies:
     moment-timezone "^0.5.x"
 
+cronstrue@^1.81.0:
+  version "1.81.0"
+  resolved "https://registry.yarnpkg.com/cronstrue/-/cronstrue-1.81.0.tgz#d618ae55ddc77e5de4bdd349c657bcb052c0ff44"
+  integrity sha512-4UUXedlzxRB4mHTOc9FECZuRv4ri4KE0/y7aclNvIme9doqFQ5Sswl6SU5R6LWSiwQ4GhNg1kqGKSQ8xPd1zrQ==
+
 cross-spawn@^4:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-4.0.2.tgz#7b9247621c23adfdd3856004a823cbe397424d41"

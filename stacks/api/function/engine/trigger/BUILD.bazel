@@ -45,5 +45,6 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//cron",
         "@npm//moment-timezone",  # Not direct dependency
+        "@npm//cronstrue"
     ],
 )
