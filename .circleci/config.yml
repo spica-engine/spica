@@ -114,7 +114,7 @@ jobs:
             gcloud auth configure-docker
       - run:
           name: "Deploying artifacts"
-          command: yarn bazel run deploy.apply
+          command: ./node_modules/.bin/bazel run deploy.replace -- --force
 workflows:
   version: 2
   default:
