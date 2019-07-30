@@ -56,7 +56,6 @@ export class AddComponent implements OnInit, OnDestroy {
 
     this.activatedRoute.params
       .pipe(
-        takeUntil(this.dispose),
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id)),
         tap(fn => {
@@ -64,7 +63,8 @@ export class AddComponent implements OnInit, OnDestroy {
           this.ls.request("open", this.function._id);
         }),
         tap(fn => (this.dependencies = this.http.get(`api:/function/${fn._id}/dependencies`))),
-        switchMap(fn => this.functionService.getIndex(fn._id))
+        switchMap(fn => this.functionService.getIndex(fn._id)),
+        takeUntil(this.dispose)
       )
       .subscribe(response => (this.index = response.index));
   }
@@ -123,7 +123,7 @@ export class AddComponent implements OnInit, OnDestroy {
   save() {
     this.clearEmptyEnvVars();
     this.functionService
-      .create(this.function)
+      .upsertOne(this.function)
       .pipe(switchMap(fn => this.functionService.updateIndex(fn._id, this.index)))
       .toPromise()
       .then(() => this.router.navigate(["function"]));
@@ -141,10 +141,6 @@ export class AddComponent implements OnInit, OnDestroy {
       .catch(() => {
         this.dependencyInstallPending = false;
       });
-  }
-
-  deleteDependency(index: number) {
-    console.log(index);
   }
 
   ngOnDestroy() {

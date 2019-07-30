@@ -14,6 +14,13 @@ export const enum TriggerFlags {
   NotSubscribable = 1 << 0
 }
 
+export interface Info {
+  icon: string;
+  text: string;
+  type: "url" | "label";
+  url?: string;
+}
+
 /**
  * If register function called with an null invoker
  * that means the function begin deleted from system.
@@ -24,6 +31,7 @@ export interface Trigger<OptionsT = object> {
   schema(): Promise<TriggerSchema>;
   stub?(test: any, info: Function): Promise<any[]>;
   runSchema?(options: OptionsT): Promise<RunSchema>;
+  info(options: OptionsT): Promise<Info[]>;
 }
 
 export interface RunSchema extends JSONSchema7 {}

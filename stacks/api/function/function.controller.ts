@@ -14,6 +14,7 @@ import {
   Res,
   UseGuards
 } from "@nestjs/common";
+import {DATE, DEFAULT} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
@@ -39,15 +40,19 @@ export class FunctionController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index() {
-    return this.fs.find();
+  async index() {
+    const functions = await this.fs.find();
+    return Promise.all(functions.map(fn => this.engine.info(fn).then(info => ({...fn, info}))));
   }
 
   @Post("add")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async add(@Body(Schema.validate(generate)) body: Function) {
     body._id = body._id || new ObjectId();
-    return await this.fs.upsertOne(body);
+
+    const fn = await this.fs.upsertOne(body);
+    const info = await this.engine.info(fn);
+    return {...fn, info};
   }
 
   @Get("trigger")
@@ -77,7 +82,7 @@ export class FunctionController {
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const fn = await this.fs.findOne({_id: id});
     if (!fn) {
-      throw new NotFoundException("Cannot find function.");
+      throw new NotFoundException("Can not find function.");
     }
     await this.fs.deleteOne(fn._id);
     await this.engine.host.delete(fn);
@@ -95,16 +100,11 @@ export class FunctionController {
 
   @Get(":id/logs")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
-  logs(@Param("id", OBJECT_ID) id: ObjectId, @Query("begin") begin: any, @Query("end") end: any) {
-    if (begin && end) {
-      begin = new Date(begin);
-      end = new Date(end);
-    } else {
-      const today = new Date(Date.now());
-      end = new Date(today.setHours(23, 59, 59, 99));
-      begin = new Date(today.setDate(today.getDate() - 10));
-    }
-
+  logs(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Query("begin", DEFAULT(new Date().setUTCHours(0, 0, 0, 0)), DATE) begin: Date,
+    @Query("end", DEFAULT(new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date
+  ) {
     return this.loggerHost.query(id.toHexString(), {
       fields: ["message", "execution", "timestamp", "level", "durationMs", "stack"],
       from: begin,
@@ -116,8 +116,8 @@ export class FunctionController {
   @Delete(":id/logs")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  clearLogs(@Param("id") id: string) {
-    return this.loggerHost.clear(id);
+  clearLogs(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.loggerHost.clear(id.toHexString());
   }
 
   @Post(":id/index")
@@ -136,7 +136,7 @@ export class FunctionController {
   async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
     const fn = await this.fs.findOne({_id: id});
     if (!fn) {
-      throw new NotFoundException("Cannot find function.");
+      throw new NotFoundException("Can not find function.");
     }
     const index = await this.engine.host.read(fn);
     return {index};
@@ -172,7 +172,7 @@ export class FunctionController {
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
     const fn = await this.fs.findOne({_id: id});
     if (!fn) {
-      throw new NotFoundException("Cannot find the function.");
+      throw new NotFoundException("Can not find the function.");
     }
     return this.engine.host.getDependencies(fn);
   }
