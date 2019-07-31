@@ -21,7 +21,6 @@ export interface PropertyOptions {
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";
-    order?: number;
   };
 }
 
