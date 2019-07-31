@@ -16,17 +16,14 @@
     }
   }
 }
-mat-header-cell.select {
-  max-width: 60px;
-  .select {
-    max-width: 60px;
-  }
-}
-mat-header-cell.action {
-  max-width: 150px;
-}
+
+mat-header-cell.action,
 mat-cell.action {
   max-width: 150px;
+}
+mat-header-cell.select,
+mat-cell.select {
+  max-width: 60px;
 }
 
 :host {

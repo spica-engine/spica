@@ -124,7 +124,6 @@
       <ng-container matColumnDef="$$spicainternal_select">
         <mat-header-cell class="select" *matHeaderCellDef>
           <mat-checkbox
-            class="select"
             *ngIf="dataIds?.length > 0"
             color="primary"
             [indeterminate]="selectedItems.length < dataIds.length && selectedItems.length > 0"
@@ -132,7 +131,7 @@
             (ngModelChange)="selectedItems = $event ? [].concat(dataIds) : []"
           ></mat-checkbox>
         </mat-header-cell>
-        <mat-cell *matCellDef="let row">
+        <mat-cell class="select" *matCellDef="let row">
           <mat-checkbox
             color="primary"
             (ngModelChange)="
