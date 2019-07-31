@@ -35,7 +35,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   public isThereVisible = false;
   public visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
-  public translatableTypes = ["string", "textarea", "array", "object", "richtext"];
+  public translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   public basicPropertyTypes = ["string", "textarea", "boolean", "number"];
 
   public $buckets: Observable<Bucket[]>;
