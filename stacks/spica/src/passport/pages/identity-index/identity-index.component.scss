@@ -1,10 +1,7 @@
 :host {
   mat-header-cell.action,
+  mat-cell.action,
   .actions-content {
-    justify-content: flex-end;
-    max-width: 150px;
-  }
-  mat-cell.action {
     justify-content: flex-end;
     max-width: 150px;
   }

@@ -1,5 +1,6 @@
 :host {
-  .action-cell {
+  mat-header-cell.action,
+  mat-cell.action {
     justify-content: flex-end;
     width: 150px;
   }
