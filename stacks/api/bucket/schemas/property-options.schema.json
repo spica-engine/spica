@@ -8,11 +8,6 @@
             "title": "Property configuration",
             "description": "View and history options of this property",
             "properties": {
-                "order": {
-                    "type": "number",
-                    "title": "Order",
-                    "description": "Order of this property."
-                },
                 "visible": {
                     "type": "boolean",
                     "title": "Visible",

@@ -90,7 +90,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   sortProperties(a: KeyValue<string, Property>, b: KeyValue<string, Property>) {
-    return a.value.options.order - b.value.options.order;
+    return a.value.type - b.value.type;
   }
 
   cardDrop(event: CdkDragDrop<Bucket[]>) {
@@ -99,12 +99,15 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     moveItemInArray(properties, event.previousIndex, event.currentIndex);
 
     this.bucket.properties = properties.reduce((accumulator, [key, value], index) => {
-      value.options.order = index;
       accumulator[key] = value;
       return accumulator;
     }, {});
-    this.bs.replaceOne(this.bucket).toPromise();
-    this.bs.retrieve().toPromise();
+    this.bs
+      .replaceOne(this.bucket)
+      .toPromise()
+      .then(() => {
+        this.updatePositionProperties();
+      });
   }
 
   updatePositionProperties() {
