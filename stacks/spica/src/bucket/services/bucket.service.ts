@@ -102,8 +102,8 @@ export class BucketService {
     return this.http.post(`api:/bucket/export`, bucketIds, {responseType: "blob"});
   }
 
-  exportSchema(bucketId: string): Observable<any> {
-    return this.http.post(`api:/bucket/export-schema`, bucketId, {responseType: "blob"});
+  exportSchema(bucketIds: Array<string>): Observable<any> {
+    return this.http.post(`api:/bucket/export-schema`, bucketIds, {responseType: "blob"});
   }
   getTemplates(): Observable<any> {
     return this.http.get<any>(`api:/bucket/templates`);

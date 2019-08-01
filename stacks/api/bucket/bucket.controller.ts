@@ -195,7 +195,7 @@ export class BucketController {
 
   @Post("export-schema")
   @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
-  async exportSchema(@Body() bucketId: string, @Res() res) {
+  async exportSchema(@Body() bucketIds: Array<string>, @Res() res) {
     const path = "./temp";
     const archiveName = Math.random()
       .toString(36)
@@ -212,10 +212,12 @@ export class BucketController {
 
     archive.pipe(outputArch);
 
-    const bucket = await this.bs.findOne({_id: new ObjectId(bucketId[0])});
+    for (let id of bucketIds) {
+      const bucket = await this.bs.findOne({_id: new ObjectId(id)});
 
-    const stringifiedData = JSON.stringify(bucket);
-    archive.append(stringifiedData, {name: `${bucketId}.json`});
+      const stringifiedData = JSON.stringify(bucket);
+      archive.append(stringifiedData, {name: `${id}.json`});
+    }
 
     await archive.finalize();
 
