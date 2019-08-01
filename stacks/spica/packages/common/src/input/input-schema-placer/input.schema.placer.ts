@@ -38,10 +38,9 @@ import {InputResolver} from "../input.resolver";
     `
   ],
   host: {
-    "(click)": "onTouchFn"
+    "(click)": "onTouchFn()"
   }
 })
-// tslint:disable-next-line:component-class-suffix
 export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   @Input("inputSchemaPlacer") type: string;
   @Input("options") options: SchemaPlacerOptions = {

@@ -7,9 +7,9 @@ import {
   Optional
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {MatMenuModule} from "@angular/material";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatChipsModule} from "@angular/material/chips";
 import {MatNativeDateModule} from "@angular/material/core";
 import {MatDatepickerModule} from "@angular/material/datepicker";
@@ -18,8 +18,10 @@ import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
+import {MatMenuModule} from "@angular/material/menu";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
 import {ArrayComponent} from "./components/array/array.component";
 import {BooleanComponent} from "./components/boolean/boolean.component";
@@ -37,7 +39,13 @@ import {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 import {InputPlacerComponent} from "./input.placer";
 import {InputResolver} from "./input.resolver";
 import {NgModelParentDirective} from "./ngmodel.parent";
-import {MaxValidator, MinValidator} from "./validators";
+import {
+  MaxValidator,
+  MinItemsValidator,
+  MinValidator,
+  UniqueItemsValidator,
+  MaxItemsValidator
+} from "./validators";
 
 export function coerceObject() {
   return {};
@@ -61,6 +69,8 @@ export function coerceObject() {
     MatListModule,
     MatMenuModule,
     MatDatepickerModule,
+    MatCheckboxModule,
+    MatTooltipModule,
     MatNativeDateModule
   ],
   exports: [InputPlacerComponent, InputSchemaPlacer],
@@ -81,7 +91,10 @@ export function coerceObject() {
     ObjectSchemaComponent,
     NgModelParentDirective,
     MinValidator,
-    MaxValidator
+    MaxValidator,
+    UniqueItemsValidator,
+    MinItemsValidator,
+    MaxItemsValidator
   ],
   providers: [
     {

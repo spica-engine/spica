@@ -1,4 +1,33 @@
-<div *ngFor="let property of schema.properties | keyvalue">
+<button mat-icon-button [matMenuTriggerFor]="validatorsMenu">
+  <mat-icon>settings</mat-icon>
+  <mat-menu #validatorsMenu class="mat-elevation-z25 validators">
+    <div
+      *ngFor="let propertyKv of schema.properties | keyvalue"
+      mat-menu-item
+      role="menuitemcheckbox"
+      disableRipple
+      (click)="$event.stopImmediatePropagation()"
+    >
+      <mat-checkbox
+        [ngModel]="schema?.required?.indexOf(propertyKv.key) > -1"
+        (ngModelChange)="
+          schema.required = schema.required || [];
+          $event
+            ? schema.required.push(propertyKv.key)
+            : schema.required.splice(schema.required.indexOf(propertyKv.key), 1)
+        "
+      >
+        <b>{{ propertyKv.value.title | titlecase }}</b> is required
+      </mat-checkbox>
+      <button mat-icon-button matTooltip="Whether user must fill this property.">
+        <mat-icon>info</mat-icon>
+      </button>
+    </div>
+  </mat-menu>
+</button>
+{{ schema.required | json }}
+
+<div class="property" *ngFor="let property of schema.properties | keyvalue">
   <span
     [name]="property.key"
     [inputSchemaPlacer]="schema.properties[property.key]['type']"

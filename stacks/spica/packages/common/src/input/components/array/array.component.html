@@ -1,8 +1,8 @@
-<mat-card #matCard class="mat-elevation-z0">
+<mat-card class="mat-elevation-z0">
   <h3 class="mat-h3">{{ schema.title }}</h3>
   <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
   <mat-card-content>
-    <div #buttonContainer>
+    <div>
       <button
         *ngFor="let item of _values; let index = index"
         class="mat-elevation-z0"
@@ -19,13 +19,29 @@
     </div>
     <div *ngIf="_activeIndex != undefined">
       <span
-        [inputPlacer]="schema.items"
-        [name]="schema.$name"
-        [disabled]="_disabled"
         ngModelParent
+        #model="ngModel"
+        [inputPlacer]="schema.items"
+        [disabled]="_disabled"
+        [name]="schema.$name + _activeIndex"
         [(ngModel)]="_values[_activeIndex]"
         (ngModelChange)="callOnChange()"
-      ></span>
+        [uniqueItems]="schema.uniqueItems"
+        [minItems]="schema.minItems"
+        [index]="_activeIndex"
+        [items]="_values"
+        [maxItems]="schema.maxItems"
+      >
+        <mat-error slot="after" *ngIf="model?.errors?.unique">
+          All items in the array must be unique.
+        </mat-error>
+        <mat-error slot="after" *ngIf="model?.errors?.minItems">
+          Array must have at least {{ model?.errors?.minItems?.expected }} items.
+        </mat-error>
+        <mat-error slot="after" *ngIf="model?.errors?.maxItems">
+          Array can have maximum {{ model?.errors?.maxItems?.expected }} items.
+        </mat-error>
+      </span>
       <button
         mat-mini-fab
         color="warn"
