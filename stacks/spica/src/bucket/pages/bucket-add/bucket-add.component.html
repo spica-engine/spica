@@ -41,7 +41,7 @@
       <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
       <mat-divider></mat-divider>
       <mat-list-item>
-        <form id="describeForm" #describeForm="ngForm" class="title-description-form padding-24">
+        <form id="describeForm" #describeForm="ngForm" class="title-description padding-24">
           <mat-form-field class="title">
             <input
               matInput
@@ -92,7 +92,7 @@
       </mat-list-item>
       <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
       <mat-divider></mat-divider>
-      <mat-list-item>
+      <mat-list-item class="properties">
         <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
           <mat-expansion-panel
             *ngFor="
@@ -142,7 +142,7 @@
                       >
                         <mat-checkbox
                           [(ngModel)]="propertyKv.value.options.visible"
-                          (change)="bucketVisible()"
+                          (ngModelChange)="bucketVisible()"
                         >
                           Visible on list
                         </mat-checkbox>
