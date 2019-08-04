@@ -1,15 +1,14 @@
 import {Module} from "@nestjs/common";
-import {BucketDataService} from "../bucket-data.service";
-import {BucketHistorian} from "./bucket-historian";
+import {BucketWatcher} from "./watcher";
 import {HistoryController} from "./history.controller";
 import {HistoryService} from "./history.service";
 
 @Module({
   controllers: [HistoryController],
-  providers: [BucketHistorian, HistoryService, BucketDataService]
+  providers: [BucketWatcher, HistoryService]
 })
 export class HistoryModule {
-  constructor(bw: BucketHistorian) {
+  constructor(bw: BucketWatcher) {
     bw.watch();
   }
 }

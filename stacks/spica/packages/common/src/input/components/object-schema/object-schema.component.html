@@ -9,13 +9,8 @@
       (click)="$event.stopImmediatePropagation()"
     >
       <mat-checkbox
-        [ngModel]="schema?.required?.indexOf(propertyKv.key) > -1"
-        (ngModelChange)="
-          schema.required = schema.required || [];
-          $event
-            ? schema.required.push(propertyKv.key)
-            : schema.required.splice(schema.required.indexOf(propertyKv.key), 1)
-        "
+        [ngModel]="schema.required && schema.required.indexOf(propertyKv.key) > -1"
+        (ngModelChange)="toggleRequired(propertyKv.key, $event)"
       >
         <b>{{ propertyKv.value.title | titlecase }}</b> is required
       </mat-checkbox>
@@ -25,7 +20,6 @@
     </div>
   </mat-menu>
 </button>
-{{ schema.required | json }}
 
 <div class="property" *ngFor="let property of schema.properties | keyvalue">
   <span

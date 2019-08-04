@@ -83,6 +83,10 @@ export class InputPlacerComponent implements ControlValueAccessor, OnDestroy, On
       }
       const placer = this._inputResolver.resolve(this.inputProperty.type);
       const placerFactory = this._componentFactoryResolver.resolveComponentFactory(placer.placer);
+      if (this.required) {
+        console.log(this.required, this.inputProperty);
+      }
+
       const injector = Injector.create(
         [
           {
