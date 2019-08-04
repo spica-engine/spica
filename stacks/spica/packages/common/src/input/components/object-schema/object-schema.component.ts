@@ -21,6 +21,13 @@ export class ObjectSchemaComponent {
     }
   }
 
+  toggleRequired(key: string, required: boolean) {
+    this.schema.required = this.schema.required || [];
+    required
+      ? this.schema.required.push(key)
+      : this.schema.required.splice(this.schema.required.indexOf(key), 1);
+  }
+
   removeProperty(name: string) {
     delete this.schema.properties[name];
   }

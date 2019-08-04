@@ -13,9 +13,8 @@ export class BucketHistoryService {
   }
 
   revertTo(bucketId: string, bucketDataId: string, historyId: string) {
-    return this.http.post<BucketEntry>(
-      `api:/bucket/${bucketId}/history/${bucketDataId}/${historyId}`,
-      {}
+    return this.http.get<BucketEntry>(
+      `api:/bucket/${bucketId}/history/${bucketDataId}/${historyId}`
     );
   }
 }

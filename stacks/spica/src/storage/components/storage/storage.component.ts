@@ -53,14 +53,16 @@ export class StorageComponent implements ControlValueAccessor {
     }
   }
 
-  writeValue(obj: any): void {
-    this.value = obj;
-    if (obj) {
+  writeValue(value: string): void {
+    this.value = value;
+    if (value) {
       const storageId = this.value.substring(this.value.lastIndexOf("/") + 1);
       this.storage
         .getOne(storageId)
         .toPromise()
         .then(data => (this.selected = data));
+    } else {
+      this.selected = undefined;
     }
   }
   registerOnChange(fn: any): void {
