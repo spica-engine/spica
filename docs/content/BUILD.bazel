@@ -7,7 +7,6 @@ docs(
     srcs = ["index.md"],
     data = [
         "//docs/content/concept",
-        "//docs/content/guide"
+        "//docs/content/guide",
     ],
 )
-

@@ -68,11 +68,9 @@ docs(
     exports = [
         "BucketController",
         "BucketDataController",
-        "HistoryController",
     ],
     deps = [
         "//packages/database",
         "//stacks/api/passport",
     ],
 )
-

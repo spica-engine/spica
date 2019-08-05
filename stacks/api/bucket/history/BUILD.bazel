@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "history",
@@ -20,6 +21,16 @@ ts_library(
         "@npm//deep-diff",
         "@npm//diff-match-patch",
     ],
+)
+
+docs(
+    name = "docs",
+    srcs = ["history.controller.ts"],
+    tags = ["history-docs"],
+    exports = [
+        "HistoryController",
+    ],
+    deps = [":history"],
 )
 
 ts_library(
