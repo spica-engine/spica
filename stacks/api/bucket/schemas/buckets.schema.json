@@ -1,0 +1,8 @@
+{
+  "$id": "http://spica.internal/buckets/schema",
+  "type": "array",
+  "minItems": 2,
+  "items": {
+    "$ref": "http://spica.internal/bucket/schema"
+  }
+}

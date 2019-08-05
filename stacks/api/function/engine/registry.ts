@@ -27,7 +27,8 @@ export class EngineRegistry implements OnModuleInit {
             ...triggerMetadata,
             register: instance.register.bind(instance),
             schema: instance.schema.bind(instance),
-            stub: instance.stub && instance.stub.bind(instance)
+            stub: instance.stub && instance.stub.bind(instance),
+            info: instance.info.bind(instance)
           });
         }
 

@@ -5,12 +5,13 @@ import {PreferenceModule, PreferenceService} from "@spica-server/preference";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
-import {CUSTOM_TYPES} from "./bucket.schema.types";
-import {SchemaCacheInvalidator} from "./bucket.schema.invalidator";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
+import {CUSTOM_TYPES} from "./bucket.schema.types";
 import {BucketService} from "./bucket.service";
+import {BucketCache, provideBucketCache} from "./cache";
 import {HistoryModule} from "./history/history.module";
 const BucketSchema = require("./schemas/bucket.schema.json");
+const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 
 @Module({
@@ -20,21 +21,21 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
     HistoryModule,
     SchemaModule.forChild({
       keywords: [CUSTOM_TYPES],
-      schemas: [BucketSchema, PropertyOptionsSchema]
+      schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
     })
   ],
   providers: [
     BucketService,
     BucketDataService,
     {
+      provide: BucketCache,
+      useFactory: provideBucketCache,
+      inject: [DatabaseService, Validator]
+    },
+    {
       provide: BucketSchemaResolver,
       useFactory: provideBucketSchemaResolver,
       inject: [Validator, BucketService]
-    },
-    {
-      provide: SchemaCacheInvalidator,
-      useFactory: (validator, db) => new SchemaCacheInvalidator(validator, db),
-      inject: [Validator, DatabaseService]
     }
   ],
   exports: [BucketDataService]

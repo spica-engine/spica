@@ -1,3 +1,56 @@
+<h3>Bucket Schema Export/Import</h3>
+<div class="container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>backup</mat-icon>
+        Export
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-form-field>
+        <mat-select placeholder="Bucket Schema" #exportBucketSchema multiple>
+          <mat-option *ngFor="let bucket of buckets" [value]="bucket._id">
+            {{ bucket.title }}
+          </mat-option>
+        </mat-select>
+        <mat-hint>Choose a bucket to export its schema.</mat-hint>
+      </mat-form-field>
+      <mat-card-actions>
+        <button mat-button (click)="exportSchema(exportBucketSchema.value)">
+          Export
+        </button>
+      </mat-card-actions>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>restore</mat-icon>
+        Import
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <input
+        type="file"
+        accept="application/json"
+        #fileSelectorSchema
+        #fileModel="ngModel"
+        [ngModel]="undefined"
+      />
+
+      <mat-progress-spinner [diameter]="40"></mat-progress-spinner>
+      <mat-hint class="custom-mat-hint">Choose a bucket to import its schema.</mat-hint>
+      <mat-card-actions>
+        <button mat-button (click)="importSchema(fileSelectorSchema.files[0])">
+          Import
+        </button>
+      </mat-card-actions>
+    </mat-card-content>
+  </mat-card>
+</div>
+<h3>Bucket Data Export/Import</h3>
 <div class="container">
   <mat-card>
     <mat-card-header>

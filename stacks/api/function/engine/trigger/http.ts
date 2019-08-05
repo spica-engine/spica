@@ -1,6 +1,6 @@
 import {Logger, Module} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {InvokerFn, Target, Trigger, TriggerFlags, TriggerSchema} from "./base";
+import {Info, InvokerFn, Target, Trigger, TriggerFlags, TriggerSchema} from "./base";
 import express = require("express");
 
 enum HttpMethod {
@@ -93,6 +93,16 @@ export class HttpTrigger implements Trigger<HttpTriggerOptions> {
         );
       }
     }
+  }
+
+  info(options: HttpTriggerOptions) {
+    const info: Info = {
+      icon: "http",
+      text: `${options.method} ${options.path}`,
+      url: `${process.env.PUBLIC_HOST}/fn-execute/${options.path.replace(/^\//, "")}`,
+      type: "url"
+    };
+    return Promise.resolve([info]);
   }
 }
 

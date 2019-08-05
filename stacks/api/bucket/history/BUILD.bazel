@@ -1,0 +1,45 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "history",
+    srcs = glob(
+        include = ["*.ts"],
+        exclude = ["*.spec.ts"],
+    ),
+    module_name = "@spica-server/bucket/history",
+    deps = [
+        "//packages/database",
+        "//stacks/api/passport",
+        "@npm//@nestjs/common",
+        "@npm//@types/deep-diff",
+        "@npm//@types/diff-match-patch",
+        "@npm//@types/json-schema",
+        "@npm//deep-diff",
+        "@npm//diff-match-patch",
+    ],
+)
+
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = glob(["*.spec.ts"]),
+    tsconfig = "//:tsconfig.json",
+    deps = [
+        ":history",
+        "@npm//@types/jasmine",
+        "@npm//@types/json-schema",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+    deps = [
+        "@npm//jasmine",
+        "@npm//source-map",
+    ],
+)

@@ -7,7 +7,8 @@ import {
   FilterQuery,
   InsertOneWriteOpResult,
   InsertWriteOpResult,
-  ReplaceWriteOpResult
+  ReplaceWriteOpResult,
+  WriteOpResult
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference";
 import * as fs from "fs";
@@ -30,7 +31,10 @@ export class BucketService {
   }
 
   find(filter?: FilterQuery<Bucket>): Promise<Array<Bucket>> {
-    return this.buckets.find(filter).toArray();
+    return this.buckets
+      .find(filter)
+      .sort({order: 1})
+      .toArray();
   }
 
   findOne(filter: FilterQuery<Bucket>): Promise<Bucket | null> {
@@ -47,6 +51,9 @@ export class BucketService {
 
   replaceOne(bucket: Bucket): Promise<ReplaceWriteOpResult> {
     return this.buckets.replaceOne({_id: bucket._id}, bucket, {upsert: true});
+  }
+  updateOne(bucket: Bucket): Promise<WriteOpResult> {
+    return this.buckets.update({_id: bucket._id}, bucket, {upsert: true});
   }
 
   deleteOne(filter: FilterQuery<Bucket>): Promise<DeleteWriteOpResultObject> {

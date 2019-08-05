@@ -1,4 +1,4 @@
-import {Context, Target} from "./trigger/base";
+import {Context, Target, Info} from "./trigger/base";
 import {Logger} from "./logger";
 
 export interface Execution {
@@ -28,6 +28,10 @@ export interface Subscription {
   _id: string;
   trigger: Trigger;
   url: string;
+}
+
+export interface FunctionInfo {
+  [key: string]: Info[];
 }
 
 export interface Triggers {

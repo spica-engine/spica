@@ -1,3 +1,31 @@
+::ng-deep .filter-menu {
+  .mat-menu-content {
+    width: 100%;
+    padding: 30px 0 20px !important;
+    mat-form-field {
+      width: 80%;
+      margin: 0 10%;
+
+      .mat-form-field-infix {
+        width: 300px;
+      }
+    }
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+
+mat-header-cell.action,
+mat-cell.action {
+  max-width: 150px;
+}
+mat-header-cell.select,
+mat-cell.select {
+  max-width: 60px;
+}
+
 :host {
   mat-toolbar {
     min-height: 250px;
@@ -72,9 +100,6 @@
           &:first-of-type {
             padding-left: 10px;
           }
-          &:nth-of-type(2) {
-            justify-content: center;
-          }
           &:last-of-type {
             justify-content: flex-end;
           }
@@ -91,9 +116,6 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-          }
-          &:nth-of-type(2) {
-            justify-content: center;
           }
           &:last-of-type {
             justify-content: flex-end;

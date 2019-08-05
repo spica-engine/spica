@@ -3,6 +3,7 @@
     margin: 0 !important;
   }
   mat-card {
+    padding: 25px;
     margin: 30px;
     .field-container {
       display: flex;
@@ -74,20 +75,16 @@
         width: 100%;
         padding: 10px;
         background-color: var(--primary-100);
-        .field-settings {
+        .field-settings,
+        .settings-field-text {
+          padding: 10px 24px 0 24px;
+
           .currentInputField {
             display: block;
             width: 100%;
-            /deep/ form {
-              .property-field {
-                .field {
-                  width: calc(100% - 40px);
-                  display: flex;
-                  justify-content: space-between;
-                  .mat-form-field {
-                    width: 31.33%;
-                  }
-                }
+            ::ng-deep {
+              mat-form-field {
+                width: 30%;
               }
             }
           }

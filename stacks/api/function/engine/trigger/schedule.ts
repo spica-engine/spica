@@ -1,7 +1,8 @@
 import {Module} from "@nestjs/common";
 import * as cron from "cron";
-import {InvokerFn, Target, Trigger, TriggerFlags, TriggerSchema} from "./base";
 import * as moment from "moment-timezone";
+import * as cronstrue from "cronstrue";
+import {Info, InvokerFn, Target, Trigger, TriggerFlags, TriggerSchema} from "./base";
 
 interface SchedulingOptions {
   frequency: string;
@@ -65,6 +66,17 @@ export class ScheduleTrigger implements Trigger<SchedulingOptions> {
       additionalProperties: false
     };
     return Promise.resolve(schema);
+  }
+
+  info(options: SchedulingOptions) {
+    const info: Info = {
+      icon: "schedule",
+      text: `${cronstrue.toString(options.frequency, {throwExceptionOnParseError: false})} at ${
+        options.timezone
+      } timezone.`,
+      type: "label"
+    };
+    return Promise.resolve([info]);
   }
 }
 

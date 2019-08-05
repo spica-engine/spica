@@ -1,24 +1,21 @@
-import {ObjectId} from "@spica-server/database";
 import {Injectable} from "@nestjs/common";
-
+import {Validator} from "@spica-server/core/schema";
+import {ObjectId} from "@spica-server/database";
 import {Bucket} from "./bucket";
 import {BucketService} from "./bucket.service";
-import {Validator} from "@spica-server/core/schema";
 
 @Injectable()
 export class BucketSchemaResolver {
   constructor(private bucketService: BucketService) {}
 
   resolve(uri: string): Promise<Bucket | object> | undefined {
-    const match = /bucket:(.*?)$/g.exec(uri);
-    if (match) {
-      return this.bucketService.findOne({_id: new ObjectId(match[1])}).then(async schema => {
+    try {
+      return this.bucketService.findOne({_id: new ObjectId(uri)}).then(async schema => {
         const prefs = await this.bucketService.getPreferences();
         if (schema) {
           schema["$schema"] = "http://spica.internal/bucket/schema";
-          schema["$id"] = `bucket:${schema._id}`;
           // @ts-ignore
-          schema["_id"] = String(schema._id);
+          schema["_id"] = schema["$id"] = String(schema._id);
           // TODO(thesayyn): Accomplish the same behavior with custom keywords
           schema["properties"] = Object.keys(schema["properties"]).reduce(
             (accumulator, key) => {
@@ -44,7 +41,7 @@ export class BucketSchemaResolver {
         }
         return schema || {type: true};
       });
-    }
+    } catch {}
   }
 }
 

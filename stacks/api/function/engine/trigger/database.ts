@@ -1,6 +1,6 @@
-import {ChangeStream, DatabaseModule, DatabaseService} from "@spica-server/database";
 import {Logger, Module} from "@nestjs/common";
-import {InvokerFn, Target, Trigger, TriggerSchema} from "./base";
+import {ChangeStream, DatabaseModule, DatabaseService} from "@spica-server/database";
+import {Info, InvokerFn, Target, Trigger, TriggerSchema} from "./base";
 
 interface DatabaseTriggerOptions {
   collection: string;
@@ -77,6 +77,15 @@ export class DatabaseTrigger implements Trigger<DatabaseTriggerOptions> {
         `Deregistered ${target.id}.${target.handler} from the collection {${options.collection}, ${options.type}}`
       );
     }
+  }
+
+  info(options: DatabaseTriggerOptions) {
+    const info: Info = {
+      icon: "view_agenda",
+      text: `${options.type}: collection.${options.collection}`,
+      type: "label"
+    };
+    return Promise.resolve([info]);
   }
 }
 

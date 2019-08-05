@@ -5,6 +5,7 @@ export interface Bucket {
   _id?: string;
   primary: string;
   title?: string;
+  order?: number;
   icon?: string;
   description?: string;
   required?: string[];

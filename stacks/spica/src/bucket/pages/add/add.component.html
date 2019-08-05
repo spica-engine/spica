@@ -35,6 +35,9 @@
         (click)="revert(history._id); $event.stopPropagation()"
         [matTooltip]="history.date | date: 'MMM d y, h:mm:ss a'"
         matTooltipPosition="before"
+        [matBadge]="history.changes"
+        matBadgeColor="warn"
+        matBadgeSize="small"
       >
         {{ index + 1 }}
       </button>
@@ -44,7 +47,7 @@
 
 <mat-card *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25">
   <mat-card-content>
-    <form #form="ngForm">
+    <form class="block-form" #form="ngForm">
       <div *ngFor="let layout of layouts" [class]="layout">
         <ng-container *ngFor="let propertyKv of bucket['positioned'][layout]">
           <div
@@ -52,7 +55,7 @@
             [inputPlacer]="propertyKv.value"
             class="property-translate"
             [disabled]="propertyKv.value.readOnly || !language.selected"
-            [required]="bucket.required?.indexOf(propertyKv.key) > -1"
+            [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
             [(ngModel)]="data[propertyKv.key][language.selected]"
           >
@@ -62,7 +65,7 @@
             *ngIf="!propertyKv.value.options.translate"
             [inputPlacer]="propertyKv.value"
             [disabled]="propertyKv.value.readOnly"
-            [required]="bucket.required?.indexOf(propertyKv.key) > -1"
+            [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
             [(ngModel)]="data[propertyKv.key]"
           ></div>

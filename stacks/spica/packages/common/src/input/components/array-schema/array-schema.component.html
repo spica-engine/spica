@@ -1,4 +1,55 @@
 <input-schema-placer
   [inputSchemaPlacer]="schema.items['type']"
   [(ngModel)]="schema.items"
-></input-schema-placer>
+  (ngModelChange)="getOrigin()"
+>
+  <button
+    *ngIf="origin == 'string' || origin == 'number' || origin == 'boolean'"
+    mat-icon-button
+    color="primary"
+    [matMenuTriggerFor]="validatorsMenu"
+  >
+    <mat-icon>settings</mat-icon>
+    <mat-menu #validatorsMenu class="mat-elevation-z25 validators">
+      <div
+        mat-menu-item
+        role="menuitemcheckbox"
+        disableRipple
+        (click)="$event.stopImmediatePropagation()"
+      >
+        <mat-checkbox [(ngModel)]="schema.uniqueItems">
+          Unique Items
+        </mat-checkbox>
+        <button
+          mat-icon-button
+          mat-flat-button
+          matTooltip="Whether all items must be different from each other."
+        >
+          <mat-icon>info</mat-icon>
+        </button>
+      </div>
+
+      <div mat-menu-item role="menuitem" disableRipple (click)="$event.stopImmediatePropagation()">
+        <mat-form-field>
+          <input matInput placeholder="Minimum items" [(ngModel)]="schema.minItems" />
+        </mat-form-field>
+        <button mat-icon-button mat-flat-button matTooltip="Minimum required item count.">
+          <mat-icon>info</mat-icon>
+        </button>
+      </div>
+
+      <div mat-menu-item role="menuitem" disableRipple (click)="$event.stopImmediatePropagation()">
+        <mat-form-field>
+          <input matInput placeholder="Maximum items" [(ngModel)]="schema.maxItems" />
+        </mat-form-field>
+        <button
+          mat-icon-button
+          mat-flat-button
+          matTooltip="Maximum item count that this array can have."
+        >
+          <mat-icon>info</mat-icon>
+        </button>
+      </div>
+    </mat-menu>
+  </button>
+</input-schema-placer>

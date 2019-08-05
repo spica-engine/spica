@@ -1,4 +1,55 @@
 :host {
+  .drag-list {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .drag-list li {
+    display: table-cell;
+    padding: 4px;
+  }
+
+  .drag-container {
+    margin-top: 40px;
+    margin-left: 30px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .drag-box {
+    cursor: move;
+    transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
+    box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+      0 1px 5px 0 rgba(0, 0, 0, 0.12);
+  }
+
+  .drag-box:active {
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
+      0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    opacity: 0.6;
+  }
+
+  .cdk-drop-list {
+    display: flex;
+    padding-right: 10px;
+    padding-bottom: 10px;
+  }
+
+  .cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 4px;
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
+      0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0.3;
+  }
+
+  .cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+
   mat-toolbar {
     padding: 0 30px;
     align-items: flex-start;
@@ -13,29 +64,27 @@
     }
   }
 
-  mat-grid-list {
-    margin-left: 30px;
-    margin-right: 30px;
-    mat-grid-tile {
-      mat-card {
-        width: 250px;
-        margin: 5px;
-        float: left;
-        user-select: none;
-        mat-card-title {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          text-transform: capitalize;
-          font-size: 20px;
-          display: inline-flex;
-          justify-content: center;
-          align-items: center;
-          .space-between {
-            flex: 1 1 auto;
-          }
-        }
+  mat-card {
+    width: 280px;
+    height: 180px;
+    float: left;
+    user-select: none;
+    mat-card-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-transform: capitalize;
+      font-size: 20px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      .space-between {
+        flex: 1 1 auto;
       }
+    }
+    .mat-card-actions {
+      position: absolute;
+      bottom: 10px;
     }
   }
 }

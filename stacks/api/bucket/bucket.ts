@@ -11,6 +11,7 @@ export interface Bucket {
   properties?: {
     [key: string]: JSONSchema7 & PropertyOptions;
   };
+  order?: number;
 }
 
 interface PropertyOptions {
@@ -23,7 +24,7 @@ interface PropertyOptions {
   };
 }
 
-export interface BucketEntry {
+export interface BucketDocument {
   _id?: ObjectId;
   [key: string]: any | undefined;
 }

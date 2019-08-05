@@ -14,36 +14,26 @@
       }
     }
   }
+  mat-header-cell.action,
+  mat-cell.action {
+    max-width: 150px;
+    justify-content: flex-end;
+  }
+
   mat-card {
     margin: 30px;
     margin-top: -110px;
-    // For proper border radius
     overflow: hidden;
-  }
-  mat-cell:last-of-type,
-  mat-header-cell:last-of-type {
-    justify-content: flex-end;
-    display: inline-flex;
-  }
-  .id-header,
-  .id-content {
-    text-align: left;
-    padding-right: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .id-header,
-  .id-content,
-  .name-header,
-  .name-content,
-  .description-header,
-  .description-content {
-    flex: 3;
-    text-align: left;
-  }
-  .actions-header,
-  .actions-content {
-    flex: 3;
+
+    mat-card-content {
+      mat-table {
+        mat-header-cell.info,
+        mat-cell.info,
+        mat-header-cell.name,
+        mat-cell.name {
+          justify-content: center;
+        }
+      }
+    }
   }
 }

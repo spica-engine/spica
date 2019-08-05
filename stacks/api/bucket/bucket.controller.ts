@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Res,
+  Put,
   UseGuards
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
@@ -18,7 +19,7 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {Bucket, BucketEntry, ImportFile} from "./bucket";
+import {Bucket, BucketDocument, ImportFile} from "./bucket";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketService} from "./bucket.service";
 
@@ -59,6 +60,17 @@ export class BucketController {
     return this.bs.replaceOne(bucket).then(() => bucket);
   }
 
+  @Put()
+  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  updateMany(@Body(Schema.validate("http://spica.internal/buckets/schema")) buckets: Bucket[]) {
+    return Promise.all(
+      buckets.map(bucket => {
+        bucket._id = new ObjectId(bucket._id);
+        return this.bs.updateOne(bucket);
+      })
+    );
+  }
+
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
   async show(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -78,7 +90,7 @@ export class BucketController {
     try {
       const result = {skippedDueToDuplication: 0, insertedToBucketCollection: 0};
       // TODO(tolga): Validate each row before adding them.
-      const dataArray = JSON.parse(file.content.data.toString()) as Array<BucketEntry>;
+      const dataArray = JSON.parse(file.content.data.toString()) as Array<BucketDocument>;
       for (let data of dataArray) {
         data._id = new ObjectId(data._id);
         await this.bds.insertOne(bucketId, data).then(
@@ -92,6 +104,31 @@ export class BucketController {
           }
         );
       }
+
+      return result;
+    } catch (error) {
+      throw new HttpException("Invalid JSON", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post("import-schema")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:add"))
+  async importSchema(@Body() file: ImportFile) {
+    try {
+      const result = {skippedDueToDuplication: 0, insertedToBucket: 0};
+      const data = JSON.parse(file.content.data.toString());
+
+      data._id = new ObjectId(data._id);
+      await this.bs.insertOne(data).then(
+        () => {
+          result.insertedToBucket = result.insertedToBucket + 1;
+        },
+        (err: MongoError) => {
+          if (err.code == 11000) {
+            result.skippedDueToDuplication = result.skippedDueToDuplication + 1;
+          }
+        }
+      );
 
       return result;
     } catch (error) {
@@ -141,6 +178,45 @@ export class BucketController {
         const stringifiedData = JSON.stringify(data);
         archive.append(stringifiedData, {name: `${id}.json`});
       }
+    }
+
+    await archive.finalize();
+
+    res.writeHead(200, {
+      "Content-Type": "application/json"
+    });
+
+    fs.createReadStream(`${path}/${archiveName}.zip`)
+      .pipe(res)
+      .on("finish", function() {
+        fs.unlinkSync(`${path}/${archiveName}.zip`);
+      });
+  }
+
+  @Post("export-schema")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
+  async exportSchema(@Body() bucketIds: Array<string>, @Res() res) {
+    const path = "./temp";
+    const archiveName = Math.random()
+      .toString(36)
+      .substr(2, 9);
+
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path);
+    }
+
+    const archive = archiver("zip", {
+      zlib: {level: -1}
+    });
+    const outputArch = fs.createWriteStream(`${path}/${archiveName}.zip`);
+
+    archive.pipe(outputArch);
+
+    for (let id of bucketIds) {
+      const bucket = await this.bs.findOne({_id: new ObjectId(id)});
+
+      const stringifiedData = JSON.stringify(bucket);
+      archive.append(stringifiedData, {name: `${id}.json`});
     }
 
     await archive.finalize();

@@ -26,16 +26,29 @@ export class ImportExportComponent implements OnInit {
   }
 
   export(bucketIds: Array<string>): void {
-    this.bucketService.exportData(bucketIds).subscribe(data => {
-      console.log(data);
-      saveAs(data, `export.zip`);
-    });
+    this.bucketService
+      .exportData(bucketIds)
+      .toPromise()
+      .then(data => {
+        saveAs(data, `export.zip`);
+      });
   }
 
   import(file: File, bucketId: string): void {
-    this.bucketService.importData(file, bucketId).subscribe(console.log);
+    this.bucketService.importData(file, bucketId).toPromise();
   }
 
+  exportSchema(bucketIds: Array<string>) {
+    this.bucketService
+      .exportSchema(bucketIds)
+      .toPromise()
+      .then(data => {
+        saveAs(data, `export.zip`);
+      });
+  }
+  importSchema(file: File) {
+    this.bucketService.importSchema(file).toPromise();
+  }
   // create(templateId: string): void {
   //   this.bucketService
   //     .createFromTemplate(this.templates[templateId])

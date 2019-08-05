@@ -17,15 +17,12 @@ spec:
           imagePullPolicy: Always
       containers:
         - name: mongo
-          image: mongo
+          image: mongo:4.2-rc
           command:
             - mongod
             - "--replSet"
             - rs0
-            - "--bind_ip"
-            - 0.0.0.0
-            - "--smallfiles"
-            - "--noprealloc"
+            - "--bind_ip_all"
           ports:
             - containerPort: 27017
           volumeMounts:
@@ -45,9 +42,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongo
-  annotations:
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: true
 spec:
+  publishNotReadyAddresses: true
   ports:
     - port: 27017
       targetPort: 27017

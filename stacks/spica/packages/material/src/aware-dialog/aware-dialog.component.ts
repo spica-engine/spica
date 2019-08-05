@@ -1,6 +1,5 @@
-import {Component, ElementRef, Inject, TemplateRef, ViewChild} from "@angular/core";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-
+import {Component, Inject, TemplateRef} from "@angular/core";
+import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {MatAwareDialogOptions} from "./options";
 
 @Component({
@@ -9,8 +8,6 @@ import {MatAwareDialogOptions} from "./options";
   styleUrls: ["./aware-dialog.component.scss"]
 })
 export class MatAwareDialogComponent {
-  @ViewChild("confirmButton", {read: ElementRef, static: true}) confirmButton: ElementRef;
-
   constructor(
     @Inject(MAT_DIALOG_DATA) public options: MatAwareDialogOptions,
     public ref: MatDialogRef<MatAwareDialogComponent>

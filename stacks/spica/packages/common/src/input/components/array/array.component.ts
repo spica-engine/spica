@@ -1,4 +1,4 @@
-import {Component, forwardRef, HostListener, Inject} from "@angular/core";
+import {Component, forwardRef, HostListener, Inject, ViewChild} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 import {InputResolver} from "../../input.resolver";
@@ -15,6 +15,8 @@ export class ArrayComponent implements ControlValueAccessor {
   _onTouchedFn: any;
   _activeIndex: number;
 
+  @ViewChild("arrayForm", {static: true}) form;
+
   constructor(
     @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
     private resolver: InputResolver
@@ -28,13 +30,16 @@ export class ArrayComponent implements ControlValueAccessor {
 
   removeItem() {
     this._values.splice(this._activeIndex, 1);
-    this._activeIndex =
-      this._activeIndex - 1 == -1
-        ? this._values.length > 0
-          ? this._activeIndex
-          : undefined
-        : this._activeIndex - 1;
     this.callOnChange();
+    setTimeout(
+      () =>
+        (this._activeIndex =
+          this._activeIndex - 1 == -1
+            ? this._values.length > 0
+              ? this._activeIndex
+              : undefined
+            : this._activeIndex - 1)
+    );
   }
 
   @HostListener("click")

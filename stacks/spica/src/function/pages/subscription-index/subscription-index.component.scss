@@ -1,4 +1,9 @@
 :host {
+  mat-header-cell.action,
+  mat-cell.action {
+    max-width: 150px;
+    justify-content: flex-end;
+  }
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;

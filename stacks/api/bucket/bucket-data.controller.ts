@@ -4,277 +4,56 @@ import {
   Delete,
   Get,
   Headers,
-  HttpException,
-  HttpStatus,
+  InternalServerErrorException,
   NotFoundException,
   Param,
   Post,
   Query,
   UseGuards
 } from "@nestjs/common";
-import {BOOLEAN, JSONP, NUMBER, JSONPV} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {FilterQuery, OBJECT_ID, ObjectId} from "@spica-server/database";
+import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
-import {BucketEntry} from "./bucket";
+import {BucketDocument} from "./bucket";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {BucketService} from "./bucket.service";
 
-@Controller("bucket/:bid/data")
+@Controller("bucket/:bucketId/data")
 export class BucketDataController {
   constructor(private bs: BucketService, private bds: BucketDataService) {}
 
-  @Get()
-  async find(
-    @Headers("accept-language") acceptedLanguage: string,
-    @Param("bid", OBJECT_ID) bid: ObjectId,
-    @Query("prune", BOOLEAN) prune: boolean = false,
-    @Query("filter", JSONPV((key, value) => (key === "$lookup" ? undefined : value)))
-    filter: FilterQuery<any>,
-    @Query("limit", NUMBER) limit?: number,
-    @Query("skip", NUMBER) skip?: number,
-    @Query("sort", JSONP) sort?: object
-  ) {
-    limit = limit || 10;
-    const schema = await this.bs.findOne({_id: bid});
-
+  private async getLanguage(language: string) {
     const bucketSettings = await this.bs.getPreferences();
-
-    if (!schema) {
-      throw new HttpException(`Bucket can not found.`, HttpStatus.BAD_REQUEST);
-    }
-
-    const aggregation = [];
 
     const supportedLocales = new locale.Locales(
       bucketSettings.language.supported_languages.map(lang => lang.code)
     );
-    const locales = new locale.Locales(acceptedLanguage);
+    const locales = new locale.Locales(language);
     const bestLocale = locales.best(supportedLocales);
 
-    const chosenLocale =
+    const best =
       bestLocale && !bestLocale.defaulted
         ? bestLocale.normalized
         : bucketSettings.language.default.code;
 
-    const fallbackLocale = bucketSettings.language.default.code;
+    const fallback = bucketSettings.language.default.code;
 
-    aggregation.unshift({
-      $replaceRoot: {newRoot: this.buildI18nAggregation("$$ROOT", chosenLocale, fallbackLocale)}
-    });
-
-    for (const propertyKey in schema.properties) {
-      const property = schema.properties[propertyKey];
-      if (property.type == "relation") {
-        aggregation.push(
-          {
-            $addFields: {
-              [propertyKey]: {
-                $convert: {
-                  input: `$${propertyKey}`,
-                  to: "objectId",
-                  onError: "Could not convert to objectId.",
-                  onNull: null
-                }
-              }
-            }
-          },
-          {
-            $lookup: {
-              from: getBucketDataCollection(property["bucket"]),
-              localField: propertyKey,
-              foreignField: "_id",
-              as: propertyKey
-            }
-          },
-          {
-            $addFields: {
-              [propertyKey]: {
-                $cond: {
-                  if: {
-                    $eq: [{$size: `$${propertyKey}`}, 1]
-                  },
-                  then: this.buildI18nAggregation(
-                    {$arrayElemAt: [`$${propertyKey}`, 0]},
-                    chosenLocale,
-                    fallbackLocale
-                  ),
-                  else: undefined
-                }
-              }
-            }
-          },
-          {
-            $addFields: {
-              [`${propertyKey}._id`]: {
-                $toString: `$${propertyKey}._id`
-              }
-            }
-          },
-          {
-            $unwind: {
-              path: `$${propertyKey}`,
-              preserveNullAndEmptyArrays: true
-            }
-          }
-        );
-      }
-    }
-
-    if (sort) {
-      aggregation.push({
-        $sort: sort
-      });
-    }
-
-    if (filter) {
-      aggregation.push({
-        $addFields: {
-          _id: {
-            $toString: `$_id`
-          }
-        }
-      });
-      filter instanceof Array ? aggregation.push(...filter) : aggregation.push(filter);
-    }
-
-    aggregation.push(
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: [{$skip: skip}, {$limit: limit}]
-        }
-      },
-      {
-        $project: {
-          meta: {$arrayElemAt: ["$meta", 0]},
-          data: "$data"
-        }
-      }
-    );
-
-    return this.bds
-      .find(bid, prune ? [] : aggregation)
-      .then(([row]) => (row ? row : new NotFoundException("Cannot found.")));
+    return {best, fallback};
   }
 
-  @Get(":id")
-  async findOne(
-    @Headers("accept-language") acceptedLanguage: string,
-    @Param("bid", OBJECT_ID) bid: ObjectId,
-    @Query("prune") prune: boolean = false,
-    @Param("id", OBJECT_ID) id: ObjectId
-  ) {
-    const schema = await this.bs.findOne({_id: bid});
-
-    const bucketSettings = await this.bs.getPreferences();
-
-    if (!schema) {
-      throw new HttpException(`Bucket can not found.`, HttpStatus.BAD_REQUEST);
-    }
-
-    const aggregation = [];
-
-    // TODO(tolga, thesayyn): aggregate relation locale also.
-    const supportedLocales = new locale.Locales(
-      bucketSettings.language.supported_languages.map(lang => lang.code)
-    );
-    const locales = new locale.Locales(acceptedLanguage);
-    const bestLocale = locales.best(supportedLocales);
-
-    const chosenLocale =
-      bestLocale && !bestLocale.defaulted
-        ? bestLocale.normalized
-        : bucketSettings.language.default.code;
-
-    const fallbackLocale = bucketSettings.language.default.code;
-
-    const constAggregation = {
-      $match: {
-        _id: id
-      }
-    };
-
-    aggregation.unshift({
-      $replaceRoot: {newRoot: this.buildI18nAggregation("$$ROOT", chosenLocale, fallbackLocale)}
-    });
-
-    aggregation.unshift(constAggregation);
-
-    for (const propertyKey in schema.properties) {
-      const property = schema.properties[propertyKey];
-      if (property.type == "relation") {
-        aggregation.push(
-          {
-            $addFields: {
-              [propertyKey]: {
-                $convert: {
-                  input: `$${propertyKey}`,
-                  to: "objectId",
-                  onError: "Could not convert to objectId.",
-                  onNull: null
-                }
-              }
-            }
-          },
-          {
-            $lookup: {
-              from: getBucketDataCollection(property["bucket"]),
-              localField: propertyKey,
-              foreignField: "_id",
-              as: propertyKey
-            }
-          },
-          {
-            $addFields: {
-              [propertyKey]: {
-                $cond: {
-                  if: {
-                    $eq: [{$size: `$${propertyKey}`}, 1]
-                  },
-                  then: this.buildI18nAggregation(
-                    {$arrayElemAt: [`$${propertyKey}`, 0]},
-                    chosenLocale,
-                    fallbackLocale
-                  ),
-                  else: undefined
-                }
-              }
-            }
-          },
-          {
-            $addFields: {
-              [`${propertyKey}._id`]: {
-                $toString: `$${propertyKey}._id`
-              }
-            }
-          },
-          {
-            $unwind: {
-              path: `$${propertyKey}`,
-              preserveNullAndEmptyArrays: true
-            }
-          }
-        );
-      }
-    }
-    return this.bds
-      .find(bid, prune ? [constAggregation] : aggregation)
-      .then(([row]) => (row ? row : new NotFoundException("Cannot found.")));
-  }
-
-  buildI18nAggregation(field: any, locale: string, fallback: string) {
+  private buildI18nAggregation(property: any, locale: string, fallback: string) {
     return {
       $mergeObjects: [
-        field,
+        property,
         {
           $arrayToObject: {
             $map: {
               input: {
                 $filter: {
                   input: {
-                    $objectToArray: field
+                    $objectToArray: property
                   },
                   as: "item",
                   cond: {
@@ -306,24 +85,172 @@ export class BucketDataController {
     };
   }
 
+  private buildRelationAggreation(
+    property: string,
+    bucketId: string,
+    locale: {best: string; fallback: string}
+  ) {
+    return [
+      {
+        $lookup: {
+          from: getBucketDataCollection(bucketId),
+          let: {
+            documentId: {
+              $convert: {
+                input: `$${property}`,
+                to: "objectId"
+              }
+            }
+          },
+          pipeline: [
+            {$match: {$expr: {_id: "$$documentId"}}},
+            {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+            {$set: {_id: {$toString: "$_id"}}}
+          ],
+          as: property
+        }
+      },
+      {$unwind: `$${property}`}
+    ];
+  }
+
+  @Get()
+  async find(
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Headers("accept-language") acceptedLanguage: string,
+    @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false,
+    @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
+    @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
+    @Query("filter", JSONP) filter: FilterQuery<BucketDocument>,
+    @Query("limit", NUMBER) limit: number,
+    @Query("skip", NUMBER) skip: number,
+    @Query("sort", JSONP) sort: object
+  ) {
+    const aggregation = [];
+
+    if (localize) {
+      const locale = await this.getLanguage(acceptedLanguage);
+
+      aggregation.unshift({
+        $replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+      });
+    }
+
+    if (relation) {
+      const schema = await this.bs.findOne({_id: bucketId});
+      for (const propertyKey in schema.properties) {
+        const property = schema.properties[propertyKey];
+        if (property.type == "relation") {
+          aggregation.push(
+            ...this.buildRelationAggreation(propertyKey, property["bucket"], locale)
+          );
+        }
+      }
+    }
+
+    if (typeof filter == "object") {
+      aggregation.push({
+        $set: {
+          _id: {
+            $toString: `$_id`
+          }
+        }
+      });
+
+      aggregation.push({$match: filter});
+    }
+
+    if (sort) {
+      aggregation.push({
+        $sort: sort
+      });
+    }
+
+    if (skip) {
+      aggregation.push({$skip: skip});
+    }
+
+    if (limit) {
+      aggregation.push({$limit: limit});
+    }
+
+    const documents = await this.bds
+      .find(bucketId, aggregation)
+      .catch((error: MongoError) =>
+        Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
+      );
+
+    return paginate != false
+      ? {meta: {total: await this.bds.documentCount(bucketId)}, data: await documents}
+      : documents;
+  }
+
+  @Get(":documentId")
+  async findOne(
+    @Headers("accept-language") acceptedLanguage: string,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
+    @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false
+  ) {
+    const aggregation = [];
+
+    aggregation.push({
+      $match: {
+        _id: documentId
+      }
+    });
+
+    if (localize) {
+      const locale = await this.getLanguage(acceptedLanguage);
+
+      aggregation.unshift({
+        $replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+      });
+    }
+
+    if (relation) {
+      const schema = await this.bs.findOne({_id: bucketId});
+      for (const propertyKey in schema.properties) {
+        const property = schema.properties[propertyKey];
+        if (property.type == "relation") {
+          aggregation.push(
+            ...this.buildRelationAggreation(propertyKey, property["bucket"], locale)
+          );
+        }
+      }
+    }
+
+    const [document] = await this.bds.find(bucketId, aggregation);
+
+    if (!document) {
+      throw new NotFoundException(`${documentId} could not be found.`);
+    }
+
+    return document;
+  }
+
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   replaceOne(
-    @Param("bid", OBJECT_ID) bid: ObjectId,
-    @Body(Schema.validate(req => `bucket:${req.params.bid}`)) body: BucketEntry
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    return this.bds.replaceOne(bid, body).then(() => null);
+    return this.bds.replaceOne(bucketId, body).then(() => null);
   }
 
-  @Delete(":id")
+  @Delete(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteOne(@Param("bid", OBJECT_ID) bid: ObjectId, @Param("id", OBJECT_ID) id: ObjectId) {
-    return this.bds.deleteOne(bid, {_id: id});
+  deleteOne(
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId
+  ) {
+    return this.bds.deleteOne(bucketId, {_id: documentId});
   }
 
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteMany(@Param("bid", OBJECT_ID) bid: ObjectId, @Body() body) {
-    return this.bds.deleteMany(bid, body);
+  deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
+    return this.bds.deleteMany(bucketId, body);
   }
 }

@@ -4,7 +4,7 @@
       <form #detailsForm="ngForm" class="details-form">
         <div identifierContainer>
           <mat-error *ngIf="error?.error">{{ error.error.message }}</mat-error>
-          <mat-form-field class="details-field">
+          <mat-form-field>
             <input
               matInput
               name="identifier"
@@ -23,7 +23,7 @@
           >
             Change Password
           </button>
-          <mat-form-field class="details-field" *ngIf="!identity._id || changePasswordState">
+          <mat-form-field *ngIf="!identity._id || changePasswordState">
             <input
               matInput
               name="password"

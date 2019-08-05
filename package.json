@@ -44,6 +44,7 @@
     "bson": "^4.0.1",
     "color-name-list": "^3.75.0",
     "cron": "^1.7.1",
+    "cronstrue": "^1.81.0",
     "css-tree": "^1.0.0-alpha.29",
     "deep-diff": "^1.0.2",
     "diff-match-patch": "^1.0.4",

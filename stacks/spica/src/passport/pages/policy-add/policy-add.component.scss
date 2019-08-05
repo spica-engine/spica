@@ -2,6 +2,7 @@
   mat-card {
     margin: 30px;
     overflow: hidden;
+    padding: 25px;
   }
   mat-form-field {
     width: 100%;
@@ -11,5 +12,9 @@
   }
   .resource-input {
     padding-left: 5px;
+  }
+
+  mat-expansion-panel {
+    margin-top: 10px;
   }
 }

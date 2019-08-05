@@ -4,7 +4,7 @@
     <span>Functions</span>
   </h4>
   <span class="space-between"></span>
-  <button mat-icon-button>
+  <button mat-icon-button (click)="refresh()">
     <mat-icon>refresh</mat-icon>
   </button>
   <button canInteract="function:create" mat-icon-button routerLink="add">
@@ -15,25 +15,57 @@
   <mat-card-content>
     <mat-table [dataSource]="$data">
       <ng-container matColumnDef="_id">
-        <mat-header-cell class="id-header" *matHeaderCellDef> # </mat-header-cell>
-        <mat-cell class="id-content" *matCellDef="let element">{{ element._id }}</mat-cell>
+        <mat-header-cell *matHeaderCellDef> Id </mat-header-cell>
+        <mat-cell *matCellDef="let function">{{ function._id }}</mat-cell>
       </ng-container>
+
       <ng-container matColumnDef="name">
-        <mat-header-cell class="name-header" *matHeaderCellDef> Name </mat-header-cell>
-        <mat-cell class="name-content" *matCellDef="let element">{{ element.name }}</mat-cell>
+        <mat-header-cell class="name" *matHeaderCellDef> Name </mat-header-cell>
+        <mat-cell class="name" *matCellDef="let function">{{ function.name }}</mat-cell>
       </ng-container>
+
       <ng-container matColumnDef="description">
-        <mat-header-cell class="description-header" *matHeaderCellDef>
+        <mat-header-cell *matHeaderCellDef>
           Description
         </mat-header-cell>
-        <mat-cell class="description-content" *matCellDef="let element">{{
-          element.description
-        }}</mat-cell>
+        <mat-cell *matCellDef="let function">
+          {{ function.description }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="info">
+        <mat-header-cell class="info" *matHeaderCellDef>
+          Info
+        </mat-header-cell>
+        <mat-cell class="info" *matCellDef="let function">
+          <ng-container *ngFor="let infoKv of function.info | keyvalue">
+            <ng-container *ngFor="let info of infoKv.value">
+              <a
+                *ngIf="info.type == 'url'"
+                mat-icon-button
+                mat-flat-button
+                [attr.href]="info.url"
+                target="_blank"
+                [matTooltip]="info.text"
+              >
+                <mat-icon>{{ info.icon }}</mat-icon>
+              </a>
+              <button
+                *ngIf="info.type == 'label'"
+                mat-icon-button
+                mat-flat-button
+                [matTooltip]="info.text"
+              >
+                <mat-icon>{{ info.icon }}</mat-icon>
+              </button>
+            </ng-container>
+          </ng-container>
+        </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <mat-header-cell class="actions-header" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="actions-content" *matCellDef="let function">
+        <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell class="action" *matCellDef="let function">
           <button
             canInteract="function:update"
             mat-icon-button
@@ -66,10 +98,6 @@
       <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
     </mat-table>
   </mat-card-content>
-
-  <mat-card-footer>
-    <mat-paginator #paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
-  </mat-card-footer>
 </mat-card>
 
 <ng-template #dialogTemplate let-answer="answer">
