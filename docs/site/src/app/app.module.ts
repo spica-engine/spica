@@ -27,6 +27,10 @@ import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
 import {DocsComponent} from "./pages/docs/docs.component";
 import {HomeComponent} from "./pages/home/home.component";
 import {InlineSVGModule} from "ng-inline-svg";
+import {HomeSectionComponent} from "./components/home-section/home-section.component";
+import {FeaturesComponent} from "./pages/features/features.component";
+import {HeaderComponent} from "./components/header/header.component";
+import {FooterComponent} from "./components/footer/footer.component";
 
 @NgModule({
   imports: [
@@ -58,7 +62,11 @@ import {InlineSVGModule} from "ng-inline-svg";
     FragmentLinkComponent,
     DocsLayoutComponent,
     TocComponent,
-    DocCardComponent
+    DocCardComponent,
+    HomeSectionComponent,
+    FeaturesComponent,
+    HeaderComponent,
+    FooterComponent
   ],
   entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent],
   providers: [],

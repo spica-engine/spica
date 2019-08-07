@@ -4,7 +4,6 @@ load("//tools/dgeni:index.bzl", "docs")
 
 docs(
     name = "content",
-    srcs = ["index.md"],
     data = [
         "//docs/content/concept",
         "//docs/content/guide",

@@ -5,12 +5,6 @@ import {Component} from "@angular/core";
   template: `
     <router-outlet></router-outlet>
   `,
-  styles: [
-    `
-      :host {
-        display: block;
-      }
-    `
-  ]
+  styles: []
 })
 export class AppComponent {}

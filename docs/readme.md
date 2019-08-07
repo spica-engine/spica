@@ -32,3 +32,10 @@ Example links;
 http://localhost:4200/assets/docs/content/doc-list.json # Generated Concept & Guide docs
 http://localhost:4200/assets/docs/api/doc-list.json # Generated API docs
 ```
+
+
+### Publishing the site (next)
+
+- Cd into site directory
+- Run `ng build --prod`
+- Run `BUILD_SCM_VERSION_OVERRIDE=next yarn bazel run //docs/site:deploy.apply --config=release`

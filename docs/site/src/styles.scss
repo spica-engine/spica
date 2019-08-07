@@ -114,9 +114,10 @@ $spica-app-theme: mat-light-theme($spica-app-primary, $spica-app-accent, $spica-
 body {
   margin: 0;
   font-family: "Ubuntu", sans-serif;
-  font-weight: 100;
   box-sizing: border-box;
-  font-size: 15px;
   text-size-adjust: none;
   -webkit-font-smoothing: antialiased;
+  color: white;
+  overflow-x: hidden;
+  //font-size: calc(1em + 1vw)
 }

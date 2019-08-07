@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  background-image: url("../../../assets/images/footer.svg");
+  background-size: cover;
+  padding-top: 250px;
+
+  nav {
+    padding-bottom: 150px;
+    max-width: 90%;
+    margin: auto;
+    ul {
+      padding-left: 0;
+      list-style-type: none;
+      h1 {
+        //font-size: 2rem;
+        font-weight: 100;
+        &::after {
+          display: list-item;
+          content: "";
+          height: 2px;
+          background: #15bde8;
+          margin-top: 10px;
+        }
+      }
+      li {
+        margin-top: 20px;
+      }
+    }
+  }
+  footer {
+    padding: 5px 12%;
+    background: #fff;
+    color: #1c1c50;
+    font-weight: 100;
+    p {
+      text-align: center;
+      span {
+        color: #15bde8;
+      }
+    }
+    ul {
+      list-style-type: none;
+      display: flex;
+      justify-content: center;
+      padding-left: 0;
+      li {
+        margin-left: 15px;
+      }
+    }
+  }
+}

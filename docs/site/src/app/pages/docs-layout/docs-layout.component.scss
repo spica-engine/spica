@@ -1,46 +1,53 @@
 :host {
-  display: block;
-
-  header {
-    height: 50px;
-    z-index: 3;
-    position: relative;
-    padding: 0 10%;
-    box-shadow: rgba(2, 8, 20, 0.06) 0px 1px 3px, rgba(2, 8, 20, 0.04) 0px 1px 2px;
-    nav {
-      .logo {
-        img {
-          vertical-align: middle;
-          height: 25px;
-        }
-      }
-    }
+  app-header {
+    position: sticky;
+    min-height: 150px;
   }
 
   mat-sidenav-container {
-    background: unset;
-    height: calc(100vh - 50px);
+    max-width: 90%;
+    margin-left: 5%;
+    min-height: 95vh;
+    background: none;
+    color: #1c1c50;
+
+    &.handset {
+      max-width: unset;
+      margin-left: unset;
+      mat-sidenav {
+        background: #fff;
+      }
+    }
+
     mat-sidenav {
-      width: 250px;
+      background: none;
+      border-right: none;
       mat-nav-list {
         h6 {
           cursor: pointer;
           outline: 0;
           text-transform: uppercase;
+          color: #1c1c50;
+          font-weight: 700;
         }
         a.mat-list-item {
           height: 35px;
         }
 
         a.active {
-          background: #0000ff08;
-          border-left: 2px solid black;
+          background: #1c1c5008;
+          border-left: 2px solid #1c1c50;
         }
       }
     }
+
     mat-sidenav-content {
-      background: unset;
-      padding: 15px;
+      ::ng-deep {
+        app-doc,
+        app-doc-list {
+          flex: 1;
+        }
+      }
     }
   }
 }

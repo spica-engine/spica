@@ -5,6 +5,7 @@ import {DocComponent} from "./pages/doc/doc.component";
 import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
 import {DocsComponent} from "./pages/docs/docs.component";
 import {HomeComponent} from "./pages/home/home.component";
+import {FeaturesComponent} from "./pages/features/features.component";
 
 const routes: Routes = [
   {
@@ -36,6 +37,10 @@ const routes: Routes = [
         component: DocComponent
       }
     ]
+  },
+  {
+    path: "features",
+    component: FeaturesComponent
   }
 ];
 

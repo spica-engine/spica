@@ -1,25 +1,25 @@
 :host {
   display: block;
+  color: black;
 
   ::ng-deep div.doc-content {
     padding-bottom: 50px;
     padding-left: 4%;
-    padding-right: 4%;
+    padding-right: 8%;
     line-height: 2;
-    max-width: calc(92% - 150px);
 
     doc-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.35rem 1.35rem;
+      gap: 2rem 2rem;
     }
 
     a {
       text-decoration: none;
       color: rgb(28, 28, 80);
-      font-weight: 400;
+      font-weight: 700;
       &.external-link {
-        color: #ffa14b;
+        color: #1c1c50;
         &::after {
           content: "";
           background-image: url(../../../assets/icons/link.svg);
@@ -53,22 +53,17 @@
     }
 
     blockquote {
-      border-left: 3px solid #ffa14b;
+      border-left: 3px solid #1c1c50;
       padding-left: 15px;
     }
 
     pre code.hljs {
       padding: 1em;
-      font-size: 85%;
       font-weight: 700;
       font-family: Menlo, Courier, monospace;
     }
 
     doc-toc {
-      position: fixed;
-      right: 60px;
-      top: 82px;
-
       ul {
         padding-left: 8px;
         list-style-type: none;
@@ -76,6 +71,7 @@
           position: relative;
           padding: 0;
           a {
+            font-weight: 400;
             text-decoration: none;
             color: black;
           }
@@ -89,10 +85,6 @@
 
     article.api-doc {
       header {
-        h1.title,
-        label.type {
-          display: inline;
-        }
         label.type.controller {
           display: none;
         }
@@ -110,7 +102,6 @@
               border: 2px solid #383838;
               padding: 3px 15px;
               border-radius: 23px;
-              font-size: 85%;
             }
             span.path {
               margin-left: 6px;

@@ -1,0 +1,13 @@
+<section fxFlex.lt-md="80%">
+  <h1>{{ title }}</h1>
+  <h4>{{ description }}</h4>
+  <div
+    [fxLayout.lt-md]="fxLayoutLtMd"
+    [fxLayoutAlign.lt-md]="fxLayoutAlignMd"
+    [fxLayout.gt-sm]="fxLayoutGtSm"
+    [fxLayoutAlign.gt-sm]="fxLayoutAlignGtSm"
+  >
+    <ng-content></ng-content>
+  </div>
+</section>
+<ng-content select="footer"></ng-content>

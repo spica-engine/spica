@@ -1,0 +1,22 @@
+<nav fxLayout="row wrap" fxLayoutAlign="space-evenly center" fxLayoutGap.gt-md="45%">
+  <span>
+    <ng-content select="[slot=beforelogo]"></ng-content>
+    <img routerLink="/" src="assets/images/logo.svg" />
+  </span>
+
+  <ul>
+    <li mat-button routerLink="/features">
+      <span>Features</span>
+    </li>
+    <li mat-button [matMenuTriggerFor]="docsMenu">
+      Docs <mat-icon>arrow_drop_down</mat-icon>
+      <mat-menu #docsMenu="matMenu">
+        <button mat-menu-item routerLink="/docs/guide">Guides</button>
+        <button mat-menu-item routerLink="/docs/concept">Concept</button>
+        <button mat-menu-item routerLink="/docs/api">API</button>
+      </mat-menu>
+    </li>
+    <li mat-button>Feature</li>
+  </ul>
+</nav>
+<ng-content></ng-content>

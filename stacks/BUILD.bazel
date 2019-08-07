@@ -44,7 +44,7 @@ container_image(
         "//stacks/spica:nginx.conf",
     ],
     labels = {
-        "maintainer": "Spica maintainers <dev@spicanengine.com>",
+        "maintainer": "Spica maintainers <dev@spicaengine.com>",
     },
     legacy_run_behavior = False,
     stamp = True,

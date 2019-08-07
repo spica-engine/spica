@@ -54,11 +54,7 @@ ts_library(
 jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
-    coverage = True,
-    deps = [
-        "@npm//jasmine",
-        "@npm//source-map",
-    ],
+    coverage = True
 )
 
 docs(

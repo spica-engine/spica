@@ -25,7 +25,7 @@ ts_library(
 )
 
 ts_library(
-    name = "schema_test_lib",
+    name = "test_lib",
     testonly = True,
     srcs = glob(["*.spec.ts"]),
     tsconfig = "//:tsconfig.json",
@@ -39,9 +39,6 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "schema_test",
-    srcs = [":schema_test_lib"],
-    deps = [
-        "@npm//jasmine",
-    ],
+    name = "test",
+    srcs = [":test_lib"]
 )

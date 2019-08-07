@@ -1,0 +1,35 @@
+:host {
+  background-image: url("../../../assets/images/background.svg");
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  flex-flow: column;
+  justify-content: space-between;
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 40px;
+    span {
+      img {
+        height: 45px;
+        vertical-align: middle;
+      }
+    }
+
+    ul {
+      list-style-type: none;
+      display: flex;
+      padding-left: 0;
+      li {
+        margin-left: 25px;
+        & > * {
+          vertical-align: middle;
+        }
+      }
+      &[aria-expanded~="true"] {
+        color: #58bce4;
+      }
+    }
+  }
+}

@@ -1,8 +1,8 @@
 import {Component, OnInit} from "@angular/core";
 import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
 import {ActivatedRoute} from "@angular/router";
-import {merge, Observable} from "rxjs";
-import {delay, map, skip, switchMap, take, filter} from "rxjs/operators";
+import {Observable} from "rxjs";
+import {map, switchMap} from "rxjs/operators";
 import {DocService} from "../../services/doc.service";
 
 @Component({

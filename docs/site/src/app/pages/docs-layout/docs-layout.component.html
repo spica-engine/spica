@@ -1,29 +1,15 @@
-<header fxLayout="column" fxLayoutGap="20px" fxLayoutAlign="center">
-  <nav class="navbar" fxLayoutAlign="space-between center">
-    <div class="logo" fxFlex="0 0 50%">
-      <button mat-icon-button (click)="sidenav.toggle()">
-        <mat-icon>sort</mat-icon>
-      </button>
-      <img src="assets/images/docs-logo.svg" routerLink="/docs" />
-    </div>
-    <div class="navs" fxLayout="row" fxLayoutAlign="end center">
-      <button mat-button>Features</button>
-      <button mat-button [matMenuTriggerFor]="docsMenu">
-        Docs
-        <mat-menu #docsMenu="matMenu">
-          <button mat-menu-item routerLink="/docs/guide">
-            Guides
-          </button>
-          <button mat-menu-item routerLink="/docs/concept">Concept</button>
-          <button mat-menu-item routerLink="/docs/api">API</button>
-        </mat-menu>
-      </button>
-      <button mat-button>Feature</button>
-    </div>
-  </nav>
-</header>
-<mat-sidenav-container>
-  <mat-sidenav #sidenav mode="side" fixedInViewport fixedTopGap="50">
+<app-header>
+  <button slot="beforelogo" mat-icon-button fxHide.gt-md="true" (click)="drawer.toggle()">
+    <mat-icon>sort</mat-icon>
+  </button>
+</app-header>
+
+<mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
+  <mat-sidenav
+    #drawer
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="!(isHandset$ | async)"
+  >
     <mat-nav-list *ngFor="let contentDoc of ($contentDocs | async)?.children">
       <h6 mat-subheader [routerLink]="[contentDoc.name]" routerLinkActive="active">
         {{ contentDoc.name }}
@@ -37,7 +23,6 @@
         {{ subDoc.name }}
       </a>
     </mat-nav-list>
-
     <mat-nav-list>
       <h6 mat-subheader routerLink="api" routerLinkActive="active">API</h6>
       <a

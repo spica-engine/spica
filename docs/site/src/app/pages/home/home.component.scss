@@ -1,199 +1,173 @@
+@keyframes spica {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes shadow {
+  0% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleX(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+}
+
 :host {
-  color: white;
-  display: block;
-
-  .mat-raised-button {
-    color: white;
-    border-radius: 20px;
-  }
-
-  .accent {
-    color: #58bce4;
-  }
-
-  .space-back {
-    background-image: url("../../../assets/images/background.svg");
-    background-size: cover;
-  }
-
-  .font-light {
-    font-weight: 300;
-  }
-  .font-bold {
-    font-weight: bold;
-  }
-
-  .container {
-    padding: 30px 10%;
-    position: relative;
-  }
-
-  header {
-    position: relative;
-    .header-container {
-      min-height: 800px;
-      nav {
-        .logo {
-          height: 45px;
-          img {
-            height: 100%;
+  app-header {
+    .headline {
+      display: flex;
+      flex-flow: row;
+      justify-content: space-evenly;
+      div {
+        &:first-of-type {
+          h1 {
+            font-size: 4rem;
+            font-weight: 100;
+          }
+          p {
+            font-weight: 200;
+          }
+          .button-group {
+            max-width: 200px;
+            flex-flow: row;
+            display: flex;
+            justify-content: space-between;
           }
         }
-        button[aria-expanded~="true"] {
-          color: #58bce4;
-        }
-      }
-      .spica-logo {
-        width: 500px;
-        padding-left: 95px;
-        z-index: 1;
-      }
-    }
-
-    .header-wave {
-      ::ng-deep svg {
-        display: block;
-        fill: white;
-        bottom: 0;
-        position: absolute;
-      }
-    }
-  }
-
-  .headline {
-    padding: 70px 0;
-    color: white;
-    div {
-      padding: 10px;
-    }
-    .heading {
-      font-size: 5em;
-    }
-    .subheading {
-      font-size: 1.6em;
-    }
-  }
-
-  .head {
-    .title {
-      font-size: 4em;
-    }
-    .subtitle {
-      font-size: 1.5em;
-    }
-  }
-
-  .features-container {
-    background: white;
-    color: black;
-    .content {
-      div {
-        padding: 10px;
-        .feat-description {
-          text-align: center;
+        &:last-of-type {
+          display: flex;
+          flex-flow: column;
+          align-items: center;
+          z-index: 1;
+          transform: translateY(100px);
+          img.logo {
+            height: 400px;
+            animation-name: spica;
+            animation-duration: 1.3s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+          }
+          img.shadow {
+            margin-top: 5px;
+            width: 260px;
+            animation-name: shadow;
+            animation-duration: 1.3s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+          }
         }
       }
     }
-  }
 
-  .description {
-    .title {
-      font-size: 1.5em;
-    }
-    .subtitle {
-      font-size: 1.2em;
-    }
-  }
-
-  .divider-wave {
-    transform: scaleX(-1);
-    ::ng-deep svg {
-      display: block;
-      fill: #f2f1f0;
-    }
-  }
-
-  .discover-container {
-    color: black;
-    background-color: #f2f1f0;
-    .discover-content {
-      padding: 75px 0;
-      .discover-description {
-        padding: 20px;
-        div {
-          padding: 10px;
-        }
-      }
-    }
-  }
-
-  .line {
-    width: 10%;
-    margin: 10px;
-    height: 4px;
-    background-color: #58bce4;
-    border: 0 none;
-  }
-
-  .projects-container {
-    button {
-      font-size: 3em;
-      padding: 20px;
-      line-height: normal;
-    }
-  }
-
-  .for-container {
-    color: black;
-    div {
-      padding: 20px;
-    }
-  }
-
-  .newslatter-menu {
-    display: block;
     .wave {
       ::ng-deep svg {
-        height: 263px;
-        fill: white;
-        transform: scale(-1, -1);
         display: block;
+        fill: white;
       }
     }
-    .newslatter {
-      font-size: 1.3em;
-      text-align: end;
+  }
+
+  home-section.major-features {
+    div {
+      text-align: center;
+      min-width: 250px;
+      max-width: 350px;
+      padding: 10px;
+      img {
+        height: 150px;
+      }
+      p {
+        line-height: 2;
+      }
     }
-    .menu {
-      .menu-logo {
-        width: 50%;
+    footer {
+      ::ng-deep svg {
+        display: block;
+        fill: #f2f1f0;
       }
-      padding: 10% 0;
-      hr {
-        width: 100%;
-        height: 4px;
-        background-color: #58bce4;
-        border: 0 none;
-      }
-      .menu-title {
-        font-size: 2em;
-      }
-      .menu-items {
-        font-size: 1.5em;
-        .item {
-          padding-top: 10%;
+    }
+  }
+
+  home-section.discover {
+    background: #f2f1f0;
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+      li {
+        h2 {
+          font-weight: 400;
+          margin-bottom: 0;
+        }
+        p {
+          font-weight: 100;
         }
       }
     }
   }
 
-  footer {
+  section.projects {
+    background-image: url("../../../assets/images/background.svg");
     background-size: cover;
-    padding: 30px 10%;
-    color: black;
-    a {
-      text-decoration: none;
-      padding: 0 16px;
+    min-height: 350px;
+    padding: 5% 0;
+    span h1 {
+      font-size: 4rem;
+      font-weight: 400;
     }
+    p {
+      &::after {
+        margin-top: 20px;
+        display: block;
+        content: "";
+        height: 2px;
+        width: 75px;
+        background: #15bde8;
+      }
+    }
+  }
+
+  section.audience {
+    color: #1c1c50;
+    padding: 5% 0;
+    div {
+      max-width: 90%;
+      span {
+        p {
+          line-height: 2;
+          font-weight: 100;
+        }
+      }
+    }
+  }
+
+  home-section.description {
+    background-color: #f2f1f0;
+    img {
+      width: 350px;
+    }
+    ul {
+      padding-left: 0;
+      list-style-type: none;
+      li {
+        margin-top: 35px;
+      }
+    }
+  }
+
+  app-footer {
+    background-color: #f2f1f0;
   }
 }

@@ -13,8 +13,7 @@
     "url": "https://github.com/spica-engine/spica.git"
   },
   "workspaces": [
-    "stacks/*",
-    "docs/site"
+    "stacks/*"
   ],
   "scripts": {
     "docs": "bazel query 'kind('docs', //...)' --output label | xargs bazel build",
@@ -85,8 +84,8 @@
     "@bazel/bazel": "^0.27.0",
     "@bazel/buildifier": "^0.26.0",
     "@bazel/ibazel": "^0.10.3",
-    "@bazel/jasmine": "^0.31.1",
-    "@bazel/typescript": "^0.31.1",
+    "@bazel/jasmine": "^0.35.0",
+    "@bazel/typescript": "^0.35.0",
     "@nestjs/testing": "^6.3.0",
     "@types/archiver": "^3.0.0",
     "@types/css-tree": "^1.0.0",
@@ -102,7 +101,6 @@
     "conventional-changelog-cli": "^2.0.21",
     "dgeni": "^0.4.12",
     "dgeni-packages": "^0.27.3",
-    "jasmine": "^3.1.0",
     "mdast-util-toc": "^4.2.0",
     "prettier": "1.18.2",
     "remark": "^10.0.1",
