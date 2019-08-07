@@ -48,5 +48,5 @@ ts_library(
 
 jasmine_node_test(
     name = "test",
-    srcs = [":test_lib"]
+    srcs = [":test_lib"],
 )

@@ -54,7 +54,7 @@ ts_library(
 jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
-    coverage = True
+    coverage = True,
 )
 
 docs(
