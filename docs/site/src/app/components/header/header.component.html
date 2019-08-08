@@ -22,9 +22,10 @@
       </mat-menu>
     </li>
     <li mat-button>Feature</li>
-    <li mat-icon-button>
+    <li mat-icon-button matTooltipClass="support-us" [matTooltip]="supportMessage">
       <a href="https://github.com/spica-engine/spica">
         <mat-icon svgIcon="github"></mat-icon>
+        <span role="progressbars">{{ ($stargazers | async) || 0 }}</span>
       </a>
     </li>
   </ul>

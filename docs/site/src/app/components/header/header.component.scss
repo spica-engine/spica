@@ -1,22 +1,30 @@
-::ng-deep .mat-menu-panel {
-  margin-top: 15px;
-  min-width: 200px;
-  background: none;
-  &::before {
-    display: block;
-    content: "";
-    height: 8px;
-    background-image: url(../../../assets/images/menu-arrow.svg);
-    background-repeat: no-repeat;
-    background-position: center;
-    margin-right: 7px;
+::ng-deep {
+  .mat-menu-panel {
+    margin-top: 15px;
+    min-width: 200px;
+    background: none;
+    &::before {
+      display: block;
+      content: "";
+      height: 8px;
+      background-image: url(../../../assets/images/menu-arrow.svg);
+      background-repeat: no-repeat;
+      background-position: center;
+      margin-right: 7px;
+    }
+    .mat-menu-content {
+      border-radius: 10px;
+      background: white;
+    }
   }
-  .mat-menu-content {
-    border-radius: 10px;
+  .support-us {
     background: white;
+    color: black !important;
+    font-weight: 700;
+    white-space: pre;
+    text-align: center;
   }
 }
-
 :host {
   background-image: url("../../../assets/images/background.svg");
   background-size: cover;
@@ -45,6 +53,24 @@
         }
         & > * {
           vertical-align: middle;
+        }
+        &:last-child {
+          a {
+            > * {
+              vertical-align: middle;
+            }
+            span {
+              background: #fff;
+              color: black;
+              text-align: center;
+              display: inline-block;
+              border-radius: 9px;
+              font-weight: 700;
+              font-size: 14px;
+              padding: 2px 14px;
+              margin-left: 5px;
+            }
+          }
         }
       }
       &[aria-expanded~="true"] {

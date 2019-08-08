@@ -44,7 +44,10 @@
             max-width: 500px;
           }
           .button-group {
-            max-width: 200px;
+            max-width: 300px;
+            button[mat-flat-button]:last-child {
+              float: right;
+            }
           }
         }
         &:last-of-type {

@@ -10,7 +10,8 @@ import {
   MatListModule,
   MatMenuModule,
   MatSidenavModule,
-  MatToolbarModule
+  MatToolbarModule,
+  MatTooltipModule
 } from "@angular/material";
 import {BrowserModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
@@ -52,7 +53,8 @@ import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
     MatIconModule,
     MatButtonModule,
     MatListModule,
-    MatSidenavModule
+    MatSidenavModule,
+    MatTooltipModule
   ],
   declarations: [
     AppComponent,
