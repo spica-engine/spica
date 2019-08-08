@@ -31,6 +31,7 @@ import {HomeSectionComponent} from "./components/home-section/home-section.compo
 import {FeaturesComponent} from "./pages/features/features.component";
 import {HeaderComponent} from "./components/header/header.component";
 import {FooterComponent} from "./components/footer/footer.component";
+import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
 
 @NgModule({
   imports: [
@@ -63,12 +64,13 @@ import {FooterComponent} from "./components/footer/footer.component";
     DocsLayoutComponent,
     TocComponent,
     DocCardComponent,
+    DocCardsComponent,
     HomeSectionComponent,
     FeaturesComponent,
     HeaderComponent,
     FooterComponent
   ],
-  entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent],
+  entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
   providers: [],
   bootstrap: [AppComponent]
 })
@@ -77,5 +79,6 @@ export class AppModule {
     customElements.define("fragment-link", createCustomElement(FragmentLinkComponent, {injector}));
     customElements.define("doc-toc", createCustomElement(TocComponent, {injector}));
     customElements.define("doc-card", createCustomElement(DocCardComponent, {injector}));
+    customElements.define("doc-cards", createCustomElement(DocCardsComponent, {injector}));
   }
 }

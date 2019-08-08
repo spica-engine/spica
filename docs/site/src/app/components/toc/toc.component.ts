@@ -5,7 +5,10 @@ import {delay, filter, skip, take} from "rxjs/operators";
 
 @Component({
   templateUrl: "./toc.component.html",
-  styleUrls: ["./toc.component.scss"]
+  styleUrls: ["./toc.component.scss"],
+  host: {
+    role: "doc-toc"
+  }
 })
 export class TocComponent implements OnInit, OnDestroy {
   subsctiption: Subscription;

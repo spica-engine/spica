@@ -1,19 +1,15 @@
 :host {
   display: block;
   color: black;
+  line-height: 2;
 
   ::ng-deep div.doc-content {
     padding-bottom: 50px;
     padding-left: 4%;
     padding-right: 8%;
-    line-height: 2;
-
-    doc-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 2rem 2rem;
+    p {
+      font-weight: 100;
     }
-
     a {
       text-decoration: none;
       color: rgb(28, 28, 80);

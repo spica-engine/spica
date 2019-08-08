@@ -7,7 +7,10 @@ import {DocService} from "../../services/doc.service";
 @Component({
   selector: "app-doc-list",
   templateUrl: "./doc-list.component.html",
-  styleUrls: ["./doc-list.component.scss"]
+  styleUrls: ["./doc-list.component.scss"],
+  host: {
+    role: "doc-index"
+  }
 })
 export class DocListComponent implements OnInit {
   $doc: Observable<any>;

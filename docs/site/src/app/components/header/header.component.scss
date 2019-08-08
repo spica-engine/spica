@@ -37,11 +37,12 @@
 
     ul {
       list-style-type: none;
-      display: flex;
       padding-left: 0;
       li {
         cursor: pointer;
-        margin-left: 35px;
+        &:not(:first-child) {
+          margin-left: 35px;
+        }
         & > * {
           vertical-align: middle;
         }

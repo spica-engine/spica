@@ -2,6 +2,13 @@
   app-header {
     position: sticky;
     min-height: 150px;
+    button {
+      position: absolute;
+      left: 20px;
+      mat-icon {
+        font-size: 1.5rem;
+      }
+    }
   }
 
   mat-sidenav-container {
@@ -22,6 +29,11 @@
     mat-sidenav {
       background: none;
       border-right: none;
+
+      &.desktop {
+        padding-top: 25px;
+      }
+
       mat-nav-list {
         h6 {
           cursor: pointer;

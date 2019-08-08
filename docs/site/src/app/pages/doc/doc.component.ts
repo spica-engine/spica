@@ -8,7 +8,10 @@ import {DocService} from "../../services/doc.service";
 @Component({
   selector: "app-doc",
   templateUrl: "./doc.component.html",
-  styleUrls: ["./doc.component.scss"]
+  styleUrls: ["./doc.component.scss"],
+  host: {
+    role: "doc article"
+  }
 })
 export class DocComponent implements OnInit {
   $doc: Observable<SafeHtml>;
