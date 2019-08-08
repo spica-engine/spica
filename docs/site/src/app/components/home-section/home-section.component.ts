@@ -15,6 +15,7 @@ export class HomeSectionComponent implements OnInit {
   @Input("cnFxLayoutAlign.lt-md") fxLayoutAlignMd: string = "center center";
   @Input("cnFxLayout.gt-sm") fxLayoutGtSm: string = "row wrap";
   @Input("cnFxLayoutAlign.gt-sm") fxLayoutAlignGtSm: string = "space-around center";
+  @Input("cnFxLayoutGap") fxLayoutGap: string = "0px";
 
   constructor() {}
 

@@ -1,14 +1,32 @@
+::ng-deep .mat-menu-panel {
+  margin-top: 15px;
+  min-width: 200px;
+  background: none;
+  &::before {
+    display: block;
+    content: '';
+    height: 8px;
+    background-image: url(../../../assets/images/menu-arrow.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-right: 7px;
+  }
+  .mat-menu-content {
+    border-radius: 10px;
+    background: white;
+  }
+}
+
 :host {
   background-image: url("../../../assets/images/background.svg");
   background-size: cover;
-  min-height: 100vh;
+  min-height: 850px;
   display: flex;
   flex-flow: column;
   justify-content: space-between;
   nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    max-width: 80%;
+    margin-left: 10%;
     padding-top: 40px;
     span {
       img {
@@ -22,7 +40,8 @@
       display: flex;
       padding-left: 0;
       li {
-        margin-left: 25px;
+        cursor: pointer;
+        margin-left: 35px;
         & > * {
           vertical-align: middle;
         }

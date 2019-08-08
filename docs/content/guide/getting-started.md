@@ -7,7 +7,7 @@ First, we will explain a few things as Spica has few requirements in order to wo
 
 ## Requirements
 
-- **mongoDB** 4 and above
+- **mongoDB** 4.2-rc and above
 - **nodeJS** 10 and above
 
 As spica relies on **replica set** feature of MongoDB, you need to configure at least **3 members** of replica set.

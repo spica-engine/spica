@@ -22,6 +22,7 @@ ts_library(
         "@npm//dgeni",
         "@npm//dgeni-packages",
         "@npm//path-to-regexp",
+        "@npm//typescript"
     ],
 )
 
@@ -31,23 +32,4 @@ nodejs_binary(
         ":dgeni_sources",
     ],
     entry_point = ":dgeni.ts",
-)
-
-ts_library(
-    name = "bundle_sources",
-    srcs = [
-        "bundle.ts",
-    ],
-    tsconfig = ":tsconfig.json",
-    deps = [
-        "@npm//@types/node",
-    ],
-)
-
-nodejs_binary(
-    name = "bundle",
-    data = [
-        ":bundle_sources",
-    ],
-    entry_point = ":bundle.ts",
 )

@@ -1,6 +1,6 @@
 <app-header>
-  <section class="headline" fxLayout="row" fxLayoutAlign="space-evenly">
-    <div fxFlex.lt-md="80%">
+  <section class="headline" fxLayout="row" fxLayoutAlign="space-between" ngClass.gt-md="desktop">
+    <div>
       <h1>
         Go beyond, <br />
         your dreams!
@@ -35,6 +35,7 @@
   class="major-features"
   title="Major Features"
   description="It has many features that allows you to create contents simply."
+  cnFxLayoutGap="50px"
 >
   <div>
     <img src="assets/artboard/functions.svg" />
@@ -72,8 +73,8 @@
   cnFxLayout.gt-sm="row nowrap"
   cnFxLayoutAlign.gt-sm="space-around center"
 >
-  <img fxFlex.lt-md="30%" fxFlex.gt-sm="25%" src="assets/artboard/discover.svg" />
-  <ul fxFlex.lt-md="100%" fxFlex="60%" fxLayout="column" fxLayoutAlign="space-between">
+  <img fxFlex.lt-md="30%" fxFlex.gt-sm="35%" src="assets/artboard/discover.svg" />
+  <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
     <li>
       <h3>Feel flexibility and have control</h3>
       <p>
@@ -117,13 +118,13 @@
   fxLayout="column"
   fxLayoutAlign="center center"
   fxLayoutGap.lt-md="20px"
-  fxLayoutGap="30px"
+  fxLayoutGap="50px"
 >
   <div
     fxLayout.lt-md="column-reverse"
     fxLayoutAlign="space-between center"
     flexLayout.gt-sm="row"
-    fxLayoutGap="30px"
+    fxLayoutGap.gt-sm="20%"
   >
     <span>
       <h1>For Developers</h1>
@@ -140,16 +141,16 @@
         import into frontend composer or use ready one.
       </p>
     </span>
-    <img fxFlex.gt-sm="20%" fxFlex.lt-md="30%" src="assets/artboard/for-developers.svg" />
+    <img fxFlex="30%" src="assets/artboard/for-developers.svg" />
   </div>
 
   <div
     fxLayout.lt-md="column"
     fxLayoutAlign="space-between center"
     flexLayout.gt-sm="row"
-    fxLayoutGap="30px"
+    fxLayoutGap.gt-sm="20%"
   >
-    <img fxFlex.gt-sm="20%" fxFlex.lt-md="30%" src="assets/artboard/for-agencies.svg" />
+    <img fxFlex="30%" src="assets/artboard/for-agencies.svg" />
     <span>
       <h1>For Agencies</h1>
       <p>
@@ -171,7 +172,7 @@
     fxLayout.lt-md="column-reverse"
     fxLayoutAlign="space-between center"
     flexLayout.gt-sm="row"
-    fxLayoutGap="30px"
+    fxLayoutGap.gt-sm="20%"
   >
     <span>
       <h1>For Marketers</h1>
@@ -188,7 +189,7 @@
         easily, we give extraordinary support services.
       </p>
     </span>
-    <img fxFlex.gt-sm="20%" fxFlex.lt-md="30%" src="assets/artboard/for-marketers.svg" />
+    <img fxFlex="30%" src="assets/artboard/for-marketers.svg" />
   </div>
 </section>
 
@@ -197,7 +198,13 @@
   title="Way to Create Something Game Changer"
   description="Write Something Here To Explain Above"
 >
-  <img fxFlex.gt-sm="20%" fxFlex.lt-md="50%" src="assets/artboard/tool-and-astro-boy.svg" />
+  <img
+    fxFlex.gt-sm="25%"
+    fxFlex.lt-md="45%"
+    fxFlexAlign.gt-sm="flex-start"
+    ngClass.gt-sm="desktop"
+    src="assets/artboard/tool-and-astro-boy.svg"
+  />
   <ul>
     <li>
       <h3>Create an account and choose your instance</h3>

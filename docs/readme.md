@@ -38,4 +38,5 @@ http://localhost:4200/assets/docs/api/doc-list.json # Generated API docs
 
 - Cd into site directory
 - Run `ng build --prod`
+- Cd back to root project directory
 - Run `BUILD_SCM_VERSION_OVERRIDE=next yarn bazel run //docs/site:deploy.apply --config=release`

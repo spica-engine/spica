@@ -1,5 +1,5 @@
 import {Dgeni, Package} from "dgeni";
-import {TypeFormatFlags} from "dgeni-packages/node_modules/typescript";
+import {TypeFormatFlags} from "typescript";
 import {ReadTypeScriptModules} from "dgeni-packages/typescript/processors/readTypeScriptModules";
 import {Host} from "dgeni-packages/typescript/services/ts-host/host";
 import {TsParser} from "dgeni-packages/typescript/services/TsParser";

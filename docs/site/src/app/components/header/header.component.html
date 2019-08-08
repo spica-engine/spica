@@ -1,4 +1,9 @@
-<nav fxLayout="row wrap" fxLayoutAlign="space-evenly center" fxLayoutGap.gt-md="45%">
+<nav
+  fxLayout.lt-sm="column"
+  fxLayoutAlign.lt-sm="center center"
+  fxLayout.gt-xs="row wrap"
+  fxLayoutAlign.gt-xs="space-between center"
+>
   <span>
     <ng-content select="[slot=beforelogo]"></ng-content>
     <img routerLink="/" src="assets/images/logo.svg" />
@@ -10,7 +15,7 @@
     </li>
     <li mat-button [matMenuTriggerFor]="docsMenu">
       Docs <mat-icon>arrow_drop_down</mat-icon>
-      <mat-menu #docsMenu="matMenu">
+      <mat-menu #docsMenu="matMenu" class="navbar-menu mat-elevation-z1">
         <button mat-menu-item routerLink="/docs/guide">Guides</button>
         <button mat-menu-item routerLink="/docs/concept">Concept</button>
         <button mat-menu-item routerLink="/docs/api">API</button>

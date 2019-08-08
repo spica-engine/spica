@@ -28,9 +28,8 @@
 :host {
   app-header {
     .headline {
-      display: flex;
-      flex-flow: row;
-      justify-content: space-evenly;
+      max-width: 80%;
+      margin-left: 10%;
       div {
         &:first-of-type {
           h1 {
@@ -39,20 +38,19 @@
           }
           p {
             font-weight: 200;
+            font-size: 1.2rem;
+            line-height: 2rem;
+            max-width: 500px;
+
           }
           .button-group {
             max-width: 200px;
-            flex-flow: row;
-            display: flex;
-            justify-content: space-between;
           }
         }
         &:last-of-type {
-          display: flex;
-          flex-flow: column;
-          align-items: center;
           z-index: 1;
-          transform: translateY(100px);
+          transform: translateY(120px);
+          margin-right: 40px;
           img.logo {
             height: 400px;
             animation-name: spica;
@@ -83,8 +81,7 @@
   home-section.major-features {
     div {
       text-align: center;
-      min-width: 250px;
-      max-width: 350px;
+      width: 250px;
       padding: 10px;
       img {
         height: 150px;
@@ -107,6 +104,7 @@
       list-style-type: none;
       padding-left: 0;
       li {
+        line-height: 2;
         h2 {
           font-weight: 400;
           margin-bottom: 0;
@@ -145,6 +143,10 @@
     div {
       max-width: 90%;
       span {
+        h1 {
+          font-size: 3rem;
+          font-weight: 100;
+        }
         p {
           line-height: 2;
           font-weight: 100;
@@ -157,6 +159,9 @@
     background-color: #f2f1f0;
     img {
       width: 350px;
+      &.desktop {
+        margin-top: 60px;
+      }
     }
     ul {
       padding-left: 0;
