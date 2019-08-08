@@ -90,7 +90,7 @@ As we are publishing Spica as container images, you need a container runtime in 
   # https://github.com/spica-engine/spica/issues/20 resolves.
   docker exec -it spica sed -i "s/\/spica\//\//g" /usr/share/nginx/html/index.html
   # Basically, this replaces /api with http://localhost:4300 which is our accesible api url.
-  docker exec -w /usr/share/nginx/html -it spica find . -type f -iname 'main-es\*.js' -exec sed -i 's/\"\/api\"/\"http:\/\/localhost:4300\"/g' {} \;
+  docker exec -w /usr/share/nginx/html -it spica find . -type f -iname 'main-es*.js' -exec sed -i 's/\"\/api\"/\"http:\/\/localhost:4300\"/g' {} \;
   ```
 - Ensure you have setup everything correctly
   ```sh
