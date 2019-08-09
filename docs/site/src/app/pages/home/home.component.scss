@@ -70,6 +70,7 @@
     }
 
     .wave {
+      margin-bottom: -1px;
       ::ng-deep svg {
         display: block;
         fill: white;
