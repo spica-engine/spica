@@ -1,6 +1,8 @@
 <nav
   fxLayout.lt-sm="column"
   fxLayoutAlign.lt-sm="center center"
+  ngClass.sm="sm"
+  ngClass.xs="xs"
   fxLayout.gt-xs="row wrap"
   fxLayoutAlign.gt-xs="space-between center"
 >
@@ -9,7 +11,7 @@
     <img routerLink="/" src="assets/images/logo.svg" />
   </span>
 
-  <ul fxLayout="row" fxLayoutAlign="space-between">
+  <ul ngClass.lt-md="handset" fxLayout="row" fxLayoutAlign="space-between">
     <li mat-button routerLink="/features">
       <span>Features</span>
     </li>

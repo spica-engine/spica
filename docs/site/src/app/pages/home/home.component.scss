@@ -30,9 +30,8 @@
     .headline {
       max-width: 80%;
       margin-left: 10%;
-      div {
+      > div {
         &:first-of-type {
-          margin-top: -50px;
           h1 {
             font-size: 4rem;
             font-weight: 100;
@@ -44,13 +43,10 @@
             max-width: 500px;
           }
           .button-group {
-            max-width: 300px;
-            button[mat-flat-button]:last-child {
-              float: right;
-            }
+            max-width: 400px;
           }
         }
-        &:last-of-type {
+        &:last-child {
           z-index: 1;
           transform: translateY(120px);
           margin-right: 40px;

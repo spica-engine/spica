@@ -36,6 +36,17 @@
     max-width: 80%;
     margin-left: 10%;
     padding-top: 40px;
+    &.sm {
+      max-width: 90%;
+      margin-left: 5%;
+    }
+    &.xs {
+      max-width: unset;
+      margin-left: unset;
+      ul li:last-child a span {
+        padding: 2px 6px;
+      }
+    }
     span {
       img {
         height: 45px;
