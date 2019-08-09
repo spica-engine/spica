@@ -44,6 +44,14 @@
           }
           .button-group {
             max-width: 400px;
+            button[mat-flat-button] {
+              float: right;
+              color: white;
+              font-size: 1.2rem;
+              padding-top: 4px;
+              padding-bottom: 4px;
+              border-radius: 15px;
+            }
           }
         }
         &:last-child {
