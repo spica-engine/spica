@@ -1,0 +1,7 @@
+<mat-card class="mat-elevation-z0" [routerLink]="href" preserveFragment>
+  <img mat-card-image [src]="image" />
+  <mat-card-content>
+    <mat-card-title>{{ title }}</mat-card-title>
+    <ng-content></ng-content>
+  </mat-card-content>
+</mat-card>

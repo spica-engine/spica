@@ -1,0 +1,11 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//tools/dgeni:index.bzl", "docs")
+
+docs(
+    name = "content",
+    data = [
+        "//docs/content/concept",
+        "//docs/content/guide",
+    ],
+)

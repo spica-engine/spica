@@ -1,0 +1,6 @@
+:host {
+  text-align: center;
+}
+:host mat-card img {
+  max-height: 200px;
+}

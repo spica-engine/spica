@@ -1,0 +1,244 @@
+<app-header>
+  <section
+    class="headline"
+    fxLayout="row"
+    fxLayoutAlign="space-between flex-start"
+    ngClass.gt-md="desktop"
+  >
+    <div>
+      <h1>
+        Go beyond, <br />
+        your dreams!
+      </h1>
+      <p>
+        Now, you don’t need to spend tons of hours and money to make your projects.
+      </p>
+      <div class="button-group">
+        <!-- <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
+          <mat-icon svgIcon="instagram"></mat-icon>
+        </a> -->
+        <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
+          <mat-icon svgIcon="twitter"></mat-icon>
+        </a>
+        <a
+          mat-icon-button
+          href="https://www.facebook.com/Spica-Development-Engine-292036878363505/"
+          target="_blank"
+        >
+          <mat-icon svgIcon="facebook"></mat-icon>
+        </a>
+        <a mat-icon-button href="https://github.com/spica-engine/spica">
+          <mat-icon svgIcon="github"></mat-icon>
+        </a>
+        <button mat-flat-button color="accent" routerLink="/docs/guide/getting-started">
+          Get Started
+        </button>
+      </div>
+    </div>
+    <div fxLayout="column" fxLayoutAlign="center center" fxShow.lt-lg="false">
+      <img class="logo" src="assets/images/spica.svg" alt="Spica logo" />
+      <img class="shadow" src="assets/images/shadow.svg" alt="Shadow" />
+    </div>
+  </section>
+  <div class="wave" inlineSVG="/assets/images/wave-white.svg"></div>
+</app-header>
+
+<home-section
+  class="major-features"
+  title="Major Features"
+  description="It has many features that allows you to create contents simply."
+  cnFxLayoutGap="50px"
+>
+  <div>
+    <img src="assets/artboard/functions.svg" />
+    <h2>Functions</h2>
+    <p>For developers, for creators, for crafters, you can apply any logic to your projects.</p>
+  </div>
+  <div>
+    <img src="assets/artboard/policy.svg" />
+    <h2>Policy-Based Management</h2>
+    <p>Instead of using pre-built roles, you can create your roles now!</p>
+  </div>
+  <div>
+    <img src="assets/artboard/bucket.svg" />
+    <h2>Bucket Architecture</h2>
+    <p>It gives full data model customization. So you can ride wherever you want.</p>
+  </div>
+  <div>
+    <img src="assets/artboard/composer.svg" />
+    <h2>Frontend Composer</h2>
+    <p>With component-based interface composer, you can make UI much faster.</p>
+  </div>
+  <div>
+    <img src="assets/artboard/agnostic.svg" />
+    <h2>Platform Agnostic</h2>
+    <p>You can take mobile, PWA or web app builds with using build module.</p>
+  </div>
+
+  <footer inlineSVG="/assets/images/wave-gray.svg"></footer>
+</home-section>
+
+<home-section
+  class="discover"
+  title="Discover a New Type of Development"
+  description="It has many features that allows you to create contents simply."
+  cnFxLayout.gt-sm="row nowrap"
+  cnFxLayoutAlign.gt-sm="space-around center"
+>
+  <img fxFlex.lt-md="30%" fxFlex.gt-sm="35%" src="assets/artboard/discover.svg" />
+  <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
+    <li>
+      <h3>Feel flexibility and have control</h3>
+      <p>
+        You will have full control as a developer and provide the most flexible project
+        infrastructure.
+      </p>
+    </li>
+    <li>
+      <h3>Save time and money</h3>
+      <p>
+        Everything in Spica has been designed to save time and cost without losing quality. With
+        easy-to-use composer, you can display your data in sweet harmony.
+      </p>
+    </li>
+    <li>
+      <h3>Focus on your product designs</h3>
+      <p>
+        You can develop any kind of project in any shape. It is time to focus on the product now.
+      </p>
+    </li>
+  </ul>
+</home-section>
+
+<section class="projects" fxLayoutAlign.gt-md="space-evenly" fxLayoutAlign.lt-lg="center">
+  <span fxFlex.lt-lg="85%">
+    <h1>
+      Feel The Energy, <br />
+      Join Our Creator World
+    </h1>
+    <p>Powered by Spica Community &trade;</p>
+  </span>
+
+  <button mat-button fxShow.lt-lg="false">
+    <mat-icon svgIcon="github"></mat-icon>
+    Github
+  </button>
+</section>
+
+<section
+  class="audience"
+  fxLayout="column"
+  fxLayoutAlign="center center"
+  fxLayoutGap.lt-md="20px"
+  fxLayoutGap="50px"
+>
+  <div
+    fxLayout.lt-md="column-reverse"
+    fxLayoutAlign="space-between center"
+    flexLayout.gt-sm="row"
+    fxLayoutGap.gt-sm="20%"
+  >
+    <span>
+      <h1>For Developers</h1>
+      <p>
+        Our bucket module saves much time for you. You can customize your data models and we handle
+        REST API. Also you will have full control because of IAM.
+      </p>
+      <p>
+        Spica provides subscriptions(webhooks) and function management module. Apply your own logic
+        and define your key functions.
+      </p>
+      <p>
+        Once you need user interface for your project, you can develop your own UI components and
+        import into frontend composer or use ready one.
+      </p>
+    </span>
+    <img fxFlex="30%" src="assets/artboard/for-developers.svg" />
+  </div>
+
+  <div
+    fxLayout.lt-md="column"
+    fxLayoutAlign="space-between center"
+    flexLayout.gt-sm="row"
+    fxLayoutGap.gt-sm="20%"
+  >
+    <img fxFlex="30%" src="assets/artboard/for-agencies.svg" />
+    <span>
+      <h1>For Agencies</h1>
+      <p>
+        You don’t need to have full stack team from now. Set the rules once, deploy for every
+        device. You can develop mobile application, website or PWA faster and secure.
+      </p>
+      <p>
+        With multi-tenant architecture, you can create many projects and handle all of them easily.
+        Just focus on your business.
+      </p>
+      <p>
+        Keep your technology stack up-to-date always. You will be behind of your competitors and
+        take the lead.
+      </p>
+    </span>
+  </div>
+
+  <div
+    fxLayout.lt-md="column-reverse"
+    fxLayoutAlign="space-between center"
+    flexLayout.gt-sm="row"
+    fxLayoutGap.gt-sm="20%"
+  >
+    <span>
+      <h1>For Marketers</h1>
+      <p>
+        You don’t need to know coding. From scratch to end, there are many assets you can use. All
+        these assets are secure to use because we review all assets.
+      </p>
+      <p>
+        You can create a project in 15 minutes and close in a minute. You can connect every tool you
+        need into frontend composer.
+      </p>
+      <p>
+        We know, having personalized support is one of the best things for you. Contact with us
+        easily, we give extraordinary support services.
+      </p>
+    </span>
+    <img fxFlex="30%" src="assets/artboard/for-marketers.svg" />
+  </div>
+</section>
+
+<home-section
+  class="description"
+  title="Way to Create Something Game Changer"
+  description="Write Something Here To Explain Above"
+>
+  <img
+    fxFlex.gt-sm="25%"
+    fxFlex.lt-md="45%"
+    fxFlexAlign.gt-sm="flex-start"
+    ngClass.gt-sm="desktop"
+    src="assets/artboard/tool-and-astro-boy.svg"
+  />
+  <ul>
+    <li>
+      <h3>Create an account and choose your instance</h3>
+      <p>This will take a minute approximately</p>
+    </li>
+    <li>
+      <h3>Define your data models</h3>
+      <p>Make a control panel for content creators</p>
+    </li>
+    <li>
+      <h3>Import component sets</h3>
+      <p>There are tons of component sets you can use or you can import your own components</p>
+    </li>
+    <li>
+      <h3>Design your own interface</h3>
+      <p>You can connect UI and data models easily</p>
+    </li>
+    <li>
+      <h3>Deploy your project</h3>
+      <p>Get a build in any shape you would like to use. We support even PWA built-in</p>
+    </li>
+  </ul>
+</home-section>
+
+<app-footer></app-footer>

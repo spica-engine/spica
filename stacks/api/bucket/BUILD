@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "bucket",
@@ -54,13 +55,18 @@ jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
     coverage = True,
-    deps = [
-        "@npm//jasmine",
-        "@npm//source-map",
-    ],
 )
 
-filegroup(
-    name = "sources",
+docs(
+    name = "docs",
     srcs = glob(["**/*.ts"]),
+    tags = ["bucket-docs"],
+    exports = [
+        "BucketController",
+        "BucketDataController",
+    ],
+    deps = [
+        "//packages/database",
+        "//stacks/api/passport",
+    ],
 )

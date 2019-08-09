@@ -1,0 +1,85 @@
+{% import "route.macro.html" as routeMacros -%} {% extends 'base.template.html' -%} {% block body %}
+<h2>Resources</h2>
+{%- for member in doc.members %}{% if member.docType == "route" %}
+<section class="resource">
+  <h3>
+    <span class="method {$ member.type | lower $}">{$ member.type $}</span>
+    <span class="path">{$ routeMacros.renderRoute(member.route) $}</span>
+  </h3>
+  {% if member.description %}
+  <p>{$ member.description | marked $}</p>
+  {% endif %}
+  <p class="authorization">
+    Authorization: <b>{$ 'Required' if member.authorization else 'Not Required' $}</b>
+  </p>
+  {% if member.actions.length %}
+  <p class="actions">Required actions: {$ member.actions | join $}</p>
+  {% endif %} {% if member.param and member.param.length %}
+  <h4>Params</h4>
+  <table>
+    <thead>
+      <tr>
+        <td>Name</td>
+        <td>Type</td>
+        <td>Optional</td>
+        <td>Description</td>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for param in member.param %}
+      <tr>
+        <td>{$ param.name $}</td>
+        <td><code>{$ param.type $}</code></td>
+        <td><code>{$ param.isOptional $}</code></td>
+        <td>{$ param.description if param.description else 'No description' $}</td>
+      </tr>
+      {% endfor -%}
+    </tbody>
+  </table>
+  {% endif %} {% if member.query and member.query.length %}
+  <h4>Query Params</h4>
+  <table>
+    <thead>
+      <tr>
+        <td>Name</td>
+        <td>Type</td>
+        <td>Optional</td>
+        <td>Description</td>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for queryParam in member.query %}
+      <tr>
+        <td>{$ queryParam.name $}</td>
+        <td><code>{$ queryParam.type $}</code></td>
+        <td><code>{$ queryParam.isOptional $}</code></td>
+        <td>{$ queryParam.description if queryParam.description else 'No description' $}</td>
+      </tr>
+      {% endfor -%}
+    </tbody>
+  </table>
+  {% endif %} {% if member.header.length %}
+  <h4>Headers</h4>
+  <table>
+    <thead>
+      <tr>
+        <td>Name</td>
+        <td>Type</td>
+        <td>Optional</td>
+        <td>Description</td>
+      </tr>
+    </thead>
+    <tbody>
+      {%- for header in member.header %}
+      <tr>
+        <td>{$ header.name $}</td>
+        <td><code>{$ header.type $}</code></td>
+        <td><code>{$ header.isOptional $}</code></td>
+        <td>{$ header.description if header.description else 'No description' $}</td>
+      </tr>
+      {% endfor -%}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endif %}{% endfor -%} {% endblock %}

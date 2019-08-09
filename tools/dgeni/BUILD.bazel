@@ -3,23 +3,33 @@ package(default_visibility = ["//visibility:public"])
 load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 
-nodejs_binary(
-    name = "dgeni",
-    data = [
-        ":sources",
-        "@npm//dgeni",
-        "@npm//dgeni-packages",
-    ],
-    entry_point = ":bazel-bin.ts",
-)
+exports_files(["tsconfig.json"])
 
 ts_library(
-    name = "sources",
-    srcs = glob(["**/*.ts"]),
+    name = "dgeni_sources",
+    srcs = [
+        "dgeni.ts",
+        "processors/controller.ts",
+        "processors/copydata.ts",
+        "processors/filter.ts",
+        "processors/list.ts",
+        "processors/symbol-filter.ts",
+    ],
     tsconfig = ":tsconfig.json",
     deps = [
+        "//tools/dgeni/remark",
         "@npm//@types/node",
         "@npm//dgeni",
         "@npm//dgeni-packages",
+        "@npm//path-to-regexp",
+        "@npm//typescript",
     ],
+)
+
+nodejs_binary(
+    name = "dgeni",
+    data = [
+        ":dgeni_sources",
+    ],
+    entry_point = ":dgeni.ts",
 )

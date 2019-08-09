@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("//tools/dgeni:index.bzl", "docs")
 
 # TODO: Add more build files to make incremental build
 ts_library(
@@ -23,5 +24,21 @@ ts_library(
         "@npm//@types/node",
         "@npm//rxjs",
         "@npm//typescript",
+    ],
+)
+
+docs(
+    name = "docs",
+    srcs = [
+        "function.controller.ts",
+        "subscription.controller.ts",
+    ],
+    tags = ["function-docs"],
+    exports = [
+        "FunctionController",
+        "SubscriptionController",
+    ],
+    deps = [
+        "//packages/database",
     ],
 )

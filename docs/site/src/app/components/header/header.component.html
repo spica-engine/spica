@@ -1,0 +1,35 @@
+<nav
+  fxLayout.lt-sm="column"
+  fxLayoutAlign.lt-sm="center center"
+  ngClass.sm="sm"
+  ngClass.xs="xs"
+  fxLayout.gt-xs="row wrap"
+  fxLayoutAlign.gt-xs="space-between center"
+>
+  <span>
+    <ng-content select="[slot=beforelogo]"></ng-content>
+    <img routerLink="/" src="assets/images/logo.svg" />
+  </span>
+
+  <ul ngClass.lt-md="handset" fxLayout="row" fxLayoutAlign="space-between">
+    <li mat-button routerLink="/features">
+      <span>Features</span>
+    </li>
+    <li mat-button [matMenuTriggerFor]="docsMenu">
+      Docs <mat-icon>arrow_drop_down</mat-icon>
+      <mat-menu #docsMenu="matMenu" class="navbar-menu mat-elevation-z1">
+        <button mat-menu-item routerLink="/docs/guide">Guides</button>
+        <button mat-menu-item routerLink="/docs/concept">Concept</button>
+        <button mat-menu-item routerLink="/docs/api">API</button>
+      </mat-menu>
+    </li>
+    <li mat-button>Feature</li>
+    <li mat-icon-button matTooltipClass="support-us" [matTooltip]="supportMessage">
+      <a href="https://github.com/spica-engine/spica">
+        <mat-icon svgIcon="github"></mat-icon>
+        <span role="progressbars">{{ ($stargazers | async) || 0 }}</span>
+      </a>
+    </li>
+  </ul>
+</nav>
+<ng-content></ng-content>

@@ -1,0 +1,186 @@
+@keyframes spica {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes shadow {
+  0% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scaleX(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+}
+
+:host {
+  app-header {
+    .headline {
+      max-width: 80%;
+      margin-left: 10%;
+      > div {
+        &:first-of-type {
+          h1 {
+            font-size: 4rem;
+            font-weight: 100;
+          }
+          p {
+            font-weight: 200;
+            font-size: 1.2rem;
+            line-height: 2rem;
+            max-width: 500px;
+          }
+          .button-group {
+            max-width: 400px;
+            button[mat-flat-button] {
+              float: right;
+              color: white;
+              font-size: 1.2rem;
+              padding-top: 4px;
+              padding-bottom: 4px;
+              border-radius: 15px;
+            }
+          }
+        }
+        &:last-child {
+          z-index: 1;
+          transform: translateY(120px);
+          margin-right: 40px;
+          img.logo {
+            height: 400px;
+            animation-name: spica;
+            animation-duration: 1.3s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+          }
+          img.shadow {
+            margin-top: 5px;
+            width: 260px;
+            animation-name: shadow;
+            animation-duration: 1.3s;
+            animation-iteration-count: infinite;
+            animation-timing-function: ease-in-out;
+          }
+        }
+      }
+    }
+
+    .wave {
+      margin-bottom: -1px;
+      ::ng-deep svg {
+        display: block;
+        fill: white;
+      }
+    }
+  }
+
+  home-section.major-features {
+    div {
+      text-align: center;
+      width: 250px;
+      padding: 10px;
+      img {
+        height: 150px;
+      }
+      p {
+        line-height: 2;
+      }
+    }
+    footer {
+      ::ng-deep svg {
+        display: block;
+        fill: #f2f1f0;
+      }
+    }
+  }
+
+  home-section.discover {
+    background: #f2f1f0;
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+      li {
+        line-height: 2;
+        h2 {
+          font-weight: 400;
+          margin-bottom: 0;
+        }
+        p {
+          font-weight: 100;
+        }
+      }
+    }
+  }
+
+  section.projects {
+    background-image: url("../../../assets/images/background.svg");
+    background-size: cover;
+    min-height: 350px;
+    padding: 5% 0;
+    span h1 {
+      font-size: 4rem;
+      font-weight: 400;
+    }
+    p {
+      &::after {
+        margin-top: 20px;
+        display: block;
+        content: "";
+        height: 2px;
+        width: 75px;
+        background: #15bde8;
+      }
+    }
+  }
+
+  section.audience {
+    color: #1c1c50;
+    padding: 5% 0;
+    div {
+      max-width: 90%;
+      span {
+        h1 {
+          font-size: 3rem;
+          font-weight: 100;
+        }
+        p {
+          line-height: 2;
+          font-weight: 100;
+        }
+      }
+    }
+  }
+
+  home-section.description {
+    background-color: #f2f1f0;
+    img {
+      width: 350px;
+      &.desktop {
+        margin-top: 60px;
+      }
+    }
+    ul {
+      padding-left: 0;
+      list-style-type: none;
+      li {
+        margin-top: 35px;
+      }
+    }
+  }
+
+  app-footer {
+    background-color: #f2f1f0;
+  }
+}

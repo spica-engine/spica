@@ -1,0 +1,42 @@
+<app-header>
+  <button slot="beforelogo" mat-icon-button fxHide.gt-md="true" (click)="drawer.toggle()">
+    <mat-icon>sort</mat-icon>
+  </button>
+</app-header>
+
+<mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
+  <mat-sidenav
+    #drawer
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="!(isHandset$ | async)"
+    ngClass.gt-md="desktop"
+  >
+    <mat-nav-list *ngFor="let contentDoc of ($contentDocs | async)?.children">
+      <h6 mat-subheader [routerLink]="[contentDoc.name]" routerLinkActive="active">
+        {{ contentDoc.name }}
+      </h6>
+      <a
+        mat-list-item
+        *ngFor="let subDoc of contentDoc.docs"
+        [routerLink]="[contentDoc.name, subDoc.path]"
+        routerLinkActive="active"
+      >
+        {{ subDoc.name }}
+      </a>
+    </mat-nav-list>
+    <mat-nav-list>
+      <h6 mat-subheader routerLink="api" routerLinkActive="active">API</h6>
+      <a
+        mat-list-item
+        *ngFor="let apiDoc of ($apiDocs | async)?.children"
+        [routerLink]="['api', apiDoc.name]"
+        routerLinkActive="active"
+      >
+        {{ apiDoc.name | titlecase }}
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

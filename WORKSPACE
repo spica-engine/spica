@@ -11,8 +11,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 # Setup nodejs workspace
 http_archive(
     name = "build_bazel_rules_nodejs",
-    sha256 = "e04a82a72146bfbca2d0575947daa60fda1878c8d3a3afe868a8ec39a6b968bb",
-    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/0.31.1/rules_nodejs-0.31.1.tar.gz"],
+    sha256 = "6625259f9f77ef90d795d20df1d0385d9b3ce63b6619325f702b6358abb4ab33",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/0.35.0/rules_nodejs-0.35.0.tar.gz"],
 )
 
 load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "node_repositories", "yarn_install")
@@ -94,6 +94,17 @@ k8s_repositories()
 
 # Create a rule named as k8s_deploy
 k8s_defaults(
+    name = "k8s_deploy_dev",
+    cluster = "_".join([
+        "gke",
+        "spica-239113",
+        "us-central1-a",
+        "master",
+    ]),
+    kind = "deployment",
+)
+
+k8s_defaults(
     name = "k8s_deploy",
     cluster = "_".join([
         "gke",
@@ -101,5 +112,6 @@ k8s_defaults(
         "us-central1-a",
         "master",
     ]),
+    image_chroot = "index.docker.io",
     kind = "deployment",
 )

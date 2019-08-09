@@ -2,6 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "history",
@@ -22,6 +23,16 @@ ts_library(
     ],
 )
 
+docs(
+    name = "docs",
+    srcs = ["history.controller.ts"],
+    tags = ["history-docs"],
+    exports = [
+        "HistoryController",
+    ],
+    deps = [":history"],
+)
+
 ts_library(
     name = "test_lib",
     testonly = True,
@@ -38,8 +49,4 @@ ts_library(
 jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
-    deps = [
-        "@npm//jasmine",
-        "@npm//source-map",
-    ],
 )

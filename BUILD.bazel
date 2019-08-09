@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@k8s_deploy_dev//:defaults.bzl", "k8s_deploy_dev")
+
 exports_files(["tsconfig.json"])
 
 filegroup(
@@ -7,9 +9,12 @@ filegroup(
     srcs = glob(["dist/spica/**/*"]),
 )
 
-load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
+filegroup(
+    name = "site",
+    srcs = glob(["dist/spica-site/**/*"]),
+)
 
-k8s_deploy(
+k8s_deploy_dev(
     name = "deploy",
     images = {
         "gcr.io/spica-239113/api": "//stacks:api_image",
