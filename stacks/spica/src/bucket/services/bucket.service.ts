@@ -110,6 +110,6 @@ export class BucketService {
   }
 
   createFromTemplate(template: BucketTemplate): Observable<any> {
-    return this.http.post(`api:/bucket/templates`, template).pipe(tap(data => console.log(data)));
+    return this.http.post(`api:/bucket/templates`, template);
   }
 }
