@@ -52,6 +52,7 @@ import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketInitializer} from "./services/bucket.initializer";
 import * as fromBucket from "./services/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
+import {CommonModule as SpicaCommon} from "@spica-client/common";
 
 @NgModule({
   imports: [
@@ -109,7 +110,8 @@ import {BucketService} from "./services/bucket.service";
     PreferencesModule.forChild(),
     MatClipboardModule,
     TextEditorModule,
-    PassportModule.forChild()
+    PassportModule.forChild(),
+    SpicaCommon
   ],
   declarations: [
     IndexComponent,

@@ -95,10 +95,7 @@
       <mat-list-item class="properties">
         <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
           <mat-expansion-panel
-            *ngFor="
-              let propertyKv of bucket.properties | keyvalue: sortProperties;
-              let index = index
-            "
+            *ngFor="let propertyKv of bucket.properties | propertyKv:registerInvalidator.bind(this);"
             cdkDrag
           >
             <mat-expansion-panel-header>

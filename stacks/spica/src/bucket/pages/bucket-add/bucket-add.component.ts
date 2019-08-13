@@ -7,13 +7,12 @@ import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";
 import {ICONS} from "@spica-client/material";
 import {Observable, Subject} from "rxjs";
-import {filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
+import {filter, map, switchMap, takeUntil, tap, flatMap} from "rxjs/operators";
 import {BucketService} from "../../services/bucket.service";
 import {INPUT_ICONS} from "../../icons";
-import {Bucket, emptyBucket, Property} from "../../interfaces/bucket";
+import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {moveItemInArray} from "@angular/cdk/drag-drop";
-import {KeyValue} from "@angular/common";
 
 @Component({
   selector: "bucket-add",
@@ -34,6 +33,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   public isThereVisible = false;
   public visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
+
+  private invalidate: Function;
 
   public translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   public basicPropertyTypes = ["string", "textarea", "boolean", "number"];
@@ -62,8 +63,20 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.activatedRoute.params
       .pipe(
+        flatMap(params =>
+          this.bs.getPredefinedDefaults().pipe(
+            map(predefs => {
+              this.predefinedDefaults = predefs.reduce((accumulator, item) => {
+                accumulator[item.type] = accumulator[item.type] || [];
+                accumulator[item.type].push(item);
+                return accumulator;
+              }, {});
+              return params;
+            })
+          )
+        ),
         filter(params => params.id !== undefined),
-        takeUntil(this.onDestroy),
+
         switchMap(params => this.bs.getBucket(params.id)),
         tap(meta => {
           const clone = deepCopy<Bucket>(meta);
@@ -71,26 +84,15 @@ export class BucketAddComponent implements OnInit, OnDestroy {
           this.immutableProperties = Object.keys(this.bucket.properties);
           this.bucketVisible();
         }),
-        switchMap(() => this.bs.getPredefinedDefaults()),
-        map(predefs => {
-          return predefs.reduce((obj, item) => {
-            if (Array.isArray(obj[item.type])) {
-              obj[item.type].push(item);
-            } else {
-              obj[item.type] = [item];
-            }
-            return obj;
-          }, {});
-        })
+        takeUntil(this.onDestroy)
       )
-      .subscribe(predefs => {
-        this.predefinedDefaults = predefs;
-      });
+      .subscribe();
+
     this.updatePositionProperties();
   }
 
-  sortProperties(a: KeyValue<string, Property>, b: KeyValue<string, Property>) {
-    return a.value.type - b.value.type;
+  registerInvalidator(fn: Function) {
+    this.invalidate = fn;
   }
 
   cardDrop(event: CdkDragDrop<Bucket[]>) {
@@ -102,12 +104,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       accumulator[key] = value;
       return accumulator;
     }, {});
-    this.bs
-      .replaceOne(this.bucket)
-      .toPromise()
-      .then(() => {
-        this.updatePositionProperties();
-      });
+    this.invalidate();
   }
 
   updatePositionProperties() {
@@ -161,6 +158,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       this.bucket.required.splice(this.bucket.required.indexOf(propertyKey), 1);
     }
 
+    this.bucket.properties = {...this.bucket.properties};
     this.updatePositionProperties();
   }
 
