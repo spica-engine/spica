@@ -34,9 +34,6 @@ export class BooleanComponent implements ControlValueAccessor {
 
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;
-    if (this.value == null) {
-      this._onChangeFn(false);
-    }
   }
 
   registerOnTouched(fn: any): void {
