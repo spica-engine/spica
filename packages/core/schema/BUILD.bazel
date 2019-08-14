@@ -31,7 +31,6 @@ ts_library(
     tsconfig = "//:tsconfig.json",
     deps = [
         ":schema",
-        "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
         "@npm//@types/json-schema",
         "@npm//@types/node",
