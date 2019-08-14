@@ -43,7 +43,6 @@ ts_library(
         "@npm//parse5",
         "@npm//request-promise",
         "@npm//rxjs",
-        "@npm//sharp",
         "@npm//typescript",
     ],
 )
