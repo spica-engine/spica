@@ -1,181 +1,108 @@
-<mat-tab-group mat-align-tabs="center" animationDuration="0ms" class="full-height-card">
-  <mat-tab label="Identifier">
-    <mat-card>
-      <form #detailsForm="ngForm" class="details-form">
-        <div identifierContainer>
-          <mat-error *ngIf="error?.error">{{ error.error.message }}</mat-error>
-          <mat-form-field>
-            <input
-              matInput
-              name="identifier"
-              placeholder="Identifier"
-              [(ngModel)]="identity.identifier"
-              #identifierModel="ngModel"
-              required
-            />
-            <mat-hint> Example: example or example@mail.com </mat-hint>
-            <mat-error *ngIf="identifierModel?.errors?.required">This field is required.</mat-error>
-          </mat-form-field>
-          <button
-            mat-button
-            *ngIf="identity._id && !changePasswordState"
-            (click)="changePasswordState = !changePasswordState"
-          >
-            Change Password
-          </button>
-          <mat-form-field *ngIf="!identity._id || changePasswordState">
-            <input
-              matInput
-              name="password"
-              placeholder="Password"
-              [(ngModel)]="identity.password"
-              #passwordModel="ngModel"
-              required
-            />
-            <mat-error *ngIf="passwordModel?.errors?.required">This field is required.</mat-error>
-          </mat-form-field>
-        </div>
+<ng-template #toolbar>
+  <mat-toolbar-row>
+    <h4>
+      <mat-icon>account_circle</mat-icon>
+      <span>Identity</span>
+    </h4>
+  </mat-toolbar-row>
+</ng-template>
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <form #identityForm="ngForm">
+      <mat-form-field>
+        <input
+          matInput
+          name="identifier"
+          placeholder="Identifier"
+          [(ngModel)]="identity.identifier"
+          #identifierModel="ngModel"
+          required
+        />
+        <mat-hint> Example: example or example@mail.com </mat-hint>
+        <mat-error *ngIf="identifierModel?.errors?.required">This field is required.</mat-error>
+      </mat-form-field>
+      <button
+        mat-button
+        *ngIf="identity._id && !changePasswordState"
+        (click)="changePasswordState = !changePasswordState"
+      >
+        Change Password
+      </button>
+      <mat-form-field *ngIf="!identity._id || changePasswordState">
+        <input
+          matInput
+          name="password"
+          placeholder="Password"
+          [(ngModel)]="identity.password"
+          #passwordModel="ngModel"
+          required
+        />
+        <mat-error *ngIf="passwordModel?.errors?.required">This field is required.</mat-error>
+      </mat-form-field>
 
-        <mat-divider></mat-divider>
+      <div
+        *ngFor="let propertyKv of preferences?.attributes?.properties | keyvalue"
+        [name]="propertyKv.key"
+        [inputPlacer]="propertyKv.value"
+        [disabled]="propertyKv.value.readOnly"
+        [required]="
+          preferences.attributes.required &&
+          preferences.attributes.required.indexOf(propertyKv.key) > -1
+        "
+        [ngModel]="identity.attributes && identity.attributes[propertyKv.key]"
+        (ngModelChange)="
+          identity.attributes = identity.attributes || {};
+          identity.attributes[propertyKv.key] = $event
+        "
+      ></div>
 
-        <div informationContainer>
-          <mat-form-field class="details-field">
-            <input
-              matInput
-              name="first_name"
-              placeholder="First Name"
-              [(ngModel)]="identity.first_name"
-              #identifierModel="ngModel"
-              required
-            />
-          </mat-form-field>
-
-          <mat-form-field class="details-field">
-            <input
-              matInput
-              name="last_name"
-              placeholder="Last Name"
-              [(ngModel)]="identity.last_name"
-              #identifierModel="ngModel"
-              required
-            />
-          </mat-form-field>
-
-          <mat-form-field class="details-field">
-            <input
-              matInput
-              type="email"
-              name="mail"
-              placeholder="E-mail"
-              [(ngModel)]="identity.email"
-              #identifierModel="ngModel"
-              required
-              email
-            />
-            <mat-error>Please enter a valid email address</mat-error>
-          </mat-form-field>
-        </div>
-
-        <mat-divider></mat-divider>
-
-        <div customAttributesContainer>
-          <ng-container *ngFor="let attribute of customAttributes">
-            <div
-              [options]="{appearance: '', class: 'custom-attr'}"
-              [name]="attribute.name"
-              [inputPlacer]="attribute.schema"
-              [(ngModel)]="identity[attribute.name]"
-              class="field-container"
-            ></div>
-          </ng-container>
-        </div>
-
-        <button
-          [canInteract]="'passport:identity:update'"
-          submitButton
-          mat-button
-          (click)="submitForm()"
-        >
-          <mat-icon>save</mat-icon> Save
-        </button>
-      </form>
-    </mat-card>
-  </mat-tab>
-  <mat-tab label="Policies" [disabled]="identity._id == undefined">
-    <form #permissionsForm="ngForm">
-      <!-- Owned Policies -->
-      <mat-card>
-        <mat-card-title>Owned Policies</mat-card-title>
-        <mat-card-content>
-          <mat-card *ngFor="let policy of ownedPolicies">
-            <mat-card-subtitle> {{ policy.name }} </mat-card-subtitle>
-            <mat-card-content>
-              {{ policy.description }}
-              <button
-                [canInteract]="'passport:identity:policy'"
-                (click)="detachPolicy(policy._id)"
-                mat-button
-                color="warn"
-              >
-                Detach <mat-icon>link_off</mat-icon>
-              </button>
-            </mat-card-content>
-          </mat-card>
-          <!-- <mat-accordion>
-            <span *ngIf="identity.policies.length <= 0">
-              The identity has no policy, yet.
-            </span>
-            <mat-expansion-panel
-              class="mat-elevation-z1"
-              *ngFor="let policy of ownedPolicies"
+      <div class="policies" *ngIf="identity._id">
+        <mat-list>
+          <h3 mat-subheader>Owned Policies</h3>
+          <mat-list-item *ngFor="let policy of ownedPolicies">
+            <mat-icon mat-list-icon>layers</mat-icon>
+            <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+            <button
+              mat-icon-button
+              canInteract="passport:identity:policy"
+              matTooltip="Detach this policy"
+              (click)="detachPolicy(policy._id)"
+              color="warn"
             >
-              <mat-expansion-panel-header>
-                <mat-panel-title>{{ policy.name }}</mat-panel-title>
-              </mat-expansion-panel-header>
-              <mat-panel-description>
-                {{ policy.description }}
-              </mat-panel-description>
-              <mat-action-row>
-                <button (click)="detachPolicy(policy._id)" mat-button color="warn">
-                  Detach <mat-icon>link_off</mat-icon>
-                </button>
-              </mat-action-row>
-            </mat-expansion-panel>
-          </mat-accordion> -->
-        </mat-card-content>
-      </mat-card>
-      <mat-divider></mat-divider>
-      <!-- Ownable Policies -->
-      <mat-card>
-        <mat-card-title>Ownable Policies</mat-card-title>
-        <mat-card-content>
-          <mat-accordion>
-            <ng-container *ngFor="let policy of policies">
-              <mat-expansion-panel
-                class="mat-elevation-z1"
-                *ngIf="!identity.policies.includes(policy._id)"
+              <mat-icon>link_off</mat-icon>
+            </button>
+          </mat-list-item>
+        </mat-list>
+
+        <mat-list>
+          <h3 mat-subheader>Ownable Policies</h3>
+          <ng-container *ngFor="let policy of policies">
+            <mat-list-item *ngIf="identity?.policies?.indexOf(policy._id) == -1">
+              <mat-icon mat-list-icon>layers</mat-icon>
+              <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+              <button
+                mat-icon-button
+                canInteract="passport:identity:policy"
+                matTooltip="Attach this policy"
+                (click)="attachPolicy(policy._id)"
               >
-                <mat-expansion-panel-header>
-                  <mat-panel-title>{{ policy.name }}</mat-panel-title>
-                </mat-expansion-panel-header>
-                <mat-panel-description>
-                  {{ policy.description }}
-                </mat-panel-description>
-                <mat-action-row>
-                  <button
-                    [canInteract]="'passport:identity:policy'"
-                    (click)="attachPolicy(policy._id)"
-                    mat-button
-                    color="primary"
-                  >
-                    Attach <mat-icon>link</mat-icon>
-                  </button>
-                </mat-action-row>
-              </mat-expansion-panel>
-            </ng-container>
-          </mat-accordion>
-        </mat-card-content>
-      </mat-card>
+                <mat-icon>link</mat-icon>
+              </button>
+            </mat-list-item>
+          </ng-container>
+        </mat-list>
+      </div>
+      <mat-error *ngIf="error">{{ error }}</mat-error>
     </form>
-  </mat-tab>
-</mat-tab-group>
+  </mat-card-content>
+  <mat-card-actions>
+    <button
+      canInteract="passport:identity:update"
+      [disabled]="identityForm.invalid"
+      mat-button
+      (click)="upsertIdentity()"
+    >
+      <mat-icon>save</mat-icon> Save
+    </button>
+  </mat-card-actions>
+</mat-card>

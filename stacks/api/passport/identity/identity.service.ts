@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Collection, DatabaseService, ObjectId, FilterQuery} from "@spica-server/database";
 import {Identity, Service} from "./interface";
+import {Default, Validator} from "@spica-server/core/schema";
 import {hash} from "../utils/hash";
 
 @Injectable()
@@ -16,7 +17,12 @@ export class IdentityService {
 
   services: Array<Service> = [];
 
-  constructor(db: DatabaseService, identities: Identity[], services: Service[]) {
+  constructor(
+    db: DatabaseService,
+    identities: Identity[],
+    services: Service[],
+    private validator: Validator
+  ) {
     this.identityCollection = db.collection("identity");
     this.managedIdentities = identities.map(p => ({...p, system: true}));
     this.services = services;
@@ -49,6 +55,10 @@ export class IdentityService {
 
   deleteOne(filter: Object): Promise<any> {
     return this.identityCollection.deleteOne(filter);
+  }
+
+  getPredefinedDefaults(): Default[] {
+    return this.validator.defaults;
   }
 }
 

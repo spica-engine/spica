@@ -3,6 +3,7 @@ import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
 import {Observable} from "rxjs";
 import {Identity} from "../interfaces/identity";
+import {PredefinedDefault} from "../interfaces/predefined-default";
 
 @Injectable({
   providedIn: "root"
@@ -36,5 +37,9 @@ export class IdentityService {
 
   deleteOne(id: string): Observable<void> {
     return this.http.delete<void>(`api:/passport/identity/${id}`);
+  }
+
+  getPredefinedDefaults(): Observable<PredefinedDefault[]> {
+    return this.http.get<PredefinedDefault[]>(`api:/passport/identity/predefs`);
   }
 }

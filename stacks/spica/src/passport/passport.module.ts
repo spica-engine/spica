@@ -38,6 +38,9 @@ import {PassportRoutingModule} from "./passport-routing.module";
 import {PassportRouteFilter} from "./services/route.filter";
 import {AuthorizationInterceptor} from "./services/authorization.interceptor";
 import {MatGridListModule} from "@angular/material";
+import {MatListModule} from "@angular/material/list";
+import {DragDropModule} from "@angular/cdk/drag-drop";
+import {CommonModule as SpicaCommon} from "@spica-client/common";
 
 @NgModule({
   declarations: [
@@ -77,7 +80,10 @@ import {MatGridListModule} from "@angular/material";
     MatAwareDialogModule,
     MatToolbarModule,
     MatGridListModule,
-    InputModule
+    MatListModule,
+    InputModule,
+    DragDropModule,
+    SpicaCommon
   ],
   exports: [CanInteractDirective],
   entryComponents: [IdentityBadgeComponent]

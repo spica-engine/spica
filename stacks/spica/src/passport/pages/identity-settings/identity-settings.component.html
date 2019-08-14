@@ -6,68 +6,178 @@
     </h4>
   </mat-toolbar-row>
 </ng-template>
-<mat-card class="mat-elevation-z25">
-  <mat-card-content *ngIf="preferences">
-    <mat-hint>Custom Attributes</mat-hint>
-    <div class="field-container">
-      <div class="left">
-        <div
-          class="field-box"
-          [class.selected-property]="selectedInput == index"
-          *ngFor="let attribute of preferences.identity.custom_attributes; let index = index"
+<mat-card class="mat-elevation-z25" *ngIf="preferences">
+  <mat-card-content>
+    <mat-list-item>
+      <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
+        <mat-expansion-panel
+          class="identity-settings"
+          *ngFor="
+            let propertyKv of preferences?.identity?.attributes?.properties | propertyKv:registerInvalidator.bind(this);
+            let index = index
+          "
+          cdkDrag
         >
-          <div class="click" (click)="selectedInput = index"></div>
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <span>{{ propertyKv.value.title | titlecase }}</span>
+            </mat-panel-title>
+            <mat-panel-description>
+              <button
+                mat-icon-button
+                [matMenuTriggerFor]="settingsMenu"
+                [matMenuTriggerData]="{propertyKv: propertyKv}"
+              >
+                <mat-icon>settings</mat-icon>
+                <mat-menu #settingsMenu="matMenu">
+                  <ng-template matMenuContent let-propertyKv="propertyKv">
+                    <div
+                      mat-menu-item
+                      *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+                      role="menuitemcheckbox"
+                      disableRipple
+                      (click)="$event.stopImmediatePropagation()"
+                    >
+                      <mat-checkbox [(ngModel)]="propertyKv.value.options.visible">
+                        Visible on list
+                      </mat-checkbox>
+                    </div>
+                    <div
+                      mat-menu-item
+                      role="menuitemcheckbox"
+                      disableRipple
+                      (click)="$event.stopImmediatePropagation()"
+                    >
+                      <mat-checkbox [(ngModel)]="propertyKv.value.readOnly">
+                        Read-only
+                      </mat-checkbox>
+                    </div>
+                    <div
+                      mat-menu-item
+                      role="menuitemcheckbox"
+                      disableRipple
+                      (click)="$event.stopImmediatePropagation()"
+                    >
+                      <mat-checkbox
+                        [ngModel]="
+                          preferences.identity.attributes.required?.includes(propertyKv.key)
+                        "
+                        (ngModelChange)="
+                          preferences.identity.attributes.required =
+                            preferences.identity.attributes.required || [];
+                          $event
+                            ? preferences.identity.attributes.required.push(propertyKv.key)
+                            : preferences.identity.attributes.required.splice(
+                                preferences.identity.attributes.required.indexOf(propertyKv.key),
+                                1
+                              )
+                        "
+                      >
+                        Required
+                      </mat-checkbox>
+                    </div>
+                  </ng-template>
+                </mat-menu>
+              </button>
+
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="$event.stopImmediatePropagation(); deleteProperty(propertyKv.key)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+              <mat-icon class="drag-box" cdkDragHandle>drag_handle</mat-icon>
+            </mat-panel-description>
+          </mat-expansion-panel-header>
           <div>
-            <button
-              delete
-              mat-icon-button
-              color="warn"
-              (click)="selectedInput = null; removeAttribute(index)"
+            <span class="space-between"></span>
+
+            <mat-icon
+              *ngIf="propertyKv.value.options?.visible"
+              matTooltip="This property will be visible on list by default."
+              >visibility</mat-icon
             >
-              <mat-icon> delete </mat-icon>
-            </button>
+            <mat-icon *ngIf="propertyKv.value.readOnly" matTooltip="This property is read-only."
+              >format_clear</mat-icon
+            >
           </div>
-          <div class="title" matTooltip="{{ attribute.name }}">
-            {{ attribute.name }}
-          </div>
-          <div class="action">
-            <button edit disabled mat-icon-button>
-              <mat-icon>edit</mat-icon>
-            </button>
-          </div>
-        </div>
-        <div class="field-box add-new">
-          <button mat-icon-button (click)="addAttribute()">
-            <mat-icon>add</mat-icon>
-          </button>
-        </div>
-      </div>
-      <div class="right">
-        <form ngForm>
-          <div
-            field
-            ngModelGroup="fields"
-            *ngIf="selectedInput != null || selectedInput != undefined"
+          <span
+            class="input-placer-area"
+            [inputSchemaPlacer]="propertyKv.value.type"
+            [(ngModel)]="preferences.identity.attributes.properties[propertyKv.key]"
           >
-            <h6 class="mat-h5 settings-field-text">Settings of Field</h6>
-            <div class="field-settings">
-              <span
-                [inputSchemaPlacer]="
-                  preferences.identity.custom_attributes[selectedInput].schema.type
-                "
-                [name]="preferences.identity.custom_attributes[selectedInput].name"
-                [ngModel]="preferences.identity.custom_attributes[selectedInput].schema"
-                (ngModelChange)="slugifyAttributeTitle($event, selectedInput)"
-                class="currentInputField"
-              ></span>
-              <mat-hint>
-                Will be shown as "{{ preferences.identity.custom_attributes[selectedInput].name }}"
-              </mat-hint>
-            </div>
+          </span>
+
+          <div
+            class="input-defaults"
+            *ngIf="predefinedDefaults && predefinedDefaults[propertyKv.value.type]"
+          >
+            <mat-form-field *ngIf="predefinedDefaults">
+              <mat-label>Default</mat-label>
+              <mat-select [(ngModel)]="propertyKv.value.default">
+                <mat-option>None</mat-option>
+                <ng-container *ngFor="let predef of predefinedDefaults[propertyKv.value.type]">
+                  <mat-option [value]="predef.keyword">
+                    {{ predef.keyword }}
+                  </mat-option>
+                </ng-container>
+              </mat-select>
+              <mat-hint
+                >You can select a prdefined default value for {{ propertyKv.value.type }}.</mat-hint
+              >
+            </mat-form-field>
           </div>
-        </form>
-      </div>
-    </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </mat-list-item>
+
+    <mat-list-item class="property">
+      <mat-form-field>
+        <input
+          matInput
+          name="property-name"
+          placeholder="Enter a property name"
+          #pnm="ngModel"
+          (keyup.enter)="
+            pnm.valid &&
+              !preferences.identity.attributes.properties[pnm?.value?.toLowerCase()] &&
+              addProperty(pnm.value);
+            pnm.reset();
+            pnm.control.markAsUntouched()
+          "
+          ngModel
+          required
+          minlength="3"
+          maxlength="25"
+        />
+
+        <mat-error *ngIf="pnm.value && pnm?.errors?.required">
+          Property name is required.
+        </mat-error>
+        <mat-error *ngIf="pnm?.errors?.minlength">
+          Length of the property name must be greater than
+          {{ propertyName?.errors?.minlength?.requiredLength }} character.
+        </mat-error>
+        <mat-error *ngIf="pnm?.errors?.maxlength">
+          Length of the property name must be less than
+          {{ propertyName?.errors?.maxlength?.requiredLength }} character.
+        </mat-error>
+        <mat-error *ngIf="preferences.identity.attributes.properties[pnm?.value?.toLowerCase()]">
+          {{ pnm?.value | lowercase }} already exists.
+        </mat-error>
+      </mat-form-field>
+
+      <button
+        mat-button
+        [disabled]="
+          pnm.invalid || preferences.identity.attributes.properties[pnm?.value?.toLowerCase()]
+        "
+        (click)="addProperty(pnm.value); pnm.reset(); pnm.control.markAsUntouched()"
+      >
+        <mat-icon>add</mat-icon> Add new property
+      </button>
+    </mat-list-item>
   </mat-card-content>
   <mat-card-actions>
     <button mat-button (click)="saveSettings()"><mat-icon>save</mat-icon> Save</button>

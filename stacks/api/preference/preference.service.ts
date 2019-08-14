@@ -1,6 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Collection, DatabaseService} from "@spica-server/database";
 import {Preference} from "./interface";
+import {Observable} from "rxjs";
 
 @Injectable()
 export class PreferenceService {
@@ -11,6 +12,32 @@ export class PreferenceService {
     this._collection = database.collection("preferences");
   }
 
+  watch<T extends Preference>(
+    scope: string,
+    {propagateOnStart}: {propagateOnStart: boolean} = {propagateOnStart: false}
+  ): Observable<T> {
+    return new Observable(observer => {
+      if (propagateOnStart) {
+        this.get<T>(scope).then(pref => observer.next(pref));
+      }
+
+      const watcher = this._collection.watch([
+        {
+          $match: {
+            "fullDocument.scope": scope
+          }
+        }
+      ]);
+
+      watcher.on("change", change => observer.next(change.fullDocument as T));
+      return () => {
+        if (!watcher.isClosed()) {
+          watcher.close();
+        }
+      };
+    });
+  }
+
   get<T extends Preference>(scope: string) {
     return this._collection
       .findOne<T>({scope})
@@ -19,11 +46,9 @@ export class PreferenceService {
 
   update<T extends Preference>(preference: T) {
     delete preference._id;
-    return this._collection.findOneAndUpdate(
-      {scope: preference.scope},
-      {$set: preference},
-      {upsert: true}
-    );
+    return this._collection.findOneAndReplace({scope: preference.scope}, preference, {
+      upsert: true
+    });
   }
 
   default<T extends Preference>(preference: T) {
