@@ -8,7 +8,7 @@ We are generating our docs from markdown and typescript files through bazel rule
 
 You can generate document with running commands.
 
-For API Docs, run: `yarn ibazel build //stacks:api_docs`
+For API Docs, run: `yarn ibazel build //docs/content/api`
 
 For Content Docs (guide, concept eg.), run: `yarn ibazel build //docs/content`
 
