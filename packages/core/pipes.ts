@@ -22,7 +22,7 @@ export const JSONP: PipeTransform<string, object> = {
 export function DEFAULT<T = any>(def: T): PipeTransform<any, T> {
   return {
     transform: value => {
-      return value == undefined ? def : value;
+      return typeof value == "undefined" ? def : value;
     }
   };
 }
