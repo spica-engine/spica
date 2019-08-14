@@ -19,7 +19,8 @@
     },
   },
   "bazelOptions": {
-    "suppressTsconfigOverrideWarnings": true
+    "suppressTsconfigOverrideWarnings": true,
+    "devmodeTargetOverride": "es2018"
   },
   "exclude": ["node_modules", "dist", "bazel-*"]
 }
