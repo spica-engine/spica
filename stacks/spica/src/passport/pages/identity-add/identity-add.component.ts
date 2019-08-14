@@ -1,13 +1,14 @@
 import {Location} from "@angular/common";
-import {Component, OnDestroy, OnInit} from "@angular/core";
+import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {PreferencesService} from "@spica-client/core";
 import {Subject} from "rxjs";
 import {filter, switchMap, takeUntil} from "rxjs/operators";
-import {EMPTY_IDENTITY, Identity} from "../../interfaces/identity";
+import {emptyIdentity, Identity} from "../../interfaces/identity";
 import {Policy} from "../../interfaces/policy";
-import {PolicyService} from "../../services/policy.service";
 import {IdentityService} from "../../services/identity.service";
+import {PolicyService} from "../../services/policy.service";
+import {PassportPreference} from "../identity-settings/identity-settings.component";
 
 @Component({
   selector: "passport-identity-add",
@@ -15,12 +16,13 @@ import {IdentityService} from "../../services/identity.service";
   styleUrls: ["./identity-add.component.scss"]
 })
 export class IdentityAddComponent implements OnInit, OnDestroy {
-  identity: Identity = {...EMPTY_IDENTITY};
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
+  identity: Identity = emptyIdentity();
   policies: Policy[];
   changePasswordState: boolean;
 
-  public error;
-  public customAttributes;
+  public error: string;
+  public preferences: PassportPreference;
   private onDestroy: Subject<void> = new Subject<void>();
 
   constructor(
@@ -44,12 +46,10 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
-        takeUntil(this.onDestroy),
-        switchMap(params => this.identityService.findOne(params.id))
+        switchMap(params => this.identityService.findOne(params.id)),
+        takeUntil(this.onDestroy)
       )
-      .subscribe(identity => {
-        this.identity = {...EMPTY_IDENTITY, ...identity};
-      });
+      .subscribe(identity => (this.identity = identity));
 
     this.policyService
       .find()
@@ -61,8 +61,8 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.preferencesService
       .get("passport")
       .toPromise()
-      .then(data => {
-        this.customAttributes = data.identity.custom_attributes;
+      .then(pref => {
+        this.preferences = pref.identity;
       });
   }
 
@@ -70,8 +70,8 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.policyService
       .attachPolicy(policyId, this.identity._id)
       .toPromise()
-      .then(identityData => {
-        this.identity = identityData;
+      .then(identity => {
+        this.identity = identity;
       });
   }
 
@@ -79,8 +79,8 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.policyService
       .detachPolicy(policyId, this.identity._id)
       .toPromise()
-      .then(identityData => {
-        this.identity = identityData;
+      .then(identity => {
+        this.identity = identity;
       });
   }
 
@@ -103,10 +103,10 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.identityService
       .updateOne(this.identity)
       .toPromise()
-      .then(() => this.router.navigate(["passport/identities"]));
+      .then(() => this.router.navigate(["passport/identity"]));
   }
 
-  submitForm(): void {
+  upsertIdentity(): void {
     if (this.identity._id) {
       this.updateIdentity();
     } else {

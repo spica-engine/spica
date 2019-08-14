@@ -20,7 +20,6 @@ import {NUMBER} from "@spica-server/core";
 import {AuthGuard} from "@nestjs/passport";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-
 @Controller("passport/identity")
 export class IdentityController {
   constructor(
@@ -28,7 +27,6 @@ export class IdentityController {
     private identity: IdentityService,
     private policy: PolicyService
   ) {}
-
   @Get("statements")
   @UseGuards(AuthGuard())
   async statements(@Req() req) {
@@ -36,15 +34,12 @@ export class IdentityController {
       return [];
     }
     const policies = await this.policy._findAll();
-
     const identityPolicies = req.user.policies.map(p => policies.find(pp => pp._id == p));
-
     return Array.prototype.concat.apply(
       [],
       identityPolicies.filter(item => item).map(ip => ip.statement)
     );
   }
-
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
   find(@Query("limit", NUMBER) limit: number, @Query("skip", NUMBER) skip: number) {
@@ -66,6 +61,11 @@ export class IdentityController {
       .find(aggregate)
       .then(result => (result && result[0]) || Promise.reject("Cannot found."));
   }
+  @Get("predefs")
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:show"))
+  getPredefinedDefaults() {
+    return this.identity.getPredefinedDefaults();
+  }
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:show"))
@@ -74,11 +74,11 @@ export class IdentityController {
     delete identity.password;
     return identity;
   }
-
   @Post("create")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:create"))
   insertOne(
-    @Body(Schema.validate("http://spica.internal/passport/identity-create")) identity: Identity
+    @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
+    identity: Identity
   ) {
     return this.passport.create(identity).catch(exception => {
       if (exception.code === 11000) {
@@ -87,23 +87,21 @@ export class IdentityController {
       throw new InternalServerErrorException();
     });
   }
-
   @Post(":id")
   // TODO(thesayyn): Check if user updates its own identity.
   @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
   updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/identity")) identity: Identity
+    @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
+    identity: Identity
   ) {
     return this.identity.updateOne(id, identity);
   }
-
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.identity.deleteOne({_id: id});
   }
-
   // TODO(thesayyn): Strictly check policies before attaching them
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
@@ -122,7 +120,6 @@ export class IdentityController {
     await this.identity.updateOne(id, identity);
     return identity;
   }
-
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async detachPolicy(

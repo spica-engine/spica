@@ -11,5 +11,6 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/mongodb",
+        "@npm//rxjs",
     ],
 )

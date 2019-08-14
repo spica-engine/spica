@@ -1,7 +1,7 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {JwtModule} from "@nestjs/jwt";
 import {PassportModule as CorePassportModule} from "@nestjs/passport";
-import {SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference";
 import {readdirSync} from "fs";
@@ -16,6 +16,7 @@ import {PolicyController} from "./policy/policy.controller";
 import {SamlService} from "./saml.service";
 import {StrategyController} from "./strategies/strategy.controller";
 import {StrategyService} from "./strategies/strategy.service";
+import {SchemaResolver, provideSchemaResolver} from "./schema.resolver";
 
 @Global()
 @Module({})
@@ -28,7 +29,8 @@ class PassportCoreModule {
         JwtModule.register({
           secret: options.secretOrKey,
           signOptions: {audience: options.audience, issuer: options.issuer, expiresIn: "2 days"}
-        })
+        }),
+        SchemaModule.forChild()
       ],
       exports: [PolicyService, IdentityService, JwtModule, CorePassportModule],
       providers: [
@@ -45,24 +47,24 @@ class PassportCoreModule {
         },
         {
           provide: IdentityService,
-          useFactory: db => {
+          useFactory: (db, validator) => {
             return new IdentityService(
               db,
               readdirSync(`${__dirname}/identity`).map(f => require(`${__dirname}/identity/${f}`)),
-              readdirSync(`${__dirname}/services`).map(f => require(`${__dirname}/services/${f}`))
+              readdirSync(`${__dirname}/services`).map(f => require(`${__dirname}/services/${f}`)),
+              validator
             );
           },
-          inject: [DatabaseService]
+          inject: [DatabaseService, Validator]
         }
       ]
     };
   }
 }
-
 @Module({})
 export class PassportModule {
   constructor(preference: PreferenceService, identity: PassportService) {
-    preference.default({scope: "passport", identity: {custom_attributes: []}});
+    preference.default({scope: "passport", identity: {attributes: {}}});
     identity.default({
       identifier: "spica",
       password: "$2a$10$wibvsNsOxEVDj5Pl2EJnme.rhEV5vRIhOExhXvNCrCXIdRzr6F5TG", // encrypted = 123
@@ -77,7 +79,6 @@ export class PassportModule {
       ]
     });
   }
-
   static forRoot(options: PassportOptions): DynamicModule {
     return {
       module: PassportModule,
@@ -99,6 +100,11 @@ export class PassportModule {
           provide: PassportService,
           useClass: PassportService,
           inject: [DatabaseService, PASSPORT_OPTIONS]
+        },
+        {
+          provide: SchemaResolver,
+          useFactory: provideSchemaResolver,
+          inject: [Validator, PreferenceService]
         }
       ]
     };
