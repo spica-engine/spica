@@ -48,3 +48,5 @@ build:release --workspace_status_command="./tools/bazel_stamp_vars.sh"
 # Use phyton 2 instead of 3
 build --host_force_python=PY2
 run --host_force_python=PY2
+
+common --experimental_allow_incremental_repository_updates
