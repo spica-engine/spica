@@ -1,6 +1,16 @@
 <div class="storage-prop">
   <p class="title">{{ schema.title }}</p>
   <p class="desc">{{ schema.description }}</p>
+  <button
+    *ngIf="selected"
+    mat-icon-button
+    mat-flat-button
+    color="warn"
+    matTooltip="Clear storage object"
+    (click)="delete(); $event.stopPropagation()"
+  >
+    <mat-icon>clear_all</mat-icon>
+  </button>
 </div>
 <div
   [ngClass]="{'selected-storage': selected, 'unselected-storage': !selected}"

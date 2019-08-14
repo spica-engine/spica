@@ -73,6 +73,8 @@ export class StorageComponent implements ControlValueAccessor {
   }
   delete() {
     this.value = "";
+    this.selected = undefined;
+    this.onChangeFn();
   }
   uploadStorage(file: FileList): void {
     if (file) {
