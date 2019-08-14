@@ -14,7 +14,6 @@ import * as path from "path";
 import * as request from "request-promise";
 import {from, fromEvent, Subject, Observable} from "rxjs";
 import {map, tap} from "rxjs/operators";
-import * as sharp from "sharp";
 import {CollectionDiscovery, CollectionRegistry, ElementFlags, ElementSchema} from "./collection";
 import {getCustomCodeInHead, updateCustomCodeInHead} from "./html";
 import {collectPalettes, ColorPair, DefaultPalettes, updateRootPalette} from "./palette";
@@ -46,13 +45,6 @@ export class ComposerGateway implements OnGatewayConnection, OnGatewayDisconnect
       //resolve dynamic schemas
       return request.get(`${process.env.PUBLIC_HOST}/bucket/${options.source}`).then(JSON.parse);
     });
-    sharp(path.join(this.project.root, "src", "assets", "icons", "icon-512x512.png"))
-      .resize(10)
-      .toFile(path.join(this.project.root, "src", "favicon.png"))
-      .then(() => {
-        console.log("dawdsda");
-      })
-      .catch(console.log);
   }
 
   handleConnection(client: any) {
