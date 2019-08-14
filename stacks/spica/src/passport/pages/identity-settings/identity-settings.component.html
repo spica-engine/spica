@@ -148,20 +148,10 @@
           "
           ngModel
           required
-          minlength="3"
-          maxlength="25"
         />
 
         <mat-error *ngIf="pnm.value && pnm?.errors?.required">
           Property name is required.
-        </mat-error>
-        <mat-error *ngIf="pnm?.errors?.minlength">
-          Length of the property name must be greater than
-          {{ propertyName?.errors?.minlength?.requiredLength }} character.
-        </mat-error>
-        <mat-error *ngIf="pnm?.errors?.maxlength">
-          Length of the property name must be less than
-          {{ propertyName?.errors?.maxlength?.requiredLength }} character.
         </mat-error>
         <mat-error *ngIf="preferences.identity.attributes.properties[pnm?.value?.toLowerCase()]">
           {{ pnm?.value | lowercase }} already exists.

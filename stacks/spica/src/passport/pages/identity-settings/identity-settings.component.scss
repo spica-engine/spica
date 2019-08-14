@@ -45,6 +45,9 @@
 :host {
   mat-list-item.property {
     text-align: center;
+    mat-form-field input {
+      text-transform: lowercase;
+    }
   }
 
   mat-expansion-panel {
@@ -80,11 +83,6 @@
             }
             .title-description-form {
               display: flex;
-            }
-          }
-          &.add-property {
-            input[name="property-name"] {
-              text-transform: lowercase;
             }
           }
         }
