@@ -19,10 +19,14 @@ import * as locale from "locale";
 import {BucketDocument} from "./bucket";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {BucketService} from "./bucket.service";
-
+import {ScheduleService} from "./schedule.service";
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
-  constructor(private bs: BucketService, private bds: BucketDataService) {}
+  constructor(
+    private bs: BucketService,
+    private bds: BucketDataService,
+    private ss: ScheduleService
+  ) {}
 
   private async getLanguage(language: string) {
     const bucketSettings = await this.bs.getPreferences();
@@ -236,7 +240,13 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    return this.bds.replaceOne(bucketId, body).then(() => null);
+    if (body._schedule) {
+      return this.bds.replaceOne(bucketId, body).then(data => {
+        this.ss.register(bucketId, data.ops[0]._id, body);
+      });
+    } else {
+      return this.bds.replaceOne(bucketId, body).then(() => null);
+    }
   }
 
   @Delete(":documentId")

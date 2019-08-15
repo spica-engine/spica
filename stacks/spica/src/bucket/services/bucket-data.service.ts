@@ -74,6 +74,7 @@ export class BucketDataService {
   }
 
   replaceOne(bucketId: string, data: any): Observable<any> {
+    console.log(data)
     return this.http.post(`api:/bucket/${bucketId}/data`, data);
   }
 }

@@ -18,6 +18,7 @@ export class AddComponent implements OnInit {
   bucketId: string;
   data: BucketRow = {};
   now: BucketRow;
+  datefalan = new Date();
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
@@ -78,6 +79,10 @@ export class AddComponent implements OnInit {
   }
 
   saveBucketRow() {
+    this.data["_schedule"] = {
+      type: "schedule",
+      options: {date: this.datefalan}
+    };
     this.bds
       .replaceOne(this.bucketId, this.data)
       .toPromise()
