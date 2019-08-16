@@ -91,16 +91,6 @@ load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_defaults", "k8s_repositories")
 k8s_repositories()
 
 # Create a rule named as k8s_deploy
-k8s_defaults(
-    name = "k8s_deploy_dev",
-    cluster = "_".join([
-        "gke",
-        "spica-239113",
-        "us-central1-a",
-        "master",
-    ]),
-    kind = "deployment",
-)
 
 k8s_defaults(
     name = "k8s_deploy",
