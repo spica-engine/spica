@@ -1,12 +1,7 @@
-apiVersion: v1
-kind: Namespace
-metadata: 
-  name: master
----
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  namespace: master
+  name: database
 spec:
   serviceName: mongo
   replicas: 3
@@ -18,11 +13,11 @@ spec:
       terminationGracePeriodSeconds: 10
       initContainers:
         - name: init
-          image: gcr.io/spica-239113/initcontainer
+          image: spicaengine/initcontainer:master
           imagePullPolicy: Always
       containers:
         - name: mongo
-          image: mongo:4.2-rc
+          image: mongo:4.2
           command:
             - mongod
             - "--replSet"
@@ -47,7 +42,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mongo
-  namespace: master
 spec:
   publishNotReadyAddresses: true
   ports:
@@ -61,7 +55,6 @@ apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
   name: spica
-  namespace: master
 spec:
   serviceName: spica
   replicas: 1
@@ -72,12 +65,12 @@ spec:
     spec:
       containers:
         - name: spica
-          image: gcr.io/spica-239113/spica
+          image: spicaengine/spica:master
           imagePullPolicy: Always
           ports:
             - containerPort: 80
         - name: api
-          image: gcr.io/spica-239113/api
+          image: spicaengine/api:master
           imagePullPolicy: Always
           ports:
             - containerPort: 4300
@@ -112,7 +105,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: spica
-  namespace: master
 spec:
   type: NodePort
   ports:
@@ -129,7 +121,6 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: gateway
-  namespace: master
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     kubernetes.io/ingress.class: nginx
