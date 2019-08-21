@@ -87,6 +87,11 @@ export class BucketDataService {
 
     return collection.deleteMany({_id: {$in: idArray.map(data => new ObjectId(data))}});
   }
+
+  updateMany(bucketId: ObjectId, filter: FilterQuery<any>, update: any) {
+    const collection = this.db.collection(getBucketDataCollection(bucketId));
+    return collection.updateMany(filter, update);
+  }
 }
 
 export function getBucketDataCollection(bucketId: string | ObjectId): string {

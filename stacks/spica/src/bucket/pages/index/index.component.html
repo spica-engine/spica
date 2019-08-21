@@ -37,6 +37,15 @@
   </button>
 
   <button
+    mat-icon-button
+    matTooltip="Show On/Off Scheduled Data"
+    [class.publish-on]="scheduledData"
+    (click)="scheduleTrigger()"
+  >
+    <mat-icon>schedule</mat-icon>
+  </button>
+
+  <button
     *ngIf="$meta | async; let meta"
     matTooltip="Toggle columns"
     mat-icon-button
@@ -143,6 +152,12 @@
           ></mat-checkbox>
         </mat-cell>
       </ng-container>
+      <ng-container matColumnDef="$$spicainternal_schedule">
+        <mat-header-cell class="scheduled" *matHeaderCellDef>Scheduled</mat-header-cell>
+        <mat-cell class="scheduled" *matCellDef="let row">
+          {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
+        </mat-cell>
+      </ng-container>
       <ng-container matColumnDef="$$spicainternal_actions">
         <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell class="action" *matCellDef="let row">
@@ -164,6 +179,7 @@
           </button>
         </mat-cell>
       </ng-container>
+
       <ng-container
         *ngFor="let property of ($meta | async)?.properties | keyvalue"
         [matColumnDef]="property.key"

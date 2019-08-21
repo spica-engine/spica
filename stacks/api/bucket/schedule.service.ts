@@ -1,10 +1,65 @@
-import { Injectable } from "@nestjs/common";
-import { MongoClient } from "@spica-server/database";
+import {Injectable} from "@nestjs/common";
+import {MongoClient, ObjectId} from "@spica-server/database";
+import * as cron from "cron";
+import {BucketDocument} from "./bucket";
+import {BucketDataService} from "./bucket-data.service";
+import {BucketService} from "./bucket.service";
 
 @Injectable()
-export class DocumentSheduler {
+export class DocumentScheduler {
+  private scheduleMap = new Map<string, cron.CronJob>();
 
-  constructor(database: MongoClient)   {
-    database.watch([])
+  constructor(database: MongoClient, private bds: BucketDataService, private bs: BucketService) {
+    this.bs.find().then(buckets => {
+      for (const bucket of buckets) {
+        this.bds.updateMany(bucket._id, {_schedule: {$lt: new Date()}}, {$unset: {_schedule: ""}});
+      }
+    });
+
+    const watcher = database.watch([
+      {
+        $match: {
+          "ns.coll": {
+            $regex: /^bucket_/
+          },
+          "fullDocument._schedule": {$type: "string"}
+        }
+      }
+    ]);
+    watcher.on("change", change => {
+      this.schedule(
+        new ObjectId(change.ns.coll.replace(/^bucket_/, "")),
+        new ObjectId(change.documentKey._id),
+        new Date(change.fullDocument._schedule),
+        change.fullDocument
+      );
+    });
+  }
+  schedule(bucket: ObjectId, document: ObjectId, time: Date, data: BucketDocument) {
+    const key = `${bucket}_${document}`;
+    delete data._schedule;
+    if (this.scheduleMap.has(key)) {
+      this.scheduleMap.set(
+        key,
+        new cron.CronJob({
+          cronTime: time,
+          start: true,
+          onTick: () => {
+            this.bds.replaceOne(bucket, data);
+          }
+        })
+      );
+    } else {
+      this.scheduleMap.set(
+        key,
+        new cron.CronJob({
+          cronTime: time,
+          start: true,
+          onTick: () => {
+            this.bds.replaceOne(bucket, data);
+          }
+        })
+      );
+    }
   }
 }

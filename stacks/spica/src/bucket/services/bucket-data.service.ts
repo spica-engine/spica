@@ -7,6 +7,7 @@ import {BucketEntry, BucketRow} from "../interfaces/bucket-entry";
 interface FindOptions {
   limit?: number;
   skip?: number;
+  schedule?: boolean;
   language?: string;
   sort?: {
     [key: string]: number;
@@ -22,7 +23,7 @@ export class BucketDataService {
 
   find(
     bucketId: string,
-    {filter, sort, language, limit, skip}: FindOptions = {}
+    {filter, sort, language, limit, skip, schedule}: FindOptions = {}
   ): Observable<IndexResult<BucketEntry>> {
     let params = new HttpParams({fromObject: {paginate: "true"}});
     let headers = new HttpHeaders();
@@ -45,6 +46,10 @@ export class BucketDataService {
 
     if (language) {
       headers = headers.set("Accept-Language", language);
+    }
+
+    if (schedule) {
+      params = params.set("schedule", String(schedule));
     }
 
     return this.http.get<IndexResult<BucketEntry>>(`api:/bucket/${bucketId}/data`, {
@@ -74,7 +79,6 @@ export class BucketDataService {
   }
 
   replaceOne(bucketId: string, data: any): Observable<any> {
-    console.log(data)
     return this.http.post(`api:/bucket/${bucketId}/data`, data);
   }
 }

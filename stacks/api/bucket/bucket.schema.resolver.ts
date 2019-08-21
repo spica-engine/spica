@@ -37,7 +37,7 @@ export class BucketSchemaResolver {
             },
             {
               _id: {type: "string", options: {position: undefined}, format: "objectid"},
-              _schedule: {type: "schedule", options: {date: Date}}
+              _schedule: {type: "string", format: "date-time"}
             }
           ) as any;
           schema["additionalProperties"] = false;

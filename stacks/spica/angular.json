@@ -30,11 +30,10 @@
             "styles": [
               "src/styles.scss",
               "../../node_modules/cropperjs/dist/cropper.css",
-              "../../node_modules/leaflet/dist/leaflet.css"
+              "../../node_modules/leaflet/dist/leaflet.css",
+              "../../node_modules/ng-pick-datetime/assets/style/picker.min.css"
             ],
-            "scripts": [
-              "../../node_modules/cropperjs/dist/cropper.js"
-            ]
+            "scripts": ["../../node_modules/cropperjs/dist/cropper.js"]
           },
           "configurations": {
             "production": {
@@ -76,7 +75,7 @@
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
-          "options": { 
+          "options": {
             "karmaConfig": "./karma.conf.js",
             "main": "src/test.ts",
             "tsConfig": "tsconfig.spec.json",
@@ -98,9 +97,7 @@
               "../../node_modules/cropperjs/dist/cropper.css",
               "../../node_modules/leaflet/dist/leaflet.css"
             ],
-            "scripts": [
-              "../../node_modules/cropperjs/dist/cropper.js"
-            ]
+            "scripts": ["../../node_modules/cropperjs/dist/cropper.js"]
           }
         }
       }

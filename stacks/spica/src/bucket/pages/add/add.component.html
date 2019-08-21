@@ -73,43 +73,34 @@
       </div>
     </form>
   </mat-card-content>
-  {{ data._schedule | json }}
-  <br />
-  {{ datefalan }}
+
   <mat-card-actions class="save">
-    Publish Date:
-    <mat-form-field>
-      <input
-        [(ngModel)]="datefalan"
-        matInput
-        [matDatepicker]="schedulePicker"
-        (focus)="schedulePicker.open()"
-        placeholder="Choose a date"
-      />
-      <mat-datepicker-toggle matSuffix [for]="schedulePicker"></mat-datepicker-toggle>
-      <mat-datepicker #schedulePicker></mat-datepicker>
-    </mat-form-field>
-    <mat-card-content>
-      <form novalidate>
-        <mat-form-field>
-          <mcc-timer-picker
-            mccConnectedTimerPicker
-            [mccConnectedTimerPickerOrigin]="inputTrigger"
-          ></mcc-timer-picker>
-          <input
-            matInput
-            mccTimerPickerOrigin
-            #inputTrigger="mccTimerPickerOrigin"
-            placeholder="Timer"
-          />
-        </mat-form-field>
-      </form>
-    </mat-card-content>
+    <form class="schedule" #scheduleForm="ngForm" *ngIf="scheduleOn">
+      <button mat-button color="warn" (click)="rejectSchedule()">
+        <mat-icon>cancel</mat-icon> Reject
+      </button>
+      <mat-form-field>
+        <input
+          matInput
+          [min]="minScheduleDate"
+          readonly
+          required
+          name="scheduleDate"
+          [(ngModel)]="scheduleDate"
+          [owlDateTime]="dt1"
+          [owlDateTimeTrigger]="dt1"
+          placeholder="Date Time"
+        />
+        <owl-date-time #dt1></owl-date-time>
+      </mat-form-field>
+    </form>
+
+    <button mat-button (click)="scheduleOnTrue()" *ngIf="!scheduleOn">Set Publish Date</button>
 
     <button
       canInteract="bucket:data:update"
       *ngIf="!data?._id"
-      [disabled]="form.invalid"
+      [disabled]="form.invalid || (scheduleForm && scheduleForm.invalid)"
       mat-button
       (click)="saveBucketRow()"
     >

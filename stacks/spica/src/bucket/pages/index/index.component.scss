@@ -17,21 +17,14 @@
   }
 }
 
-mat-header-cell.action,
-mat-cell.action {
-  max-width: 150px;
-}
-mat-header-cell.select,
-mat-cell.select {
-  max-width: 60px;
-}
-
 :host {
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
-
+    button.publish-on {
+      color: #4caf50;
+    }
     h4 {
       mat-icon,
       span {
@@ -91,6 +84,18 @@ mat-cell.select {
     mat-table {
       width: 100%;
 
+      mat-header-cell.action,
+      mat-cell.action {
+        max-width: 150px;
+      }
+      mat-header-cell.select,
+      mat-cell.select {
+        max-width: 60px;
+      }
+      mat-header-cell.scheduled,
+      mat-cell.scheduled {
+        max-width: 200px;
+      }
       .mat-header-row {
         mat-header-cell {
           mat-checkbox {

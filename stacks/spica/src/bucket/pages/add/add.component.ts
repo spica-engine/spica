@@ -18,7 +18,9 @@ export class AddComponent implements OnInit {
   bucketId: string;
   data: BucketRow = {};
   now: BucketRow;
-  datefalan = new Date();
+  minScheduleDate: Date = new Date();
+  scheduleDate: Date = new Date();
+  scheduleOn: boolean = false;
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
@@ -33,6 +35,9 @@ export class AddComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    let hourTolerance = this.scheduleDate.getMinutes() + 1;
+    this.minScheduleDate.setMinutes(hourTolerance);
+    this.scheduleDate.setMinutes(hourTolerance);
     this.bucket$ = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
@@ -43,7 +48,13 @@ export class AddComponent implements OnInit {
       switchMap(params => {
         if (params.rid) {
           return this.bds.findOne(params.id, params.rid, true).pipe(
-            tap(data => (this.data = data)),
+            tap(data => {
+              this.data = data;
+              if (data._schedule) {
+                this.scheduleOn = true;
+                this.scheduleDate = new Date(data._schedule);
+              }
+            }),
             switchMap(() => this.bs.getBucket(params.id))
           );
         }
@@ -78,11 +89,20 @@ export class AddComponent implements OnInit {
     this.data = await this.bhs.revertTo(this.bucketId, this.data._id, historyId).toPromise();
   }
 
+  scheduleOnTrue() {
+    this.scheduleOn = true;
+  }
+  rejectSchedule() {
+    this.scheduleOn = false;
+  }
+
   saveBucketRow() {
-    this.data["_schedule"] = {
-      type: "schedule",
-      options: {date: this.datefalan}
-    };
+    if (this.scheduleOn) {
+      this.data["_schedule"] = this.scheduleDate.toISOString();
+    } else {
+      delete this.data["_schedule"];
+    }
+
     this.bds
       .replaceOne(this.bucketId, this.data)
       .toPromise()

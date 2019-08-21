@@ -19,14 +19,10 @@ import * as locale from "locale";
 import {BucketDocument} from "./bucket";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {BucketService} from "./bucket.service";
-import {ScheduleService} from "./schedule.service";
+
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
-  constructor(
-    private bs: BucketService,
-    private bds: BucketDataService,
-    private ss: ScheduleService
-  ) {}
+  constructor(private bs: BucketService, private bds: BucketDataService) {}
 
   private async getLanguage(language: string) {
     const bucketSettings = await this.bs.getPreferences();
@@ -124,6 +120,7 @@ export class BucketDataController {
     @Headers("accept-language") acceptedLanguage: string,
     @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
+    @Query("schedule", DEFAULT(false), BOOLEAN) schedule: boolean = false,
     @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
     @Query("filter", JSONP) filter: FilterQuery<BucketDocument>,
     @Query("limit", NUMBER) limit: number,
@@ -178,6 +175,13 @@ export class BucketDataController {
       aggregation.push({$limit: limit});
     }
 
+    aggregation.push({
+      $match: {
+        _schedule: {
+          $exists: schedule
+        }
+      }
+    });
     const documents = await this.bds
       .find(bucketId, aggregation)
       .catch((error: MongoError) =>
@@ -230,7 +234,6 @@ export class BucketDataController {
     if (!document) {
       throw new NotFoundException(`${documentId} could not be found.`);
     }
-
     return document;
   }
 
@@ -240,13 +243,7 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (body._schedule) {
-      return this.bds.replaceOne(bucketId, body).then(data => {
-        this.ss.register(bucketId, data.ops[0]._id, body);
-      });
-    } else {
-      return this.bds.replaceOne(bucketId, body).then(() => null);
-    }
+    return this.bds.replaceOne(bucketId, body).then(() => null);
   }
 
   @Delete(":documentId")

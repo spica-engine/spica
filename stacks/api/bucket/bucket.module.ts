@@ -8,9 +8,9 @@ import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {CUSTOM_TYPES} from "./bucket.schema.types";
 import {BucketService} from "./bucket.service";
-import {ScheduleService} from "./schedule.service";
 import {BucketCache, provideBucketCache} from "./cache";
 import {HistoryModule} from "./history/history.module";
+import {DocumentScheduler} from "./schedule.service";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
@@ -28,7 +28,7 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
   providers: [
     BucketService,
     BucketDataService,
-    ScheduleService,
+    DocumentScheduler,
     {
       provide: BucketCache,
       useFactory: provideBucketCache,
@@ -43,7 +43,7 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
   exports: [BucketDataService]
 })
 export class BucketModule {
-  constructor(preference: PreferenceService) {
+  constructor(preference: PreferenceService, documentScheduler: DocumentScheduler) {
     preference.default({
       scope: "bucket",
       language: {

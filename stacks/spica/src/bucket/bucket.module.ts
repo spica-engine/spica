@@ -52,12 +52,10 @@ import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketInitializer} from "./services/bucket.initializer";
 import * as fromBucket from "./services/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
-<<<<<<< Updated upstream
 import {CommonModule as SpicaCommon} from "@spica-client/common";
-=======
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import { MccTimerPickerModule } from 'material-community-components';
->>>>>>> Stashed changes
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {MccTimerPickerModule} from "material-community-components";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 
 @NgModule({
   imports: [
@@ -111,6 +109,8 @@ import { MccTimerPickerModule } from 'material-community-components';
     MatBadgeModule,
     MatSlideToggleModule,
     MatDatepickerModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     LeafletModule,
     DragDropModule,
     StorageModule.forChild(),

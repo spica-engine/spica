@@ -38,6 +38,18 @@
     width: calc(100% - 60px);
     margin: 30px;
     margin-top: -130px;
+    mat-card-actions.save {
+      margin: 0;
+      padding: 0;
+      text-align: end;
+      mat-form-field.schedule {
+        width: 150px;
+        margin-left: 5px;
+      }
+      form.schedule {
+        display: inline;
+      }
+    }
     mat-card-content {
       form {
         > div {
@@ -62,9 +74,6 @@
           }
         }
       }
-    }
-    mat-card-actions.save{
-      text-align: end;
     }
   }
 }
