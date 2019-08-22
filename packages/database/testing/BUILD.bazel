@@ -9,7 +9,6 @@ ts_library(
         "testing.module.ts",
     ],
     module_name = "@spica-server/database/testing",
-    tsconfig = "//:tsconfig.json",
     deps = [
         "//packages/database",
         "@npm//@nestjs/common",

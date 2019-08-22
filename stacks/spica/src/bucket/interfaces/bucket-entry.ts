@@ -1,5 +1,6 @@
 export interface BucketEntry {
   _id?: string;
+  _schedule?: Date;
   [key: string]: any | undefined;
 }
 

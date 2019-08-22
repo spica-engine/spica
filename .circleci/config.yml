@@ -2,31 +2,26 @@ var_1: &job_defaults
   working_directory: ~/spica
   docker:
     - image: circleci/node:11
-
+    - image: circleci/mongo:4.2
 var_2: &setup_circleci_bazel_config
   run:
     name: Setting up CircleCI bazel configuration
     command: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
-
 var_3: &cache_key infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
-
 var_4: &restore_cache
   restore_cache:
     keys:
       - *cache_key
       # fallback to using the latest cache if no exact match is found
       - infra
-
 var_5: &attach_workspace
   attach_workspace:
     at: ~/
-
 var_6: &checkout_code
   checkout:
     # After checkout, rebase on top of master. By default, PRs are not rebased on top of master,
     # which we want. See https://discuss.circleci.com/t/1662
     post: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
-
 version: 2
 jobs:
   setup:
@@ -72,12 +67,11 @@ jobs:
             cd stacks/spica
             yarn ng build @spica-client/material
       - run:
-          # After we switch spica(client) to bazel we gonna get rid of this
+          # After we switch spica(client) to bazel we gonna get rid of this
           name: "Running tests (spica)"
           command: |
             cd stacks/spica;
             yarn ng build --prod --progress=false --base-href="/spica/"
-
       - persist_to_workspace:
           root: ~/
           paths:

@@ -18,6 +18,7 @@ export class AddComponent implements OnInit {
   bucketId: string;
   data: BucketRow = {};
   now: BucketRow;
+  minScheduleDate: Date = new Date();
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
@@ -42,13 +43,17 @@ export class AddComponent implements OnInit {
       switchMap(params => {
         if (params.rid) {
           return this.bds.findOne(params.id, params.rid, true).pipe(
-            tap(data => (this.data = data)),
+            tap(data => {
+              this.data = data;
+            }),
             switchMap(() => this.bs.getBucket(params.id))
           );
         }
         return this.bs.getBucket(params.id);
       }),
       map(schema => {
+        this.data._schedule = this.data._schedule && new Date(this.data._schedule);
+
         // What we do here is simply coercing the translated data
         Object.keys(schema.properties).forEach(key => {
           const property = schema.properties[key];
@@ -77,7 +82,19 @@ export class AddComponent implements OnInit {
     this.data = await this.bhs.revertTo(this.bucketId, this.data._id, historyId).toPromise();
   }
 
+  schedule() {
+    this.data._schedule = new Date();
+  }
+
+  cancelSchedule() {
+    this.data._schedule = undefined;
+  }
+
   saveBucketRow() {
+    if (!(this.data._schedule instanceof Date)) {
+      delete this.data._schedule;
+    }
+
     this.bds
       .replaceOne(this.bucketId, this.data)
       .toPromise()

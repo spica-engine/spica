@@ -3,60 +3,46 @@ import {ModuleRef} from "@nestjs/core";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import * as fs from "fs";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server-core";
-import * as path from "path";
-
-let installing: Promise<any> = Promise.resolve();
-
-const downloadDir = path.join(
-  path.dirname(fs.realpathSync(require.resolve("mongodb-memory-server-core"))),
-  ".cache"
-);
-
 @Global()
 @Module({})
 export class DatabaseTestingModule implements OnModuleDestroy {
   constructor(private moduleRef: ModuleRef) {}
-
   static create(): DynamicModule {
     return {
       module: DatabaseTestingModule,
       providers: [
         {
           provide: MongoMemoryServer,
-          useFactory: async () => {
-            // To prevent redundant installations
-            await installing;
-            return new MongoMemoryServer({
+          useFactory: async () =>
+            new MongoMemoryServer({
               binary: {
-                downloadDir
+                // @ts-ignore
+                systemBinary: fs.existsSync("/usr/bin/mongod")
+                  ? "/usr/bin/mongod"
+                  : "/usr/local/bin/mongod"
               }
-            });
-          }
+            })
         },
         {
           provide: MongoClient,
-          useFactory: async (server: MongoMemoryServer) => {
-            if (!fs.existsSync(downloadDir)) {
-              installing = server.ensureInstance();
-            }
-            const connectionString = await server.getConnectionString();
-            return MongoClient.connect(connectionString, {useNewUrlParser: true});
-          },
+          useFactory: async (server: MongoMemoryServer) =>
+            MongoClient.connect(await server.getConnectionString(), {
+              useNewUrlParser: true,
+              // @ts-ignore
+              useUnifiedTopology: true
+            }),
           inject: [MongoMemoryServer]
         },
         {
           provide: DatabaseService,
-          useFactory: async (client: MongoClient, server: MongoMemoryServer) => {
-            const dbName = await server.getDbName();
-            return client.db(dbName);
-          },
+          useFactory: async (client: MongoClient, server: MongoMemoryServer) =>
+            client.db(await server.getDbName()),
           inject: [MongoClient, MongoMemoryServer]
         }
       ],
       exports: [DatabaseService]
     };
   }
-
   static replicaSet(): DynamicModule {
     return {
       module: DatabaseTestingModule,
@@ -66,14 +52,12 @@ export class DatabaseTestingModule implements OnModuleDestroy {
           useFactory: async () =>
             new MongoMemoryReplSet({
               binary: {
-                downloadDir,
-                version: "4.0.3"
+                // @ts-ignore
+                systemBinary: fs.existsSync("/usr/bin/mongod")
+                  ? "/usr/bin/mongod"
+                  : "/usr/local/bin/mongod"
               },
-              instanceOpts: [
-                {storageEngine: "wiredTiger"},
-                {storageEngine: "wiredTiger"},
-                {storageEngine: "wiredTiger"}
-              ]
+              instanceOpts: [{storageEngine: "wiredTiger"}, {storageEngine: "wiredTiger"}]
             })
         },
         {
@@ -87,7 +71,8 @@ export class DatabaseTestingModule implements OnModuleDestroy {
               `${connectionString}?replicaSet=${server.opts.replSet.name}`,
               {
                 useNewUrlParser: true,
-                replicaSet: server.opts.replSet.name
+                replicaSet: server.opts.replSet.name,
+                poolSize: 200
               }
             );
           },
@@ -100,10 +85,9 @@ export class DatabaseTestingModule implements OnModuleDestroy {
           inject: [MongoClient, MongoMemoryReplSet]
         }
       ],
-      exports: [DatabaseService]
+      exports: [DatabaseService, MongoClient]
     };
   }
-
   onModuleDestroy() {
     try {
       this.moduleRef.get(MongoMemoryServer).stop();
