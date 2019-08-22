@@ -86,6 +86,7 @@ export class Storage {
       data.map(d => {
         d._id = new ObjectId(d._id);
         fs.writeFileSync(this.buildPath(d), d.content.data);
+        delete d.content.data;
       })
     );
 
