@@ -73,7 +73,7 @@ export function coerceObject() {
     MatTooltipModule,
     MatNativeDateModule
   ],
-  exports: [InputPlacerComponent, InputSchemaPlacer],
+  exports: [InputPlacerComponent, InputSchemaPlacer, MaxValidator, MinValidator],
   declarations: [
     InputSchemaPlacer,
     InputPlacerComponent,

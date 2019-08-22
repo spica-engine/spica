@@ -29,6 +29,7 @@ ts_library(
         "@npm//@types/node",
         "@npm//ajv",
         "@npm//archiver",
+        "@npm//cron",
         "@npm//deep-diff",
         "@npm//diff-match-patch",
         "@npm//locale",

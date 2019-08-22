@@ -53,6 +53,8 @@ import {BucketInitializer} from "./services/bucket.initializer";
 import * as fromBucket from "./services/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 
 @NgModule({
   imports: [
@@ -78,7 +80,6 @@ import {CommonModule as SpicaCommon} from "@spica-client/common";
     FormsModule,
     BucketRoutingModule,
     StoreModule.forFeature("bucket", fromBucket.reducer),
-
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -104,6 +105,9 @@ import {CommonModule as SpicaCommon} from "@spica-client/common";
     MatRadioModule,
     MatBadgeModule,
     MatSlideToggleModule,
+    MatDatepickerModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
     LeafletModule,
     DragDropModule,
     StorageModule.forChild(),

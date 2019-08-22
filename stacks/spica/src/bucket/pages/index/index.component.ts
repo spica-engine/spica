@@ -26,6 +26,8 @@ export class IndexComponent implements OnInit {
   public filter: {[key: string]: any} = {};
   public sort: {[key: string]: number} = {};
 
+  public scheduledData: boolean = false;
+
   public displayedProperties: Array<string> = [];
   public properties: Array<{name: string; title: string}> = [];
 
@@ -47,6 +49,7 @@ export class IndexComponent implements OnInit {
         this.bucketId = params.id;
         this.paginator.pageIndex = 0;
         this.filter = {};
+        this.scheduledData = false;
         this.sort = {};
         this.getData();
         this.$preferences = this.bs.getPreferences();
@@ -60,6 +63,7 @@ export class IndexComponent implements OnInit {
               name,
               title: value.title
             })),
+            {name: "$$spicainternal_schedule", title: "Scheduled"},
             {name: "$$spicainternal_actions", title: "Actions"}
           ];
 
@@ -80,12 +84,14 @@ export class IndexComponent implements OnInit {
       this.displayedProperties = [
         "$$spicainternal_select",
         ...Object.keys(schema.properties),
+        "$$spicainternal_schedule",
         "$$spicainternal_actions"
       ];
     } else {
       this.displayedProperties = [
         "$$spicainternal_select",
         schema.primary,
+        "$$spicainternal_schedule",
         "$$spicainternal_actions"
       ];
     }
@@ -103,6 +109,19 @@ export class IndexComponent implements OnInit {
     );
   }
 
+  scheduleTrigger() {
+    this.scheduledData = !this.scheduledData;
+    let displayScheduleIndex = this.displayedProperties.indexOf("$$spicainternal_schedule");
+    if (displayScheduleIndex > -1 && !this.scheduledData) {
+      this.displayedProperties.splice(displayScheduleIndex, 1);
+    }
+    if (displayScheduleIndex == -1 && this.scheduledData) {
+      let lastIndex = this.displayedProperties.lastIndexOf("$$spicainternal_actions");
+      this.displayedProperties.splice(lastIndex, 0, "$$spicainternal_schedule");
+    }
+    this.getData();
+  }
+
   getData(): void {
     this.$data = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
@@ -111,7 +130,8 @@ export class IndexComponent implements OnInit {
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
           sort: this.sort && Object.keys(this.sort).length > 0 && this.sort,
           limit: this.paginator.pageSize || 12,
-          skip: this.paginator.pageSize * this.paginator.pageIndex
+          skip: this.paginator.pageSize * this.paginator.pageIndex,
+          schedule: this.scheduledData
         })
       ),
       map(response => {
