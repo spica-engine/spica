@@ -13,7 +13,7 @@
         <mat-expansion-panel
           class="identity-settings"
           *ngFor="
-            let propertyKv of preferences?.identity?.attributes?.properties | propertyKv:registerInvalidator.bind(this);
+            let propertyKv of preferences?.identity?.attributes?.properties | propertyKv;
             let index = index
           "
           cdkDrag
