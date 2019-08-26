@@ -94,10 +94,7 @@
       <mat-divider></mat-divider>
       <mat-list-item class="properties">
         <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
-          <mat-expansion-panel
-            *ngFor="let propertyKv of bucket.properties | propertyKv:registerInvalidator.bind(this);"
-            cdkDrag
-          >
+          <mat-expansion-panel *ngFor="let propertyKv of bucket.properties | propertyKv" cdkDrag>
             <mat-expansion-panel-header>
               <mat-panel-title>
                 <mat-icon>{{ bIcons[propertyKv.value.type] }}</mat-icon>

@@ -1,4 +1,4 @@
-import {CdkDragDrop} from "@angular/cdk/drag-drop";
+import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
 import {STEPPER_GLOBAL_OPTIONS} from "@angular/cdk/stepper";
 import {Component, OnDestroy, OnInit} from "@angular/core";
 import {MatCheckboxChange} from "@angular/material";
@@ -7,12 +7,11 @@ import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";
 import {ICONS} from "@spica-client/material";
 import {Observable, Subject} from "rxjs";
-import {filter, map, switchMap, takeUntil, tap, flatMap} from "rxjs/operators";
-import {BucketService} from "../../services/bucket.service";
+import {filter, flatMap, map, switchMap, takeUntil, tap} from "rxjs/operators";
 import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
-import {moveItemInArray} from "@angular/cdk/drag-drop";
+import {BucketService} from "../../services/bucket.service";
 
 @Component({
   selector: "bucket-add",
@@ -33,8 +32,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   public isThereVisible = false;
   public visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
-
-  private invalidate: Function;
 
   public translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   public basicPropertyTypes = ["string", "textarea", "boolean", "number"];
@@ -91,10 +88,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-  registerInvalidator(fn: Function) {
-    this.invalidate = fn;
-  }
-
   cardDrop(event: CdkDragDrop<Bucket[]>) {
     const properties = Object.entries(this.bucket.properties);
 
@@ -104,7 +97,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       accumulator[key] = value;
       return accumulator;
     }, {});
-    this.invalidate();
   }
 
   updatePositionProperties() {
