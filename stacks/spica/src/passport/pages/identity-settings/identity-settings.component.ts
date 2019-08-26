@@ -21,8 +21,6 @@ export class IdentitySettingsComponent implements OnInit {
   public basicPropertyTypes = ["string", "textarea", "boolean", "number"];
   selectedInput: string;
 
-  private invalidate: Function;
-
   private onDestroy: Subject<void> = new Subject<void>();
 
   public predefinedDefaults: {[key: string]: PredefinedDefault[]};
@@ -63,10 +61,6 @@ export class IdentitySettingsComponent implements OnInit {
       .subscribe();
   }
 
-  registerInvalidator(fn: Function) {
-    this.invalidate = fn;
-  }
-
   addProperty(propertyKey: string): void {
     if (propertyKey && !this.preferences.identity.attributes.properties[propertyKey]) {
       this.preferences.identity.attributes.properties[propertyKey.toLowerCase()] = {
@@ -103,7 +97,6 @@ export class IdentitySettingsComponent implements OnInit {
       },
       {}
     );
-    this.invalidate();
   }
 }
 
