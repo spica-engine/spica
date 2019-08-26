@@ -1,12 +1,12 @@
-import {Component, Inject, OnDestroy} from "@angular/core";
-import {INPUT_SCHEMA, InputSchema} from "../../input";
+import {Component, Inject} from "@angular/core";
+import {InputSchema, INPUT_SCHEMA} from "../../input";
 
 @Component({
   templateUrl: "./enum-schema.component.html",
   selector: "enum-schema",
   styleUrls: ["./enum-schema.component.scss"]
 })
-export class EnumSchemaComponent implements OnDestroy {
+export class EnumSchemaComponent {
   _trackBy: (i) => any = i => i;
 
   schemaWithoutEnum: InputSchema;
@@ -22,9 +22,5 @@ export class EnumSchemaComponent implements OnDestroy {
 
   removeItem(index) {
     this.schema.enum.splice(index, 1);
-  }
-
-  ngOnDestroy() {
-    delete this.schema.enum;
   }
 }

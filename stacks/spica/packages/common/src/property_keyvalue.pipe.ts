@@ -1,12 +1,15 @@
+import {KeyValue} from "@angular/common";
 import {
-  Pipe,
-  PipeTransform,
   Injectable,
+  IterableChanges,
+  IterableDiffer,
+  IterableDiffers,
+  KeyValueChanges,
   KeyValueDiffer,
   KeyValueDiffers,
-  KeyValueChanges
+  Pipe,
+  PipeTransform
 } from "@angular/core";
-import {KeyValue} from "@angular/common";
 
 @Injectable()
 @Pipe({
@@ -16,15 +19,19 @@ import {KeyValue} from "@angular/common";
 export class PropertyKvPipe implements PipeTransform {
   private differ: KeyValueDiffer<any, any>;
   private keyValues: Array<KeyValue<any, any>> = [];
-  constructor(private readonly differs: KeyValueDiffers) {}
 
-  transform<V>(
-    value: Array<any>,
-    register: (fn: Function) => void = () => {}
-  ): Array<KeyValue<string, V>> {
+  private keyDiffer: IterableDiffer<string>;
+
+  constructor(
+    private readonly differs: KeyValueDiffers,
+    private iterableDiffers: IterableDiffers
+  ) {}
+
+  transform<V>(value: Object): Array<KeyValue<string, V>> {
     if (!value) {
       return [];
     }
+
     if (!this.differ) {
       this.differ = this.differs.find(value).create();
     }
@@ -32,12 +39,26 @@ export class PropertyKvPipe implements PipeTransform {
     const differChanges: KeyValueChanges<string, V> | null = this.differ.diff(value);
 
     if (differChanges) {
-      register(() => {
-        this.differ = undefined;
-      });
       return (this.keyValues = Object.entries(value).map(([key, value]) => ({key, value})));
     }
 
+    const keys = Object.entries(value).map(([key]) => key);
+
+    if (!this.keyDiffer) {
+      this.keyDiffer = this.iterableDiffers.find(keys).create();
+    }
+
+    const keyChanges: IterableChanges<string> = this.keyDiffer.diff(keys);
+
+    if (keyChanges) {
+      keyChanges.forEachMovedItem(change => {
+        if (!change["_nextPrevious"]) {
+          const item = this.keyValues[change.previousIndex];
+          this.keyValues[change.previousIndex] = this.keyValues[change.currentIndex];
+          this.keyValues[change.currentIndex] = item;
+        }
+      });
+    }
     return this.keyValues;
   }
 }
