@@ -25,6 +25,7 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
 import {ArrayComponent} from "./components/array/array.component";
 import {BooleanComponent} from "./components/boolean/boolean.component";
+import {ColorComponent} from "./components/color/color.component";
 import {DateComponent} from "./components/date/date.component";
 import {EnumSchemaComponent} from "./components/enum-schema/enum-schema.component";
 import {NumberSchemaComponent} from "./components/number-schema/number-schema.component";
@@ -94,7 +95,8 @@ export function coerceObject() {
     MaxValidator,
     UniqueItemsValidator,
     MinItemsValidator,
-    MaxItemsValidator
+    MaxItemsValidator,
+    ColorComponent
   ],
   providers: [
     {
@@ -125,6 +127,11 @@ export function coerceObject() {
         placer: ObjectComponent,
         metaPlacer: ObjectSchemaComponent,
         coerce: coerceObject
+      },
+      {
+        origin: "string",
+        type: "color",
+        placer: ColorComponent
       }
     ])
   ]

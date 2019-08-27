@@ -6,6 +6,7 @@ export const INPUT_ICONS = {
   number: "filter_1",
   boolean: "exposure",
   textarea: "format_size",
+  color: "invert_colors",
   array: "ballot",
   object: "all_out",
   storage: "perm_media",

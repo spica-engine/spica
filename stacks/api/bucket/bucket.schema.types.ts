@@ -10,6 +10,9 @@ export const CUSTOM_TYPES: Keyword = {
       case "textarea":
         parentSchema["type"] = "string";
         return "string";
+      case "color":
+        parentSchema["type"] = "string";
+        return "string";
       case "relation":
         parentSchema["type"] = "string";
         parentSchema["format"] = "objectid";
