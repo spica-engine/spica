@@ -29,19 +29,19 @@ export function compile(schema: JSONSchema7): JSONSchema7 {
           break;
         case "location":
           schema.type = "object";
-          schema.required = ["lat", "long"];
+          schema.required = ["longitude", "latitude"];
           schema.properties = {
-            lat: {
-              title: "Latitude",
-              type: "number",
-              minimum: -90,
-              maximum: 90
-            },
-            long: {
+            longitude: {
               title: "Longitude",
               type: "number",
               minimum: -180,
               maximum: 180
+            },
+            latitude: {
+              title: "Latitude",
+              type: "number",
+              minimum: -90,
+              maximum: 90
             }
           };
           break;
