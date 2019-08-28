@@ -23,19 +23,19 @@ export const CUSTOM_TYPES: Keyword = {
         return "string";
       case "location":
         parentSchema["type"] = "object";
-        parentSchema["required"] = ["lat", "long"];
+        parentSchema["required"] = ["longitude", "latitude"];
         parentSchema["properties"] = {
-          lat: {
-            title: "Latitude",
-            type: "number",
-            minimum: -90,
-            maximum: 90
-          },
-          long: {
+          longitude: {
             title: "Longitude",
             type: "number",
             minimum: -180,
             maximum: 180
+          },
+          latitude: {
+            title: "Latitude",
+            type: "number",
+            minimum: -90,
+            maximum: 90
           }
         };
         return "object";

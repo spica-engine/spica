@@ -41,8 +41,8 @@ export class LocationComponent implements ControlValueAccessor {
   }
 
   value = {
-    lat: undefined,
-    long: undefined
+    longitude: undefined,
+    latitude: undefined
   };
 
   _disabled: boolean = false;
@@ -72,13 +72,13 @@ export class LocationComponent implements ControlValueAccessor {
 
   applyCoords(latLng?: LatLng, mapOnly: boolean = false) {
     if (latLng && !this._disabled) {
-      this.value.lat = latLng.lat;
-      this.value.long = latLng.lng;
+      this.value.latitude = latLng.lat;
+      this.value.longitude = latLng.lng;
     }
     if (!mapOnly) {
-      this._marker.setLatLng([this.value.lat, this.value.long]);
+      this._marker.setLatLng([this.value.latitude, this.value.longitude]);
     }
-    setTimeout(() => (this._center = [this.value.lat, this.value.long]), 1000);
+    setTimeout(() => (this._center = [this.value.latitude, this.value.longitude]), 1000);
   }
 
   @HostListener("click")
