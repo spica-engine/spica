@@ -16,6 +16,9 @@ export function compile(schema: JSONSchema7): JSONSchema7 {
         case "textarea":
           schema.type = "string";
           break;
+        case "color":
+          schema.type = "string";
+          break;
         case "relation":
           schema.type = "string";
           schema.format = "objectid";

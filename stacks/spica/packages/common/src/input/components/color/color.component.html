@@ -1,0 +1,13 @@
+<mat-form-field>
+  <mat-label>{{ schema.title }}</mat-label>
+  <input
+    matInput
+    type="color"
+    rows="10"
+    [disabled]="disabled"
+    [placeholder]="schema.title"
+    [(ngModel)]="value"
+    (ngModelChange)="callOnChange()"
+  />
+  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+</mat-form-field>
