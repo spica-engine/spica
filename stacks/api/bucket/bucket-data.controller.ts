@@ -243,7 +243,7 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    return this.bds.replaceOne(bucketId, body).then(() => null);
+    return this.bds.replaceOne(bucketId, body).then(data => data.ops[0]._id || data.upsertedId._id);
   }
 
   @Delete(":documentId")
