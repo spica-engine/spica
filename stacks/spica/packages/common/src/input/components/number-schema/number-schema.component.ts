@@ -1,5 +1,4 @@
 import {Component, Inject} from "@angular/core";
-
 import {INPUT_SCHEMA, InputSchema} from "../../input";
 
 @Component({
@@ -7,8 +6,9 @@ import {INPUT_SCHEMA, InputSchema} from "../../input";
   styleUrls: ["./number-schema.component.scss"]
 })
 export class NumberSchemaComponent {
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
-    this.schema.minimum = this.schema.minimum || undefined;
-    this.schema.maximum = this.schema.maximum || undefined;
+  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
+
+  removeEnum() {
+    delete this.schema.enum;
   }
 }
