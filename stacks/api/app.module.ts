@@ -13,7 +13,8 @@ import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
   imports: [
     DatabaseModule.withConnection(process.env.DATABASE_URI, {
       database: process.env.DATABASE_NAME,
-      replicaSet: process.env.REPLICA_SET
+      replicaSet: process.env.REPLICA_SET,
+      poolSize: Number(process.env.POOL_SIZE || 50)
     }),
     SchemaModule.forRoot({
       formats: [OBJECT_ID],

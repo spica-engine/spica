@@ -1,0 +1,47 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "realtime",
+    srcs = [
+        "database.module.ts",
+        "database.service.ts",
+        "index.ts",
+        "levenshtein.ts",
+        "stream.ts",
+    ],
+    module_name = "@spica-server/database/realtime",
+    deps = [
+        "//packages/database",
+        "@npm//@nestjs/common",
+        "@npm//@types/deep-diff",
+        "@npm//@types/mongodb",
+        "@npm//deep-diff",
+        "@npm//rxjs",
+    ],
+)
+
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "levenshtein.spec.ts",
+    ],
+    deps = [
+        ":realtime",
+        "//packages/database",
+        "//packages/database/testing",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/json-schema",
+        "@npm//@types/node",
+        "@npm//rxjs",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)

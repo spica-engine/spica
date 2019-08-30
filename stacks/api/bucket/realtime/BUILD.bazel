@@ -1,0 +1,22 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("//tools/dgeni:index.bzl", "docs")
+
+ts_library(
+    name = "realtime",
+    srcs = [
+        "index.ts",
+        "realtime.gateway.ts",
+        "realtime.module.ts",
+    ],
+    module_name = "@spica-server/bucket/realtime",
+    deps = [
+        "//packages/database",
+        "//packages/database/realtime",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/websockets",
+        "@npm//rxjs",
+    ],
+)
