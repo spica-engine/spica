@@ -52,11 +52,11 @@ export class PropertyKvPipe implements PipeTransform {
 
     if (keyChanges) {
       keyChanges.forEachMovedItem(change => {
-        if (!change["_nextPrevious"]) {
-          const item = this.keyValues[change.previousIndex];
-          this.keyValues[change.previousIndex] = this.keyValues[change.currentIndex];
-          this.keyValues[change.currentIndex] = item;
-        }
+        const item = this.keyValues[change.previousIndex];
+
+        this.keyValues.splice(change.previousIndex, 1);
+
+        this.keyValues.splice(change.currentIndex, 0, item);
       });
     }
     return this.keyValues;

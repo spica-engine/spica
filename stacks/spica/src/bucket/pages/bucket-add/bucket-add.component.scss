@@ -150,10 +150,12 @@
         }
       }
     }
-
     mat-card-actions {
       margin: 0;
       padding: 0;
+      mat-progress-spinner.save {
+        display: inline;
+      }
     }
   }
 }

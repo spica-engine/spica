@@ -14,33 +14,35 @@
   >
     <mat-icon> restore </mat-icon>
     <mat-menu #historyMenu="matMenu" class="history-tree mat-elevation-z25" xPosition="before">
-      <button
-        mat-icon-button
-        mat-raised-button
-        [disabled]="!now"
-        color="primary"
-        class="mat-elevation-z0"
-        (click)="data = now; $event.stopPropagation()"
-        matTooltip="Now"
-        matTooltipPosition="before"
-      >
-        N
-      </button>
-      <button
-        *ngFor="let history of histories; let index = index"
-        mat-icon-button
-        mat-raised-button
-        color="accent"
-        class="mat-elevation-z0"
-        (click)="revert(history._id); $event.stopPropagation()"
-        [matTooltip]="history.date | date: 'MMM d y, h:mm:ss a'"
-        matTooltipPosition="before"
-        [matBadge]="history.changes"
-        matBadgeColor="warn"
-        matBadgeSize="small"
-      >
-        {{ index + 1 }}
-      </button>
+      <ng-template matMenuContent>
+        <button
+          mat-icon-button
+          mat-raised-button
+          [disabled]="!now"
+          color="primary"
+          class="mat-elevation-z0"
+          (click)="data = now; $event.stopPropagation()"
+          matTooltip="Now"
+          matTooltipPosition="before"
+        >
+          N
+        </button>
+        <button
+          *ngFor="let history of histories; let index = index"
+          mat-icon-button
+          mat-raised-button
+          color="accent"
+          class="mat-elevation-z0"
+          (click)="revert(history._id); $event.stopPropagation()"
+          [matTooltip]="history.date | date: 'MMM d y, h:mm:ss a'"
+          matTooltipPosition="before"
+          [matBadge]="history.changes"
+          matBadgeColor="warn"
+          matBadgeSize="small"
+        >
+          {{ index + 1 }}
+        </button>
+      </ng-template>
     </mat-menu>
   </button>
 </mat-toolbar>
@@ -103,7 +105,8 @@
     >
       <mat-icon>schedule</mat-icon>
     </button>
-
+    <mat-progress-spinner *ngIf="savingBucketState" class="save" diameter="20" mode="indeterminate">
+    </mat-progress-spinner>
     <button
       canInteract="bucket:data:update"
       *ngIf="!data?._id"

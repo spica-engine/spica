@@ -42,6 +42,9 @@
       margin: 0;
       padding: 0;
       text-align: end;
+      mat-progress-spinner.save {
+        display: inline;
+      }
       mat-form-field.schedule {
         width: 150px;
         margin-left: 5px;

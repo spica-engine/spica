@@ -39,6 +39,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   public $buckets: Observable<Bucket[]>;
   public bucket: Bucket = emptyBucket();
 
+  public savingBucketState: Boolean = false;
+
   public predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
   public immutableProperties: Array<string> = [];
@@ -155,10 +157,14 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   saveBucket(): void {
+    this.savingBucketState = true;
     this.bs
       .replaceOne(this.bucket)
       .toPromise()
-      .then(() => this.router.navigate(["buckets"]));
+      .then(data => {
+        this.savingBucketState = false;
+        this.router.navigate(["buckets/" + data._id]);
+      });
   }
 
   ngOnDestroy() {
