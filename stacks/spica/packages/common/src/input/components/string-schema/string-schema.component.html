@@ -1,4 +1,7 @@
-<mat-slide-toggle #isEnum [checked]="schema.enum?.length > 0"
+<mat-slide-toggle
+  #isEnum
+  [ngModel]="schema.enum?.length > 0"
+  (ngModelChange)="$event ? (schema.enum = []) : removeEnum()"
   >Make field enumerated</mat-slide-toggle
 >
 <enum-schema *ngIf="isEnum.checked"></enum-schema>

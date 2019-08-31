@@ -398,6 +398,8 @@
     </mat-list>
   </mat-card-content>
   <mat-card-actions>
+    <mat-progress-spinner *ngIf="savingBucketState" class="save" diameter="20" mode="indeterminate">
+    </mat-progress-spinner>
     <button
       mat-button
       canInteract="bucket:update"

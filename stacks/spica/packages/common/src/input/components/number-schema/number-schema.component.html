@@ -12,7 +12,10 @@
 <div class="description mat-hint" *ngIf="schema.description">
   If you don't want to limit values, you can keep the above lines empty.
 </div>
-<mat-slide-toggle #isEnum [checked]="schema.enum?.length > 0"
+<mat-slide-toggle
+  #isEnum
+  [ngModel]="schema.enum?.length > 0"
+  (ngModelChange)="$event ? (schema.enum = []) : removeEnum()"
   >Make field enumerated</mat-slide-toggle
 >
 <enum-schema *ngIf="isEnum.checked"></enum-schema>

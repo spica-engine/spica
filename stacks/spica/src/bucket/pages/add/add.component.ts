@@ -22,6 +22,8 @@ export class AddComponent implements OnInit {
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
+  public savingBucketState: Boolean = false;
+
   layouts = ["left", "right", "bottom"];
 
   constructor(
@@ -91,6 +93,7 @@ export class AddComponent implements OnInit {
   }
 
   saveBucketRow() {
+    this.savingBucketState = true;
     if (!(this.data._schedule instanceof Date)) {
       delete this.data._schedule;
     }
@@ -98,6 +101,10 @@ export class AddComponent implements OnInit {
     this.bds
       .replaceOne(this.bucketId, this.data)
       .toPromise()
-      .then(() => this.router.navigate(["bucket", this.bucketId]));
+      .then(data => {
+        this.savingBucketState = false;
+        this.router.navigate(["bucket", this.bucketId, data]);
+        this.histories$ = this.bhs.historyList(this.bucketId, data);
+      });
   }
 }
