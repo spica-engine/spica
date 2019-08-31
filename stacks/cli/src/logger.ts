@@ -21,6 +21,10 @@ export class Logger extends console.Console {
         },
         error => {
           spinner.fail();
+          if ("message" in error) {
+            this.error(error.message);
+            process.exit();
+          }
           return Promise.reject(error);
         }
       );
@@ -29,7 +33,7 @@ export class Logger extends console.Console {
   }
 
   error(message?: any, ...optionalParams: any[]) {
-    super.warn(chalk.red(util.format(message, ...optionalParams)));
+    super.warn(chalk.bold(chalk.red(util.format(message, ...optionalParams))));
   }
 
   warn(message?: any, ...optionalParams: any[]) {

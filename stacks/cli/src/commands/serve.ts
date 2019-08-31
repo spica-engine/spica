@@ -9,13 +9,14 @@ import * as docker from "dockerode";
 import * as getport from "get-port";
 import * as open from "open";
 import {Stream} from "stream";
+import {ImageNotFoundError} from "../errors";
 import {Command} from "../interface";
 import {namespace} from "../validators";
 
-export class RunCommand extends Command {
+export class ServeCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
     return {
-      name: "run",
+      name: "serve",
       summary: "Run a Spica instance on your local machine.",
       inputs: [
         {
@@ -112,11 +113,15 @@ export class RunCommand extends Command {
       });
     }
 
-    function pullImage(image: string) {
+    function pullImage(image: string, tag: string) {
       return new Promise((resolve, reject) =>
-        machine.pull(image, {}, function(err, stream) {
+        machine.pull(`${image}:${tag}`, {}, function(err, stream) {
           if (err) {
-            reject(err);
+            if (err.message && err.message.indexOf(`manifest for ${image}`)) {
+              reject(new ImageNotFoundError(image, tag));
+            } else {
+              reject(err);
+            }
           } else {
             machine.modem.followProgress(stream, resolve);
           }
@@ -133,10 +138,14 @@ export class RunCommand extends Command {
           spinner.text = `Pulling images (${pulled}/4)`;
         }
         return Promise.all([
-          pullImage(`spicaengine/api:${options.version}`).then(() => increasePulledCount()),
-          pullImage(`spicaengine/spica:${options.version}`).then(() => increasePulledCount()),
-          pullImage("mongo:4.2-rc").then(() => increasePulledCount()),
-          pullImage("nginx:latest").then(() => increasePulledCount())
+          pullImage("spicaengine/api", options.version.toString()).then(() =>
+            increasePulledCount()
+          ),
+          pullImage("spicaengine/spica", options.version.toString()).then(() =>
+            increasePulledCount()
+          ),
+          pullImage("mongo", "4.2").then(() => increasePulledCount()),
+          pullImage("nginx", "latest").then(() => increasePulledCount())
         ]);
       }
     });
@@ -300,10 +309,10 @@ export class RunCommand extends Command {
           server_name  localhost;
 
           location ~ ^/api/?(.*) {
-            proxy_pass http://${namespace}-api/$1;
+            proxy_pass http://${namespace}-api/$1$is_args$args;
           }
           location ~ ^/spica/?(.*) {
-            proxy_pass http://${namespace}-spica/$1;
+            proxy_pass http://${namespace}-spica/$1$is_args$args;
           }
         }
         `;
