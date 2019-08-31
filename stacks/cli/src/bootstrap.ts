@@ -1,9 +1,10 @@
-import {CommandMap, execute, NamespaceMetadata} from "@ionic/cli-framework";
+import {CommandMap, execute, NamespaceMetadata, DEFAULT_COLORS} from "@ionic/cli-framework";
 import {ListCommand} from "./commands/list";
 import {RemoveCommand} from "./commands/remove";
-import {RunCommand} from "./commands/run";
+import {ServeCommand} from "./commands/serve";
 import {SpicaNamespace} from "./interface";
 import {Logger} from "./logger";
+import chalk from "chalk";
 
 class RootNamespace extends SpicaNamespace {
   logger?: Logger = new Logger(process.stdout, process.stderr);
@@ -17,7 +18,7 @@ class RootNamespace extends SpicaNamespace {
 
   async getCommands(): Promise<CommandMap> {
     return new CommandMap([
-      ["run", async () => new RunCommand(this)],
+      ["serve", async () => new ServeCommand(this)],
       ["ls", async () => new ListCommand(this)],
       ["rm", async () => new RemoveCommand(this)]
     ]);
@@ -27,5 +28,9 @@ class RootNamespace extends SpicaNamespace {
 execute({
   namespace: new RootNamespace(),
   argv: process.argv.slice(2),
-  env: process.env
+  env: process.env,
+  colors: {
+    ...DEFAULT_COLORS,
+    input: chalk.hex("#588fd2")
+  }
 });
