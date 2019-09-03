@@ -197,7 +197,7 @@ export class MaxItemsValidator implements Validator, OnChanges {
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
-    if (!Array.isArray(this.items) || !this.maxItems || this.items.length < this.maxItems) {
+    if (!Array.isArray(this.items) || !this.maxItems || this.items.length <= this.maxItems) {
       return null;
     }
 
