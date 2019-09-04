@@ -30,6 +30,17 @@
       span {
         vertical-align: middle;
       }
+      mat-chip-list {
+        display: inline-block;
+        margin-left: 10px;
+        mat-chip {
+          font-size: 11px;
+          padding: 7px 10px;
+          min-height: 20px;
+          height: 22px;
+          line-height: normal;
+        }
+      }
       span {
         margin-left: 5px;
       }

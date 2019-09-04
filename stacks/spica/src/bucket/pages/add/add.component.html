@@ -3,9 +3,14 @@
     <h1>
       <mat-icon>{{ bucket.icon }}</mat-icon>
       <span>{{ bucket.title }}</span>
+
+      <mat-chip-list *ngIf="bucket.readOnly">
+        <mat-chip disableRipple>Read Only</mat-chip>
+      </mat-chip-list>
     </h1>
     <h6>{{ bucket.description }}</h6>
   </div>
+
   <span class="space-between"></span>
   <button
     *ngIf="histories$ | async; let histories"
@@ -56,7 +61,7 @@
             *ngIf="propertyKv.value.options.translate && data[propertyKv.key]"
             [inputPlacer]="propertyKv.value"
             class="property-translate"
-            [disabled]="propertyKv.value.readOnly || !language.selected"
+            [disabled]="propertyKv.value.readOnly || !language.selected || bucket.readOnly"
             [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
             [(ngModel)]="data[propertyKv.key][language.selected]"
@@ -66,7 +71,7 @@
           <div
             *ngIf="!propertyKv.value.options.translate"
             [inputPlacer]="propertyKv.value"
-            [disabled]="propertyKv.value.readOnly"
+            [disabled]="propertyKv.value.readOnly || bucket.readOnly"
             [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
             [(ngModel)]="data[propertyKv.key]"
@@ -78,7 +83,12 @@
 
   <mat-card-actions class="save">
     <form class="schedule" #scheduleForm="ngForm" *ngIf="data?._schedule">
-      <button mat-button color="warn" (click)="cancelSchedule()">
+      <button
+        [disabled]="(bucket$ | async)?.readOnly"
+        mat-button
+        color="warn"
+        (click)="cancelSchedule()"
+      >
         <mat-icon>cancel</mat-icon> Cancel Schedule
       </button>
       <mat-form-field>
@@ -87,6 +97,7 @@
           [min]="minScheduleDate"
           readonly
           required
+          [disabled]="(bucket$ | async)?.readOnly"
           name="scheduleDate"
           [(ngModel)]="data._schedule"
           [owlDateTime]="dt1"
@@ -100,6 +111,7 @@
     <button
       mat-icon-button
       (click)="schedule()"
+      [disabled]="(bucket$ | async)?.readOnly"
       *ngIf="!data._schedule"
       matTooltip="Set publish date"
     >
@@ -109,7 +121,7 @@
     </mat-progress-spinner>
     <button
       canInteract="bucket:data:update"
-      *ngIf="!data?._id"
+      *ngIf="!data?._id && !(bucket$ | async)?.readOnly"
       [disabled]="form.invalid || scheduleForm?.invalid"
       mat-button
       (click)="saveBucketRow()"
@@ -118,12 +130,16 @@
     </button>
     <button
       canInteract="bucket:data:update"
-      *ngIf="data?._id"
+      *ngIf="data?._id && !(bucket$ | async)?.readOnly"
       [disabled]="form.invalid"
       mat-button
       (click)="saveBucketRow()"
     >
       <mat-icon>sync</mat-icon> Update
     </button>
+
+    <mat-chip-list *ngIf="(bucket$ | async)?.readOnly">
+      <mat-chip disableRipple>Read Only</mat-chip>
+    </mat-chip-list>
   </mat-card-actions>
 </mat-card>
