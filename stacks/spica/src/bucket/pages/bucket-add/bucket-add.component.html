@@ -88,6 +88,16 @@
               {{ dm?.errors.maxlength?.requiredLength }} character.
             </mat-error>
           </mat-form-field>
+
+          <div class="read-only">
+            <p>Read Only Bucket</p>
+            <mat-slide-toggle
+              matInput
+              name="readOnly"
+              placeholder="Read Only"
+              [(ngModel)]="bucket.readOnly"
+            ></mat-slide-toggle>
+          </div>
         </form>
       </mat-list-item>
       <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>

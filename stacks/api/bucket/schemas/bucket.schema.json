@@ -53,6 +53,9 @@
         "type": "string"
       }
     },
+    "readOnly": {
+      "type": "boolean"
+    },
     "properties": {
       "type": "object",
       "additionalProperties": {
