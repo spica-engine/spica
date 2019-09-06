@@ -64,10 +64,18 @@
             [disabled]="propertyKv.value.readOnly || !language.selected || bucket.readOnly"
             [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
+            #translateModel="ngModel"
             [(ngModel)]="data[propertyKv.key][language.selected]"
+            [requiredTranslate]="data[propertyKv.key]"
+            [currentLanguage]="language.selected"
+            [defaultLanguage]="language.default"
           >
             <property-language #language slot="after"></property-language>
+            <mat-error *ngIf="translateModel?.errors" slot="after">
+              This property's default language is required
+            </mat-error>
           </div>
+
           <div
             *ngIf="!propertyKv.value.options.translate"
             [inputPlacer]="propertyKv.value"
