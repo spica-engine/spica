@@ -41,6 +41,7 @@ export interface Triggers {
 
 export interface Trigger {
   type: string;
+  active?: boolean;
   options: any;
 }
 

@@ -151,6 +151,9 @@
                 [required]="triggers[trigger.value.type]?.required.indexOf(propertyKv.key) > -1"
               >
               </span>
+              <mat-slide-toggle name="status" [(ngModel)]="trigger.value.status"
+                >Deactive / Active</mat-slide-toggle
+              >
             </ng-container>
           </ng-container>
         </mat-list-item>

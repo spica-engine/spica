@@ -38,6 +38,7 @@ export interface Triggers {
 
 export interface Trigger {
   type: string;
+  active?: boolean;
   options: any;
 }
 
@@ -45,7 +46,7 @@ export function emptyFunction(): Function {
   return {
     name: undefined,
     description: undefined,
-    triggers: {default: {type: undefined, options: {}}},
+    triggers: {default: {type: undefined, active: true, options: {}}},
     env: [],
     flags: FunctionFlags.Editable
   };

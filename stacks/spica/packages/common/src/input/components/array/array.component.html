@@ -47,6 +47,7 @@
         color="warn"
         class="mat-elevation-z0"
         [disabled]="_disabled"
+        *ngIf="_activeIndex > 0"
         (click)="removeItem()"
       >
         <mat-icon>remove</mat-icon>
