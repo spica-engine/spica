@@ -1,8 +1,4 @@
 :host ::ng-deep {
-  mat-form-field.trigger,
-  span.margin {
-    margin: 10px 10px 0 0;
-  }
   .mat-subheader {
     padding: 0;
   }
@@ -49,14 +45,17 @@
         width: 100%;
       }
 
-      .mat-list-item {
-        height: auto;
-
-        .mat-list-item-content {
-          display: contents;
-        }
-      }
       mat-list {
+        .mat-list-item {
+          height: auto;
+          .mat-list-item-content {
+            display: contents;
+          }
+          mat-form-field.trigger,
+          span.margin {
+            margin: 10px 10px 0 0;
+          }
+        }
         .editor {
           .decorationsOverviewRuler {
             display: none;

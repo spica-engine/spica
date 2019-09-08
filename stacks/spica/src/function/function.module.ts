@@ -24,6 +24,7 @@ import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 
 import {PassportModule} from "../passport/passport.module";
 
@@ -69,6 +70,7 @@ import {SubscriptionModule} from "./subscription.module";
     MatExpansionModule,
     MatSortModule,
     MatProgressSpinnerModule,
+    MatSlideToggleModule,
     MatToolbarModule,
     MatTabsModule,
     MatMenuModule,
