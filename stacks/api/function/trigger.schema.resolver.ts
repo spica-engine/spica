@@ -43,6 +43,11 @@ export function generate({body}: {body: Function}) {
                   type: {
                     type: "string"
                   },
+
+                  active: {
+                    type: "boolean",
+                    default: true
+                  },
                   options: {
                     $ref: `http://spica.internal/function/triggers/${body.triggers[key].type}/schema`
                   }

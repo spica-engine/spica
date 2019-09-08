@@ -23,7 +23,8 @@ export class FunctionEngine {
     triggers.forEach(t => {
       const meta = fn.triggers[t];
       const trigger = this.registry.getTrigger(meta.type);
-      if (trigger) {
+
+      if (trigger && meta.active) {
         const target: Target = {handler: t, id: fn._id.toString()};
         const invoker: InvokerFn = invocation => {
           const script = this.host.read(fn);
@@ -45,6 +46,9 @@ export class FunctionEngine {
           return this.executor.execute(execution).then(() => logger.dispose());
         };
         trigger.register(invoker, target, meta.options);
+      } else if (trigger && !meta.active) {
+        const target: Target = {handler: t, id: fn._id.toString()};
+        trigger.register(null, target, meta.options);
       }
     });
   }
