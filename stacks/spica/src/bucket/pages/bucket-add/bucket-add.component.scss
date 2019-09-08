@@ -71,7 +71,11 @@
                 }
 
                 mat-form-field.description {
-                  width: 65%;
+                  width: 40%;
+                }
+                div.read-only {
+                  width: 25%;
+                  text-align: center;
                 }
               }
             }

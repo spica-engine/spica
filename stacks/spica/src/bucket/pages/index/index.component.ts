@@ -27,6 +27,7 @@ export class IndexComponent implements OnInit {
   public sort: {[key: string]: number} = {};
 
   public scheduledData: boolean = false;
+  public readOnly: boolean = true;
 
   public displayedProperties: Array<string> = [];
   public properties: Array<{name: string; title: string}> = [];
@@ -57,6 +58,7 @@ export class IndexComponent implements OnInit {
       switchMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
         if (schema) {
+          this.readOnly = schema.readOnly;
           this.properties = [
             {name: "$$spicainternal_select", title: "Select"},
             ...Object.entries(schema.properties).map(([name, value]) => ({
@@ -68,12 +70,14 @@ export class IndexComponent implements OnInit {
           ];
 
           this.displayedProperties = [
-            "$$spicainternal_select",
             ...Object.entries(schema.properties)
               .filter(([, value]) => value.options.visible)
               .map(([key]) => key),
             "$$spicainternal_actions"
           ];
+          if (!schema.readOnly) {
+            this.displayedProperties = ["$$spicainternal_select", ...this.displayedProperties];
+          }
         }
       })
     );

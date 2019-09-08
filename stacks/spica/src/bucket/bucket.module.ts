@@ -55,6 +55,7 @@ import {BucketService} from "./services/bucket.service";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
+import {MatChipsModule} from "@angular/material/chips";
 
 @NgModule({
   imports: [
@@ -101,6 +102,7 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
     MatAwareDialogModule,
     MatGridListModule,
     MatExpansionModule,
+    MatChipsModule,
     MatToolbarModule,
     MatRadioModule,
     MatBadgeModule,

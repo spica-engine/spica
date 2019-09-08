@@ -1,7 +1,6 @@
 import {KeyValue} from "@angular/common";
 import {
   Injectable,
-  IterableChanges,
   IterableDiffer,
   IterableDiffers,
   KeyValueChanges,
@@ -48,16 +47,13 @@ export class PropertyKvPipe implements PipeTransform {
       this.keyDiffer = this.iterableDiffers.find(keys).create();
     }
 
-    const keyChanges: IterableChanges<string> = this.keyDiffer.diff(keys);
+    const keyChanges: any = this.keyDiffer.diff(keys);
 
     if (keyChanges) {
-      keyChanges.forEachMovedItem(change => {
-        const item = this.keyValues[change.previousIndex];
-
-        this.keyValues.splice(change.previousIndex, 1);
-
-        this.keyValues.splice(change.currentIndex, 0, item);
-      });
+      const sortedKeys = keyChanges.collection.slice();
+      this.keyValues = this.keyValues.sort(
+        (a, b) => sortedKeys.indexOf(a.key) - sortedKeys.indexOf(b.key)
+      );
     }
     return this.keyValues;
   }

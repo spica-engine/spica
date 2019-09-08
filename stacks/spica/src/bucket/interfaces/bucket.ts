@@ -7,6 +7,7 @@ export interface Bucket {
   title?: string;
   order?: number;
   icon?: string;
+  readOnly?: boolean;
   description?: string;
   required?: string[];
   properties?: {
@@ -32,6 +33,7 @@ export function emptyBucket(): Bucket {
     description: undefined,
     icon: "view_stream",
     primary: undefined,
+    readOnly: false,
     properties: {
       title: {
         type: "string",
