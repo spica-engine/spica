@@ -88,6 +88,9 @@
             float: left;
             width: 100%;
           }
+          mat-error {
+            font-size: 10.5px;
+          }
           // TODO(thesayyn): replace this with css variables
           ::ng-deep .input-placer-input {
             width: 100%;

@@ -10,7 +10,7 @@ import {BucketService} from "../../services/bucket.service";
 })
 export class PropertyLanguageComponent {
   selected: string;
-
+  default: string;
   languages$: Observable<
     {
       name: string;
@@ -21,7 +21,7 @@ export class PropertyLanguageComponent {
   constructor(bs: BucketService) {
     this.languages$ = bs.getPreferences().pipe(
       map(prefs => {
-        this.selected = prefs.language.default.code;
+        this.default = this.selected = prefs.language.default.code;
         return prefs.language.supported_languages;
       })
     );
