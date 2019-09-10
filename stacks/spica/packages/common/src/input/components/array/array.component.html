@@ -2,14 +2,16 @@
   <h3 class="mat-h3">{{ schema.title }}</h3>
   <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
   <mat-card-content>
-    <div>
+    <div cdkDropList [cdkDropListDisabled]="_disabled" (cdkDropListDropped)="drop($event)">
       <button
         *ngFor="let item of _values; let index = index"
         class="mat-elevation-z0"
+        [class.drag-box]="!_disabled"
         mat-icon-button
         mat-raised-button
         [color]="_activeIndex == index && 'primary'"
         (click)="_activeIndex = index"
+        cdkDrag
       >
         {{ index + 1 }}
       </button>

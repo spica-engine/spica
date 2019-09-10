@@ -2,7 +2,7 @@ import {Component, forwardRef, HostListener, Inject, ViewChild} from "@angular/c
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 import {InputResolver} from "../../input.resolver";
-
+import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
 @Component({
   templateUrl: "./array.component.html",
   styleUrls: ["./array.component.scss"],
@@ -75,5 +75,9 @@ export class ArrayComponent implements ControlValueAccessor {
 
   setDisabledState?(isDisabled: boolean): void {
     this._disabled = isDisabled;
+  }
+
+  drop(event: CdkDragDrop<string[]>) {
+    moveItemInArray(this._values, event.previousIndex, event.currentIndex);
   }
 }
