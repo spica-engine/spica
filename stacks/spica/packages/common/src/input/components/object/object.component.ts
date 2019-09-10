@@ -1,7 +1,7 @@
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 
-import {INPUT_SCHEMA, InputSchema} from "../../input";
+import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./object.component.html",
@@ -13,7 +13,7 @@ export class ObjectComponent implements ControlValueAccessor {
   _disabled: boolean = false;
   _onChangeFn: any;
   _onTouchedFn: any;
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
+  constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
   @HostListener("click")
   callOnTouched(): void {
