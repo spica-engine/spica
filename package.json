@@ -13,7 +13,7 @@
     "url": "https://github.com/spica-engine/spica.git"
   },
   "workspaces": [
-    "stacks/*"
+    "stacks/api"
   ],
   "scripts": {
     "docs": "bazel query 'kind('docs', //...)' --output label | xargs bazel build",

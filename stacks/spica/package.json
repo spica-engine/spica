@@ -2,16 +2,16 @@
   "name": "@spica/client",
   "version": "0.0.0",
   "dependencies": {
-    "@angular/animations": "^8.0.1",
+    "@angular/animations": "^9.0.0-next.5",
     "@angular/cdk": "^8.0.1",
-    "@angular/common": "^8.0.1",
-    "@angular/compiler": "^8.0.1",
-    "@angular/core": "^8.0.1",
-    "@angular/forms": "^8.0.1",
+    "@angular/common": "^9.0.0-next.5",
+    "@angular/compiler": "^9.0.0-next.5",
+    "@angular/core": "^9.0.0-next.5",
+    "@angular/forms": "^9.0.0-next.5",
     "@angular/material": "^8.0.1",
-    "@angular/platform-browser": "^8.0.1",
-    "@angular/platform-browser-dynamic": "^8.0.1",
-    "@angular/router": "^8.0.1",
+    "@angular/platform-browser": "^9.0.0-next.5",
+    "@angular/platform-browser-dynamic": "^9.0.0-next.5",
+    "@angular/router": "^9.0.0-next.5",
     "@asymmetrik/ngx-leaflet": "^5.0.2",
     "@ngrx/entity": "^8.0.1",
     "@ngrx/store": "^8.0.1",
@@ -37,14 +37,14 @@
     "saturn-datepicker": "^7.2.0",
     "socket.io-client": "^2.2.0",
     "sockjs-client": "^1.3.0",
-    "zone.js": "^0.9.1"
+    "zone.js": "^0.10.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "0.800.3",
-    "@angular-devkit/build-ng-packagr": "0.800.3",
-    "@angular/cli": "8.0.3",
-    "@angular/compiler-cli": "8.0.2",
-    "@angular/language-service": "8.0.2",
+    "@angular-devkit/build-angular": "0.803.3",
+    "@angular-devkit/build-ng-packagr": "0.803.3",
+    "@angular/cli": "8.3.3",
+    "@angular/compiler-cli": "9.0.0-next.5",
+    "@angular/language-service": "9.0.0-next.5",
     "@ngrx/schematics": "^8.0.1",
     "@types/cropperjs": "^1.1.5",
     "@types/jasmine": "~3.3.8",
@@ -66,6 +66,6 @@
     "tsickle": "0.34.3",
     "tslib": "^1.9.0",
     "tslint": "~5.12.1",
-    "typescript": "3.4.5"
+    "typescript": "3.5.3"
   }
 }

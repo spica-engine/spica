@@ -4,7 +4,6 @@ import {BrowserModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
-import {StoreDevtoolsModule} from "@ngrx/store-devtools";
 import {BaseUrlInterceptorModule, RouteModule} from "@spica-client/core";
 import {LayoutModule} from "@spica-client/core";
 
@@ -29,7 +28,6 @@ import {StorageModule} from "./storage/storage.module";
     RouteModule.forRoot(),
     LayoutModule.forRoot(),
     StoreModule.forRoot([]),
-    StoreDevtoolsModule.instrument(),
     /**
      * Core Feature Modules
      */

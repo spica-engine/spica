@@ -1,5 +1,5 @@
 {
-  "dest": "../../../../dist/spica-client/material",
+  "dest": "../../node_modules/@spica-client/material",
   "lib": {
     "entryFile": "src/public_api.ts"
   },
