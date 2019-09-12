@@ -40,7 +40,6 @@ import {LocationComponent} from "./components/location/location.component";
 import {RelationSchemaComponent} from "./components/relation-schema/relation-schema.component";
 import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
-import {TextEditorModule} from "./components/richtext/text-editor/text-editor.module";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
@@ -115,7 +114,6 @@ import {RequiredTranslate} from "./validators";
     StorageModule.forChild(),
     PreferencesModule.forChild(),
     MatClipboardModule,
-    TextEditorModule,
     PassportModule.forChild(),
     SpicaCommon
   ],

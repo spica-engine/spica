@@ -22,8 +22,13 @@
     padding: 0 30px;
     align-items: flex-start;
     .title {
-      h1 > * {
-        vertical-align: middle;
+      h1 {
+        & > * {
+          vertical-align: middle;
+        }
+        span {
+          margin-left: 5px;
+        }
       }
       mat-chip-list {
         display: inline-block;
