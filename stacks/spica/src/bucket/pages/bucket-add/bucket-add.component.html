@@ -51,7 +51,7 @@
               [(ngModel)]="bucket.title"
               required
               minlength="4"
-              maxlength="30"
+              maxlength="15"
             />
             <mat-hint align="end">{{ tm.value?.length || 0 }} / 15</mat-hint>
             <mat-error *ngIf="tm?.errors?.required">This field is required.</mat-error>
