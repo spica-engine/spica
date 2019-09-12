@@ -52,7 +52,7 @@ body {
 @include vars($app-light-theme);
 
 /* Dark mode */
-@media (prefers-color-scheme: dark) {
+body.dark {
   @include angular-material-theme($app-dark-theme);
   @include vars($app-dark-theme);
 }
@@ -66,12 +66,12 @@ body {
 .mat-form-field {
   &.mat-focused {
     .mat-form-field-infix {
-      box-shadow: 3px 3px 5px var(--primary-100) !important;
+      // box-shadow: 3px 3px 5px var(--primary-100) !important;
     }
   }
   .mat-form-field-flex {
     .mat-form-field-infix {
-      background: var(--primary-50);
+      background: rgba(var(--background-hover-rgb), 0.12);
       border-radius: 5px;
       padding: 0.875em 0.75em !important;
       border: 0px;

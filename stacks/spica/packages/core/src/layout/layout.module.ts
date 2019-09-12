@@ -13,7 +13,9 @@ import {DEFAULT_LAYOUT, LayoutConfig} from "./config";
 import {ErrorInterceptor} from "./error.interceptor";
 import {ErrorPageComponent} from "./error/error.page";
 import {HomeLayoutComponent} from "./home/home.layout";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {LayoutRouterOutlet} from "./router_outlet";
+import {ThemeSwitcherComponent} from "./theme-switcher/theme-switcher.component";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -27,10 +29,16 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
+    MatSlideToggleModule,
     CdkLayoutModule,
     RouterModule.forChild(routes)
   ],
-  declarations: [HomeLayoutComponent, LayoutRouterOutlet, ErrorPageComponent],
+  declarations: [
+    HomeLayoutComponent,
+    LayoutRouterOutlet,
+    ErrorPageComponent,
+    ThemeSwitcherComponent
+  ],
   exports: [LayoutRouterOutlet, RouterModule],
   entryComponents: [HomeLayoutComponent]
 })
@@ -40,7 +48,8 @@ export class LayoutModule {
       ngModule: LayoutModule,
       providers: [
         {provide: DEFAULT_LAYOUT, useValue: config.defaultLayout || HomeLayoutComponent},
-        {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true}
+        {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
+        {provide: DEFAULT_LAYOUT, useValue: ThemeSwitcherComponent, multi: true}
       ]
     };
   }
