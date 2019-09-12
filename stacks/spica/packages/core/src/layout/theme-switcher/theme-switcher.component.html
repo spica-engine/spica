@@ -1,9 +1,9 @@
-<button *ngIf="!theme" mat-icon-button [disableRipple]="true">
-  <mat-icon>wb_sunny</mat-icon>
-</button>
-<button mat-icon-button *ngIf="theme" [disableRipple]="true">
-  <mat-icon>nights_stay</mat-icon>
-</button>
-<button mat-icon-button>
-  <mat-slide-toggle [(ngModel)]="theme" (change)="themeChange()"> </mat-slide-toggle>
+<button
+  mat-icon-button
+  [class.mat-flat-button]="isDark"
+  [matTooltip]="'Switch to ' + (isDark ? 'light' : 'dark') + ' theme.'"
+  disableRipple
+  (click)="changeScheme(!isDark)"
+>
+  <mat-icon> {{ isDark ? "nights_stay" : "wb_sunny" }}</mat-icon>
 </button>

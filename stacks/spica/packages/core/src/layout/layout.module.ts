@@ -7,13 +7,14 @@ import {MatExpansionModule} from "@angular/material/expansion";
 import {MatIconModule} from "@angular/material/icon";
 import {MatListModule} from "@angular/material/list";
 import {MatSidenavModule} from "@angular/material/sidenav";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {RouterModule, Routes} from "@angular/router";
-import {DEFAULT_LAYOUT, LayoutConfig} from "./config";
+import {DEFAULT_LAYOUT, LayoutConfig, LAYOUT_ACTIONS} from "./config";
 import {ErrorInterceptor} from "./error.interceptor";
 import {ErrorPageComponent} from "./error/error.page";
 import {HomeLayoutComponent} from "./home/home.layout";
-import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {LayoutRouterOutlet} from "./router_outlet";
 import {ThemeSwitcherComponent} from "./theme-switcher/theme-switcher.component";
 
@@ -26,6 +27,7 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     MatExpansionModule,
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule,
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
@@ -40,7 +42,7 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     ThemeSwitcherComponent
   ],
   exports: [LayoutRouterOutlet, RouterModule],
-  entryComponents: [HomeLayoutComponent]
+  entryComponents: [HomeLayoutComponent, ThemeSwitcherComponent]
 })
 export class LayoutModule {
   static forRoot(config: LayoutConfig = {}): ModuleWithProviders {
@@ -49,7 +51,7 @@ export class LayoutModule {
       providers: [
         {provide: DEFAULT_LAYOUT, useValue: config.defaultLayout || HomeLayoutComponent},
         {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
-        {provide: DEFAULT_LAYOUT, useValue: ThemeSwitcherComponent, multi: true}
+        {provide: LAYOUT_ACTIONS, useValue: ThemeSwitcherComponent, multi: true}
       ]
     };
   }
