@@ -22,6 +22,8 @@
         padding: 5px;
       }
       mat-form-field {
+        margin-top: 4px;
+        width: 32%;
         &::ng-deep .mat-form-field-wrapper {
           padding: unset;
         }
