@@ -3,6 +3,7 @@
   <p class="desc">{{ schema.description }}</p>
   <button
     *ngIf="selected"
+    [disabled]="disabled"
     mat-icon-button
     mat-flat-button
     color="warn"
@@ -23,6 +24,7 @@
   [(files)]="incomingFile"
   (filesChange)="uploadStorage(incomingFile)"
   class="image-field"
+  [class.disabled]="disabled"
 >
   <div *ngIf="!progress" class="display-container">
     <storage-view *ngIf="selected != null" [storage]="selected" class="storage-view"></storage-view>
