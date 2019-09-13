@@ -85,9 +85,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         }),
         takeUntil(this.onDestroy)
       )
-      .subscribe();
-
-    this.updatePositionProperties();
+      .subscribe(() => this.updatePositionProperties());
   }
 
   cardDrop(event: CdkDragDrop<Bucket[]>) {
