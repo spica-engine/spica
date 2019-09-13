@@ -47,3 +47,7 @@ To have a full control in your database, we integrated history system in bucket 
 
 NOTE: To make history feature works, you need to have a MongoDB with 3 replica sets.
 You can see each revisions by clicking history on right side of screen.
+
+## Real-time
+
+This feature helps you to connect bucket collections and listen to the bucket data and their changes in real-time to handle constantly changing workloads. Unlike API calls, retrieved data will always be actual. You can skip some data row or limit the amount of data you'll get. Sorting and filtering are also supported. Real-time bucket system is mostly useful for chat applications, reservation systems and accounting.
