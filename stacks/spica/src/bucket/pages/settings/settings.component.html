@@ -28,7 +28,7 @@
         <mat-label>Choose Language</mat-label>
         <mat-select ngModel #selectedLanguage="ngModel" name="lang">
           <mat-option *ngFor="let lang of langs" [value]="lang">
-            {{ lang.short }} | {{ lang.long }}
+            {{ lang.long }} ( {{ lang.short }})
           </mat-option>
         </mat-select>
       </mat-form-field>
