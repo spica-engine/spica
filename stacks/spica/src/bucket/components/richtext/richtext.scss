@@ -2,17 +2,33 @@
   display: inline-block;
   padding: 5px 0px;
   overflow: hidden;
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
   section.toolbar {
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     background: rgba(var(--background-hover-rgb), 0.12);
-    padding: 20px 10px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    span.space-between {
-      flex-basis: 20px;
-      border-left: 2px solid var(--background-hover-rgb);
+    padding: 10px 10px;
+    div.actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 5px;
+      span {
+        padding: 5px;
+      }
+      mat-form-field {
+        &::ng-deep .mat-form-field-wrapper {
+          padding: unset;
+        }
+        &:not(:first-of-type) {
+          margin-left: 5px;
+        }
+      }
     }
   }
 

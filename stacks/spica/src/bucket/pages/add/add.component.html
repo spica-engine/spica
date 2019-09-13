@@ -53,7 +53,7 @@
 </mat-toolbar>
 
 <mat-card *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25">
-  <mat-card-content>
+  <mat-card-content [class.handset]="isHandset$ | async">
     <form class="block-form" #form="ngForm">
       <div *ngFor="let layout of layouts" [class]="layout">
         <ng-container *ngFor="let propertyKv of bucket['positioned'][layout]">
