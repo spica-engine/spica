@@ -91,7 +91,7 @@
     [matTooltip]="'Show ' + (moreActions ? 'less' : 'more') + ' actions'"
     (click)="moreActions = !moreActions"
   >
-    <mat-icon>expand_more</mat-icon>
+    <mat-icon>{{ moreActions ? "expand_less" : "expand_more" }}</mat-icon>
   </button>
 
   <ng-container *ngIf="moreActions">
