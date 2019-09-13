@@ -30,6 +30,8 @@ export class FilterComponent implements OnChanges {
       for (const [key, value] of Object.entries(this.meta.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
+          this.properties[key].type =
+            this.properties[key].type == "richtext" ? "textarea" : this.properties[key].type;
         }
       }
     }
