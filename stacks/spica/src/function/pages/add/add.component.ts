@@ -1,12 +1,13 @@
 import {HttpClient, HttpEvent, HttpEventType, HttpRequest} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable} from "rxjs";
+import {Observable, Subscription} from "rxjs";
 import {delay, filter, scan, switchMap, takeUntil, tap} from "rxjs/operators";
 
 import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
 import {emptyFunction, Function, Trigger} from "../../interface";
+import {BreakpointObserver} from "@angular/cdk/layout";
 
 @Component({
   selector: "functions-add",
@@ -20,6 +21,11 @@ export class AddComponent implements OnInit, OnDestroy {
   public triggers: Observable<Trigger[]>;
   public dependencies: Observable<any>;
   public dependencyInstallPending = false;
+
+  isDark: boolean = false;
+
+  private mediaMatchObserver: Subscription;
+
   public editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
   public index: string;
   public lastSaved: Date;
@@ -42,8 +48,12 @@ export class AddComponent implements OnInit, OnDestroy {
     private router: Router,
     private functionService: FunctionService,
     private http: HttpClient,
-    private ls: LanguageService
+    private ls: LanguageService,
+    breakpointObserver: BreakpointObserver
   ) {
+    this.mediaMatchObserver = breakpointObserver
+      .observe("(prefers-color-scheme: dark)")
+      .subscribe(r => this.changeScheme(r.matches));
     this.triggers = this.functionService.getTriggers();
   }
 
@@ -143,8 +153,19 @@ export class AddComponent implements OnInit, OnDestroy {
       });
   }
 
+  changeScheme(isDark: boolean) {
+    console.log("ljsaljdasd")
+    // this.isDark = isDark;
+    // if (this.isDark) {
+    //   this.editorOptions.theme = "vs-dark";
+    // } else {
+    //   this.editorOptions.theme = "vs-light";
+    // }
+    // console.log(this.editorOptions);
+  }
   ngOnDestroy() {
     this.dispose.emit();
     this.ls.close();
+    this.mediaMatchObserver.unsubscribe();
   }
 }
