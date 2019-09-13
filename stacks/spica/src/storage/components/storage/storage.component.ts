@@ -22,7 +22,7 @@ export class StorageComponent implements ControlValueAccessor {
   onTouchedFn: any;
   value: string;
   incomingFile: FileList;
-
+  disabled: boolean;
   storageStyle: string;
   selected: Storage;
   progress: number;
@@ -75,6 +75,9 @@ export class StorageComponent implements ControlValueAccessor {
     this.value = "";
     this.selected = undefined;
     this.onChangeFn();
+  }
+  setDisabledState?(isDisabled: boolean): void {
+    this.disabled = isDisabled;
   }
   uploadStorage(file: FileList): void {
     if (file) {

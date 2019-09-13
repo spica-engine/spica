@@ -98,6 +98,10 @@ p.desc {
       right: 10px;
     }
   }
+  .disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
   .image-field {
     text-align: center;
     display: block;
