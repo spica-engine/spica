@@ -40,6 +40,7 @@ import {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 import {InputPlacerComponent} from "./input.placer";
 import {InputResolver} from "./input.resolver";
 import {NgModelParentDirective} from "./ngmodel.parent";
+import {DragDropModule} from "@angular/cdk/drag-drop";
 import {
   MaxValidator,
   MinItemsValidator,
@@ -72,7 +73,8 @@ export function coerceObject() {
     MatDatepickerModule,
     MatCheckboxModule,
     MatTooltipModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    DragDropModule
   ],
   exports: [InputPlacerComponent, InputSchemaPlacer, MaxValidator, MinValidator],
   declarations: [
