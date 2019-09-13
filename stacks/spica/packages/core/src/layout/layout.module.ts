@@ -16,7 +16,8 @@ import {ErrorInterceptor} from "./error.interceptor";
 import {ErrorPageComponent} from "./error/error.page";
 import {HomeLayoutComponent} from "./home/home.layout";
 import {LayoutRouterOutlet} from "./router_outlet";
-import {ThemeSwitcherComponent} from "./theme-switcher/theme-switcher.component";
+import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.component";
+import {SchemeObserver} from "./scheme.observer";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -35,14 +36,15 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     CdkLayoutModule,
     RouterModule.forChild(routes)
   ],
+  providers: [SchemeObserver],
   declarations: [
     HomeLayoutComponent,
     LayoutRouterOutlet,
     ErrorPageComponent,
-    ThemeSwitcherComponent
+    SchemeSwitcherComponent
   ],
   exports: [LayoutRouterOutlet, RouterModule],
-  entryComponents: [HomeLayoutComponent, ThemeSwitcherComponent]
+  entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent]
 })
 export class LayoutModule {
   static forRoot(config: LayoutConfig = {}): ModuleWithProviders {
@@ -51,7 +53,7 @@ export class LayoutModule {
       providers: [
         {provide: DEFAULT_LAYOUT, useValue: config.defaultLayout || HomeLayoutComponent},
         {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
-        {provide: LAYOUT_ACTIONS, useValue: ThemeSwitcherComponent, multi: true}
+        {provide: LAYOUT_ACTIONS, useValue: SchemeSwitcherComponent, multi: true}
       ]
     };
   }

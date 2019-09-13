@@ -1,8 +1,7 @@
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, Inject, Optional, Type} from "@angular/core";
 import {Observable} from "rxjs";
-import {map, throttleTime} from "rxjs/operators";
-
+import {debounceTime, map} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 
@@ -14,9 +13,9 @@ import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 export class HomeLayoutComponent {
   $routes: Observable<{key: string; value: Route[]}[]>;
   isHandset$: Observable<boolean> = this.breakpointObserver
-    .observe([Breakpoints.Handset, Breakpoints.Tablet])
+    .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
     .pipe(
-      throttleTime(200),
+      debounceTime(200),
       map(result => result.matches)
     );
 

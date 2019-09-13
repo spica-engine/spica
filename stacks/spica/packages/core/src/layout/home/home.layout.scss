@@ -1,9 +1,9 @@
 :host {
   width: 100%;
   height: 100%;
-  .sidenav-container {
+  mat-sidenav-container {
     height: 100vh;
-    .sidenav {
+    mat-sidenav {
       min-width: 250px;
       mat-accordion {
         mat-expansion-panel {
@@ -23,11 +23,18 @@
         }
       }
     }
-    .primary-content {
-      .top-toolbar {
+    mat-sidenav-content {
+      mat-toolbar {
+        padding: 0 30px;
         background-color: var(--current-color, var(--primary-default, black));
+        button[mat-icon-button] {
+          text-align: left;
+        }
         .fill-between {
           flex: 1 1 auto;
+        }
+        .custom-action:not(:last-of-type) {
+          margin-right: 5px;
         }
       }
     }

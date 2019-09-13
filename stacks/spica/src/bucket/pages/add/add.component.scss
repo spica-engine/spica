@@ -81,17 +81,22 @@
       }
     }
     mat-card-content {
+      &.handset form{
+        flex-flow: column;
+      }
       form {
+        display: flex;
+        flex-flow: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
         > div {
           padding: 10px;
           &.left,
           &.right {
-            float: left;
-            width: 50%;
+            flex: 2.5;
           }
           &.bottom {
-            float: left;
-            width: 100%;
+            flex-basis: 100%;
           }
           mat-error {
             font-size: 10.5px;

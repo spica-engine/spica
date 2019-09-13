@@ -1,3 +1,4 @@
+import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
@@ -22,17 +23,22 @@ export class AddComponent implements OnInit {
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
-  public savingBucketState: Boolean = false;
+  savingBucketState: Boolean = false;
 
-  layouts = ["left", "right", "bottom"];
+  readonly layouts = ["left", "right", "bottom"];
+
+  readonly isHandset$: Observable<boolean>;
 
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
     private bhs: BucketHistoryService,
     private router: Router,
-    private route: ActivatedRoute
-  ) {}
+    private route: ActivatedRoute,
+    breakpointObserver: BreakpointObserver
+  ) {
+    this.isHandset$ = breakpointObserver.observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall]).pipe(map(r => r.matches));
+  }
 
   ngOnInit(): void {
     this.bucket$ = this.route.params.pipe(

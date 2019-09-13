@@ -64,9 +64,12 @@ body.dark {
 
 /* TODO: Adopt these styles to dark mode also */
 .mat-form-field {
+  .mat-form-field-wrapper {
+    padding-top: 1.25em;
+  }
   &.mat-focused {
     .mat-form-field-infix {
-      // box-shadow: 3px 3px 5px var(--primary-100) !important;
+      box-shadow: 3px 3px 5px var(--background-hover-rgb) !important;
     }
   }
   .mat-form-field-flex {
@@ -86,7 +89,7 @@ body.dark {
   &.mat-form-field-should-float {
     .mat-form-field-infix {
       .mat-form-field-label {
-        transform: translate(0.75em, -1.26em) scale(0.84375em);
+        transform: translate(0.75em, -1.26em) scale(0.84375em) !important;
       }
     }
   }
