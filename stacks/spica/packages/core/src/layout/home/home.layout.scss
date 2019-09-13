@@ -5,6 +5,9 @@
     height: 100vh;
     mat-sidenav {
       min-width: 250px;
+      mat-toolbar {
+        background: transparent;
+      }
       mat-accordion {
         mat-expansion-panel {
           mat-nav-list {
