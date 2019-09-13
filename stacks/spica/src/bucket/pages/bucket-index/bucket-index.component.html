@@ -27,7 +27,7 @@
     [cdkDropListEnterPredicate]="dropListEnterPredicate"
     (cdkDropListDropped)="dropListDropped()"
   >
-    <mat-card class="drag-box mat-elevation-z0" cdkDrag (cdkDragMoved)="dragMoved($event)">
+    <mat-card class="drag-box mat-elevation-1" cdkDrag (cdkDragMoved)="dragMoved($event)">
       <mat-card-title>
         <mat-icon>{{ bucket.icon }}</mat-icon>
         <span>{{ bucket.title }}</span>

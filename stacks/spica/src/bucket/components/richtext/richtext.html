@@ -168,7 +168,7 @@
   </div>
 </section>
 <div
-  contenteditable
+  [attr.contenteditable]="!disabled"
   [innerHTML]="value"
   (input)="onChangeFn($event.target.innerHTML)"
   (blur)="onTouchedFn()"
