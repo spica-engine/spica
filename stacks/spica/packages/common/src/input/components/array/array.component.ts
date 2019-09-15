@@ -1,8 +1,8 @@
-import {Component, forwardRef, HostListener, Inject, ViewChild} from "@angular/core";
+import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
+import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 import {InputResolver} from "../../input.resolver";
-import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
 @Component({
   templateUrl: "./array.component.html",
   styleUrls: ["./array.component.scss"],
@@ -14,8 +14,6 @@ export class ArrayComponent implements ControlValueAccessor {
   _onChangeFn: any;
   _onTouchedFn: any;
   _activeIndex: number;
-
-  @ViewChild("arrayForm", {static: true}) form;
 
   constructor(
     @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
