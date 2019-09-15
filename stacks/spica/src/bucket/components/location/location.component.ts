@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   forwardRef,
   HostListener,
@@ -7,17 +8,17 @@ import {
   ViewChild
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
+import {LeafletDirective} from "@asymmetrik/ngx-leaflet";
 import {InputSchema, INPUT_SCHEMA} from "@spica-client/common";
 import {
   icon,
-  marker,
-  Marker,
-  tileLayer,
   LatLng,
   LatLngExpression,
-  LeafletMouseEvent
+  LeafletMouseEvent,
+  marker,
+  Marker,
+  tileLayer
 } from "leaflet";
-import {LeafletDirective} from "@asymmetrik/ngx-leaflet";
 
 @Component({
   templateUrl: "./location.component.html",
@@ -33,7 +34,7 @@ import {LeafletDirective} from "@asymmetrik/ngx-leaflet";
 export class LocationComponent implements ControlValueAccessor {
   @ViewChild(LeafletDirective, {static: true}) map: LeafletDirective;
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
+  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema, private cd: ChangeDetectorRef) {
     this._marker.on("move", (event: LeafletMouseEvent) => {
       this.applyCoords(event.latlng, true);
       this.callOnChange();
@@ -78,7 +79,10 @@ export class LocationComponent implements ControlValueAccessor {
     if (!mapOnly) {
       this._marker.setLatLng([this.value.latitude, this.value.longitude]);
     }
-    setTimeout(() => (this._center = [this.value.latitude, this.value.longitude]), 1000);
+    setTimeout(() => {
+      this._center = [this.value.latitude, this.value.longitude];
+      this.cd.markForCheck();
+    }, 500);
   }
 
   @HostListener("click")
@@ -95,9 +99,11 @@ export class LocationComponent implements ControlValueAccessor {
   }
 
   writeValue(val: any): void {
+    console.log(val, val && typeof val === "object" && val !== null);
     if (val && typeof val === "object" && val !== null) {
       this.value = val;
       this.applyCoords();
+      this.cd.markForCheck();
     }
   }
 
@@ -113,4 +119,8 @@ export class LocationComponent implements ControlValueAccessor {
     this._disabled = isDisabled;
     this._marker.dragging.disable();
   }
+}
+
+export function createLocation() {
+  return {longitude: 0, latitude: 0};
 }

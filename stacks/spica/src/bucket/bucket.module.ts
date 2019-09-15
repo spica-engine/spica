@@ -6,7 +6,9 @@ import {MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatChipsModule} from "@angular/material/chips";
 import {MatRippleModule} from "@angular/material/core";
+import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatDividerModule} from "@angular/material/divider";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatGridListModule} from "@angular/material/grid-list";
@@ -28,15 +30,16 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {StoreModule} from "@ngrx/store";
-import {InputModule} from "@spica-client/common";
+import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
 import {BucketRoutingModule} from "./bucket-routing.module";
 import {FilterComponent} from "./components/filter/filter.component";
 import {PropertyLanguageComponent} from "./components/language/language.component";
-import {LocationComponent} from "./components/location/location.component";
+import {createLocation, LocationComponent} from "./components/location/location.component";
 import {RelationSchemaComponent} from "./components/relation-schema/relation-schema.component";
 import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
@@ -52,11 +55,8 @@ import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketInitializer} from "./services/bucket.initializer";
 import * as fromBucket from "./services/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
-import {CommonModule as SpicaCommon} from "@spica-client/common";
-import {MatDatepickerModule} from "@angular/material/datepicker";
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
-import {MatChipsModule} from "@angular/material/chips";
 import {RequiredTranslate} from "./validators";
+
 @NgModule({
   imports: [
     InputModule.withPlacers([
@@ -74,7 +74,8 @@ import {RequiredTranslate} from "./validators";
       {
         origin: "object",
         type: "location",
-        placer: LocationComponent
+        placer: LocationComponent,
+        coerce: createLocation
       }
     ]),
     CommonModule,
