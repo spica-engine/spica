@@ -52,9 +52,10 @@ import {SettingsComponent} from "./pages/settings/settings.component";
 import {BucketDataService} from "./services/bucket-data.service";
 import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketInitializer} from "./services/bucket.initializer";
-import * as fromBucket from "./services/bucket.reducer";
+import * as fromBucket from "./state/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
 import {RequiredTranslate} from "./validators";
+import { WelcomeComponent } from "./pages/welcome/welcome.component";
 
 @NgModule({
   imports: [
@@ -124,6 +125,7 @@ import {RequiredTranslate} from "./validators";
     BucketIndexComponent,
     BucketAddComponent,
     ImportExportComponent,
+    WelcomeComponent,
 
     RichTextEditorComponent,
     RelationComponent,

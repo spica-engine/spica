@@ -8,6 +8,8 @@ import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component"
 import {ImportExportComponent} from "./pages/import-export/import-export.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
+import { BucketIndexGuard } from "./state/index.guard";
 
 const routes: Routes = [
   {
@@ -48,6 +50,10 @@ const routes: Routes = [
     },
     children: [
       {
+        path: "welcome",
+        component: WelcomeComponent
+      },
+      {
         path: "import-export",
         component: ImportExportComponent
       },
@@ -56,6 +62,7 @@ const routes: Routes = [
         component: SettingsComponent
       },
       {
+        canActivate: [BucketIndexGuard],
         path: "",
         component: BucketIndexComponent,
         data: {

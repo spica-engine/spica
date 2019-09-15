@@ -10,7 +10,7 @@ import {Storage} from "../../storage/interfaces/storage";
 import {Bucket, BucketTemplate} from "../interfaces/bucket";
 import {BucketSettings} from "../interfaces/bucket-settings";
 import {PredefinedDefault} from "../interfaces/predefined-default";
-import * as fromBucket from "./bucket.reducer";
+import * as fromBucket from "../state/bucket.reducer";
 
 @Injectable()
 export class BucketService {
