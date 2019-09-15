@@ -154,7 +154,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   changeScheme(isDark: boolean) {
-    console.log("ljsaljdasd")
+    console.log("ljsaljdasd");
     // this.isDark = isDark;
     // if (this.isDark) {
     //   this.editorOptions.theme = "vs-dark";

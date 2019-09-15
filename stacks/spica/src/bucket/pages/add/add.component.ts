@@ -37,7 +37,9 @@ export class AddComponent implements OnInit {
     private route: ActivatedRoute,
     breakpointObserver: BreakpointObserver
   ) {
-    this.isHandset$ = breakpointObserver.observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall]).pipe(map(r => r.matches));
+    this.isHandset$ = breakpointObserver
+      .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
+      .pipe(map(r => r.matches));
   }
 
   ngOnInit(): void {

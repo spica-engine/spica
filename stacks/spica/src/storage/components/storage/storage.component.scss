@@ -1,248 +1,64 @@
-// TODO: We should clean up this
-p.title,
-p.desc {
-  padding: 5px;
-}
-.container-element {
-  .upload-button {
-    background-color: var(--primary-300);
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 3px;
-    color: var(--accent-a400);
-    .mat-icon {
-      user-select: none;
-    }
-  }
-  .upload-text {
-    display: inline-block;
-    padding-left: 10px;
-    color: var(--primary-a400);
-    font-size: 12px;
-  }
-  .upload-text-container {
-    height: 15px;
-    overflow: hidden;
-    display: inline-flex;
-    position: relative;
-    .upload-text-guide {
-      display: block;
-      transition: 0.19s linear;
-    }
-    .upload-text-type {
-      display: block;
-      transform: translateY(15px);
-      position: absolute;
-      transition: 0.19s linear;
-    }
-  }
-}
-
 :host {
-  width: 100%;
-  display: inline-block;
-  border: 1px solid var(--li-primary-300);
-  overflow: hidden;
-  position: relative;
-  border-radius: 10px;
-  &:hover {
-    .storage-view {
-      filter: grayscale(0) !important;
-    }
-    .selected-storage {
-      .cached-icon {
-        transform: rotate(180deg);
-      }
-    }
-  }
-  .storage-view {
-    filter: grayscale(0.9);
-    transition: 0.3s;
-    width: 100%;
-    height: 100%;
-    /deep/ {
-      img,
-      video {
-        width: 100%;
-        height: 100%;
-        min-height: unset;
-        max-height: unset;
-        margin: 0;
-      }
-      .unkown-file {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-    }
-  }
-  .storage-prop {
-    padding: 0.2em 0.75em;
-    background: #f8f8f8;
-    width: 100%;
-    color: rgba(0, 0, 0, 0.54);
-    .title {
-      margin: 0;
-      font-size: 14px;
-    }
-    .desc {
-      margin: 0;
-      font-size: 12px;
-    }
-    button {
-      position: absolute;
-      top: 20px;
-      right: 10px;
-    }
-  }
-  .disabled {
+  &.disabled {
     pointer-events: none;
     cursor: not-allowed;
   }
-  .image-field {
-    text-align: center;
-    display: block;
-    border: 1px solid var(--primary-100);
-    color: var(--primary-500);
-    font-size: 2em;
-    width: 100%;
-    height: 200px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    align-content: center;
-    align-items: center;
-    .display-container {
-      width: 100%;
-      height: 100%;
+  section {
+    &:first-of-type {
       display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      align-content: center;
+      justify-content: space-between;
       align-items: center;
-    }
-    &.unselected-storage {
-      .drag-text {
-        display: unset;
-      }
-      .save-alt {
-        display: unset;
-      }
-      &:hover {
-        .mat-icon {
-          animation: jello-horizontal 0.9s both;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      background: rgba(var(--background-app-bar-rgb), calc(0.5 + calc(var(--tone-diff) * 2)));
+      padding: 10px 10px;
+      span:last-of-type {
+        display: flex;
+        align-items: center;
+        mat-progress-spinner {
+          margin-right: 5px;
         }
       }
     }
-    &.selected-storage {
-      &:after {
-        content: "";
-        display: block;
+    &:last-of-type {
+      overflow: hidden;
+      border-bottom-left-radius: 4px;
+      border-bottom-right-radius: 4px;
+      background: rgba(var(--background-app-bar-rgb), calc(0.1 + var(--tone-diff)));
+      transition: filter 0.3s ease-in-out;
+      filter: grayscale(1);
+      &:hover {
+        filter: grayscale(0);
+        mat-icon.change {
+          transform: rotate(180deg);
+        }
+      }
+
+      mat-icon.change {
         position: absolute;
-        width: 100%;
-        height: 100%;
-        border-radius: 5px;
-        z-index: -1;
+        left: calc(50% - 12px);
+        top: calc(50% - 12px);
+        transition: transform 0.3s ease-in-out;
+        will-change: transform;
       }
-      .cached-icon {
-        display: unset;
-      }
-    }
-    .drag-text {
-      width: 100%;
-      font-size: 1rem;
-      display: none;
-    }
-    .cached-icon {
-      display: none;
-      position: absolute;
-      z-index: 99;
-      color: var(--li-primary-700);
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      transition-duration: 0.3s;
-    }
-    .save-alt {
-      display: none;
-      width: 75px;
-      height: 75px;
-      font-size: 75px;
-      user-select: none;
-    }
-    .spinner {
-      position: absolute;
-      z-index: 99;
-    }
-  }
 
-  div[image] {
-    position: relative;
-    cursor: pointer;
-    img {
-      width: 100%;
-      min-height: 150px;
-      max-height: 200px;
-      object-fit: cover;
-    }
-    &:hover div[reselect] {
-      display: flex;
-    }
-    div[reselect] {
-      pointer-events: none;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-      background: #00000066;
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-    }
-  }
-
-  .visible {
-    display: none;
-  }
-
-  .upload-container {
-    width: 95%;
-    cursor: pointer;
-    &:hover {
-      .upload-button {
-        color: var(--primary-600);
+      div.drop {
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        opacity: 0.3;
+        padding: 10px 0;
+        cursor: pointer;
+        &:hover {
+          opacity: 0.6;
+        }
+        mat-icon {
+          font-size: 65px;
+        }
+        small {
+          margin-top: 5px;
+        }
       }
-      .upload-text-guide {
-        transform: translateY(-15px);
-        display: none;
-      }
-      .upload-text-type {
-        transform: translateY(0px) !important;
-      }
-    }
-    @extend .container-element;
-  }
-  .uploaded-container {
-    width: 95%;
-    @extend .container-element;
-    .delete {
-      color: #f44336;
-      pointer-events: all;
-      cursor: pointer;
-      padding-right: 5px;
-    }
-    .change {
-      pointer-events: all;
-      color: #4ca8f8;
-      cursor: pointer;
-      padding-left: 5px;
-      padding-right: 5px;
     }
   }
 }
