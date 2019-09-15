@@ -21,10 +21,11 @@ export class SchemeSwitcherComponent {
     this.isDark$ = schemeObserver.observe(Scheme.Dark).pipe(
       tap(isDark => {
         this.isDark = isDark;
+        const root = this.document.querySelector(":root");
         if (isDark) {
-          this.renderer.addClass(this.document.body, "dark");
+          this.renderer.addClass(root, "dark");
         } else {
-          this.renderer.removeClass(this.document.body, "dark");
+          this.renderer.removeClass(root, "dark");
         }
       })
     );

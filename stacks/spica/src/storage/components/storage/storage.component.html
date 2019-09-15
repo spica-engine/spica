@@ -1,80 +1,39 @@
-<div class="storage-prop">
-  <p class="title">{{ schema.title }}</p>
-  <p class="desc">{{ schema.description }}</p>
-  <button
-    *ngIf="selected"
-    mat-icon-button
-    mat-flat-button
-    color="warn"
-    matTooltip="Clear storage object"
-    (click)="delete(); $event.stopPropagation()"
-  >
-    <mat-icon>clear_all</mat-icon>
-  </button>
-</div>
-<div
-  [ngClass]="{'selected-storage': selected, 'unselected-storage': !selected}"
-  *ngIf="storageStyle == 'large'"
-  #picker="storagePicker"
-  [storagePicker]="{closeOnChange: true}"
-  [(ngModel)]="selected"
-  (ngModelChange)="callOnChange()"
-  ngfDrop
-  [(files)]="incomingFile"
-  (filesChange)="uploadStorage(incomingFile)"
-  class="image-field"
->
-  <div *ngIf="!progress" class="display-container">
-    <storage-view *ngIf="selected != null" [storage]="selected" class="storage-view"></storage-view>
-    <mat-icon class="cached-icon">cached</mat-icon>
-    <mat-icon class="save-alt">save_alt</mat-icon>
-    <div class="drag-text">Drag & Drop your file here</div>
-  </div>
-  <mat-progress-spinner class="spinner" mode="determinate" [value]="progress" *ngIf="progress">
-  </mat-progress-spinner>
-</div>
-
-<div
-  [ngClass]="{visible: value}"
-  class="upload-container"
-  [(ngModel)]="selected"
-  #picker="storagePicker"
-  [storagePicker]="{closeOnChange: true}"
-  (ngModelChange)="callOnChange()"
-  *ngIf="storageStyle == 'small'"
->
-  <div *ngIf="!value" class="upload-button">
-    <mat-icon>publish</mat-icon>
-  </div>
-  <div class="upload-text">
-    <span
-      ><b>{{ schema.description }}</b></span
+<section>
+  <span>
+    <h5 class="mat-h5">{{ schema.title | titlecase }}</h5>
+    <small *ngIf="schema.description">{{ schema.description }}</small>
+  </span>
+  <span>
+    <mat-progress-spinner
+      *ngIf="progress"
+      diameter="40"
+      mode="determinate"
+      [value]="progress"
+    ></mat-progress-spinner>
+    <button
+      *ngIf="value || blob"
+      mat-icon-button
+      mat-flat-button
+      matTooltip="Clear storage object"
+      (click)="clear()"
     >
-    <br />
-    <div class="upload-text-container">
-      <span class="upload-text-guide">Click Here to Upload it</span>
-      <span class="upload-text-type">Gif, SVG, PNG, JPEG, JPG</span>
-    </div>
-  </div>
-</div>
+      <mat-icon>clear_all</mat-icon>
+    </button>
+  </span>
+</section>
+<section
+  [storagePicker]="{closeOnChange: true}"
+  [(ngModel)]="selected"
+  (ngModelChange)="pickFromStorage($event)"
+>
+  <ng-container *ngIf="value">
+    <mat-progress-bar *ngIf="view.ready == false" mode="indeterminate"></mat-progress-bar>
+    <storage-view #view [blob]="blob || value"></storage-view>
+    <mat-icon class="change">{{ isDraggingOver ? "save_alt" : "cached" }}</mat-icon>
+  </ng-container>
 
-<div class="uploaded-container" *ngIf="value && storageStyle == 'small'">
-  <div class="upload-button">
-    <mat-icon>check</mat-icon>
+  <div class="drop" *ngIf="!value">
+    <mat-icon inline="true">save_alt</mat-icon>
+    <small class="mat-small">Drag & Drop your file here</small>
   </div>
-
-  <div class="upload-text">
-    <span><b>You Uploaded an Image!</b></span>
-    <div class="uploaded-text-container">
-      <span class="delete" (click)="delete()">Delete Image</span>
-      <span
-        class="change"
-        [(ngModel)]="selected"
-        #picker="storagePicker"
-        [storagePicker]="{closeOnChange: true}"
-        (ngModelChange)="callOnChange()"
-        >Change Image</span
-      >
-    </div>
-  </div>
-</div>
+</section>

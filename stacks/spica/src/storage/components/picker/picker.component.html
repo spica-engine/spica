@@ -7,7 +7,7 @@
             <div selected *ngIf="selected == storage.url">
               <mat-icon>done</mat-icon>
             </div>
-            <storage-view [storage]="storage" class="storage-view"></storage-view>
+            <storage-view [blob]="storage" class="storage-view"></storage-view>
           </mat-card>
         </mat-grid-tile>
       </span>
@@ -20,7 +20,7 @@
         <mat-card class="mat-elevation-z0 upload-field">
           <storage-view
             *ngIf="selected != null"
-            [storage]="selected"
+            [blob]="selected"
             class="storage-view"
           ></storage-view>
           <button
