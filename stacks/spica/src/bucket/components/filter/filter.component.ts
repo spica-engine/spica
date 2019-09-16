@@ -23,18 +23,21 @@ export class FilterComponent implements OnChanges {
   property: string;
   value: string | boolean | number;
 
+  typeMappings = new Map<string, string>([["richtext", "textarea"]]);
+
   constructor(private resolver: InputResolver) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.meta && this.meta) {
+    if (changes.meta && this.meta)
       for (const [key, value] of Object.entries(this.meta.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
-          this.properties[key].type =
-            this.properties[key].type == "richtext" ? "textarea" : this.properties[key].type;
+          if (this.typeMappings.has(value.type)) {
+            this.properties[key] = {...value, type: this.typeMappings.get(value.type)};
+            this.properties[key].options.position = "bottom";
+          }
         }
       }
-    }
   }
 
   apply() {
