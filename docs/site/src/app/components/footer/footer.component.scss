@@ -24,6 +24,14 @@
       }
       li {
         margin-top: 20px;
+        cursor: pointer;
+        a {
+          text-decoration: none;
+          color: #fff;
+        }
+      }
+      li.disabled {
+        opacity: 0.5;
       }
     }
   }

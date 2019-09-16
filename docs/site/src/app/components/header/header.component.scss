@@ -51,9 +51,14 @@
       img {
         height: 45px;
         vertical-align: middle;
+        cursor: pointer;
       }
     }
-
+    .handset {
+      li:not(:last-child) {
+        line-height: 40px;
+      }
+    }
     ul {
       list-style-type: none;
       padding-left: 0;

@@ -33,6 +33,8 @@ import {FeaturesComponent} from "./pages/features/features.component";
 import {HeaderComponent} from "./components/header/header.component";
 import {FooterComponent} from "./components/footer/footer.component";
 import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
+import {EnterpriseComponent} from "./pages/enterprise/enterprise.component";
+import {PartnersComponent} from "./pages/partners/partners.component";
 
 @NgModule({
   imports: [
@@ -70,7 +72,9 @@ import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
     HomeSectionComponent,
     FeaturesComponent,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    EnterpriseComponent,
+    PartnersComponent
   ],
   entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
   providers: [],

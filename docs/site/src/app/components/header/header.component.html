@@ -11,9 +11,15 @@
     <img routerLink="/" src="assets/images/logo.svg" />
   </span>
 
-  <ul ngClass.lt-md="handset" fxLayout="row" fxLayoutAlign="space-between">
+  <ul ngClass.lt-md="handset"  fxLayout.lt-md="row wrap" fxLayoutAlign.lt-md="space-around center"  fxLayoutAlign="space-between">
     <li mat-button routerLink="/features">
       <span>Features</span>
+    </li>
+    <li mat-button routerLink="/enterprise">
+      <span>Enterprise</span>
+    </li>
+    <li mat-button routerLink="/partners">
+      <span>Partners</span>
     </li>
     <li mat-button [matMenuTriggerFor]="docsMenu">
       Docs <mat-icon>arrow_drop_down</mat-icon>
@@ -23,7 +29,6 @@
         <button mat-menu-item routerLink="/docs/api">API</button>
       </mat-menu>
     </li>
-    <li mat-button>Feature</li>
     <li mat-icon-button matTooltipClass="support-us" [matTooltip]="supportMessage">
       <a href="https://github.com/spica-engine/spica">
         <mat-icon svgIcon="github"></mat-icon>
