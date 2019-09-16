@@ -72,7 +72,7 @@
           >
             <property-language #language slot="after"></property-language>
             <mat-error *ngIf="translateModel?.errors" slot="after">
-              This property's default language is required
+              This property's default language ({{ language.default }}) is required
             </mat-error>
           </div>
 
