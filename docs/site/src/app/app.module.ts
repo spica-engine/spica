@@ -35,6 +35,7 @@ import {FooterComponent} from "./components/footer/footer.component";
 import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
 import {EnterpriseComponent} from "./pages/enterprise/enterprise.component";
 import {PartnersComponent} from "./pages/partners/partners.component";
+import { IntersectDirective } from './directives/intersect.directive';
 
 @NgModule({
   imports: [
@@ -74,7 +75,8 @@ import {PartnersComponent} from "./pages/partners/partners.component";
     HeaderComponent,
     FooterComponent,
     EnterpriseComponent,
-    PartnersComponent
+    PartnersComponent,
+    IntersectDirective
   ],
   entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
   providers: [],
