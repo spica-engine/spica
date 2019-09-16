@@ -26,6 +26,12 @@
       color: #4caf50;
     }
     h4 {
+      mat-spinner {
+        display: inline-block;
+        margin-left: 5px;
+        margin-top: 2px;
+      }
+      mat-spinner,
       mat-icon,
       span {
         vertical-align: middle;
