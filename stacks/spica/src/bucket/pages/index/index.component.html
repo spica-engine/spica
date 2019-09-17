@@ -18,8 +18,7 @@
     <mat-chip-list *ngIf="readOnly">
       <mat-chip disableRipple>Read Only</mat-chip>
     </mat-chip-list>
-
-    <!-- fi -->
+    <mat-spinner *ngIf="!loaded" [@smooth] color="accent" diameter="20"></mat-spinner>
     <span class="description">{{ ($meta | async)?.description }}</span>
   </h4>
 
@@ -45,9 +44,9 @@
 
   <button
     mat-icon-button
-    matTooltip="Show On/Off Scheduled Data"
-    [class.publish-on]="scheduledData"
-    (click)="scheduleTrigger()"
+    [matTooltip]="showScheduled ? 'Hide scheduled documents' : 'Show scheduled documents'"
+    [color]="showScheduled ? 'accent' : 'secondary'"
+    (click)="toggleScheduled()"
   >
     <mat-icon>schedule</mat-icon>
   </button>
@@ -124,7 +123,7 @@
     </mat-menu>
   </button>
 
-  <button mat-icon-button matTooltip="Refresh data" (click)="refresh.emit()">
+  <button mat-icon-button matTooltip="Refresh data" (click)="refresh.next()">
     <mat-icon>refresh</mat-icon>
   </button>
   <button
@@ -138,14 +137,10 @@
     <mat-icon>add</mat-icon>
   </button>
 </mat-toolbar>
+
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
-    <mat-table
-      [dataSource]="$data"
-      matSort
-      matSortDisableClear="true"
-      (matSortChange)="sortChange($event)"
-    >
+    <mat-table [dataSource]="$data" matSort (matSortChange)="sortChange($event)">
       <ng-container matColumnDef="$$spicainternal_select">
         <mat-header-cell class="select" *matHeaderCellDef>
           <mat-checkbox
