@@ -34,7 +34,6 @@ export class FilterComponent implements OnChanges {
           this.properties[key] = value;
           if (this.typeMappings.has(value.type)) {
             this.properties[key] = {...value, type: this.typeMappings.get(value.type)};
-            this.properties[key].options.position = "bottom";
           }
         }
       }
