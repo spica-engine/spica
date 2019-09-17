@@ -27,6 +27,13 @@ Join us on [Slack][slack] or [Discord][discord], feel free to request to join ou
 ## Demo
 [Try Live Demo](http://master.spicaengine.com/spica)
 
+Login with the following credentials:
+
+username: spica
+
+password: 123
+
+
 ## Contributing
 
 Thanks for your interest in contributing! Read up on our guidelines for [contributing](https://github.com/spica-engine/spica/blob/master/CONTRIBUTING.md).
@@ -37,11 +44,11 @@ Thanks for your interest in contributing! Read up on our guidelines for [contrib
 
 ## Licence
 
-Spica is an open-source software licensed under the [GNU GPL][licence].
+Spica is an open-source software licensed under the [AGPL-3.0][licence].
 
 
 [quickstart]: https://next.spicaengine.com/docs/guide/getting-started
 [slack]: https://join.slack.com/t/spica-global/shared_invite/enQtNzYyNzExMDQ4ODE2LTIyZTE0MmRhNmFlNTMxNmQ2MTMzOTMyZmMwYTYzMmM1NWQ5YTlmODdkMzI1MzkzNzFkMTQ4NTc0MzYwOWVkYjg
 [discord]: https://discord.gg/4k6BpA6
 [changelog]: https://github.com/spica-engine/spica/blob/master/CHANGELOG.md
-[licence]: https://www.gnu.org/licenses/gpl-3.0.en.html
+[licence]: https://opensource.org/licenses/AGPL-3.0
