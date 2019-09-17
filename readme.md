@@ -1,15 +1,15 @@
-[![CircleCI](https://circleci.com/gh/spica-engine/spica/tree/master.svg?style=shield)](https://circleci.com/gh/spica-engine/spica)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-
 <p align="center">
   <img src="/docs/site/src/assets/images/spica-dark.png">
 </p>
   
 :star: Star us on GitHub!
 
-# About Spica
+# Spica [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Get%20over%20170%20free%20design%20blocks%20based%20on%20Bootstrap%204&url=https://www.froala.com/design-blocks&via=froala&hashtags=bootstrap,design,templates,blocks,developers)
 
-Spica is not a framework, it's a full-fledged development engine. We aim cost-efficient, fast and reliable development. Spica fulfills the needs of development such as:
+[![CircleCI](https://circleci.com/gh/spica-engine/spica/tree/master.svg?style=shield)](https://circleci.com/gh/spica-engine/spica)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+Spica is not a framework, it's a full-fledged free open-source development engine. We aim cost-efficient, fast and reliable development. Spica fulfills the needs of development such as:
 
 * Data modeling with Bucket Architecture.
 * Custom behavior implementation.
