@@ -6,8 +6,8 @@ export function fly(name: string) {
       query("div", style({opacity: 0, transform: "translateY(-40px)"})),
       query(
         "div",
-        stagger("200ms", [
-          animate("0.5s ease-out", style({opacity: 1, transform: "translateX(0)"}))
+        stagger("450ms", [
+          animate("0.7s ease-out", style({opacity: 1, transform: "translateX(0)"}))
         ])
       )
     ])

@@ -108,6 +108,7 @@
     intersect="flyOne"
     fxFlex.lt-md="30%"
     fxFlex.gt-sm="35%"
+    [single]="true"
     src="assets/artboard/discover.svg"
   />
   <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
@@ -179,7 +180,7 @@
         import into frontend composer or use ready one.
       </p>
     </span>
-    <img fxFlex="30%" intersect="flyOne" src="assets/artboard/for-developers.svg" />
+    <img [single]="true" fxFlex="30%" intersect="flyOne" src="assets/artboard/for-developers.svg" />
   </div>
 
   <div
@@ -188,7 +189,7 @@
     flexLayout.gt-sm="row"
     fxLayoutGap.gt-sm="20%"
   >
-    <img fxFlex="30%" intersect="flyOne" src="assets/artboard/for-agencies.svg" />
+    <img [single]="true" fxFlex="30%" intersect="flyOne" src="assets/artboard/for-agencies.svg" />
     <span>
       <h1>For Agencies</h1>
       <p>
@@ -227,7 +228,7 @@
         easily, we give extraordinary support services.
       </p>
     </span>
-    <img fxFlex="30%" intersect="flyOne" src="assets/artboard/for-marketers.svg" />
+    <img fxFlex="30%" [single]="true" intersect="flyOne" src="assets/artboard/for-marketers.svg" />
   </div>
 </section>
 
@@ -238,6 +239,7 @@
     fxFlexAlign.gt-sm="flex-start"
     ngClass.gt-sm="desktop"
     intersect="flyOne"
+    [single]="true"
     src="assets/artboard/tool-and-astro-boy.svg"
   />
   <ul>
