@@ -1,7 +1,7 @@
 [![CircleCI](https://circleci.com/gh/spica-engine/spica/tree/master.svg?style=shield)](https://circleci.com/gh/spica-engine/spica)
 [![GLP Licence](https://badges.frapsoft.com/os/gpl/gpl.svg?v=102)](https://github.com/ellerbrock/open-source-badge/)
 
-<img src="https://github.com/spica-engine/spica/raw/master/docs/site/src/assets/icons/icon-128x128.png">
+<img src="https://github.com/spica-engine/spica/raw/master/docs/site/src/assets/images/spica-dark.png">
 
 :star: Star us on GitHub!
 
