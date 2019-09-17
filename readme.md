@@ -1,5 +1,5 @@
 [![CircleCI](https://circleci.com/gh/spica-engine/spica/tree/master.svg?style=shield)](https://circleci.com/gh/spica-engine/spica)
-[![GLP Licence](https://badges.frapsoft.com/os/gpl/gpl.svg?v=102)](https://github.com/ellerbrock/open-source-badge/)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 <p align="center">
   <img src="/docs/site/src/assets/images/spica-dark.png">
