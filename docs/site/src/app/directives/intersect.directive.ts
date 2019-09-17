@@ -1,6 +1,6 @@
 import {Directive, ElementRef, Input, OnDestroy, OnInit, Renderer2} from "@angular/core";
 import {Observable, Subscription} from "rxjs";
-import {distinctUntilChanged, filter, map} from "rxjs/operators";
+import {distinctUntilChanged, filter, map, delay} from "rxjs/operators";
 
 @Directive({
   selector: "[intersect]",
@@ -26,6 +26,7 @@ export class IntersectDirective implements OnDestroy, OnInit {
       iobserver.observe(this.element.nativeElement);
       return () => iobserver.disconnect();
     }).pipe(
+      delay(10),
       map(r => r.some(r => r.isIntersecting)),
       distinctUntilChanged(),
       filter(r => r)

@@ -48,6 +48,7 @@
   title="Major Features"
   description="It has many features that allows you to create contents simply."
   cnFxLayoutGap="50px"
+  intersect="fly"
 >
   <div>
     <img src="assets/artboard/functions.svg" />
@@ -58,7 +59,7 @@
       Spica..
     </p>
   </div>
-  <div intersect="inviewport2">
+  <div>
     <img src="assets/artboard/policy.svg" />
     <h2>Policy-Based Management</h2>
     <p>
@@ -103,7 +104,12 @@
   cnFxLayout.gt-sm="row nowrap"
   cnFxLayoutAlign.gt-sm="space-around center"
 >
-  <img fxFlex.lt-md="30%" fxFlex.gt-sm="35%" src="assets/artboard/discover.svg" />
+  <img
+    intersect="flyOne"
+    fxFlex.lt-md="30%"
+    fxFlex.gt-sm="35%"
+    src="assets/artboard/discover.svg"
+  />
   <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
     <li>
       <h3>Feel flexibility and have control</h3>
@@ -173,7 +179,7 @@
         import into frontend composer or use ready one.
       </p>
     </span>
-    <img fxFlex="30%" src="assets/artboard/for-developers.svg" />
+    <img fxFlex="30%" intersect="flyOne" src="assets/artboard/for-developers.svg" />
   </div>
 
   <div
@@ -182,7 +188,7 @@
     flexLayout.gt-sm="row"
     fxLayoutGap.gt-sm="20%"
   >
-    <img fxFlex="30%" src="assets/artboard/for-agencies.svg" />
+    <img fxFlex="30%" intersect="flyOne" src="assets/artboard/for-agencies.svg" />
     <span>
       <h1>For Agencies</h1>
       <p>
@@ -221,7 +227,7 @@
         easily, we give extraordinary support services.
       </p>
     </span>
-    <img fxFlex="30%" src="assets/artboard/for-marketers.svg" />
+    <img fxFlex="30%" intersect="flyOne" src="assets/artboard/for-marketers.svg" />
   </div>
 </section>
 
@@ -231,6 +237,7 @@
     fxFlex.lt-md="45%"
     fxFlexAlign.gt-sm="flex-start"
     ngClass.gt-sm="desktop"
+    intersect="flyOne"
     src="assets/artboard/tool-and-astro-boy.svg"
   />
   <ul>

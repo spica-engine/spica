@@ -1,11 +1,11 @@
 import {Component} from "@angular/core";
-import {flyFromLeft} from "../animations";
+import {fly, flyOne} from "../animations";
 
 @Component({
   selector: "spica-home",
   templateUrl: "./home.component.html",
   styleUrls: ["./home.component.scss"],
-  animations: [flyFromLeft("inviewport2")]
+  animations: [fly("fly"), flyOne("flyOne")]
 })
 export class HomeComponent {
   constructor() {}
