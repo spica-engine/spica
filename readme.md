@@ -4,8 +4,11 @@
   
 :star: Star us on GitHub!
 
-# Spica ![Twitter Follow](https://img.shields.io/twitter/follow/SpicaEngine?label=Follow&style=social) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?url=https%3A%2F%2Fspicaengine.com&text=Feel%20The%20Energy%2C%20Join%20Our%20Creator%20World!!&via=SpicaEngine) &nbsp;[<img src="https://img.shields.io/badge/slack-red.svg?logo=slack">](https://join.slack.com/t/spica-engine/shared_invite/enQtNzYzMDE3NjQ2MTkyLTA3MTg4ZTViZGI0MThiYzdhNTYxMTQxNjcwYzRjZTJhZDE4YWFhOGU5NmUzMGZiYjlmOWY2NDg5OTUxZjM2NDM)
+# Spica Development Engine ![Twitter Follow](https://img.shields.io/twitter/follow/SpicaEngine?label=Follow&style=social) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?url=https%3A%2F%2Fspicaengine.com&text=Feel%20The%20Energy%2C%20Join%20Our%20Creator%20World!!&via=SpicaEngine) &nbsp;[<img src="https://img.shields.io/badge/slack-red.svg?logo=slack">](https://join.slack.com/t/spica-engine/shared_invite/enQtNzYzMDE3NjQ2MTkyLTA3MTg4ZTViZGI0MThiYzdhNTYxMTQxNjcwYzRjZTJhZDE4YWFhOGU5NmUzMGZiYjlmOWY2NDg5OTUxZjM2NDM)
+
 [![Price](https://img.shields.io/badge/price-FREE-0098f7.svg)](https://github.com/spica-engine/spica/blob/master/license.md)
+![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/api)
+![npm](https://img.shields.io/npm/v/spicaengine)
 [![CircleCI](https://circleci.com/gh/spica-engine/spica/tree/master.svg?style=shield)](https://circleci.com/gh/spica-engine/spica)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
@@ -16,6 +19,8 @@ Spica is not a framework, it's a full-fledged free and open-source development e
 * Policy-based identity management system.
 * Platform agnostic build with API-first approach
 * And many more...
+
+### Spica is free and always will be! :v:
 
 ## Getting Started
 
