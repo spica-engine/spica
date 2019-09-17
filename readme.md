@@ -29,9 +29,11 @@ Join us on [Slack][slack] or [Discord][discord], feel free to request to join ou
 
 Login with the following credentials:
 
+~~~
 username: spica
 
 password: 123
+~~~~
 
 
 ## Contributing
