@@ -30,7 +30,6 @@ If the credentials on request URL are correct, Spica returns the following respo
 {
   "_id": "5d14f92e0617f15b1bc7d1b2", // Id string of the Identity
   "identifier": "spica",
-  "password": "...", // Encrypted password string of the Identity
   "policies": [...], // Array of the identitiy's Policy Ids
   "iat": 1562668335, // Creationg date of the token
   "exp": 1562841135, // Expiration date of the token
