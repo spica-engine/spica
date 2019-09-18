@@ -56,6 +56,6 @@ Spica is an open-source software licensed under the [AGPL-3.0][licence].
 
 [quickstart]: https://next.spicaengine.com/docs/guide/getting-started
 [slack]: https://join.slack.com/t/spica-engine/shared_invite/enQtNzYzMDE3NjQ2MTkyLTA3MTg4ZTViZGI0MThiYzdhNTYxMTQxNjcwYzRjZTJhZDE4YWFhOGU5NmUzMGZiYjlmOWY2NDg5OTUxZjM2NDM
-[discord]: https://discord.gg/4k6BpA6
+[discord]: https://discord.gg/HJTrRMH
 [changelog]: https://github.com/spica-engine/spica/blob/master/CHANGELOG.md
 [licence]: https://opensource.org/licenses/AGPL-3.0
