@@ -24,7 +24,7 @@ k8s_deploy(
     name = "deploy",
     images = {
         "spicaengine/api:master": "//stacks/api:image",
-        "spicaengine/spica:master": "//stacks/spica:image",
+        "spicaengine/spica:master": "//stacks/spica",
         "spicaengine/initcontainer:master": "//tools/initcontainer",
     },
     template = ":deployment.yaml",
