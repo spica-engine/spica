@@ -41,10 +41,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - next.spicaengine.com
+        - spicaengine.com
       secretName: spicaengine-cert
   rules:
-    - host: next.spicaengine.com
+    - host: spicaengine.com
       http:
         paths:
           - backend:
