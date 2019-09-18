@@ -216,10 +216,20 @@
         </h4>
         <mat-list-item environment *ngFor="let env of function.env; let index = index">
           <mat-form-field class="trigger">
-            <input matInput [ngModelOptions]="{standalone: true}" placeholder="Name" [(ngModel)]="env.name" />
+            <input
+              matInput
+              [ngModelOptions]="{standalone: true}"
+              placeholder="Name"
+              [(ngModel)]="env.name"
+            />
           </mat-form-field>
           <mat-form-field class="trigger">
-            <input matInput [ngModelOptions]="{standalone: true}" placeholder="Value" [(ngModel)]="env.value" />
+            <input
+              matInput
+              [ngModelOptions]="{standalone: true}"
+              placeholder="Value"
+              [(ngModel)]="env.value"
+            />
           </mat-form-field>
           <button mat-icon-button color="warn" (click)="removeVariable(index)">
             <mat-icon>remove</mat-icon>
