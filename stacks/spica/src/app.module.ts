@@ -5,11 +5,8 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
 import {StoreDevtoolsModule} from "@ngrx/store-devtools";
-import {BaseUrlInterceptorModule, RouteModule} from "@spica-client/core";
-import {LayoutModule} from "@spica-client/core";
-
+import {BaseUrlInterceptorModule, LayoutModule, RouteModule} from "@spica-client/core";
 import {environment} from "../environments/environment";
-
 import {AppComponent} from "./app.component";
 import {BucketModule} from "./bucket";
 import {ComposerModule} from "./composer/composer.module";
@@ -25,11 +22,13 @@ import {StorageModule} from "./storage/storage.module";
     BrowserAnimationsModule,
     RouterModule.forRoot([], {paramsInheritanceStrategy: "always"}),
     HttpClientModule,
-    BaseUrlInterceptorModule.forRoot(environment.base_urls),
+    BaseUrlInterceptorModule.forRoot({api: environment.api}),
     RouteModule.forRoot(),
     LayoutModule.forRoot(),
     StoreModule.forRoot([]),
-    StoreDevtoolsModule.instrument(),
+    StoreDevtoolsModule.instrument({
+      logOnly: environment.production
+    }),
     /**
      * Core Feature Modules
      */
@@ -37,8 +36,8 @@ import {StorageModule} from "./storage/storage.module";
     PassportModule.forRoot(),
     BucketModule.forRoot(),
     StorageModule.forRoot(),
-    FunctionModule.forRoot({url: environment.base_urls.api}),
-    ComposerModule.forRoot({url: environment.base_urls.api})
+    FunctionModule.forRoot({url: environment.api}),
+    ComposerModule.forRoot({url: environment.api})
   ],
   declarations: [AppComponent],
   bootstrap: [AppComponent]

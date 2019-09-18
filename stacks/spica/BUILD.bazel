@@ -1,3 +1,44 @@
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["nginx.conf"])
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@io_bazel_rules_docker//contrib:test.bzl", "container_test")
+
+container_image(
+    name = "spica",
+    base = "@nginx_image//image",
+    cmd = [
+        "sh",
+        "-c",
+        "/container/substitute.sh && nginx -g 'daemon off;'",
+    ],
+    data_path = ".",
+    docker_run_flags = "-p 80:80",
+    env = {
+        "BASE_URL": "/spica",
+        "API_URL": "/api",
+    },
+    files = [
+        "//:spica",
+        "//stacks/spica/container:nginx.conf",
+        "//stacks/spica/container:substitute.sh",
+    ],
+    labels = {
+        "maintainer": "Spica maintainers <dev@spicaengine.com>",
+    },
+    legacy_run_behavior = False,
+    stamp = True,
+    symlinks = {
+        "/etc/nginx/nginx.conf": "/container/nginx.conf",
+        "/usr/share/nginx/html": "/dist/spica",
+    },
+)
+
+container_push(
+    name = "push",
+    format = "Docker",
+    image = ":spica",
+    registry = "index.docker.io",
+    repository = "spicaengine/spica",
+    tag = "{BUILD_SCM_VERSION}",
+    tags = ["release-with-spica"],
+)
