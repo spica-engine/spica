@@ -11,7 +11,12 @@
     <img routerLink="/" src="assets/images/logo.svg" />
   </span>
 
-  <ul ngClass.lt-md="handset"  fxLayout.lt-md="row wrap" fxLayoutAlign.lt-md="space-around center"  fxLayoutAlign="space-between">
+  <ul
+    ngClass.lt-md="handset"
+    fxLayout.lt-md="row wrap"
+    fxLayoutAlign.lt-md="space-around center"
+    fxLayoutAlign="space-between"
+  >
     <li mat-button routerLink="/features">
       <span>Features</span>
     </li>
@@ -27,6 +32,18 @@
         <button mat-menu-item routerLink="/docs/guide">Guides</button>
         <button mat-menu-item routerLink="/docs/concept">Concept</button>
         <button mat-menu-item routerLink="/docs/api">API</button>
+      </mat-menu>
+    </li>
+    <li mat-button [matMenuTriggerFor]="touchMenu">
+      Get In Touch <mat-icon>arrow_drop_down</mat-icon>
+      <mat-menu #touchMenu="matMenu" class="navbar-menu mat-elevation-z1">
+        <a
+          mat-menu-item
+          target="_blank"
+          href="https://join.slack.com/t/spica-global/shared_invite/enQtNzYyNzExMDQ4ODE2LTIyZTE0MmRhNmFlNTMxNmQ2MTMzOTMyZmMwYTYzMmM1NWQ5YTlmODdkMzI1MzkzNzFkMTQ4NTc0MzYwOWVkYjg"
+          >Slack</a
+        >
+        <a mat-menu-item target="_blank" href="https://discord.gg/4k6BpA6">Discord</a>
       </mat-menu>
     </li>
     <li mat-icon-button matTooltipClass="support-us" [matTooltip]="supportMessage">
