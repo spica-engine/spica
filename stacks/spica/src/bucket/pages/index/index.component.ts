@@ -1,9 +1,10 @@
+import {animate, style, transition, trigger} from "@angular/animations";
 import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
-import {merge, Observable, of} from "rxjs";
-import {map, switchMap, tap} from "rxjs/operators";
+import {merge, Observable} from "rxjs";
+import {debounceTime, first, flatMap, map, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
@@ -13,30 +14,37 @@ import {BucketService} from "../../services/bucket.service";
 @Component({
   selector: "bucket-index",
   templateUrl: "./index.component.html",
-  styleUrls: ["./index.component.scss"]
+  styleUrls: ["./index.component.scss"],
+  animations: [
+    trigger("smooth", [
+      transition(":enter", [style({opacity: 0}), animate("0.5s ease-out", style({opacity: 1}))]),
+      transition(":leave", [style({opacity: 1}), animate("0.5s ease-in", style({opacity: 0}))])
+    ])
+  ]
 })
 export class IndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
-  public bucketId: string;
-  public $meta: Observable<Bucket>;
-  public $data: Observable<BucketData>;
-  public refresh = new EventEmitter();
+  bucketId: string;
+  $meta: Observable<Bucket>;
+  $data: Observable<BucketData>;
+  refresh = new EventEmitter();
+  loaded: boolean;
 
-  public filter: {[key: string]: any} = {};
-  public sort: {[key: string]: number} = {};
+  filter: {[key: string]: any} = {};
+  sort: {[key: string]: number} = {};
 
-  public scheduledData: boolean = false;
-  public readOnly: boolean = true;
+  showScheduled: boolean = false;
+  readOnly: boolean = true;
 
-  public displayedProperties: Array<string> = [];
-  public properties: Array<{name: string; title: string}> = [];
+  displayedProperties: Array<string> = [];
+  properties: Array<{name: string; title: string}> = [];
 
-  public $preferences: Observable<BucketSettings>;
-  public language: string;
+  $preferences: Observable<BucketSettings>;
+  language: string;
 
-  public selectedItems: Array<string> = [];
-  public dataIds: Array<string> = [];
+  selectedItems: Array<string> = [];
+  dataIds: Array<string> = [];
 
   constructor(
     private bs: BucketService,
@@ -45,40 +53,62 @@ export class IndexComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.$preferences = this.bs.getPreferences();
+
+    this.route.params.subscribe(console.log);
     this.$meta = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
         this.paginator.pageIndex = 0;
         this.filter = {};
-        this.scheduledData = false;
+        this.showScheduled = false;
         this.sort = {};
-        this.getData();
-        this.$preferences = this.bs.getPreferences();
+        this.loaded = false;
       }),
-      switchMap(() => this.bs.getBucket(this.bucketId)),
+      flatMap(() => this.bs.getBucket(this.bucketId).pipe(first())),
       tap(schema => {
-        if (schema) {
-          this.readOnly = schema.readOnly;
-          this.properties = [
-            {name: "$$spicainternal_select", title: "Select"},
-            ...Object.entries(schema.properties).map(([name, value]) => ({
-              name,
-              title: value.title
-            })),
-            {name: "$$spicainternal_schedule", title: "Scheduled"},
-            {name: "$$spicainternal_actions", title: "Actions"}
-          ];
+        this.readOnly = schema.readOnly;
+        this.properties = [
+          {name: "$$spicainternal_select", title: "Select"},
+          ...Object.entries(schema.properties).map(([name, value]) => ({
+            name,
+            title: value.title
+          })),
+          {name: "$$spicainternal_schedule", title: "Scheduled"},
+          {name: "$$spicainternal_actions", title: "Actions"}
+        ];
 
-          this.displayedProperties = [
-            ...Object.entries(schema.properties)
-              .filter(([, value]) => value.options.visible)
-              .map(([key]) => key),
-            "$$spicainternal_actions"
-          ];
-          if (!schema.readOnly) {
-            this.displayedProperties = ["$$spicainternal_select", ...this.displayedProperties];
-          }
+        this.displayedProperties = [
+          ...Object.entries(schema.properties)
+            .filter(([, value]) => value.options.visible)
+            .map(([key]) => key),
+          "$$spicainternal_actions"
+        ];
+        if (!schema.readOnly) {
+          this.displayedProperties = ["$$spicainternal_select", ...this.displayedProperties];
         }
+      })
+    );
+
+    this.$data = merge(this.route.params, this.paginator.page, this.refresh).pipe(
+      debounceTime(200),
+      tap(() => (this.loaded = false)),
+      switchMap(() =>
+        this.bds.find(this.bucketId, {
+          language: this.language,
+          filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
+          sort: this.sort && Object.keys(this.sort).length > 0 && this.sort,
+          limit: this.paginator.pageSize || 12,
+          skip: this.paginator.pageSize * this.paginator.pageIndex,
+          schedule: this.showScheduled
+        })
+      ),
+      map(response => {
+        this.selectedItems = [];
+        this.paginator.length = (response.meta && response.meta.total) || 0;
+        this.dataIds = response.data.map(d => d._id);
+        this.loaded = true;
+        return response.data;
       })
     );
   }
@@ -113,42 +143,27 @@ export class IndexComponent implements OnInit {
     );
   }
 
-  scheduleTrigger() {
-    this.scheduledData = !this.scheduledData;
+  toggleScheduled() {
+    this.showScheduled = !this.showScheduled;
     let displayScheduleIndex = this.displayedProperties.indexOf("$$spicainternal_schedule");
-    if (displayScheduleIndex > -1 && !this.scheduledData) {
+    if (displayScheduleIndex > -1 && !this.showScheduled) {
       this.displayedProperties.splice(displayScheduleIndex, 1);
     }
-    if (displayScheduleIndex == -1 && this.scheduledData) {
+    if (displayScheduleIndex == -1 && this.showScheduled) {
       let lastIndex = this.displayedProperties.lastIndexOf("$$spicainternal_actions");
       this.displayedProperties.splice(lastIndex, 0, "$$spicainternal_schedule");
     }
-    this.getData();
-  }
-
-  getData(): void {
-    this.$data = merge(this.paginator.page, of(null), this.refresh).pipe(
-      switchMap(() =>
-        this.bds.find(this.bucketId, {
-          language: this.language,
-          filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
-          sort: this.sort && Object.keys(this.sort).length > 0 && this.sort,
-          limit: this.paginator.pageSize || 12,
-          skip: this.paginator.pageSize * this.paginator.pageIndex,
-          schedule: this.scheduledData
-        })
-      ),
-      map(response => {
-        this.selectedItems = [];
-        this.paginator.length = (response.meta && response.meta.total) || 0;
-        this.dataIds = response.data.map(d => d._id);
-        return response.data;
-      })
-    );
+    this.refresh.next();
   }
 
   sortChange(sort: Sort) {
-    this.sort = {[sort.active]: sort.direction === "asc" ? 1 : -1};
+    console.log(sort);
+    if (sort.direction) {
+      this.sort = {[sort.active]: sort.direction === "asc" ? 1 : -1};
+    } else {
+      this.sort = {};
+    }
+
     this.refresh.emit();
   }
 

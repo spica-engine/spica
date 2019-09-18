@@ -17,9 +17,11 @@ ts_library(
     data = ["http.d.ts"],
     deps = [
         ":trigger",
+        "//packages/core",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/node",
+        "@npm//body-parser",
         "@npm//express",
     ],
 )
