@@ -1,6 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
+load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 
 ts_library(
     name = "api",
@@ -9,7 +12,6 @@ ts_library(
         "defaults.ts",
         "main.ts",
     ],
-    tsconfig = "//:tsconfig.json",
     deps = [
         "//packages/core",
         "//packages/core/schema",
@@ -24,4 +26,35 @@ ts_library(
         "@npm//@nestjs/core",
         "@npm//@types/node",
     ],
+)
+
+nodejs_binary(
+    name = "bin",
+    configuration_env_vars = [
+        "DATABASE_URI",
+        "DATABASE_NAME",
+        "REPLICA_SET",
+        "PUBLIC_HOST",
+        "PERSISTENT_PATH",
+        "PORT",
+    ],
+    data = [":api"],
+    entry_point = "//stacks/api:main.ts",
+)
+
+nodejs_image(
+    name = "image",
+    data = ["//stacks/api"],
+    entry_point = "//stacks/api:main.ts",
+    node_modules = "@npm//:node_modules",
+)
+
+container_push(
+    name = "push",
+    format = "Docker",
+    image = ":image",
+    registry = "index.docker.io",
+    repository = "spicaengine/api",
+    tag = "{BUILD_SCM_VERSION}",
+    tags = ["release-with-spica"],
 )

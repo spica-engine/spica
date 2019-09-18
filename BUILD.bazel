@@ -6,19 +6,25 @@ exports_files(["tsconfig.json"])
 
 filegroup(
     name = "spica",
-    srcs = glob(["dist/spica/**/*"]),
+    srcs = glob(
+        include = ["dist/spica/**/*"],
+        exclude = ["**/index.html"],
+    ) + ["dist/spica/index.html"],
 )
 
 filegroup(
     name = "site",
-    srcs = glob(["dist/spica-site/**/*"]),
+    srcs = glob(
+        include = ["dist/spica-site/**/*"],
+        exclude = ["**/index.html"],
+    ) + ["dist/spica-site/index.html"],
 )
 
 k8s_deploy(
     name = "deploy",
     images = {
-        "spicaengine/api:master": "//stacks:api_image",
-        "spicaengine/spica:master": "//stacks:spica_image",
+        "spicaengine/api:master": "//stacks/api:image",
+        "spicaengine/spica:master": "//stacks/spica:image",
         "spicaengine/initcontainer:master": "//tools/initcontainer",
     },
     template = ":deployment.yaml",
