@@ -87,9 +87,14 @@
   }
 
   home-section.major-features {
+    ::ng-deep section {
+      div:not(.top) {
+        align-items: unset !important;
+        place-content: center !important;
+      }
+    }
     div {
       text-align: center;
-      width: 250px;
       padding: 10px;
       img {
         height: 150px;
@@ -186,6 +191,4 @@
   app-footer {
     background-color: #f2f1f0;
   }
-
-
 }

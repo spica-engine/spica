@@ -48,6 +48,23 @@
       }
     }
     span {
+      .beta {
+        content: "beta";
+        position: absolute;
+        width: 80px;
+        height: 25px;
+        background: #f2f1f0;
+        top: 7px;
+        left: -20px;
+        text-align: center;
+        font-size: 13px;
+        font-family: sans-serif;
+        text-transform: uppercase;
+        font-weight: bold;
+        color: #1c1c50;
+        line-height: 27px;
+        transform: rotate(-45deg);
+      }
       img {
         height: 45px;
         vertical-align: middle;
