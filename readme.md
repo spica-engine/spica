@@ -6,6 +6,7 @@
 
 # Spica Development Engine ![Twitter Follow](https://img.shields.io/twitter/follow/SpicaEngine?label=Follow&style=social) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?url=https%3A%2F%2Fspicaengine.com&text=Feel%20The%20Energy%2C%20Join%20Our%20Creator%20World!!&via=SpicaEngine) &nbsp;[<img src="https://img.shields.io/badge/slack-red.svg?logo=slack">](https://join.slack.com/t/spica-engine/shared_invite/enQtNzYzMDE3NjQ2MTkyLTA3MTg4ZTViZGI0MThiYzdhNTYxMTQxNjcwYzRjZTJhZDE4YWFhOGU5NmUzMGZiYjlmOWY2NDg5OTUxZjM2NDM)
 
+![GitHub package.json version](https://img.shields.io/github/package-json/v/spica-engine/spica)
 [![CircleCI](https://circleci.com/gh/spica-engine/spica/tree/master.svg?style=shield)](https://circleci.com/gh/spica-engine/spica)
 ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/api)
 ![npm](https://img.shields.io/npm/v/spicaengine)
