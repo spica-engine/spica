@@ -18,6 +18,7 @@ export class PassportService {
   }
 
   signIdentity(identity: Identity): string {
+    delete identity.password;
     return this.jwt.sign(identity, {
       audience: this.options.audience,
       issuer: this.options.issuer,
