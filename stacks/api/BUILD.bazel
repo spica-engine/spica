@@ -43,6 +43,7 @@ nodejs_binary(
 )
 
 nodejs_image(
+    base = "@node_image//image",
     name = "image",
     data = ["//stacks/api"],
     entry_point = "//stacks/api:main.ts",
