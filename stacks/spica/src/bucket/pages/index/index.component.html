@@ -117,6 +117,7 @@
     <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
       <bucket-filter
         #filterer
+        [filter]="filter"
         [meta]="$meta | async"
         (filterChange)="this.filter = $event; refresh.emit()"
       ></bucket-filter>
