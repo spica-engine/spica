@@ -14,7 +14,7 @@ container_image(
     data_path = ".",
     docker_run_flags = "-p 80:80",
     env = {
-        "BASE_URL": "/spica",
+        "BASE_URL": "/spica/",
         "API_URL": "/api",
     },
     files = [

@@ -1,10 +1,5 @@
 #!/bin/sh
 cd /usr/share/nginx/html
-echo $SPICA_VERSION
-
-BASE_URL="${BASE_URL:-/}"
-API_URL="${API_URL:-/api}"
-SPICA_VERSION="${SPICA_VERSION:-local}"
 
 echo "Substituting base-href in index.html"
 
