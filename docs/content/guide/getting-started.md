@@ -7,7 +7,7 @@ First, we will explain a few things as Spica has few requirements to work.
 
 ## Requirements
 
-- **mongoDB** 4.2-rc and above
+- **mongoDB** 4.2 and above
 - **nodeJS** 10 and above
 
 As spica relies on **replica set** feature of MongoDB, you need to configure at least **3 members** of a replica set.
@@ -118,9 +118,9 @@ docker network create spica
 - Setup **Three Replica Set** MongoDB
 
 ```sh
-docker run --name mongo-1 --network spica -d mongo --replSet "rs0" --bind_ip_all
-docker run --name mongo-2 --network spica -d mongo --replSet "rs0" --bind_ip_all
-docker run --name mongo-3 --network spica -d mongo --replSet "rs0" --bind_ip_all
+docker run --name mongo-1 --network spica -d mongo:4.2 --replSet "rs0" --bind_ip_all
+docker run --name mongo-2 --network spica -d mongo:4.2 --replSet "rs0" --bind_ip_all
+docker run --name mongo-3 --network spica -d mongo:4.2 --replSet "rs0" --bind_ip_all
 ```
 
 - Ensure that all three of replica set members are up and running.
@@ -129,10 +129,10 @@ docker run --name mongo-3 --network spica -d mongo --replSet "rs0" --bind_ip_all
 # Run the command below
 docker ps --filter=Name=mongo
 # If you get an output that similar to this, that means you are good to go.
-CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
-9183a4935e2d mongo "docker-entrypoint.s…" 10 minutes ago Up 10 minutes 27017/tcp mongo-3
-34920d7d9124 mongo "docker-entrypoint.s…" 10 minutes ago Up 10 minutes 27017/tcp mongo-2
-e73c9107d53d mongo "docker-entrypoint.s…" 10 minutes ago Up 10 minutes 27017/tcp mongo-1
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES
+1c903c67f70e        mongo:4.2           "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp           mongo-2
+0b51ab4e7909        mongo:4.2           "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp           mongo-1
+2f315729758c        mongo:4.2           "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp           mongo-3
 ```
 
 - Setup replication between members so they can elect a primary.
@@ -179,12 +179,12 @@ docker exec -w /usr/share/nginx/html -it spica find . -type f -iname 'main-es*.j
 # Run
 docker ps
 # And you will see an output like this
-CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
-76211cf5d960 gcr.io/spica-239113/api "/app/stacks/api_ima…" 6 seconds ago Up 5 seconds 0.0.0.0:4300->4300/tcp api
-66001a891855 gcr.io/spica-239113/spica "nginx -g 'daemon of…" 17 seconds ago Up 16 seconds 0.0.0.0:8080->80/tcp spica
-49308ccfde23 mongo "docker-entrypoint.s…" 28 seconds ago Up 27 seconds 27017/tcp mongo-3
-07a4ec8a349d mongo "docker-entrypoint.s…" 29 seconds ago Up 27 seconds 27017/tcp mongo-2
-a0ecdc3c6f68 mongo "docker-entrypoint.s…" 30 seconds ago Up 28 seconds 27017/tcp mongo-1
+CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS              PORTS                    NAMES
+9c30befa326b        gcr.io/spica-239113/api     "/app/stacks/api_ima…"   4 seconds ago       Up 4 seconds        0.0.0.0:4300->4300/tcp   api
+a973f9598ba2        gcr.io/spica-239113/spica   "nginx -g 'daemon of…"   4 seconds ago       Up 4 seconds        0.0.0.0:8080->80/tcp     spica
+2f315729758c        mongo:4.2                   "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp                mongo-3
+1c903c67f70e        mongo:4.2                   "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp                mongo-2
+0b51ab4e7909        mongo:4.2                   "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp                mongo-1
 # the first container (api) is our api service, core of our spica instance.
 # the second container (spica) is our client which communicates with api container.
 # the other ones (mongo-1, mongo-2, mongo-3) is our three-member replica set mongodb containers.
