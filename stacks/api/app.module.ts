@@ -25,8 +25,9 @@ import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
       path: process.env.PERSISTENT_PATH
     }),
     PassportModule.forRoot({
-      secretOrKey: "$2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C",
+      secretOrKey: process.env.SECRET,
       issuer: process.env.PUBLIC_HOST,
+      defaultPassword: process.env.DEFAULT_PASSWORD,
       audience: "spica.io"
     }),
     FunctionModule.forRoot({

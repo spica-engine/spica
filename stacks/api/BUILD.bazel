@@ -37,14 +37,25 @@ nodejs_binary(
         "PUBLIC_HOST",
         "PERSISTENT_PATH",
         "PORT",
+        "SECRET",
+        "DEFAULT_PASSWORD",
     ],
     data = [":api"],
     entry_point = "//stacks/api:main.ts",
 )
 
-nodejs_image(
+container_image(
+    name = "api_image_base",
     base = "@node_image//image",
+    env = {
+        "DEFAULT_PASSWORD": "spica",
+    },
+    visibility = ["//visibility:private"],
+)
+
+nodejs_image(
     name = "image",
+    base = ":api_image_base",
     data = ["//stacks/api"],
     entry_point = "//stacks/api:main.ts",
     node_modules = "@npm//:node_modules",

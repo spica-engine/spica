@@ -63,7 +63,6 @@ container_pull(
     tag = "alpine",
 )
 
-
 container_pull(
     name = "node_image",
     digest = "sha256:c953b001ea2acf18a6ef99a90fc50630e70a7c0a6b49d774a7aee1f9c937b645",

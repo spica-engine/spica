@@ -265,7 +265,9 @@ export class ServeCommand extends Command {
             `DATABASE_NAME=${namespace}`,
             `REPLICA_SET=${namespace}`,
             `PUBLIC_HOST=${publicHost}/api`,
+            `DEFAULT_PASSWORD=${namespace}`,
             `PERSISTENT_PATH=/tmp`,
+            `SECRET="${namespace}"`,
             `DATABASE_URI="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`
           ],
           Labels: {namespace},
@@ -326,9 +328,12 @@ export class ServeCommand extends Command {
         await proxy.restart();
       }
     });
-    this.namespace.logger.success(
-      `Spica ${namespace} is serving on ${publicHost}\nOpen your browser on ${publicHost}/spica to login.`
-    );
+    this.namespace.logger.success(`
+Spica ${namespace} is serving on ${publicHost}\nOpen your browser on ${publicHost}/spica to login.
+
+Identitifer: spica
+Password: ${namespace}
+    `);
 
     if (options.open) {
       await open(`${publicHost}/spica`);

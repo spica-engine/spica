@@ -152,25 +152,33 @@ docker exec -it mongo-1 mongo admin --eval 'rs.initiate({
 - Setup spica
 
 ```sh
-# Start spica (client) on port 8080
-docker run --name spica --network spica -p 8080:80 -d gcr.io/spica-239113/spica
-# Start spica (api) on port 4300
+# Start spica (API) on port 4400
 docker run
- --name api
- --network spica
- -p 4300:4300
- -e PORT=4300
- -e DATABASE_URI="mongodb://mongo-1,mongo-2,mongo-3"
- -e REPLICA_SET="rs0"
- -e DATABASE_NAME=spica
- -e PUBLIC_HOST=http://localhost:4300 # You can replace this with your domain name if you have any.
- -e PERSISTENT_PATH=/tmp # The path that the storage files will be kept at.
- -d gcr.io/spica-239113/api
-# Important: you need to apply these two commands until
-# https://github.com/spica-engine/spica/issues/20 resolves.
-docker exec -it spica sed -i "s/\/spica\//\//g" /usr/share/nginx/html/index.html
-# Basically, this replaces /api with http://localhost:4300 which is our accesible api url.
-docker exec -w /usr/share/nginx/html -it spica find . -type f -iname 'main-es*.js' -exec sed -i 's/\"\/api\"/\"http:\/\/localhost:4300\"/g' {} \;
+    --name api
+    --network spica
+    -p 4400:80
+    -e PORT=80
+    -e DATABASE_URI="mongodb://mongo-1,mongo-2,mongo-3"
+    -e REPLICA_SET="rs0"
+    -e DATABASE_NAME=spica
+    # Password of the default spica user
+    -e DEFAULT_PASSWORD=spica
+    # API will use this secret to sign login tokens.
+    -e SECRET="$2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C"
+    # This secret is important to keep your Spica secure.
+    # Changing this secret to something different is strongly advised.
+    -e PUBLIC_HOST=http://localhost:4400 # Publicly accesible url of the API.
+    -e PERSISTENT_PATH=/tmp # The path that the storage files will be kept at.
+    -d spicaengine/api
+
+# Start spica (Client) on port 4500
+docker run
+    --name spica
+    --network spica
+    -e BASE_URL="/"
+    -e API_URL="http://localhost:4400" # Publicly accesible url of the API for connection. In this case it is http://localhost:4400
+    -p 4500:80
+    -d spicaengine/spica
 ```
 
 - Ensure you have setup everything correctly
@@ -180,8 +188,8 @@ docker exec -w /usr/share/nginx/html -it spica find . -type f -iname 'main-es*.j
 docker ps
 # And you will see an output like this
 CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS              PORTS                    NAMES
-9c30befa326b        gcr.io/spica-239113/api     "/app/stacks/api_ima…"   4 seconds ago       Up 4 seconds        0.0.0.0:4300->4300/tcp   api
-a973f9598ba2        gcr.io/spica-239113/spica   "nginx -g 'daemon of…"   4 seconds ago       Up 4 seconds        0.0.0.0:8080->80/tcp     spica
+9c30befa326b        spicaengine/api             "/app/stacks/api_ima…"   4 seconds ago       Up 4 seconds        0.0.0.0:4300->4300/tcp   api
+a973f9598ba2        spicaengine/spica           "nginx -g 'daemon of…"   4 seconds ago       Up 4 seconds        0.0.0.0:4500->80/tcp     spica
 2f315729758c        mongo:4.2                   "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp                mongo-3
 1c903c67f70e        mongo:4.2                   "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp                mongo-2
 0b51ab4e7909        mongo:4.2                   "docker-entrypoint.s…"   4 seconds ago       Up 4 seconds        27017/tcp                mongo-1
@@ -190,13 +198,5 @@ a973f9598ba2        gcr.io/spica-239113/spica   "nginx -g 'daemon of…"   4 sec
 # the other ones (mongo-1, mongo-2, mongo-3) is our three-member replica set mongodb containers.
 ```
 
-- Open your browser and navigate to http://localhost:8080
-- The default `identifier` is `spica` and the password is `123`.
-
-## More details
-
-> You can skip this part if you don't want to know detailed explanation of requirements.
-
-> TODO: Explain why do we need replica sets
-
-> TODO: Explain how you can set up your default language and default users
+- Open your browser and navigate to http://localhost:4500
+- The default `identifier` is `spica` and the password is `spica`.
