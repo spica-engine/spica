@@ -160,7 +160,7 @@ export class ServeCommand extends Command {
 
     async function createMongoDB(instanceIndex: number) {
       const container = await machine.createContainer({
-        Image: "mongo:4.2-rc",
+        Image: "mongo:4.2",
         name: `${databaseName}-${instanceIndex}`,
         Cmd: ["--replSet", namespace, "--bind_ip_all"],
         Labels: {namespace},
