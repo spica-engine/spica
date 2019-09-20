@@ -1,6 +1,5 @@
 import {Module} from "@nestjs/common";
 import {BucketModule} from "@spica-server/bucket";
-import {ComposerModule} from "@spica-server/composer";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
@@ -32,10 +31,6 @@ import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
     }),
     FunctionModule.forRoot({
       path: process.env.PERSISTENT_PATH
-    }),
-    ComposerModule.forRoot({
-      path: process.env.PERSISTENT_PATH,
-      serverUrl: process.env.PUBLIC_HOST
     })
   ]
 })
