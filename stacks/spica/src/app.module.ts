@@ -9,7 +9,6 @@ import {BaseUrlInterceptorModule, LayoutModule, RouteModule} from "@spica-client
 import {environment} from "../environments/environment";
 import {AppComponent} from "./app.component";
 import {BucketModule} from "./bucket";
-import {ComposerModule} from "./composer/composer.module";
 import {DashboardModule} from "./dashboard/dashboard.module";
 import {FunctionModule} from "./function/function.module";
 import {PassportModule} from "./passport";
@@ -36,8 +35,7 @@ import {StorageModule} from "./storage/storage.module";
     PassportModule.forRoot(),
     BucketModule.forRoot(),
     StorageModule.forRoot(),
-    FunctionModule.forRoot({url: environment.api}),
-    ComposerModule.forRoot({url: environment.api})
+    FunctionModule.forRoot({url: environment.api})
   ],
   declarations: [AppComponent],
   bootstrap: [AppComponent]
