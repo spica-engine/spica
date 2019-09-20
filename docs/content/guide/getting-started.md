@@ -1,6 +1,7 @@
 # Getting Started
 
 ## Installing Spica
+
 This tutorial helps you to install Spica to different environments. We provide a few ways to install, so you can choose which one of them suits you. 
 
 ### via Spica Cli
