@@ -134,6 +134,10 @@
     background-size: cover;
     min-height: 350px;
     padding: 5% 0;
+    .url {
+      text-decoration: none;
+      color: white;
+    }
     span h1 {
       font-size: 4rem;
       font-weight: 400;
