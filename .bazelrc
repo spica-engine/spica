@@ -41,6 +41,8 @@ build --define=DATABASE_NAME=spica
 build --define=PUBLIC_HOST=http://localhost:4300
 build --define=PORT=4300
 build --define=PERSISTENT_PATH=/tmp #Very persistent!
+build --define=SECRET=$2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
+build --define=DEFAULT_PASSWORD=spica
 
 build:release --workspace_status_command="./tools/bazel_stamp_vars.sh"
 
