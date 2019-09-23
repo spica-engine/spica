@@ -1,7 +1,7 @@
-# function onError {
-#     echo "Failed to execute: $0"
-#     echo ""
-# }
+function onError {
+    echo "Failed to execute: $0"
+    echo ""
+}
 
 # Setup crash trap
 trap 'onError' ERR

@@ -22,43 +22,18 @@ export class IntersectDirective implements OnDestroy, OnInit {
   }
 
   private observe() {
-    if (this.wait) {
-      return new Observable<IntersectionObserverEntry[]>(observer => {
-        const box = this.element.nativeElement.getBoundingClientRect();
-        const iobserver = new IntersectionObserver(entry => observer.next(entry));
-        iobserver.observe(this.element.nativeElement);
-        return () => iobserver.disconnect();
-      }).pipe(
-        delay(50),
-        map(r => r.some(r => r.isIntersecting)),
-        distinctUntilChanged(),
-        filter(r => r)
-      );
-    } else if (this.single) {
-      return new Observable<IntersectionObserverEntry[]>(observer => {
-        const box = this.element.nativeElement.getBoundingClientRect();
-        const iobserver = new IntersectionObserver(entry => observer.next(entry), {
-          threshold: 0.8
-        });
-        iobserver.observe(this.element.nativeElement);
-        return () => iobserver.disconnect();
-      }).pipe(
-        map(r => r.some(r => r.isIntersecting)),
-        distinctUntilChanged(),
-        filter(r => r)
-      );
-    } else {
-      return new Observable<IntersectionObserverEntry[]>(observer => {
-        const box = this.element.nativeElement.getBoundingClientRect();
-        const iobserver = new IntersectionObserver(entry => observer.next(entry));
-        iobserver.observe(this.element.nativeElement);
-        return () => iobserver.disconnect();
-      }).pipe(
-        map(r => r.some(r => r.isIntersecting)),
-        distinctUntilChanged(),
-        filter(r => r)
-      );
-    }
+    return new Observable<IntersectionObserverEntry[]>(observer => {
+      const box = this.element.nativeElement.getBoundingClientRect();
+      const iobserver = new IntersectionObserver(entry => observer.next(entry), {
+        threshold: this.single ? 0.8 : 0
+      });
+      iobserver.observe(this.element.nativeElement);
+      return () => iobserver.disconnect();
+    }).pipe(
+      map(r => r.some(r => r.isIntersecting)),
+      distinctUntilChanged(),
+      filter(r => r)
+    );
   }
 
   ngOnDestroy(): void {
