@@ -50,7 +50,7 @@
   intersect="fly"
 >
   <div fxFlex="33" fxFlex.lt-md="100">
-    <img src="assets/artboard/functions.svg" />
+    <img src="assets/artboard/functions.svg" alt="Function" />
     <h2>Functions</h2>
     <p>
       You can apply any kind of logic to your projects. As this is the only module which needs some
@@ -59,7 +59,7 @@
     </p>
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
-    <img src="assets/artboard/policy.svg" />
+    <img src="assets/artboard/policy.svg" alt="Policy" />
     <h2>Policy-Based Management</h2>
     <p>
       Instead of using pre-built roles, you can create your own ones now! Encapsulate your users
@@ -67,7 +67,7 @@
     </p>
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
-    <img src="assets/artboard/bucket.svg" />
+    <img src="assets/artboard/bucket.svg" alt="Bucket" />
     <h2>Bucket Architecture</h2>
     <p>
       Every project is unique and they need unique approaches. For this, we’ve developed the Bucket
@@ -75,7 +75,7 @@
     </p>
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
-    <img src="assets/artboard/composer.svg" />
+    <img src="assets/artboard/composer.svg" alt="Composer" />
     <h2>Frontend Composer</h2>
     <p>
       Why should you need another branch for frontend if you know what you want to show? With the
@@ -83,7 +83,7 @@
     </p>
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
-    <img src="assets/artboard/agnostic.svg" />
+    <img src="assets/artboard/agnostic.svg" alt="Agnostic" />
     <h2>Platform Agnostic</h2>
     <p>
       As the nature of Headless CMS concept, once you set your calls and data models, you should use
@@ -109,6 +109,7 @@
     fxFlex.gt-sm="35%"
     [single]="true"
     src="assets/artboard/discover.svg"
+    alt="Discover"
   />
   <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
     <li>
@@ -146,9 +147,9 @@
   <div class="github">
     <button mat-button fxShow.lt-lg="false">
       <a class="url" href="https://github.com/spica-engine/spica">
-      <mat-icon svgIcon="github"></mat-icon>
-      Github
-    </a>
+        <mat-icon svgIcon="github"></mat-icon>
+        Github
+      </a>
     </button>
   </div>
 </section>
@@ -181,7 +182,13 @@
         import into frontend composer or use ready one.
       </p>
     </span>
-    <img [single]="true" fxFlex="30%" intersect="flyOne" src="assets/artboard/for-developers.svg" />
+    <img
+      [single]="true"
+      fxFlex="30%"
+      intersect="flyOne"
+      alt="For developers"
+      src="assets/artboard/for-developers.svg"
+    />
   </div>
 
   <div
@@ -190,7 +197,13 @@
     flexLayout.gt-sm="row"
     fxLayoutGap.gt-sm="20%"
   >
-    <img [single]="true" fxFlex="30%" intersect="flyOne" src="assets/artboard/for-agencies.svg" />
+    <img
+      [single]="true"
+      fxFlex="30%"
+      intersect="flyOne"
+      alt="For agencies"
+      src="assets/artboard/for-agencies.svg"
+    />
     <span>
       <h1>For Agencies</h1>
       <p>
@@ -229,11 +242,17 @@
         easily, we give extraordinary support services.
       </p>
     </span>
-    <img fxFlex="30%" [single]="true" intersect="flyOne" src="assets/artboard/for-marketers.svg" />
+    <img
+      fxFlex="30%"
+      [single]="true"
+      intersect="flyOne"
+      src="assets/artboard/for-marketers.svg"
+      alt="For marketers"
+    />
   </div>
 </section>
 
-<home-section class="description" title="Way to Create Something Game Changer" description="">
+<home-section class="description" title="Way to Create Something Game Changer">
   <img
     fxFlex.gt-sm="25%"
     fxFlex.lt-md="45%"
@@ -241,6 +260,7 @@
     ngClass.gt-sm="desktop"
     intersect="flyOne"
     [single]="true"
+    alt="Astro boy"
     src="assets/artboard/tool-and-astro-boy.svg"
   />
   <ul>
