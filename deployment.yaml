@@ -83,8 +83,11 @@ spec:
               value: rs0
             - name: DATABASE_NAME
               value: spica
+            - name: SECRET
+              value: $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
+            - name: DEFAULT_PASSWORD
+              value: spica
             - name: PUBLIC_HOST
-              # TODO(thesayyn): https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
               value: 'https://35.239.247.158/api'
             - name: PERSISTENT_PATH
               value: /data

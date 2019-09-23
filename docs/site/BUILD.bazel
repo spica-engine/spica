@@ -10,7 +10,7 @@ container_image(
     docker_run_flags = "-p 80:80",
     files = [
         "//:site",
-        "//stacks/spica:nginx.conf",
+        "//stacks/spica/container:nginx.conf",
     ],
     labels = {
         "maintainer": "Spica maintainers <dev@spicaengine.com>",
@@ -18,7 +18,7 @@ container_image(
     legacy_run_behavior = False,
     stamp = True,
     symlinks = {
-        "/etc/nginx/nginx.conf": "/stacks/spica/nginx.conf",
+        "/etc/nginx/nginx.conf": "/stacks/spica/container/nginx.conf",
         "/usr/share/nginx/html": "/dist/spica-site",
     },
 )

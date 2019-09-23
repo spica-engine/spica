@@ -115,8 +115,9 @@ export class TspClient {
       args.push("--globalPlugins", globalPlugins.join(","));
     }
 
-    // TODO(thesayyn): refactor when https://github.com/bazelbuild/rules_nodejs/issues/312 resolved.
-    const tsServerPath = path.resolve(require.resolve("./tsserver_bin_loader"));
+    const tsServerPath = path.resolve(
+      path.resolve(require.resolve("typescript"), "../../", "bin", "tsserver")
+    );
     this.tsserverProc = cp.fork(tsServerPath, args, {
       silent: true
     });

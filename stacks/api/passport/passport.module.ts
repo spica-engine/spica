@@ -5,8 +5,8 @@ import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference";
 import {readdirSync} from "fs";
-import {IdentityController} from "./identity/identity.controller";
 import {IdentityService} from "./identity";
+import {IdentityController} from "./identity/identity.controller";
 import {PassportOptions, PASSPORT_OPTIONS} from "./interface";
 import {JwtStrategy} from "./jwt.strategy";
 import {PassportController} from "./passport.controller";
@@ -14,9 +14,9 @@ import {PassportService} from "./passport.service";
 import {PolicyService} from "./policy";
 import {PolicyController} from "./policy/policy.controller";
 import {SamlService} from "./saml.service";
+import {provideSchemaResolver, SchemaResolver} from "./schema.resolver";
 import {StrategyController} from "./strategies/strategy.controller";
 import {StrategyService} from "./strategies/strategy.service";
-import {SchemaResolver, provideSchemaResolver} from "./schema.resolver";
 
 @Global()
 @Module({})
@@ -63,21 +63,8 @@ class PassportCoreModule {
 }
 @Module({})
 export class PassportModule {
-  constructor(preference: PreferenceService, identity: PassportService) {
+  constructor(preference: PreferenceService) {
     preference.default({scope: "passport", identity: {attributes: {}}});
-    identity.default({
-      identifier: "spica",
-      password: "$2a$10$wibvsNsOxEVDj5Pl2EJnme.rhEV5vRIhOExhXvNCrCXIdRzr6F5TG", // encrypted = 123
-      policies: [
-        "PassportFullAccess",
-        "IdentityFullAccess",
-        "StorageFullAccess",
-        "PolicyFullAccess",
-        "FunctionFullAccess",
-        "SubscriptionFullAccess",
-        "BucketFullAccess"
-      ]
-    });
   }
   static forRoot(options: PassportOptions): DynamicModule {
     return {

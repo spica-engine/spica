@@ -23,6 +23,7 @@ ts_library(
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//rxjs",
+        "@npm//semver",
         "@npm//typescript",
     ],
 )

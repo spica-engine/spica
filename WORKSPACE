@@ -9,8 +9,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 # Setup nodejs workspace
 http_archive(
     name = "build_bazel_rules_nodejs",
-    sha256 = "6625259f9f77ef90d795d20df1d0385d9b3ce63b6619325f702b6358abb4ab33",
-    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/0.35.0/rules_nodejs-0.35.0.tar.gz"],
+    sha256 = "da217044d24abd16667324626a33581f3eaccabf80985b2688d6a08ed2f864be",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/0.37.1/rules_nodejs-0.37.1.tar.gz"],
 )
 
 load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "node_repositories", "yarn_install")
@@ -61,6 +61,14 @@ container_pull(
     registry = "index.docker.io",
     repository = "library/nginx",
     tag = "alpine",
+)
+
+container_pull(
+    name = "node_image",
+    digest = "sha256:c953b001ea2acf18a6ef99a90fc50630e70a7c0a6b49d774a7aee1f9c937b645",
+    registry = "index.docker.io",
+    repository = "library/node",
+    tag = "12.10.0",
 )
 
 load(
