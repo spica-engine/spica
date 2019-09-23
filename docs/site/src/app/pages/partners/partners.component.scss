@@ -1,0 +1,39 @@
+:host {
+  app-header {
+    min-height: 200px;
+  }
+
+  home-section.partners {
+    div.left {
+      flex-flow: inherit;
+      div {
+        margin-top: 10px;
+      }
+      img {
+        max-width: 10% !important;
+      }
+      p {
+        align-self: center;
+        text-align: left;
+        margin: 10px;
+        span {
+          margin-top: 2px;
+          display: block;
+        }
+      }
+    }
+    .mobile {
+      div {
+        img {
+          max-width: 30% !important;
+        }
+        p {
+          font-size: 11px !important;
+        }
+      }
+    }
+    .mobile-img {
+      max-width: 100%;
+    }
+  }
+}

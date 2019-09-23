@@ -11,7 +11,7 @@ import {DocService} from "../../services/doc.service";
 })
 export class DocsLayoutComponent implements OnInit {
   $apiDocs: Observable<any>;
-  $contentDocs: Observable<any[]>;
+  $contentDocs: Observable<any>;
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe([Breakpoints.Handset, Breakpoints.Tablet])
     .pipe(

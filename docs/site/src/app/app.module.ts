@@ -33,7 +33,9 @@ import {FeaturesComponent} from "./pages/features/features.component";
 import {HeaderComponent} from "./components/header/header.component";
 import {FooterComponent} from "./components/footer/footer.component";
 import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
-
+import {EnterpriseComponent} from "./pages/enterprise/enterprise.component";
+import {PartnersComponent} from "./pages/partners/partners.component";
+import {IntersectDirective} from "./directives/intersect.directive";
 @NgModule({
   imports: [
     BrowserModule,
@@ -70,7 +72,10 @@ import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
     HomeSectionComponent,
     FeaturesComponent,
     HeaderComponent,
-    FooterComponent
+    FooterComponent,
+    EnterpriseComponent,
+    PartnersComponent,
+    IntersectDirective
   ],
   entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
   providers: [],

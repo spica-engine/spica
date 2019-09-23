@@ -38,7 +38,7 @@
     padding-top: 40px;
     &.sm {
       max-width: 90%;
-      margin-left: 5%;
+      margin-left: 12%;
     }
     &.xs {
       max-width: unset;
@@ -48,12 +48,31 @@
       }
     }
     span {
+      .beta {
+        position: absolute;
+        width: 173px;
+        height: 27px;
+        background: #f2f1f0;
+        top: 36px;
+        left: -36px;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 700;
+        color: #1c1c50;
+        line-height: 27px;
+        transform: rotate(-45deg);
+      }
       img {
         height: 45px;
         vertical-align: middle;
+        cursor: pointer;
       }
     }
-
+    .handset {
+      li:not(:last-child) {
+        line-height: 40px;
+      }
+    }
     ul {
       list-style-type: none;
       padding-left: 0;

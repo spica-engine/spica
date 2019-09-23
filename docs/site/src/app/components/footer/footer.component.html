@@ -1,24 +1,32 @@
 <nav fxLayout.lt-md="column" fxLayout.gt-sm="row wrap" fxLayoutAlign.gt-sm="space-evenly">
-  <img fxFlex.lt-md="30%" src="assets/images/logo-2.svg" />
+  <img
+    fxFlex.lt-md="30%"
+    single="true"
+    intersect="flyOne"
+    alt="Spica logo"
+    src="assets/images/logo-2.svg"
+  />
   <ul>
     <h1>Product</h1>
-    <li>Features</li>
-    <li>Customers</li>
-    <li>Why Spica?</li>
-    <li>Pricing</li>
+    <li routerLink="/features">Features</li>
   </ul>
 
   <ul>
     <h1>Resources</h1>
-    <li>Features</li>
-    <li>Customers</li>
-    <li>Docs</li>
+    <li routerLink="/docs">Docs</li>
+    <li><a target="_blank" href="https://github.com/spica-engine/spica">GitHub</a></li>
   </ul>
 
   <ul>
     <h1>About</h1>
-    <li>Team</li>
-    <li>Meets Up</li>
+    <li><a target="_blank" href="https://twitter.com/SpicaEngine">Team</a></li>
+    <li class="disabled">Meets Up</li>
+  </ul>
+  <ul>
+    <h1>Social</h1>
+    <li><a target="_blank" href="https://www.reddit.com/r/SpicaEngine/">Reddit</a></li>
+    <li><a target="_blank" href="https://twitter.com/SpicaEngine">Twitter</a></li>
+    <li><a target="_blank" href="https://www.instagram.com/spicadevengine/">Instagram</a></li>
   </ul>
 </nav>
 <footer
@@ -29,7 +37,7 @@
 >
   <p>This site created by <span class="accent">Spica</span> © 2019. All rights reserved.</p>
   <ul>
-    <li>
+    <!-- <li>
       Privacy Statement
     </li>
     <li>
@@ -37,6 +45,6 @@
     </li>
     <li>
       Security
-    </li>
+    </li> -->
   </ul>
 </footer>
