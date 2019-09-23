@@ -37,7 +37,7 @@ Login with the following credentials:
 ~~~
 username: spica
 
-password: 123
+password: spica
 ~~~~
 
 

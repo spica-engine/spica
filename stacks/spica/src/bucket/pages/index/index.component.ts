@@ -55,12 +55,11 @@ export class IndexComponent implements OnInit {
   ngOnInit(): void {
     this.$preferences = this.bs.getPreferences();
 
-    this.route.params.subscribe(console.log);
     this.$meta = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
         this.paginator.pageIndex = 0;
-        this.filter = {};
+        this.filter = undefined;
         this.showScheduled = false;
         this.sort = {};
         this.loaded = false;
@@ -157,7 +156,6 @@ export class IndexComponent implements OnInit {
   }
 
   sortChange(sort: Sort) {
-    console.log(sort);
     if (sort.direction) {
       this.sort = {[sort.active]: sort.direction === "asc" ? 1 : -1};
     } else {
