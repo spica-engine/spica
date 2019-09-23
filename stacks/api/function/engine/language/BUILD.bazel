@@ -1,27 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
-load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
-
-# Workaround for forking issue.
-# TODO(thesayyn): refactor when https://github.com/bazelbuild/rules_nodejs/issues/312 resolved.
-ts_library(
-    name = "server",
-    srcs = ["server.ts"],
-    visibility = ["//visibility:private"],
-    deps = [
-        "@npm//@types/node",
-        "@npm//typescript",
-    ],
-)
-
-nodejs_binary(
-    name = "tsserver",
-    data = [":server"],
-    entry_point = ":server.ts",
-    node_modules = "@npm//:node_modules",
-    visibility = ["//visibility:private"],
-)
 
 ts_library(
     name = "language",
@@ -29,9 +8,6 @@ ts_library(
         "index.ts",
         "tsp.ts",
         "utils.ts",
-    ],
-    data = [
-        ":tsserver",
     ],
     deps = [
         "//stacks/api/function/engine/language/plugins",
