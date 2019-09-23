@@ -47,10 +47,10 @@
   class="major-features"
   title="Major Features"
   description="It has many features that allows you to create contents simply."
-  cnFxLayoutGap="50px"
+  intersect="fly"
 >
-  <div>
-    <img src="assets/artboard/functions.svg" />
+  <div fxFlex="33" fxFlex.lt-md="100">
+    <img src="assets/artboard/functions.svg" alt="Function" />
     <h2>Functions</h2>
     <p>
       You can apply any kind of logic to your projects. As this is the only module which needs some
@@ -58,32 +58,32 @@
       Spica..
     </p>
   </div>
-  <div>
-    <img src="assets/artboard/policy.svg" />
+  <div fxFlex="33" fxFlex.lt-md="100">
+    <img src="assets/artboard/policy.svg" alt="Policy" />
     <h2>Policy-Based Management</h2>
     <p>
       Instead of using pre-built roles, you can create your own ones now! Encapsulate your users
       with the in-depth policy creation tool.
     </p>
   </div>
-  <div>
-    <img src="assets/artboard/bucket.svg" />
+  <div fxFlex="33" fxFlex.lt-md="100">
+    <img src="assets/artboard/bucket.svg" alt="Bucket" />
     <h2>Bucket Architecture</h2>
     <p>
       Every project is unique and they need unique approaches. For this, we’ve developed the Bucket
       data modeling system to fulfill the needs of development.
     </p>
   </div>
-  <div>
-    <img src="assets/artboard/composer.svg" />
+  <div fxFlex="33" fxFlex.lt-md="100">
+    <img src="assets/artboard/composer.svg" alt="Composer" />
     <h2>Frontend Composer</h2>
     <p>
       Why should you need another branch for frontend if you know what you want to show? With the
       component-based interface composer, you can make UIs without coding.
     </p>
   </div>
-  <div>
-    <img src="assets/artboard/agnostic.svg" />
+  <div fxFlex="33" fxFlex.lt-md="100">
+    <img src="assets/artboard/agnostic.svg" alt="Agnostic" />
     <h2>Platform Agnostic</h2>
     <p>
       As the nature of Headless CMS concept, once you set your calls and data models, you should use
@@ -103,7 +103,14 @@
   cnFxLayout.gt-sm="row nowrap"
   cnFxLayoutAlign.gt-sm="space-around center"
 >
-  <img fxFlex.lt-md="30%" fxFlex.gt-sm="35%" src="assets/artboard/discover.svg" />
+  <img
+    intersect="flyOne"
+    fxFlex.lt-md="30%"
+    fxFlex.gt-sm="35%"
+    single="true"
+    src="assets/artboard/discover.svg"
+    alt="Discover"
+  />
   <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
     <li>
       <h3>Feel flexibility and have control</h3>
@@ -137,10 +144,14 @@
     <p>Powered by Spica Community &trade;</p>
   </span>
 
-  <button mat-button fxShow.lt-lg="false">
-    <mat-icon svgIcon="github"></mat-icon>
-    Github
-  </button>
+  <div class="github">
+    <button mat-button fxShow.lt-lg="false">
+      <a class="url" href="https://github.com/spica-engine/spica">
+        <mat-icon svgIcon="github"></mat-icon>
+        Github
+      </a>
+    </button>
+  </div>
 </section>
 
 <section
@@ -171,7 +182,13 @@
         import into frontend composer or use ready one.
       </p>
     </span>
-    <img fxFlex="30%" src="assets/artboard/for-developers.svg" />
+    <img
+      single="true"
+      fxFlex="30%"
+      intersect="flyOne"
+      alt="For developers"
+      src="assets/artboard/for-developers.svg"
+    />
   </div>
 
   <div
@@ -180,7 +197,13 @@
     flexLayout.gt-sm="row"
     fxLayoutGap.gt-sm="20%"
   >
-    <img fxFlex="30%" src="assets/artboard/for-agencies.svg" />
+    <img
+      single="true"
+      fxFlex="30%"
+      intersect="flyOne"
+      alt="For agencies"
+      src="assets/artboard/for-agencies.svg"
+    />
     <span>
       <h1>For Agencies</h1>
       <p>
@@ -219,16 +242,25 @@
         easily, we give extraordinary support services.
       </p>
     </span>
-    <img fxFlex="30%" src="assets/artboard/for-marketers.svg" />
+    <img
+      fxFlex="30%"
+      single="true"
+      intersect="flyOne"
+      src="assets/artboard/for-marketers.svg"
+      alt="For marketers"
+    />
   </div>
 </section>
 
-<home-section class="description" title="Way to Create Something Game Changer" description="">
+<home-section class="description" title="Way to Create Something Game Changer">
   <img
     fxFlex.gt-sm="25%"
     fxFlex.lt-md="45%"
     fxFlexAlign.gt-sm="flex-start"
     ngClass.gt-sm="desktop"
+    intersect="flyOne"
+    single="true"
+    alt="Astro boy"
     src="assets/artboard/tool-and-astro-boy.svg"
   />
   <ul>

@@ -20,7 +20,7 @@ export class DocService {
   }
 
   getContentDocs() {
-    return this.http.get<any[]>("/assets/docs/doc-list.json");
+    return this.http.get<any>("/assets/docs/doc-list.json");
   }
 
   getContentDoc(name: string, docName: string) {

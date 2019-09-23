@@ -1,12 +1,12 @@
 import {Component, OnInit} from "@angular/core";
 import {fly, flyOne} from "../animations";
 @Component({
-  selector: "app-features",
-  templateUrl: "./features.component.html",
-  styleUrls: ["./features.component.scss"],
+  selector: "app-partners",
+  templateUrl: "./partners.component.html",
+  styleUrls: ["./partners.component.scss"],
   animations: [fly("fly"), flyOne("flyOne")]
 })
-export class FeaturesComponent implements OnInit {
+export class PartnersComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {}
