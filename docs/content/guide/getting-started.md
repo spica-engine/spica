@@ -4,7 +4,9 @@
 
 This tutorial helps you to install Spica to different environments. We provide a few ways to install, so you can choose which one of them suits you. 
 
-### via Spica Cli
+### Using Spica Cli
+
+> Note: This feature is currently unavailable. Continue with other installation ways. 
 
 Spica has a command-line interface for quick installation. To use it, you must have [Docker](https://www.docker.com/) and [NodeJs](https://nodejs.org) installed on your development environment.
 
@@ -34,7 +36,7 @@ Spica my-first-spica-instance is serving on http://localhost:4500
 Open your browser on http://localhost:4500/spica to login.
 ```
 
-### via Kubernetes
+### Using Kubernetes
 
 - Install kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - After you'll need a kubernetes environment it can be either a local or a cloud kubernetes environment.
@@ -46,7 +48,7 @@ Open your browser on http://localhost:4500/spica to login.
 - The Cluster must have Nginx ingress controller enabled. You can follow https://kubernetes.github.io/ingress-nginx/deploy/ to install Nginx ingress on the cluster.
 - Just apply `kubectl apply -f https://raw.githubusercontent.com/spica-engine/spica/master/deployment.yaml`
 
-### via Docker
+### Using Docker
 
 - Install docker on your environment and ensure that you have installed docker correctly by running "`docker ps`" command.
 - For macOS: https://docs.docker.com/docker-for-mac/
