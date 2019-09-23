@@ -35,8 +35,7 @@ import {FooterComponent} from "./components/footer/footer.component";
 import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
 import {EnterpriseComponent} from "./pages/enterprise/enterprise.component";
 import {PartnersComponent} from "./pages/partners/partners.component";
-import { IntersectDirective } from './directives/intersect.directive';
-import { LazyLoadScriptService } from './services/lazy-load-script.service';
+import {IntersectDirective} from "./directives/intersect.directive";
 @NgModule({
   imports: [
     BrowserModule,
@@ -79,7 +78,7 @@ import { LazyLoadScriptService } from './services/lazy-load-script.service';
     IntersectDirective
   ],
   entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
-  providers: [LazyLoadScriptService],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {

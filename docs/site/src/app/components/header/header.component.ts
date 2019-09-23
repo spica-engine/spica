@@ -4,7 +4,6 @@ import {map} from "rxjs/operators";
 import {Observable} from "rxjs";
 import {MatIconRegistry} from "@angular/material";
 import {DomSanitizer} from "@angular/platform-browser";
-import {LazyLoadScriptService} from "../../services/lazy-load-script.service";
 
 @Component({
   selector: "app-header",
@@ -21,8 +20,7 @@ export class HeaderComponent implements OnInit {
   constructor(
     http: HttpClient,
     private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private lazyLoadService: LazyLoadScriptService
+    private domSanitizer: DomSanitizer
   ) {
     this.matIconRegistry.addSvgIcon(
       "instagram",
@@ -47,7 +45,5 @@ export class HeaderComponent implements OnInit {
       .pipe(map((data: any) => data.stargazers_count));
   }
 
-  ngOnInit() {
-    this.lazyLoadService.loadScript("/assets/hotjar.js").subscribe();
-  }
+  ngOnInit() {}
 }
