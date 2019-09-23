@@ -1,80 +1,25 @@
 # Getting Started
 
-This tutorial helps you to install Spica to different environments.
-First, we will explain a few things as Spica has few requirements to work.
+## Installing Spica
 
-## Table of contents
+This tutorial helps you to install Spica to different environments. We provide a few ways to install, so you can choose which one of them suits you. 
 
-## Requirements
+### Using Spica Cli
 
-- **mongoDB** 4.2 and above
-- **nodeJS** 10 and above
+> Note: This feature is currently unavailable. Continue with other installation ways. 
 
-As spica relies on **replica set** feature of MongoDB, you need to configure at least **3 members** of a replica set.
+Spica has a command-line interface for quick installation. To use it, you must have [Docker](https://www.docker.com/) and [NodeJs](https://nodejs.org) installed on your development environment.
 
-> Important: One of the replica set members must have _slaveDelay_ enabled and delay time must be greater than 3 seconds. (5 seconds suggested.)
-
-## Installation
-
-As we are publishing Spica as container images, you need a container runtime to use official Spica images.
-
-> Note: If you are not familiar with containers, we highly recommend you to get familiar with them.
-
-### CLI
-
-Spica has a command-line interface for quick and fast spica installation. You can use it for fast local development or if you want to opt-in quickly. To use CLI, you must have Docker and NodeJs installed on your computer.
-
-#### Install
-
-Before you go, ensure that the Docker and NodeJs correctly installed on your computer by running the following commands:
-
-- Ensure that the Docker installed correctly
-
-```sh
-$ docker ps
-# The docker command above will show an empty list if you installed Docker for the first time.
-```
-
-- Ensure that the NodeJs installed correctly
-
-```sh
-$ npm --v
-# When you install NodeJs, it will come with a built-in package manager
-# so when you run the above command you will see the version of the npm.
-```
-
-To install CLI run following command in your computer.
+Install CLI using the `npm` package manager:
 
 ```sh
 $ npm install @spicaengine/cli -g
-# This command will install CLI globally on your computer.
 ```
 
-```sh
-# Hint: You can use other package managers as well.
-# Yarn (yarnpkg.com)
-$ yarn global add @spicaengine/cli
-# PNPM (pnpm.js.org)
-$ pnpm install @spicaengine/cli -g
-```
-
-#### Creating your first Spica instance with CLI.
-
-Spica CLI has a command for creating Spica instances on your computer. This command will pull all necessary images and create desired spica containers on your Docker.
-
-To create an instance on your computer simply run:
+To create and serve a new Spica instance on your computer, simply run:
 
 ```sh
-$ spica run my-first-spica-instance # You can use a different name
-# This command will create a Spica instance named as run my-first-spica-instance on 4500 port
-# if that port is not in use however if the port 4500(default port) in use, CLI will another port that is not in use.
-```
-
-> HINT: If you want to use a custom port you can use --port option like below
-
-```sh
-$ spica run my-first-spica-instance --port=80
-# NOTE: If the port 80 is in use, CLI will go on and find another port that is not in use.
+$ spica run my-spica-instance 
 ```
 
 When everything completed, you will get an output similar to below:
@@ -91,7 +36,7 @@ Spica my-first-spica-instance is serving on http://localhost:4500
 Open your browser on http://localhost:4500/spica to login.
 ```
 
-### Kubernetes
+### Using Kubernetes
 
 - Install kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/
 - After you'll need a kubernetes environment it can be either a local or a cloud kubernetes environment.
@@ -103,7 +48,7 @@ Open your browser on http://localhost:4500/spica to login.
 - The Cluster must have Nginx ingress controller enabled. You can follow https://kubernetes.github.io/ingress-nginx/deploy/ to install Nginx ingress on the cluster.
 - Just apply `kubectl apply -f https://raw.githubusercontent.com/spica-engine/spica/master/deployment.yaml`
 
-### Docker
+### Using Docker
 
 - Install docker on your environment and ensure that you have installed docker correctly by running "`docker ps`" command.
 - For macOS: https://docs.docker.com/docker-for-mac/
