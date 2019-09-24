@@ -30,7 +30,7 @@ Read our [Getting Started guide][quickstart] to start a project quickly.
 Join us on [Slack][slack] or [Discord][discord], feel free to request to join our private `#development` channel if you're planning to contribute. 
 
 ## Demo
-[Try Live Demo](http://master.spicaengine.com/spica)
+[Try Live Demo](https://example.spicaengine.com/spica)
 
 Login with the following credentials:
 
