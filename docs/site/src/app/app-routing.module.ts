@@ -6,6 +6,8 @@ import {DocsLayoutComponent} from "./pages/docs-layout/docs-layout.component";
 import {DocsComponent} from "./pages/docs/docs.component";
 import {HomeComponent} from "./pages/home/home.component";
 import {FeaturesComponent} from "./pages/features/features.component";
+import {EnterpriseComponent} from "./pages/enterprise/enterprise.component";
+import {PartnersComponent} from "./pages/partners/partners.component";
 
 const routes: Routes = [
   {
@@ -41,6 +43,14 @@ const routes: Routes = [
   {
     path: "features",
     component: FeaturesComponent
+  },
+  {
+    path: "enterprise",
+    component: EnterpriseComponent
+  },
+  {
+    path: "partners",
+    component: PartnersComponent
   }
 ];
 
