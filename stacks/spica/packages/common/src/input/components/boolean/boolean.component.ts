@@ -37,6 +37,10 @@ export class BooleanComponent implements ControlValueAccessor {
   }
 
   registerOnTouched(fn: any): void {
+    if (this.value == undefined && this.schema.default != undefined) {
+      this.value = !!this.schema.default;
+      this._onChangeFn(this.value);
+    }
     this._onTouchedFn = fn;
   }
 

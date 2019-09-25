@@ -48,6 +48,7 @@ import {
   UniqueItemsValidator,
   MaxItemsValidator
 } from "./validators";
+import { BooleanSchemaComponent } from './components/boolean-schema/boolean-schema.component';
 
 export function coerceObject() {
   return {};
@@ -98,7 +99,8 @@ export function coerceObject() {
     UniqueItemsValidator,
     MinItemsValidator,
     MaxItemsValidator,
-    ColorComponent
+    ColorComponent,
+    BooleanSchemaComponent
   ],
   providers: [
     {
@@ -120,7 +122,7 @@ export function coerceObject() {
         placer: NumberComponent,
         metaPlacer: NumberSchemaComponent
       },
-      {origin: "boolean", type: "boolean", placer: BooleanComponent},
+      {origin: "boolean", type: "boolean", placer: BooleanComponent,metaPlacer: BooleanSchemaComponent},
       {origin: "string", type: "textarea", placer: TextAreaComponent},
       {origin: "array", type: "array", placer: ArrayComponent, metaPlacer: ArraySchemaComponent},
       {
