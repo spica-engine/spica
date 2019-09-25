@@ -23,17 +23,6 @@
         <mat-icon>layers</mat-icon>
         Policies
       </a>
-
-      <a
-        mat-tab-link
-        routerLink="settings"
-        routerLinkActive
-        #rlaSetting="routerLinkActive"
-        [active]="rlaSetting.isActive"
-      >
-        <mat-icon>settings</mat-icon>
-        Settings
-      </a>
       <a
         mat-tab-link
         routerLink="strategies"
@@ -43,6 +32,16 @@
       >
         <mat-icon>linear_scale</mat-icon>
         Strategies
+      </a>
+      <a
+        mat-tab-link
+        routerLink="settings"
+        routerLinkActive
+        #rlaSetting="routerLinkActive"
+        [active]="rlaSetting.isActive"
+      >
+        <mat-icon>settings</mat-icon>
+        Settings
       </a>
     </nav>
   </mat-toolbar-row>

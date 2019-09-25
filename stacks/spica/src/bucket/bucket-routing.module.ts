@@ -9,7 +9,7 @@ import {ImportExportComponent} from "./pages/import-export/import-export.compone
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
-import { BucketIndexGuard } from "./state/index.guard";
+import {BucketIndexGuard} from "./state/index.guard";
 
 const routes: Routes = [
   {

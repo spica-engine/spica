@@ -56,7 +56,7 @@ import {BucketInitializer} from "./services/bucket.initializer";
 import * as fromBucket from "./state/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
 import {RequiredTranslate} from "./validators";
-import { WelcomeComponent } from "./pages/welcome/welcome.component";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
 
 @NgModule({
   imports: [

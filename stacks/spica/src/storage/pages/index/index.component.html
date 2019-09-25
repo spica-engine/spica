@@ -34,7 +34,6 @@
   >
     <input
       type="file"
-      accept="image/*,video/mp4,video/webm"
       #fileSelector
       multiple
       #fileModel="ngModel"
@@ -54,38 +53,32 @@
 <mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
   <mat-grid-tile *ngFor="let storage of storages$ | async; let i = index">
     <mat-card class="mat-elevation-z25">
-      <mat-card-content class="storageItems">
-        <label matTooltip="{{ storage.name }}">{{ storage.name }}</label>
+      <mat-card-content>
         <storage-view
-          [class.default-img]="panelOpenState && fabIndex == i"
-          class="img"
+          mat-card-image
+          matTooltip="View this object"
           [blob]="storage"
-          (click)="openDialog(storage)"
+          (click)="openPreview(storage)"
         >
         </storage-view>
-        <button
-          class="fab-button"
-          (click)="panelOpenState = true; fabIndex = i"
-          mat-mini-fab
-          [matMenuTriggerFor]="menu"
-        >
+      </mat-card-content>
+      <mat-card-actions>
+        <mat-label [matTooltip]="'Mime type: ' + storage?.content?.type">{{
+          storage.name
+        }}</mat-label>
+        <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
           <mat-icon>more_vert</mat-icon>
-
-          <mat-menu
-            class="fab-menu"
-            (closed)="panelOpenState = false"
-            #menu="matMenu"
-            yPosition="above"
-          >
+          <mat-menu class="actions-menu" #menu="matMenu" yPosition="above">
             <button
-              mat-icon-button
-              [routerLink]="storage._id"
               *ngIf="storage.content?.type?.startsWith('image/')"
+              mat-menu-item
+              [routerLink]="storage._id"
             >
               <mat-icon>edit</mat-icon>
+              Edit
             </button>
             <button
-              mat-icon-button
+              mat-menu-item
               color="warn"
               [matAwareDialog]="{
                 title: 'Attention',
@@ -95,13 +88,15 @@
               (confirm)="delete(storage._id)"
             >
               <mat-icon>delete</mat-icon>
+              Delete
             </button>
           </mat-menu>
         </button>
-      </mat-card-content>
+      </mat-card-actions>
     </mat-card>
   </mat-grid-tile>
 </mat-grid-list>
+
 <mat-paginator [pageSize]="12" [pageSizeOptions]="[12, 24, 46]"></mat-paginator>
 
 <ng-template #dialogTemplate let-answer="answer">
