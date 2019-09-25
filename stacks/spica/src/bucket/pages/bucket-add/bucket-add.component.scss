@@ -124,6 +124,7 @@
         }
         mat-grid-list {
           mat-grid-tile {
+            overflow: auto;
             border: 1px solid rgba(var(--foreground-divider-rgb), 0.04);
             .mat-figure {
               flex-flow: column;
