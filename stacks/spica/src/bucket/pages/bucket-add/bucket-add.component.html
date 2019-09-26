@@ -116,6 +116,7 @@
                   mat-icon-button
                   [matMenuTriggerFor]="settingsMenu"
                   [matMenuTriggerData]="{propertyKv: propertyKv}"
+                  (click)="$event.stopPropagation()"
                 >
                   <mat-icon>settings</mat-icon>
                   <mat-menu #settingsMenu="matMenu">
