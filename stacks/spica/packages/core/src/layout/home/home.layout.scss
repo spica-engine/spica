@@ -31,7 +31,7 @@
         padding: 0 30px;
         background-color: var(--current-color, var(--primary-default, black));
         button[mat-icon-button] {
-          text-align: left;
+          margin-left: -10px;
         }
         .fill-between {
           flex: 1 1 auto;

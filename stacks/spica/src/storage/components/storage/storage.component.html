@@ -5,7 +5,7 @@
   </span>
   <span>
     <mat-progress-spinner
-      *ngIf="progress"
+      *ngIf="progress$ | async; let progress"
       diameter="40"
       mode="determinate"
       [value]="progress"
@@ -14,7 +14,7 @@
       *ngIf="value || blob"
       mat-icon-button
       mat-flat-button
-      matTooltip="Clear storage object"
+      [matTooltip]="!progress$ ? 'Clear storage object' : 'Stop'"
       (click)="clear()"
     >
       <mat-icon>clear_all</mat-icon>
@@ -26,13 +26,13 @@
   [(ngModel)]="selected"
   (ngModelChange)="pickFromStorage($event)"
 >
-  <ng-container *ngIf="value">
+  <ng-container *ngIf="blob || value">
     <mat-progress-bar *ngIf="view.ready == false" mode="indeterminate"></mat-progress-bar>
     <storage-view #view [blob]="blob || value"></storage-view>
     <mat-icon class="change">{{ isDraggingOver ? "save_alt" : "cached" }}</mat-icon>
   </ng-container>
 
-  <div class="drop" *ngIf="!value">
+  <div class="drop" *ngIf="!value && !blob">
     <mat-icon inline="true">save_alt</mat-icon>
     <small class="mat-small">Drag & Drop your file here</small>
   </div>

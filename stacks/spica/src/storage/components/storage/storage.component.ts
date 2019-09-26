@@ -4,6 +4,8 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {InputSchema, INPUT_SCHEMA} from "@spica-client/common";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
+import {map} from "rxjs/operators";
+import {Observable} from "rxjs";
 
 @Component({
   selector: "storage",
@@ -22,7 +24,8 @@ import {StorageService} from "../../storage.service";
 export class StorageComponent implements ControlValueAccessor {
   disabled: boolean;
 
-  progress: number;
+  progress$: Observable<number>;
+
   isDraggingOver: boolean = false;
 
   blob: Blob | Storage;
@@ -52,18 +55,17 @@ export class StorageComponent implements ControlValueAccessor {
     if (files.length) {
       this.blob = files.item(0);
 
-      this.storage.insertMany(files).subscribe(
-        event => {
+      this.progress$ = this.storage.insertMany(files).pipe(
+        map(event => {
           if (event.type === HttpEventType.UploadProgress) {
-            this.progress = Math.round((100 * event.loaded) / event.total);
+            return Math.round((100 * event.loaded) / event.total);
           } else if (event.type === HttpEventType.Response) {
             // TODO: Ideally this should have come from response body
             this.value = event.url + "/" + event.body[0]._id;
             this.onChangeFn(this.value);
-            this.progress = undefined;
+            this.progress$ = undefined;
           }
-        },
-        () => (this.progress = undefined)
+        })
       );
     }
   }
@@ -107,6 +109,7 @@ export class StorageComponent implements ControlValueAccessor {
   }
 
   clear() {
+    this.progress$ = undefined;
     this.value = this.blob = undefined;
     this.onChangeFn(this.value);
   }

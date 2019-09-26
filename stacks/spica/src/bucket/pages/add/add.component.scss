@@ -12,35 +12,34 @@
 }
 
 :host {
-  .block-form {
-    display: block;
-    float: left;
-    width: 100%;
-  }
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
-    .title {
-      h1 {
+    span {
+      h4 {
         & > * {
           vertical-align: middle;
+        }
+        mat-icon {
+          margin-left: -3px;
         }
         span {
           margin-left: 5px;
         }
-      }
-      mat-chip-list {
-        display: inline-block;
-        margin-left: 10px;
-        mat-chip {
-          font-size: 11px;
-          padding: 7px 10px;
-          min-height: 20px;
-          height: 22px;
-          line-height: normal;
+        mat-chip-list {
+          display: inline-block;
+          margin-left: 10px;
+          mat-chip {
+            font-size: 11px;
+            padding: 7px 10px;
+            min-height: 20px;
+            height: 22px;
+            line-height: normal;
+          }
         }
       }
+
       h6 {
         font-size: 14px;
       }
@@ -54,32 +53,6 @@
     width: calc(100% - 60px);
     margin: 30px;
     margin-top: -130px;
-    mat-card-actions.save {
-      margin: 0;
-      padding: 0;
-      text-align: end;
-      mat-chip-list {
-        display: inline-block;
-        mat-chip {
-          font-size: 11px;
-          padding: 7px 10px;
-          min-height: 20px;
-          height: 22px;
-          line-height: normal;
-        }
-      }
-      mat-progress-spinner.save {
-        display: inline;
-      }
-      mat-form-field.schedule {
-        width: 150px;
-        margin-left: 5px;
-        margin-right: 10px;
-      }
-      form.schedule {
-        display: inline;
-      }
-    }
     mat-card-content {
       &.handset form {
         flex-flow: column;
@@ -110,6 +83,32 @@
               margin-right: 5px;
             }
           }
+        }
+      }
+    }
+
+    mat-card-actions {
+      margin: 0;
+      padding: 0;
+      text-align: end;
+
+      > button {
+        span,
+        mat-progress-spinner {
+          display: inline-block;
+          vertical-align: middle;
+        }
+        span {
+          margin-left: 4px;
+        }
+      }
+
+      form {
+        display: inline;
+        mat-form-field {
+          width: 150px;
+          margin-left: 5px;
+          margin-right: 10px;
         }
       }
     }
