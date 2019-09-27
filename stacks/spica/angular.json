@@ -101,48 +101,6 @@
           }
         }
       }
-    },
-    "@spica-client/core": {
-      "root": "stacks/spica/packages/core",
-      "sourceRoot": "stacks/spica/packages/core/src",
-      "projectType": "library",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
-          "options": {
-            "tsConfig": "packages/tsconfig.lib.json",
-            "project": "packages/core/ng-package.json"
-          }
-        }
-      }
-    },
-    "@spica-client/common": {
-      "root": "stacks/spica/packages/common",
-      "sourceRoot": "stacks/spica/packages/common/src",
-      "projectType": "library",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
-          "options": {
-            "tsConfig": "packages/tsconfig.lib.json",
-            "project": "packages/common/ng-package.json"
-          }
-        }
-      }
-    },
-    "@spica-client/material": {
-      "root": "stacks/spica/packages/material",
-      "sourceRoot": "stacks/spica/packages/material/src",
-      "projectType": "library",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-ng-packagr:build",
-          "options": {
-            "tsConfig": "packages/tsconfig.lib.json",
-            "project": "packages/material/ng-package.json"
-          }
-        }
-      }
     }
   },
   "cli": {

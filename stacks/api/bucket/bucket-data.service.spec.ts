@@ -4,7 +4,7 @@ import {
   InsertOneWriteOpResult,
   InsertWriteOpResult
 } from "@spica-server/database/testing";
-import {BucketDataService} from "./bucket-data.service";
+import {BucketDataService} from "@spica-server/bucket";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 

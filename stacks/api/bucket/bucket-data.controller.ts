@@ -205,7 +205,7 @@ export class BucketDataController {
       );
       return this.bds
         .find(bucketId, aggregation)
-        .then(r => r[0])
+        .then(r => r[0] || {meta: {total: 0}, data: []})
         .catch((error: MongoError) =>
           Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
         );

@@ -1,7 +1,0 @@
-{
-  "dest": "../../../../dist/spica-client/common",
-  "lib": {
-    "entryFile": "src/index.ts"
-  },
-  "deleteDestPath": false
-}
