@@ -5,9 +5,45 @@
     height: 100vh;
     mat-sidenav {
       min-width: 250px;
-      mat-toolbar {
-        background: transparent;
+
+      section.routes {
+        height: 100%;
+        display: flex;
+        flex-flow: row;
+        justify-content: stretch;
+        mat-nav-list {
+          &:first-of-type {
+            background: rgba(var(--background-background-rgb), 0.9);
+            mat-list-item {
+              height: 90px;
+              &.active {
+                border-left: 2px solid var(--accent-700);
+                background: var(--background-card);
+              }
+              &:first-of-type {
+                pointer-events: none;
+                img {
+                  width: 26px;
+                  object-fit: fill;
+                  user-select: none;
+                }
+              }
+            }
+          }
+          &:last-of-type {
+            flex: 1;
+            h4 {
+              padding-left: 18px;
+            }
+            mat-list-item {
+              mat-icon {
+                margin-right: 5px;
+              }
+            }
+          }
+        }
       }
+
       mat-accordion {
         mat-expansion-panel {
           mat-nav-list {
