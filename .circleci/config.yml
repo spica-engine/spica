@@ -73,10 +73,6 @@ jobs:
             # After we switch spica(client) to bazel we gonna get rid of this
             cd stacks/spica
             rm -rf dist/spica-client
-            yarn ng build @spica-client/core
-            yarn ng build @spica-client/common
-            yarn ng build @spica-client/material
-            wait
             # Disable differential loading on patch branches to gain speed up
             if [ $CIRCLE_BRANCH != "master" ]; then
               echo "Disabling differential loading"

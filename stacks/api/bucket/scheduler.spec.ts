@@ -1,12 +1,11 @@
 import {Test} from "@nestjs/testing";
+import {BucketDataService, BucketModule} from "@spica-server/bucket";
+import {DocumentScheduler} from "@spica-server/bucket/scheduler";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {BucketDataService} from "./bucket-data.service";
-import {DocumentScheduler} from "./schedule.service";
-import {BucketModule} from "./bucket.module";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 12000;
 
-describe("bucket schedule service", () => {
+describe("scheduler", () => {
   let bds: BucketDataService;
   let scheduler: DocumentScheduler;
   const bucketId = new ObjectId();
