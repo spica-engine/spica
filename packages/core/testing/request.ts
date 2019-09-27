@@ -7,8 +7,12 @@ export class Request {
     return `/tmp/${process.env.BAZEL_TARGET.replace(/\/|:/g, "_")}.sock`;
   }
 
-  options<T>(path: string): Promise<Response<T>> {
+  options<T>(path: string) {
     return this.request<T>({method: "OPTIONS", path});
+  }
+
+  get<T>(path: string, query: any) {
+    return this.request<T>({method: "GET", path, qs: query});
   }
 
   post<T>(path: string, body?: object) {
@@ -52,6 +56,7 @@ export interface RequestOptions {
   method: string;
   path: string;
   body?: any;
+  qs?: object;
 }
 
 export interface Response<T = any> {
