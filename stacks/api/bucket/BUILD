@@ -22,16 +22,11 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/archiver",
-        "@npm//@types/deep-diff",
-        "@npm//@types/diff-match-patch",
         "@npm//@types/json-schema",
         "@npm//@types/mongodb",
         "@npm//@types/node",
-        "@npm//ajv",
         "@npm//archiver",
         "@npm//cron",
-        "@npm//deep-diff",
-        "@npm//diff-match-patch",
         "@npm//locale",
     ],
 )
@@ -39,8 +34,10 @@ ts_library(
 ts_library(
     name = "test_lib",
     testonly = True,
-    srcs = glob(["*.spec.ts"]),
-    tsconfig = "//:tsconfig.json",
+    srcs = [
+        "bucket.service.spec.ts",
+        "bucket-data.service.spec.ts",
+    ],
     deps = [
         ":bucket",
         "//packages/core/schema",
@@ -52,10 +49,27 @@ ts_library(
     ],
 )
 
+ts_library(
+    name = "scheduler_test_lib",
+    testonly = True,
+    srcs = [
+        "scheduler.spec.ts",
+    ],
+    deps = [
+        ":bucket",
+        "//packages/database/testing",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
 jasmine_node_test(
     name = "test",
-    srcs = [":test_lib"],
-    coverage = True,
+    deps = [
+        ":scheduler_test_lib",
+        ":test_lib",
+    ],
 )
 
 docs(

@@ -40,7 +40,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
           inject: [MongoClient, MongoMemoryServer]
         }
       ],
-      exports: [DatabaseService]
+      exports: [DatabaseService, MongoClient]
     };
   }
   static replicaSet(): DynamicModule {
