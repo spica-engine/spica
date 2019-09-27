@@ -14,9 +14,10 @@
     "lib": ["es2015"],
     "paths": {
       "@spica-server/*": [
-        "./packages/*"
+        "./packages/*",
+        "./stacks/api/*"
       ]
-    },
+    }
   },
   "bazelOptions": {
     "suppressTsconfigOverrideWarnings": true,
