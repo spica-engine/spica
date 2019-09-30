@@ -82,7 +82,7 @@ export class RichTextEditorComponent implements ControlValueAccessor {
     this._document.execCommand("fontName", false, name);
   }
 
-  setSize(size: string): void {
+  setSize(size: number): void {
     this._document.execCommand("fontSize", false, size);
   }
 
