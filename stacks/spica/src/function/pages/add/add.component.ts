@@ -1,13 +1,12 @@
 import {HttpClient, HttpEvent, HttpEventType, HttpRequest} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
+import {SchemeObserver, Scheme} from "@spica-server/core";
 import {Observable, Subscription} from "rxjs";
 import {delay, filter, scan, switchMap, takeUntil, tap} from "rxjs/operators";
-
 import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
 import {emptyFunction, Function, Trigger} from "../../interface";
-import {BreakpointObserver} from "@angular/cdk/layout";
 
 @Component({
   selector: "functions-add",
@@ -21,8 +20,6 @@ export class AddComponent implements OnInit, OnDestroy {
   public triggers: Observable<Trigger[]>;
   public dependencies: Observable<any>;
   public dependencyInstallPending = false;
-
-  isDark: boolean = false;
 
   private mediaMatchObserver: Subscription;
 
@@ -49,11 +46,11 @@ export class AddComponent implements OnInit, OnDestroy {
     private functionService: FunctionService,
     private http: HttpClient,
     private ls: LanguageService,
-    breakpointObserver: BreakpointObserver
+    schemeObserver: SchemeObserver
   ) {
-    this.mediaMatchObserver = breakpointObserver
-      .observe("(prefers-color-scheme: dark)")
-      .subscribe(r => this.changeScheme(r.matches));
+    this.mediaMatchObserver = schemeObserver
+      .observe(Scheme.Dark)
+      .subscribe(r => this.changeScheme(r));
     this.triggers = this.functionService.getTriggers();
   }
 
@@ -154,14 +151,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   changeScheme(isDark: boolean) {
-    console.log("ljsaljdasd");
-    // this.isDark = isDark;
-    // if (this.isDark) {
-    //   this.editorOptions.theme = "vs-dark";
-    // } else {
-    //   this.editorOptions.theme = "vs-light";
-    // }
-    // console.log(this.editorOptions);
+    this.editorOptions = {...this.editorOptions, theme: isDark ? "vs-dark" : "vs-light"};
   }
   ngOnDestroy() {
     this.dispose.emit();
