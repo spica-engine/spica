@@ -9,6 +9,9 @@ html:not(.dark) :host ::ng-deep {
   .mtk6 {
     color: #4a91e2;
   }
+  .monaco-editor .view-overlays .current-line {
+    border: 2px solid #eeeeee;
+  }
 }
 
 :host ::ng-deep {
@@ -25,5 +28,13 @@ html:not(.dark) :host ::ng-deep {
   .monaco-editor .inputarea.ime-input,
   .monaco-editor .margin {
     background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+  }
+
+  .monaco-editor .view-overlays .current-line {
+    border: 2px solid var(--primary-A700);
+  }
+  .monaco-editor .curent-line {
+    color: red;
+    background-color: red;
   }
 }
