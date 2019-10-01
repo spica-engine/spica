@@ -11,6 +11,7 @@
       "dom"
     ],
   },
+  "include": ["src/**/*.ts"],
   "exclude": [
     "test.ts",
     "**/*.spec.ts"

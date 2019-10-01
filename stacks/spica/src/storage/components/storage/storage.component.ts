@@ -1,10 +1,11 @@
 import {HttpEventType} from "@angular/common/http";
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {InputSchema, INPUT_OPTIONS, INPUT_SCHEMA} from "@spica-client/common";
-import {Subject} from "rxjs";
+import {InputSchema, INPUT_SCHEMA} from "@spica-client/common";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
+import {map} from "rxjs/operators";
+import {Observable} from "rxjs";
 
 @Component({
   selector: "storage",
@@ -15,93 +16,101 @@ import {StorageService} from "../../storage.service";
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => StorageComponent)
     }
-  ]
+  ],
+  host: {
+    "[class.disabled]": "disabled"
+  }
 })
 export class StorageComponent implements ControlValueAccessor {
-  onChangeFn: any;
-  onTouchedFn: any;
-  value: string;
-  incomingFile: FileList;
   disabled: boolean;
-  storageStyle: string;
-  selected: Storage;
-  progress: number;
-  _onChange: Subject<string> = new Subject<string>();
-  _pageSize: number = 8;
-  refresh: Subject<void> = new Subject<void>();
+
+  progress$: Observable<number>;
+
+  isDraggingOver: boolean = false;
+
+  blob: Blob | Storage;
+  value: string;
+
+  onChangeFn: (val: string) => void = () => {};
+  onTouchedFn: () => void = () => {};
 
   constructor(
     @Inject(INPUT_SCHEMA) public readonly schema: InputSchema,
-    @Inject(INPUT_OPTIONS) public options,
     private storage: StorageService
-  ) {
-    this.storageStyle =
-      typeof this.options.storageStyle === "undefined" ? "large" : this.options.storageStyle;
-  }
+  ) {}
 
-  @HostListener("click")
+  @HostListener("blur")
   callOnTouched(): void {
     if (this.onTouchedFn) {
       this.onTouchedFn();
     }
   }
 
-  callOnChange() {
-    this.value = this.selected.url;
-    if (this.onChangeFn) {
-      this.onChangeFn(this.value);
+  @HostListener("drop", ["$event"])
+  uploadStorage(e: DragEvent): void {
+    e.preventDefault();
+    this.isDraggingOver = false;
+    const files = e.dataTransfer.files;
+
+    if (files.length) {
+      this.blob = files.item(0);
+
+      this.progress$ = this.storage.insertMany(files).pipe(
+        map(event => {
+          if (event.type === HttpEventType.UploadProgress) {
+            return Math.round((100 * event.loaded) / event.total);
+          } else if (event.type === HttpEventType.Response) {
+            // TODO: Ideally this should have come from response body
+            this.value = event.url + "/" + event.body[0]._id;
+            this.onChangeFn(this.value);
+            this.progress$ = undefined;
+          }
+        })
+      );
     }
+  }
+
+  @HostListener("dragover", ["$event"])
+  dragOver(e: DragEvent): void {
+    e.preventDefault();
+    if (e.dataTransfer.types.indexOf("Files") > -1) {
+      e.dataTransfer.dropEffect = "copy";
+      this.isDraggingOver = true;
+    }
+  }
+
+  @HostListener("dragleave", ["$event"])
+  dragLeave(e: DragEvent): void {
+    e.preventDefault();
+    this.isDraggingOver = false;
+  }
+
+  pickFromStorage(obj: Storage) {
+    this.blob = obj;
+    this.value = obj.url;
+    this.onChangeFn(this.value);
+    console.log(this.value);
   }
 
   writeValue(value: string): void {
     this.value = value;
-    if (value) {
-      const storageId = this.value.substring(this.value.lastIndexOf("/") + 1);
-      this.storage
-        .getOne(storageId)
-        .toPromise()
-        .then(data => (this.selected = data));
-    } else {
-      this.selected = undefined;
-    }
   }
+
   registerOnChange(fn: any): void {
     this.onChangeFn = fn;
   }
+
   registerOnTouched(fn: any): void {
     this.onTouchedFn = fn;
   }
-  delete() {
-    this.value = "";
-    this.selected = undefined;
-    this.onChangeFn();
+
+  setDisabledState(disabled: boolean) {
+    this.disabled = disabled;
   }
-  setDisabledState?(isDisabled: boolean): void {
-    this.disabled = isDisabled;
-  }
-  uploadStorage(file: FileList): void {
-    if (file) {
-      this.storage.insertMany(file).subscribe(
-        event => {
-          if (event.type === HttpEventType.UploadProgress) {
-            this.progress = Math.round((100 * event.loaded) / event.total);
-          } else if (event.type === HttpEventType.Response) {
-            this.selected = {
-              content: event.body[0].content,
-              name: event.body[0].name,
-              _id: event.body[0]._id,
-              url: event.url + "/" + event.body[0]._id
-            };
-            this.callOnChange();
-            this.progress = undefined;
-            this.refresh.next();
-          }
-        },
-        () => {
-          this.progress = undefined;
-          this.refresh.next();
-        }
-      );
-    }
+
+  clear() {
+    this.progress$ = undefined;
+    this.value = this.blob = undefined;
+    this.onChangeFn(this.value);
   }
 }

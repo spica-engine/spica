@@ -124,7 +124,6 @@ export class IndexComponent implements OnInit {
       this.displayedProperties = [
         "$$spicainternal_select",
         schema.primary,
-        "$$spicainternal_schedule",
         "$$spicainternal_actions"
       ];
     }

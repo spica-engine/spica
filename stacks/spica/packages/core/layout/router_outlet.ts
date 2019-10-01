@@ -1,3 +1,4 @@
+import {DOCUMENT} from "@angular/common";
 import {
   Attribute,
   ChangeDetectorRef,
@@ -5,24 +6,39 @@ import {
   ComponentRef,
   Directive,
   Inject,
+  Renderer2,
   ViewContainerRef
 } from "@angular/core";
 import {ActivatedRoute, ChildrenOutletContexts, RouterOutlet} from "@angular/router";
-
 import {DEFAULT_LAYOUT} from "./config";
+import {Scheme, SchemeObserver} from "./scheme.observer";
 
 @Directive({selector: "layout-router-outlet", exportAs: "outlet"})
 export class LayoutRouterOutlet extends RouterOutlet {
   activatedLayout: ComponentRef<{}>;
+
   constructor(
     private _location: ViewContainerRef,
     _parentContexts: ChildrenOutletContexts,
     private _resolver: ComponentFactoryResolver,
     @Attribute("name") _name: string,
     _changeDetector: ChangeDetectorRef,
-    @Inject(DEFAULT_LAYOUT) private defaultLayout: any
+    @Inject(DEFAULT_LAYOUT) private defaultLayout: any,
+    renderer: Renderer2,
+    schemeObserver: SchemeObserver,
+    @Inject(DOCUMENT) private document: any
   ) {
-    super(_parentContexts, _location, _resolver, name, _changeDetector);
+    super(_parentContexts, _location, _resolver, _name, _changeDetector);
+    // We did not unsubscribe this because our app has only one outlet
+    // TODO(thesayyn): reconsider this
+    schemeObserver.observe(Scheme.Dark).subscribe(isDark => {
+      const root = this.document.querySelector(":root");
+      if (isDark) {
+        renderer.addClass(root, "dark");
+      } else {
+        renderer.removeClass(root, "dark");
+      }
+    });
   }
 
   activateWith(activatedRoute: ActivatedRoute, resolver: ComponentFactoryResolver | null) {

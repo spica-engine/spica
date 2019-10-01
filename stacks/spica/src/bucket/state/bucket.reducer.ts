@@ -48,7 +48,7 @@ export const initialState: State = adapter.getInitialState({loaded: false});
 export function reducer(state: State = initialState, action: BucketAction): State {
   switch (action.type) {
     case BucketActionTypes.RETRIEVE:
-      return adapter.addAll(action.buckets, state);
+      return adapter.addAll(action.buckets, {...state, loaded: true});
     case BucketActionTypes.ADD:
       return adapter.addOne(action.bucket, state);
     case BucketActionTypes.REMOVE:

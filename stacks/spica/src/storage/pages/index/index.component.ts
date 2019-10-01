@@ -22,8 +22,6 @@ export class IndexComponent implements OnInit {
   refresh: Subject<void> = new Subject<void>();
   sorter;
   cols: number = 4;
-  panelOpenState: boolean = false;
-  fabIndex;
 
   constructor(
     private storage: StorageService,
@@ -103,7 +101,7 @@ export class IndexComponent implements OnInit {
     this.refresh.next();
   }
 
-  openDialog(storage): void {
+  openPreview(storage: Storage): void {
     this.dialog.open(StorageDialogOverviewDialog, {
       maxWidth: "80%",
       maxHeight: "80%",

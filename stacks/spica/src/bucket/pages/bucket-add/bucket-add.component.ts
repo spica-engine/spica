@@ -39,7 +39,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   public $buckets: Observable<Bucket[]>;
   public bucket: Bucket = emptyBucket();
 
-  public savingBucketState: Boolean = false;
+  public savingBucketState: boolean = false;
 
   public predefinedDefaults: {[key: string]: PredefinedDefault[]};
 

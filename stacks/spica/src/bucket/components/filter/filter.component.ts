@@ -28,7 +28,8 @@ export class FilterComponent implements OnChanges {
   constructor(private resolver: InputResolver) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.meta && this.meta)
+    if (changes.meta && this.meta) {
+      this.property = undefined;
       for (const [key, value] of Object.entries(this.meta.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
@@ -37,6 +38,7 @@ export class FilterComponent implements OnChanges {
           }
         }
       }
+    }
   }
 
   apply() {

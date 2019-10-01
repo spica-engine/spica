@@ -1,8 +1,7 @@
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
-import {Component, Inject, Optional, Type} from "@angular/core";
-import {Observable} from "rxjs";
-import {map, throttleTime} from "rxjs/operators";
-
+import {Component, Inject, OnInit, Optional, Type} from "@angular/core";
+import {BehaviorSubject, Observable} from "rxjs";
+import {debounceTime, map, switchMap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 
@@ -11,37 +10,50 @@ import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
   templateUrl: "home.layout.html",
   styleUrls: ["home.layout.scss"]
 })
-export class HomeLayoutComponent {
-  $routes: Observable<{key: string; value: Route[]}[]>;
+export class HomeLayoutComponent implements OnInit {
+  routes$: Observable<Route[]>;
   isHandset$: Observable<boolean> = this.breakpointObserver
-    .observe([Breakpoints.Handset, Breakpoints.Tablet])
+    .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
     .pipe(
-      throttleTime(200),
+      debounceTime(200),
       map(result => result.matches)
     );
+
+  categories: Array<{icon: string; category: RouteCategory}> = [
+    {
+      icon: "stars",
+      category: RouteCategory.Primary
+    },
+    {
+      icon: "view_stream",
+      category: RouteCategory.Content
+    },
+    {
+      icon: "terrain",
+      category: RouteCategory.System
+    },
+    {
+      icon: "double_arrow",
+      category: RouteCategory.Developer
+    }
+  ];
+
+  currentCategory = new BehaviorSubject(RouteCategory.Primary);
 
   constructor(
     public routeService: RouteService,
     private breakpointObserver: BreakpointObserver,
     @Optional() @Inject(LAYOUT_ACTIONS) public components: Type<any>[],
-    @Optional() @Inject(LAYOUT_INITIALIZER) public initializer: Function[]
+    @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[]
   ) {
-    initializer.forEach(fn => fn.call(fn));
-    this.$routes = routeService.routes.pipe(
-      map((routes: Route[]) => {
-        const routeMap: {[key in RouteCategory]: Route[]} = {} as any;
-        routes.forEach(route => {
-          routeMap[route.category] = routeMap[route.category] || [];
-          routeMap[route.category].push(route);
-        });
-
-        return Object.entries(routeMap)
-          .map(e => ({key: e[0], value: e[1]}))
-          .sort((a, b) => {
-            const order = {Primary: 0, Content: 1, System: 2, Developer: 3};
-            return (order[a.key] || 0) - (order[b.key] || 0);
-          });
-      })
+    this.routes$ = this.currentCategory.pipe(
+      switchMap(category =>
+        this.routeService.routes.pipe(map(routes => routes.filter(r => r.category == category)))
+      )
     );
+  }
+
+  ngOnInit(): void {
+    this.initializer.forEach(fn => fn.call(fn));
   }
 }

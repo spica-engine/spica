@@ -44,7 +44,6 @@ import {createLocation, LocationComponent} from "./components/location/location.
 import {RelationSchemaComponent} from "./components/relation-schema/relation-schema.component";
 import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
-import {TextEditorModule} from "./components/richtext/text-editor/text-editor.module";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
@@ -54,9 +53,10 @@ import {SettingsComponent} from "./pages/settings/settings.component";
 import {BucketDataService} from "./services/bucket-data.service";
 import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketInitializer} from "./services/bucket.initializer";
-import * as fromBucket from "./services/bucket.reducer";
+import * as fromBucket from "./state/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
 import {RequiredTranslate} from "./validators";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
 
 @NgModule({
   imports: [
@@ -118,7 +118,6 @@ import {RequiredTranslate} from "./validators";
     StorageModule.forChild(),
     PreferencesModule.forChild(),
     MatClipboardModule,
-    TextEditorModule,
     PassportModule.forChild(),
     SpicaCommon
   ],
@@ -128,6 +127,7 @@ import {RequiredTranslate} from "./validators";
     BucketIndexComponent,
     BucketAddComponent,
     ImportExportComponent,
+    WelcomeComponent,
 
     RichTextEditorComponent,
     RelationComponent,
