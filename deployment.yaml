@@ -88,7 +88,7 @@ spec:
             - name: DEFAULT_PASSWORD
               value: spica
             - name: PUBLIC_HOST
-              value: 'https://35.239.247.158/api'
+              value: "https://35.239.247.158/api"
             - name: PERSISTENT_PATH
               value: /data
           volumeMounts:
@@ -127,7 +127,12 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     kubernetes.io/ingress.class: nginx
+    certmanager.k8s.io/cluster-issuer: "letsencrypt-prod"
 spec:
+  tls:
+    - hosts:
+        - master.spicaengine.com
+      secretName: master-spicaengine
   rules:
     - host: master.spicaengine.com
       http:
