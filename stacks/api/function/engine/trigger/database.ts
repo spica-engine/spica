@@ -39,11 +39,6 @@ export class DatabaseTrigger implements Trigger<DatabaseTriggerOptions> {
               description: "Function will be triggered on these operations.",
               type: "string",
               enum: ["INSERT", "UPDATE", "REPLACE", "DELETE", "DROP"]
-            },
-            fullDocument: {
-              title: "Full Document",
-              type: "boolean",
-              description: "Get the full document in your change event."
             }
           },
           additionalProperties: false
@@ -59,11 +54,14 @@ export class DatabaseTrigger implements Trigger<DatabaseTriggerOptions> {
   register(invoker: InvokerFn, target: Target, options: DatabaseTriggerOptions) {
     const targetKey = `${target.id}_${target.handler}`;
     if (invoker) {
-      const stream = this.db.collection(options.collection).watch([
-        {
-          $match: {operationType: options.type.toLowerCase()}
-        }
-      ]);
+      const stream = this.db.collection(options.collection).watch(
+        [
+          {
+            $match: {operationType: options.type.toLowerCase()}
+          }
+        ],
+        {fullDocument: "updateLookup"}
+      );
       stream.on("change", change => {
         invoker({target: target, parameters: [change]});
       });
