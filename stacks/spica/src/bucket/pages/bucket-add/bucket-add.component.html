@@ -3,6 +3,7 @@
     <button
       mat-icon-button
       menu-icon
+      class="mat-elevation-z25"
       matTooltip="You can select a icon by clicking here."
       [matMenuTriggerFor]="iconSelector"
     >
@@ -12,6 +13,7 @@
           <button
             *ngFor="let icon of visibleIcons"
             mat-icon-button
+            mat-flat-button
             [matTooltip]="icon"
             (click)="bucket.icon = icon"
           >
