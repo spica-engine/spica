@@ -10,7 +10,8 @@ function init(modules: {typescript: typeof tss}) {
     info.project.setCompilerOptions({
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2018,
-      noLib: true
+      skipDefaultLibCheck: true,
+      lib: ["es2018"]
     });
 
     glob
