@@ -8,11 +8,14 @@ ts_library(
         "index.ts",
         "module.ts",
         "request.ts",
+        "websocket.ts",
     ],
     module_name = "@spica-server/core/testing",
     deps = [
         "@npm//@nestjs/common",
         "@npm//@nestjs/platform-express",
+        "@npm//@types/ws",
         "@npm//request-promise",
+        "@npm//ws",
     ],
 )

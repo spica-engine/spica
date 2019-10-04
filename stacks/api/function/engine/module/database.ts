@@ -10,10 +10,7 @@ export class DatabaseUnit implements FnModule {
     return {
       database: () => {
         return {
-          collection: (name: string) => {
-            const collection = this.db.collection(name);
-            return collection;
-          }
+          collection: (name: string) => this.db.collection(name)
         };
       },
       objectId: (id?: string | number | ObjectId) => new ObjectId(id)

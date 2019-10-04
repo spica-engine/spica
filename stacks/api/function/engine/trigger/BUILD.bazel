@@ -68,3 +68,34 @@ ts_library(
         "@npm//moment-timezone",  # Not direct dependency
     ],
 )
+
+ts_library(
+    name = "firehose",
+    srcs = ["firehose.ts"],
+    data = ["firehose.d.ts"],
+    deps = [
+        ":trigger",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/core",
+        "@npm//@types/node",
+        "@npm//@types/ws",
+        "@npm//ws",
+    ],
+)
+
+ts_library(
+    name = "firehose_test_lib",
+    srcs = ["firehose.spec.ts"],
+    deps = [
+        ":firehose",
+        "//packages/core/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "firehose_test",
+    srcs = [":firehose_test_lib"],
+)

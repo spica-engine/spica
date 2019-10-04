@@ -11,6 +11,7 @@ ts_library(
         "//stacks/api/function/engine/module:database",
         "//stacks/api/function/engine/trigger",
         "//stacks/api/function/engine/trigger:database",
+        "//stacks/api/function/engine/trigger:firehose",
         "//stacks/api/function/engine/trigger:http",
         "//stacks/api/function/engine/trigger:schedule",
         "@npm//@nestjs/common",
