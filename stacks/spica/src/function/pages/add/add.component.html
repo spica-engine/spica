@@ -167,7 +167,7 @@
           >
             <span class="name">{{ data.key }}</span>
             <span class="version">{{ data.value }}</span>
-            <button mat-icon-button class="delete" (click)="deleteDependency(index)">
+            <button mat-icon-button class="delete" (click)="deleteDependency(data.key)">
               <mat-icon>delete</mat-icon>
             </button>
           </mat-list-item>
