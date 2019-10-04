@@ -88,7 +88,7 @@ spec:
             - name: DEFAULT_PASSWORD
               value: spica
             - name: PUBLIC_HOST
-              value: "https://35.239.247.158/api"
+              value: "https://master.spicaengine.com/api"
             - name: PERSISTENT_PATH
               value: /data
           volumeMounts:
