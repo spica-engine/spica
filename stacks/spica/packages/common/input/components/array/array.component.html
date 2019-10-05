@@ -1,6 +1,10 @@
 <mat-card class="mat-elevation-z0">
-  <h3 class="mat-h3">{{ schema.title }}</h3>
-  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+  <mat-card-header>
+    <mat-card-title>{{ schema.title }}</mat-card-title>
+    <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
+    <span class="fill"></span>
+    <ng-content></ng-content>
+  </mat-card-header>
   <mat-card-content>
     <div cdkDropList [cdkDropListDisabled]="_disabled" (cdkDropListDropped)="drop($event)">
       <button
@@ -28,6 +32,7 @@
         [name]="schema.$name + _activeIndex"
         [(ngModel)]="_values[_activeIndex]"
         (ngModelChange)="callOnChange()"
+        (click)="_onTouchedFn()"
         [uniqueItems]="schema.uniqueItems"
         [minItems]="schema.minItems"
         [index]="_activeIndex"
@@ -49,7 +54,7 @@
         color="warn"
         class="mat-elevation-z0"
         [disabled]="_disabled"
-        *ngIf="_activeIndex > 0"
+        *ngIf="_activeIndex != undefined && _values.length"
         (click)="removeItem()"
       >
         <mat-icon>remove</mat-icon>

@@ -10,12 +10,6 @@
     {{ language.name | slice: 0:2 | uppercase }}
   </button>
 </mat-menu>
-<button
-  mat-icon-button
-  mat-raised-button
-  color="primary"
-  class="mat-elevation-z0"
-  [matMenuTriggerFor]="languageMenu"
->
+<button mat-icon-button mat-flat-button class="mat-elevation-z0" [matMenuTriggerFor]="languageMenu">
   <mat-icon>translate</mat-icon>
 </button>

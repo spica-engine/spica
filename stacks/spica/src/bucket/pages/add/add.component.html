@@ -61,7 +61,6 @@
           <div
             *ngIf="propertyKv.value.options.translate && data[propertyKv.key]"
             [inputPlacer]="propertyKv.value"
-            class="property-translate"
             [disabled]="propertyKv.value.readOnly || !language.selected || bucket.readOnly"
             [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
@@ -71,8 +70,12 @@
             [currentLanguage]="language.selected"
             [defaultLanguage]="language.default"
           >
-            <property-language #language slot="after"></property-language>
-            <mat-error *ngIf="translateModel?.errors" slot="after">
+            <property-language
+              #language
+              matSuffix
+              (click)="$event.stopPropagation()"
+            ></property-language>
+            <mat-error *ngIf="translateModel?.errors?.requiredTranslate && translateModel.touched">
               {{ language.default }} value is required as it is the default language.
             </mat-error>
           </div>

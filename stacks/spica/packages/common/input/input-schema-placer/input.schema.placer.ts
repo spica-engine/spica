@@ -32,14 +32,11 @@ import {InputResolver} from "../input.resolver";
       :host {
         display: block;
       }
-      mat-form-field {
+      mat-form-field:not(:first-child-of-type) {
         margin-left: 5px;
       }
     `
-  ],
-  host: {
-    "(click)": "onTouchFn()"
-  }
+  ]
 })
 export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   @Input("inputSchemaPlacer") type: string;

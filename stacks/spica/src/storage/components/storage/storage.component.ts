@@ -18,7 +18,8 @@ import {Observable} from "rxjs";
     }
   ],
   host: {
-    "[class.disabled]": "disabled"
+    "[class.disabled]": "disabled",
+    "(click)": "onTouchedFn()"
   }
 })
 export class StorageComponent implements ControlValueAccessor {
@@ -38,13 +39,6 @@ export class StorageComponent implements ControlValueAccessor {
     @Inject(INPUT_SCHEMA) public readonly schema: InputSchema,
     private storage: StorageService
   ) {}
-
-  @HostListener("blur")
-  callOnTouched(): void {
-    if (this.onTouchedFn) {
-      this.onTouchedFn();
-    }
-  }
 
   @HostListener("drop", ["$event"])
   uploadStorage(e: DragEvent): void {
@@ -89,10 +83,10 @@ export class StorageComponent implements ControlValueAccessor {
     this.blob = obj;
     this.value = obj.url;
     this.onChangeFn(this.value);
-    console.log(this.value);
   }
 
   writeValue(value: string): void {
+    this.blob = undefined;
     this.value = value;
   }
 

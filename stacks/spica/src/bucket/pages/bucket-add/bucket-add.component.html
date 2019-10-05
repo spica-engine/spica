@@ -37,14 +37,21 @@
     <span>{{ bucket?.title }}</span>
   </h4>
 </mat-toolbar>
-<mat-card class="mat-elevation-z25 margin-5">
+<mat-card class="mat-elevation-z25" *ngIf="bucket" @smooth>
   <mat-card-content>
     <mat-list>
-      <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
+      <span>
+        <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
+        <span class="errors" *ngIf="describeForm.touched">
+          <mat-error *ngIf="describeForm.invalid">
+            Please correctly fill the describe form.
+          </mat-error>
+        </span>
+      </span>
       <mat-divider></mat-divider>
       <mat-list-item>
-        <form id="describeForm" #describeForm="ngForm" class="title-description padding-24">
-          <mat-form-field class="title">
+        <form #describeForm="ngForm">
+          <mat-form-field>
             <input
               matInput
               name="title"
@@ -67,7 +74,7 @@
             </mat-error>
           </mat-form-field>
 
-          <mat-form-field class="description">
+          <mat-form-field>
             <textarea
               matInput
               name="description"
@@ -91,18 +98,38 @@
             </mat-error>
           </mat-form-field>
 
-          <div class="read-only">
-            <p>Read Only Bucket</p>
-            <mat-slide-toggle
-              matInput
-              name="readOnly"
-              placeholder="Read Only"
-              [(ngModel)]="bucket.readOnly"
-            ></mat-slide-toggle>
-          </div>
+          <mat-slide-toggle
+            matInput
+            name="readOnly"
+            placeholder="Read Only"
+            [(ngModel)]="bucket.readOnly"
+          >
+            Read Only
+          </mat-slide-toggle>
+          <button
+            mat-icon-button
+            color="accent"
+            disableRipple
+            matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
+          >
+            <mat-icon>info</mat-icon>
+          </button>
         </form>
       </mat-list-item>
-      <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
+      <span>
+        <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
+        <span class="errors">
+          <mat-error *ngIf="(bucket.properties | keyvalue)?.length < 1">
+            Please add at least one property.
+          </mat-error>
+          <mat-error *ngIf="bucket.primary == undefined">
+            Please select a primary property.
+          </mat-error>
+          <mat-error *ngIf="!isThereVisible">
+            You have to make a least a property visible at the list.
+          </mat-error>
+        </span>
+      </span>
       <mat-divider></mat-divider>
       <mat-list-item class="properties">
         <mat-accordion cdkDropList (cdkDropListDropped)="cardDrop($event)">
@@ -150,7 +177,7 @@
                       >
                         <mat-checkbox
                           [(ngModel)]="propertyKv.value.options.visible"
-                          (ngModelChange)="bucketVisible()"
+                          (ngModelChange)="updatePositionProperties()"
                         >
                           Visible on list
                         </mat-checkbox>
@@ -183,6 +210,7 @@
                       </div>
 
                       <div
+                        *ngIf="propertyKv.value.type != 'boolean'"
                         mat-menu-item
                         role="menuitemcheckbox"
                         disableRipple
@@ -250,7 +278,6 @@
           </mat-expansion-panel>
         </mat-accordion>
       </mat-list-item>
-
       <mat-list-item class="property">
         <mat-form-field>
           <input
@@ -259,7 +286,7 @@
             placeholder="Enter a property name"
             #pnm="ngModel"
             (keyup.enter)="
-              pnm.valid && !bucket.properties[pnm?.value?.toLowerCase()] && addField(pnm.value);
+              pnm.valid && !bucket.properties[pnm?.value?.toLowerCase()] && addProperty(pnm.value);
               pnm.reset();
               pnm.control.markAsUntouched()
             "
@@ -287,34 +314,17 @@
         <button
           mat-button
           [disabled]="pnm.invalid || bucket.properties[pnm?.value?.toLowerCase()]"
-          (click)="addField(pnm.value); pnm.reset(); pnm.control.markAsUntouched()"
+          (click)="addProperty(pnm.value); pnm.reset(); pnm.control.markAsUntouched()"
         >
           <mat-icon>add</mat-icon> Add new property
         </button>
       </mat-list-item>
-      <h4 mat-subheader><mat-icon>view_module</mat-icon> View</h4>
+      <span>
+        <h4 mat-subheader><mat-icon>view_module</mat-icon> View</h4>
+      </span>
       <mat-divider></mat-divider>
       <mat-list-item class="padding-24">
         <mat-grid-list [cols]="4" gutterSize="10px" rowHeight="200px">
-          <mat-grid-tile
-            [colspan]="4"
-            #nonPositioned="cdkDropList"
-            cdkDropList
-            cdkDropListSortingDisabled
-            [cdkDropListData]="nonPositionedProperties"
-            [cdkDropListConnectedTo]="[rightList, leftList, bottomList]"
-            (cdkDropListDropped)="setPosition($event)"
-          >
-            <mat-card
-              class="mat-elevation-z0"
-              *ngFor="let propertyKv of nonPositionedProperties"
-              cdkDrag
-            >
-              <mat-icon>{{ bIcons[propertyKv.value.type] }}</mat-icon>
-              <span>{{ propertyKv.value.title }}</span>
-            </mat-card>
-            <span>No position</span>
-          </mat-grid-tile>
           <mat-grid-tile
             [colspan]="2"
             #leftList="cdkDropList"
@@ -374,21 +384,6 @@
           </mat-grid-tile>
         </mat-grid-list>
       </mat-list-item>
-      <mat-list-item class="validation">
-        <mat-error *ngIf="describeForm.invalid">Please correctly fill the describe form.</mat-error>
-        <mat-error *ngIf="nonPositionedProperties.length > 0">
-          Please place all the properties above.
-        </mat-error>
-        <mat-error *ngIf="(bucket.properties | keyvalue)?.length < 1">
-          Please add at least one property.
-        </mat-error>
-        <mat-error *ngIf="bucket.primary == undefined">
-          Please select the primary property.
-        </mat-error>
-        <mat-error *ngIf="!isThereVisible">
-          You have to select at least a visible field on list.
-        </mat-error>
-      </mat-list-item>
     </mat-list>
   </mat-card-content>
   <mat-card-actions>
@@ -398,7 +393,6 @@
       form="describeForm"
       [disabled]="
         describeForm.invalid ||
-        nonPositionedProperties.length > 0 ||
         (bucket.properties | keyvalue)?.length < 1 ||
         !isThereVisible ||
         bucket.primary == undefined

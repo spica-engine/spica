@@ -21,7 +21,7 @@
       span:last-of-type {
         display: flex;
         align-items: center;
-        mat-progress-spinner {
+        ::ng-deep > *:not(:last-child) {
           margin-right: 5px;
         }
       }

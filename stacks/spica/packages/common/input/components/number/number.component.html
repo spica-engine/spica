@@ -3,6 +3,7 @@
   <input
     matInput
     type="number"
+    inputmode="numeric"
     [name]="schema.$name"
     [disabled]="disabled"
     [required]="schema.$required"
@@ -10,8 +11,9 @@
     [max]="schema.maximum"
     ngModelParent
     #model="ngModel"
-    [(ngModel)]="value"
-    (ngModelChange)="callOnChange()"
+    [ngModel]="value"
+    (ngModelChange)="_onChangeFn($event)"
+    (blur)="_onTouchedFn()"
   />
   <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
   <mat-error *ngIf="model?.errors?.required">This property is required.</mat-error>

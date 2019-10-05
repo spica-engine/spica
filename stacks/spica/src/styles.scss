@@ -62,20 +62,16 @@ body {
   box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
 }
 
-/* TODO: Adopt these styles to dark mode also */
 .mat-form-field {
-  .mat-form-field-wrapper {
-    padding-top: 1.25em;
-  }
   &.mat-focused {
     .mat-form-field-infix {
       box-shadow: 3px 3px 5px var(--foreground-base-rgb) !important;
     }
   }
   .mat-form-field-flex {
+    background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+    border-radius: 5px;
     .mat-form-field-infix {
-      background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
-      border-radius: 5px;
       padding: 0.875em 0.75em !important;
       border: 0px;
     }

@@ -73,7 +73,7 @@ export class StorageViewComponent implements OnChanges {
   }
 
   viewError(event: MediaError) {
-    console.log(event);
+    this.error = true;
   }
 
   private observe() {

@@ -29,10 +29,10 @@ export type Property = InputSchema & PropertyOptions;
 
 export function emptyBucket(): Bucket {
   return {
-    title: undefined,
-    description: undefined,
+    title: "New Bucket",
+    description: "Describe your new bucket",
     icon: "view_stream",
-    primary: undefined,
+    primary: "title",
     readOnly: false,
     properties: {
       title: {
@@ -40,7 +40,8 @@ export function emptyBucket(): Bucket {
         title: "title",
         description: "Title of the row",
         options: {
-          position: "left"
+          position: "left",
+          visible: true
         }
       },
       description: {

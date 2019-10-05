@@ -1,13 +1,4 @@
 :host {
-  display: block;
-  margin-top: 30px;
+  display: inline;
   padding-left: 2%;
-  .input-group {
-    :first-child {
-      margin-left: 0;
-    }
-  }
-  .description {
-    font-size: 75%;
-  }
 }

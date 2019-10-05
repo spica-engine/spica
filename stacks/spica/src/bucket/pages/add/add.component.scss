@@ -70,18 +70,17 @@
           }
           &.bottom {
             flex-basis: 100%;
+            padding-top: 0;
           }
           mat-error {
             font-size: 10.5px;
           }
+          div {
+            padding-top: 15px;
+          }
           // TODO(thesayyn): replace this with css variables
           ::ng-deep .input-placer-input {
             width: 100%;
-            padding: 10px 0px;
-            &.property-translate {
-              width: calc(100% - 45px);
-              margin-right: 5px;
-            }
           }
         }
       }
