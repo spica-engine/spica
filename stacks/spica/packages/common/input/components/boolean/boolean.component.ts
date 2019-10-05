@@ -10,26 +10,23 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 export class BooleanComponent implements ControlValueAccessor {
   value: boolean;
   disabled: boolean = false;
-  _onChangeFn: any;
-  _onTouchedFn: any;
+  _onChangeFn: Function = () => {};
+
+  _onTouchedFn: Function = () => {};
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
   @HostListener("click")
   callOnTouched(): void {
-    if (this._onTouchedFn) {
-      this._onTouchedFn();
-    }
-  }
-
-  callOnChange() {
-    if (this._onChangeFn) {
-      this._onChangeFn(this.value);
-    }
+    this._onTouchedFn();
   }
 
   writeValue(val: boolean): void {
     this.value = val;
+    if (this.value == undefined && this.schema.default != undefined) {
+      this.value = !!this.schema.default;
+      this._onChangeFn(this.value);
+    }
   }
 
   registerOnChange(fn: any): void {
@@ -37,10 +34,6 @@ export class BooleanComponent implements ControlValueAccessor {
   }
 
   registerOnTouched(fn: any): void {
-    if (this.value == undefined && this.schema.default != undefined) {
-      this.value = !!this.schema.default;
-      this._onChangeFn(this.value);
-    }
     this._onTouchedFn = fn;
   }
 

@@ -1,5 +1,9 @@
 :host {
   display: inline-block;
+  border-radius: 5px;
+  mat-slide-toggle {
+    height: unset;
+  }
   mat-error {
     font-size: 75%;
   }

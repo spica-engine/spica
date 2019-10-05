@@ -1,14 +1,27 @@
+:root.dark :host {
+  --opacity: 0.5;
+}
 :host {
+  --opacity: 1;
   display: inline-block;
-  h3 {
-    margin-bottom: unset;
-  }
-  mat-hint {
-    font-size: 11px;
-    margin-bottom: 10px;
-  }
   mat-card {
     padding: 0;
+    mat-card-header {
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      background: rgba(var(--background-app-bar-rgb), var(--opacity));
+      align-items: center;
+      padding: 15px 10px;
+      padding-left: unset;
+      mat-card-subtitle,
+      mat-card-title {
+        margin: unset;
+        font-size: 12px;
+      }
+      span.fill {
+        flex: 1 1 auto;
+      }
+    }
     mat-card-content {
       margin-top: 16px;
       display: flex;

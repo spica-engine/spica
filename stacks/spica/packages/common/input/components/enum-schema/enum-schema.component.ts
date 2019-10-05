@@ -17,10 +17,13 @@ export class EnumSchemaComponent {
   }
 
   addItem() {
-    this.schema.enum.push("");
+    this.schema.enum.push(undefined);
   }
 
   removeItem(index) {
     this.schema.enum.splice(index, 1);
+    if (this.schema.enum.length < 1) {
+      delete this.schema.enum;
+    }
   }
 }

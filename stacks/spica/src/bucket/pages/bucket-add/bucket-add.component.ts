@@ -1,12 +1,12 @@
+import {animate, style, transition, trigger} from "@angular/animations";
 import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
-import {STEPPER_GLOBAL_OPTIONS} from "@angular/cdk/stepper";
 import {Component, OnDestroy, OnInit} from "@angular/core";
 import {MatCheckboxChange} from "@angular/material";
 import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";
 import {ICONS} from "@spica-client/material";
-import {Observable, Subject} from "rxjs";
+import {Subject} from "rxjs";
 import {filter, flatMap, map, switchMap, takeUntil, tap} from "rxjs/operators";
 import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
@@ -17,11 +17,11 @@ import {BucketService} from "../../services/bucket.service";
   selector: "bucket-add",
   templateUrl: "./bucket-add.component.html",
   styleUrls: ["./bucket-add.component.scss"],
-  providers: [
-    {
-      provide: STEPPER_GLOBAL_OPTIONS,
-      useValue: {displayDefaultIndicatorType: false}
-    }
+  animations: [
+    trigger("smooth", [
+      transition(":enter", [style({opacity: 0}), animate("0.3s ease-out", style({opacity: 1}))]),
+      transition(":leave", [style({opacity: 1}), animate("0.3s ease-in", style({opacity: 0}))])
+    ])
   ]
 })
 export class BucketAddComponent implements OnInit, OnDestroy {
@@ -30,23 +30,21 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   readonly bIcons = INPUT_ICONS;
   readonly iconPageSize = 21;
 
-  public isThereVisible = false;
-  public visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
+  isThereVisible = true;
+  visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
-  public translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
-  public basicPropertyTypes = ["string", "textarea", "boolean", "number"];
+  translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
+  basicPropertyTypes = ["string", "textarea", "boolean", "number"];
 
-  public $buckets: Observable<Bucket[]>;
-  public bucket: Bucket = emptyBucket();
+  bucket: Bucket;
 
-  public savingBucketState: boolean = false;
+  savingBucketState: boolean = false;
 
-  public predefinedDefaults: {[key: string]: PredefinedDefault[]};
+  predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
-  public immutableProperties: Array<string> = [];
+  immutableProperties: Array<string> = [];
 
-  public nonPositionedProperties: Array<{[k: string]: any}> = [];
-  public propertyPositionMap: {[k: string]: any[]} = {};
+  propertyPositionMap: {[k: string]: any[]} = {};
 
   private onDestroy: Subject<void> = new Subject<void>();
 
@@ -74,14 +72,17 @@ export class BucketAddComponent implements OnInit, OnDestroy {
             })
           )
         ),
-        filter(params => params.id !== undefined),
-
+        tap(params => {
+          if (!params.id) {
+            this.updatePositionProperties();
+            this.bucket = emptyBucket();
+          }
+        }),
+        filter(params => params.id),
         switchMap(params => this.bs.getBucket(params.id)),
-        tap(meta => {
-          const clone = deepCopy<Bucket>(meta);
-          this.bucket = {...this.bucket, ...clone};
+        tap(scheme => {
+          this.bucket = deepCopy<Bucket>(scheme);
           this.immutableProperties = Object.keys(this.bucket.properties);
-          this.bucketVisible();
         }),
         takeUntil(this.onDestroy)
       )
@@ -100,17 +101,17 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   updatePositionProperties() {
-    this.nonPositionedProperties = Object.entries(this.bucket.properties)
-      .filter(([, prop]) => !prop.options.position)
-      .map(([key, value]) => ({key, value}));
     this.propertyPositionMap = Object.entries(this.bucket.properties).reduce(
       (accumulator, [key, value]) => {
-        if (accumulator[value.options.position]) {
-          accumulator[value.options.position].push({key, value});
-        }
+        value.options.position = value.options.position || "bottom";
+        accumulator[value.options.position].push({key, value});
+
         return accumulator;
       },
       {left: [], right: [], bottom: []}
+    );
+    this.isThereVisible = Object.values(this.bucket.properties).some(
+      prop => prop.options && prop.options.visible
     );
   }
 
@@ -119,14 +120,15 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-  addField(propertyKey: string) {
+  addProperty(propertyKey: string) {
     if (propertyKey && !this.bucket.properties[propertyKey]) {
-      this.bucket.properties[propertyKey.toLowerCase()] = {
-        type: "string",
+      const propertyName = propertyKey.toLowerCase();
+      this.bucket.properties[propertyName] = {
+        type: this.inputTypes.indexOf(propertyName) > -1 ? propertyName : "string",
         title: propertyKey,
-        description: `Description of '${propertyKey}'`,
+        description: `Description of ${propertyKey}`,
         options: {
-          position: undefined
+          position: "bottom"
         }
       };
       this.updatePositionProperties();
@@ -167,14 +169,5 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.onDestroy.next();
-  }
-
-  bucketVisible() {
-    this.isThereVisible = false;
-    for (const property in this.bucket.properties) {
-      if (this.bucket.properties[property].options.visible === true) {
-        this.isThereVisible = true;
-      }
-    }
   }
 }

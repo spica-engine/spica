@@ -1,5 +1,5 @@
-import {Component, forwardRef, HostListener, Inject} from "@angular/core";
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
+import {Component, forwardRef, Inject, ViewChild} from "@angular/core";
+import {ControlValueAccessor, NG_VALUE_ACCESSOR, NgModel} from "@angular/forms";
 import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
@@ -10,29 +10,22 @@ import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA, InternalPropertySchema}
 export class StringComponent implements ControlValueAccessor {
   value: string;
   disabled: boolean = false;
-  _onChangeFn: any;
-  _onTouchedFn: any;
+  _onChangeFn: Function = () => {};
+  _onTouchedFn: Function = () => {};
+
+  @ViewChild(NgModel, {static: false}) model: NgModel;
 
   constructor(
     @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
     @Inject(INPUT_OPTIONS) public options: InputPlacerOptions
   ) {}
 
-  @HostListener("click")
-  callOnTouched(): void {
-    if (this._onTouchedFn) {
-      this._onTouchedFn();
-    }
-  }
-
-  callOnChange() {
-    if (this._onChangeFn) {
-      this._onChangeFn(this.value);
-    }
-  }
-
   writeValue(val: string): void {
     this.value = val;
+    if (this.value == undefined && this.schema.default) {
+      this.value = String(this.schema.default);
+      this._onChangeFn(this.value);
+    }
   }
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;

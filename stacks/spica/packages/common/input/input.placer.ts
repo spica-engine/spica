@@ -1,19 +1,24 @@
 import {
+  AfterContentInit,
   Component,
   ComponentFactoryResolver,
   ComponentRef,
+  ContentChildren,
+  ElementRef,
   forwardRef,
   Injector,
   Input,
   OnChanges,
   OnDestroy,
+  QueryList,
   Renderer2,
   SimpleChanges,
   ViewChild,
   ViewContainerRef
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA} from "./input";
+import {MatSuffix} from "@angular/material/form-field";
+import {InputPlacerOptions, InputSchema, INPUT_OPTIONS, INPUT_SCHEMA} from "./input";
 import {InputResolver} from "./input.resolver";
 
 @Component({
@@ -21,7 +26,7 @@ import {InputResolver} from "./input.resolver";
   template: `
     <ng-content></ng-content>
     <ng-container #inputPlace></ng-container>
-    <ng-content select="[slot=after]"></ng-content>
+    <ng-content select="[slot=after], mat-error"></ng-content>
   `,
   providers: [
     {
@@ -31,12 +36,15 @@ import {InputResolver} from "./input.resolver";
     }
   ]
 })
-export class InputPlacerComponent implements ControlValueAccessor, OnDestroy, OnChanges {
+export class InputPlacerComponent
+  implements ControlValueAccessor, OnDestroy, OnChanges, AfterContentInit {
   @Input() name: string;
   @Input() required: boolean;
-  @Input("inputPlacer") inputProperty: any;
+  @Input("inputPlacer") inputProperty: InputSchema;
   @Input() class: string;
   @Input() options: InputPlacerOptions = {};
+
+  @ContentChildren(MatSuffix, {read: ElementRef}) matSuffix: QueryList<ElementRef>;
 
   @ViewChild("inputPlace", {read: ViewContainerRef, static: true})
   _viewContainerRef: ViewContainerRef;
@@ -76,6 +84,19 @@ export class InputPlacerComponent implements ControlValueAccessor, OnDestroy, On
     }
   }
 
+  ngAfterContentInit(): void {
+    if (this.matSuffix.length) {
+      this.ngOnChanges({
+        inputProperty: {
+          firstChange: false,
+          currentValue: this.inputProperty,
+          previousValue: this.inputProperty,
+          isFirstChange: () => false
+        }
+      });
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.inputProperty && this.inputProperty) {
       if (this._placerRef) {
@@ -103,7 +124,10 @@ export class InputPlacerComponent implements ControlValueAccessor, OnDestroy, On
         ],
         this._injector
       );
-      this._placerRef = this._viewContainerRef.createComponent(placerFactory, null, injector);
+
+      this._placerRef = this._viewContainerRef.createComponent(placerFactory, null, injector, [
+        this.matSuffix ? this.matSuffix.toArray().map(e => e.nativeElement) : []
+      ]);
 
       this._accessor = this._placerRef.injector.get(NG_VALUE_ACCESSOR);
       this._renderer.addClass(this._placerRef.location.nativeElement, this.inputProperty.type);

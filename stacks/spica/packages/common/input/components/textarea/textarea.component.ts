@@ -1,7 +1,6 @@
-import {Component, forwardRef, HostListener, Inject} from "@angular/core";
+import {Component, forwardRef, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-
-import {INPUT_SCHEMA, InputSchema} from "../../input";
+import {InputSchema, INPUT_SCHEMA} from "../../input";
 
 @Component({
   templateUrl: "./textarea.component.html",
@@ -11,26 +10,17 @@ import {INPUT_SCHEMA, InputSchema} from "../../input";
 export class TextAreaComponent implements ControlValueAccessor {
   value: string;
   disabled: boolean = false;
-  _onChangeFn: any;
-  _onTouchedFn: any;
+  _onChangeFn: any = () => {};
+  _onTouchedFn: any = () => {};
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
 
-  @HostListener("click")
-  callOnTouched(): void {
-    if (this._onTouchedFn) {
-      this._onTouchedFn();
-    }
-  }
-
-  callOnChange() {
-    if (this._onChangeFn) {
-      this._onChangeFn(this.value);
-    }
-  }
-
   writeValue(val: string): void {
     this.value = val;
+    if (this.value == "undefined" && this.schema.default) {
+      this.value = String(this.schema.default);
+      this._onChangeFn(this.value);
+    }
   }
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;

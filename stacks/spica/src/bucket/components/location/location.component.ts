@@ -5,20 +5,14 @@ import {
   forwardRef,
   HostListener,
   Inject,
+  OnDestroy,
+  OnInit,
   ViewChild
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {LeafletDirective} from "@asymmetrik/ngx-leaflet";
 import {InputSchema, INPUT_SCHEMA} from "@spica-client/common";
-import {
-  icon,
-  LatLng,
-  LatLngExpression,
-  LeafletMouseEvent,
-  marker,
-  Marker,
-  tileLayer
-} from "leaflet";
+import {icon, LatLngExpression, LeafletMouseEvent, marker, Marker, tileLayer} from "leaflet";
 
 @Component({
   templateUrl: "./location.component.html",
@@ -31,15 +25,8 @@ import {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LocationComponent implements ControlValueAccessor {
+export class LocationComponent implements ControlValueAccessor, OnDestroy, OnInit {
   @ViewChild(LeafletDirective, {static: true}) map: LeafletDirective;
-
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema, private cd: ChangeDetectorRef) {
-    this._marker.on("move", (event: LeafletMouseEvent) => {
-      this.applyCoords(event.latlng, true);
-      this.callOnChange();
-    });
-  }
 
   value = {
     longitude: undefined,
@@ -47,10 +34,10 @@ export class LocationComponent implements ControlValueAccessor {
   };
 
   _disabled: boolean = false;
-  _onChangeFn: any;
-  _onTouchedFn: any;
-  _center: LatLngExpression;
+  _onChangeFn: Function = () => {};
+  _onTouchedFn: Function = () => {};
 
+  _center: LatLngExpression;
   _options = {
     layers: [
       tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
@@ -58,7 +45,9 @@ export class LocationComponent implements ControlValueAccessor {
       })
     ],
     zoom: 5,
-    center: [36.9, 30.642]
+    center: [36.9, 30.642],
+    zoomControl: false,
+    trackResize: true
   };
 
   _marker: Marker = marker([36.9, 30.642], {
@@ -67,11 +56,34 @@ export class LocationComponent implements ControlValueAccessor {
       iconAnchor: [24, 24],
       iconUrl: "assets/baseline-location.svg"
     }),
-    draggable: true,
+    draggable: !this._disabled,
     autoPan: true
   });
 
-  applyCoords(latLng?: LatLng, mapOnly: boolean = false) {
+  showLatLng: boolean = false;
+
+  get isGeolocationSupported() {
+    return navigator.geolocation;
+  }
+
+  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema, private cd: ChangeDetectorRef) {
+    this._marker.on("move", this.onMoveMarker.bind(this));
+  }
+
+  ngOnInit(): void {
+    this.map.onResize();
+  }
+
+  ngOnDestroy(): void {
+    this._marker.off("move", this.onMoveMarker);
+  }
+
+  onMoveMarker(event: LeafletMouseEvent) {
+    this.applyCoords(event.latlng, true);
+    this.callOnChange();
+  }
+
+  applyCoords(latLng?: {lat: number; lng: number}, mapOnly: boolean = false) {
     if (latLng && !this._disabled) {
       this.value.latitude = latLng.lat;
       this.value.longitude = latLng.lng;
@@ -85,21 +97,22 @@ export class LocationComponent implements ControlValueAccessor {
     }, 500);
   }
 
-  @HostListener("click")
-  callOnTouched(): void {
-    if (this._onTouchedFn) {
-      this._onTouchedFn();
-    }
+  setToCurrentLocation() {
+    navigator.geolocation.getCurrentPosition(location => {
+      this.applyCoords({lat: location.coords.latitude, lng: location.coords.longitude});
+    });
   }
 
   callOnChange() {
-    if (this._onChangeFn) {
-      this._onChangeFn(this.value);
-    }
+    this._onChangeFn(this.value);
+  }
+
+  @HostListener("click")
+  callOnTouched(): void {
+    this._onTouchedFn();
   }
 
   writeValue(val: any): void {
-    console.log(val, val && typeof val === "object" && val !== null);
     if (val && typeof val === "object" && val !== null) {
       this.value = val;
       this.applyCoords();
@@ -117,7 +130,7 @@ export class LocationComponent implements ControlValueAccessor {
 
   setDisabledState?(isDisabled: boolean): void {
     this._disabled = isDisabled;
-    this._marker.dragging.disable();
+    this._marker.dragging && this._marker.dragging.disable();
   }
 }
 

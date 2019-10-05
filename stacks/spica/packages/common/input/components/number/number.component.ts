@@ -1,6 +1,6 @@
-import {Component, forwardRef, HostListener, Inject} from "@angular/core";
+import {Component, forwardRef, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA, InternalPropertySchema} from "../../input";
+import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./number.component.html",
@@ -8,31 +8,19 @@ import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA, InternalPropertySchema}
   providers: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => NumberComponent)}]
 })
 export class NumberComponent implements ControlValueAccessor {
-  value: string;
+  value: number;
   disabled: boolean = false;
-  _onChangeFn: any;
-  _onTouchedFn: any;
+  _onChangeFn: Function = () => {};
+  _onTouchedFn: Function = () => {};
 
-  constructor(
-    @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
-    @Inject(INPUT_OPTIONS) public options: InputPlacerOptions
-  ) {}
+  constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
-  @HostListener("click")
-  callOnTouched(): void {
-    if (this._onTouchedFn) {
-      this._onTouchedFn();
-    }
-  }
-
-  callOnChange() {
-    if (this._onChangeFn) {
+  writeValue(val: number): void {
+    this.value = val;
+    if (!Number.isFinite(this.value) && this.schema.default) {
+      this.value = Number(this.schema.default);
       this._onChangeFn(this.value);
     }
-  }
-
-  writeValue(val: string): void {
-    this.value = val;
   }
 
   registerOnChange(fn: any): void {
