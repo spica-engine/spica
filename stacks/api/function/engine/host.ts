@@ -35,11 +35,10 @@ export class FsHost implements FunctionHost<Function> {
       console.debug("TODO: FsFunctionHost.create");
     }
 
-    
-    if (! fs.existsSync(path.join(root, "index.ts"))) {
+    if (!fs.existsSync(path.join(root, "index.ts"))) {
       fs.writeFileSync(path.join(root, "index.ts"), template);
     }
-    if (! fs.existsSync(path.join(root, "package.json") ) ) {
+    if (!fs.existsSync(path.join(root, "package.json"))) {
       fs.writeFileSync(
         path.join(root, "package.json"),
         `{
@@ -50,7 +49,6 @@ export class FsHost implements FunctionHost<Function> {
         }`
       );
     }
-   
   }
 
   delete(fn: Function) {
