@@ -1,7 +1,4 @@
-<ng-container
-  *ngIf="contentType && contentType != 'text/html'"
-  [ngSwitch]="contentType.split('/')[0]"
->
+<ng-container *ngIf="contentType" [ngSwitch]="contentType.split('/')[0]">
   <img
     *ngSwitchCase="'image'"
     [src]="content"

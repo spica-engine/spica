@@ -27,7 +27,7 @@ export class PickerDirective implements OnDestroy, ControlValueAccessor {
   constructor(private dialog: MatDialog) {}
 
   writeValue(obj: any): void {
-    this._value = obj;
+    this._value = obj ? obj : undefined;
     if (this._dialogRef) {
       this._dialogRef.componentInstance.selected = this._value;
     }
