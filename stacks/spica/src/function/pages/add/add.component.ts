@@ -66,10 +66,10 @@ export class AddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id)),
         tap(fn => {
-          this.function = {...emptyFunction(), ...fn};
+          this.function = fn;
           this.ls.request("open", this.function._id);
+          this.dependencies = this.http.get(`api:/function/${fn._id}/dependencies`);
         }),
-        tap(fn => (this.dependencies = this.http.get(`api:/function/${fn._id}/dependencies`))),
         switchMap(fn => this.functionService.getIndex(fn._id)),
         takeUntil(this.dispose)
       )
@@ -157,5 +157,18 @@ export class AddComponent implements OnInit, OnDestroy {
     this.dispose.emit();
     this.ls.close();
     this.mediaMatchObserver.unsubscribe();
+  }
+  deleteDependency(name: string) {
+    this.dependencyInstallPending = true;
+    this.http
+      .post(`api:/function/${this.function._id}/delete-dependency`, {name})
+      .toPromise()
+      .then(() => {
+        this.dependencies = this.http.get(`api:/function/${this.function._id}/dependencies`);
+        this.dependencyInstallPending = false;
+      })
+      .catch(() => {
+        this.dependencyInstallPending = false;
+      });
   }
 }

@@ -56,7 +56,6 @@ export class StorageViewComponent implements OnChanges {
               this.cd.markForCheck();
             },
             complete: () => {
-              console.log(this.contentType);
               this.ready = !this.displayableTypes.test(this.contentType);
               this.cd.markForCheck();
             }

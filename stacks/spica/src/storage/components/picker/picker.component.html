@@ -1,18 +1,23 @@
 <mat-tab-group>
   <mat-tab label="Storage">
     <mat-grid-list cols="4" rowHeight="1:1" gutterSize="10px">
-      <span *ngIf="storages$ | async; let storages">
-        <mat-grid-tile *ngFor="let storage of storages">
-          <mat-card class="mat-elevation-z0" (click)="selected = storage; _onChange.next(selected)">
-            <div selected *ngIf="selected == storage.url">
-              <mat-icon>done</mat-icon>
-            </div>
-            <storage-view [blob]="storage" class="storage-view"></storage-view>
-          </mat-card>
-        </mat-grid-tile>
-      </span>
+      <mat-grid-tile *ngFor="let storage of storages$ | async">
+        <mat-card class="mat-elevation-z0" (click)="selected = storage; _onChange.next(selected)">
+          <div selected *ngIf="selected == storage.url">
+            <mat-icon>done</mat-icon>
+          </div>
+          <storage-view [blob]="storage" class="storage-view"></storage-view>
+        </mat-card>
+      </mat-grid-tile>
     </mat-grid-list>
-    <mat-paginator [pageSize]="_pageSize" [pageSizeOptions]="[8, 12, 18, 20]"></mat-paginator>
+    <mat-paginator
+      [style.visibility]="totalItems && totalItems > 0 ? 'visible' : 'hidden'"
+      [pageSize]="_pageSize"
+      [pageSizeOptions]="[8, 12, 18, 20]"
+    ></mat-paginator>
+    <span class="empty" [style.visibility]="totalItems && totalItems > 0 ? 'hidden' : 'visible'"
+      >Storage is empty</span
+    >
   </mat-tab>
   <mat-tab label="Upload">
     <mat-grid-list cols="4" rowHeight="1:1" gutterSize="10px">
@@ -46,9 +51,6 @@
         </mat-card>
       </mat-grid-tile>
     </mat-grid-list>
-    <div class="uploadable-text">
-      <p>Uploadable files: *</p>
-    </div>
   </mat-tab>
 </mat-tab-group>
 

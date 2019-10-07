@@ -10,6 +10,7 @@ export abstract class FunctionHost<T = object> {
   abstract delete(fn: T);
   abstract getDependencies(fn: T);
   abstract addDependency(fn: T, dependency: string);
+  abstract deleteDependency(fn: T, dependency: string);
   abstract getRoot(fn: T): string;
 }
 
@@ -34,16 +35,20 @@ export class FsHost implements FunctionHost<Function> {
       console.debug("TODO: FsFunctionHost.create");
     }
 
-    fs.writeFileSync(path.join(root, "index.ts"), template);
-    fs.writeFileSync(
-      path.join(root, "package.json"),
-      `{
-        "name": "${fn._id}",
-        "version": "0.0.0",
-        "private": true,
-        "dependencies": {}
-      }`
-    );
+    if (!fs.existsSync(path.join(root, "index.ts"))) {
+      fs.writeFileSync(path.join(root, "index.ts"), template);
+    }
+    if (!fs.existsSync(path.join(root, "package.json"))) {
+      fs.writeFileSync(
+        path.join(root, "package.json"),
+        `{
+          "name": "${fn._id}",
+          "version": "0.0.0",
+          "private": true,
+          "dependencies": {}
+        }`
+      );
+    }
   }
 
   delete(fn: Function) {
@@ -68,6 +73,19 @@ export class FsHost implements FunctionHost<Function> {
     return fs.promises.readFile(path.join(root, "package.json")).then(buffer => {
       const packageJson = JSON.parse(buffer.toString());
       return packageJson.dependencies;
+    });
+  }
+
+  deleteDependency(fn: Function, dependency: string): Promise<any> {
+    const root = this.getRoot(fn);
+    return new Promise((resolve, reject) => {
+      const proc = child_process.spawn("npm", ["uninstall", dependency], {cwd: root});
+      proc.on("close", code => {
+        if (code == 0) {
+          return resolve();
+        }
+        reject(`Uninstall failed. Code: ${code}`);
+      });
     });
   }
 

@@ -13,6 +13,7 @@ import {StorageService} from "../../storage.service";
 })
 export class PickerComponent implements OnInit {
   selected: Storage;
+  totalItems: number = 0;
   storages$: Observable<Storage[]>;
   progress: number;
   refresh: Subject<void> = new Subject<void>();
@@ -40,6 +41,7 @@ export class PickerComponent implements OnInit {
           typeof storage.meta === "undefined" || typeof storage.meta.total === "undefined"
             ? 0
             : storage.meta.total;
+        this.totalItems = this._paginator.length;
         return storage.data;
       })
     );
