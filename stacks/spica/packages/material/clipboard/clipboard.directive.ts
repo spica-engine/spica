@@ -8,7 +8,7 @@ export class MatClipboardDirective {
 
   @HostListener("click")
   copy() {
-    if ( !this.text ) {
+    if (!this.text) {
       return;
     }
     const clipboard = document.createElement("input");

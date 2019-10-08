@@ -19,9 +19,9 @@ describe(`HttpInterceptor`, () => {
           multi: true
         },
         {
-            provide: BaseUrlInterceptor,
-            useValue: new BaseUrlInterceptor({api: "http://customdomain"}),
-            deps: [BASE_URL]
+          provide: BaseUrlInterceptor,
+          useValue: new BaseUrlInterceptor({api: "http://customdomain"}),
+          deps: [BASE_URL]
         }
       ]
     });
@@ -30,18 +30,18 @@ describe(`HttpInterceptor`, () => {
     httpTesting = TestBed.get(HttpTestingController);
   });
 
-  it("should replace base url",  () => {
+  it("should replace base url", () => {
     service.get("api:/myurl").toPromise();
-    expect(httpTesting.expectOne('http://customdomain/myurl')).toBeTruthy();
+    expect(httpTesting.expectOne("http://customdomain/myurl")).toBeTruthy();
   });
 
-  it("should not replace base url if theres no match",  () => {
+  it("should not replace base url if theres no match", () => {
     service.get("microapi:/mydoamin/te").toPromise();
-    expect(httpTesting.expectOne('microapi:/mydoamin/te')).toBeTruthy();
+    expect(httpTesting.expectOne("microapi:/mydoamin/te")).toBeTruthy();
   });
 
-  it("should not replace base url",  () => {
+  it("should not replace base url", () => {
     service.get("http://customdomain/test123").toPromise();
-    expect(httpTesting.expectOne('http://customdomain/test123')).toBeTruthy();
+    expect(httpTesting.expectOne("http://customdomain/test123")).toBeTruthy();
   });
 });

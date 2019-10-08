@@ -81,18 +81,6 @@
             "tsConfig": "tsconfig.spec.json",
             "polyfills": "src/polyfills.ts"
           }
-        },
-        "e2e": {
-          "builder": "@angular-devkit/build-angular:protractor",
-          "options": {
-            "protractorConfig": "protractor.conf.js",
-            "devServerTarget": "spica-client:serve"
-          },
-          "configurations": {
-            "production": {
-              "devServerTarget": "spica-client:serve:production"
-            }
-          }
         }
       }
     }

@@ -1,9 +1,5 @@
 import {PreferencesService, PreferencesMeta} from "./preferences.service";
-import {
-  HttpTestingController,
-  HttpClientTestingModule,
-  
-} from "@angular/common/http/testing";
+import {HttpTestingController, HttpClientTestingModule} from "@angular/common/http/testing";
 import {TestBed} from "@angular/core/testing";
 import {of} from "rxjs";
 
@@ -13,10 +9,9 @@ let preferences: PreferencesMeta = {
   key: "test"
 };
 
-describe("Preferences Service Test Suit", () => {
+describe("PreferenceService", () => {
   let service: PreferencesService;
   let httpTestingController: HttpTestingController;
-  
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -50,9 +45,9 @@ describe("Preferences Service Test Suit", () => {
   });
 
   it("should return default value when there is no value on db", async () => {
-    const originalGet = service["http"]["get"] ; 
+    const originalGet = service["http"]["get"];
     const spy = (service["http"]["get"] = jasmine.createSpy("GET").and.returnValue(of(null)));
-    expect( await service.get("scope", preferences).toPromise()).toBe(preferences);
+    expect(await service.get("scope", preferences).toPromise()).toBe(preferences);
     expect(spy).toHaveBeenCalledTimes(1);
     service["http"]["get"] = originalGet;
   });

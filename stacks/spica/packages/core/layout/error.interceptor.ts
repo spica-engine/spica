@@ -10,6 +10,7 @@ import {Router} from "@angular/router";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 
+// @Todo Test
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
   constructor(public router: Router) {}
