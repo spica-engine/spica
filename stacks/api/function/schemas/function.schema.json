@@ -15,7 +15,12 @@
     "description": {
       "type": "string"
     },
-    "env": true,
+    "env": {
+      "type": "object",
+      "patternProperties": {
+        ".": {"type": "string"}
+      }
+    },
     "memoryLimit": {
       "type": "number",
       "default": 100

@@ -24,7 +24,7 @@ export enum FunctionFlags {
 
 export interface Environment {
   name: string;
-  value: string | number | boolean;
+  value: string;
 }
 
 export interface Dependency {
