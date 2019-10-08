@@ -1,0 +1,40 @@
+<button
+  mat-icon-button
+  [matTooltip]="(showOptions ? 'Hide' : 'Show') + ' validation options'"
+  (click)="showOptions = !showOptions"
+>
+  <mat-icon>build</mat-icon>
+</button>
+<ng-container *ngIf="showOptions">
+  <div class="min-max">
+    <div class="inputs">
+      <mat-form-field>
+        <mat-label>Minimum</mat-label>
+        <input matInput type="number" [(ngModel)]="schema.minimum" />
+      </mat-form-field>
+      <span> - </span>
+      <mat-form-field>
+        <mat-label>Maximum</mat-label>
+        <input matInput type="number" [(ngModel)]="schema.maximum" />
+      </mat-form-field>
+    </div>
+    <mat-hint *ngIf="schema.description">
+      If you don't want to limit values, you can keep the above lines empty.
+    </mat-hint>
+  </div>
+  <div class="default">
+    <mat-label>Default</mat-label>
+    <mat-form-field>
+      <input matInput type="number" [(ngModel)]="schema.default" />
+    </mat-form-field>
+  </div>
+  <div class="enum">
+    <mat-slide-toggle
+      [ngModel]="schema.enum?.length > 0"
+      (ngModelChange)="$event ? (schema.enum = []) : removeEnum()"
+    >
+      Make field enumerated
+    </mat-slide-toggle>
+    <enum-schema *ngIf="schema.enum?.length != undefined"></enum-schema>
+  </div>
+</ng-container>

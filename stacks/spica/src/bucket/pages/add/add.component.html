@@ -1,21 +1,22 @@
 <mat-toolbar color="primary">
-  <div class="title" *ngIf="bucket$ | async; let bucket">
-    <h1>
+  <span *ngIf="bucket$ | async; let bucket" [@smooth]>
+    <h4>
       <mat-icon>{{ bucket.icon }}</mat-icon>
       <span>{{ bucket.title }}</span>
 
       <mat-chip-list *ngIf="bucket.readOnly">
         <mat-chip disableRipple>Read Only</mat-chip>
       </mat-chip-list>
-    </h1>
+    </h4>
     <h6>{{ bucket.description }}</h6>
-  </div>
+  </span>
 
   <span class="space-between"></span>
   <button
     *ngIf="histories$ | async; let histories"
     mat-icon-button
     [matMenuTriggerFor]="historyMenu"
+    @smooth
   >
     <mat-icon> restore </mat-icon>
     <mat-menu #historyMenu="matMenu" class="history-tree mat-elevation-z25" xPosition="before">
@@ -52,15 +53,14 @@
   </button>
 </mat-toolbar>
 
-<mat-card *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25">
-  <mat-card-content>
-    <form class="block-form" #form="ngForm">
+<mat-card *ngIf="bucket$ | async; let bucket" class="mat-elevation-z25" @smooth>
+  <mat-card-content [class.handset]="isHandset$ | async">
+    <form #form="ngForm">
       <div *ngFor="let layout of layouts" [class]="layout">
         <ng-container *ngFor="let propertyKv of bucket['positioned'][layout]">
           <div
             *ngIf="propertyKv.value.options.translate && data[propertyKv.key]"
             [inputPlacer]="propertyKv.value"
-            class="property-translate"
             [disabled]="propertyKv.value.readOnly || !language.selected || bucket.readOnly"
             [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"
             [name]="propertyKv.key"
@@ -70,12 +70,15 @@
             [currentLanguage]="language.selected"
             [defaultLanguage]="language.default"
           >
-            <property-language #language slot="after"></property-language>
-            <mat-error *ngIf="translateModel?.errors" slot="after">
-              This property's default language is required
+            <property-language
+              #language
+              matSuffix
+              (click)="$event.stopPropagation()"
+            ></property-language>
+            <mat-error *ngIf="translateModel?.errors?.requiredTranslate && translateModel.touched">
+              {{ language.default }} value is required as it is the default language.
             </mat-error>
           </div>
-
           <div
             *ngIf="!propertyKv.value.options.translate"
             [inputPlacer]="propertyKv.value"
@@ -89,8 +92,8 @@
     </form>
   </mat-card-content>
 
-  <mat-card-actions class="save">
-    <form class="schedule" #scheduleForm="ngForm" *ngIf="data?._schedule">
+  <mat-card-actions>
+    <form #scheduleForm="ngForm" *ngIf="data?._schedule">
       <button
         [disabled]="(bucket$ | async)?.readOnly"
         mat-button
@@ -125,29 +128,16 @@
     >
       <mat-icon>schedule</mat-icon>
     </button>
-    <mat-progress-spinner *ngIf="savingBucketState" class="save" diameter="20" mode="indeterminate">
-    </mat-progress-spinner>
     <button
       canInteract="bucket:data:update"
-      *ngIf="!data?._id && !(bucket$ | async)?.readOnly"
-      [disabled]="form.invalid || scheduleForm?.invalid"
+      [disabled]="form.invalid || scheduleForm?.invalid || (bucket$ | async)?.readOnly"
       mat-button
       (click)="saveBucketRow()"
     >
-      <mat-icon>add</mat-icon> Add
+      <mat-progress-spinner *ngIf="savingBucketState" diameter="20" mode="indeterminate">
+      </mat-progress-spinner>
+      <mat-icon *ngIf="!savingBucketState">{{ data?._id ? "double_arrow" : "add" }}</mat-icon>
+      <span>{{ data?._id ? "Update" : "Add" }}</span>
     </button>
-    <button
-      canInteract="bucket:data:update"
-      *ngIf="data?._id && !(bucket$ | async)?.readOnly"
-      [disabled]="form.invalid"
-      mat-button
-      (click)="saveBucketRow()"
-    >
-      <mat-icon>sync</mat-icon> Update
-    </button>
-
-    <mat-chip-list *ngIf="(bucket$ | async)?.readOnly">
-      <mat-chip disableRipple>Read Only</mat-chip>
-    </mat-chip-list>
   </mat-card-actions>
 </mat-card>

@@ -11,6 +11,7 @@ import {Component, Input, OnInit} from "@angular/core";
 export class HomeSectionComponent implements OnInit {
   @Input() title: string;
   @Input() description: string;
+  @Input() subtitle: string;
   @Input("cnFxLayout.lt-md") fxLayoutLtMd: string = "column wrap";
   @Input("cnFxLayoutAlign.lt-md") fxLayoutAlignMd: string = "center center";
   @Input("cnFxLayout.gt-sm") fxLayoutGtSm: string = "row wrap";

@@ -1,0 +1,16 @@
+<mat-form-field>
+  <mat-label>{{ schema.title }}</mat-label>
+  <textarea
+    matInput
+    rows="10"
+    [disabled]="disabled"
+    [placeholder]="schema.title"
+    [(ngModel)]="value"
+    (ngModelChange)="_onChangeFn($event)"
+    (blur)="_onTouchedFn()"
+  ></textarea>
+  <span matSuffix>
+    <ng-content></ng-content>
+  </span>
+  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
+</mat-form-field>

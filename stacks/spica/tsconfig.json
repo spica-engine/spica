@@ -10,27 +10,8 @@
       "es2018",
       "dom"
     ],
-    "paths": {
-      "@spica-client/core": [
-        "../../dist/spica-client/core"
-      ],
-      "@spica-client/core/*": [
-        "../../dist/spica-client/core/*"
-      ],
-      "@spica-client/common": [
-        "../../dist/spica-client/common"
-      ],
-      "@spica-client/common/*": [
-        "../../dist/spica-client/common/*"
-      ],
-      "@spica-client/material": [
-        "../../dist/spica-client/material"
-      ],
-      "@spica-client/material/*": [
-        "../../dist/spica-client/material/*"
-      ]
-    }
   },
+  "include": ["src/**/*.ts"],
   "exclude": [
     "test.ts",
     "**/*.spec.ts"

@@ -1,33 +1,32 @@
 <mat-toolbar color="primary">
-  <h4 class="mat-h4">
-    <mat-icon>{{ ($meta | async)?.icon }}</mat-icon>
-    <span>{{ ($meta | async)?.title }}</span>
-
-    <button
-      mat-icon-button
-      class="id-icon"
-      #clipboard="matClipboard"
-      [matClipboard]="bucketId"
-      [matTooltip]="'Copied!'"
-      (mouseenter)="$event.stopImmediatePropagation()"
-      (click)="tooltip.toggle()"
-      #tooltip="matTooltip"
-    >
-      <mat-icon>{{ clipboard.icon }}</mat-icon>
-    </button>
-    <mat-chip-list *ngIf="readOnly">
-      <mat-chip disableRipple>Read Only</mat-chip>
-    </mat-chip-list>
-
-    <!-- fi -->
-    <span class="description">{{ ($meta | async)?.description }}</span>
-  </h4>
+  <span *ngIf="$meta | async; let bucket">
+    <h4>
+      <mat-icon>{{ bucket.icon }}</mat-icon>
+      <span>{{ bucket.title }}</span>
+      <button
+        mat-icon-button
+        #clipboard="matClipboard"
+        [matClipboard]="bucketId"
+        [matTooltip]="'Copied!'"
+        (mouseenter)="$event.stopImmediatePropagation()"
+        (click)="tooltip.toggle()"
+        #tooltip="matTooltip"
+      >
+        <mat-icon>{{ clipboard.icon }}</mat-icon>
+      </button>
+      <mat-chip-list *ngIf="bucket.readOnly">
+        <mat-chip disableRipple>Read Only</mat-chip>
+      </mat-chip-list>
+      <mat-spinner *ngIf="!loaded" [@smooth] color="accent" diameter="20"></mat-spinner>
+    </h4>
+    <h6>{{ bucket.description }}</h6>
+  </span>
 
   <span class="space-between"></span>
 
   <button
     *ngIf="selectedItems.length > 0"
-    class="delete-button mat-elevation-z0"
+    class="delete mat-elevation-z0"
     mat-icon-button
     mat-raised-button
     color="warn"
@@ -45,9 +44,9 @@
 
   <button
     mat-icon-button
-    matTooltip="Show On/Off Scheduled Data"
-    [class.publish-on]="scheduledData"
-    (click)="scheduleTrigger()"
+    [matTooltip]="(showScheduled ? 'Hide' : 'Show') + ' scheduled documents'"
+    [color]="showScheduled ? 'accent' : 'secondary'"
+    (click)="toggleScheduled()"
   >
     <mat-icon>schedule</mat-icon>
   </button>
@@ -118,34 +117,31 @@
     <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
       <bucket-filter
         #filterer
+        [filter]="filter"
         [meta]="$meta | async"
         (filterChange)="this.filter = $event; refresh.emit()"
       ></bucket-filter>
     </mat-menu>
   </button>
 
-  <button mat-icon-button matTooltip="Refresh data" (click)="refresh.emit()">
+  <button mat-icon-button matTooltip="Refresh data" (click)="refresh.next()">
     <mat-icon>refresh</mat-icon>
   </button>
+
   <button
-    [disabled]="readOnly"
+    *ngIf="!readOnly"
+    mat-icon-button
     canInteract="bucket:data:update"
     matTooltip="Add new"
-    mat-icon-button
     routerLink="add"
-    [disableRipple]="readOnly"
   >
     <mat-icon>add</mat-icon>
   </button>
 </mat-toolbar>
+
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
-    <mat-table
-      [dataSource]="$data"
-      matSort
-      matSortDisableClear="true"
-      (matSortChange)="sortChange($event)"
-    >
+    <mat-table [dataSource]="$data" matSort (matSortChange)="sortChange($event)">
       <ng-container matColumnDef="$$spicainternal_select">
         <mat-header-cell class="select" *matHeaderCellDef>
           <mat-checkbox

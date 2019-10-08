@@ -2,27 +2,40 @@ var_1: &job_defaults
   working_directory: ~/spica
   docker:
     - image: circleci/node:11
+
+var_2: &test_defaults
+  <<: *job_defaults
+  docker:
+    - image: circleci/node:11
     - image: circleci/mongo:4.2
-var_2: &setup_circleci_bazel_config
+
+var_3: &setup_circleci_bazel_config
   run:
     name: Setting up CircleCI bazel configuration
     command: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
-var_3: &cache_key infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
-var_4: &restore_cache
+
+var_4: &cache_key infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
+
+var_5: &restore_cache
   restore_cache:
     keys:
       - *cache_key
       # fallback to using the latest cache if no exact match is found
       - infra
-var_5: &attach_workspace
+
+var_6: &attach_workspace
   attach_workspace:
     at: ~/
-var_6: &checkout_code
+
+var_7: &checkout_code
   checkout:
     # After checkout, rebase on top of master. By default, PRs are not rebased on top of master,
     # which we want. See https://discuss.circleci.com/t/1662
     post: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
-version: 2
+
+version: 2.1
+orbs:
+  gcp-gke: circleci/gcp-gke@0.2.0
 jobs:
   setup:
     <<: *job_defaults
@@ -44,7 +57,7 @@ jobs:
       - run: "yarn bazel:format -mode=check"
       - run: "yarn code:format-check"
   test:
-    <<: *job_defaults
+    <<: *test_defaults
     steps:
       - *attach_workspace
       - *setup_circleci_bazel_config
@@ -52,26 +65,20 @@ jobs:
           name: "Running tests"
           command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
       - run:
-          name: "Running tests (spica)"
+          name: "Running tests"
           command: |
+            # Run Unit tests
+            # We need to check the client for AOT errors. 
+            # This is the expensive way to do but ¯\_(ツ)_/¯
+            # After we switch spica(client) to bazel we gonna get rid of this
             cd stacks/spica
-            yarn ng build @spica-client/core
-      - run:
-          name: "Running tests (spica)"
-          command: |
-            cd stacks/spica
-            yarn ng build @spica-client/common
-      - run:
-          name: "Running tests (spica)"
-          command: |
-            cd stacks/spica
-            yarn ng build @spica-client/material
-      - run:
-          # After we switch spica(client) to bazel we gonna get rid of this
-          name: "Running tests (spica)"
-          command: |
-            cd stacks/spica;
-            yarn ng build --prod --progress=false --base-href="/spica/"
+            rm -rf dist/spica-client
+            # Disable differential loading on patch branches to gain speed up
+            if [ $CIRCLE_BRANCH != "master" ]; then
+              echo "Disabling differential loading"
+              echo "last 2 Chrome versions" > browserslist
+            fi
+            yarn ng build --prod --progress=false
       - persist_to_workspace:
           root: ~/
           paths:
@@ -81,6 +88,7 @@ jobs:
           key: *cache_key
           paths:
             - "node_modules"
+            - "docs/site/node_modules"
             - "stacks/spica/node_modules"
             - "~/bazel_repository_cache"
   deploy:
@@ -89,26 +97,17 @@ jobs:
       - setup_remote_docker
       - *attach_workspace
       - *setup_circleci_bazel_config
+      - gcp-gke/install
+      - gcp-gke/init
       - run:
-          # We need to use install gcloud instead using google/cloud-sdk because google/cloud-sdk is not based on debian
-          # google/cloud-sdk us prevents from using basic commands like sudo
-          name: "Installing gcloud and kubectl"
+          name: "Configuring docker"
           command: |
-            echo "deb http://packages.cloud.google.com/apt cloud-sdk-stretch main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
-            curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-            sudo apt-get update && sudo apt-get install -y google-cloud-sdk=243.0.0-0
-            sudo apt-get install kubectl
-      - run:
-          name: "Configuring kubectl and docker"
-          command: |
-            echo $GCLOUD_SERVICE_KEY | gcloud auth activate-service-account --key-file=-
-            gcloud config set project spica-239113
-            gcloud config set compute/zone us-central1-a
-            gcloud container clusters get-credentials master --zone us-central1-a --project spica-239113
+            gcloud container clusters get-credentials $CLUSTER_NAME --zone $GOOGLE_COMPUTE_ZONE --project $GOOGLE_PROJECT_ID
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: "Deploying artifacts"
           command: ./node_modules/.bin/bazel run deploy.replace -- --force
+
 workflows:
   version: 2
   default:
@@ -118,8 +117,9 @@ workflows:
           requires:
             - setup
       - test:
+          # We should not depend on lint because we want to run them on parallel
           requires:
-            - lint
+            - setup
       - deploy:
           requires:
             - test

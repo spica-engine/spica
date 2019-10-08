@@ -1,0 +1,64 @@
+<mat-card class="mat-elevation-z0">
+  <mat-card-header>
+    <mat-card-title>{{ schema.title }}</mat-card-title>
+    <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
+    <span class="fill"></span>
+    <ng-content></ng-content>
+  </mat-card-header>
+  <mat-card-content>
+    <div cdkDropList [cdkDropListDisabled]="_disabled" (cdkDropListDropped)="drop($event)">
+      <button
+        *ngFor="let item of _values; let index = index"
+        class="mat-elevation-z0"
+        [class.drag-box]="!_disabled"
+        mat-icon-button
+        mat-raised-button
+        [color]="_activeIndex == index && 'primary'"
+        (click)="_activeIndex = index"
+        cdkDrag
+      >
+        {{ index + 1 }}
+      </button>
+      <button mat-icon-button [disabled]="_disabled" (click)="addItem()">
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
+    <div *ngIf="_activeIndex != undefined">
+      <span
+        ngModelParent
+        #model="ngModel"
+        [inputPlacer]="schema.items"
+        [disabled]="_disabled"
+        [name]="schema.$name + _activeIndex"
+        [(ngModel)]="_values[_activeIndex]"
+        (ngModelChange)="callOnChange()"
+        (click)="_onTouchedFn()"
+        [uniqueItems]="schema.uniqueItems"
+        [minItems]="schema.minItems"
+        [index]="_activeIndex"
+        [items]="_values"
+        [maxItems]="schema.maxItems"
+      >
+        <mat-error slot="after" *ngIf="model?.errors?.unique">
+          All items in the array must be unique.
+        </mat-error>
+        <mat-error slot="after" *ngIf="model?.errors?.minItems">
+          Array must have at least {{ model?.errors?.minItems?.expected }} items.
+        </mat-error>
+        <mat-error slot="after" *ngIf="model?.errors?.maxItems">
+          Array can have maximum {{ model?.errors?.maxItems?.expected }} items.
+        </mat-error>
+      </span>
+      <button
+        mat-mini-fab
+        color="warn"
+        class="mat-elevation-z0"
+        [disabled]="_disabled"
+        *ngIf="_activeIndex != undefined && _values.length"
+        (click)="removeItem()"
+      >
+        <mat-icon>remove</mat-icon>
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>

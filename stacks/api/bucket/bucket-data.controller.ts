@@ -96,14 +96,11 @@ export class BucketDataController {
           from: getBucketDataCollection(bucketId),
           let: {
             documentId: {
-              $convert: {
-                input: `$${property}`,
-                to: "objectId"
-              }
+              $toObjectId: `$${property}`
             }
           },
           pipeline: [
-            {$match: {$expr: {_id: "$$documentId"}}},
+            {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
             {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
             {$set: {_id: {$toString: "$_id"}}}
           ],
@@ -127,18 +124,38 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object
   ) {
-    const aggregation = [];
+    const aggregation: any[] = [
+      {
+        $match: {
+          _schedule: {
+            $exists: schedule
+          }
+        }
+      }
+    ];
 
-    if (localize) {
+    const schema = relation || localize ? await this.bs.findOne({_id: bucketId}) : null;
+
+    if (
+      localize &&
+      Object.values(schema.properties).some(
+        property => property.options && property.options.translate
+      )
+    ) {
       const locale = await this.getLanguage(acceptedLanguage);
 
-      aggregation.unshift({
+      aggregation.push({
         $replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
       });
     }
 
+    if (sort) {
+      aggregation.push({
+        $sort: sort
+      });
+    }
+
     if (relation) {
-      const schema = await this.bs.findOne({_id: bucketId});
       for (const propertyKey in schema.properties) {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
@@ -161,36 +178,52 @@ export class BucketDataController {
       aggregation.push({$match: filter});
     }
 
-    if (sort) {
-      aggregation.push({
-        $sort: sort
-      });
-    }
-
-    if (skip) {
-      aggregation.push({$skip: skip});
-    }
-
-    if (limit) {
-      aggregation.push({$limit: limit});
-    }
-
-    aggregation.push({
-      $match: {
-        _schedule: {
-          $exists: schedule
-        }
+    if (paginate && !skip && !limit) {
+      const data = await this.bds
+        .find(bucketId, aggregation)
+        .catch((error: MongoError) =>
+          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
+        );
+      return {meta: {total: data.length}, data};
+    } else if (paginate && (skip || limit)) {
+      const subAggregation = [];
+      if (skip) {
+        subAggregation.push({$skip: skip});
       }
-    });
-    const documents = await this.bds
-      .find(bucketId, aggregation)
-      .catch((error: MongoError) =>
-        Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
-      );
 
-    return paginate != false
-      ? {meta: {total: await this.bds.documentCount(bucketId)}, data: await documents}
-      : documents;
+      if (limit) {
+        subAggregation.push({$limit: limit});
+      }
+      aggregation.push(
+        {
+          $facet: {
+            meta: [{$count: "total"}],
+            data: subAggregation
+          }
+        },
+        {$unwind: "$meta"}
+      );
+      return this.bds
+        .find(bucketId, aggregation)
+        .then(r => r[0] || {meta: {total: 0}, data: []})
+        .catch((error: MongoError) =>
+          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
+        );
+    } else {
+      if (skip) {
+        aggregation.push({$skip: skip});
+      }
+
+      if (limit) {
+        aggregation.push({$limit: limit});
+      }
+
+      return this.bds
+        .find(bucketId, aggregation)
+        .catch((error: MongoError) =>
+          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
+        );
+    }
   }
 
   @Get(":documentId")

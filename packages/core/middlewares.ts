@@ -16,7 +16,9 @@ export namespace Middlewares {
 
   export function Preflight(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", req.header("access-control-request-method"));
+    if (req.header("access-control-request-method")) {
+      res.header("Access-Control-Allow-Methods", req.header("access-control-request-method"));
+    }
     res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept-Language");
 
     if (req.method == "OPTIONS") {

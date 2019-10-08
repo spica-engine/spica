@@ -1,36 +1,27 @@
 :host {
-  width: 100%;
-  display: grid !important;
-  mat-card-subtitle {
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  [mat-card-image] {
-    margin-top: unset;
-  }
+  display: block;
   img {
+    display: block;
     object-fit: cover;
-    min-height: 120px;
-    max-height: 120px;
-  }
-  video {
-    object-fit: contain;
+    width: 100%;
     min-height: 120px;
     max-height: 120px;
   }
 
-  .unkown-file {
-    height: 100%;
+  video {
     display: block;
-    text-align: center;
-    .mat-icon {
-      font-size: 132px;
-      height: auto;
-    }
-    p {
-      margin-left: 20px;
+    object-fit: cover;
+    width: 100%;
+    min-height: 120px;
+    max-height: 120px;
+  }
+  div {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    padding: 20px 0;
+    small {
+      text-align: center;
     }
   }
 }

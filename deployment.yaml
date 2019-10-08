@@ -83,9 +83,12 @@ spec:
               value: rs0
             - name: DATABASE_NAME
               value: spica
+            - name: SECRET
+              value: $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
+            - name: DEFAULT_PASSWORD
+              value: spica
             - name: PUBLIC_HOST
-              # TODO(thesayyn): https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
-              value: 'https://35.239.247.158/api'
+              value: "https://master.spicaengine.com/api"
             - name: PERSISTENT_PATH
               value: /data
           volumeMounts:
@@ -124,7 +127,12 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     kubernetes.io/ingress.class: nginx
+    certmanager.k8s.io/cluster-issuer: "letsencrypt-prod"
 spec:
+  tls:
+    - hosts:
+        - master.spicaengine.com
+      secretName: master-spicaengine
   rules:
     - host: master.spicaengine.com
       http:

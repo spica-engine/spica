@@ -41,7 +41,7 @@ const route: Route[] = [
   {
     id: "function",
     category: RouteCategory.Developer,
-    icon: "functions",
+    icon: "memory",
     path: "/function",
     display: "Function",
     data: {action: "function:index"}

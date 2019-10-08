@@ -257,7 +257,7 @@ declare namespace triggers.http {
   /**
    * Response object
    */
-  class Response {
+  interface Response {
     /**
      * Set status `code`.
      */

@@ -1,12 +1,4 @@
-:host ::ng-deep {
-  @import url(https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css);
-  display: block;
-  min-height: 400px;
-
-  .line-numbers {
-    color: rgba(151, 137, 152, 0.5) !important;
-  }
-
+html:not(.dark) :host ::ng-deep {
   .mtk20 {
     color: #dd6546;
   }
@@ -16,5 +8,33 @@
   }
   .mtk6 {
     color: #4a91e2;
+  }
+  .monaco-editor .view-overlays .current-line {
+    border: 2px solid #eeeeee;
+  }
+}
+
+:host ::ng-deep {
+  @import url(https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css);
+  display: block;
+  min-height: 400px;
+
+  .line-numbers {
+    color: --primary-50;
+  }
+
+  .monaco-editor,
+  .monaco-editor-background,
+  .monaco-editor .inputarea.ime-input,
+  .monaco-editor .margin {
+    background-color: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+  }
+
+  .monaco-editor .view-overlays .current-line {
+    border: 2px solid var(--primary-A700);
+  }
+  .monaco-editor .curent-line {
+    color: red;
+    background-color: red;
   }
 }

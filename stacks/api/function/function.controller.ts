@@ -167,6 +167,15 @@ export class FunctionController {
     return this.engine.host.addDependency(fn, dependency);
   }
 
+  @Post(":id/delete-dependency")
+  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Body("name") dependency: string) {
+    const fn = await this.fs.findOne({_id: id});
+
+    return this.engine.host.deleteDependency(fn, dependency);
+  }
+
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {

@@ -87,9 +87,14 @@
   }
 
   home-section.major-features {
+    ::ng-deep section {
+      div:not(.top) {
+        align-items: unset !important;
+        place-content: center !important;
+      }
+    }
     div {
       text-align: center;
-      width: 250px;
       padding: 10px;
       img {
         height: 150px;
@@ -129,6 +134,10 @@
     background-size: cover;
     min-height: 350px;
     padding: 5% 0;
+    .url {
+      text-decoration: none;
+      color: white;
+    }
     span h1 {
       font-size: 4rem;
       font-weight: 400;
@@ -142,6 +151,9 @@
         width: 75px;
         background: #15bde8;
       }
+    }
+    div.github {
+      align-self: center;
     }
   }
 

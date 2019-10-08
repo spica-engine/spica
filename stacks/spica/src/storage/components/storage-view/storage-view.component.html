@@ -1,22 +1,35 @@
-<ng-container *ngIf="storage.url">
+<ng-container *ngIf="contentType" [ngSwitch]="contentType.split('/')[0]">
   <img
-    *ngIf="storage.content?.type?.startsWith('image/')"
-    mat-card-image
-    [src]="storage.url"
-    [alt]="storage.name"
+    *ngSwitchCase="'image'"
+    [src]="content"
+    loading="lazy"
+    (error)="viewError($event)"
+    (load)="ready = true"
   />
-  <video *ngIf="storage.content?.type?.startsWith('video/')" width="100%" mat-card-image controls>
-    <source [src]="storage.url" [type]="storage.content?.type" />
+  <video
+    *ngSwitchCase="'video'"
+    controls
+    preload="none"
+    (error)="viewError($event)"
+    (loadedmetadata)="ready = true"
+  >
+    <source [src]="content" [type]="contentType" />
     Your browser does not support the video tag.
   </video>
-  <div
-    class="unkown-file"
-    *ngIf="
-      storage.content?.type?.startsWith('video/') == false &&
-      storage.content?.type?.startsWith('image/') == false
-    "
-  >
-    <mat-icon [inline]="true">file_copy</mat-icon>
-    <p>{{ storage.name }}</p>
+  <div *ngSwitchDefault>
+    <mat-icon>warning</mat-icon>
+    <h4 class="mat-h3">This object cannot be viewed.</h4>
+    <small class="mat-small">
+      Instead you might want to open it directly.
+      <a
+        mat-icon-button
+        mat-flat-button
+        target="_blank"
+        [href]="content"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-icon>launch</mat-icon>
+      </a>
+    </small>
   </div>
 </ng-container>

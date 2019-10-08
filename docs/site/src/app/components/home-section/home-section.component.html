@@ -1,6 +1,9 @@
 <section fxFlex.lt-md="80%">
-  <h1>{{ title }}</h1>
-  <h4>{{ description }}</h4>
+  <div class="top">
+    <h1 ngClass.lt-md="mobile-h1">{{ title }}</h1>
+    <h4>{{ description }}</h4>
+    <h4>{{ subtitle }}</h4>
+  </div>
   <div
     [fxLayout.lt-md]="fxLayoutLtMd"
     [fxLayoutAlign.lt-md]="fxLayoutAlignMd"

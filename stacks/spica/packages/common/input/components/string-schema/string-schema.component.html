@@ -1,0 +1,13 @@
+<mat-label>
+  Default:
+</mat-label>
+<mat-form-field>
+  <input matInput type="text" [(ngModel)]="schema.default" />
+</mat-form-field>
+<mat-slide-toggle
+  #isEnum
+  [ngModel]="schema.enum?.length > 0"
+  (ngModelChange)="$event ? (schema.enum = []) : removeEnum()"
+  >Make field enumerated</mat-slide-toggle
+>
+<enum-schema *ngIf="isEnum.checked"></enum-schema>

@@ -1,7 +1,9 @@
+import {animate, style, transition, trigger} from "@angular/animations";
+import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
-import {map, switchMap, tap} from "rxjs/operators";
+import {map, shareReplay, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketHistory} from "../../interfaces/bucket-history";
@@ -12,7 +14,13 @@ import {BucketService} from "../../services/bucket.service";
 @Component({
   selector: "bucket-add",
   templateUrl: "./add.component.html",
-  styleUrls: ["./add.component.scss"]
+  styleUrls: ["./add.component.scss"],
+  animations: [
+    trigger("smooth", [
+      transition(":enter", [style({opacity: 0}), animate("0.3s ease-out", style({opacity: 1}))]),
+      transition(":leave", [style({opacity: 1}), animate("0.3s ease-in", style({opacity: 0}))])
+    ])
+  ]
 })
 export class AddComponent implements OnInit {
   bucketId: string;
@@ -22,17 +30,24 @@ export class AddComponent implements OnInit {
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
 
-  public savingBucketState: Boolean = false;
+  savingBucketState: Boolean = false;
 
-  layouts = ["left", "right", "bottom"];
+  readonly layouts = ["left", "right", "bottom"];
+
+  readonly isHandset$: Observable<boolean>;
 
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
     private bhs: BucketHistoryService,
     private router: Router,
-    private route: ActivatedRoute
-  ) {}
+    private route: ActivatedRoute,
+    breakpointObserver: BreakpointObserver
+  ) {
+    this.isHandset$ = breakpointObserver
+      .observe([Breakpoints.Medium, Breakpoints.Small, Breakpoints.XSmall])
+      .pipe(map(r => r.matches));
+  }
 
   ngOnInit(): void {
     this.bucket$ = this.route.params.pipe(
@@ -73,7 +88,8 @@ export class AddComponent implements OnInit {
           {left: [], right: [], bottom: []}
         );
         return schema;
-      })
+      }),
+      shareReplay()
     );
   }
 
@@ -103,7 +119,9 @@ export class AddComponent implements OnInit {
       .toPromise()
       .then(data => {
         this.savingBucketState = false;
-        this.router.navigate(["bucket", this.bucketId, data]);
+        if (!this.data._id) {
+          this.router.navigate(["bucket", this.bucketId]);
+        }
         this.histories$ = this.bhs.historyList(this.bucketId, data);
       });
   }

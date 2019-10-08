@@ -1,0 +1,15 @@
+:host {
+  display: inline-block;
+  border-radius: 5px;
+  mat-slide-toggle {
+    height: unset;
+  }
+  mat-error {
+    font-size: 75%;
+  }
+  mat-hint {
+    font-size: 12px;
+    display: block;
+    padding-top: 5px;
+  }
+}

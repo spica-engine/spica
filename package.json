@@ -1,6 +1,6 @@
 {
   "name": "spica-sources",
-  "version": "1.0.0-beta",
+  "version": "0.1.0-rc1",
   "private": true,
   "license": "AGPLv3",
   "author": {
@@ -34,6 +34,7 @@
     "@nestjs/passport": "^6.0.0",
     "@nestjs/platform-express": "^6.1.1",
     "@nestjs/platform-socket.io": "^6.1.1",
+    "@nestjs/platform-ws": "^6.1.1",
     "@nestjs/websockets": "^6.1.1",
     "@schematics/angular": "^8.0.0-beta.7",
     "ajv": "^6.6.1",
@@ -61,7 +62,7 @@
     "matcher": "^1.1.1",
     "mime-types": "^2.1.24",
     "mongodb": "^3.1.13",
-    "mongodb-memory-server-core": "^5.1.5",
+    "mongodb-memory-server-core": "^5.2.0",
     "multimatch": "^3.0.0",
     "nearest-color": "^0.4.4",
     "npm-package-arg": "^6.1.0",
@@ -84,7 +85,8 @@
     "typescript": "~3.4.2",
     "url": "^0.11.0",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^3.6.0"
+    "winston-daily-rotate-file": "^3.6.0",
+    "ws": "^7.1.2"
   },
   "devDependencies": {
     "@bazel/bazel": "^0.27.0",
@@ -102,9 +104,10 @@
     "@types/jasmine": "^3.3.13",
     "@types/json-schema": "^7.0.3",
     "@types/matcher": "^1.1.0",
-    "@types/mongodb": "^3.1.27",
+    "@types/mongodb": "~3.1.27",
     "@types/node": "^12.0.10",
     "@types/saml2-js": "^1.6.7",
+    "@types/ws": "^6.0.3",
     "conventional-changelog-cli": "^2.0.21",
     "dgeni": "^0.4.12",
     "dgeni-packages": "^0.27.3",

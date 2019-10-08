@@ -1,19 +1,90 @@
-import {Component, Input, OnChanges} from "@angular/core";
-import {BehaviorSubject} from "rxjs";
+import {HttpClient} from "@angular/common/http";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  Input,
+  OnChanges,
+  SimpleChanges
+} from "@angular/core";
+import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
+import {Observable} from "rxjs";
+import {distinctUntilChanged, filter, map, switchMap, takeWhile, tap} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
 
 @Component({
   selector: "storage-view",
   templateUrl: "./storage-view.component.html",
-  styleUrls: ["./storage-view.component.scss"]
+  styleUrls: ["./storage-view.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StorageViewComponent implements OnChanges {
-  @Input() public storage: Storage;
-  private storage$ = new BehaviorSubject(this.storage);
+  @Input() blob: string | Blob | Storage;
 
-  constructor() {}
+  displayableTypes: RegExp = /image\/.*?|video\/.*?/;
 
-  ngOnChanges(): void {
-    this.storage$.next(this.storage);
+  ready: boolean;
+
+  error: boolean = false;
+
+  contentType: string;
+  content: SafeUrl | string;
+
+  constructor(
+    private http: HttpClient,
+    private cd: ChangeDetectorRef,
+    private sanitizer: DomSanitizer,
+    private element: ElementRef<Element>
+  ) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.blob) {
+      if (typeof this.blob == "string") {
+        this.ready = false;
+        const url = this.blob;
+        this.observe()
+          .pipe(
+            switchMap(() => this.http.get(url, {responseType: "blob"})),
+            tap(r => (this.contentType = r.type)),
+            takeWhile(r => this.displayableTypes.test(r.type))
+          )
+          .subscribe({
+            next: r => {
+              this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
+              this.ready = true;
+              this.cd.markForCheck();
+            },
+            complete: () => {
+              this.ready = !this.displayableTypes.test(this.contentType);
+              this.cd.markForCheck();
+            }
+          });
+      } else if (this.blob instanceof Blob) {
+        this.contentType = this.blob.type;
+        this.ready = !this.displayableTypes.test(this.contentType);
+        this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(this.blob));
+      } else {
+        this.contentType = this.blob.content.type;
+        this.ready = !this.displayableTypes.test(this.contentType);
+        this.content = this.blob.url;
+      }
+    }
+  }
+
+  viewError(event: MediaError) {
+    this.error = true;
+  }
+
+  private observe() {
+    return new Observable<IntersectionObserverEntry[]>(observer => {
+      const iobserver = new IntersectionObserver(entry => observer.next(entry));
+      iobserver.observe(this.element.nativeElement);
+      return () => iobserver.disconnect();
+    }).pipe(
+      map(r => r.some(r => r.isIntersecting)),
+      distinctUntilChanged(),
+      filter(r => r)
+    );
   }
 }

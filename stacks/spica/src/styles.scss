@@ -7,16 +7,15 @@ $accent: mat-palette($mat-amber, A200, A100, A400);
 $app-light-theme: mat-light-theme($primary, $accent);
 $app-dark-theme: mat-dark-theme($primary, $accent);
 
-@mixin vars($theme) {
-  :root {
-    @each $colorName, $colorMap in $theme {
-      @if type-of($colorMap) == "map" {
-        @each $colorKey, $colorValue in $colorMap {
-          @if type-of($colorValue) == "color" {
-            --#{$colorName}-#{$colorKey}: #{$colorValue};
-            --#{$colorName}-#{$colorKey}-rgb: #{red($colorValue)}, #{green($colorValue)},
-              #{blue($colorValue)};
-          }
+@mixin vars($theme, $tone) {
+  --tone-diff: #{$tone};
+  @each $colorName, $colorMap in $theme {
+    @if type-of($colorMap) == "map" {
+      @each $colorKey, $colorValue in $colorMap {
+        @if type-of($colorValue) == "color" {
+          --#{$colorName}-#{$colorKey}: #{$colorValue};
+          --#{$colorName}-#{$colorKey}-rgb: #{red($colorValue)}, #{green($colorValue)},
+            #{blue($colorValue)};
         }
       }
     }
@@ -47,32 +46,32 @@ body {
   }
 }
 
-/* Light(default) mode */
-@include angular-material-theme($app-light-theme);
-@include vars($app-light-theme);
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  @include angular-material-theme($app-dark-theme);
-  @include vars($app-dark-theme);
+:root {
+  &:not(.dark) {
+    @include angular-material-theme($app-light-theme);
+    @include vars($app-light-theme, 0.6);
+  }
+  &.dark {
+    @include angular-material-theme($app-dark-theme);
+    @include vars($app-dark-theme, 0);
+  }
 }
 
 /* Custom elevation */
 .mat-elevation-z25 {
-  box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.12);
+  box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
 }
 
-/* TODO: Adopt these styles to dark mode also */
 .mat-form-field {
   &.mat-focused {
     .mat-form-field-infix {
-      box-shadow: 3px 3px 5px var(--primary-100) !important;
+      box-shadow: 3px 3px 5px var(--foreground-base-rgb) !important;
     }
   }
   .mat-form-field-flex {
+    background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+    border-radius: 5px;
     .mat-form-field-infix {
-      background: var(--primary-50);
-      border-radius: 5px;
       padding: 0.875em 0.75em !important;
       border: 0px;
     }
@@ -86,7 +85,7 @@ body {
   &.mat-form-field-should-float {
     .mat-form-field-infix {
       .mat-form-field-label {
-        transform: translate(0.75em, -1.26em) scale(0.84375em);
+        transform: translate(0.75em, -1.26em) scale(0.84375em) !important;
       }
     }
   }

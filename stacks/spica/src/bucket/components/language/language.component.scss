@@ -3,13 +3,24 @@
   min-width: unset;
   overflow: visible;
   background: none;
+  border-radius: 24px;
+  margin-top: 5px;
   .mat-menu-content {
     padding: 0 !important;
-    button {
+    button:not(:first-of-type) {
       margin-top: 4px;
     }
   }
 }
+
+.mat-form-field-suffix :host {
+  button.mat-icon-button {
+    height: 30px;
+    width: 30px;
+  }
+}
+
 :host {
   display: inline-block;
+  vertical-align: top;
 }

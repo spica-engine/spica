@@ -1,27 +1,41 @@
 ::ng-deep {
-  mat-expansion-panel {
-    .mat-subheader {
-      padding: 0 !important;
-    }
-    .mat-expansion-indicator {
-      height: 23px;
+  mat-accordion {
+    &.cdk-drop-list-dragging mat-expansion-panel {
+      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+      pointer-events: none;
     }
 
+    mat-expansion-panel.cdk-drag-placeholder {
+      margin: 10px 0;
+      min-height: 48px;
+      background: rgba(var(--background-background-rgb), 0.4) !important;
+      box-shadow: unset !important;
+      .mat-expansion-indicator {
+        display: none;
+      }
+    }
+  }
+  mat-expansion-panel {
+    mat-panel-title {
+      align-items: center;
+    }
     .mat-expansion-panel-header-description {
       flex-grow: initial !important;
-    }
-
-    .drag-box {
-      cursor: move;
-      flex: unset;
-      padding-top: 6px;
     }
   }
 }
 
+:root.dark :host {
+  --opacity: 0.2;
+}
+
 :host {
+  --opacity: 0.5;
+
   mat-toolbar {
+    padding: 0 30px;
     .bucket-title {
+      margin-left: -10px;
       display: flex;
       align-items: center;
     }
@@ -42,123 +56,144 @@
     }
   }
 
-  mat-card {
-    &.margin-5 {
-      margin: 30px;
-    }
-    ::ng-deep {
-      mat-card-content {
-        margin-bottom: 0px;
-        mat-divider {
-          position: relative;
-          width: 100%;
+  & > mat-card {
+    margin: 30px;
+
+    mat-list {
+      > span {
+        display: flex;
+        flex-flow: row;
+        justify-content: space-between;
+        align-items: center;
+        padding-right: 5px;
+        span.errors {
+          mat-error:not(:first-of-type) {
+            margin-top: 5px;
+          }
         }
-        mat-list {
-          mat-list-item {
-            height: auto;
-            padding-top: 34px;
-            padding-bottom: 10px;
+      }
 
-            .mat-list-item-content {
-              display: contents;
-              mat-form-field {
-                margin-left: 10px;
-              }
-              form.title-description {
-                display: flex;
-                mat-form-field.title {
-                  width: 35%;
-                }
+      mat-divider {
+        position: relative;
+        width: 100%;
+      }
 
-                mat-form-field.description {
-                  width: 40%;
-                }
-                div.read-only {
-                  width: 25%;
-                  text-align: center;
-                }
-              }
+      mat-list-item {
+        &:first-of-type {
+          mat-form-field {
+            margin-left: 10px;
+          }
+
+          form {
+            display: flex;
+            flex-flow: row;
+            align-items: center;
+            justify-content: space-around;
+            mat-form-field:first-of-type {
+              width: 35%;
             }
-
-            &.properties {
-              mat-expansion-panel {
-                box-shadow: none;
-                margin-top: 10px;
-                mat-panel-title {
-                  padding-top: 10px;
-                  mat-icon {
-                    margin-right: 10px;
-                  }
-                }
-
-                mat-panel-description {
-                  button {
-                    flex: unset;
-                    padding: 0;
-                    min-width: 0;
-                    width: auto;
-                    height: auto;
-                    flex-shrink: 0;
-                    line-height: 0px;
-                    border-radius: 50%;
-                    margin-right: 5px;
-                  }
-                }
-              }
-              .input-placer-area {
-                padding: 20px;
-              }
+            mat-form-field:last-of-type {
+              width: 40%;
             }
-
-            &.add-property {
-              input[name="property-name"] {
-                text-transform: lowercase;
-              }
-            }
-
-            &.validation {
-              margin: 0;
-              padding: 0;
+            mat-slide-toggle {
+              align-self: center;
             }
           }
         }
-        mat-grid-list {
-          mat-grid-tile {
-            border: 1px solid rgba(var(--foreground-divider-rgb), 0.04);
-            .mat-figure {
-              flex-flow: column;
-              justify-content: unset;
-              padding: 5px;
-              background: var(--primary-50);
-              mat-card {
-                width: 100%;
-                padding: 12px;
-                border-radius: unset;
-                border-bottom: 1px solid var(--foreground-divider);
-                > * {
-                  vertical-align: middle;
+
+        &.properties {
+          mat-expansion-panel {
+            margin-top: 10px;
+            box-shadow: unset !important;
+            background: rgba(var(--background-app-bar-rgb), var(--opacity));
+            transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+            mat-expansion-panel-header {
+              mat-panel-title {
+                align-items: center;
+                mat-icon {
+                  margin-right: 10px;
                 }
               }
-              > span {
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                z-index: 0;
-                transform: translate(-50%, -50%);
-                font-size: 26px;
-                font-weight: 400;
-                color: var(--foreground-disabled-text);
+
+              mat-panel-description {
+                button {
+                  flex-shrink: 0;
+                  line-height: 0px;
+                  margin-right: 5px;
+                }
+
+                button.cdk-drag-handle {
+                  cursor: move;
+                }
               }
+            }
+          }
+        }
+
+        &.property {
+          input[name="property-name"] {
+            text-transform: lowercase;
+          }
+        }
+
+        &.validation {
+          margin: 0;
+          padding: 0;
+        }
+      }
+    }
+
+    ::ng-deep mat-card-content {
+      margin-bottom: 0px;
+      mat-list {
+        mat-list-item {
+          height: auto;
+          padding-top: 34px;
+          padding-bottom: 10px;
+
+          .mat-list-item-content {
+            display: contents;
+          }
+        }
+      }
+      mat-grid-list {
+        mat-grid-tile {
+          overflow: auto;
+          .mat-figure {
+            flex-flow: column;
+            justify-content: unset;
+            padding: 5px;
+            background: rgba(var(--background-app-bar-rgb), 0.5);
+            mat-card {
+              width: 100%;
+              padding: 12px;
+              border-radius: unset;
+              border-bottom: 1px solid rgba(var(--background-app-bar-rgb), 0.5);
+              > * {
+                vertical-align: middle;
+              }
+            }
+            > span {
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              z-index: 0;
+              transform: translate(-50%, -50%);
+              font-size: 26px;
+              font-weight: 400;
+              color: var(--foreground-disabled-text);
             }
           }
         }
       }
     }
+
     mat-card-actions {
+      text-align: right;
       margin: 0;
-      padding: 0;
-      mat-progress-spinner.save {
-        display: inline;
+      mat-progress-spinner {
+        display: inline-block;
+        margin-right: 5px;
       }
     }
   }

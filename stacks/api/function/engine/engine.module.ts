@@ -8,6 +8,7 @@ import {SubscriptionEngine} from "./subscription/engine";
 import {RequestSubscriptionExecutor, SubscriptionExecutor} from "./subscription/executor";
 import {DatabaseTriggerModule} from "./trigger/database";
 import {HttpTriggerModule} from "./trigger/http";
+import {FirehoseTriggerModule} from "./trigger/firehose";
 import {ScheduleTriggerModule} from "./trigger/schedule";
 import {DatabaseUnitModule} from "./module/database";
 
@@ -19,6 +20,7 @@ export class EngineModule {
       imports: [
         DatabaseUnitModule,
         HttpTriggerModule,
+        FirehoseTriggerModule,
         DatabaseTriggerModule,
         ScheduleTriggerModule
       ],

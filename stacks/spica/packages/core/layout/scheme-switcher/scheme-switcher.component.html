@@ -1,0 +1,9 @@
+<button
+  mat-icon-button
+  [class.mat-flat-button]="isDark$ | async"
+  [matTooltip]="'Switch to ' + ((isDark$ | async) ? 'light' : 'dark') + ' theme.'"
+  disableRipple
+  (click)="changeScheme()"
+>
+  <mat-icon> {{ (isDark$ | async) ? "nights_stay" : "wb_sunny" }}</mat-icon>
+</button>

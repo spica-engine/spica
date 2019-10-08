@@ -219,9 +219,19 @@ All the params below are optional.
 
 `"limit"`: Accepts number value. Limits the data count on listing array.
 
+"{baseUrl}/bucket/{bucket \_id}?limit={number}"
+
 `"skip"`: Skips number of entries before listing.
 
-`"sort"`: Accepts mongoDb \$sort aggregation.
+"{baseUrl}/bucket/{bucket \_id}?skip={number}"
+
+`"sort"`: Accepts mongoDb \$sort aggregation. 
+
+{sort order} can have one of the following values:
+*1 to specify ascending order.
+*-1 to specify descending order.
+
+"{baseUrl}/bucket/{bucket \_id}?sort={ {fieldname}: {sort order} }"
 
 `"prune"`: Accepts boolean. Ignores additional mappings on listing such as getting related Data etc. Returns the data as it is.
 
