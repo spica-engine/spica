@@ -1,5 +1,5 @@
 import {NgModule} from "@angular/core";
-import {ClipboardDirective} from "./clipboard.directive";
+import {MatClipboardDirective} from "./clipboard.directive";
 
-@NgModule({imports: [], declarations: [ClipboardDirective], exports: [ClipboardDirective]})
+@NgModule({imports: [], declarations: [MatClipboardDirective], exports: [MatClipboardDirective]})
 export class MatClipboardModule {}
