@@ -6,6 +6,7 @@ ts_library(
     name = "engine",
     srcs = glob(["**/*.ts"]),
     deps = [
+        "//packages/database",
         "//stacks/api/function/engine/language",
         "//stacks/api/function/engine/module",
         "//stacks/api/function/engine/module:database",
@@ -23,7 +24,5 @@ ts_library(
         "@npm//short-id",
         "@npm//typescript",
         "@npm//vm2",
-        "@npm//winston",
-        "@npm//winston-daily-rotate-file",
     ],
 )

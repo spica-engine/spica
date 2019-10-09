@@ -106,10 +106,9 @@ export class FunctionController {
     @Query("end", DEFAULT(new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date
   ) {
     return this.loggerHost.query(id.toHexString(), {
-      fields: ["message", "execution", "timestamp", "level", "durationMs", "stack"],
       from: begin,
       until: end,
-      order: "desc"
+      sort: 1
     });
   }
 
