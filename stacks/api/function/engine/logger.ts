@@ -1,9 +1,7 @@
-import * as stackTrace from "error-stack-parser";
-import * as fs from "fs";
-import * as path from "path";
+import {Collection, DatabaseService, ObjectId} from "@spica-server/database";
+import * as os from "os";
 import * as util from "util";
-import * as winston from "winston";
-import * as DailyRotateFile from "winston-daily-rotate-file";
+//import * as stackTrace from "error-stack-parser";
 import {Execution} from "./interface";
 
 export interface Logger {
@@ -12,125 +10,109 @@ export interface Logger {
   log(message?: any, ...optionalParams: any[]);
   error(message?: any, ...optionalParams: any[]);
   warn(message?: any, ...optionalParams: any[]);
+  _destroy(): void;
   [key: string]: (...args) => void;
 }
 
 interface QueryOptions {
-  rows?: number;
   limit?: number;
-  start?: number;
+  skip?: number;
   from?: Date;
   until?: Date;
-  order?: "asc" | "desc";
-  fields: any;
+  sort?: -1 | 1;
 }
 
 export abstract class LoggerHost {
-  abstract create(execution: Execution): {logger: Logger; dispose: Function};
-  abstract create(
-    execution: Execution,
-    stream?: NodeJS.WritableStream
-  ): {logger: Logger; dispose: Function};
-  abstract create(
-    execution: Execution,
-    stream?: NodeJS.WritableStream
-  ): {logger: Logger; dispose: Function};
+  abstract create(execution: Execution, stream?: NodeJS.WritableStream): Logger | Promise<Logger>;
   abstract query(targetId: string, options: QueryOptions): Promise<any>;
   abstract clear(targetId: string): Promise<void> | void;
 }
 
-export class WinstonLogger implements LoggerHost {
-  constructor(private root: string) {}
+export class DatabaseLogger implements LoggerHost {
+  constructor(private db: DatabaseService) {}
 
-  query(targetId: string, options: QueryOptions): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const logger = this.getLogger(targetId);
-      logger.query(options, (err, results) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(results.dailyRotateFile);
+  async create(execution: Execution, stream?: NodeJS.WritableStream): Promise<Logger> {
+    let collection: Collection;
+    if (!stream) {
+      collection = await this.db.createCollection(`function_${execution.target.id}`, {
+        capped: true,
+        size: 5242880,
+        max: 1000
       });
-    });
-  }
+    }
 
-  getLogger(targetId: string, executionId?: string, stream?: NodeJS.WritableStream) {
-    const stackTraceFormat = winston.format(info => {
-      if (info instanceof Error || (info.message != undefined && info.stack)) {
-        const stack = stackTrace
-          .parse((info as unknown) as Error)
-          .map(({source, ..._}) => ({..._}));
-        info = {
-          level: info.level,
-          message: info.message,
-          stack,
-          [Symbol.for("level")]: info.level
-        };
+    const log = (level: string, messageOrError: string | Error, ...optionalParams: any[]) => {
+      const message = {
+        level,
+        message:
+          optionalParams.length >= 1
+            ? util.format(messageOrError, ...optionalParams)
+            : util.format(messageOrError),
+        execution: execution.id
+      };
+      // TODO(thesayyn): Handle track traces
+      // if (messageOrError instanceof Error || (messageOrError != undefined && messageOrError['stack'])) {
+      //   const stack = stackTrace
+      //     .parse((info as unknown) as Error)
+      //     .map(({source, ..._}) => ({..._}));
+      //   info = {
+      //     level: info.level,
+      //     message: info.message,
+      //     stack,
+      //     [Symbol.for("level")]: info.level
+      //   };
+      // }
+      if (!stream) {
+        collection.insertOne(message);
+      } else {
+        stream.write(`${JSON.stringify(message)}${os.EOL}`);
       }
-      return info;
-    });
-
-    const executionIdFormat = winston.format(info => {
-      info.execution = executionId;
-      return info;
-    });
-
-    const transport = stream
-      ? new winston.transports.Stream({stream, close: () => stream.end()})
-      : new DailyRotateFile({
-          dirname: path.join(this.root, "logs"),
-          filename: `${targetId}-%DATE%.log`,
-          datePattern: "YYYY-MM-DD",
-          zippedArchive: true,
-          maxSize: "20m",
-          maxFiles: "10d",
-          json: true
-        });
-
-    return winston.createLogger({
-      level: "silly",
-      format: winston.format.combine(
-        stackTraceFormat(),
-        executionIdFormat(),
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-      transports: [transport]
-    });
-  }
-
-  create(execution: Execution, stream?: fs.WriteStream) {
-    const logger = this.getLogger(execution.target.id, execution.id, stream);
+    };
     return {
-      logger: {
-        log: (message, ...optionalParams) => logger.silly(util.format(message, ...optionalParams)),
-        debug: (message, ...optionalParams) =>
-          logger.debug(util.format(message, ...optionalParams)),
-        error: (message, ...optionalParams) =>
-          logger.error(util.format(message, ...optionalParams)),
-        info: (message, ...optionalParams) => logger.info(util.format(message, ...optionalParams)),
-        warn: (message, ...optionalParams) => logger.warn(util.format(message, ...optionalParams)),
-        dir: (object: any, options: util.InspectOptions) =>
-          logger.silly(util.inspect(object, options)),
-        time: (label: string) => logger.profile(label),
-        timeEnd: (label: string) => logger.profile(label),
-        clear: () => this.clear(execution.target.id)
-      },
-      dispose: () => logger.close()
+      debug: (message: string, ...optionalParams: any[]) =>
+        log("debug", message, ...optionalParams),
+      error: (message: string, ...optionalParams: any[]) =>
+        log("error", message, ...optionalParams),
+      log: (message: string, ...optionalParams: any[]) => log("log", message, ...optionalParams),
+      info: (message: string, ...optionalParams: any[]) => log("info", message, ...optionalParams),
+      warn: (message: string, ...optionalParams: any[]) => log("warn", message, ...optionalParams),
+      clear: () => this.clear(execution.target.id),
+      _destroy: () => stream && stream.end()
     };
   }
 
-  async clear(targetId: string): Promise<void> {
-    const root = path.join(this.root, "logs");
-    const files = await fs.promises.readdir(root);
-    for (const file of files) {
-      if (file.match(new RegExp(`${targetId}-.*?\.log.gz`))) {
-        await fs.promises.unlink(path.join(root, file));
-      } else if (file.match(new RegExp(`${targetId}-.*?\.log`))) {
-        // We need clean up files instead deleting them
-        // explicitly brokes the logging
-        await fs.promises.writeFile(path.join(root, file), "").catch();
-      }
+  query(targetId: string, options: QueryOptions): Promise<any> {
+    let query: any;
+
+    const toObjectId = (d: Date) => {
+      return new ObjectId(`${Math.floor(d.getTime() / 1000).toString(16)}0000000000000000`);
+    };
+
+    if (options.from && options.until) {
+      query = {_id: {$gt: toObjectId(options.from), $lte: toObjectId(options.until)}};
     }
+
+    let cursor = this.db.collection(`function_${targetId}`).find(query);
+
+    if (options.sort) {
+      cursor = cursor.sort({$natural: options.sort});
+    }
+
+    if (options.limit) {
+      cursor = cursor.limit(options.limit);
+    }
+
+    if (options.skip) {
+      cursor = cursor.skip(options.skip);
+    }
+
+    return cursor.toArray();
+  }
+
+  clear(targetId: string): void | Promise<void> {
+    return this.db
+      .collection(`function_${targetId}`)
+      .drop()
+      .then();
   }
 }
