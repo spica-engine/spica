@@ -6,17 +6,26 @@ load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "bucket",
-    srcs = glob(
-        include = ["**/*.ts"],
-        exclude = ["**/*.spec.ts"],
-    ),
-    data = glob(["**/*.json"]),
+    srcs = [
+        "bucket.controller.ts",
+        "bucket.module.ts",
+        "bucket.schema.resolver.ts",
+        "bucket.schema.types.ts",
+        "bucket.service.ts",
+        "bucket.ts",
+        "bucket-data.controller.ts",
+        "bucket-data.service.ts",
+        "cache.ts",
+        "index.ts",
+    ],
+    data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
     deps = [
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/bucket/history",
+        "//stacks/api/bucket/realtime",
         "//stacks/api/passport",
         "//stacks/api/preference",
         "@npm//@nestjs/common",

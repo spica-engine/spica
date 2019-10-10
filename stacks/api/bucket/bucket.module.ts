@@ -1,5 +1,6 @@
 import {Module} from "@nestjs/common";
-import {HistoryModule} from "@spica-server/bucket/history/history.module";
+import {HistoryModule} from "@spica-server/bucket/history";
+import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
 import {PreferenceModule, PreferenceService} from "@spica-server/preference";
@@ -10,7 +11,7 @@ import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema
 import {CUSTOM_TYPES} from "./bucket.schema.types";
 import {BucketService} from "./bucket.service";
 import {BucketCache, provideBucketCache} from "./cache";
-import {DocumentScheduler} from "./scheduler";
+import {DocumentScheduler} from "./schedule.service";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
@@ -20,6 +21,7 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
   imports: [
     PreferenceModule,
     HistoryModule,
+    RealtimeModule,
     SchemaModule.forChild({
       keywords: [CUSTOM_TYPES],
       schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]

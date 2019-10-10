@@ -8,10 +8,10 @@ ts_library(
         "database.module.ts",
         "database.service.ts",
         "index.ts",
+        "interface.ts",
         "pipes.ts",
     ],
     module_name = "@spica-server/database",
-    tsconfig = "//:tsconfig.json",
     deps = [
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",

@@ -194,7 +194,9 @@ To be able to create a function that triggered by database event, you need two r
 
 - **Collection:** Name of the collection where the set of documents stored
 - **Event Type:** Type of the event that happens in the collection. It can be `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
-- **Full Document:** Whether you want only full document or changes on passed data
+- **Full Document:** Whether you want only full document or changes on passed data.
+
+> IMPORTANT: When a REPLACE/UPDATE event immediately followed by DELETE/DROP event, `fullDocument` property in the event will be `null`. 
 
 A basic database function looks like this:
 

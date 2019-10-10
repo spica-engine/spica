@@ -6,8 +6,6 @@ import {
 } from "@spica-server/database/testing";
 import {BucketDataService} from "@spica-server/bucket";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
-
 describe("bucket data service", () => {
   let module: TestingModule;
   let bds: BucketDataService;
