@@ -119,7 +119,6 @@
     source-map-support "0.5.9"
     tsutils "2.27.2"
 
-<<<<<<< HEAD
 "@ionic/cli-framework@^2.1.6":
   version "2.1.6"
   resolved "https://registry.yarnpkg.com/@ionic/cli-framework/-/cli-framework-2.1.6.tgz#db7b6e75ab238e85d74e29fc006d355f2d0b31d3"
@@ -132,20 +131,6 @@
     "@ionic/utils-stream" "2.0.3"
     "@ionic/utils-subprocess" "1.0.7"
     "@ionic/utils-terminal" "1.0.4"
-=======
-"@ionic/cli-framework@^2.1.3":
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/@ionic/cli-framework/-/cli-framework-2.1.4.tgz#e42ce49e7d54a1ee4cd84f07da74be20375173c9"
-  integrity sha512-tfaQu1Jl4sekG4D84y1kSY83RWyWjnRAYF03to5yxBTTy4obMGfWIDn/VzBNnDd6N2dYDaTVfIc0LlxwGfrm9g==
-  dependencies:
-    "@ionic/utils-array" "1.1.0"
-    "@ionic/utils-fs" "2.0.5"
-    "@ionic/utils-object" "1.0.3"
-    "@ionic/utils-process" "1.0.3"
-    "@ionic/utils-stream" "2.0.2"
-    "@ionic/utils-subprocess" "1.0.5"
-    "@ionic/utils-terminal" "1.0.3"
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
     chalk "^2.3.0"
     debug "^4.0.0"
     inquirer "^6.0.0"
@@ -161,54 +146,32 @@
     wrap-ansi "^6.0.0"
     write-file-atomic "^3.0.0"
 
-<<<<<<< HEAD
 "@ionic/utils-array@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@ionic/utils-array/-/utils-array-1.2.0.tgz#e82ddca752525a37bcc9ae4cb650922b09a45b59"
   integrity sha512-wJfshi287FRjZM43+w3OkMl4n7hDTmK/9Jxm9Ot5hBDgeLP6Fw/OBb6tt+nGjhRBJbk1oOi7ksJgyBw/+1ldzg==
-=======
-"@ionic/utils-array@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@ionic/utils-array/-/utils-array-1.1.0.tgz#1abc7a3042803b8b7a10c92e21b251181e196349"
-  integrity sha512-+6ZWha08lPFE30dm50AF7lW+zvqdWj1WMzFfKVx5OAhuGpkuJmxrGrVOk26zvOYN//eluDc8MmnM7uwUUwuq/Q==
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
   dependencies:
     debug "^4.0.0"
     tslib "^1.9.0"
 
-<<<<<<< HEAD
 "@ionic/utils-fs@2.0.6":
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/@ionic/utils-fs/-/utils-fs-2.0.6.tgz#e23cdff3009e2d8b0df59d4763136e95075cea3d"
   integrity sha512-iU1UwU5NW2nlLvNNE3QoeH6I+wN3a4ypHFcS6Bp7qUDENeI+oTxHzVHKHM6qt7T/24TFLNcHVxcq/pGIt7vgOA==
-=======
-"@ionic/utils-fs@2.0.5":
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/@ionic/utils-fs/-/utils-fs-2.0.5.tgz#210f2a97d1441445e315dcb4f8439b6cb488b7d1"
-  integrity sha512-RFQ4JCvUyGmGCZaFpevaI8XpkSmOBFXqB8LGVF1rlJqRH049nyWTY9uy7G3kJ9iPy+OTLWpHVlfstzQ2xDzQyA==
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
   dependencies:
     debug "^4.0.0"
     fs-extra "^8.0.1"
     through2 "^3.0.0"
     tslib "^1.9.0"
 
-<<<<<<< HEAD
 "@ionic/utils-object@1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@ionic/utils-object/-/utils-object-1.0.4.tgz#e1bb0a923ab90e030fbacf8bc756e89d266ce36c"
   integrity sha512-B05kWS+Uj0rGrvG1RvAzDBuggstmWM0X4OUb3p9GhZJJQsNK2/0W03VfPOkNuaDi15NF/WFwLS7/yp7kM25mTw==
-=======
-"@ionic/utils-object@1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@ionic/utils-object/-/utils-object-1.0.3.tgz#12650c4f3caf05626b4907325b0c3a629ff7e044"
-  integrity sha512-QjqEsaJ0FchmW3flBTDEvcz5OdeRhmNh/kWtzvHjyCUkdMyKBJhpl56LwztJ7945ChZQw2UlhJ/WacY+7T/2mg==
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
   dependencies:
     debug "^4.0.0"
     tslib "^1.9.0"
 
-<<<<<<< HEAD
 "@ionic/utils-process@1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@ionic/utils-process/-/utils-process-1.0.4.tgz#ad1b1ddaa5dac725f1ca9ccf6fd2e0155d83b0cf"
@@ -216,36 +179,19 @@
   dependencies:
     "@ionic/utils-object" "1.0.4"
     "@ionic/utils-terminal" "1.0.4"
-=======
-"@ionic/utils-process@1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@ionic/utils-process/-/utils-process-1.0.3.tgz#d886a91ba05c8a8062caa2c2bcf06b99f7c8b520"
-  integrity sha512-AkzMdO6u4Ndwcue3yAXtZrXRu53MT+c0gj7X/4/XbUH43ZpmTVWyRgRUcRLzZHaCQEEb6zUYh+9B/7XOCEN64Q==
-  dependencies:
-    "@ionic/utils-object" "1.0.3"
-    "@ionic/utils-terminal" "1.0.3"
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
     debug "^4.0.0"
     lodash "^4.17.5"
     tree-kill "1.2.1"
     tslib "^1.9.0"
 
-<<<<<<< HEAD
 "@ionic/utils-stream@2.0.3":
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@ionic/utils-stream/-/utils-stream-2.0.3.tgz#4066c26ebb6c89d4da03d522b611bb6d76923c90"
   integrity sha512-Y1OAcJwP8uNCYQiRxywfo85jdOVbfdvRwjuvFVupFrLQet6kOBKh9wHHnivoS9du+Wlq4VjuFh03LmmAaHwenA==
-=======
-"@ionic/utils-stream@2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@ionic/utils-stream/-/utils-stream-2.0.2.tgz#0105f5dd25eb4ca3170fe1e236e49d32edb31d44"
-  integrity sha512-VPeSRPcHJGM0nH4aOD2LyJt6eOKnrkYQdgdKSoU/t/uyqZGeW5b1dasol218+Nm5hGa4woQVm7REmy07Np8wBA==
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
   dependencies:
     debug "^4.0.0"
     tslib "^1.9.0"
 
-<<<<<<< HEAD
 "@ionic/utils-subprocess@1.0.7":
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/@ionic/utils-subprocess/-/utils-subprocess-1.0.7.tgz#573a4d46535c0b158b63d0a395f0b6afa9d30a76"
@@ -256,33 +202,14 @@
     "@ionic/utils-process" "1.0.4"
     "@ionic/utils-stream" "2.0.3"
     "@ionic/utils-terminal" "1.0.4"
-=======
-"@ionic/utils-subprocess@1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@ionic/utils-subprocess/-/utils-subprocess-1.0.5.tgz#79839ee8ff7caefa1ae4641bf5dbbe39def95509"
-  integrity sha512-IIRaXAT6Ji7zKmHEQWB9R2dyxCZAuTzFPfkq5F8pa5SuetH4YTC66/HbsBMK5Qvn6DuI84dVBgScGdNgBjAQeg==
-  dependencies:
-    "@ionic/utils-array" "1.1.0"
-    "@ionic/utils-fs" "2.0.5"
-    "@ionic/utils-process" "1.0.3"
-    "@ionic/utils-stream" "2.0.2"
-    "@ionic/utils-terminal" "1.0.3"
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
     cross-spawn "^6.0.5"
     debug "^4.0.0"
     tslib "^1.9.0"
 
-<<<<<<< HEAD
 "@ionic/utils-terminal@1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@ionic/utils-terminal/-/utils-terminal-1.0.4.tgz#44de3a058a8967e44ee6e05bc906f03ad15f0b15"
   integrity sha512-+iJbFff7mnJ6ROE465+/DG8eweFmINVy69Bdw9fr8Vcf8WhJWxMw0vd59J/gaUSsHuxoufZYftVXVoWUd8RfWA==
-=======
-"@ionic/utils-terminal@1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@ionic/utils-terminal/-/utils-terminal-1.0.3.tgz#17c665116aa56ebda16ed80786e3da653e0712ef"
-  integrity sha512-Jx6IoxsramEKvp+eFbbL1dfDNi5iO8LhwgLAFuXWVfmrdCW5G5HaDod71V2edHimur3/XyS0cQsmJ4XHUOettA==
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
   dependencies:
     debug "^4.0.0"
     tslib "^1.9.0"
@@ -906,12 +833,7 @@ async-each@^1.0.1:
   resolved "https://registry.yarnpkg.com/async-each/-/async-each-1.0.3.tgz#b727dbf87d7651602f06f4d4ac387f47d91b0cbf"
   integrity sha512-z/WhQ5FPySLdvREByI2vZiTWwCnF0moMJ1hK9YQwDTHKh6I7/uSckMetoRGb5UBZPC1z0jlw+n/XCgjeH7y1AQ==
 
-async-limiter@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/async-limiter/-/async-limiter-1.0.1.tgz#dd379e94f0db8310b08291f9d64c3209766617fd"
-  integrity sha512-csOlWGAcRFJaI6m+F2WKdnMKr4HhdhFVBk0H/QbJFMCr+uO2kwohwXQPxw/9OCxp05r5ghVBFSyioixx3gfkNQ==
-
-async-limiter@~1.0.0:
+async-limiter@^1.0.0, async-limiter@~1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/async-limiter/-/async-limiter-1.0.1.tgz#dd379e94f0db8310b08291f9d64c3209766617fd"
   integrity sha512-csOlWGAcRFJaI6m+F2WKdnMKr4HhdhFVBk0H/QbJFMCr+uO2kwohwXQPxw/9OCxp05r5ghVBFSyioixx3gfkNQ==
@@ -923,17 +845,10 @@ async@2.6.1:
   dependencies:
     lodash "^4.17.10"
 
-<<<<<<< HEAD
-async@^2.0.0, async@^2.1.5, async@^2.5.0:
-  version "2.6.2"
-  resolved "https://registry.yarnpkg.com/async/-/async-2.6.2.tgz#18330ea7e6e313887f5d2f2a904bac6fe4dd5381"
-  integrity sha512-H1qVYh1MYhEEFLsP97cVKqCGo7KfCyTt6uEWqsTBr9SO84oK9Uwbyd/yCW+6rKJLHksBNUVWZDAjfS+Ccx0Bbg==
-=======
-async@^2.1.5, async@^2.5.0, async@^2.6.1, async@^2.6.3:
+async@^2.1.5, async@^2.5.0, async@^2.6.3:
   version "2.6.3"
   resolved "https://registry.yarnpkg.com/async/-/async-2.6.3.tgz#d72625e2344a3656e3a3ad4fa749fa83299d82ff"
   integrity sha512-zflvls11DCy+dQWzTW2dzuilv8Z5X/pjfmZOWba6TNIVDm+2UDaJmXSOXlasHKfNBs8oo3M0aT50fDEWfKZjXg==
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
   dependencies:
     lodash "^4.17.14"
 
@@ -2357,19 +2272,11 @@ entities@^1.1.1:
   resolved "https://registry.yarnpkg.com/entities/-/entities-1.1.2.tgz#bdfa735299664dfafd34529ed4f8522a275fea56"
   integrity sha512-f2LZMYl1Fzu7YSBKg+RoROelpOaNrcGmE9AZubeDfrCEia483oW4MI4VyFd5VNHIgQ/7qm1I0wUHK1eJnn2y2w==
 
-<<<<<<< HEAD
-=======
 entities@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/entities/-/entities-2.0.0.tgz#68d6084cab1b079767540d80e56a39b423e4abf4"
   integrity sha512-D9f7V0JSRwIxlRI2mjMqufDrRDnx8p+eEOz7aUM9SuvF8gsBzra0/6tbjl1m8eQHrZlYj6PxqE00hZ1SAIKPLw==
 
-env-variable@0.0.x:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/env-variable/-/env-variable-0.0.5.tgz#913dd830bef11e96a039c038d4130604eba37f88"
-  integrity sha512-zoB603vQReOFvTg5xMl9I1P2PnHsHQQKTEowsKKD7nseUfJq6UWzK+4YtlWUO1nhiQUxe6XMkk+JleSZD1NZFA==
-
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
 err-code@^1.0.0:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/err-code/-/err-code-1.1.2.tgz#06e0116d3028f6aef4806849eb0ea6a748ae6960"
@@ -4267,6 +4174,11 @@ memoizee@^0.4.14:
     next-tick "1"
     timers-ext "^0.1.5"
 
+memory-pager@^1.0.2:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/memory-pager/-/memory-pager-1.5.0.tgz#d8751655d22d384682741c972f2c3d6dfa3e66b5"
+  integrity sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==
+
 meow@^3.3.0:
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/meow/-/meow-3.7.0.tgz#72cb668b425228290abbfa856892587308a801fb"
@@ -4464,7 +4376,6 @@ moment-timezone@^0.5.x:
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.24.0.tgz#0d055d53f5052aa653c9f6eb68bb5d12bf5c2b5b"
   integrity sha512-bV7f+6l2QigeBBZSM/6yTNq4P2fNpSWj/0e7jQcy87A8e7o2nAfP/34/2ky5Vw4B9S446EtIhodAzkFCcR4dQg==
 
-<<<<<<< HEAD
 mongodb-core@3.2.7:
   version "3.2.7"
   resolved "https://registry.yarnpkg.com/mongodb-core/-/mongodb-core-3.2.7.tgz#a8ef1fe764a192c979252dacbc600dc88d77e28f"
@@ -4477,15 +4388,9 @@ mongodb-core@3.2.7:
     saslprep "^1.0.0"
 
 mongodb-memory-server-core@^5.2.0:
-  version "5.2.6"
-  resolved "https://registry.yarnpkg.com/mongodb-memory-server-core/-/mongodb-memory-server-core-5.2.6.tgz#985f595ee15be9cc8e0261a4be4abaa1b3b716ee"
-  integrity sha512-XnbYHJ3vdxXy38j8kxM0wkSOK7EFoTVFkmkh4oK5iXosWey83YLDh8x0UjtYfva6j6rCGF4tAhiDg53n1xV5Jg==
-=======
-mongodb-memory-server-core@^5.2.0:
   version "5.2.0"
   resolved "https://registry.yarnpkg.com/mongodb-memory-server-core/-/mongodb-memory-server-core-5.2.0.tgz#0f3be9c822fa9ec3491c4fc3ccef0eb375fa184f"
   integrity sha512-fwrrru0+/hglsxoKUHwdlv+i6UIZUiJMnJCZCOYwJ9X7bVmYmKY1P5+tvh5SeLK5fiTz8jqvBsnuQ3/taUhvhw==
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
   dependencies:
     camelcase "^5.3.1"
     cross-spawn "^6.0.5"
@@ -4505,7 +4410,15 @@ mongodb-memory-server-core@^5.2.0:
   optionalDependencies:
     mongodb ">=3.2.7"
 
-mongodb@>=3.2.7, mongodb@^3.1.13:
+mongodb@3.2.7:
+  version "3.2.7"
+  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-3.2.7.tgz#8ba149e4be708257cad0dea72aebb2bbb311a7ac"
+  integrity sha512-2YdWrdf1PJgxcCrT1tWoL6nHuk6hCxhddAAaEh8QJL231ci4+P9FLyqopbTm2Z2sAU6mhCri+wd9r1hOcHdoMw==
+  dependencies:
+    mongodb-core "3.2.7"
+    safe-buffer "^5.1.2"
+
+mongodb@>=3.2.7:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-3.3.0.tgz#3ec6fa6260405b16fe76cc37b5d09684d13d8c11"
   integrity sha512-QYa8YEN5uiJyIFdnn1vmBtiSveyygmQghsaL/RDnHqUzjGvkYe0vRg6UikCKba06cg6El/Lu7qzOYnR3vMhwlA==
@@ -5903,6 +5816,13 @@ saml2-js@^2.0.3:
     xmlbuilder "~2.2.0"
     xmldom "^0.1.0"
 
+saslprep@^1.0.0:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/saslprep/-/saslprep-1.0.3.tgz#4c02f946b56cf54297e347ba1093e7acac4cf226"
+  integrity sha512-/MY/PEMbk2SuY5sScONwhUDsV2p77Znkb/q3nSVstq/yQzYJOH/Azh29p9oJLsl3LnQwSvZDKagDGBsBwSooag==
+  dependencies:
+    sparse-bitfield "^3.0.3"
+
 sax@>=0.6.0, sax@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
@@ -5932,7 +5852,7 @@ semver@5.6.0:
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.6.0.tgz#7e74256fbaa49c75aa7c7a205cc22799cac80004"
   integrity sha512-RS9R6R35NYgQn++fkDWaOmqGoj4Ek9gGs+DPxNUZKuwE183xjJroKvyo1IzVFeXvUrvmALy6FWD5xrdJT25gMg==
 
-semver@^6.0.0, semver@^6.2.0:
+semver@^6.0.0:
   version "6.3.0"
   resolved "https://registry.yarnpkg.com/semver/-/semver-6.3.0.tgz#ee0a64c8af5e8ceea67687b133761e1becbd1d3d"
   integrity sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==
@@ -6203,6 +6123,13 @@ space-separated-tokens@^1.0.0:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/space-separated-tokens/-/space-separated-tokens-1.1.4.tgz#27910835ae00d0adfcdbd0ad7e611fb9544351fa"
   integrity sha512-UyhMSmeIqZrQn2UdjYpxEkwY9JUrn8pP+7L4f91zRzOQuI8MF1FGLfYU9DKCYeLdo7LXMxwrX5zKFy7eeeVHuA==
+
+sparse-bitfield@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/sparse-bitfield/-/sparse-bitfield-3.0.3.tgz#ff4ae6e68656056ba4b3e792ab3334d38273ca11"
+  integrity sha1-/0rm5oZWBWuks+eSqzM004JzyhE=
+  dependencies:
+    memory-pager "^1.0.2"
 
 spawn-wrap@^1.4.2:
   version "1.4.2"
@@ -7128,38 +7055,6 @@ window-size@^0.1.4:
   resolved "https://registry.yarnpkg.com/window-size/-/window-size-0.1.4.tgz#f8e1aa1ee5a53ec5bf151ffa09742a6ad7697876"
   integrity sha1-+OGqHuWlPsW/FR/6CXQqatdpeHY=
 
-<<<<<<< HEAD
-=======
-winston-compat@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/winston-compat/-/winston-compat-0.1.4.tgz#599b4ce807ffe728713ecc25ede3f6b89425b739"
-  integrity sha512-mMEfFsSm6GmkFF+f4/0UJtG4N1vSaczGmXLVJYmS/+u2zUaIPcw2ZRuwUg2TvVBjswgiraN+vNnAG8z4fRUZ4w==
-  dependencies:
-    cycle "~1.0.3"
-    logform "^1.6.0"
-    triple-beam "^1.2.0"
-
-winston-daily-rotate-file@^3.6.0:
-  version "3.10.0"
-  resolved "https://registry.yarnpkg.com/winston-daily-rotate-file/-/winston-daily-rotate-file-3.10.0.tgz#c49047d227f82a1f191c8298772aaeb7b67d5906"
-  integrity sha512-KO8CfbI2CvdR3PaFApEH02GPXiwJ+vbkF1mCkTlvRIoXFI8EFlf1ACcuaahXTEiDEKCii6cNe95gsL4ZkbnphA==
-  dependencies:
-    file-stream-rotator "^0.4.1"
-    object-hash "^1.3.0"
-    semver "^6.2.0"
-    triple-beam "^1.3.0"
-    winston-compat "^0.1.4"
-    winston-transport "^4.2.0"
-
-winston-transport@^4.2.0, winston-transport@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/winston-transport/-/winston-transport-4.3.0.tgz#df68c0c202482c448d9b47313c07304c2d7c2c66"
-  integrity sha512-B2wPuwUi3vhzn/51Uukcao4dIduEiPOcOt9HJ3QeaXgkJ5Z7UwpBzxS4ZGNHtrxrUvTwemsQiSys0ihOf8Mp1A==
-  dependencies:
-    readable-stream "^2.3.6"
-    triple-beam "^1.2.0"
-
->>>>>>> 1f32e17b3e957eeefc43fe83899ca2b89c83eaa7
 winston@^2.1.1:
   version "2.4.4"
   resolved "https://registry.yarnpkg.com/winston/-/winston-2.4.4.tgz#a01e4d1d0a103cf4eada6fc1f886b3110d71c34b"

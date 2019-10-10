@@ -15,6 +15,7 @@ ts_library(
         "bucket.ts",
         "bucket-data.controller.ts",
         "bucket-data.service.ts",
+        "scheduler.ts",
         "cache.ts",
         "index.ts",
     ],

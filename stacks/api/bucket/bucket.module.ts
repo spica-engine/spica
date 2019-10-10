@@ -11,7 +11,7 @@ import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema
 import {CUSTOM_TYPES} from "./bucket.schema.types";
 import {BucketService} from "./bucket.service";
 import {BucketCache, provideBucketCache} from "./cache";
-import {DocumentScheduler} from "./schedule.service";
+import {DocumentScheduler} from "./scheduler";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");

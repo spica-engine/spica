@@ -37,7 +37,7 @@ test --incompatible_strict_action_env
 # In order to make things work as expected.
 build --define=DATABASE_URI=mongodb://localhost:27017,localhost:27018,localhost:27019
 build --define=REPLICA_SET=infra
-build --define=DATABASE_NAME=spica
+build --define=DATABASE_NAME=spica1
 build --define=PUBLIC_HOST=http://localhost:4300
 build --define=PORT=4300
 build --define=PERSISTENT_PATH=/tmp #Very persistent!
