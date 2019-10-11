@@ -84,8 +84,6 @@
     "typescript": "~3.4.2",
     "url": "^0.11.0",
     "vm2": "^3.6.9",
-    "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^3.6.0",
     "ws": "^7.1.2"
   },
   "devDependencies": {

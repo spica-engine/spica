@@ -134,10 +134,18 @@ export class HttpTrigger implements Trigger<HttpTriggerOptions>, OnModuleInit {
   }
 
   stub(test: any, info: Function) {
-    const req = {};
+    const req = {query: {}, body: {}, params: {}};
     const res = {
-      send: body => {
-        info(body);
+      header: (name: string, value: string) => {
+        info("Header ", `${name}: ${value}`);
+        return res;
+      },
+      status: (code: number) => {
+        info("Status code: ", code);
+        return res;
+      },
+      send: (body: any) => {
+        info("Body: ", body);
         return res;
       }
     };

@@ -31,7 +31,7 @@ export class AddComponent implements OnInit, OnDestroy {
   public $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
 
   public logLevelMapping = {
-    silly: {icon: "bug_report", color: "#6b6b6b"},
+    log: {icon: "bug_report", color: "#6b6b6b"},
     error: {icon: "error", color: "red"},
     warn: {icon: "warning", color: "orange"},
     debug: {icon: "bug_report", color: "#6b6b6b"},
