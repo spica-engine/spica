@@ -3,13 +3,15 @@
   <input
     matInput
     type="datetime"
-    [matDatepicker]="picker"
+    [disabled]="_disabled"
+    (focus)="dt1.open()"
     [(ngModel)]="_value"
     (ngModelChange)="callOnChange()"
-    (focus)="picker.open()"
-    [disabled]="_disabled"
+    [owlDateTime]="dt1"
+    [owlDateTimeTrigger]="dt1"
+    placeholder="Date Time"
   />
-  <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="_disabled"></mat-datepicker-toggle>
-  <mat-datepicker #picker></mat-datepicker>
+  <owl-date-time #dt1></owl-date-time>
+
   <mat-hint>{{ schema.description }}</mat-hint>
 </mat-form-field>
