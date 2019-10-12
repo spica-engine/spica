@@ -74,8 +74,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         ),
         tap(params => {
           if (!params.id) {
-            this.updatePositionProperties();
             this.bucket = emptyBucket();
+            this.updatePositionProperties();
           }
         }),
         filter(params => params.id),

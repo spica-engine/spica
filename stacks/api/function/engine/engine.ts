@@ -26,7 +26,7 @@ export class FunctionEngine {
 
       if (trigger && meta.active) {
         const target: Target = {handler: t, id: fn._id.toString()};
-        const invoker: InvokerFn = invocation => {
+        const invoker: InvokerFn = async invocation => {
           const script = this.host.read(fn);
           const context: Context = {process: {env: fn.env}};
           const execution: Execution = {
@@ -41,9 +41,11 @@ export class FunctionEngine {
             parameters: invocation.parameters,
             target: invocation.target
           };
-          const logger = this.logger.create(execution);
-          execution.logger = logger.logger;
-          return this.executor.execute(execution).then(() => logger.dispose());
+          execution.logger = await this.logger.create(execution);
+          return this.executor
+            .execute(execution)
+            .then(() => execution.logger._destroy())
+            .catch(() => execution.logger._destroy());
         };
         trigger.register(invoker, target, meta.options);
       } else if (trigger && !meta.active) {
@@ -53,7 +55,7 @@ export class FunctionEngine {
     });
   }
 
-  run(fn: Function, target: Target, stream: NodeJS.WritableStream) {
+  async run(fn: Function, target: Target, stream: NodeJS.WritableStream) {
     const trigger = this.registry.getTrigger(fn.triggers[target.handler].type);
     const script = this.host.read(fn);
     const context: Context = {process: {env: fn.env}};
@@ -70,8 +72,7 @@ export class FunctionEngine {
       target
     };
 
-    const logger = this.logger.create(execution, stream);
-    execution.logger = logger.logger;
+    execution.logger = await this.logger.create(execution, stream);
 
     return trigger
       .stub({}, execution.logger.info)
@@ -81,12 +82,12 @@ export class FunctionEngine {
       })
       .then(() => {
         stream.write(JSON.stringify({type: "event", state: "succeeded"}));
-        logger.dispose();
+        execution.logger._destroy();
       })
       .catch(error => {
         console.log(error);
         stream.write(JSON.stringify({type: "event", state: "failed"}));
-        logger.dispose();
+        execution.logger._destroy();
       });
   }
 

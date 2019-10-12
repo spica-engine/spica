@@ -49,6 +49,7 @@ import {
   MaxItemsValidator
 } from "./validators";
 import {BooleanSchemaComponent} from "./components/boolean-schema/boolean-schema.component";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 
 export function coerceObject() {
   return {};
@@ -75,7 +76,9 @@ export function coerceObject() {
     MatCheckboxModule,
     MatTooltipModule,
     MatNativeDateModule,
-    DragDropModule
+    DragDropModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule
   ],
   exports: [InputPlacerComponent, InputSchemaPlacer, MaxValidator, MinValidator],
   declarations: [
