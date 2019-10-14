@@ -1,4 +1,4 @@
-import {Context, Target, Info} from "./trigger/base";
+import {Environment, Target, Info} from "./trigger/base";
 import {Logger} from "./logger";
 
 export interface Execution {
@@ -7,7 +7,7 @@ export interface Execution {
   logger: Logger;
   cwd: string;
   script: string;
-  context: Context;
+  environment: Environment;
   parameters: any[];
   modules?: {
     [key: string]: object;

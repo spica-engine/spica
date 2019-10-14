@@ -5,7 +5,7 @@ import {FunctionHost} from "./host";
 import {Execution, Function, FunctionInfo} from "./interface";
 import {LoggerHost} from "./logger";
 import {EngineRegistry} from "./registry";
-import {Context, InvokerFn, Target} from "./trigger/base";
+import {InvokerFn, Target} from "./trigger/base";
 
 @Injectable()
 export class FunctionEngine {
@@ -28,14 +28,13 @@ export class FunctionEngine {
         const target: Target = {handler: t, id: fn._id.toString()};
         const invoker: InvokerFn = async invocation => {
           const script = this.host.read(fn);
-          const context: Context = {process: {env: fn.env}};
           const execution: Execution = {
             id: shortId.generate(),
             script: script,
             cwd: this.host.getRoot(fn),
             timeout: fn.timeout,
             memoryLimit: fn.memoryLimit,
-            context: context,
+            environment: fn.env,
             logger: null, //Lazy
             modules: this.registry.getModules(),
             parameters: invocation.parameters,
@@ -58,14 +57,13 @@ export class FunctionEngine {
   async run(fn: Function, target: Target, stream: NodeJS.WritableStream) {
     const trigger = this.registry.getTrigger(fn.triggers[target.handler].type);
     const script = this.host.read(fn);
-    const context: Context = {process: {env: fn.env}};
     const execution: Execution = {
       id: shortId.generate(),
       script: script,
       cwd: this.host.getRoot(fn),
       timeout: fn.timeout,
       memoryLimit: fn.memoryLimit,
-      context: context,
+      environment: fn.env,
       logger: null, //Lazy
       modules: this.registry.getModules(),
       parameters: null, // Lazy

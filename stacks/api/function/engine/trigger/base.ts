@@ -49,6 +49,6 @@ export interface Invocation {
   parameters: any[];
 }
 
-export interface Context {
+export interface Environment {
   [key: string]: any;
 }
