@@ -66,7 +66,10 @@ export class AddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id)),
         tap(fn => {
-          this.function = fn;
+          this.function = {
+            ...fn,
+            env: Object.entries(fn.env as any).map(([name, value]) => ({name, value})) as any
+          };
           this.ls.request("open", this.function._id);
           this.dependencies = this.http.get(`api:/function/${fn._id}/dependencies`);
         }),
@@ -130,7 +133,13 @@ export class AddComponent implements OnInit, OnDestroy {
   save() {
     this.clearEmptyEnvVars();
     this.functionService
-      .upsertOne(this.function)
+      .upsertOne({
+        ...this.function,
+        env: this.function.env.reduce((acc, env) => {
+          acc[env.name] = env.value;
+          return acc;
+        }, {}) as any
+      })
       .pipe(switchMap(fn => this.functionService.updateIndex(fn._id, this.index)))
       .toPromise()
       .then(() => this.router.navigate(["function"]));
