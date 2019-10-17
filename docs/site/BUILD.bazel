@@ -36,7 +36,7 @@ container_push(
 k8s_deploy(
     name = "deploy",
     images = {
-        "spicaengine/site": ":site",
+        "spicaengine/site:master": ":site",
     },
     template = ":deployment.yaml",
 )
