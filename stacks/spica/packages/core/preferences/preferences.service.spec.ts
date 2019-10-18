@@ -27,10 +27,6 @@ describe("PreferenceService", () => {
     httpTestingController.verify();
   });
 
-  it("should be created", () => {
-    expect(service).toBeTruthy();
-  });
-
   it("should be get request", () => {
     service.get("scope").subscribe();
     const req = httpTestingController.expectOne("api:/preference/scope");

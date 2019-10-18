@@ -1,45 +1,35 @@
-import {Component, ViewChild} from "@angular/core";
+import {Component, DebugElement, ViewChild} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {By} from "@angular/platform-browser";
 import {MatClipboardDirective} from "./clipboard.directive";
+import {By} from "@angular/platform-browser";
+import {MatClipboardModule} from "./clipboard.module";
+
+//UNDONE
+
+@Component({
+  template: `
+    <button #clipboard="matClipboard" [matClipboard]="test">Copy Me!</button>
+  `
+})
+class TestClipBoardComponent {
+  @ViewChild(MatClipboardDirective, {static: true}) directive: MatClipboardDirective;
+}
 
 describe("ClipboardDirective", () => {
-  let fixture: ComponentFixture<TestComponent>;
-
-  @Component({
-    template: `
-      text: string = "text";
-      <button #clipboard="matClipboard" [matClipboard]="text">{{ clipboard.icon }}</button>
-    `
-  })
-  class TestComponent {
-    @ViewChild(MatClipboardDirective, {static: true}) clipboard: MatClipboardDirective;
-    text: string = "text";
-  }
+  let component: TestClipBoardComponent;
+  let fixture: ComponentFixture<TestClipBoardComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [TestComponent, MatClipboardDirective]
+      imports: [MatClipboardModule],
+      providers: [],
+      declarations: [TestClipBoardComponent]
     });
-
-    fixture = TestBed.createComponent(TestComponent);
+    fixture = TestBed.createComponent(TestClipBoardComponent);
+    component = fixture.componentInstance;
   });
 
-  it("should find clipboard directive", () => {
-    expect(fixture.componentInstance.clipboard).toBeTruthy();
-  });
-
-  it("should change the icon", done => {
-    const button = fixture.debugElement.query(By.css("button")).nativeElement as HTMLButtonElement;
-    fixture.detectChanges();
-    expect(button.textContent).toBe("info");
-    button.click();
-    fixture.detectChanges();
-    expect(button.textContent).toBe("check");
-    setTimeout(() => {
-      fixture.detectChanges();
-      expect(button.textContent).toBe("info");
-      done();
-    }, 1001);
+  it("should create component", () => {
+    expect(component).toBeDefined();
   });
 });

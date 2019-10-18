@@ -6,10 +6,10 @@
     "target": "es2015",
     "module": "esnext",
     "baseUrl": "./",
+    "typeRoots": ["@types"],
     "lib": [
-      "es2018",
-      "dom"
-    ],
+      "es2018"
+    ]
   },
   "include": ["src/**/*.ts"],
   "exclude": [
