@@ -18,6 +18,13 @@ spec:
       containers:
         - name: mongo
           image: mongo:4.2
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "200Mi"
+              cpu: "250m"
           command:
             - mongod
             - "--replSet"
@@ -67,11 +74,22 @@ spec:
         - name: spica
           image: spicaengine/spica:master
           imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "10m"
+            limits:
+              memory: "20Mi"
+              cpu: "20m"
           ports:
             - containerPort: 80
         - name: api
           image: spicaengine/api:master
           imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "400Mi"
+              cpu: "500m"
           ports:
             - containerPort: 4300
           env:

@@ -13,7 +13,7 @@ export class VM2Executor extends FunctionExecutor {
     return new Promise(async resolve => {
       const vm = new NodeVM({
         timeout: execution.timeout || 100,
-        sandbox: {console: execution.logger, exports: {}},
+        sandbox: {console: execution.logger, exports: {}, ...execution.context},
         require: {
           mock: execution.modules,
           external: true,

@@ -11,6 +11,10 @@ export class FirehoseClient {
     return this.client.remoteAddress;
   }
 
+  close(): void {
+    this.client.close();
+  }
+
   send(name: string, data: any) {
     this.client.send(JSON.stringify({name, data}));
   }
@@ -38,7 +42,7 @@ export class FirehosePool {
 }
 
 export interface FirehoseOptions {
-  event: "connection" | "disconnect" | string;
+  event: "*" | "**" | "connection" | "disconnect" | string;
 }
 
 @Trigger({
@@ -58,9 +62,10 @@ export class FirehoseTrigger implements Trigger<FirehoseOptions>, OnModuleInit {
     this.wss = new ws.Server({noServer: true});
     this.pool = new FirehosePool(this.wss);
 
-    this.wss.on("connection", ws => {
+    this.wss.on("connection", (ws, req) => {
       const cl = new FirehoseClient(ws);
-      this.invoke("connection", cl);
+      this.invoke("connection", cl, req);
+
       ws["alive"] = true;
       ws.on("message", (raw: string) => {
         try {
@@ -104,12 +109,22 @@ export class FirehoseTrigger implements Trigger<FirehoseOptions>, OnModuleInit {
     });
   }
 
+  handleUpgrade() {}
+
   invoke(name: string, client: any, data?: any) {
     for (const pair of this.eventTargetMap.values()) {
-      if (pair.event == name || (pair.event == "*" && (name == "connection" || name == "close"))) {
+      if (
+        pair.event == name ||
+        pair.event == "*" ||
+        (pair.event == "**" && (name == "connection" || name == "close"))
+      ) {
+        console.log(name);
         pair.invoker({
           target: pair.target,
-          parameters: [{client, pool: this.pool}, {name, data}]
+          parameters: [
+            {client, pool: this.pool},
+            {name, [name == "connection" ? "request" : "data"]: data}
+          ]
         });
       }
     }
@@ -135,8 +150,9 @@ export class FirehoseTrigger implements Trigger<FirehoseOptions>, OnModuleInit {
         event: {
           title: "Event",
           description:
-            "For connection events use 'connection' or 'close'. For custom events use the event name or '*' for all events.",
-          type: "string"
+            "For all events use '*'. For connection events use '**'. For custom events use the event name.",
+          type: "string",
+          examples: ["*", "**", "connection", "close", "mycustomevent"]
         }
       },
       additionalProperties: false
@@ -144,9 +160,13 @@ export class FirehoseTrigger implements Trigger<FirehoseOptions>, OnModuleInit {
   }
 
   info(options: FirehoseOptions): Promise<Info[]> {
+    const infoMap = {
+      "*": "Firehose: All events",
+      "**": "Firehose: All connection events"
+    };
     const info: Info = {
       icon: "compare_arrows",
-      text: options.event == "*" ? "Firehose: All events" : `Firehose: on ${options.event}`,
+      text: infoMap[options.event] || `Firehose: on ${options.event}`,
       type: "label"
     };
     return Promise.resolve([info]);
