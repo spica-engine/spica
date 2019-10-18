@@ -6,7 +6,7 @@ describe("executor", () => {
     handler: "mytarget"
   };
 
-  fit("should execute print logs", async () => {
+  it("should execute print logs", async () => {
     const executor = new IsolatedVMExecutor();
     const logger = jasmine.createSpyObj("console", ["debug", "info", "log", "error", "warn"]);
 
@@ -68,7 +68,7 @@ describe("executor", () => {
   it("should pass return value from closure", async () => {
     const executor = new IsolatedVMExecutor();
     const logger = jasmine.createSpyObj("console", ["debug", "info", "log", "error", "warn"]);
-    const res = await executor.execute({
+    const execution = {
       environment: {},
       cwd: ".",
       logger,
@@ -77,11 +77,35 @@ describe("executor", () => {
       parameters: [],
       target,
       script: `
-        export function mytarget(arg1, arg2) {
-           return [];
-        }
-        `
-    });
-    expect(res).toEqual([]);
+      export function mytarget(arg1, arg2) {
+        return [];
+      }
+      `
+    };
+    expect(await executor.execute(execution)).toEqual([]);
+    execution.script = `
+    export function mytarget(arg1, arg2) {
+      return {test: {test: 1}};
+    }
+    `;
+    expect(await executor.execute(execution)).toEqual({test: {test: 1}});
+    execution.script = `
+    export function mytarget(arg1, arg2) {
+      return true;
+    }
+    `;
+    expect(await executor.execute(execution)).toBe(true);
+    execution.script = `
+    export function mytarget(arg1, arg2) {
+      return 213;
+    }
+    `;
+    expect(await executor.execute(execution)).toBe(213);
+    execution.script = `
+    export function mytarget(arg1, arg2) {
+      return "string";
+    }
+    `;
+    expect(await executor.execute(execution)).toBe("string");
   });
 });

@@ -26,31 +26,31 @@ export class IsolatedVMExecutor extends FunctionExecutor {
       runtime: vm.compileModuleSync(
         // Prepare resolver function
         `export function resolve(val) {
-            if (val instanceof ivm.Reference) {
-              console.log('ref');
-              switch (val.typeof) {
-                case "function":
-                  return function(...args) {
-                    val.applyIgnored(
-                      undefined,
-                      args.map(arg => new ivm.ExternalCopy(arg).copyInto())
-                    );
-                  };
-                case "object":
-                  const actualValue = val.copySync();
-                  return Object.keys(actualValue).reduce((accumulator, key) => {
-                    accumulator[key] = resolve(actualValue[key]);
-                    return accumulator;
-                  }, {});
-                default:
-                  return val.copySync();
-              }
-            } else if (val instanceof ivm.ExternalCopy) {
-              return val.copy();
-            } else {
-              return val;
+          if (val instanceof ivm.Reference) {
+            switch (val.typeof) {
+              case "function":
+                return function(...args) {
+                  val.applyIgnored(
+                    undefined,
+                    args.map(arg => new ivm.ExternalCopy(arg).copyInto())
+                  );
+                };
+              case "object":
+                const actualValue = val.copySync();
+                return Object.keys(actualValue).reduce((accumulator, key) => {
+                  accumulator[key] = resolve(actualValue[key]);
+                  return accumulator;
+                }, {});
+              default:
+                return val.copySync();
             }
-        }`
+          } else if (val instanceof ivm.ExternalCopy) {
+            return val.copy();
+          } else {
+            return val;
+          }
+        }
+        `
       )
     };
 
@@ -65,7 +65,6 @@ export class IsolatedVMExecutor extends FunctionExecutor {
 
     export function closure_${execution.id}(...args) {
       const res = ${execution.target.handler}(...args.map((p) => resolve(p)));
-      console.log(res);
       return new ivm.ExternalCopy(res).copyInto();
     }`,
       {filename: "closure.js"}
@@ -82,16 +81,15 @@ export class IsolatedVMExecutor extends FunctionExecutor {
       .apply(undefined, execution.parameters.map(param => this.makeTransferable(param)), {
         timeout: execution.timeout
       })
-      .then(() => {
+      .then(r => {
+        console.log(r);
         console.log(vm.cpuTime, vm.wallTime, vm.referenceCount, vm.getHeapStatisticsSync());
-        if (!vm.isDisposed) {
-          vm.dispose();
-        }
+        !vm.isDisposed && vm.dispose();
+        return r;
       })
       .catch(error => {
-        if (!vm.isDisposed) {
-          vm.dispose();
-        }
+        !vm.isDisposed && vm.dispose();
+
         return Promise.reject(error);
       });
   }
