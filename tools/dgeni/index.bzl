@@ -3,7 +3,7 @@
   specified entry points and outputs the API docs into a package relative directory.
 """
 
-load("@build_bazel_rules_nodejs//internal/common:node_module_info.bzl", "NodeModuleSources", "collect_node_modules_aspect")
+load("@build_bazel_rules_nodejs//:providers.bzl", "node_modules_aspect", "NpmPackageInfo")
 load("@npm_bazel_typescript//internal:common/compilation.bzl", "DEPS_ASPECTS")
 
 DocSources = provider(
@@ -28,9 +28,9 @@ def _docs(ctx):
     mappings = dict()
 
     for dep in ctx.attr.deps:
-        if NodeModuleSources in dep:
+        if NpmPackageInfo in dep:
             # Dependencies from node_module should appear in execroot.
-            node_module = dep[NodeModuleSources]
+            node_module = dep[NpmPackageInfo]
             sources = depset(transitive = [sources, node_module.sources])
         if hasattr(dep, "typescript"):
             # We need to pass all transitive deps as well to let typescript resolve everything.
@@ -126,7 +126,7 @@ docs = rule(
             allow_files = [".ts", ".md"],
         ),
         "deps": attr.label_list(
-            aspects = DEPS_ASPECTS + [collect_node_modules_aspect],
+            aspects = DEPS_ASPECTS + [node_modules_aspect],
             doc = "Compile-time dependencies, typically other ts_library targets",
         ),
         "flat": attr.bool(
