@@ -5,7 +5,9 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 @Component({
   templateUrl: "./boolean.component.html",
   styleUrls: ["./boolean.component.scss"],
-  providers: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => BooleanComponent)}]
+  providers: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => BooleanComponent)}
+  ]
 })
 export class BooleanComponent implements ControlValueAccessor {
   value: boolean;
