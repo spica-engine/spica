@@ -1,44 +1,24 @@
-import {Component, forwardRef, HostListener, Inject} from "@angular/core";
+import {Component, forwardRef, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-
-import {INPUT_SCHEMA, InputSchema} from "../../input";
+import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./date.component.html",
   styleUrls: ["./date.component.scss"],
-  providers: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DateComponent)}]
+  providers: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => DateComponent)}
+  ]
 })
 export class DateComponent implements ControlValueAccessor {
   _value: Date;
   _disabled: boolean = false;
-  _onChangeFn: any;
-  _onTouchedFn: any;
+  _onChangeFn: Function = () => {};
+  _onTouchedFn: Function = () => {};
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
-
-  get value() {
-    return this._value ? this._value.toISOString() : undefined;
-  }
-
-  set value(v: any) {
-    this._value = v ? new Date(v) : undefined;
-  }
-
-  @HostListener("click")
-  callOnTouched(): void {
-    if (this._onTouchedFn) {
-      this._onTouchedFn();
-    }
-  }
-
-  callOnChange() {
-    if (this._onChangeFn) {
-      this._onChangeFn(this._value);
-    }
-  }
+  constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
   writeValue(val: any): void {
-    this.value = val;
+    this._value = val && new Date(val);
   }
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;

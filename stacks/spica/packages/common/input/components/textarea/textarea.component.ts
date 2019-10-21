@@ -1,6 +1,6 @@
 import {Component, forwardRef, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {InputSchema, INPUT_SCHEMA} from "../../input";
+import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./textarea.component.html",
@@ -13,11 +13,11 @@ export class TextAreaComponent implements ControlValueAccessor {
   _onChangeFn: any = () => {};
   _onTouchedFn: any = () => {};
 
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
+  constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
   writeValue(val: string): void {
     this.value = val;
-    if (this.value == "undefined" && this.schema.default) {
+    if (this.value == undefined && this.schema.default) {
       this.value = String(this.schema.default);
       this._onChangeFn(this.value);
     }

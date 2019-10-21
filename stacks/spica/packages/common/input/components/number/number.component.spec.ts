@@ -1,12 +1,6 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import {
-  MatFormFieldModule,
-  MatIconModule,
-  MatInputModule,
-  MatMenuModule,
-  MatSelectModule
-} from "@angular/material";
+import {MatFormFieldModule, MatInputModule} from "@angular/material";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
@@ -27,15 +21,7 @@ describe("Common#number", () => {
   beforeEach(() => {
     TestBed.resetTestingModule()
       .configureTestingModule({
-        imports: [
-          FormsModule,
-          MatFormFieldModule,
-          MatInputModule,
-          MatMenuModule,
-          MatSelectModule,
-          MatIconModule,
-          NoopAnimationsModule
-        ],
+        imports: [FormsModule, MatFormFieldModule, MatInputModule, NoopAnimationsModule],
         declarations: [NumberComponent, MinValidator, MaxValidator],
         providers: [
           {
