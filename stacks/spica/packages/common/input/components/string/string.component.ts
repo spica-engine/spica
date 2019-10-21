@@ -7,7 +7,7 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
   styleUrls: ["./string.component.scss"],
   providers: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => StringComponent)}
-  ]
+  ],
 })
 export class StringComponent implements ControlValueAccessor {
   value: string;

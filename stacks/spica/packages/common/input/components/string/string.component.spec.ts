@@ -1,4 +1,4 @@
-import {ComponentFixture, fakeAsync, TestBed, tick, flushMicrotasks} from "@angular/core/testing";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
 import {
   MatFormFieldModule,
@@ -128,14 +128,67 @@ fdescribe("Common#string", () => {
     });
 
     describe("minLength", () => {
-      it("should not be valid when value is less than expected", fakeAsync(() => {
+      it("should not be valid when value is less than expected", () => {
         changeScheme(fixture, {minLength: 3});
-        fixture.componentInstance.writeValue('tt');
-        tick();
-        fixture.detectChanges();
+        const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+        input.control.setValue("te");
+        input.control.markAsTouched();
+        fixture.detectChanges(false);
         const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
-      }));
+        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+          " This property must be greater than 2 characters. "
+        );
+      });
+
+      it("should remove errors if input greater than expected", () => {
+        changeScheme(fixture, {minLength: 3});
+        const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+
+        input.control.setValue("te");
+        input.control.markAsTouched();
+        fixture.detectChanges(false);
+        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        expect(formFieldElem.classList).toContain("ng-invalid");
+
+        input.control.setValue("tet");
+        input.control.markAsTouched();
+        fixture.detectChanges(false);
+        expect(formFieldElem.classList).toContain("ng-valid");
+        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
+      });
+    });
+
+    describe("maxLength", () => {
+      it("should not be valid when value is greater than expected", () => {
+        changeScheme(fixture, {maxLength: 3});
+        const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+        input.control.setValue("test");
+        input.control.markAsTouched();
+        fixture.detectChanges(false);
+        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        expect(formFieldElem.classList).toContain("ng-invalid");
+        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+          " This property must be less than 3 characters. "
+        );
+      });
+
+      it("should remove errors if input less than expected", () => {
+        changeScheme(fixture, {maxLength: 3});
+        const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+
+        input.control.setValue("test");
+        input.control.markAsTouched();
+        fixture.detectChanges(false);
+        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+        expect(formFieldElem.classList).toContain("ng-invalid");
+
+        input.control.setValue("tet");
+        input.control.markAsTouched();
+        fixture.detectChanges(false);
+        expect(formFieldElem.classList).toContain("ng-valid");
+        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
+      });
     });
   });
 });
