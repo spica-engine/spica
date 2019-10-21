@@ -1,16 +1,17 @@
 import {DynamicModule, Module} from "@nestjs/common";
+import {DatabaseService} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
 import {FunctionExecutor, VM2Executor} from "./executor";
 import {FsHost, FunctionHost} from "./host";
-import {LoggerHost, WinstonLogger} from "./logger";
+import {DatabaseLogger, LoggerHost} from "./logger";
+import {DatabaseUnitModule} from "./module/database";
 import {EngineRegistry} from "./registry";
 import {SubscriptionEngine} from "./subscription/engine";
 import {RequestSubscriptionExecutor, SubscriptionExecutor} from "./subscription/executor";
 import {DatabaseTriggerModule} from "./trigger/database";
-import {HttpTriggerModule} from "./trigger/http";
 import {FirehoseTriggerModule} from "./trigger/firehose";
+import {HttpTriggerModule} from "./trigger/http";
 import {ScheduleTriggerModule} from "./trigger/schedule";
-import {DatabaseUnitModule} from "./module/database";
 
 @Module({})
 export class EngineModule {
@@ -29,7 +30,7 @@ export class EngineModule {
         EngineRegistry,
         FunctionEngine,
         SubscriptionEngine,
-        {provide: LoggerHost, useValue: new WinstonLogger(options.root)},
+        {provide: LoggerHost, useFactory: db => new DatabaseLogger(db), inject: [DatabaseService]},
         {
           provide: FunctionExecutor,
           useValue: new VM2Executor()
