@@ -12,8 +12,10 @@ import {RouteService} from "../../route/route.service";
 import {Retrieve} from "../../route/route.reducer";
 import {BreakpointObserver} from "@angular/cdk/layout";
 import {of} from "rxjs";
-import {LAYOUT_ACTIONS} from "../config";
-import {Component} from "@angular/core";
+import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
+import {Component, NgModule, ANALYZE_FOR_ENTRY_COMPONENTS} from "@angular/core";
+import {BrowserDynamicTestingModule} from "@angular/platform-browser-dynamic/testing";
+import {TestingModule} from "@nestjs/testing";
 
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
@@ -207,5 +209,97 @@ describe("Home Layout", () => {
       expect(sideNav.getAttribute("ng-reflect-mode")).toBe("side");
       expect(sideNav.getAttribute("role")).toBe("navigation");
     }));
+  });
+
+  describe("should work with layout actions", () => {
+    @Component({
+      selector: "dummy-action",
+      template: "<button>BUTTON</button>"
+    })
+    class DummyAction {}
+
+    let component: HomeLayoutComponent;
+    let fixture: ComponentFixture<HomeLayoutComponent>;
+
+    beforeEach(() => {
+      TestBed.configureTestingModule({
+        declarations: [HomeLayoutComponent, DummyAction],
+        imports: [
+          MatSidenavModule,
+          MatListModule,
+          MatIconModule,
+          MatToolbarModule,
+          RouterTestingModule,
+          BrowserAnimationsModule,
+          StoreModule.forRoot({}),
+          RouteModule.forRoot()
+        ],
+        providers: [
+          {
+            provide: LAYOUT_ACTIONS,
+            useValue: DummyAction,
+            multi: true
+          },
+          {
+            provide: ANALYZE_FOR_ENTRY_COMPONENTS,
+            useValue: DummyAction,
+            multi: true
+          }
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(HomeLayoutComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    });
+
+    it("should create component", () => {
+      expect(component).toBeTruthy();
+    });
+
+    it("should create dummy action layout", () => {
+      const layout = fixture.debugElement.nativeElement.querySelector("dummy-action");
+      expect(layout).toBeTruthy();
+      const button = fixture.debugElement.nativeElement.querySelector("dummy-action > button");
+      expect(button).toBeTruthy();
+      expect(button.textContent).toBe("BUTTON");
+    });
+  });
+
+  describe("should work with layout initializer", () => {
+    let component: HomeLayoutComponent;
+    let fixture: ComponentFixture<HomeLayoutComponent>;
+
+    let spy = jasmine.createSpy("test");
+
+    beforeEach(() => {
+      TestBed.configureTestingModule({
+        declarations: [HomeLayoutComponent],
+        imports: [
+          MatSidenavModule,
+          MatListModule,
+          MatIconModule,
+          MatToolbarModule,
+          RouterTestingModule,
+          BrowserAnimationsModule,
+          StoreModule.forRoot({}),
+          RouteModule.forRoot()
+        ],
+        providers: [
+          {
+            provide: LAYOUT_INITIALIZER,
+            useValue: spy,
+            multi: true
+          }
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(HomeLayoutComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    });
+
+    it("should create component and call functions", () => {
+      expect(component).toBeDefined();
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
   });
 });
