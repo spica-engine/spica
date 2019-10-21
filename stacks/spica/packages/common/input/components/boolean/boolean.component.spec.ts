@@ -1,11 +1,11 @@
 import {ComponentFixture, fakeAsync, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
-import {MatFormFieldModule, MatSlideToggleModule, MatSlideToggle} from "@angular/material";
+import {MatFormFieldModule, MatSlideToggle, MatSlideToggleModule} from "@angular/material";
 import {By} from "@angular/platform-browser";
 import {INPUT_SCHEMA} from "../../input";
 import {BooleanComponent} from "./boolean.component";
 
-fdescribe("Common#boolean", () => {
+describe("Common#boolean", () => {
   beforeEach(() => {
     TestBed.resetTestingModule()
       .configureTestingModule({
@@ -23,7 +23,18 @@ fdescribe("Common#boolean", () => {
       .compileComponents();
   });
 
-  describe("default value", () => {
+  describe("basic behavior", () => {
+    let fixture: ComponentFixture<BooleanComponent>;
+    let labelElement: HTMLLabelElement;
+    let slideToggle: MatSlideToggle;
+
+    beforeEach(fakeAsync(() => {
+      fixture = TestBed.createComponent(BooleanComponent);
+      fixture.detectChanges();
+      labelElement = fixture.debugElement.query(By.css("label")).nativeElement;
+      slideToggle = fixture.debugElement.query(By.css("mat-slide-toggle")).componentInstance;
+    }));
+
     it("should default to default value if undefined", () => {
       const fixture = TestBed.createComponent(BooleanComponent);
       const changeSpy = jasmine.createSpy("ngModelChange");
@@ -39,19 +50,6 @@ fdescribe("Common#boolean", () => {
       fixture.detectChanges();
       expect(changeSpy).toHaveBeenCalledWith(false);
     });
-  });
-
-  describe("basic behavior", () => {
-    let fixture: ComponentFixture<BooleanComponent>;
-    let labelElement: HTMLLabelElement;
-    let slideToggle: MatSlideToggle;
-
-    beforeEach(fakeAsync(() => {
-      fixture = TestBed.createComponent(BooleanComponent);
-      fixture.detectChanges();
-      labelElement = fixture.debugElement.query(By.css("label")).nativeElement;
-      slideToggle = fixture.debugElement.query(By.css('mat-slide-toggle')).componentInstance;
-    }));
 
     it("should propagate true on click if the start value is false", () => {
       const changeSpy = jasmine.createSpy("ngModelChange");

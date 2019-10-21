@@ -1,5 +1,5 @@
 <mat-form-field>
-  <mat-label>{{ schema.title }}</mat-label>
+  <mat-label>{{ schema.title || schema.$name }}</mat-label>
   <mat-select
     *ngIf="schema.enum"
     [disabled]="disabled"

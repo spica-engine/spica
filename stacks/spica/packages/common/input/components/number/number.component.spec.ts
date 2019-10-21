@@ -10,18 +10,19 @@ import {
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
-import {StringComponent} from "./string.component";
+import {MaxValidator, MinValidator} from "../../validators";
+import {NumberComponent} from "./number.component";
 
 async function patchScheme<T extends {schema: InternalPropertySchema}>(
   fixture: ComponentFixture<T>,
   changes: Partial<typeof fixture["componentInstance"]["schema"]>
 ) {
   fixture.componentInstance.schema = {...fixture.componentInstance.schema, ...changes};
-  fixture.detectChanges(false);
+  fixture.detectChanges();
 }
 
-describe("Common#string", () => {
-  let fixture: ComponentFixture<StringComponent>;
+describe("Common#number", () => {
+  let fixture: ComponentFixture<NumberComponent>;
 
   beforeEach(() => {
     TestBed.resetTestingModule()
@@ -35,19 +36,19 @@ describe("Common#string", () => {
           MatIconModule,
           NoopAnimationsModule
         ],
-        declarations: [StringComponent],
+        declarations: [NumberComponent, MinValidator, MaxValidator],
         providers: [
           {
             provide: INPUT_SCHEMA,
             useValue: {
-              type: "string",
+              type: "number",
               $name: "test"
             }
           }
         ]
       })
       .compileComponents();
-    fixture = TestBed.createComponent(StringComponent);
+    fixture = TestBed.createComponent(NumberComponent);
     fixture.detectChanges();
   });
 
@@ -74,15 +75,10 @@ describe("Common#string", () => {
     it("should show description if provided", () => {
       expect(fixture.debugElement.query(By.css("mat-hint"))).toBeNull();
       const description = (fixture.componentInstance.schema.description = "my long description");
-      fixture.detectChanges(false);
+      fixture.detectChanges();
       expect(fixture.debugElement.query(By.css("mat-hint")).nativeElement.textContent).toBe(
         description
       );
-    });
-
-    it("should show select if schema has enums", () => {
-      patchScheme(fixture, {enum: ["123", "test"]});
-      expect(fixture.debugElement.query(By.css("mat-select"))).toBeTruthy();
     });
 
     it("should default to default value if undefined", fakeAsync(() => {
@@ -90,12 +86,12 @@ describe("Common#string", () => {
       const changeSpy = jasmine.createSpy("ngModelChange");
       fixture.componentInstance.registerOnChange(changeSpy);
 
-      fixture.componentInstance.schema.default = "test";
+      fixture.componentInstance.schema.default = 123;
       fixture.componentInstance.writeValue(undefined);
       fixture.detectChanges();
       tick();
-      expect(changeSpy).toHaveBeenCalledWith("test");
-      expect(inputElem.value).toBe("test");
+      expect(changeSpy).toHaveBeenCalledWith(123);
+      expect(inputElem.value).toBe("123");
     }));
 
     it("should be valid pristine and untouched", () => {
@@ -106,11 +102,11 @@ describe("Common#string", () => {
     });
 
     it("should write value", fakeAsync(() => {
-      fixture.componentInstance.writeValue("myvalue");
+      fixture.componentInstance.writeValue(100);
       fixture.detectChanges();
       tick();
       const inputElem = fixture.debugElement.query(By.css("input")).nativeElement;
-      expect(inputElem.value).toBe("myvalue");
+      expect(inputElem.value).toBe("100");
     }));
 
     it("should emit input events", fakeAsync(() => {
@@ -118,17 +114,18 @@ describe("Common#string", () => {
       fixture.componentInstance.registerOnChange(ngModelChange);
       fixture.detectChanges();
       const inputElem = fixture.debugElement.query(By.css("input")).nativeElement;
-      inputElem.value = "myvalue";
+      inputElem.value = 5e1;
       inputElem.dispatchEvent(new Event("input"));
       tick();
       fixture.detectChanges();
-      expect(ngModelChange).toHaveBeenCalledWith("myvalue");
+      expect(ngModelChange).toHaveBeenCalledWith(5e1);
     }));
   });
 
   describe("with validation", () => {
     describe("required", () => {
       beforeEach(() => patchScheme(fixture, {$required: true}));
+
       it("should not be valid at start", () => {
         const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
@@ -141,7 +138,7 @@ describe("Common#string", () => {
 
         const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
         input.control.markAsTouched();
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         tick();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
           "This property is required."
@@ -149,103 +146,64 @@ describe("Common#string", () => {
       }));
     });
 
-    describe("minLength", () => {
-      beforeEach(() => patchScheme(fixture, {minLength: 3}));
+    describe("minimum", () => {
+      beforeEach(() => patchScheme(fixture, {minimum: 3}));
       it("should not be valid when value is less than expected", () => {
         const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
-
-        input.control.setValue("te");
+        input.control.setValue(2);
         input.control.markAsTouched();
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-          " This property must be greater than 2 characters. "
+          " This property must be greater than 3. "
         );
       });
 
       it("should remove errors if input greater than expected", () => {
         const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
-
-        input.control.setValue("te");
+        input.control.setValue(2);
         input.control.markAsTouched();
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
 
-        input.control.setValue("tet");
+        input.control.setValue(3);
         input.control.markAsTouched();
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         expect(formFieldElem.classList).toContain("ng-valid");
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
+        expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
       });
     });
 
-    describe("maxLength", () => {
-      beforeEach(() => patchScheme(fixture, {maxLength: 3}));
+    describe("maximum", () => {
+      beforeEach(() => patchScheme(fixture, {maximum: 3}));
       it("should not be valid when value is greater than expected", () => {
         const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
-
-        input.control.setValue("test");
+        input.control.setValue(4);
         input.control.markAsTouched();
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-          " This property must be less than 3 characters. "
+          " This property must be less than 3. "
         );
       });
 
       it("should remove errors if input less than expected", () => {
         const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
 
-        input.control.setValue("test");
+        input.control.setValue(4);
         input.control.markAsTouched();
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
         expect(formFieldElem.classList).toContain("ng-invalid");
 
-        input.control.setValue("tet");
+        input.control.setValue(3);
         input.control.markAsTouched();
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         expect(formFieldElem.classList).toContain("ng-valid");
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
-      });
-    });
-
-    describe("pattern", () => {
-      it("should not be valid when value is does not match the pattern", () => {
-        patchScheme(fixture, {
-          pattern: "^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:.[a-zA-Z0-9-]+)*$"
-        });
-        const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
-        input.control.setValue("test[at]example.io");
-        input.control.markAsTouched();
-        fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
-        expect(formFieldElem.classList).toContain("ng-invalid");
-        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-          " This property must match the pattern. "
-        );
-      });
-
-      it("should remove errors if input matches the pattern", () => {
-        patchScheme(fixture, {
-          pattern: "^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:.[a-zA-Z0-9-]+)*$"
-        });
-        const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
-
-        input.control.setValue("test[at]example.io");
-        input.control.markAsTouched();
-        fixture.detectChanges(false);
-        const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
-        expect(formFieldElem.classList).toContain("ng-invalid");
-
-        input.control.setValue("test@example.io");
-        input.control.markAsTouched();
-        fixture.detectChanges(false);
-        expect(formFieldElem.classList).toContain("ng-valid");
-        expect(fixture.debugElement.query(By.css("mat-error"))).toBe(null);
+        expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
       });
     });
   });
