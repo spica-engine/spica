@@ -39,13 +39,13 @@
         [items]="_values"
         [maxItems]="schema.maxItems"
       >
-        <mat-error slot="after" *ngIf="model?.errors?.unique">
+        <mat-error *ngIf="model?.errors?.unique">
           All items in the array must be unique.
         </mat-error>
-        <mat-error slot="after" *ngIf="model?.errors?.minItems">
+        <mat-error *ngIf="model?.errors?.minItems">
           Array must have at least {{ model?.errors?.minItems?.expected }} items.
         </mat-error>
-        <mat-error slot="after" *ngIf="model?.errors?.maxItems">
+        <mat-error *ngIf="model?.errors?.maxItems">
           Array can have maximum {{ model?.errors?.maxItems?.expected }} items.
         </mat-error>
       </span>

@@ -1,12 +1,8 @@
 export {
-  SchemaPlacerOptions,
   InputSchema,
   EMPTY_INPUT_SCHEMA,
-  INPUT_OPTIONS,
   INPUT_PLACERS,
   INPUT_SCHEMA,
-  INPUT_SCHEMA_OPTIONS,
-  InputPlacerOptions,
   InputPlacerWithMetaPlacer
 } from "./input";
 export * from "./input.resolver";

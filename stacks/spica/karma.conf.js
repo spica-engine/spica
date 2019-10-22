@@ -23,8 +23,8 @@ module.exports = function(config) {
     },
     customLaunchers: {
       ChromeNoSandbox: {
-        base: 'Chrome',
-        flags: ['--no-sandbox']
+        base: "Chrome",
+        flags: ["--no-sandbox"]
       }
     },
     reporters: ["progress", "kjhtml"],

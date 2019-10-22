@@ -96,7 +96,7 @@ export const UNIQUE_ITEMS_VALIDATOR: any = {
 export class UniqueItemsValidator implements Validator, OnChanges {
   private _onChange: () => void;
 
-  @Input() uniqueItems: boolean;
+  @Input() uniqueItems: boolean = true;
 
   @Input() items: Array<any>;
 
