@@ -164,7 +164,7 @@ export class MinItemsValidator implements Validator, OnChanges {
       return null;
     }
 
-    return {minItems: {expected: this.minItems, current: this.items.length}};
+    return {minItems: {min: this.minItems, actual: this.items.length}};
   }
 
   registerOnValidatorChange(fn: () => void): void {
@@ -201,7 +201,7 @@ export class MaxItemsValidator implements Validator, OnChanges {
       return null;
     }
 
-    return {maxItems: {expected: this.maxItems, current: this.items.length}};
+    return {maxItems: {max: this.maxItems, actual: this.items.length}};
   }
 
   registerOnValidatorChange(fn: () => void): void {
