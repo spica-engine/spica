@@ -109,24 +109,28 @@ export class UniqueItemsValidator implements Validator, OnChanges {
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
+    console.log(control);
     if (!Array.isArray(this.items) || !this.uniqueItems) {
       return null;
     }
 
+   
     this.items[this.index] = control.value;
 
     const sameItems = this.items
       .map((value, index) => ({value, index}))
       .filter(({value, index}) => this.items.indexOf(value) != index);
 
+    console.log(this.items, sameItems);
+
     return sameItems.length < 1
       ? null
       : sameItems.reduce(
           (error, item) => {
-            error.unique.push(item.index);
+            error.uniqueItems.push(item.index);
             return error;
           },
-          {unique: []}
+          {uniqueItems: []}
         );
   }
 

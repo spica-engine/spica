@@ -61,7 +61,7 @@ describe("Common#date", () => {
     it("should show description if provided", () => {
       expect(fixture.debugElement.query(By.css("mat-hint"))).toBeNull();
       const description = (fixture.componentInstance.schema.description = "my long description");
-      fixture.detectChanges(false);
+      fixture.detectChanges();
       expect(fixture.debugElement.query(By.css("mat-hint")).nativeElement.textContent).toBe(
         description
       );

@@ -9,7 +9,7 @@ import {
 } from "./validators";
 
 describe("Validators", () => {
-  describe("UniqueItems", () => {
+  describe("uniqueItems", () => {
     let validator: UniqueItemsValidator;
 
     beforeEach(() => {
@@ -24,11 +24,11 @@ describe("Validators", () => {
     it("should return errors", () => {
       validator.items = ["ab", "cd"];
       validator.index = 2;
-      expect(validator.validate(new FormControl("ab"))).toEqual({unique: [2]});
+      expect(validator.validate(new FormControl("ab"))).toEqual({uniqueItems: [2]});
     });
 
     it("should not return errors when disabled", () => {
-      validator.items = ["ab", "cd"];
+      validator.items = ["ab", "ab"];
       validator.index = 2;
       validator.uniqueItems = false;
       expect(validator.validate(new FormControl("ab"))).toBeNull();

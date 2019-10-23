@@ -24,7 +24,6 @@ export class ArrayComponent implements ControlValueAccessor {
   addItem() {
     this._values.push(this.resolver.coerce(this.schema.items["type"]));
     this._activeIndex = this._values.length - 1;
-    this.callOnChange();
   }
 
   removeItem() {
@@ -63,11 +62,11 @@ export class ArrayComponent implements ControlValueAccessor {
     this._onTouchedFn = fn;
   }
 
-  setDisabledState?(isDisabled: boolean): void {
+  setDisabledState(isDisabled: boolean): void {
     this._disabled = isDisabled;
   }
 
-  drop(event: CdkDragDrop<string[]>) {
+  move(event: CdkDragDrop<string[]>) {
     moveItemInArray(this._values, event.previousIndex, event.currentIndex);
   }
 }
