@@ -1,6 +1,6 @@
 <section>
-  <h4 class="mat-h4">{{ schema.title | titlecase }}</h4>
-  <small>{{ schema.description }}</small>
+  <h4 class="mat-h4">{{ schema.title || schema.$name }}</h4>
+  <small *ngIf="schema.description">{{ schema.description }}</small>
 </section>
 <section>
   <span

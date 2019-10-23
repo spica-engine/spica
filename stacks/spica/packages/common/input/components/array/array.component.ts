@@ -7,7 +7,9 @@ import {InputResolver} from "../../input.resolver";
 @Component({
   templateUrl: "./array.component.html",
   styleUrls: ["./array.component.scss"],
-  providers: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ArrayComponent)}]
+  providers: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => ArrayComponent)}
+  ]
 })
 export class ArrayComponent implements ControlValueAccessor {
   _values = new Array<any>();

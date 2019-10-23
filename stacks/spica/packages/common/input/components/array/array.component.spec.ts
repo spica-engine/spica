@@ -1,7 +1,7 @@
 import {CdkDragDrop, DragDropModule} from "@angular/cdk/drag-drop";
-import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, forwardRef, NgModule} from "@angular/core";
+import {ANALYZE_FOR_ENTRY_COMPONENTS, Component, forwardRef} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, NgModel} from "@angular/forms";
+import {ControlValueAccessor, FormsModule, NgModel, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule} from "@angular/material";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -54,20 +54,16 @@ class StringPlacer implements ControlValueAccessor {
     .and.callThrough();
 }
 
-const types = {
-  string: {
-    origin: "string",
-    type: "string",
-    placer: StringPlacer
-  }
-};
-
 describe("Common#array", () => {
   let fixture: ComponentFixture<ArrayComponent>;
   let changeSpy: jasmine.Spy;
   const inputResolver = {
     coerce: jasmine.createSpy("coerce").and.returnValue(undefined),
-    resolve: jasmine.createSpy("resolve").and.callFake(t => types[t])
+    resolve: jasmine.createSpy("resolve").and.returnValue({
+      origin: "string",
+      type: "string",
+      placer: StringPlacer
+    })
   };
 
   beforeEach(() => {
@@ -172,9 +168,11 @@ describe("Common#array", () => {
       );
       expect(buttons.map(b => b.nativeElement.textContent)).toEqual([" 1 ", " 2 "]);
       expect(buttons[0].nativeElement.classList).toContain("mat-primary");
-      
+
       expect(fixture.componentInstance._activeIndex).toBe(0);
-      expect(fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel).name).toEqual('test0')
+      expect(fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel).name).toEqual(
+        "test0"
+      );
     });
 
     it("should change active item", fakeAsync(() => {
@@ -194,7 +192,9 @@ describe("Common#array", () => {
       expect(placer.componentInstance.writeValue).toHaveBeenCalledWith("test2");
 
       expect(fixture.componentInstance._activeIndex).toBe(1);
-      expect(fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel).name).toEqual('test1')
+      expect(fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel).name).toEqual(
+        "test1"
+      );
     }));
 
     it("should push an item if array is empty", fakeAsync(() => {
