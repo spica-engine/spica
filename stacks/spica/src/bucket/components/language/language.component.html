@@ -3,7 +3,7 @@
     *ngFor="let language of languages$ | async"
     mat-icon-button
     mat-raised-button
-    [color]="(selected == language.code && 'accent') || 'primary'"
+    [color]="selected == language.code ? 'accent':'primary'"
     class="mat-elevation-z0"
     (click)="selected = language.code; $event.stopPropagation()"
   >
