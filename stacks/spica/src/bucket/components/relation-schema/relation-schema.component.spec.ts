@@ -1,22 +1,13 @@
-import {RelationSchemaComponent} from "./relation-schema.component";
-import {
-  ComponentFixture,
-  TestBed,
-  tick,
-  fakeAsync,
-  flushMicrotasks,
-  async
-} from "@angular/core/testing";
-import {MatFormFieldModule} from "@angular/material/form-field";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import {MatOptionModule, MatSelectModule, MatOption, MatSelect} from "@angular/material";
-import {INPUT_SCHEMA, EMPTY_INPUT_SCHEMA} from "@spica-server/common";
-import {RelationSchema, RelationType} from "../relation";
-import {BucketService} from "src/bucket/services/bucket.service";
-import {of} from "rxjs";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {Element} from "@angular/compiler/src/render3/r3_ast";
+import {MatOptionModule, MatSelectModule} from "@angular/material";
 import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {EMPTY_INPUT_SCHEMA, INPUT_SCHEMA} from "@spica-server/common";
+import {of} from "rxjs";
+import {BucketService} from "src/bucket/services/bucket.service";
+import {RelationType} from "../relation";
+import {RelationSchemaComponent} from "./relation-schema.component";
 
 fdescribe("Relation Schema Component", () => {
   describe("basic behavior", () => {
@@ -56,13 +47,11 @@ fdescribe("Relation Schema Component", () => {
     });
 
     it("should show required relation type error", () => {
-      const relationForm = fixture.debugElement
-        .queryAll(By.directive(NgModel))[0]
-        .injector.get(NgModel);
+      const relationForm = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
       relationForm.control.markAsTouched();
       fixture.detectChanges();
 
-      expect(document.body.querySelector("mat-error").textContent).toBe(
+      expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
         "You must select a relation type"
       );
     });
@@ -74,67 +63,64 @@ fdescribe("Relation Schema Component", () => {
       bucketForm.control.markAsTouched();
       fixture.detectChanges();
 
-      expect(document.body.querySelector("mat-error").textContent).toBe("You must select a bucket");
+      expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        "You must select a bucket"
+      );
     });
 
     it("should show relation types", () => {
-      compiled.querySelector("mat-select:first-of-type").click();
+      fixture.debugElement
+        .query(By.css("mat-form-field:first-of-type mat-select"))
+        .nativeElement.click();
       fixture.detectChanges();
 
-      compiled = document.body;
+      const options = document.body.querySelectorAll<HTMLElement>("mat-option");
 
-      const options = compiled.querySelectorAll("mat-option");
+      expect(Array.from(options).map(b => b.textContent)).toEqual([
+        "Many to Many",
+        "One to Many",
+        "One to One"
+      ]);
 
-      expect(Array.from(options).map((b: any) => b.textContent)).toEqual(
-        ["Many to Many", "One to Many", "One to One"],
-        "should work if relation type options texts' rendered correctly "
-      );
-
-      expect(Array.from(options).map((b: any) => b.getAttribute("class"))).toEqual(
-        [
-          "mat-option mat-active",
-          "mat-option mat-option-disabled",
-          "mat-option mat-option-disabled"
-        ],
-        "should work if relation type options classes' rendered correctly "
-      );
+      expect(options.item(0).classList).toContain("mat-active");
+      expect(options.item(1).classList).toContain("mat-option-disabled");
+      expect(options.item(2).classList).toContain("mat-option-disabled");
     });
 
     it("should show buckets", () => {
-      compiled.querySelectorAll("mat-select")[1].click();
+      fixture.debugElement
+        .query(By.css("mat-form-field:last-of-type mat-select"))
+        .nativeElement.click();
       fixture.detectChanges();
 
-      compiled = document.body;
-
-      expect(
-        Array.from(compiled.querySelectorAll("mat-option")).map((b: any) => b.textContent)
-      ).toEqual(
-        [" bucket1 ", " bucket2 "],
-        "should work if defined bucket titles rendered correctly "
-      );
+      const options = document.body.querySelectorAll<HTMLElement>("mat-option");
+      expect(options.item(0).textContent).toBe(" bucket1 ");
+      expect(options.item(1).textContent).toBe(" bucket2 ");
     });
 
     it("should select relation", () => {
-      compiled.querySelector("mat-select:first-of-type").click();
+      fixture.debugElement.query(By.css("mat-select:first-of-type")).nativeElement.click();
       fixture.detectChanges();
-      compiled = document.body;
-      compiled.querySelector("mat-option:first-of-type").click();
+
+      document.body.querySelector<HTMLElement>("mat-option:first-of-type").click();
       fixture.detectChanges();
+
       expect(
-        fixture.debugElement.nativeElement.querySelector("mat-select:first-of-type").textContent
+        fixture.debugElement.query(By.css("mat-select:first-of-type")).nativeElement.textContent
       ).toBe("Many to Many");
     });
 
     xit("should select bucket", () => {
-      compiled.querySelectorAll("mat-select")[1].click();
-      fixture.detectChanges();
-      compiled = document.body;
-      compiled.querySelectorAll("mat-option")[1].click();
-      fixture.detectChanges();
+      // fixture.debugElement.query(B)
+      // compiled.querySelectorAll("mat-select")[1].click();
+      // fixture.detectChanges();
+      // compiled = document.body;
+      // compiled.querySelectorAll("mat-option")[1].click();
+      // fixture.detectChanges();
 
-      expect(fixture.debugElement.nativeElement.querySelectorAll("mat-select")[1].textContent).toBe(
-        " bucket1 "
-      );
+      // expect(fixture.debugElement.nativeElement.querySelectorAll("mat-select")[1].textContent).toBe(
+      //   " bucket1 "
+      // );
     });
   });
 

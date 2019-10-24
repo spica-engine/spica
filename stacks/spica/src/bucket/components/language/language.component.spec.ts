@@ -1,26 +1,25 @@
-import {PropertyLanguageComponent} from "./language.component";
-import {TestBed, ComponentFixture} from "@angular/core/testing";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatButtonModule} from "@angular/material/button";
-import {MatMenuModule} from "@angular/material/menu";
 import {MatIconModule} from "@angular/material/icon";
-import {BucketService} from "../../services/bucket.service";
-import {of} from "rxjs";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {MatMenuModule} from "@angular/material/menu";
 import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {of} from "rxjs";
+import {BucketService} from "../../services/bucket.service";
+import {PropertyLanguageComponent} from "./language.component";
 
 describe("LanguageComponent", () => {
   let component: PropertyLanguageComponent;
   let fixture: ComponentFixture<PropertyLanguageComponent>;
 
-  let languagePrefs = {
+  const languagePrefs = {
     language: {
       supported_languages: [{code: "tr_TR", name: "Turkish"}, {code: "en_US", name: "English"}],
       default: {code: "en_US", name: "English"}
     }
   };
 
-  let defaultLanguage = languagePrefs.language.default;
-  let supported_languages = languagePrefs.language.supported_languages;
+  const defaultLanguage = languagePrefs.language.default;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -76,11 +75,8 @@ describe("LanguageComponent", () => {
 
     enLangButton.dispatchEvent(new Event("click"));
     fixture.detectChanges();
-    expect(fixture.componentInstance.selected).toBe('tr_TR');
-    expect(enLangButton.classList).toContain(
-      "mat-accent",
-      "expected Turkish button to be current"
-    );
+    expect(fixture.componentInstance.selected).toBe("tr_TR");
+    expect(enLangButton.classList).toContain("mat-accent", "expected Turkish button to be current");
     expect(compiled.querySelector(".mat-menu-content > button:last-of-type").classList).toContain(
       "mat-primary",
       "expected English button not to be current"

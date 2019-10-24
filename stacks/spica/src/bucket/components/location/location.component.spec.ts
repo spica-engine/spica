@@ -1,210 +1,152 @@
-import {TestBed, ComponentFixture, tick, fakeAsync, async} from "@angular/core/testing";
-import {LocationComponent} from "./location.component";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {FormsModule} from "@angular/forms";
-import {MatTooltipModule} from "@angular/material/tooltip";
-import {MatIconModule, MatInputModule} from "@angular/material";
-import {LeafletModule} from "@asymmetrik/ngx-leaflet";
-import {EMPTY_INPUT_SCHEMA, INPUT_SCHEMA} from "../../../../packages/common";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {By} from "@angular/platform-browser";
 import {ChangeDetectorRef} from "@angular/core";
-import {LatLng, LatLngExpression} from "leaflet";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule} from "@angular/forms";
+import {MatIconModule, MatInputModule} from "@angular/material";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatTooltip, MatTooltipModule} from "@angular/material/tooltip";
+import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {LeafletModule} from "@asymmetrik/ngx-leaflet";
+import {LatLng} from "leaflet";
+import {EMPTY_INPUT_SCHEMA, INPUT_SCHEMA} from "../../../../packages/common";
+import {LocationComponent} from "./location.component";
 
 describe("LocationComponent", () => {
+  let fixture: ComponentFixture<LocationComponent>;
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        MatInputModule,
+        MatFormFieldModule,
+        FormsModule,
+        MatTooltipModule,
+        MatIconModule,
+        LeafletModule,
+        NoopAnimationsModule
+      ],
+      providers: [
+        {
+          provide: INPUT_SCHEMA,
+          useValue: EMPTY_INPUT_SCHEMA
+        }
+      ],
+      declarations: [LocationComponent]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(LocationComponent);
+    fixture.detectChanges();
+  });
+
   describe("basic behavior", () => {
-    let component: LocationComponent;
-    let fixture: ComponentFixture<LocationComponent>;
-    let compiled;
-    beforeEach(() => {
-      TestBed.configureTestingModule({
-        imports: [
-          MatInputModule,
-          MatFormFieldModule,
-          FormsModule,
-          MatTooltipModule,
-          MatIconModule,
-          LeafletModule,
-          NoopAnimationsModule
-        ],
-        providers: [
-          {
-            provide: INPUT_SCHEMA,
-            useValue: EMPTY_INPUT_SCHEMA
-          }
-        ],
-        declarations: [LocationComponent]
-      }).compileComponents();
-
-      fixture = TestBed.createComponent(LocationComponent);
-      compiled = fixture.debugElement.nativeElement;
-      component = fixture.componentInstance;
-      fixture.detectChanges();
-    });
-
     it("should render component ", () => {
-      const cameraButton = compiled.querySelector("button:first-of-type");
-      expect(cameraButton.getAttribute("ng-reflect-message")).toBe("Show Latitude and Longitude");
-      expect(cameraButton.textContent).toBe("control_camera");
+      fixture.detectChanges();
+      const cameraButton = fixture.debugElement.query(By.css("button:first-of-type"));
+      expect(cameraButton.injector.get(MatTooltip).message).toBe("Show Latitude and Longitude");
+      expect(cameraButton.nativeElement.textContent).toBe("control_camera");
 
-      const locationButton = compiled.querySelector("button:last-of-type");
-      expect(locationButton.getAttribute("ng-reflect-message")).toBe("Set to current location");
-      expect(locationButton.disabled).toBe(false);
-      expect(locationButton.textContent).toBe("my_location");
+      const locationButton = fixture.debugElement.query(By.css("button:last-of-type"));
+
+      expect(locationButton.injector.get(MatTooltip).message).toBe("Set to current location");
+      expect(locationButton.nativeElement.disabled).toBe(false);
+      expect(locationButton.nativeElement.textContent).toBe("my_location");
     });
 
-    it("should show coordinates when clicked control camera button", () => {
-      component.value = {
+    it("should show coordinates when clicked control camera button", fakeAsync(() => {
+      fixture.componentInstance.value = {
         latitude: 35,
         longitude: 45
       };
-
-      const cameraButton = compiled.querySelector("button:first-of-type");
-      cameraButton.click();
+      const cameraButton = fixture.debugElement.query(By.css("button:first-of-type"));
+      cameraButton.nativeElement.click();
       fixture.detectChanges();
 
-      expect(component.showLatLng).toBe(true);
-      expect(cameraButton.getAttribute("ng-reflect-message")).toBe("Hide Latitude and Longitude");
+      tick();
 
-      expect(compiled.querySelector("mat-form-field:first-of-type").textContent).toBe("Latitude");
+      expect(fixture.componentInstance.showLatLng).toBe(true);
+      expect(cameraButton.injector.get(MatTooltip).message).toBe("Hide Latitude and Longitude");
 
-      const latitudeInput = compiled.querySelector("input:first-of-type");
-      expect(latitudeInput.disabled).toBe(false);
-      expect(latitudeInput.getAttribute("ng-reflect-model")).toBe("35");
+      expect(
+        fixture.debugElement.query(By.css("mat-form-field:first-of-type")).nativeElement.textContent
+      ).toBe("Latitude");
 
-      expect(compiled.querySelector("mat-form-field:last-of-type").textContent).toBe("Longitude");
+      const latitudeInput = fixture.debugElement.query(By.css("input:first-of-type"));
+      expect(latitudeInput.nativeElement.disabled).toBe(false);
+      expect(latitudeInput.nativeElement.value).toBe("35");
 
-      const longitudeInput = compiled.querySelectorAll("mat-form-field")[1].querySelector("input");
-      expect(longitudeInput.disabled).toBe(false);
-      expect(longitudeInput.getAttribute("ng-reflect-model")).toBe("45");
-    });
+      expect(
+        fixture.debugElement.query(By.css("mat-form-field:last-of-type")).nativeElement.textContent
+      ).toBe("Longitude");
 
-    it("should change coordinates", fakeAsync(() => {
-      component.value = {
-        latitude: 0,
-        longitude: 0
-      };
+      const longitudeInput = fixture.debugElement.query(
+        By.css("mat-form-field:last-of-type input")
+      );
+      expect(longitudeInput.nativeElement.disabled).toBe(false);
+      expect(longitudeInput.nativeElement.value).toBe("45");
+    }));
 
-      const cameraButton = compiled.querySelector("button:first-of-type");
-      cameraButton.click();
+    it("should change coordinates through inputs", fakeAsync(() => {
+      const cameraButton = fixture.debugElement.query(By.css("button:first-of-type"));
+      cameraButton.nativeElement.click();
       fixture.detectChanges();
 
-      const latitudeInput = compiled.querySelector("input:first-of-type");
-      const longitudeInput = compiled.querySelectorAll("mat-form-field")[1].querySelector("input");
-      latitudeInput.value = 33;
-      longitudeInput.value = 55;
+      const [latitudeInput, longitudeInput] = fixture.debugElement.queryAll(
+        By.css("mat-form-field input")
+      );
+      latitudeInput.nativeElement.value = 33;
+      longitudeInput.nativeElement.value = 55;
 
-      latitudeInput.dispatchEvent(new Event("input"));
-      longitudeInput.dispatchEvent(new Event("input"));
+      latitudeInput.nativeElement.dispatchEvent(new Event("input"));
+      longitudeInput.nativeElement.dispatchEvent(new Event("input"));
 
       fixture.detectChanges();
       tick(501);
 
-      expect(component.value).toEqual({
+      expect(fixture.componentInstance.value).toEqual({
         latitude: 33,
         longitude: 55
       });
 
-      expect(component._marker.getLatLng()).toEqual(new LatLng(33, 55));
-
-      expect(component._center[0]).toBe(33);
-      expect(component._center[1]).toBe(55);
+      expect(fixture.componentInstance._marker.getLatLng()).toEqual(new LatLng(33, 55));
+      expect(fixture.componentInstance._center[0]).toBe(33);
+      expect(fixture.componentInstance._center[1]).toBe(55);
     }));
   });
 
-  describe("should work with user current location", () => {
-    let component: LocationComponent;
+  describe("through location", () => {
     let fixture: ComponentFixture<LocationComponent>;
-    let compiled;
-    let coordinateSpy;
-    let markForCheckSpy;
+    let coordinateSpy: jasmine.Spy;
 
     beforeEach(() => {
-      TestBed.configureTestingModule({
-        imports: [
-          MatInputModule,
-          MatFormFieldModule,
-          FormsModule,
-          MatTooltipModule,
-          MatIconModule,
-          LeafletModule,
-          NoopAnimationsModule
-        ],
-        providers: [
-          {
-            provide: INPUT_SCHEMA,
-            useValue: EMPTY_INPUT_SCHEMA
-          }
-        ],
-        declarations: [LocationComponent]
-      }).compileComponents();
-
-      coordinateSpy = spyOn(navigator.geolocation, "getCurrentPosition").and.callFake(function() {
-        var position = {coords: {latitude: 32, longitude: 33}};
-        arguments[0](position);
-      });
-
+      coordinateSpy = spyOn(navigator.geolocation, "getCurrentPosition").and.callFake(
+        (callback: Function) => callback({coords: {latitude: 32, longitude: 33}})
+      );
       fixture = TestBed.createComponent(LocationComponent);
-      component = fixture.componentInstance;
-      compiled = fixture.debugElement.nativeElement;
-      markForCheckSpy = spyOn(component["cd"], "markForCheck");
       fixture.detectChanges();
     });
 
     it("should show current location", fakeAsync(() => {
-      compiled.querySelector("button:last-of-type").click();
+      fixture.debugElement.query(By.css("button:last-of-type")).nativeElement.click();
       tick(501);
       fixture.detectChanges();
 
       expect(coordinateSpy).toHaveBeenCalledTimes(1);
-      expect(component.value).toEqual({
+      expect(fixture.componentInstance.value).toEqual({
         latitude: 32,
         longitude: 33
       });
-      expect(component._center[0]).toBe(32);
-      expect(component._center[1]).toBe(33);
-      expect(component._marker.getLatLng()).toEqual(new LatLng(32, 33));
-
-      // expect(markForCheckSpy).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance._center[0]).toBe(32);
+      expect(fixture.componentInstance._center[1]).toBe(33);
+      expect(fixture.componentInstance._marker.getLatLng()).toEqual(new LatLng(32, 33));
     }));
-  });
 
-  describe("should work with no user location", () => {
-    let component: LocationComponent;
-    let fixture: ComponentFixture<LocationComponent>;
-    let compiled;
-    let isEnableSpy;
-
-    beforeEach(() => {
-      TestBed.configureTestingModule({
-        imports: [
-          MatInputModule,
-          MatFormFieldModule,
-          FormsModule,
-          MatTooltipModule,
-          MatIconModule,
-          LeafletModule,
-          NoopAnimationsModule
-        ],
-        providers: [
-          {
-            provide: INPUT_SCHEMA,
-            useValue: EMPTY_INPUT_SCHEMA
-          }
-        ],
-        declarations: [LocationComponent]
-      }).compileComponents();
-
-      isEnableSpy = spyOnProperty(navigator, "geolocation", "get").and.returnValue(undefined);
-
-      fixture = TestBed.createComponent(LocationComponent);
-      compiled = fixture.debugElement.nativeElement;
-      component = fixture.componentInstance;
-      fixture.detectChanges();
-    });
     it("should show disabled my location button", () => {
-      expect(isEnableSpy).toHaveBeenCalledTimes(1);
-      expect(compiled.querySelector("button:last-of-type").disabled).toBe(true);
+      let button = fixture.debugElement.query(By.css("button:last-of-type"));
+      expect(button.nativeElement.disabled).toBe(false);
+      spyOnProperty(fixture.componentInstance, "isGeolocationSupported", "get").and.returnValue(
+        false
+      );
+      fixture.componentRef.injector.get(ChangeDetectorRef).detectChanges();
+      expect(button.nativeElement.disabled).toBe(true);
     });
   });
 });

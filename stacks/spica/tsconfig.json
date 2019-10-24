@@ -6,8 +6,7 @@
     "target": "es2015",
     "module": "esnext",
     "baseUrl": "./",
-    "typeRoots": ["@types"],
-    "lib": ["es2018"]
+    "lib": ["es2018", "dom"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["test.ts", "**/*.spec.tsu"]

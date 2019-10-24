@@ -7,18 +7,8 @@
     "moduleResolution": "node",
     "target": "es2015",
     "module": "esnext",
-    "lib": [
-      "es2018",
-      "dom"
-    ],
+    "lib": ["es2018", "dom"]
   },
-  "files": [
-    "test.ts",
-    "src/polyfills.ts"
-  ],
-  "include": [
-    // "./packages/**/*.spec.ts",
-    "./src/**/*.spec.ts",
-    "**/*.d.ts"
-  ]
+  "files": ["test.ts", "src/polyfills.ts"],
+  "include": ["./packages/**/*.spec.ts", "./src/**/*.spec.ts"]
 }
