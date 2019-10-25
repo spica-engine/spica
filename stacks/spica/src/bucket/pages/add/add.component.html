@@ -1,5 +1,5 @@
 <mat-toolbar color="primary">
-  <span *ngIf="bucket$ | async; let bucket" [@smooth]>
+  <span *ngIf="bucket$ | async; let bucket" @smooth>
     <h4>
       <mat-icon>{{ bucket.icon }}</mat-icon>
       <span>{{ bucket.title }}</span>
@@ -15,10 +15,13 @@
   <button
     *ngIf="histories$ | async; let histories"
     mat-icon-button
+    [matBadge]="histories.length"
+    matBadgeColor="warn"
+    matBadgeSize="small"
     [matMenuTriggerFor]="historyMenu"
     @smooth
   >
-    <mat-icon> restore </mat-icon>
+    <mat-icon>restore</mat-icon>
     <mat-menu #historyMenu="matMenu" class="history-tree mat-elevation-z25" xPosition="before">
       <ng-template matMenuContent>
         <button
@@ -94,43 +97,37 @@
 
   <mat-card-actions>
     <form #scheduleForm="ngForm" *ngIf="data?._schedule">
-      <button
-        [disabled]="(bucket$ | async)?.readOnly"
-        mat-button
-        color="warn"
-        (click)="cancelSchedule()"
-      >
+      <button [disabled]="bucket.readOnly" mat-button color="warn" (click)="cancelSchedule()">
         <mat-icon>cancel</mat-icon> Cancel Schedule
       </button>
       <mat-form-field>
         <input
           matInput
-          [min]="minScheduleDate"
           readonly
           required
-          [disabled]="(bucket$ | async)?.readOnly"
-          name="scheduleDate"
+          name="schedule_date"
           [(ngModel)]="data._schedule"
+          [disabled]="bucket.readOnly"
           [owlDateTime]="dt1"
           [owlDateTimeTrigger]="dt1"
-          placeholder="Date Time"
+          [min]="minScheduleDate"
         />
         <owl-date-time #dt1></owl-date-time>
       </mat-form-field>
     </form>
 
     <button
-      mat-icon-button
-      (click)="schedule()"
-      [disabled]="(bucket$ | async)?.readOnly"
       *ngIf="!data._schedule"
+      mat-icon-button
       matTooltip="Set publish date"
+      [disabled]="bucket.readOnly"
+      (click)="schedule()"
     >
       <mat-icon>schedule</mat-icon>
     </button>
     <button
       canInteract="bucket:data:update"
-      [disabled]="form.invalid || scheduleForm?.invalid || (bucket$ | async)?.readOnly"
+      [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly"
       mat-button
       (click)="saveBucketRow()"
     >
