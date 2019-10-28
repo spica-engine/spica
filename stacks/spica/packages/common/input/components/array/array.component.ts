@@ -7,7 +7,7 @@ import {InputResolver} from "../../input.resolver";
 @Component({
   templateUrl: "./array.component.html",
   styleUrls: ["./array.component.scss"],
-  providers: [
+  viewProviders: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => ArrayComponent)}
   ]
 })

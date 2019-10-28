@@ -5,7 +5,7 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 @Component({
   templateUrl: "./string.component.html",
   styleUrls: ["./string.component.scss"],
-  providers: [
+  viewProviders: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => StringComponent)}
   ]
 })

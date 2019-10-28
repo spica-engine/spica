@@ -1,11 +1,11 @@
-import {Component, forwardRef, Inject} from "@angular/core";
-import {NG_VALUE_ACCESSOR} from "@angular/forms";
-import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
+import { Component, forwardRef, Inject } from "@angular/core";
+import { NG_VALUE_ACCESSOR } from "@angular/forms";
+import { INPUT_SCHEMA, InternalPropertySchema } from "../../input";
 
 @Component({
   templateUrl: "./color.component.html",
   styleUrls: ["./color.component.scss"],
-  providers: [
+  viewProviders: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => ColorComponent)}
   ]
 })

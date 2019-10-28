@@ -5,7 +5,9 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 @Component({
   templateUrl: "./textarea.component.html",
   styleUrls: ["./textarea.component.scss"],
-  providers: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TextAreaComponent)}]
+  viewProviders: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => TextAreaComponent)}
+  ]
 })
 export class TextAreaComponent implements ControlValueAccessor {
   value: string;

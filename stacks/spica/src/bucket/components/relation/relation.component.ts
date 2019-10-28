@@ -14,7 +14,9 @@ import {RelationSchema} from "../relation";
   selector: "bucket-relation",
   templateUrl: "./relation.component.html",
   styleUrls: ["./relation.component.scss"],
-  viewProviders: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => RelationComponent)}]
+  providers: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => RelationComponent)}
+  ]
 })
 export class RelationComponent implements ControlValueAccessor, OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;

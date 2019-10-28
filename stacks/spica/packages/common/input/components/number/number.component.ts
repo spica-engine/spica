@@ -5,7 +5,7 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 @Component({
   templateUrl: "./number.component.html",
   styleUrls: ["./number.component.scss"],
-  providers: [
+  viewProviders: [
     {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => NumberComponent)}
   ]
 })
