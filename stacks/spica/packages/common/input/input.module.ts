@@ -1,3 +1,4 @@
+import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule} from "@angular/common";
 import {
   ANALYZE_FOR_ENTRY_COMPONENTS,
@@ -22,34 +23,20 @@ import {MatMenuModule} from "@angular/material/menu";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {ArrayComponent} from "./components/array/array.component";
-import {BooleanComponent} from "./components/boolean/boolean.component";
-import {ColorComponent} from "./components/color/color.component";
-import {DateComponent} from "./components/date/date.component";
-import {EnumSchemaComponent} from "./components/enum-schema/enum-schema.component";
-import {NumberSchemaComponent} from "./components/number-schema/number-schema.component";
-import {NumberComponent} from "./components/number/number.component";
-import {ObjectSchemaComponent} from "./components/object-schema/object-schema.component";
-import {ObjectComponent} from "./components/object/object.component";
-import {StringSchemaComponent} from "./components/string-schema/string-schema.component";
-import {StringComponent} from "./components/string/string.component";
-import {TextAreaComponent} from "./components/textarea/textarea.component";
 import {InputPlacerWithMetaPlacer, INPUT_PLACERS} from "./input";
 import {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 import {InputPlacerComponent} from "./input.placer";
 import {InputResolver} from "./input.resolver";
 import {NgModelParentDirective} from "./ngmodel.parent";
-import {DragDropModule} from "@angular/cdk/drag-drop";
 import {
+  MaxItemsValidator,
   MaxValidator,
   MinItemsValidator,
   MinValidator,
-  UniqueItemsValidator,
-  MaxItemsValidator
+  UniqueItemsValidator
 } from "./validators";
-import {BooleanSchemaComponent} from "./components/boolean-schema/boolean-schema.component";
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 
 export function coerceObject() {
   return {};

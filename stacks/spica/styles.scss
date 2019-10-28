@@ -1,4 +1,4 @@
-@import "~@angular/material/theming";
+@import 'external/npm/node_modules/@angular/material/theming';
 @include mat-core();
 
 $primary: mat-palette($mat-gray, 900, 500, 700);

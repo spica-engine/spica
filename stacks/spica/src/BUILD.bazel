@@ -1,0 +1,18 @@
+load("@npm_angular_bazel//:index.bzl", "ng_module")
+
+package(default_visibility = ["//:__subpackages__"])
+
+ng_module(
+    name = "app",
+    srcs = [
+        "app.module.ts",
+        "app.component.ts"
+    ],
+    deps = [
+        "@npm//@angular/core",
+        "@npm//@angular/router",
+        "@npm//@angular/platform-browser",
+        "@npm//@ngrx/store",
+        "//stacks/spica/packages/common"
+    ],
+)

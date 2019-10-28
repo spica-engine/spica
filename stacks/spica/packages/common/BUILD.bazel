@@ -1,0 +1,39 @@
+load("@npm_angular_bazel//:index.bzl", "ng_module")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@io_bazel_rules_sass//:defs.bzl", "sass_binary", "sass_library")
+
+package(default_visibility = ["//:__subpackages__"])
+
+
+ts_library(
+    name = "input",
+    srcs = [
+        "input/input.ts"
+    ],
+    deps = [
+        "@npm//@angular/core",
+        "@npm//@types/json-schema"
+    ]
+)
+
+ng_module(
+    name = "common",
+    srcs = glob(
+        include = ["**/*.ts"], 
+        exclude = [
+            "**/components",
+            "input/input.ts"
+        ]
+    ),
+    deps = [
+        "//stacks/spica/packages/common/input/components/string",
+        ":input",
+        "@npm//@angular/core",
+        "@npm//@angular/common",
+        "@npm//@angular/forms",
+        "@npm//@angular/material",
+        "@npm//@angular/cdk",
+        "@npm//ng-pick-datetime",
+        "@npm//@types/json-schema"
+    ],
+)
