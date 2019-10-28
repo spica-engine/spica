@@ -4,7 +4,7 @@ import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
 import {merge, Observable} from "rxjs";
-import {debounceTime, first, flatMap, map, switchMap, tap} from "rxjs/operators";
+import {debounceTime, flatMap, map, share, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
@@ -26,8 +26,8 @@ export class IndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
   bucketId: string;
-  $meta: Observable<Bucket>;
-  $data: Observable<BucketData>;
+  schema$: Observable<Bucket>;
+  data$: Observable<BucketData>;
   refresh = new EventEmitter();
   loaded: boolean;
 
@@ -55,7 +55,7 @@ export class IndexComponent implements OnInit {
   ngOnInit(): void {
     this.$preferences = this.bs.getPreferences();
 
-    this.$meta = this.route.params.pipe(
+    this.schema$ = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
         this.paginator.pageIndex = 0;
@@ -64,7 +64,7 @@ export class IndexComponent implements OnInit {
         this.sort = {};
         this.loaded = false;
       }),
-      flatMap(() => this.bs.getBucket(this.bucketId).pipe(first())),
+      flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
         this.readOnly = schema.readOnly;
         this.properties = [
@@ -86,11 +86,15 @@ export class IndexComponent implements OnInit {
         if (!schema.readOnly) {
           this.displayedProperties = ["$$spicainternal_select", ...this.displayedProperties];
         }
-      })
+      }),
+      share()
     );
 
-    this.$data = merge(this.route.params, this.paginator.page, this.refresh).pipe(
-      debounceTime(200),
+    this.data$ = merge(
+      this.route.params,
+      this.paginator.page,
+      this.refresh.pipe(debounceTime(200))
+    ).pipe(
       tap(() => (this.loaded = false)),
       switchMap(() =>
         this.bds.find(this.bucketId, {
@@ -103,6 +107,7 @@ export class IndexComponent implements OnInit {
         })
       ),
       map(response => {
+        console.log(response);
         this.selectedItems = [];
         this.paginator.length = (response.meta && response.meta.total) || 0;
         this.dataIds = response.data.map(d => d._id);

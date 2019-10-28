@@ -1,8 +1,9 @@
-<mat-toolbar color="primary">
-  <span *ngIf="$meta | async; let bucket">
+<mat-toolbar color="primary" *ngIf="schema$ | async; let schema">
+  <span>
+    {{ schema | json }}
     <h4>
-      <mat-icon>{{ bucket.icon }}</mat-icon>
-      <span>{{ bucket.title }}</span>
+      <mat-icon>{{ schema.icon }}</mat-icon>
+      <span>{{ schema.title }}</span>
       <button
         mat-icon-button
         #clipboard="matClipboard"
@@ -14,12 +15,12 @@
       >
         <mat-icon>{{ clipboard.icon }}</mat-icon>
       </button>
-      <mat-chip-list *ngIf="bucket.readOnly">
+      <mat-chip-list *ngIf="schema.readOnly">
         <mat-chip disableRipple>Read Only</mat-chip>
       </mat-chip-list>
-      <mat-spinner *ngIf="!loaded" [@smooth] color="accent" diameter="20"></mat-spinner>
+      <mat-spinner *ngIf="!loaded" color="accent" diameter="20" @smooth></mat-spinner>
     </h4>
-    <h6>{{ bucket.description }}</h6>
+    <h6>{{ schema.description }}</h6>
   </span>
 
   <span class="space-between"></span>
@@ -51,12 +52,7 @@
     <mat-icon>schedule</mat-icon>
   </button>
 
-  <button
-    *ngIf="$meta | async; let meta"
-    matTooltip="Toggle columns"
-    mat-icon-button
-    [matMenuTriggerFor]="propertiesMenu"
-  >
+  <button mat-icon-button matTooltip="Toggle columns" [matMenuTriggerFor]="propertiesMenu">
     <mat-icon>view_column</mat-icon>
     <mat-menu class="displayed-properties-menu" xPosition="before" #propertiesMenu="matMenu">
       <button mat-menu-item (click)="$event.stopPropagation()">
@@ -65,7 +61,7 @@
           [indeterminate]="
             displayedProperties.length > 1 && displayedProperties.length < properties.length
           "
-          (ngModelChange)="toggleDisplayAll($event, meta)"
+          (ngModelChange)="toggleDisplayAll($event, schema)"
         >
           Display all
         </mat-checkbox>
@@ -89,21 +85,18 @@
     </mat-menu>
   </button>
 
-  <button
-    mat-icon-button
-    matTooltip="Change language"
-    [matMenuTriggerFor]="languageMenu"
-    *ngIf="$preferences | async; let preferences"
-  >
+  <button mat-icon-button matTooltip="Change language" [matMenuTriggerFor]="languageMenu">
     <mat-icon>translate</mat-icon>
     <mat-menu #languageMenu="matMenu">
-      <button
-        mat-menu-item
-        *ngFor="let lang of preferences.language.supported_languages"
-        (click)="language = lang.code; refresh.next()"
-      >
-        {{ lang.name }} ({{ lang.code }})
-      </button>
+      <ng-template matMenuContent>
+        <button
+          mat-menu-item
+          *ngFor="let lang of ($preferences | async)?.language.supported_languages"
+          (click)="language = lang.code; refresh.next()"
+        >
+          {{ lang.name }} ({{ lang.code }})
+        </button>
+      </ng-template>
     </mat-menu>
   </button>
 
@@ -118,7 +111,7 @@
       <bucket-filter
         #filterer
         [filter]="filter"
-        [meta]="$meta | async"
+        [schema]="schema"
         (filterChange)="this.filter = $event; refresh.emit()"
       ></bucket-filter>
     </mat-menu>
@@ -141,7 +134,7 @@
 
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
-    <mat-table [dataSource]="$data" matSort (matSortChange)="sortChange($event)">
+    <mat-table [dataSource]="data$" matSort (matSortChange)="sortChange($event)">
       <ng-container matColumnDef="$$spicainternal_select">
         <mat-header-cell class="select" *matHeaderCellDef>
           <mat-checkbox
@@ -197,7 +190,7 @@
       </ng-container>
 
       <ng-container
-        *ngFor="let property of ($meta | async)?.properties | keyvalue"
+        *ngFor="let property of (schema$ | async)?.properties | keyvalue"
         [matColumnDef]="property.key"
       >
         <mat-header-cell *matHeaderCellDef mat-sort-header>

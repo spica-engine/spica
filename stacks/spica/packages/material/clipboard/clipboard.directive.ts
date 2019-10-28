@@ -1,10 +1,12 @@
 import {Directive, HostListener, Input} from "@angular/core";
 
-@Directive({selector: "[matClipboard]", exportAs: "matClipboard"})
+@Directive({
+  selector: "[matClipboard]",
+  exportAs: "matClipboard"
+})
 export class MatClipboardDirective {
   @Input() icon: string = "info";
   @Input("matClipboard") text: string;
-  constructor() {}
 
   @HostListener("click")
   copy() {
