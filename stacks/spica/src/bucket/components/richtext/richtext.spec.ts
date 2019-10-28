@@ -14,7 +14,7 @@ import {INPUT_SCHEMA} from "@spica-server/common";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 
-fdescribe("RichTextEditorComponent", () => {
+describe("RichTextEditorComponent", () => {
   let fixture: ComponentFixture<RichTextEditorComponent>;
 
   beforeEach(() => {

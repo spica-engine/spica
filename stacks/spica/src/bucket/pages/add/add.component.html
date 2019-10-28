@@ -62,7 +62,7 @@
       <div *ngFor="let layout of layouts" [class]="layout">
         <ng-container *ngFor="let propertyKv of bucket['positioned'][layout]">
           <div
-            *ngIf="propertyKv.value.options.translate && data[propertyKv.key]"
+            *ngIf="propertyKv.value.options?.translate && data[propertyKv.key]"
             [inputPlacer]="propertyKv.value"
             [disabled]="propertyKv.value.readOnly || !language.selected || bucket.readOnly"
             [required]="bucket.required && bucket.required.indexOf(propertyKv.key) > -1"

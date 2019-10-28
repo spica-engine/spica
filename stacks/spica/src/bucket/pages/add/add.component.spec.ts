@@ -1,5 +1,6 @@
+import {DebugElement} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, NgModel} from "@angular/forms";
 import {
   MatBadge,
   MatBadgeModule,
@@ -17,9 +18,9 @@ import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
-import {InputModule} from "@spica-server/common";
+import {InputModule} from "@spica-client/common";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
-import {Subject} from "rxjs";
+import {of, Subject} from "rxjs";
 import {PropertyLanguageComponent} from "../../components/language/language.component";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
@@ -30,7 +31,7 @@ import {BucketService} from "../../services/bucket.service";
 import {RequiredTranslate} from "../../validators";
 import {AddComponent} from "./add.component";
 
-fdescribe("AddComponent", () => {
+describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;
 
   let bucket = new Subject<Partial<Bucket>>();
@@ -38,7 +39,15 @@ fdescribe("AddComponent", () => {
   let historyList = new Subject<BucketHistory[]>();
   let history = new Subject<BucketRow>();
   let bucketService = {
-    getBucket: jasmine.createSpy("getBucket").and.returnValue(bucket)
+    getBucket: jasmine.createSpy("getBucket").and.returnValue(bucket),
+    getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
+      of({
+        language: {
+          supported_languages: [{code: "tr_TR", name: "Turkish"}, {code: "en_US", name: "English"}],
+          default: {code: "en_US", name: "English"}
+        }
+      })
+    )
   };
   let bucketDataService = {
     findOne: jasmine.createSpy("findOne").and.returnValue(row)
@@ -144,6 +153,54 @@ fdescribe("AddComponent", () => {
       expect(bucketDataService.findOne).not.toHaveBeenCalled();
       expect(bucketHistoryService.historyList).not.toHaveBeenCalled();
     }));
+
+    describe("update/add", () => {
+      beforeEach(() => {
+        bucket.next({
+          properties: {
+            test: {
+              type: "string",
+              options: {
+                position: "bottom"
+              }
+            }
+          }
+        });
+        activatedRoute.params.next({id: "1"});
+        fixture.detectChanges();
+      });
+
+      it("should show add button", () => {
+        expect(
+          fixture.debugElement.query(
+            By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
+          ).nativeElement.textContent
+        ).toBe("Add");
+
+        expect(
+          fixture.debugElement.query(
+            By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
+          ).nativeElement.textContent
+        ).toBe("add");
+      });
+
+      it("should show update button", () => {
+        fixture.componentInstance.data._id = '1';
+        fixture.detectChanges();
+
+        expect(
+          fixture.debugElement.query(
+            By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
+          ).nativeElement.textContent
+        ).toBe("Update");
+
+        expect(
+          fixture.debugElement.query(
+            By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
+          ).nativeElement.textContent
+        ).toBe("double_arrow");
+      });
+    });
   });
 
   describe("history", () => {
@@ -156,7 +213,7 @@ fdescribe("AddComponent", () => {
       historyList.next([{_id: "1", changes: 1, date: new Date().toISOString()}]);
       fixture.detectChanges();
       expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(1);
-      expect(bucketHistoryService.historyList).toHaveBeenCalledWith(1, 2);
+      expect(bucketHistoryService.historyList).toHaveBeenCalledWith("1", "2");
       const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
       expect(button).toBeTruthy();
       expect(button.injector.get(MatBadge).content).toBe((1 as unknown) as string);
@@ -184,7 +241,7 @@ fdescribe("AddComponent", () => {
       expect(options.item(2).querySelector("span.mat-badge-content").textContent).toBe("8");
     });
 
-    fit("should set data to specific data point", fakeAsync(() => {
+    it("should set data to specific data point", fakeAsync(() => {
       const data = {_id: "2", test: "12"},
         specificPoint = {_id: "2", test: "123"};
       historyList.next([
@@ -203,60 +260,126 @@ fdescribe("AddComponent", () => {
       const secondButton = document.body.querySelector<HTMLButtonElement>(
         ".mat-menu-panel > .mat-menu-content button:nth-of-type(2)"
       );
+
       secondButton.click();
       history.next(specificPoint);
       history.complete();
       tick();
+      fixture.detectChanges();
+
       expect(bucketHistoryService.revertTo).toHaveBeenCalledTimes(1);
       expect(bucketHistoryService.revertTo).toHaveBeenCalledWith("1", "2", "1");
       expect(fixture.componentInstance.data).toEqual(specificPoint);
       expect(fixture.componentInstance.now).toEqual(data);
-      //expect(nowButton.disabled).toBe(false);
+      expect(nowButton.disabled).toBe(false);
     }));
   });
 
-  it("should render properties with positions", () => {
-    bucket.next({
-      properties: {
-        test: {
-          type: "string",
-          options: {
-            position: "bottom"
-          }
-        },
-        test1: {
-          type: "string",
-          options: {
-            position: "bottom"
-          }
-        },
-        test2: {
-          type: "string",
-          options: {
-            position: "left"
-          }
-        },
-        test3: {
-          type: "string",
-          options: {
-            position: "right"
+  describe("properties", () => {
+    it("should render with positions", () => {
+      bucket.next({
+        properties: {
+          test: {
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          },
+          test1: {
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          },
+          test2: {
+            type: "string",
+            options: {
+              position: "left"
+            }
+          },
+          test3: {
+            type: "string",
+            options: {
+              position: "right"
+            }
           }
         }
-      }
-    });
-    fixture.detectChanges();
+      });
+      fixture.detectChanges();
 
-    let bottomProperties = fixture.debugElement.queryAll(
+      let bottomProperties = fixture.debugElement.queryAll(
+          By.css("mat-card > mat-card-content > form > div.bottom > div")
+        ),
+        leftProperties = fixture.debugElement.queryAll(
+          By.css("mat-card > mat-card-content > form > div.left > div")
+        ),
+        rightProperties = fixture.debugElement.queryAll(
+          By.css("mat-card > mat-card-content > form > div.right > div")
+        );
+      expect(bottomProperties.length).toBe(2);
+      expect(leftProperties.length).toBe(1);
+      expect(rightProperties.length).toBe(1);
+    });
+
+    it("should write value to data", () => {
+      bucket.next({
+        properties: {
+          test: {
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          }
+        }
+      });
+      fixture.detectChanges();
+      const property = fixture.debugElement.query(
         By.css("mat-card > mat-card-content > form > div.bottom > div")
-      ),
-      leftProperties = fixture.debugElement.queryAll(
-        By.css("mat-card > mat-card-content > form > div.left > div")
-      ),
-      rightProperties = fixture.debugElement.queryAll(
-        By.css("mat-card > mat-card-content > form > div.right > div")
       );
-    expect(bottomProperties.length).toBe(2);
-    expect(leftProperties.length).toBe(1);
-    expect(rightProperties.length).toBe(1);
+      const ngModel = property.injector.get(NgModel);
+      ngModel.viewToModelUpdate("test");
+      expect(fixture.componentInstance.data.test).toEqual("test");
+    });
+
+    describe("translated", () => {
+      let translatedProperty: DebugElement;
+      beforeEach(() => {
+        bucket.next({
+          properties: {
+            test: {
+              type: "string",
+              options: {
+                position: "bottom",
+                translate: true
+              }
+            }
+          }
+        });
+        fixture.detectChanges(false);
+        translatedProperty = fixture.debugElement.query(
+          By.css("mat-card > mat-card-content > form > div.bottom > div")
+        );
+      });
+
+      it("should render translated properties and coerce data", () => {
+        expect(translatedProperty).toBeTruthy();
+        expect(fixture.componentInstance.data.test).toEqual({});
+      });
+
+      it("should write to the value to the coerced object", () => {
+        const ngModel = translatedProperty.injector.get(NgModel);
+        ngModel.viewToModelUpdate("test");
+        expect(fixture.componentInstance.data.test).toEqual({en_US: "test"});
+      });
+
+      it("should write to the value to the second language in the coerced object", () => {
+        const language = translatedProperty.query(By.directive(PropertyLanguageComponent))
+          .componentInstance as PropertyLanguageComponent;
+        language.selected = "tr_TR";
+        const ngModel = translatedProperty.injector.get(NgModel);
+        ngModel.viewToModelUpdate("test");
+        expect(fixture.componentInstance.data.test).toEqual({tr_TR: "test"});
+      });
+    });
   });
 });

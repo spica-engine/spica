@@ -61,6 +61,7 @@ describe("Common#object", () => {
             useValue: {
               type: "object",
               $name: "test",
+              required: ["prop1"],
               properties: {
                 prop1: {
                   type: "string"
@@ -145,6 +146,13 @@ describe("Common#object", () => {
       placers[0].componentInstance._change("test1");
       placers[1].componentInstance._change("test2");
       expect(fixture.componentInstance._value).toEqual({prop1: "test1", prop2: "test2"});
+    });
+  });
+
+  describe("validation", () => {
+    it("should be invalid when a property is required", () => {
+      const ngModel = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+      expect(ngModel.invalid).toBe(true);
     });
   });
 });
