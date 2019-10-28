@@ -1,6 +1,6 @@
 import {DebugElement} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {FormsModule, NgModel} from "@angular/forms";
+import {FormsModule, NgForm, NgModel} from "@angular/forms";
 import {
   MatBadge,
   MatBadgeModule,
@@ -112,6 +112,20 @@ describe("AddComponent", () => {
   });
 
   describe("basic behavior", () => {
+    beforeEach(() => {
+      bucket.next({
+        properties: {
+          test: {
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          }
+        }
+      });
+      fixture.detectChanges();
+    });
+
     it("should render bucket information", () => {
       bucket.next({
         title: "My Bucket",
@@ -154,52 +168,47 @@ describe("AddComponent", () => {
       expect(bucketHistoryService.historyList).not.toHaveBeenCalled();
     }));
 
-    describe("update/add", () => {
-      beforeEach(() => {
-        bucket.next({
-          properties: {
-            test: {
-              type: "string",
-              options: {
-                position: "bottom"
-              }
-            }
-          }
-        });
-        activatedRoute.params.next({id: "1"});
-        fixture.detectChanges();
+    it("should disable add/update button when readonly", () => {
+      bucket.next({
+        readOnly: true,
+        properties: {}
       });
+      fixture.detectChanges();
+      expect(
+        fixture.debugElement.query(By.css("mat-card > mat-card-actions > button:last-of-type"))
+          .nativeElement.disabled
+      ).toBe(true);
+    });
 
-      it("should show add button", () => {
-        expect(
-          fixture.debugElement.query(
-            By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
-          ).nativeElement.textContent
-        ).toBe("Add");
+    it("should show add button", () => {
+      expect(
+        fixture.debugElement.query(
+          By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
+        ).nativeElement.textContent
+      ).toBe("Add");
 
-        expect(
-          fixture.debugElement.query(
-            By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
-          ).nativeElement.textContent
-        ).toBe("add");
-      });
+      expect(
+        fixture.debugElement.query(
+          By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
+        ).nativeElement.textContent
+      ).toBe("add");
+    });
 
-      it("should show update button", () => {
-        fixture.componentInstance.data._id = '1';
-        fixture.detectChanges();
+    it("should show update button", () => {
+      fixture.componentInstance.data._id = "1";
+      fixture.detectChanges();
 
-        expect(
-          fixture.debugElement.query(
-            By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
-          ).nativeElement.textContent
-        ).toBe("Update");
+      expect(
+        fixture.debugElement.query(
+          By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
+        ).nativeElement.textContent
+      ).toBe("Update");
 
-        expect(
-          fixture.debugElement.query(
-            By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
-          ).nativeElement.textContent
-        ).toBe("double_arrow");
-      });
+      expect(
+        fixture.debugElement.query(
+          By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
+        ).nativeElement.textContent
+      ).toBe("double_arrow");
     });
   });
 
@@ -381,5 +390,64 @@ describe("AddComponent", () => {
         expect(fixture.componentInstance.data.test).toEqual({tr_TR: "test"});
       });
     });
+  });
+
+  describe("validation", () => {
+    it("should be valid when there is no property required", () => {
+      bucket.next({
+        properties: {
+          test: {
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          }
+        }
+      });
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.directive(NgForm)).injector.get(NgForm).invalid).toBe(
+        false
+      );
+    });
+
+    it("should be invalid when a property is required", fakeAsync(() => {
+      bucket.next({
+        required: ["test"],
+        properties: {
+          test: {
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          }
+        }
+      });
+      fixture.detectChanges();
+      tick();
+      expect(fixture.debugElement.query(By.directive(NgForm)).injector.get(NgForm).invalid).toBe(
+        true
+      );
+    }));
+
+    it("should disable add/update button when invalid", fakeAsync(() => {
+      bucket.next({
+        required: ["test"],
+        properties: {
+          test: {
+            type: "string",
+            options: {
+              position: "bottom"
+            }
+          }
+        }
+      });
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      expect(
+        fixture.debugElement.query(By.css("mat-card > mat-card-actions > button:last-of-type"))
+          .nativeElement.disabled
+      ).toBe(true);
+    }));
   });
 });
