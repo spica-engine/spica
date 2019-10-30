@@ -68,7 +68,6 @@ export class IndexComponent implements OnInit {
       tap(schema => {
         this.readOnly = schema.readOnly;
         this.properties = [
-          {name: "$$spicainternal_select", title: "Select"},
           ...Object.entries(schema.properties).map(([name, value]) => ({
             name,
             title: value.title
@@ -77,37 +76,33 @@ export class IndexComponent implements OnInit {
           {name: "$$spicainternal_actions", title: "Actions"}
         ];
 
+        if (!schema.readOnly) {
+          this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
+        }
+
         this.displayedProperties = [
           ...Object.entries(schema.properties)
             .filter(([, value]) => value.options.visible)
             .map(([key]) => key),
           "$$spicainternal_actions"
         ];
-        if (!schema.readOnly) {
-          this.displayedProperties = ["$$spicainternal_select", ...this.displayedProperties];
-        }
       }),
       share()
     );
 
-    this.data$ = merge(
-      this.route.params,
-      this.paginator.page,
-      this.refresh.pipe(debounceTime(200))
-    ).pipe(
+    this.data$ = merge(this.route.params, this.paginator.page, this.refresh).pipe(
       tap(() => (this.loaded = false)),
       switchMap(() =>
         this.bds.find(this.bucketId, {
           language: this.language,
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
           sort: this.sort && Object.keys(this.sort).length > 0 && this.sort,
-          limit: this.paginator.pageSize || 12,
+          limit: this.paginator.pageSize,
           skip: this.paginator.pageSize * this.paginator.pageIndex,
           schedule: this.showScheduled
         })
       ),
       map(response => {
-        console.log(response);
         this.selectedItems = [];
         this.paginator.length = (response.meta && response.meta.total) || 0;
         this.dataIds = response.data.map(d => d._id);
