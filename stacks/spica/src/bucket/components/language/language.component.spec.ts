@@ -12,15 +12,6 @@ describe("LanguageComponent", () => {
   let component: PropertyLanguageComponent;
   let fixture: ComponentFixture<PropertyLanguageComponent>;
 
-  const languagePrefs = {
-    language: {
-      supported_languages: [{code: "tr_TR", name: "Turkish"}, {code: "en_US", name: "English"}],
-      default: {code: "en_US", name: "English"}
-    }
-  };
-
-  const defaultLanguage = languagePrefs.language.default;
-
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [MatButtonModule, MatMenuModule, MatIconModule, NoopAnimationsModule],
@@ -28,7 +19,17 @@ describe("LanguageComponent", () => {
         {
           provide: BucketService,
           useValue: {
-            getPreferences: jasmine.createSpy("getPreferences").and.returnValue(of(languagePrefs))
+            getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
+              of({
+                language: {
+                  available: {
+                    tr_TR: "Turkish",
+                    en_US: "English"
+                  },
+                  default: "en_US"
+                }
+              })
+            )
           }
         }
       ],
@@ -46,8 +47,8 @@ describe("LanguageComponent", () => {
 
     let bucketService = TestBed.get(BucketService);
     expect(bucketService.getPreferences).toHaveBeenCalledTimes(1);
-    expect(component.selected).toBe(defaultLanguage.code);
-    expect(component.default).toBe(defaultLanguage.code);
+    expect(component.selected).toBe("en_US");
+    expect(component.default).toBe("en_US");
 
     const compiled = document.body;
 

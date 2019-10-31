@@ -90,10 +90,10 @@
       <ng-template matMenuContent>
         <button
           mat-menu-item
-          *ngFor="let lang of ($preferences | async)?.language.supported_languages"
-          (click)="language = lang.code; refresh.next()"
+          *ngFor="let languageKv of ($preferences | async)?.language.available | keyvalue"
+          (click)="language = languageKv.key; refresh.next()"
         >
-          {{ lang.name }} ({{ lang.code }})
+          {{ languageKv.value }} ({{ languageKv.key }})
         </button>
       </ng-template>
     </mat-menu>

@@ -43,8 +43,11 @@ describe("AddComponent", () => {
     getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
       of({
         language: {
-          supported_languages: [{code: "tr_TR", name: "Turkish"}, {code: "en_US", name: "English"}],
-          default: {code: "en_US", name: "English"}
+          available: {
+            tr_TR: "Turkish",
+            en_US: "English"
+          },
+          default: "en_US"
         }
       })
     )

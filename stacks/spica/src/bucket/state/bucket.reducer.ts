@@ -76,7 +76,5 @@ export const selectLoaded = createSelector(
 export const selectEmpty = createSelector(
   bucketFeatureSelector,
   selectTotal,
-  (state, total) => {
-    return state.loaded && total == 0;
-  }
+  (state, total) => state.loaded && total == 0
 );

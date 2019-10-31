@@ -1,6 +1,6 @@
-import { Component, forwardRef, Inject } from "@angular/core";
-import { NG_VALUE_ACCESSOR } from "@angular/forms";
-import { INPUT_SCHEMA, InternalPropertySchema } from "../../input";
+import {Component, forwardRef, Inject} from "@angular/core";
+import {NG_VALUE_ACCESSOR} from "@angular/forms";
+import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./color.component.html",

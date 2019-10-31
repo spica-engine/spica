@@ -37,12 +37,12 @@ describe("Validators", () => {
     });
 
     it("should not return error when current language is default language and control value is not empty", () => {
-        validator.currentLanguage = "tr_TR";
-        validator.requiredTranslate = {
-          en_US: "Test",
-          tr_TR: ""
-        };
-        expect(validator.validate(new FormControl("test"))).toBeNull();
-      });
+      validator.currentLanguage = "tr_TR";
+      validator.requiredTranslate = {
+        en_US: "Test",
+        tr_TR: ""
+      };
+      expect(validator.validate(new FormControl("test"))).toBeNull();
+    });
   });
 });

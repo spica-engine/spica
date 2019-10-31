@@ -1,8 +1,7 @@
 import {HttpClient, HttpHeaders, HttpRequest} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
-import {PreferencesService} from "@spica-client/core";
-import {fileToBuffer} from "@spica-client/core";
+import {fileToBuffer, PreferencesService} from "@spica-client/core";
 import * as BSON from "bson";
 import {from, Observable} from "rxjs";
 import {filter, flatMap, map, tap} from "rxjs/operators";
@@ -56,6 +55,7 @@ export class BucketService {
   updateMany(buckets: Bucket[]): Observable<Bucket[]> {
     return this.http.put<Bucket[]>(`api:/bucket`, buckets);
   }
+
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {
     return this.http.get<PredefinedDefault[]>(`api:/bucket/predefs`);
   }
@@ -105,6 +105,7 @@ export class BucketService {
   exportSchema(bucketIds: Array<string>): Observable<any> {
     return this.http.post(`api:/bucket/export-schema`, bucketIds, {responseType: "blob"});
   }
+
   getTemplates(): Observable<any> {
     return this.http.get<any>(`api:/bucket/templates`);
   }

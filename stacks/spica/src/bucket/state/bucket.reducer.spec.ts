@@ -18,7 +18,7 @@ describe("BucketReducer", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot([reducer])]
+      imports: [StoreModule.forRoot({bucket: reducer})]
     });
     store = TestBed.get(Store);
   });

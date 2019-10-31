@@ -47,8 +47,11 @@ describe("IndexComponent", () => {
     getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
       of({
         language: {
-          supported_languages: [{code: "tr_TR", name: "Turkish"}, {code: "en_US", name: "English"}],
-          default: {code: "en_US", name: "English"}
+          available: {
+            tr_TR: "Turkish",
+            en_US: "English"
+          },
+          default: "tr_TR"
         }
       })
     )
@@ -188,8 +191,8 @@ describe("IndexComponent", () => {
           .nativeElement.click();
         fixture.detectChanges();
         const options = document.body.querySelectorAll(".mat-menu-content .mat-menu-item");
-        expect(options[0].textContent).toBe(" Turkish (tr_TR) ");
-        expect(options[1].textContent).toBe(" English (en_US) ");
+        expect(options[1].textContent).toBe(" Turkish (tr_TR) ");
+        expect(options[0].textContent).toBe(" English (en_US) ");
       });
 
       it("should query language", fakeAsync(() => {
@@ -201,9 +204,9 @@ describe("IndexComponent", () => {
         document.body.querySelector<HTMLButtonElement>(".mat-menu-content .mat-menu-item").click();
         tick(500);
 
-        expect(fixture.componentInstance.language).toBe("tr_TR");
+        expect(fixture.componentInstance.language).toBe("en_US");
         expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-        expect(bucketDataService.find.calls.mostRecent().args[1].language).toBe("tr_TR");
+        expect(bucketDataService.find.calls.mostRecent().args[1].language).toBe("en_US");
       }));
     });
 
