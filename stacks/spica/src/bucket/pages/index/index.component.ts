@@ -4,7 +4,7 @@ import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
 import {merge, Observable} from "rxjs";
-import {flatMap, map, share, switchMap, tap} from "rxjs/operators";
+import {flatMap, map, publishReplay, refCount, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
@@ -62,7 +62,6 @@ export class IndexComponent implements OnInit {
         this.filter = undefined;
         this.showScheduled = false;
         this.sort = {};
-        this.loaded = false;
       }),
       flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
@@ -87,7 +86,8 @@ export class IndexComponent implements OnInit {
           "$$spicainternal_actions"
         ];
       }),
-      share()
+      publishReplay(),
+      refCount()
     );
 
     this.data$ = merge(this.route.params, this.paginator.page, this.refresh).pipe(
@@ -97,7 +97,7 @@ export class IndexComponent implements OnInit {
           language: this.language,
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
           sort: this.sort && Object.keys(this.sort).length > 0 && this.sort,
-          limit: this.paginator.pageSize,
+          limit: this.paginator.pageSize || 10,
           skip: this.paginator.pageSize * this.paginator.pageIndex,
           schedule: this.showScheduled
         })

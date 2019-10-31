@@ -7,7 +7,7 @@ import {BucketService} from "../services/bucket.service";
 import {reducer, Retrieve, State} from "./bucket.reducer";
 import {BucketIndexGuard} from "./index.guard";
 
-fdescribe("BucketIndexGuard", () => {
+describe("BucketIndexGuard", () => {
   let guard: BucketIndexGuard;
   let store: Store<State>;
   let bucketService: jasmine.SpyObj<{retrieve: Function}>;
@@ -37,7 +37,7 @@ fdescribe("BucketIndexGuard", () => {
     expect(bucketService.retrieve).toHaveBeenCalledTimes(1);
   });
 
-  fit("should not redirect if not loaded", async () => {
+  it("should not redirect if not loaded", async () => {
     expect(await guard.canActivate(null, {url: "bucket"} as RouterStateSnapshot).toPromise()).toBe(
       true
     );

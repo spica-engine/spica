@@ -133,7 +133,7 @@
 
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
-    <mat-table [dataSource]="data$" matSort (matSortChange)="sortChange($event)">
+    <mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
       <ng-container matColumnDef="$$spicainternal_select">
         <mat-header-cell class="select" *matHeaderCellDef>
           <mat-checkbox

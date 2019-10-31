@@ -330,6 +330,8 @@ describe("IndexComponent", () => {
 
   describe("rows", () => {
     beforeEach(() => {
+      rows.next([{_id: "1", test: "123"}]);
+      fixture.detectChanges();
       bucket.next({
         _id: "1",
         properties: {
@@ -343,7 +345,6 @@ describe("IndexComponent", () => {
           }
         }
       });
-      rows.next([{_id: "1", test: "123"}]);
       fixture.detectChanges();
     });
 
