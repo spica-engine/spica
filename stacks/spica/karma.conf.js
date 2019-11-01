@@ -21,18 +21,12 @@ module.exports = function(config) {
       reports: ["html", "lcovonly", "text-summary"],
       fixWebpackSourcePaths: true
     },
-    customLaunchers: {
-      ChromeNoSandbox: {
-        base: "Chrome",
-        flags: ["--no-sandbox"]
-      }
-    },
     reporters: ["progress", "kjhtml"],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: true,
-    browsers: ["ChromeNoSandbox", "Safari"],
+    browsers: ["Chrome", "Safari"],
     singleRun: false,
     restartOnFileChange: true
   });

@@ -66,19 +66,7 @@ jobs:
           command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
       - run:
           name: "Running tests"
-          command: |
-            # Run Unit tests
-            # We need to check the client for AOT errors. 
-            # This is the expensive way to do but ¯\_(ツ)_/¯
-            # After we switch spica(client) to bazel we gonna get rid of this
-            cd stacks/spica
-            rm -rf dist/spica-client
-            # Disable differential loading on patch branches to gain speed up
-            if [ $CIRCLE_BRANCH != "master" ]; then
-              echo "Disabling differential loading"
-              echo "last 2 Chrome versions" > browserslist
-            fi
-            yarn ng build --prod --progress=false
+          command: yarn ng test --browsers=ChromeHeadless
       - persist_to_workspace:
           root: ~/
           paths:
