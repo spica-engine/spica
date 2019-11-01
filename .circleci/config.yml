@@ -1,12 +1,12 @@
 var_1: &job_defaults
   working_directory: ~/spica
   docker:
-    - image: circleci/node:11
+    - image: circleci/node:11-browsers
 
 var_2: &test_defaults
   <<: *job_defaults
   docker:
-    - image: circleci/node:11
+    - image: circleci/node:11-browsers
     - image: circleci/mongo:4.2
 
 var_3: &setup_circleci_bazel_config
@@ -66,7 +66,7 @@ jobs:
           command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
       - run:
           name: "Running tests"
-          command: yarn ng test --browsers=ChromeHeadless
+          command: cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false
       - persist_to_workspace:
           root: ~/
           paths:
