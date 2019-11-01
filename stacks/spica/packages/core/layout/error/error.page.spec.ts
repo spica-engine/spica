@@ -17,7 +17,7 @@ describe("Error Page Component", () => {
 
   let location: Location;
   let fixture: ComponentFixture<ErrorPageComponent>;
-  
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ErrorPageComponent],
