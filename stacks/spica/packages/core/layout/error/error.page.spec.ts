@@ -6,8 +6,6 @@ import {of} from "rxjs";
 import {RouterTestingModule} from "@angular/router/testing";
 import {Location} from "@angular/common";
 
-//DONE
-
 describe("Error Page Component", () => {
   let queryParams = {
     queryParams: of({
@@ -19,7 +17,7 @@ describe("Error Page Component", () => {
 
   let location: Location;
   let fixture: ComponentFixture<ErrorPageComponent>;
-  // let component : ErrorPageComponent
+  
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ErrorPageComponent],
@@ -33,7 +31,6 @@ describe("Error Page Component", () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(ErrorPageComponent);
-    // component = fixture.componentInstance;
     fixture.detectChanges();
     location = TestBed.get(Location);
   });
