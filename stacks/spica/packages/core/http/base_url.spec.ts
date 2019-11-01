@@ -5,8 +5,6 @@ import {BaseUrlInterceptor} from "./base_url.interceptor";
 import {HTTP_INTERCEPTORS, HttpClient} from "@angular/common/http";
 import {BASE_URL} from "./base_url";
 
-//done
-
 describe(`HttpInterceptor`, () => {
   let service: HttpClient;
   let httpTesting: HttpTestingController;

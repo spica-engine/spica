@@ -1,6 +1,6 @@
 <button mat-button [matMenuTriggerFor]="identityMenu">
   <mat-icon>person</mat-icon>
-  {{ identity.name || identity.identifier }}
+  <span>{{ identity.identifier }}</span>
   <mat-menu #identityMenu="matMenu">
     <button mat-menu-item [routerLink]="['passport', 'identity', identity._id, 'edit']">
       Profile
