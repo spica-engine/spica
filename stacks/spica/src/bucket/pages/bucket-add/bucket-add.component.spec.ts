@@ -31,7 +31,7 @@ import {Bucket} from "src/bucket/interfaces/bucket";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 
-describe("Bucket Add Component", () => {
+fdescribe("Bucket Add Component", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
 
   let myBucket = {
@@ -459,7 +459,6 @@ describe("Bucket Add Component", () => {
           position: "bottom"
         }
       });
-
       expect(fixture.componentInstance.propertyPositionMap.bottom).toEqual([
         {
           key: "prop3",
@@ -476,6 +475,7 @@ describe("Bucket Add Component", () => {
     });
 
     it("should save bucket", async () => {
+      expect(fixture.componentInstance.savingBucketState).toBe(false);
       await fixture.whenStable();
       const form = fixture.debugElement.query(By.css("form")).injector.get(NgForm);
       form.setValue({
@@ -484,12 +484,17 @@ describe("Bucket Add Component", () => {
         readOnly: false
       });
       fixture.detectChanges();
-      fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
-      fixture.detectChanges();
+      await fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       expect(fixture.componentInstance["bs"].replaceOne).toHaveBeenCalledTimes(1);
-      expect(fixture.componentInstance.bucket.title).toBe("new title");
-      expect(fixture.componentInstance.bucket.description).toBe("new description");
-      expect(fixture.componentInstance.bucket.readOnly).toBe(false);
+      expect(fixture.componentInstance["bs"].replaceOne).toHaveBeenCalledWith({
+        ...myBucket,
+        title: "new title",
+        description: "new description",
+        readOnly: false
+      } as Bucket);
+      expect(fixture.componentInstance.savingBucketState).toBe(false);
+      expect(fixture.componentInstance["router"].navigate).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance["router"].navigate).toHaveBeenCalledWith(["buckets/123"]);
     });
   });
 
