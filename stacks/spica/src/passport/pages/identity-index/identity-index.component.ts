@@ -1,9 +1,9 @@
-import {Component, OnInit, ViewChild} from "@angular/core";
+import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
-import {IdentityService} from "../../services/identity.service";
 import {Identity} from "../../interfaces/identity";
+import {IdentityService} from "../../services/identity.service";
 
 @Component({
   selector: "function-identity-index",
@@ -11,7 +11,7 @@ import {Identity} from "../../interfaces/identity";
   styleUrls: ["./identity-index.component.scss"]
 })
 export class IdentityIndexComponent implements OnInit {
-  @ViewChild("toolbar", {static: true}) toolbar;
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
   identities$: Observable<Identity[]>;
@@ -24,11 +24,12 @@ export class IdentityIndexComponent implements OnInit {
     this.identities$ = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
         this.identity.find(
-          this.paginator.pageSize || 50,
+          this.paginator.pageSize || 10,
           this.paginator.pageSize * this.paginator.pageIndex
         )
       ),
       map(identities => {
+        console.log(identities);
         this.paginator.length = identities.meta.total;
         return identities.data;
       })
