@@ -126,7 +126,7 @@
             Please select a primary property.
           </mat-error>
           <mat-error *ngIf="!isThereVisible">
-            You have to make a least a property visible at the list.
+            You have to make at least a property visible at the list.
           </mat-error>
         </span>
       </span>
@@ -156,7 +156,7 @@
                         role="menuitemcheckbox"
                         disableRipple
                         matTooltip="To change primary property select another property as primary"
-                        [matTooltipDisabled]="bucket.primary != key"
+                        [matTooltipDisabled]="bucket.primary != propertyKv.key"
                         (click)="$event.stopImmediatePropagation()"
                       >
                         <mat-checkbox
@@ -296,7 +296,7 @@
             maxlength="25"
           />
 
-          <mat-error *ngIf="pnm.value && pnm?.errors?.required">
+          <mat-error *ngIf="pnm?.errors?.required">
             Property name is required.
           </mat-error>
           <mat-error *ngIf="pnm?.errors?.minlength">
