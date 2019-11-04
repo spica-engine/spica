@@ -17,20 +17,18 @@
   <mat-card-content>
     <mat-table [dataSource]="identities$">
       <ng-container matColumnDef="_id">
-        <mat-header-cell class="id-header" *matHeaderCellDef> # </mat-header-cell>
-        <mat-cell class="id-content" *matCellDef="let element">{{ element._id }}</mat-cell>
+        <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
+        <mat-cell *matCellDef="let identity">{{ identity._id }}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="identifier">
-        <mat-header-cell class="identifier-header" *matHeaderCellDef>Identifier</mat-header-cell>
-        <mat-cell class="identifier-content" *matCellDef="let element">{{
-          element.identifier
-        }}</mat-cell>
+        <mat-header-cell *matHeaderCellDef>Identifier</mat-header-cell>
+        <mat-cell *matCellDef="let identity">{{ identity.identifier }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
         <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="action" *matCellDef="let element">
-          <button mat-icon-button [routerLink]="element._id + '/edit'">
+        <mat-cell class="action" *matCellDef="let identity">
+          <button mat-icon-button [routerLink]="identity._id + '/edit'">
             <mat-icon>edit</mat-icon>
           </button>
           <button
@@ -42,8 +40,8 @@
               templateOrDescription: dialogTemplate,
               answer: 'yes'
             }"
-            (confirm)="delete(element._id)"
-            *ngIf="element.system !== true"
+            (confirm)="delete(identity._id)"
+            *ngIf="identity.system !== true"
           >
             <mat-icon delete-button>delete</mat-icon>
           </button>
