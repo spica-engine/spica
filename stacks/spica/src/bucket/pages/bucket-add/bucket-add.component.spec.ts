@@ -31,7 +31,7 @@ import {Bucket} from "src/bucket/interfaces/bucket";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 
-fdescribe("Bucket Add Component", () => {
+describe("Bucket Add Component", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
 
   let myBucket = {
