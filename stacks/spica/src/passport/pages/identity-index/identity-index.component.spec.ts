@@ -85,7 +85,7 @@ describe("IdentityIndexComponent", () => {
     let paginator: MatPaginator;
 
     beforeEach(() => {
-      rows.next(new Array(20).fill({_id: "1", test: "123"}));
+      rows.next(new Array(20).fill({_id: "1"}));
       fixture.detectChanges();
       paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
     });

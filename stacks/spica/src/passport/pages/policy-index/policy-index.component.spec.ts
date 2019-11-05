@@ -20,7 +20,7 @@ import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyIndexComponent} from "./policy-index.component";
 
-fdescribe("PolicyIndexComponent", () => {
+describe("PolicyIndexComponent", () => {
   let fixture: ComponentFixture<PolicyIndexComponent>;
   const rows = new Subject<Partial<Policy>[]>();
   let policyService: jasmine.SpyObj<Pick<IdentityService, "find">>;
@@ -99,7 +99,7 @@ fdescribe("PolicyIndexComponent", () => {
     let paginator: MatPaginator;
 
     beforeEach(() => {
-      rows.next(new Array(20).fill({_id: "1", test: "123"}));
+      rows.next(new Array(20).fill({_id: "1"}));
       fixture.detectChanges();
       paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
     });
