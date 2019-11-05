@@ -1,10 +1,10 @@
-import {Component, OnInit, ViewChild} from "@angular/core";
+import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {Router} from "@angular/router";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
-import {PolicyService} from "../../services/policy.service";
 import {Policy} from "../../interfaces/policy";
+import {PolicyService} from "../../services/policy.service";
 
 @Component({
   selector: "passport-policy-index",
@@ -12,7 +12,7 @@ import {Policy} from "../../interfaces/policy";
   styleUrls: ["./policy-index.component.scss"]
 })
 export class PolicyIndexComponent implements OnInit {
-  @ViewChild("toolbar", {static: true}) toolbar;
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
 
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 

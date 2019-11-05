@@ -19,26 +19,26 @@
     <mat-table [dataSource]="policies$">
       <ng-container matColumnDef="id">
         <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
-        <mat-cell *matCellDef="let element">{{ element._id }}</mat-cell>
+        <mat-cell *matCellDef="let policy">{{ policy._id }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="name">
         <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-        <mat-cell *matCellDef="let element">{{ element.name }}</mat-cell>
+        <mat-cell *matCellDef="let policy">{{ policy.name }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="description">
         <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
-        <mat-cell *matCellDef="let element">{{ element.description }}</mat-cell>
+        <mat-cell *matCellDef="let policy">{{ policy.description }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
         <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="action" *matCellDef="let element">
+        <mat-cell class="action" *matCellDef="let policy">
           <button
             mat-icon-button
-            [routerLink]="element._id + '/edit'"
-            *ngIf="element.system !== true"
+            [routerLink]="policy._id + '/edit'"
+            *ngIf="policy.system !== true"
           >
             <mat-icon>edit</mat-icon>
           </button>
@@ -50,22 +50,22 @@
               templateOrDescription: dialogTemplate,
               answer: 'yes'
             }"
-            (confirm)="delete(element._id)"
-            *ngIf="element.system !== true"
+            (confirm)="delete(policy._id)"
+            *ngIf="policy.system !== true"
           >
             <mat-icon delete-button>delete</mat-icon>
           </button>
           <button
             mat-icon-button
-            (click)="copyPolicy(element)"
-            *ngIf="element.system"
+            (click)="copyPolicy(policy)"
+            *ngIf="policy.system"
             matTooltip="Create new from this predifined policy."
           >
             <mat-icon>file_copy</mat-icon>
           </button>
           <button
             mat-icon-button
-            *ngIf="element.system"
+            *ngIf="policy.system"
             matTooltip="You can't edit predefined policies."
           >
             <mat-icon>lock</mat-icon>
