@@ -1,6 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {Strategy} from "./interfaces/strategy";
+import {Strategy} from "../interfaces/strategy";
 
 @Injectable({providedIn: "root"})
 export class StrategyService {

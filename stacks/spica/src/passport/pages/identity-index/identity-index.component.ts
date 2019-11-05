@@ -15,13 +15,14 @@ export class IdentityIndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
   identities$: Observable<Identity[]>;
-  refresh: Subject<void> = new Subject<void>();
+  refresh$: Subject<void> = new Subject<void>();
+
   displayedColumns = ["_id", "identifier", "actions"];
 
   constructor(public identity: IdentityService) {}
 
   ngOnInit(): void {
-    this.identities$ = merge(this.paginator.page, of(null), this.refresh).pipe(
+    this.identities$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
         this.identity.find(
           this.paginator.pageSize || 10,
@@ -29,7 +30,6 @@ export class IdentityIndexComponent implements OnInit {
         )
       ),
       map(identities => {
-        console.log(identities);
         this.paginator.length = identities.meta.total;
         return identities.data;
       })
@@ -40,6 +40,6 @@ export class IdentityIndexComponent implements OnInit {
     this.identity
       .deleteOne(id)
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh$.next());
   }
 }

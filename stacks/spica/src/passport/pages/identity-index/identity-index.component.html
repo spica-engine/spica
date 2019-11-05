@@ -5,7 +5,7 @@
       <span>Identities</span>
     </h4>
     <span class="space-between"></span>
-    <button mat-icon-button>
+    <button mat-icon-button (click)="refresh$.next()">
       <mat-icon>refresh</mat-icon>
     </button>
     <button mat-icon-button routerLink="/passport/identity/add">

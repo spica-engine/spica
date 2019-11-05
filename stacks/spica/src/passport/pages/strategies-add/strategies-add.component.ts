@@ -1,11 +1,11 @@
-import {Component, OnInit, ViewChild, OnDestroy} from "@angular/core";
+import {Component, OnInit, ViewChild, OnDestroy, TemplateRef} from "@angular/core";
 import {NgModel} from "@angular/forms";
 import {ActivatedRoute, Router} from "@angular/router";
 import {ICONS} from "@spica-client/material";
 import {Subject} from "rxjs";
 import {filter, switchMap, takeUntil} from "rxjs/operators";
 import {emptyStrategy, EMPTY_STRATEGY, Strategy} from "../../interfaces/strategy";
-import {StrategyService} from "../../strategy.service";
+import {StrategyService} from "../../services/strategy.service";
 
 @Component({
   selector: "strategies-add",
@@ -13,7 +13,7 @@ import {StrategyService} from "../../strategy.service";
   styleUrls: ["./strategies-add.component.scss"]
 })
 export class StrategiesAddComponent implements OnInit, OnDestroy {
-  @ViewChild("toolbar", {static: true}) toolbar;
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
 
   readonly icons: Array<string> = ICONS;
   readonly iconPageSize = 21;

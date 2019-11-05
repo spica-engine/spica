@@ -1,4 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
+import {Component, TemplateRef} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {
   MatButtonModule,
@@ -20,6 +21,15 @@ import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyIndexComponent} from "./policy-index.component";
 
+@Component({
+  template: `
+    <ng-container *ngTemplateOutlet="outlet"></ng-container>
+  `
+})
+class ToolbarCmp {
+  outlet: TemplateRef<any>;
+}
+
 describe("PolicyIndexComponent", () => {
   let fixture: ComponentFixture<PolicyIndexComponent>;
   const rows = new Subject<Partial<Policy>[]>();
@@ -39,7 +49,7 @@ describe("PolicyIndexComponent", () => {
         NoopAnimationsModule,
         RouterTestingModule
       ],
-      declarations: [PolicyIndexComponent]
+      declarations: [PolicyIndexComponent, ToolbarCmp]
     });
     policyService = {
       find: jasmine
@@ -49,6 +59,22 @@ describe("PolicyIndexComponent", () => {
     TestBed.overrideProvider(PolicyService, {useValue: policyService});
     fixture = TestBed.createComponent(PolicyIndexComponent);
     fixture.detectChanges();
+  });
+
+  describe("basic behavior", () => {
+    let toolbarFixture: ComponentFixture<ToolbarCmp>;
+
+    beforeEach(() => {
+      toolbarFixture = TestBed.createComponent(ToolbarCmp);
+      toolbarFixture.componentInstance.outlet = fixture.componentInstance.toolbar;
+      toolbarFixture.detectChanges();
+    });
+
+    it("should refresh", () => {
+      policyService.find.calls.reset();
+      toolbarFixture.debugElement.query(By.css("button")).nativeElement.click();
+      expect(policyService.find).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("rows", () => {

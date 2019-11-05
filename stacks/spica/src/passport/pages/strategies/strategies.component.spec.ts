@@ -1,10 +1,10 @@
+import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {Component, TemplateRef} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {
   MatButtonModule,
   MatCardModule,
   MatIconModule,
-  MatPaginator,
   MatPaginatorModule,
   MatTableModule,
   MatToolbarModule
@@ -14,10 +14,9 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {Subject} from "rxjs";
-import {map} from "rxjs/operators";
-import {Identity} from "../../interfaces/identity";
-import {IdentityService} from "../../services/identity.service";
-import {IdentityIndexComponent} from "./identity-index.component";
+import {Strategy} from "../../interfaces/strategy";
+import {StrategyService} from "../../services/strategy.service";
+import {StrategiesComponent} from "./strategies.component";
 
 @Component({
   template: `
@@ -28,10 +27,10 @@ class ToolbarCmp {
   outlet: TemplateRef<any>;
 }
 
-describe("IdentityIndexComponent", () => {
-  let fixture: ComponentFixture<IdentityIndexComponent>;
-  const rows = new Subject<Partial<Identity>[]>();
-  let identityService: jasmine.SpyObj<Pick<IdentityService, "find">>;
+describe("StrategiesComponent", () => {
+  let fixture: ComponentFixture<StrategiesComponent>;
+  const rows = new Subject<Partial<Strategy>[]>();
+  let strategyService: jasmine.SpyObj<Pick<StrategyService, "getStrategies">>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -43,18 +42,17 @@ describe("IdentityIndexComponent", () => {
         MatAwareDialogModule,
         MatCardModule,
         MatPaginatorModule,
+        HttpClientTestingModule,
         NoopAnimationsModule,
         RouterTestingModule
       ],
-      declarations: [IdentityIndexComponent, ToolbarCmp]
+      declarations: [StrategiesComponent, ToolbarCmp]
     });
-    identityService = {
-      find: jasmine
-        .createSpy("find")
-        .and.returnValue(rows.pipe(map(r => ({meta: {total: r.length}, data: r}))))
+    strategyService = {
+      getStrategies: jasmine.createSpy("getStrategies").and.returnValue(rows)
     };
-    TestBed.overrideProvider(IdentityService, {useValue: identityService});
-    fixture = TestBed.createComponent(IdentityIndexComponent);
+    TestBed.overrideProvider(StrategyService, {useValue: strategyService});
+    fixture = TestBed.createComponent(StrategiesComponent);
     fixture.detectChanges();
   });
 
@@ -68,15 +66,15 @@ describe("IdentityIndexComponent", () => {
     });
 
     it("should refresh", () => {
-      identityService.find.calls.reset();
+      strategyService.getStrategies.calls.reset();
       toolbarFixture.debugElement.query(By.css("button")).nativeElement.click();
-      expect(identityService.find).toHaveBeenCalledTimes(1);
+      expect(strategyService.getStrategies).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("rows", () => {
     beforeEach(() => {
-      rows.next([{_id: "1", identifier: "123"}]);
+      rows.next([{name: "Test", title: "Test title", icon: "test"}]);
       fixture.detectChanges();
     });
 
@@ -84,14 +82,14 @@ describe("IdentityIndexComponent", () => {
       const headerCells = fixture.debugElement.queryAll(
         By.css("mat-table mat-header-row mat-header-cell")
       );
-      expect(headerCells[0].nativeElement.textContent).toBe(" # ");
-      expect(headerCells[1].nativeElement.textContent).toBe("Identifier");
+      expect(headerCells[0].nativeElement.textContent).toBe("Name");
+      expect(headerCells[1].nativeElement.textContent).toBe("Title");
       expect(headerCells[2].nativeElement.textContent).toBe("Actions");
 
       const cells = fixture.debugElement.queryAll(By.css("mat-table mat-row mat-cell"));
 
-      expect(cells[0].nativeElement.textContent).toBe("1");
-      expect(cells[1].nativeElement.textContent).toBe("123");
+      expect(cells[0].nativeElement.textContent).toBe("test Test ");
+      expect(cells[1].nativeElement.textContent).toBe("Test title");
     });
 
     it("should render actions correctly", () => {
@@ -101,36 +99,6 @@ describe("IdentityIndexComponent", () => {
       const [editButton, deleteButton] = lastCell.queryAll(By.css("button"));
       expect(editButton.nativeElement.textContent).toBe("edit");
       expect(deleteButton.nativeElement.textContent).toBe("delete");
-    });
-  });
-
-  describe("pagination", () => {
-    let paginator: MatPaginator;
-
-    beforeEach(() => {
-      rows.next(new Array(20).fill({_id: "1"}));
-      fixture.detectChanges();
-      paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
-    });
-
-    it("should assign total count", () => {
-      expect(paginator.length).toBe(20);
-    });
-
-    it("should change page", () => {
-      identityService.find.calls.reset();
-      paginator.nextPage();
-      expect(identityService.find).toHaveBeenCalledTimes(1);
-      expect(identityService.find.calls.mostRecent().args[0]).toBe(10);
-      expect(identityService.find.calls.mostRecent().args[1]).toBe(10);
-    });
-
-    it("should handle pageSize changes", () => {
-      identityService.find.calls.reset();
-      paginator._changePageSize(5);
-      expect(identityService.find).toHaveBeenCalledTimes(1);
-      expect(identityService.find.calls.mostRecent().args[0]).toBe(5);
-      expect(identityService.find.calls.mostRecent().args[1]).toBe(0);
     });
   });
 });
