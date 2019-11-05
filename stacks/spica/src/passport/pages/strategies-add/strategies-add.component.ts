@@ -1,10 +1,10 @@
-import {Component, OnInit, ViewChild, OnDestroy, TemplateRef} from "@angular/core";
+import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {NgModel} from "@angular/forms";
 import {ActivatedRoute, Router} from "@angular/router";
 import {ICONS} from "@spica-client/material";
 import {Subject} from "rxjs";
 import {filter, switchMap, takeUntil} from "rxjs/operators";
-import {emptyStrategy, EMPTY_STRATEGY, Strategy} from "../../interfaces/strategy";
+import {emptyStrategy, Strategy} from "../../interfaces/strategy";
 import {StrategyService} from "../../services/strategy.service";
 
 @Component({
@@ -20,6 +20,7 @@ export class StrategiesAddComponent implements OnInit, OnDestroy {
   public visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
   strategy: Strategy = emptyStrategy();
+
   callbackUrl: string;
   private onDestroy: Subject<void> = new Subject<void>();
 
@@ -36,10 +37,10 @@ export class StrategiesAddComponent implements OnInit, OnDestroy {
         takeUntil(this.onDestroy),
         switchMap(params => this.strategyService.getStrategy(params.id).toPromise())
       )
-      .subscribe(strategyData => {
-        this.callbackUrl = strategyData.callbackUrl;
-        delete strategyData.callbackUrl;
-        this.strategy = {...EMPTY_STRATEGY, ...strategyData};
+      .subscribe(strategy => {
+        this.callbackUrl = strategy.callbackUrl;
+        delete strategy.callbackUrl;
+        this.strategy = strategy;
       });
   }
 
@@ -48,7 +49,7 @@ export class StrategiesAddComponent implements OnInit, OnDestroy {
       .updateStrategy(this.strategy)
       .toPromise()
       .then(() => this.router.navigate(["passport/strategies"]))
-      .catch(err => {
+      .catch(() => {
         certificate.control.setErrors({invalid: true});
       });
   }
