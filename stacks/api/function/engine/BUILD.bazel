@@ -1,10 +1,14 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "engine",
-    srcs = glob(["**/*.ts"]),
+    srcs = glob(
+        include = ["**/*.ts"],
+        exclude = ["**/*.spec.ts"],
+    ),
     deps = [
         "//packages/database",
         "//stacks/api/function/engine/language",
@@ -25,4 +29,18 @@ ts_library(
         "@npm//typescript",
         "@npm//vm2",
     ],
+)
+
+ts_library(
+    name = "executor_test_lib",
+    srcs = ["executor.spec.ts"],
+    deps = [
+        ":engine",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "executor_test",
+    srcs = [":executor_test_lib"],
 )
