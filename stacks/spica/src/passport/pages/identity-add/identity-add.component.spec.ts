@@ -19,7 +19,7 @@ import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {IdentityAddComponent} from "./identity-add.component";
 
-fdescribe("Identity Add Component", () => {
+describe("Identity Add Component", () => {
   let fixture: ComponentFixture<IdentityAddComponent>;
   let preferencesMeta = {
     _id: "123",
@@ -225,14 +225,16 @@ fdescribe("Identity Add Component", () => {
       ).toBeNull("if there isn't any ownable policy");
     }));
 
-    it("should detach policy", async () => {
+    it("should detach policy", fakeAsync(() => {
       const detachSpy = spyOn(policyService, "detachPolicy").and.returnValue(
         of({...fixture.componentInstance.identity, policies: []})
       );
 
-      await fixture.debugElement
+      fixture.debugElement
         .query(By.css("div.policies mat-list:first-of-type mat-list-item:first-of-type button"))
         .nativeElement.click();
+
+      tick();
       fixture.detectChanges(false);
 
       expect(detachSpy).toHaveBeenCalledTimes(1);
@@ -246,7 +248,7 @@ fdescribe("Identity Add Component", () => {
       expect(
         fixture.debugElement.query(By.css("div.policies mat-list:first-of-type mat-list-item"))
       ).toBeNull("if there isn't any owned policy");
-    });
+    }));
 
     it("should update identity", fakeAsync(() => {
       const updateSpy = spyOn(identityService, "updateOne").and.returnValue(of(null));
