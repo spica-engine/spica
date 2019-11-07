@@ -38,12 +38,12 @@
         />
         <mat-error *ngIf="passwordModel?.errors?.required">This field is required.</mat-error>
       </mat-form-field>
-
+      
       <div
         *ngFor="let propertyKv of preferences?.attributes?.properties | keyvalue"
         [name]="propertyKv.key"
         [inputPlacer]="propertyKv.value"
-        [disabled]="propertyKv.value.readOnly"
+        [disabled]="propertyKv.value.readonly"
         [required]="
           preferences.attributes.required &&
           preferences.attributes.required.indexOf(propertyKv.key) > -1
