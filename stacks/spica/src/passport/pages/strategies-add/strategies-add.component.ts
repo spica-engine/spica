@@ -51,6 +51,7 @@ export class StrategiesAddComponent implements OnInit, OnDestroy {
       .then(() => this.router.navigate(["passport/strategies"]))
       .catch(() => {
         certificate.control.setErrors({invalid: true});
+        certificate.control.markAsTouched();
       });
   }
 
