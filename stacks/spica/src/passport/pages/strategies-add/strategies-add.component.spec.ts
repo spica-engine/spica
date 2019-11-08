@@ -1,24 +1,25 @@
-import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {StrategiesAddComponent} from "./strategies-add.component";
-import {ActivatedRoute, RouterModule} from "@angular/router";
-import {of, throwError} from "rxjs";
-import {StrategyService} from "../../services/strategy.service";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule, NgModel} from "@angular/forms";
 import {
-  MatMenuModule,
-  MatIconModule,
-  MatTooltipModule,
-  MatToolbarModule,
   MatCardModule,
-  MatFormFieldModule,
   MatExpansionModule,
+  MatFormFieldModule,
+  MatIconModule,
   MatInputModule,
+  MatMenuModule,
+  MatToolbarModule,
+  MatTooltipModule
 } from "@angular/material";
 import {MatPaginatorModule} from "@angular/material/paginator";
-import {FormsModule, NgModel} from "@angular/forms";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {ActivatedRoute} from "@angular/router";
+import {RouterTestingModule} from "@angular/router/testing";
+import {of, throwError} from "rxjs";
+import {StrategyService} from "../../services/strategy.service";
+import {StrategiesAddComponent} from "./strategies-add.component";
 
-fdescribe("Strategies Add Component", () => {
+describe("Strategies Add Component", () => {
   let fixture: ComponentFixture<StrategiesAddComponent>;
   let strategiesService: jasmine.SpyObj<Partial<StrategyService>>;
   let navigateSpy;
@@ -50,7 +51,7 @@ fdescribe("Strategies Add Component", () => {
 
     TestBed.configureTestingModule({
       imports: [
-        RouterModule.forRoot([]),
+        RouterTestingModule,
         MatMenuModule,
         MatIconModule,
         MatTooltipModule,

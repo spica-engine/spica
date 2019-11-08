@@ -215,7 +215,7 @@ describe("StorageComponent", () => {
       expect(preventDefaultSpy).toHaveBeenCalledTimes(1);
 
       fixture.detectChanges();
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 20));
 
       httpTestingController.expectOne("api:/storage");
     });
@@ -234,7 +234,7 @@ describe("StorageComponent", () => {
 
       fixture.detectChanges();
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 20));
 
       const req = httpTestingController.expectOne("api:/storage");
 

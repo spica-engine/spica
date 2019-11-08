@@ -22,7 +22,7 @@
     </button>
   </span>
 </section>
-<section [storagePicker]="{closeOnChange: true}" ngModel (ngModelChange)="pickFromStorage($event)">
+<section storagePicker ngModel (ngModelChange)="pickFromStorage($event)">
   <ng-container *ngIf="blob || value">
     <mat-progress-bar *ngIf="view.ready == false" mode="indeterminate"></mat-progress-bar>
     <storage-view #view [blob]="blob || value"></storage-view>
