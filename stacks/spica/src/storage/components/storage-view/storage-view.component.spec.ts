@@ -27,7 +27,7 @@ function base64toBlob(data: string, type: string) {
   return new Blob([arrayBuffer], {type});
 }
 
-fdescribe("StorageViewComponent", () => {
+describe("StorageViewComponent", () => {
   let fixture: ComponentFixture<TestCmp>;
   let viewComponent: Omit<DebugElement, "componentInstance"> & {
     componentInstance: StorageViewComponent;
