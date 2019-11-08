@@ -43,7 +43,7 @@
         *ngFor="let propertyKv of preferences?.attributes?.properties | keyvalue"
         [name]="propertyKv.key"
         [inputPlacer]="propertyKv.value"
-        [disabled]="propertyKv.value.readonly"
+        [disabled]="propertyKv.value.readOnly"
         [required]="
           preferences.attributes.required &&
           preferences.attributes.required.indexOf(propertyKv.key) > -1
