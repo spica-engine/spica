@@ -1,14 +1,21 @@
-import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
-import { FormsModule } from "@angular/forms";
-import { MatFormFieldModule, MatInputModule, MatOptionModule, MatSelectModule } from "@angular/material";
-import { By } from "@angular/platform-browser";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { InputResolver } from "..";
-import { InputSchemaPlacer } from "./input.schema.placer";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule} from "@angular/forms";
+import {
+  MatFormFieldModule,
+  MatInputModule,
+  MatOptionModule,
+  MatSelectModule
+} from "@angular/material";
+import {By} from "@angular/platform-browser";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {InputResolver} from "..";
+import {InputSchemaPlacer} from "./input.schema.placer";
+import {Injector} from "@angular/core";
 
 describe("Common#schema-placer", () => {
   let component: InputSchemaPlacer;
   let fixture: ComponentFixture<InputSchemaPlacer>;
+  let injector: Injector;
   const inputResolver = {
     coerce: jasmine.createSpy("coerce").and.returnValue(undefined),
     resolve: jasmine.createSpy("resolve").and.returnValue({}),
@@ -70,7 +77,5 @@ describe("Common#schema-placer", () => {
 
     expect(titleInput.nativeElement.value).toEqual(component.schema.title);
     expect(descriptionTextarea.nativeElement.value).toEqual(component.schema.description);
-
-    expect(0).toEqual(0);
   }));
 });

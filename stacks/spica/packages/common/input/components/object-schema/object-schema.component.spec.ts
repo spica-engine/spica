@@ -96,8 +96,6 @@ describe("Common#object-schema", () => {
     expect(descriptionTextarea.nativeElement.value).toEqual(
       component.schema.properties.test.description
     );
-
-    expect(0).toEqual(0);
   }));
 
   it("Should be working add and remove button", fakeAsync(async () => {
