@@ -4,6 +4,23 @@
     matInput
     type="datetime"
     [disabled]="_disabled"
+    [(ngModel)]="_value"
+    (ngModelChange)="callOnChange()"
+    placeholder="Date Time"
+  />
+  <mat-hint>{{ schema.description }}</mat-hint>
+</mat-form-field>
+
+
+<!-- 
+This fails under ivy due to some incompatible code in ng-pick-datetime
+See: https://github.com/angular/ngcc-validation/issues/117
+  <mat-form-field>
+  <mat-label>{{ schema.title }}</mat-label>
+  <input
+    matInput
+    type="datetime"
+    [disabled]="_disabled"
     (focus)="dt1.open()"
     [(ngModel)]="_value"
     (ngModelChange)="callOnChange()"
@@ -15,3 +32,4 @@
 
   <mat-hint>{{ schema.description }}</mat-hint>
 </mat-form-field>
+-->

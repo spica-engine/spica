@@ -7,25 +7,22 @@
     "experimentalDecorators": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
-    "target": "es2018",
+    "target": "es2015",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "lib": ["es2018", "dom"],
     "paths": {
-      "@spica-server/*": [
-        "./packages/*",
-        "./stacks/api/*"
-      ],
-      "@spica-client/*": [
-        "./packages/*",
-        "./stacks/spica/src/*"
-      ]
+      "@spica-server/*": ["./packages/*", "./stacks/api/*"],
+      "@spica-client/*": ["./packages/*", "./stacks/spica/src/*"]
     }
   },
+  "exclude": ["node_modules", "dist", "bazel-*"],
   "bazelOptions": {
     "suppressTsconfigOverrideWarnings": true,
     "devmodeTargetOverride": "es2018"
   },
-  "exclude": ["node_modules", "dist", "bazel-*"]
+  "angularCompilerOptions": {
+    "enableIvy": true
+  }
 }

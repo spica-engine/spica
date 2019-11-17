@@ -39,7 +39,7 @@
         <button
           mat-menu-item
           *ngFor="let example of schema.examples"
-          (click)="value = example; callOnChange()"
+          (click)="value = example; _onChangeFn(value)"
         >
           {{ example }}
         </button>
