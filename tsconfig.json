@@ -12,6 +12,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "lib": ["es2015"],
+    "rootDirs": [".", "./bazel-bin"],
     "paths": {
       "@spica-server/*": [
         "./packages/*",

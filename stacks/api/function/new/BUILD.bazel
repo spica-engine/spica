@@ -1,0 +1,52 @@
+load("//tools/proto:index.bzl", "ts_proto_library")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
+
+proto_library(
+    name = "request_proto",
+    srcs = ["request.proto"]
+)
+
+ts_proto_library(
+    name = "request",
+    proto = ":request_proto",
+)
+
+
+ts_library(
+    name = "server_lib",
+    srcs = [
+        "server.ts",
+    ],
+    deps = [
+        "@npm//grpc",
+        "@npm//google-protobuf",
+        ":request"
+    ]
+)
+
+ts_library(
+    name = "client_lib",
+    srcs = [
+        "client.ts"
+    ],
+    deps = [
+        "@npm//grpc",
+        "@npm//google-protobuf",
+        ":request"
+    ]
+)
+
+
+nodejs_binary(
+    name = "server",
+    data = [":server_lib"],
+    entry_point = ":server.ts",
+)
+
+
+nodejs_binary(
+    name = "client",
+    data = [":client_lib"],
+    entry_point = ":client.ts",
+)

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+message Event {
+   enum Type {
+      HTTP = 0;
+      DATABASE = 1;
+      SCHEDULE = 3;
+      FIREHOSE = 4;
+   }
+   
+   Type type = 1;
+   string id = 2;
+
+   message Pop {
+     string id = 1;
+   }
+}
+
+
+service EventQueue {
+   rpc pop(Event.Pop) returns (Event);
+}
+
+message HttpRequest {
+   map<string, string> headers = 1;
+}
+
+message SendHeaders {
+   string id = 1;
+   map<string, string> headers = 2;
+}
+
+message SendHeadersResponse {}
+
+service Http {
+   rpc writeHead (SendHeaders) returns (SendHeadersResponse);
+}
+

@@ -1,0 +1,24 @@
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
+
+nodejs_binary(
+    name = "change_import_style",
+    data = [
+        ":change_import_style_lib",
+    ],
+    entry_point = ":change_import_style.ts",
+    visibility = ["//visibility:public"],
+)
+
+ts_library(
+    name = "change_import_style_lib",
+    srcs = [
+        "change_import_style.ts",
+    ],
+    deps = [
+        "@npm//@types/node",
+        "@npm//minimist"
+    ],
+)
+
+exports_files(["index.d.ts", "index.js"])
