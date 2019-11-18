@@ -1,5 +1,11 @@
-import {createEntityAdapter, EntityState} from "@ngrx/entity";
-import {Action, createFeatureSelector, createSelector} from "@ngrx/store";
+import {createEntityAdapter, EntityState, EntityAdapter} from "@ngrx/entity";
+import {
+  Action,
+  createFeatureSelector,
+  createSelector,
+  DefaultProjectorFn,
+  MemoizedSelector
+} from "@ngrx/store";
 import {Route, RouteCategory} from "./route";
 
 export enum RouteActionTypes {
@@ -45,7 +51,9 @@ export type RouteAction = Retrieve | Add | Update | Remove | Upsert | RemoveCate
 
 export interface RouteState extends EntityState<Route> {}
 
-export const adapter = createEntityAdapter<Route>({selectId: route => route.id});
+export const adapter: EntityAdapter<Route> = createEntityAdapter<Route>({
+  selectId: route => route.id
+});
 
 export const initialState: RouteState = adapter.getInitialState({});
 
@@ -70,7 +78,11 @@ export function reducer(state: RouteState = initialState, action: RouteAction): 
 
 const {selectAll} = adapter.getSelectors();
 
-export const selectRoutes = createSelector(
+export const selectRoutes: MemoizedSelector<
+  object,
+  Route[],
+  DefaultProjectorFn<Route[]>
+> = createSelector(
   createFeatureSelector<RouteState>("routes"),
   selectAll
 );

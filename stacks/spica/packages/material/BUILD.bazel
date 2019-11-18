@@ -1,0 +1,26 @@
+load("@npm_angular_bazel//:index.bzl", "ng_module")
+load("@io_bazel_rules_sass//:defs.bzl", "multi_sass_binary", "sass_binary")
+
+package(default_visibility = ["//:__subpackages__"])
+
+
+multi_sass_binary(
+    name = "styles",
+    srcs = glob(["**/*.scss"])
+)
+
+
+ng_module(
+    name = "material",
+    srcs = glob(["**/*.ts"]),
+    assets = glob([
+        "**/*.html"
+    ]) + [':styles'],
+    deps = [
+        "@npm//@angular/core",
+        "@npm//@angular/common",
+        "@npm//@angular/material",
+        "@npm//@angular/router",
+        "@npm//rxjs"
+    ],
+)
