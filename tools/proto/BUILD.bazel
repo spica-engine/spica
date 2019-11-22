@@ -17,8 +17,11 @@ ts_library(
     ],
     deps = [
         "@npm//@types/node",
-        "@npm//minimist"
+        "@npm//minimist",
     ],
 )
 
-exports_files(["index.d.ts", "index.js"])
+exports_files([
+    "index.d.ts",
+    "index.js",
+])

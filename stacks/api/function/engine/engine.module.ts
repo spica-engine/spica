@@ -1,13 +1,11 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {DatabaseService} from "@spica-server/database";
 import {FunctionEngine} from "./engine";
-import {FunctionExecutor, VM2Executor} from "./executor";
+import {FunctionExecutor, NodeExecutor} from "./executor";
 import {FsHost, FunctionHost} from "./host";
 import {DatabaseLogger, LoggerHost} from "./logger";
 import {DatabaseUnitModule} from "./module/database";
 import {EngineRegistry} from "./registry";
-import {SubscriptionEngine} from "./subscription/engine";
-import {RequestSubscriptionExecutor, SubscriptionExecutor} from "./subscription/executor";
 import {DatabaseTriggerModule} from "./trigger/database";
 import {FirehoseTriggerModule} from "./trigger/firehose";
 import {HttpTriggerModule} from "./trigger/http";
@@ -25,23 +23,18 @@ export class EngineModule {
         DatabaseTriggerModule,
         ScheduleTriggerModule
       ],
-      exports: [EngineRegistry, FunctionEngine, SubscriptionEngine, LoggerHost, FunctionHost],
+      exports: [EngineRegistry, FunctionEngine, LoggerHost, FunctionHost],
       providers: [
         EngineRegistry,
         FunctionEngine,
-        SubscriptionEngine,
         {provide: LoggerHost, useFactory: db => new DatabaseLogger(db), inject: [DatabaseService]},
         {
           provide: FunctionExecutor,
-          useValue: new VM2Executor()
+          useValue: new NodeExecutor()
         },
         {
           provide: FunctionHost,
           useValue: new FsHost(options.root)
-        },
-        {
-          provide: SubscriptionExecutor,
-          useValue: new RequestSubscriptionExecutor()
         }
       ]
     };

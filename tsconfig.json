@@ -14,14 +14,8 @@
     "lib": ["es2015"],
     "rootDirs": [".", "./bazel-bin"],
     "paths": {
-      "@spica-server/*": [
-        "./packages/*",
-        "./stacks/api/*"
-      ],
-      "@spica-client/*": [
-        "./packages/*",
-        "./stacks/spica/src/*"
-      ]
+      "@spica-server/*": ["./packages/*", "./stacks/api/*", "./stacks/api/*/src"],
+      "@spica-client/*": ["./stacks/spica/packages/*", "./stacks/spica/src/*"]
     }
   },
   "bazelOptions": {

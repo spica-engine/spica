@@ -1,0 +1,26 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("//tools/proto:index.bzl", "ts_proto_library")
+
+proto_library(
+    name = "protos",
+    srcs = [
+        "event.proto",
+        "http.proto"
+    ],
+)
+
+ts_proto_library(
+    name = "proto_lib",
+    proto = ":protos",
+)
+
+ts_library(
+    name = "proto",
+    module_name = "@spica-server/function/queue/proto",
+    srcs = glob(["*.ts"]),
+    deps = [
+        ":proto_lib"
+    ]
+)

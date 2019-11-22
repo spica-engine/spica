@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+message Event {
+   enum Type {
+      HTTP = 0;
+      DATABASE = 1;
+      SCHEDULE = 3;
+      FIREHOSE = 4;
+   }
+   
+   Type type = 1;
+   string id = 2;
+
+   message Pop {
+     string id = 1;
+   }
+}
+
+
+service EventQueue {
+   rpc pop(Event.Pop) returns (Event);
+}

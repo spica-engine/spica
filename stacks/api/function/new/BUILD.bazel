@@ -4,7 +4,7 @@ load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary")
 
 proto_library(
     name = "request_proto",
-    srcs = ["request.proto"]
+    srcs = ["request.proto"],
 )
 
 ts_proto_library(
@@ -12,38 +12,35 @@ ts_proto_library(
     proto = ":request_proto",
 )
 
-
 ts_library(
     name = "server_lib",
     srcs = [
         "server.ts",
     ],
     deps = [
-        "@npm//grpc",
+        ":request",
         "@npm//google-protobuf",
-        ":request"
-    ]
+        "@npm//grpc",
+    ],
 )
 
 ts_library(
     name = "client_lib",
     srcs = [
-        "client.ts"
+        "client.ts",
     ],
     deps = [
-        "@npm//grpc",
+        ":request",
         "@npm//google-protobuf",
-        ":request"
-    ]
+        "@npm//grpc",
+    ],
 )
-
 
 nodejs_binary(
     name = "server",
     data = [":server_lib"],
     entry_point = ":server.ts",
 )
-
 
 nodejs_binary(
     name = "client",

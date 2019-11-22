@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
@@ -12,8 +12,7 @@ ts_library(
     deps = [
         "//packages/database",
         "//stacks/api/function/engine/language",
-        "//stacks/api/function/engine/module",
-        "//stacks/api/function/engine/module:database",
+        "//stacks/api/function/engine/runtime:node",
         "//stacks/api/function/engine/trigger",
         "//stacks/api/function/engine/trigger:database",
         "//stacks/api/function/engine/trigger:firehose",
@@ -25,8 +24,6 @@ ts_library(
         "@npm//error-stack-parser",
         "@npm//request",
         "@npm//request-promise",
-        "@npm//short-id",
-        "@npm//typescript",
         "@npm//vm2",
     ],
 )
@@ -37,6 +34,7 @@ ts_library(
     deps = [
         ":engine",
         "@npm//@types/jasmine",
+        "@npm//@types/node",
     ],
 )
 
