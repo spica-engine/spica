@@ -29,7 +29,7 @@ import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overv
 
 //@TODO: sorting parameters send correctly but service doesn't return data as sorted by parameter
 
-fdescribe("Storage/IndexComponent", () => {
+describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let storageService: jasmine.SpyObj<Partial<StorageService>>;
   let location: Location;
