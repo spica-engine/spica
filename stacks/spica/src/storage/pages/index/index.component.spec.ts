@@ -1,7 +1,7 @@
 import {ComponentFixture, TestBed, fakeAsync, tick} from "@angular/core/testing";
 import {IndexComponent} from "./index.component";
 import {StorageService} from "../../storage.service";
-import {of, Subject} from "rxjs";
+import {of, Subject, Observable} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {
@@ -10,7 +10,8 @@ import {
   MatCardModule,
   MatToolbarModule,
   MatTooltipModule,
-  MatPaginatorModule
+  MatPaginatorModule,
+  MatPaginator
 } from "@angular/material";
 import {FormsModule} from "@angular/forms";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
@@ -23,12 +24,12 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 import {Location} from "@angular/common";
 import {MatAwareDialogModule} from "../../../../packages/material/aware-dialog";
-import {HttpEvent, HttpEventType} from "@angular/common/http";
+import {HttpEvent, HttpEventType, HttpResponse} from "@angular/common/http";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 
 //@TODO: sorting parameters send correctly but service doesn't return data as sorted by parameter
 
-describe("Storage/IndexComponent", () => {
+fdescribe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let storageService: jasmine.SpyObj<Partial<StorageService>>;
   let location: Location;
@@ -37,7 +38,7 @@ describe("Storage/IndexComponent", () => {
     storageService = {
       getAll: jasmine.createSpy("getAll").and.returnValue(
         of({
-          meta: {total: 3},
+          meta: {total: 10000},
           data: [
             {
               _id: "1",
@@ -175,22 +176,13 @@ describe("Storage/IndexComponent", () => {
       expect(insertSpy).toHaveBeenCalledWith({} as any);
     });
 
-    xit("should complete file uploading progress", fakeAsync(() => {
+    it("should complete upload progress", () => {
       const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
-      const events = new Subject<HttpEvent<Storage>>();
-      const event: HttpEvent<Storage> = {
-        type: HttpEventType.UploadProgress,
-        loaded: 10,
-        total: 100
-      };
       const insertSpy = spyOn(fixture.componentInstance["storage"], "insertMany").and.returnValue(
-        //events
-        of(event)
+        of({type: HttpEventType.Response} as any)
       );
 
-      events.next(event);
-      events.complete();
-      tick(500);
+      fixture.componentInstance.uploadStorageMany({} as any);
       fixture.detectChanges();
 
       expect(
@@ -201,7 +193,8 @@ describe("Storage/IndexComponent", () => {
       expect(insertSpy).toHaveBeenCalledWith({} as any);
 
       expect(refreshSpy).toHaveBeenCalledTimes(1);
-    }));
+      expect(fixture.componentInstance.progress).toBe(undefined);
+    });
 
     it("should delete data", fakeAsync(() => {
       const deleleteSpy = spyOn(fixture.componentInstance["storage"], "delete").and.returnValue(
@@ -299,5 +292,26 @@ describe("Storage/IndexComponent", () => {
     });
   });
 
-  xdescribe("pagination", () => {});
+  describe("pagination", () => {
+    let paginator: MatPaginator;
+
+    beforeEach(() => {
+      paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
+    });
+
+    it("it should show paginator size", fakeAsync(() => {
+      expect(fixture.componentInstance.paginator.length).toBe(10000);
+      expect(fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement.textContent).toBe("1 – 12 of 10000");
+    }));
+    it("should change page", () => {
+      paginator.nextPage();
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement.textContent).toBe("13 – 24 of 10000");
+    });
+    it("should change page size", () => {
+      paginator._changePageSize(24)
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement.textContent).toBe("1 – 24 of 10000");
+    });
+  });
 });
