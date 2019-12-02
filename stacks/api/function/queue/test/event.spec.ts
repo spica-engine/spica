@@ -1,11 +1,13 @@
-import { EventQueue, EventType } from "@spica-server/function/queue";
-import { Event } from "@spica-server/function/queue/proto";
+import {EventQueue} from "@spica-server/function/queue";
+import {Event} from "@spica-server/function/queue/proto";
 
 describe("Event", () => {
   let eventQueue: EventQueue;
 
+  // TODO: Test enqueue callback.
+
   beforeEach(() => {
-    eventQueue = new EventQueue();
+    eventQueue = new EventQueue(() => {});
   });
 
   afterEach(() => {
@@ -13,17 +15,17 @@ describe("Event", () => {
   });
 
   it("should enqueue event", () => {
-    eventQueue.enqueue({
-      id: "1",
-      type: EventType.DATABASE
-    });
+    const event = new Event.Event();
+    event.id = "1";
+    event.type = Event.Type.DATABASE;
+    eventQueue.enqueue(event);
   });
 
   it("should pop event", () => {
-    const event = {
-      id: "1",
-      type: EventType.DATABASE
-    };
+    const event = new Event.Event();
+    event.id = "1";
+    event.type = Event.Type.DATABASE;
+
     eventQueue.enqueue(event);
     const callbackSpy = jasmine.createSpy("unaryCallback");
 
@@ -31,7 +33,7 @@ describe("Event", () => {
     const lastCall = callbackSpy.calls.mostRecent();
     expect(callbackSpy).toHaveBeenCalledTimes(1);
     expect(lastCall.args[0]).toBeUndefined(); // Error
-    expect(lastCall.args[1] instanceof Event).toBe(true);
+    expect(lastCall.args[1] instanceof Event.Event).toBe(true);
   });
 
   it("should not pop a event and return an error", () => {

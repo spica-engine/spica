@@ -206,7 +206,7 @@ def _ts_proto_library_impl(ctx):
 
     transitive_declarations = depset(transitive = [dts_outputs, aspect_data.deps_dts])
     es5_outputs = aspect_data.es5_outputs
-    es6_outputs = aspect_data.dts_outputs
+    es6_outputs = aspect_data.es6_outputs
 
     outputs = depset(transitive = [es5_outputs, es6_outputs, dts_outputs])
 

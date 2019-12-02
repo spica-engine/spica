@@ -1,13 +1,13 @@
-import {HttpQueueService, HttpRequest, IHttpQueueService} from "@spica-server/function/queue/proto";
-import {Queue} from "./queue";
+import {Http} from "@spica-server/function/queue/proto";
 import * as grpc from "grpc";
+import {Queue} from "./queue";
 
-export class HttpQueue extends Queue<IHttpQueueService> {
-  readonly TYPE = HttpQueueService;
+export class HttpQueue extends Queue<typeof Http.Queue> {
+  readonly TYPE = Http.Queue;
 
-  private queue = new Array<HttpRequest>();
+  private queue = new Array<Http.Request>();
 
-  enqueue(req: HttpRequest) {
+  enqueue(req: Http.Request) {
     this.queue.push(req);
   }
 
@@ -15,7 +15,7 @@ export class HttpQueue extends Queue<IHttpQueueService> {
 
   writeHead() {}
 
-  pop(_: grpc.ServerUnaryCall<HttpRequest>, callback: grpc.sendUnaryData<HttpRequest>) {
+  pop(_: grpc.ServerUnaryCall<Http.Request.Pop>, callback: grpc.sendUnaryData<Http.Request>) {
     if (this.queue.length < 1) {
       callback(new Error("Queue is empty."), undefined);
     } else {
@@ -23,7 +23,7 @@ export class HttpQueue extends Queue<IHttpQueueService> {
     }
   }
 
-  create(): IHttpQueueService {
+  create() {
     return {
       pop: this.pop.bind(this),
       write: this.write.bind(this),

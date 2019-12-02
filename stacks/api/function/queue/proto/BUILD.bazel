@@ -11,16 +11,18 @@ proto_library(
     ],
 )
 
-ts_proto_library(
-    name = "proto_lib",
-    proto = ":protos",
-)
+# ts_proto_library(
+#     name = "proto_lib",
+#     proto = ":protos",
+# )
+
 
 ts_library(
     name = "proto",
     module_name = "@spica-server/function/queue/proto",
     srcs = glob(["*.ts"]),
     deps = [
-        ":proto_lib"
+        "@npm//grpc",
+        "@npm//google-protobuf"
     ]
 )

@@ -20,7 +20,7 @@ class FooRuntime extends Runtime {
 describe("Runtime", () => {
   let runtime: FooRuntime;
 
-  const compilation: Compilation = {id: "", cwd: "/tmp/fn1", entrypoint: "index.ts"};
+  const compilation: Compilation = {cwd: "/tmp/fn1", entrypoint: "index.ts"};
 
   beforeEach(() => {
     runtime = new FooRuntime();

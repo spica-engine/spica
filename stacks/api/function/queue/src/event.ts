@@ -1,48 +1,53 @@
+import {Event} from "@spica-server/function/queue/proto";
 import * as grpc from "grpc";
-import {Event, EventQueueService} from "@spica-server/function/queue/proto";
 import {Queue} from "./queue";
 
 export class EventQueue {
-  private server = new grpc.Server();
-  private queue = new Set<Event.AsObject>();
+  private server: grpc.Server;
+  private queue = new Set<Event.Event>();
+
+  get size(): number {
+    return this.queue.size;
+  }
+
+  constructor(private _enqueueCallback: (event: Event.Event) => void) {}
 
   listen() {
+    this.server = new grpc.Server();
     this.server.bind("0.0.0.0:5678", grpc.ServerCredentials.createInsecure());
-    this.server.addService(EventQueueService, {
-      pop: this.pop.bind(this)
-    });
+    // TODO: remove try-catch statements since listen should b
+    try {
+      this.server.addService(Event.Queue, {
+        pop: this.pop.bind(this)
+      });
+    } catch {}
+
     this.server.start();
   }
 
   kill() {
     this.server.forceShutdown();
+    this.server = undefined;
   }
 
-  enqueue(event: Event.AsObject) {
+  enqueue(event: Event.Event) {
     this.queue.add(event);
+    this._enqueueCallback(event);
   }
 
-  pop(_: grpc.ServerUnaryCall<Event>, callback: grpc.sendUnaryData<Event>) {
+  pop(_: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
     if (this.queue.size < 1) {
       callback(new Error("Queue is empty."), undefined);
     } else {
-      const fi = this.queue.values().next().value as Event.AsObject;
-      this.queue.delete(fi);
-      const event = new Event();
-      event.setId(fi.id);
-      event.setType(fi.type);
+      const event = this.queue.values().next().value;
+      this.queue.delete(event);
       callback(undefined, event);
     }
   }
 
   addQueue<T>(queue: Queue<T>) {
-    this.server.addService(queue.TYPE, queue.create());
+    try {
+      this.server.addService(queue.TYPE, queue.create());
+    } catch {}
   }
 }
-
-export const EventType = {
-  HTTP: Event.Type.HTTP,
-  SCHEDULE: Event.Type.SCHEDULE,
-  DATABASE: Event.Type.DATABASE,
-  FIREHOSE: Event.Type.FIREHOSE
-};

@@ -35,6 +35,5 @@ export interface Execution {
   memoryLimit?: number;
   timeout?: number;
   cwd: string;
-  entrypoint: string;
-  handler: string;
+  eventId: string;
 }

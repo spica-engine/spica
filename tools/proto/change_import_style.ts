@@ -8,24 +8,23 @@
  *   --input_file_path
  *   --output_file_path
  */
-import minimist = require('minimist');
-import fs = require('fs');
+import minimist = require("minimist");
+import fs = require("fs");
 
 function main() {
   const args = minimist(process.argv.slice(2));
-  const initialContents = fs.readFileSync(args.input_file_path, 'utf8');
-
+  const initialContents = fs.readFileSync(args.input_file_path, "utf8");
 
   const umdContents = convertToUmd(args, initialContents);
-  fs.writeFileSync(args.output_umd_path, umdContents, 'utf8');
+  fs.writeFileSync(args.output_umd_path, umdContents, "utf8");
 
   const commonJsContents = processCommonJs(args, initialContents);
-  fs.writeFileSync(args.output_es6_path, commonJsContents, 'utf8');
+  fs.writeFileSync(args.output_es6_path, commonJsContents, "utf8");
 }
 
 function replaceRecursiveFilePaths(args: any) {
   return (contents: string) => {
-    return contents.replace(/(\.\.\/)+/g, `${args.workspace_name}/`);
+    return contents.replace(/..\/..\/..\/..\/..\/stacks\/api\/function\/queue\/proto\/([a-zA-Z_]+)?/gm, `@spica-server/function/queue/proto`);
   };
 }
 
@@ -65,18 +64,34 @@ function convertToUmd(args: any, initialContents: string): string {
 function processCommonJs(args: any, initialContents: string): string {
   // Rollup can't resolve the commonjs exports when using goog.object.extend so we replace it with:
   // 'exports.MyProto = proto.namespace.MyProto;'
+
   const replaceGoogExtendWithExports = (contents: string) => {
-    const googSymbolRegex = /goog.exportSymbol\('(.*\.([A-z0-9_]+))',.*;/g;
+    const googSymbolRegex = /goog.exportSymbol\('([A-z0-9_]+)',.*;/g;
+    const googSymbolRegex2 = /goog.exportSymbol\('(.*\.([A-z0-9_]+))',.*;/g;
+    const cjsExport = /.*?exports\.([A-z0-9_]+)=?.*?[;|{]/g;
     let match;
-    const symbols = [];
+
+    const exported = [];
+
     while ((match = googSymbolRegex.exec(initialContents))) {
-      symbols.push([match[2], match[1]]);
+      exported.push(match[1]);
     }
 
-    const exportSymbols = symbols.reduce((currentSymbols, symbol) => {
-      return currentSymbols + `exports.${symbol[0]} = ${symbol[1]};\n`;
-    }, "");
-    return contents.replace(/goog.object.extend\(exports, .*;/g, `${exportSymbols}`);
+    while ((match = cjsExport.exec(initialContents))) {
+      exported.push(match[1]);
+    }
+
+    return `${contents
+      .replace(/goog.object.extend\(exports, .*;/g, "")
+      .replace(googSymbolRegex, "")
+      .replace(googSymbolRegex2, "")
+      .replace("var proto = {};", `var ${exported.join(",")};`)
+      .replace(/proto\./gm, "")
+      .replace(/var .*? = exports\.([A-z0-9_]+) =/gm, "var $1 =")
+      .replace(/^exports\.([A-z0-9_]+) ?= ?grpc/gm, "var $1 = grpc")}
+      export { ${exported.join(", ")} };
+      `;
+
   };
 
   const transformations: ((c: string) => string)[] = [

@@ -5,14 +5,13 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "noFallthroughCasesInSwitch": true,
+    "noFallthroughCasesInSwitch": false, // Temporarily disabled
     "noUnusedLocals": true,
     "target": "es2018",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "lib": ["es2015"],
-    "rootDirs": [".", "./bazel-bin"],
     "paths": {
       "@spica-server/*": ["./packages/*", "./stacks/api/*", "./stacks/api/*/src"],
       "@spica-client/*": ["./stacks/spica/packages/*", "./stacks/spica/src/*"]

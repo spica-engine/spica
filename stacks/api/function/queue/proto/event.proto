@@ -7,14 +7,21 @@ message Event {
       SCHEDULE = 3;
       FIREHOSE = 4;
    }
+
+   message Target {
+      string cwd = 1;
+      string handler = 2;
+   }
    
-   Type type = 1;
-   string id = 2;
+   string id = 1;
+   Type type = 2;
+   Target target = 3;
 
    message Pop {
      string id = 1;
    }
 }
+
 
 
 service EventQueue {
