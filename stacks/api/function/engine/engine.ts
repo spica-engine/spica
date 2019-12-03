@@ -1,11 +1,11 @@
-import {Injectable} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import * as shortId from "short-id";
-import {FunctionExecutor} from "./executor";
-import {FunctionHost} from "./host";
-import {Execution, Function, FunctionInfo} from "./interface";
-import {LoggerHost} from "./logger";
-import {EngineRegistry} from "./registry";
-import {Context, InvokerFn, Target} from "./trigger/base";
+import { FunctionExecutor } from "./executor";
+import { FunctionHost } from "./host";
+import { Execution, Function, FunctionInfo } from "./interface";
+import { LoggerHost } from "./logger";
+import { EngineRegistry } from "./registry";
+import { Context, InvokerFn, Target } from "./trigger/base";
 
 @Injectable()
 export class FunctionEngine {
@@ -20,6 +20,11 @@ export class FunctionEngine {
   // This method only registers the function to triggers.
   introduce(fn: Function) {
     const triggers = Object.keys(fn.triggers);
+    const script = this.host.read(fn);
+
+    if (script.match(/__init__/g)) {
+      this.init(fn);
+    }
     triggers.forEach(t => {
       const meta = fn.triggers[t];
       const trigger = this.registry.getTrigger(meta.type);
@@ -27,7 +32,6 @@ export class FunctionEngine {
       if (trigger && meta.active) {
         const target: Target = {handler: t, id: fn._id.toString()};
         const invoker: InvokerFn = async invocation => {
-          const script = this.host.read(fn);
           const context: Context = {process: {env: fn.env}};
           const execution: Execution = {
             id: shortId.generate(),
@@ -53,6 +57,27 @@ export class FunctionEngine {
         trigger.register(null, target, meta.options);
       }
     });
+  }
+
+  private async init(fn: Function) {
+    const script = this.host.read(fn);
+    const context: Context = {process: {env: fn.env}};
+    const execution: Execution = {
+      id: shortId.generate(),
+      script: script,
+      cwd: this.host.getRoot(fn),
+      timeout: fn.timeout,
+      memoryLimit: fn.memoryLimit,
+      context: context,
+      logger: null, //Lazy
+      modules: this.registry.getModules(),
+      parameters: [], 
+      target: {id: fn._id.toString(), handler: '__init__'}
+    };
+
+    execution.logger = await this.logger.create(execution);
+
+    return this.executor.execute(execution);
   }
 
   async run(fn: Function, target: Target, stream: NodeJS.WritableStream) {

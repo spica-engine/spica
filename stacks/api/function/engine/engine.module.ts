@@ -12,6 +12,7 @@ import {DatabaseTriggerModule} from "./trigger/database";
 import {FirehoseTriggerModule} from "./trigger/firehose";
 import {HttpTriggerModule} from "./trigger/http";
 import {ScheduleTriggerModule} from "./trigger/schedule";
+import {DashboardUnitModule} from "./module/dashboard";
 
 @Module({})
 export class EngineModule {
@@ -20,6 +21,7 @@ export class EngineModule {
       module: EngineModule,
       imports: [
         DatabaseUnitModule,
+        DashboardUnitModule,
         HttpTriggerModule,
         FirehoseTriggerModule,
         DatabaseTriggerModule,

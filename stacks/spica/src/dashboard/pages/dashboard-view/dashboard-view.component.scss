@@ -1,0 +1,21 @@
+h1 {
+  text-align: center;
+  hr {
+    margin-left: 100px;
+    margin-right: 100px;
+  }
+}
+div.widgets {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  flex-wrap: wrap;
+  margin: 20px;
+  div {
+    flex-basis: calc(50% - 10px);
+    margin: 5px;
+    flex-grow: 1;
+    min-height: 250px;
+    min-width: 250px;
+  }
+}

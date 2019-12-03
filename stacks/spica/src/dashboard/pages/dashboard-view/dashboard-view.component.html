@@ -1,0 +1,50 @@
+<h1>
+  {{ dashboard }}
+  <hr />
+</h1>
+
+<div  class="widgets" *ngIf="widgets$ | async; let widgets">
+  <div   *ngFor="let widget of widgets">
+    <app-dashboard-chart
+      *ngIf="
+        widget.type == 'line' ||
+        widget.type == 'pie' ||
+        widget.type == 'doughnut' ||
+        widget.type == 'polarArea' ||
+        widget.type == 'scatter' ||
+        widget.type == 'bubble' ||
+        widget.type == 'radar' ||
+        widget.type == 'bar'
+      "
+      [data]="widget"
+    ></app-dashboard-chart>
+    <app-dashboard-table *ngIf="widget.type == 'table'" [data]="widget"></app-dashboard-table>
+
+    <span *ngIf="!widget.type || !widget">This widget is unavailable.</span>
+  </div>
+  <!-- <mat-card *ngFor="let card of cards">
+    <app-dashboard-table *ngIf="card.type == 'table'" [data]="card"></app-dashboard-table>
+    <app-dashboard-table></app-dashboard-table>
+    <canvas
+      *ngIf="
+        card.type == 'line' ||
+        card.type == 'pie' ||
+        card.type == 'doughnut' ||
+        card.type == 'polarArea' ||
+        card.type == 'scatter' ||
+        card.type == 'bubble' ||
+        card.type == 'radar' ||
+        card.type == 'bar'
+      "
+      baseChart
+      [data]="card?.data"
+      [datasets]="card?.datasets"
+      [labels]="card?.label"
+      [options]="card?.options"
+      [colors]="card?.colors"
+      [legend]="card?.legend"
+      [chartType]="card?.type"
+    >
+    </canvas>
+  </mat-card> -->
+</div>
