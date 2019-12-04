@@ -9,7 +9,7 @@ export class DashboardService {
   }
   findOne(key: string) {
     for (let dashboard of Array.from(global["dashboards"])) {
-      if (dashboard[0].key == key) {
+      if (dashboard[0] == key) {
         return dashboard[1];
       }
     }

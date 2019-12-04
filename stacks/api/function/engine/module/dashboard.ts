@@ -1,7 +1,7 @@
 import {Module} from "@nestjs/common";
 import {Module as FnModule} from "./base";
 
-global["dashboards"] = new Map<{key:string,title:string}, Component>();
+global["dashboards"] = new Map<string, Component>();
 
 abstract class Component {
   abstract readonly type: string;
@@ -29,20 +29,19 @@ class Table extends Component {
 class Dashboard {
   components = new Array<Component>();
 
-  constructor(key: string,title:string) {
-    global["dashboards"].set({key:key,title:title}, this.components);
+  constructor(key: string) {
+    global["dashboards"].set(key, this.components);
+  }
+
+  static remove(dashboardKey: string): void {
+    global["dashboards"].delete(dashboardKey);
   }
 
   add(c: Component): this {
     this.components.push(c);
     return this;
   }
-
-  removeDashboard(dashboardName: string) {
-    global["dashboards"].delete(dashboardName);
-  }
 }
-
 @FnModule({moduleSpecifier: "@internal/dashboard"})
 export class DashboardUnit implements FnModule {
   create(): {[key: string]: object} {

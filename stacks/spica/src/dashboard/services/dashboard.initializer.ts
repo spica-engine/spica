@@ -13,13 +13,22 @@ export class DashboardInitializer {
     ds.getDashboards().subscribe(dashboards => {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Content));
       dashboards.forEach(dashboard => {
+        let title = "";
+        dashboard[0].split("-").forEach((element, index) => {
+          if (index == 0) {
+            title = title + element.charAt(0).toUpperCase() + element.slice(1);
+          }
+          else {
+            title = title + " "+ element.charAt(0).toUpperCase() + element.slice(1);
+          }
+        });
         this.routeService.dispatch(
           new Upsert({
             category: RouteCategory.Primary,
-            id: `dashboard_${dashboard[0].key}`,
+            id: `dashboard_${dashboard[0]}`,
             icon: "dashboard",
-            path: `/dashboard/${dashboard[0].key}`,
-            display: dashboard[0].title
+            path: `/dashboard/${dashboard[0]}`,
+            display: title
           })
         );
       });

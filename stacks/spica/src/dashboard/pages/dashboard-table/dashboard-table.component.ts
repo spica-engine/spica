@@ -1,8 +1,7 @@
-import {Component, Input, OnInit, ViewChild} from "@angular/core";
-import {MatTableDataSource} from "@angular/material";
-import {MatPaginator} from "@angular/material/paginator";
-import {MatSort} from "@angular/material/sort";
 import {HttpClient, HttpParams} from "@angular/common/http";
+import {Component, Input, OnInit, ViewChild} from "@angular/core";
+import {MatTableDataSource, MatSort} from "@angular/material";
+import {MatPaginator} from "@angular/material/paginator";
 import {Dashboard} from "../../interfaces";
 
 @Component({
@@ -16,15 +15,15 @@ export class DashboardTableComponent implements OnInit {
   tableData: any;
   params: HttpParams = new HttpParams();
   @Input() data: Dashboard;
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+  @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.getData();
   }
   getData() {
-    this.http.get(`api:/fn-execute/${this.data.target}`,{params:this.params}).subscribe(d => {
+    this.http.get(`api:/fn-execute/${this.data.target}`, {params: this.params}).subscribe(d => {
       Object.values(d).map(f => {
         if (f[this.data.key]) {
           this.dataSource = new MatTableDataSource(f[this.data.key].data);

@@ -10,8 +10,9 @@ div.widgets {
   flex-direction: row;
   flex-grow: 1;
   flex-wrap: wrap;
+  align-items: stretch;
   margin: 20px;
-  div {
+  mat-card {
     flex-basis: calc(50% - 10px);
     margin: 5px;
     flex-grow: 1;

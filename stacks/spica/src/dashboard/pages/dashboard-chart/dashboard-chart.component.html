@@ -1,5 +1,5 @@
 <div *ngIf="observable | async">
-  <mat-card>
+ 
     <h3>{{ chartData.title }}</h3>
     <div *ngIf="chartData?.filters?.length > 0">
       <span
@@ -23,5 +23,4 @@
       [chartType]="chartData?.type"
     >
     </canvas>
-  </mat-card>
 </div>

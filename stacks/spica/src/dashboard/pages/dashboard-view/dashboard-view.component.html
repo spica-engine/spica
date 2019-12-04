@@ -4,7 +4,9 @@
 </h1>
 
 <div  class="widgets" *ngIf="widgets$ | async; let widgets">
-  <div   *ngFor="let widget of widgets">
+  <mat-card *ngFor="let widget of widgets">
+  
+
     <app-dashboard-chart
       *ngIf="
         widget.type == 'line' ||
@@ -21,7 +23,7 @@
     <app-dashboard-table *ngIf="widget.type == 'table'" [data]="widget"></app-dashboard-table>
 
     <span *ngIf="!widget.type || !widget">This widget is unavailable.</span>
-  </div>
+    </mat-card>
   <!-- <mat-card *ngFor="let card of cards">
     <app-dashboard-table *ngIf="card.type == 'table'" [data]="card"></app-dashboard-table>
     <app-dashboard-table></app-dashboard-table>
