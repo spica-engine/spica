@@ -76,7 +76,7 @@
     "pem": "^1.14.2",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.0",
-    "request-promise": "^4.2.2",
+    "request-promise-native": "^1.0.8",
     "rxjs": "^6.4.0",
     "saml2-js": "^2.0.3",
     "semver": "^6.0.0",
