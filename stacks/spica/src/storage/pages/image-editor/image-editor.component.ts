@@ -2,7 +2,6 @@ import {Component, ElementRef, OnInit, ViewChild} from "@angular/core";
 import {DomSanitizer} from "@angular/platform-browser";
 import {ActivatedRoute, Router} from "@angular/router";
 import {CropperComponent} from "angular-cropperjs";
-import {CropperOptions} from "cropperjs/index";
 import {filter, switchMap, take} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
@@ -17,7 +16,7 @@ export class ImageEditorComponent implements OnInit {
   @ViewChild("cropperComponent", {static: false}) public cropperComponent: CropperComponent;
   @ViewChild("canvas", {static: true}) canvas: ElementRef;
 
-  public cropperOptions: CropperOptions = {
+  public cropperOptions: Cropper.Options = {
     movable: true,
     zoomable: true,
     checkCrossOrigin: true,
