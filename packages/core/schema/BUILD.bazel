@@ -19,7 +19,7 @@ ts_library(
         "@npm//@nestjs/core",
         "@npm//@types/node",
         "@npm//ajv",
-        "@npm//request-promise",
+        "@npm//request-promise-native",
         "@npm//rxjs",
     ],
 )
