@@ -1,6 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import * as ajv from "ajv";
-import * as request from "request-promise";
+import * as request from "request-promise-native";
 import {from} from "rxjs";
 import {
   Default,

@@ -24,7 +24,7 @@ ts_library(
         "@npm//@types/node",
         "@npm//error-stack-parser",
         "@npm//request",
-        "@npm//request-promise",
+        "@npm//request-promise-native",
         "@npm//short-id",
         "@npm//typescript",
         "@npm//vm2",
