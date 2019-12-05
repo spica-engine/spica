@@ -20,6 +20,37 @@ ts_library(
     ],
 )
 
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "storage.service.spec.ts",
+        "storage.controller.spec.ts",
+        "storage.acceptance.spec.ts"
+    ],
+    deps = [
+        ":storage",
+         "//packages/core",
+        "//packages/database/testing",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//@nestjs/common",
+        "//packages/core/testing",
+        "@npm//bson",
+        "@npm//@types/bson",
+
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    deps = [
+        ":test_lib",
+    ],
+)
+
 docs(
     name = "docs",
     srcs = [

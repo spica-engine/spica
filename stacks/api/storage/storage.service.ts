@@ -23,7 +23,7 @@ export class Storage {
       {
         $facet: {
           meta: [{$count: "total"}],
-          data: [{$skip: skip}, {$limit: limit}, {$sort: {_id: -1}}]
+          data: [{$skip: skip}, {$limit: limit}, order && {$sort: order}].filter(Boolean)
         }
       },
       {

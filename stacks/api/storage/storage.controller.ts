@@ -11,7 +11,7 @@ import {
   UseGuards,
   Put
 } from "@nestjs/common";
-import {BOOLEAN, NUMBER} from "@spica-server/core";
+import {BOOLEAN, NUMBER, JSONP, DEFAULT} from "@spica-server/core";
 import {OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Binary, ObjectId} from "bson";
@@ -27,7 +27,7 @@ export class StorageController {
   async findAll(
     @Query("limit", NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
-    @Query("sort") sort: string
+    @Query("sort", JSONP, DEFAULT({_id: -1})) sort: object
   ) {
     const object = await this.storage.getAll(limit || 10, skip, sort);
     object.data = object.data.map(m => {
