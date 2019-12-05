@@ -1,10 +1,12 @@
 export interface Dashboard  {
-  target : string;
   key :string;
-  type : string;
-}
-export interface Dashboards {
-  id:string
-  [key: string]: {};
+  name: string;
+  icon:string;
+  components: string[];
 }
 
+export interface Component {
+  target: string;
+  type: string;
+  key: string;
+}

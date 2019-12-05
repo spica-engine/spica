@@ -1,17 +1,19 @@
 import {Injectable} from "@nestjs/common";
+import {Dashboard} from "./dashboard";
 
 @Injectable()
 export class DashboardService {
   constructor() {}
 
-  find() {
-    return Array.from(global["dashboards"]);
-  }
-  findOne(key: string) {
-    for (let dashboard of Array.from(global["dashboards"])) {
-      if (dashboard[0] == key) {
-        return dashboard[1];
-      }
-    }
+  find(): Dashboard[] {
+    return Array.from(global["dashboards"]).map(dashboard => {
+      const data: Dashboard = {
+        key: dashboard[0],
+        name: dashboard[1].name,
+        components: dashboard[1].components,
+        icon: dashboard[1].icon
+      };
+      return data;
+    });
   }
 }

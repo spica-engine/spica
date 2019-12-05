@@ -1,26 +1,46 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "dashboard",
-    srcs = glob(["*.ts"]),
+    srcs = glob(
+        include = ["**/*.ts"],
+        exclude = ["**/*.spec.ts"],
+    ),
     module_name = "@spica-server/dashboard",
        deps = [
         "//packages/core",
-        "//packages/core/schema",
-        "//packages/database",
         "//stacks/api/passport",
-        "//stacks/api/preference",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
-        "@npm//@types/archiver",
         "@npm//@types/json-schema",
-        "@npm//@types/mongodb",
         "@npm//@types/node",
-        "@npm//archiver",
-        "@npm//cron",
         "@npm//locale",
+    ],
+)
+
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "dashboard.controller.spec.ts",
+        "dashboard.service.spec.ts"
+
+    ],
+    deps = [
+        ":dashboard",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    deps = [
+        ":test_lib",
     ],
 )
 

@@ -1,8 +1,8 @@
-import { HttpClient, HttpParams } from "@angular/common/http";
-import { Component, Input, OnInit } from "@angular/core";
-import { Observable } from "rxjs";
-import { tap } from "rxjs/operators";
-import { Dashboard } from "../../interfaces";
+import {HttpClient, HttpParams} from "@angular/common/http";
+import {Component, Input, OnInit} from "@angular/core";
+import {Observable} from "rxjs";
+import {tap} from "rxjs/operators";
+import {Component as DashboardComponent} from "../../interfaces";
 
 @Component({
   selector: "app-dashboard-chart",
@@ -10,7 +10,7 @@ import { Dashboard } from "../../interfaces";
   styleUrls: ["./dashboard-chart.component.scss"]
 })
 export class DashboardChartComponent implements OnInit {
-  @Input() data: Dashboard;
+  @Input() data: DashboardComponent;
   chartData: any;
   observable: Observable<any>;
   params: HttpParams = new HttpParams();

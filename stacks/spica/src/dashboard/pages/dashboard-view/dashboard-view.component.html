@@ -1,52 +1,30 @@
-<h1>
-  {{ dashboard }}
-  <hr />
-</h1>
+<div *ngIf="widgets$ | async; let dashboard">
+  <mat-toolbar>
+    <h1>
+      <mat-icon> {{ dashboard?.icon }} </mat-icon>
+      <span> {{ dashboard.name }}</span>
+    </h1>
+  </mat-toolbar>
+  <div>
+    <div class="widgets">
+      <mat-card *ngFor="let widget of dashboard?.components">
+        <app-dashboard-chart
+          *ngIf="
+            widget.type == 'line' ||
+            widget.type == 'pie' ||
+            widget.type == 'doughnut' ||
+            widget.type == 'polarArea' ||
+            widget.type == 'scatter' ||
+            widget.type == 'bubble' ||
+            widget.type == 'radar' ||
+            widget.type == 'bar'
+          "
+          [data]="widget"
+        ></app-dashboard-chart>
+        <app-dashboard-table *ngIf="widget.type == 'table'" [data]="widget"></app-dashboard-table>
 
-<div  class="widgets" *ngIf="widgets$ | async; let widgets">
-  <mat-card *ngFor="let widget of widgets">
-  
-
-    <app-dashboard-chart
-      *ngIf="
-        widget.type == 'line' ||
-        widget.type == 'pie' ||
-        widget.type == 'doughnut' ||
-        widget.type == 'polarArea' ||
-        widget.type == 'scatter' ||
-        widget.type == 'bubble' ||
-        widget.type == 'radar' ||
-        widget.type == 'bar'
-      "
-      [data]="widget"
-    ></app-dashboard-chart>
-    <app-dashboard-table *ngIf="widget.type == 'table'" [data]="widget"></app-dashboard-table>
-
-    <span *ngIf="!widget.type || !widget">This widget is unavailable.</span>
-    </mat-card>
-  <!-- <mat-card *ngFor="let card of cards">
-    <app-dashboard-table *ngIf="card.type == 'table'" [data]="card"></app-dashboard-table>
-    <app-dashboard-table></app-dashboard-table>
-    <canvas
-      *ngIf="
-        card.type == 'line' ||
-        card.type == 'pie' ||
-        card.type == 'doughnut' ||
-        card.type == 'polarArea' ||
-        card.type == 'scatter' ||
-        card.type == 'bubble' ||
-        card.type == 'radar' ||
-        card.type == 'bar'
-      "
-      baseChart
-      [data]="card?.data"
-      [datasets]="card?.datasets"
-      [labels]="card?.label"
-      [options]="card?.options"
-      [colors]="card?.colors"
-      [legend]="card?.legend"
-      [chartType]="card?.type"
-    >
-    </canvas>
-  </mat-card> -->
+        <span *ngIf="!widget.type || !widget">This widget is unavailable.</span>
+      </mat-card>
+    </div>
+  </div>
 </div>

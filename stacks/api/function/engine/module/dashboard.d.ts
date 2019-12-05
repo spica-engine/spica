@@ -355,8 +355,8 @@ declare module "@internal/dashboard" {
   }
 
   class Dashboard {
-    constructor(key: string);
+    constructor(key: string, name: string, icon: string);
     add(c: Component): this;
-   static remove(dashboardKey: string): void;
+    static remove(dashboardKey: string): void;
   }
 }

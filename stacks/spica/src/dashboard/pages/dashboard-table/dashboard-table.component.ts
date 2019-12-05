@@ -1,8 +1,8 @@
 import {HttpClient, HttpParams} from "@angular/common/http";
 import {Component, Input, OnInit, ViewChild} from "@angular/core";
-import {MatTableDataSource, MatSort} from "@angular/material";
+import {MatSort, MatTableDataSource} from "@angular/material";
 import {MatPaginator} from "@angular/material/paginator";
-import {Dashboard} from "../../interfaces";
+import {Component as DashboardComponent} from "../../interfaces";
 
 @Component({
   selector: "app-dashboard-table",
@@ -14,7 +14,7 @@ export class DashboardTableComponent implements OnInit {
   displayedColumns: string[];
   tableData: any;
   params: HttpParams = new HttpParams();
-  @Input() data: Dashboard;
+  @Input() data: DashboardComponent;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   @ViewChild(MatSort, {static: true}) sort: MatSort;
   constructor(private http: HttpClient) {}

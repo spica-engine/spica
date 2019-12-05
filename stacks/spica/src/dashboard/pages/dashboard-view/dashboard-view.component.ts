@@ -1,9 +1,8 @@
-import { Component } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
-import { RouteService } from "@spica-server/core";
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-import { DashboardService } from "../../services/dashboard.service";
+import {Component} from "@angular/core";
+import {ActivatedRoute} from "@angular/router";
+import {Observable} from "rxjs";
+import {switchMap} from "rxjs/operators";
+import {DashboardService} from "../../services/dashboard.service";
 
 @Component({
   selector: "app-dashboard-view",
@@ -12,28 +11,12 @@ import { DashboardService } from "../../services/dashboard.service";
 })
 export class DashboardViewComponent {
   widgets$: Observable<any>;
-  dashboard: string;
 
-  constructor(
-    private activatedRoute: ActivatedRoute,
-    private ds: DashboardService,
-    private routeService: RouteService
-  ) {}
+  constructor(private activatedRoute: ActivatedRoute, private ds: DashboardService) {}
 
   ngOnInit() {
-    this.activatedRoute.params.subscribe(data => {
-      this.routeService.routes
-        .pipe(
-          map(routes =>
-            routes.filter(r => {
-              if (r.id == `dashboard_${data.id}`) {
-                this.dashboard = r.display;
-              }
-            })
-          )
-        )
-        .subscribe();
-      this.widgets$ = this.ds.getDashboard(data.id);
-    });
+    this.widgets$ = this.activatedRoute.params.pipe(
+      switchMap(params => this.ds.getDashboard(params.id))
+    );
   }
 }

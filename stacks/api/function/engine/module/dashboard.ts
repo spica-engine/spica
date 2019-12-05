@@ -1,7 +1,12 @@
 import {Module} from "@nestjs/common";
 import {Module as FnModule} from "./base";
 
-global["dashboards"] = new Map<string, Component>();
+interface Dashboard {
+  name: string;
+  icon: string;
+  components: Component[];
+}
+global["dashboards"] = new Map<string, Dashboard>();
 
 abstract class Component {
   abstract readonly type: string;
@@ -29,8 +34,12 @@ class Table extends Component {
 class Dashboard {
   components = new Array<Component>();
 
-  constructor(key: string) {
-    global["dashboards"].set(key, this.components);
+  constructor(key: string, name: string, icon: string) {
+    global["dashboards"].set(key, {
+      components: this.components,
+      name: name,
+      icon: icon
+    });
   }
 
   static remove(dashboardKey: string): void {

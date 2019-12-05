@@ -1,21 +1,22 @@
 import {createEntityAdapter, EntityState} from "@ngrx/entity";
 import {Action, createFeatureSelector, createSelector} from "@ngrx/store";
-import {Dashboards} from "../interfaces";
+import {Dashboard} from "../interfaces";
 
 export enum DashboardActionTypes {
-  RETRIEVE = "dashboard_RETRIEVE"
+  RETRIEVE = "DASHBOARD_RETRIEVE"
 }
 
 export class Retrieve implements Action {
   public readonly type = DashboardActionTypes.RETRIEVE;
-  constructor(public dashboards: Dashboards[]) {}
+  constructor(public dashboards: Dashboard[]) {}
 }
 
 export type DashboardAction = Retrieve;
-export interface State extends EntityState<Dashboards> {
+
+export interface State extends EntityState<Dashboard> {
   loaded: boolean;
 }
-export const adapter = createEntityAdapter<Dashboards>({selectId: dashboard => dashboard.id});
+export const adapter = createEntityAdapter<Dashboard>({selectId: dashboard => dashboard.key});
 
 export const initialState: State = adapter.getInitialState({loaded: false});
 
@@ -23,7 +24,6 @@ export function reducer(state: State = initialState, action: DashboardAction): S
   switch (action.type) {
     case DashboardActionTypes.RETRIEVE:
       return adapter.addAll(action.dashboards, {...state, loaded: true});
-
     default:
       return state;
   }
@@ -47,3 +47,15 @@ export const selectEmpty = createSelector(
     return state.loaded && total == 0;
   }
 );
+
+export const selectName = (id: string) =>
+  createSelector(
+    dashboardFeatureSelector,
+    state => state.entities && state.entities[id] && state.entities[id].name
+  );
+
+export const selectEntity = (id: string) =>
+  createSelector(
+    selectEntities,
+    state => state && state[id]
+  );
