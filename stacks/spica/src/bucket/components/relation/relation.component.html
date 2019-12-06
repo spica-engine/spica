@@ -1,5 +1,3 @@
-<span title>{{ schema.title }}</span>
-
 <button *ngIf="!($row | async)" mat-button [matMenuTriggerFor]="selector">
   <mat-icon>{{ ($meta | async)?.icon }}</mat-icon> Select a
   {{ ($meta | async)?.title }}
