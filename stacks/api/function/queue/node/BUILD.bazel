@@ -7,6 +7,7 @@ ts_library(
     module_name = "@spica-server/function/queue/node",
     srcs = [
         "event.ts",
+        "http.ts",
         "index.ts"
     ],
     deps = [

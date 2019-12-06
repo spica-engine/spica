@@ -1,5 +1,5 @@
-import {EventQueue, HttpQueue} from "@spica-server/function/queue/node";
-import {Event} from "@spica-server/function/queue/proto";
+import {EventQueue, HttpQueue, Request, Response} from "@spica-server/function/queue/node";
+import {Event, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
 
 if (!process.env.ENTRYPOINT) {
@@ -8,8 +8,11 @@ if (!process.env.ENTRYPOINT) {
 
 (async () => {
   const queue = new EventQueue();
-  
-  const event = await queue.pop().catch(() => undefined);
+
+  const event = await queue.pop().catch(e => {
+    console.log(e);
+    return undefined;
+  });
 
   if (!event) {
     exitAbnormally("There is no event in the queue.");
@@ -19,11 +22,34 @@ if (!process.env.ENTRYPOINT) {
 
   const callArguments = [];
 
-  let queue: HttpQueue = 
+  let httpQueue: HttpQueue;
 
   switch (event.type) {
     case Event.Type.HTTP:
-      
+      httpQueue = new HttpQueue();
+      // TODO: change this particular pop message with the generic Event.Pop message.
+      const pop = new Http.Request.Pop();
+      pop.id = event.id;
+      const request = await httpQueue.pop(pop);
+      callArguments[0] = new Request(request);
+      callArguments[1] = new Response(
+        async e => {
+          console.log('CALLING WRITEHEAD');
+          e.id = event.id;
+          await httpQueue.writeHead(e);
+        },
+        async e => {
+          console.log('CALLING WRITE');
+          e.id = event.id;
+          await httpQueue.write(e);
+        },
+        async e => {
+          console.log('CALLING END');
+          e.id = event.id;
+          await httpQueue.end(e);
+          console.log('CALLING ENDD');
+        }
+      );
       break;
     case Event.Type.DATABASE:
       // TODO
@@ -33,6 +59,10 @@ if (!process.env.ENTRYPOINT) {
       break;
     case Event.Type.SCHEDULE:
       // TODO
+      break;
+    case -1:
+      // NO OP
+      console.warn("NO-OP event type received");
       break;
     default:
       exitAbnormally(`Invalid event type received. (${event.type})`);

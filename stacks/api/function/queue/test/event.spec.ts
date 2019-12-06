@@ -16,20 +16,20 @@ describe("Event", () => {
 
   it("should enqueue event", () => {
     const event = new Event.Event();
-    event.id = "1";
     event.type = Event.Type.DATABASE;
     eventQueue.enqueue(event);
+    expect(event.id).toBeTruthy();
   });
 
   it("should pop event", () => {
     const event = new Event.Event();
-    event.id = "1";
     event.type = Event.Type.DATABASE;
-
     eventQueue.enqueue(event);
-    const callbackSpy = jasmine.createSpy("unaryCallback");
 
-    eventQueue.pop(null, callbackSpy);
+    const callbackSpy = jasmine.createSpy("unaryCallback");
+    const pop = new Event.Pop();
+    pop.id = event.id;
+    eventQueue.pop({request: pop} as any, callbackSpy);
     const lastCall = callbackSpy.calls.mostRecent();
     expect(callbackSpy).toHaveBeenCalledTimes(1);
     expect(lastCall.args[0]).toBeUndefined(); // Error
@@ -38,10 +38,12 @@ describe("Event", () => {
 
   it("should not pop a event and return an error", () => {
     const callbackSpy = jasmine.createSpy("unaryCallback");
-    eventQueue.pop(null, callbackSpy);
+    const pop = new Event.Pop();
+
+    eventQueue.pop({request: pop} as any, callbackSpy);
     const lastCall = callbackSpy.calls.mostRecent();
     expect(callbackSpy).toHaveBeenCalledTimes(1);
     expect(lastCall.args[0] instanceof Error).toBe(true);
-    expect(lastCall.args[0].message).toBe("Queue is empty.");
+    expect(lastCall.args[0].message).toBe(`Queue has no item with id ${pop.id}.`);
   });
 });

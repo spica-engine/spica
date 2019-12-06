@@ -18,7 +18,7 @@ export class Horizon {
 
   enqueue(event: Event.Event) {    
     this.runtime.execute({
-      handler: event.target.handler,
+      eventId: event.id,
       cwd: event.target.cwd
     });
   }

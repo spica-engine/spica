@@ -4,43 +4,51 @@ import {Queue} from "./queue";
 
 export class EventQueue {
   private server: grpc.Server;
-  private queue = new Set<Event.Event>();
+  private queue = new Map<string, Event.Event>();
+  private eventId: number = 0;
 
   get size(): number {
     return this.queue.size;
   }
 
-  constructor(private _enqueueCallback: (event: Event.Event) => void) {}
+  constructor(private _enqueueCallback: (event: Event.Event) => void) {
+    this._create();
+  }
+
+  private _create() {
+    this.server = new grpc.Server();
+    this.server.addService(Event.Queue, {
+      pop: this.pop.bind(this)
+    });
+  }
+
+  drain() {
+    this.server.forceShutdown();
+    this._create();
+  }
 
   listen() {
-    this.server = new grpc.Server();
     this.server.bind("0.0.0.0:5678", grpc.ServerCredentials.createInsecure());
-    // TODO: remove try-catch statements since listen should b
-    try {
-      this.server.addService(Event.Queue, {
-        pop: this.pop.bind(this)
-      });
-    } catch {}
-
     this.server.start();
   }
 
-  kill() {
-    this.server.forceShutdown();
-    this.server = undefined;
+  kill(): Promise<void> {
+    return new Promise(resolve => this.server.tryShutdown(resolve));
   }
 
   enqueue(event: Event.Event) {
-    this.queue.add(event);
+    // TODO: Handle overflow
+    event.id = String(this.eventId++);
+    this.queue.set(event.id, event);
     this._enqueueCallback(event);
   }
 
-  pop(_: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
-    if (this.queue.size < 1) {
-      callback(new Error("Queue is empty."), undefined);
+  pop(call: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
+    if (!this.queue.has(call.request.id)) {
+      callback(new Error(`Queue has no item with id ${call.request.id}.`), undefined);
     } else {
-      const event = this.queue.values().next().value;
-      this.queue.delete(event);
+      const event = this.queue.get(call.request.id);
+      this.queue.delete(event.id);
       callback(undefined, event);
     }
   }
@@ -48,6 +56,8 @@ export class EventQueue {
   addQueue<T>(queue: Queue<T>) {
     try {
       this.server.addService(queue.TYPE, queue.create());
-    } catch {}
+    } catch (e) {
+      console.log(e);
+    }
   }
 }

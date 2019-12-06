@@ -5,7 +5,7 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "noFallthroughCasesInSwitch": false, // Temporarily disabled
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "target": "es2018",
     "sourceMap": true,

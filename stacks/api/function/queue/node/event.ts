@@ -10,7 +10,9 @@ export class EventQueue {
 
   pop(): Promise<Event.Event> {
     return new Promise((resolve, reject) => {
-      this.client.pop(new Event.Pop(), (error, event) => {
+      const pop = new Event.Pop();
+      pop.id = process.env.EVENT_ID;
+      this.client.pop(pop, (error, event) => {
         if (error) {
           reject(error);
         } else {

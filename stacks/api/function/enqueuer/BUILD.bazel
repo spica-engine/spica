@@ -11,6 +11,7 @@ ts_library(
     ]),
     deps = [
         "//stacks/api/function/queue/proto",
+        "//packages/core",
         "//stacks/api/function/queue"
     ]
 )

@@ -21,17 +21,21 @@ describe("HttpQueue", () => {
   });
 
   it("should return error", done => {
-    httpQueueClient.pop(new Http.Request.Pop(), (e, req) => {
+    const pop = new Http.Request.Pop();
+    pop.id = "1";
+    httpQueueClient.pop(pop, (e, req) => {
       expect(e).not.toBeUndefined();
-      expect(e.message).toBe("2 UNKNOWN: Queue is empty.");
+      expect(e.message).toBe("2 UNKNOWN: Queue has no item with id 1");
       expect(req).toBeUndefined();
       done();
     });
   });
 
   it("should not return error", done => {
-    httpQueue.enqueue(new Http.Request());
-    httpQueueClient.pop(new Http.Request.Pop(), (e, req) => {
+    const pop = new Http.Request.Pop();
+    pop.id = "2";
+    httpQueue.enqueue(pop.id, new Http.Request(), undefined);
+    httpQueueClient.pop(pop, (e, req) => {
       expect(e).toBe(null);
       expect(req instanceof Http.Request).toBe(true);
       done();
