@@ -305,6 +305,86 @@ describe("Bucket-Data acceptance", () => {
         });
       });
     });
+
+    describe("filter", () => {
+      beforeAll(async () => {
+        //create bucket
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .insertOne({
+            _id: myBucketId,
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", visible: true}
+              },
+              description: {
+                type: "textarea",
+                title: "description",
+                description: "Description of the row",
+                options: {position: "right"}
+              }
+            }
+          });
+
+        //insert some data
+        const bucketdata = new Array(10).fill(undefined).map((_, index) => {
+          return {title: `new title${index + 1}`, description: `new description${index + 1}`};
+        });
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .insertMany(bucketdata);
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteOne({_id: myBucketId});
+        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
+      });
+
+      it("should filter data which has '1'", async () => {
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+          filter: JSON.stringify({title: {$regex: "1"}})
+        });
+
+        const objects = response.body;
+
+        expect(objects.length).toBe(2);
+        expect(
+          objects.map((val, index) => {
+            return val.title;
+          })
+        ).toEqual(["new title1", "new title10"]);
+      });
+
+      it("filter with pagination", async () => {
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+          paginate: "true",
+          filter: JSON.stringify({title: {$regex: "1"}})
+        });
+
+        expect(response.body.meta.total).toBe(2);
+
+        const objects = response.body.data;
+        expect(objects.length).toBe(2);
+        expect(
+          objects.map((val, index) => {
+            return val.title;
+          })
+        ).toEqual(["new title1", "new title10"]);
+      });
+    });
   });
 
   afterAll(async () => {
