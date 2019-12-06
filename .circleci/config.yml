@@ -63,7 +63,7 @@ jobs:
       - *setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
+          command: (./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test) && yarn bazel shutdown
       - run:
           name: "Running tests"
           command: cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false

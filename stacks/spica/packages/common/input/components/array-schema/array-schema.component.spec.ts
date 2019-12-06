@@ -1,12 +1,19 @@
-import { async, ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
-import { FormsModule } from "@angular/forms";
-import { MatCheckboxModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSelectModule } from "@angular/material";
-import { By } from "@angular/platform-browser";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { InputResolver } from "../..";
-import { INPUT_SCHEMA } from "../../input";
-import { InputSchemaPlacer } from "../../input-schema-placer/input.schema.placer";
-import { ArraySchemaComponent } from "./array-schema.component";
+import {async, ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule} from "@angular/forms";
+import {
+  MatCheckboxModule,
+  MatFormFieldModule,
+  MatIconModule,
+  MatInputModule,
+  MatMenuModule,
+  MatSelectModule
+} from "@angular/material";
+import {By} from "@angular/platform-browser";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {InputResolver} from "../..";
+import {INPUT_SCHEMA} from "../../input";
+import {InputSchemaPlacer} from "../../input-schema-placer/input.schema.placer";
+import {ArraySchemaComponent} from "./array-schema.component";
 
 describe("Common#array-schema", () => {
   let component: ArraySchemaComponent;

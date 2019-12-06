@@ -301,17 +301,26 @@ describe("Storage/IndexComponent", () => {
 
     it("it should show paginator size", fakeAsync(() => {
       expect(fixture.componentInstance.paginator.length).toBe(10000);
-      expect(fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement.textContent).toBe("1 – 12 of 10000");
+      expect(
+        fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
+          .textContent
+      ).toBe("1 – 12 of 10000");
     }));
     it("should change page", () => {
       paginator.nextPage();
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement.textContent).toBe("13 – 24 of 10000");
+      expect(
+        fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
+          .textContent
+      ).toBe("13 – 24 of 10000");
     });
     it("should change page size", () => {
-      paginator._changePageSize(24)
+      paginator._changePageSize(24);
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement.textContent).toBe("1 – 24 of 10000");
+      expect(
+        fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
+          .textContent
+      ).toBe("1 – 24 of 10000");
     });
   });
 });

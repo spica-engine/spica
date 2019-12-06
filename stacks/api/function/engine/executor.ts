@@ -10,7 +10,33 @@ export abstract class FunctionExecutor {
 
 export class VM2Executor extends FunctionExecutor {
   execute(execution: Execution): Promise<any> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve, reject) => {
+      let hook: async_hooks.AsyncHook;
+      let timeout: NodeJS.Timeout;
+      const queue = new Set<number>();
+      let promises = new WeakSet();
+      let result: any;
+      let success = true;
+
+      const rejected = (e, promise) => {
+        if (promises.has(promise)) {
+          result = e;
+          success = false;
+        }
+      };
+
+      const finish = () => {
+        process.off("unhandledRejection", rejected);
+
+        if (success) {
+          resolve(result);
+        } else {
+          reject(result);
+        }
+      };
+
+      process.on("unhandledRejection", rejected);
+
       const vm = new NodeVM({
         timeout: execution.timeout || 100,
         sandbox: {console: execution.logger, exports: {}, ...execution.context},
@@ -29,9 +55,12 @@ export class VM2Executor extends FunctionExecutor {
         }
       });
 
-      const queue = new Set<number>();
-      let timeout: NodeJS.Timeout;
-      const hook = async_hooks.createHook({
+      hook = async_hooks.createHook({
+        init: (asyncId, type, triggerAsyncId, resource) => {
+          if (type == "PROMISE") {
+            promises.add(resource["promise"]);
+          }
+        },
         before: asyncId => queue.add(asyncId),
         after: asyncId => queue.delete(asyncId),
         destroy: asyncId => queue.delete(asyncId),
@@ -40,16 +69,25 @@ export class VM2Executor extends FunctionExecutor {
           clearTimeout(timeout);
           timeout = setTimeout(() => {
             if (queue.size <= 1) {
-              resolve(result);
+              finish();
             }
           }, 1);
         }
       });
 
       hook.enable();
-
-      const run = vm.run(execution.script, path.join(execution.cwd, "index.ts"));
-      const result = await run[execution.target.handler](...execution.parameters);
+      try {
+        result = await vm
+          .run(execution.script, path.join(execution.cwd, "index.ts"))
+          [execution.target.handler](...execution.parameters);
+      } catch (e) {
+        // Capture sync errors
+        success = false;
+        result = e;
+        if (!queue.size) {
+          finish();
+        }
+      }
 
       hook.disable();
     }).catch(error => {
@@ -62,45 +100,3 @@ export class VM2Executor extends FunctionExecutor {
     });
   }
 }
-
-/*
-import * as ivm from 'isolated-vm';
-export class IsolatedVMExecutor extends FunctionExecutor {
-	execute(execution: Execution, fn: FFunction) {
-		return new Promise(() => {
-			const isolate = new ivm.Isolate({ memoryLimit: fn.memoryLimit || 128, inspector: true });
-			const context = isolate.createContextSync();
-			const jail = context.global;
-			jail.setSync('global', jail.derefInto());
-			jail.setSync('_ivm', ivm);
-			jail.setSync(
-				'_log',
-				new ivm.Reference(function(...args) {
-					console.log(...args, 'annen');
-				})
-			);
-			const utilityScript = isolate.compileScriptSync(`new  function() {
-                let ivm = _ivm;
-                delete _ivm;
-
-                let log = _log;
-                delete _log;
-                global.console.log = function(...args) {
-                    log(undefined, args.map(arg => new ivm.ExternalCopy(arg).copyInto()));
-                };
-            }`);
-			const transpiled = ts.transpileModule(fn.source, {
-				compilerOptions: {
-					module: ts.ModuleKind.CommonJS,
-					target: ts.ScriptTarget.Latest,
-					noImplicitUseStrict: true
-				}
-			}).outputText;
-			const script = isolate.compileScriptSync(transpiled);
-			return Promise.all([
-				utilityScript.runSync(context),
-				script.run(context, { timeout: fn.timeout || 20000 })
-			]).then((d) => console.log(d));
-		});
-	}
-}*/

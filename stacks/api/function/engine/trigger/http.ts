@@ -70,7 +70,18 @@ export class HttpTrigger implements Trigger<HttpTriggerOptions>, OnModuleInit {
         );
       }
 
-      this.router[method](path, (...parameters) => invoker({target, parameters}));
+      this.router[method](path, async (req, res) => {
+        try {
+          const result = await invoker({target, parameters: [req, res]});
+          if (!res.headersSent) {
+            res.send(result);
+          }
+        } catch (e) {
+          if (!res.headersSent) {
+            res.status(500).send(e);
+          }
+        }
+      });
       this.logger.verbose(
         `Registered ${target.id}.${target.handler} to {/fn-execute${path}, ${options.method}}`
       );

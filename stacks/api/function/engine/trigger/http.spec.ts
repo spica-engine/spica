@@ -21,6 +21,43 @@ describe("http trigger", () => {
     await app.listen(req.socket);
   });
 
+  it("should handle errors", async () => {
+    const options = {method: HttpMethod.Get, path: "/test", preflight: false};
+    const invoker = jasmine
+      .createSpy("invoker")
+      .and.callFake(() => Promise.reject({message: "some evil error"}));
+    trigger.register(invoker, noopTarget, options);
+    const response = await req.get("/fn-execute/test", {});
+    expect(response.statusCode).toBe(500);
+    expect(response.body).toEqual({message: "some evil error"});
+    trigger.register(null, noopTarget, options);
+  });
+
+  it("should send the value returned from invoker as body", async () => {
+    const options = {method: HttpMethod.Get, path: "/test", preflight: false};
+    const invoker = jasmine
+      .createSpy("invoker")
+      .and.callFake(() => Promise.resolve({message: "here is the result"}));
+    trigger.register(invoker, noopTarget, options);
+    const response = await req.get("/fn-execute/test", {});
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({message: "here is the result"});
+    trigger.register(null, noopTarget, options);
+  });
+
+  it("should send the value returned from invoker as body if body has not been sent", async () => {
+    const options = {method: HttpMethod.Get, path: "/test", preflight: false};
+    const invoker = jasmine.createSpy("invoker").and.callFake(({parameters: [req, res]}) => {
+      res.send({should: "send this instead."});
+      return Promise.resolve({message: "here is the result"});
+    });
+    trigger.register(invoker, noopTarget, options);
+    const response = await req.get("/fn-execute/test", {});
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({should: "send this instead."});
+    trigger.register(null, noopTarget, options);
+  });
+
   it("should not handle preflight requests on indistinct paths", async () => {
     const response = await req.options("/fn-execute/test");
     expect(response.statusCode).toBe(404);

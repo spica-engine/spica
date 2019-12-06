@@ -1,4 +1,4 @@
-import * as request from "request-promise";
+import * as request from "request-promise-native";
 
 export abstract class SubscriptionExecutor {
   abstract execute(execution: SubscriptionExecution, body: object): Promise<unknown>;
