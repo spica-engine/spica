@@ -24,10 +24,13 @@ ts_library(
 
 ts_library(
     name = "dashboard",
-    srcs = ["dashboard.ts","dashboard-interface.ts"],
+    srcs = [
+        "dashboard.ts",
+        "dashboard-interface.ts",
+    ],
     data = ["dashboard.d.ts"],
     deps = [
         ":module",
-        "@npm//@nestjs/common"
+        "@npm//@nestjs/common",
     ],
 )

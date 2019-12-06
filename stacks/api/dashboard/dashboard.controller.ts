@@ -1,6 +1,6 @@
-import { Controller, Get, UseGuards } from "@nestjs/common";
-import { ActionGuard, AuthGuard } from "@spica-server/passport";
-import { DashboardService } from "./dashboard.service";
+import {Controller, Get, UseGuards} from "@nestjs/common";
+import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {DashboardService} from "./dashboard.service";
 @Controller("dashboard")
 export class DashboardController {
   constructor(private ds: DashboardService) {}
@@ -10,5 +10,4 @@ export class DashboardController {
   findAll() {
     return this.ds.find();
   }
-
 }

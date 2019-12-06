@@ -32,7 +32,8 @@ declare module "@internal/dashboard" {
       data: [];
       displayedColumns: string[];
       width?: number;
-      filters: filter[];
+      filters?: filter[];
+      paginate?: number[];
     }
     export interface Response {
       [key: string]: Data;

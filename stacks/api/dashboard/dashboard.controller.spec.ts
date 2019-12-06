@@ -29,5 +29,4 @@ describe("DashboardController", () => {
       expect(await dashboardController.findAll()).toBe(result);
     });
   });
- 
 });

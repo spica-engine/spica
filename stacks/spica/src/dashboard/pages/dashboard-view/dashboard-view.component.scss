@@ -27,6 +27,8 @@ div {
       align-items: stretch;
       margin: 20px;
       mat-card {
+        width: 100%;
+        overflow-x: auto;
         flex-basis: calc(50% - 10px);
         margin: 5px;
         flex-grow: 1;

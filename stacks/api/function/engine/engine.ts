@@ -1,11 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import * as shortId from "short-id";
-import { FunctionExecutor } from "./executor";
-import { FunctionHost } from "./host";
-import { Execution, Function, FunctionInfo } from "./interface";
-import { LoggerHost } from "./logger";
-import { EngineRegistry } from "./registry";
-import { Context, InvokerFn, Target } from "./trigger/base";
+import {FunctionExecutor} from "./executor";
+import {FunctionHost} from "./host";
+import {Execution, Function, FunctionInfo} from "./interface";
+import {LoggerHost} from "./logger";
+import {EngineRegistry} from "./registry";
+import {Context, InvokerFn, Target} from "./trigger/base";
 
 @Injectable()
 export class FunctionEngine {
@@ -71,8 +71,8 @@ export class FunctionEngine {
       context: context,
       logger: null, //Lazy
       modules: this.registry.getModules(),
-      parameters: [], 
-      target: {id: fn._id.toString(), handler: '__init__'}
+      parameters: [],
+      target: {id: fn._id.toString(), handler: "__init__"}
     };
 
     execution.logger = await this.logger.create(execution);

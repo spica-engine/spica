@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { DashboardTableComponent } from './dashboard-table.component';
+import {DashboardTableComponent} from "./dashboard-table.component";
 
-describe('DashboardTableComponent', () => {
+describe("DashboardTableComponent", () => {
   let component: DashboardTableComponent;
   let fixture: ComponentFixture<DashboardTableComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ DashboardTableComponent ]
-    })
-    .compileComponents();
+      declarations: [DashboardTableComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('DashboardTableComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });

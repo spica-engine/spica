@@ -1,7 +1,7 @@
-export interface Dashboard  {
-  key :string;
+export interface Dashboard {
+  key: string;
   name: string;
-  icon:string;
+  icon: string;
   components: string[];
 }
 

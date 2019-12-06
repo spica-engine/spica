@@ -10,7 +10,7 @@ ts_library(
         exclude = ["**/*.spec.ts"],
     ),
     module_name = "@spica-server/dashboard",
-       deps = [
+    deps = [
         "//packages/core",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
@@ -26,8 +26,7 @@ ts_library(
     testonly = True,
     srcs = [
         "dashboard.controller.spec.ts",
-        "dashboard.service.spec.ts"
-
+        "dashboard.service.spec.ts",
     ],
     deps = [
         ":dashboard",
@@ -43,5 +42,3 @@ jasmine_node_test(
         ":test_lib",
     ],
 )
-
-
