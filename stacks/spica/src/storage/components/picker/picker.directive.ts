@@ -20,18 +20,13 @@ export class PickerDirective implements OnDestroy, ControlValueAccessor {
   @Input("storagePicker") options: PickerOptions = {};
 
   private _dialogRef: MatDialogRef<PickerComponent, any>;
-  private _value: Storage;
+
   private _onTouchedFn: () => void;
   private _onChangeFn: (v: Storage) => void;
 
   constructor(private dialog: MatDialog) {}
 
-  writeValue(obj: any): void {
-    this._value = obj ? obj : undefined;
-    if (this._dialogRef) {
-      this._dialogRef.componentInstance.selected = this._value;
-    }
-  }
+  writeValue(obj: any): void {}
 
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;
@@ -50,16 +45,11 @@ export class PickerDirective implements OnDestroy, ControlValueAccessor {
       panelClass: "storage-picker",
       minWidth: "80%"
     });
-    this._dialogRef.componentInstance.selected = this._value;
-    this._dialogRef.componentInstance.onChange.subscribe(v => {
-      this._value = v;
-      if (this._onChangeFn) {
-        this._onChangeFn(v);
-      }
-      if (this.options.closeOnChange) {
-        this.close();
-      }
-    });
+
+    this._dialogRef
+      .afterClosed()
+      .toPromise()
+      .then((r: Storage) => this._onChangeFn(r));
   }
 
   close(): void {

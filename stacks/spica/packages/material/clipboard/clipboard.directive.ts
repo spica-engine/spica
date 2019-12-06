@@ -1,24 +1,23 @@
 import {Directive, HostListener, Input} from "@angular/core";
 
-@Directive({selector: "[matClipboard]", exportAs: "matClipboard"})
-export class ClipboardDirective {
+@Directive({
+  selector: "[matClipboard]",
+  exportAs: "matClipboard"
+})
+export class MatClipboardDirective {
   @Input() icon: string = "info";
   @Input("matClipboard") text: string;
-  constructor() {}
 
   @HostListener("click")
   copy() {
-    let selBox = document.createElement("textarea");
-    selBox.style.position = "fixed";
-    selBox.style.left = "0";
-    selBox.style.top = "0";
-    selBox.style.opacity = "0";
-    selBox.value = this.text;
-    document.body.appendChild(selBox);
-    selBox.focus();
-    selBox.select();
+    if (!this.text) {
+      return;
+    }
+    const clipboard = document.createElement("input");
+    clipboard.innerText = this.text;
+    clipboard.select();
+    clipboard.setSelectionRange(0, this.text.length);
     document.execCommand("copy");
-    document.body.removeChild(selBox);
     this.icon = "check";
     setTimeout(() => {
       this.icon = "info";

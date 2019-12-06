@@ -13,7 +13,7 @@
   </mat-select>
   <mat-error *ngIf="typeModel?.errors?.required">This field is required.</mat-error>
 </mat-form-field>
-<mat-form-field *ngIf="options?.title !== false">
+<mat-form-field>
   <input
     matInput
     name="title"
@@ -51,8 +51,8 @@
   <mat-hint align="end">{{ descriptionModel.value?.length || 0 }} / 50</mat-hint>
   <mat-error *ngIf="descriptionModel?.errors?.maxlength">
     Length of the field must be less than {{ descriptionModel?.errors?.maxlength?.requiredLength }}
-    character.</mat-error
-  >
+    character.
+  </mat-error>
 </mat-form-field>
 <ng-content></ng-content>
 <ng-container *ngComponentOutlet="placer; injector: injector"></ng-container>

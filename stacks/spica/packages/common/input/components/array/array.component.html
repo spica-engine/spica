@@ -1,12 +1,12 @@
 <mat-card class="mat-elevation-z0">
   <mat-card-header>
-    <mat-card-title>{{ schema.title }}</mat-card-title>
+    <mat-card-title>{{ schema.title || schema.$name }}</mat-card-title>
     <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
     <span class="fill"></span>
     <ng-content></ng-content>
   </mat-card-header>
   <mat-card-content>
-    <div cdkDropList [cdkDropListDisabled]="_disabled" (cdkDropListDropped)="drop($event)">
+    <div cdkDropList [cdkDropListDisabled]="_disabled" (cdkDropListDropped)="move($event)">
       <button
         *ngFor="let item of _values; let index = index"
         class="mat-elevation-z0"
@@ -39,14 +39,14 @@
         [items]="_values"
         [maxItems]="schema.maxItems"
       >
-        <mat-error slot="after" *ngIf="model?.errors?.unique">
+        <mat-error *ngIf="model?.errors?.uniqueItems">
           All items in the array must be unique.
         </mat-error>
-        <mat-error slot="after" *ngIf="model?.errors?.minItems">
-          Array must have at least {{ model?.errors?.minItems?.expected }} items.
+        <mat-error *ngIf="model?.errors?.minItems">
+          Array must have at least {{ model?.errors?.minItems?.min }} items.
         </mat-error>
-        <mat-error slot="after" *ngIf="model?.errors?.maxItems">
-          Array can have maximum {{ model?.errors?.maxItems?.expected }} items.
+        <mat-error *ngIf="model?.errors?.maxItems">
+          Array can have maximum {{ model?.errors?.maxItems?.max }} items.
         </mat-error>
       </span>
       <button

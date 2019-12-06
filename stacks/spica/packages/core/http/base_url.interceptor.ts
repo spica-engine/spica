@@ -5,6 +5,7 @@ import {BaseUrlCollection} from "./base_url";
 export class BaseUrlInterceptor implements HttpInterceptor {
   constructor(private baseCollection: BaseUrlCollection) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Searching for a link like "api:/mypath"
     const regExp = /^([^0-9][a-zA-Z0-9_]*):?/;
 
     if (regExp.test(request.url)) {

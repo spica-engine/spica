@@ -31,7 +31,7 @@
 
       <div mat-menu-item role="menuitem" disableRipple (click)="$event.stopImmediatePropagation()">
         <mat-form-field>
-          <input matInput placeholder="Minimum items" [(ngModel)]="schema.minItems" />
+          <input matInput type="number" placeholder="Minimum items" [(ngModel)]="schema.minItems" />
         </mat-form-field>
         <button mat-icon-button mat-flat-button matTooltip="Minimum required item count.">
           <mat-icon>info</mat-icon>
@@ -40,7 +40,7 @@
 
       <div mat-menu-item role="menuitem" disableRipple (click)="$event.stopImmediatePropagation()">
         <mat-form-field>
-          <input matInput placeholder="Maximum items" [(ngModel)]="schema.maxItems" />
+          <input matInput type="number" placeholder="Maximum items" [(ngModel)]="schema.maxItems" />
         </mat-form-field>
         <button
           mat-icon-button

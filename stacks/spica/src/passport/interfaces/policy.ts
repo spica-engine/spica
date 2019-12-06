@@ -9,6 +9,7 @@ export const EMPTY_POLICY: Policy = {
 export interface Policy {
   _id?: string;
   name: string;
+  system?: boolean;
   description: string;
   statement: Statement[];
 }
