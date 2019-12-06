@@ -142,6 +142,7 @@ export class BucketDataController {
         property => property.options && property.options.translate
       )
     ) {
+      console.log("Im in")
       const locale = await this.getLanguage(acceptedLanguage);
 
       aggregation.push({
@@ -271,7 +272,7 @@ export class BucketDataController {
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  //@UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   replaceOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument

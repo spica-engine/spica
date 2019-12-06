@@ -5,6 +5,41 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
 import * as BSON from "bson";
 import {BucketModule} from "./bucket.module";
+import {SchemaModule} from "@spica-server/core/schema";
+import {Default, Format} from "@spica-server/core/schema";
+import {ObjectId} from "@spica-server/database";
+
+export const CREATED_AT: Default = {
+  keyword: ":created_at",
+  type: "date",
+  create: data => {
+    return data || new Date().toISOString();
+  }
+};
+
+export const UPDATED_AT: Default = {
+  keyword: ":updated_at",
+  type: "date",
+  create: () => {
+    return new Date().toISOString();
+  }
+};
+
+export const OBJECT_ID: Format = {
+  name: "objectid",
+  type: "string",
+  coerce: bucketId => {
+    return new ObjectId(bucketId);
+  },
+  validate: bucketId => {
+    try {
+      return !!bucketId && !!new ObjectId(bucketId);
+    } catch {
+      return false;
+    }
+  }
+};
+
 describe("Bucket-Data acceptance", () => {
   let app: INestApplication;
   let req: Request;
@@ -12,7 +47,15 @@ describe("Bucket-Data acceptance", () => {
   let myBucketId = new BSON.ObjectID("56cb91bdc3464f14678934ca");
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [CoreTestingModule, DatabaseTestingModule.replicaSet(), BucketModule]
+      imports: [
+        SchemaModule.forRoot({
+          formats: [OBJECT_ID],
+          defaults: [CREATED_AT, UPDATED_AT]
+        }),
+        CoreTestingModule,
+        DatabaseTestingModule.replicaSet(),
+        BucketModule
+      ]
     }).compile();
     app = module.createNestApplication();
     app.use(Middlewares.BsonBodyParser);
@@ -383,6 +426,123 @@ describe("Bucket-Data acceptance", () => {
             return val.title;
           })
         ).toEqual(["new title1", "new title10"]);
+      });
+    });
+
+    describe("localization", () => {
+      beforeAll(async () => {
+        //create bucket
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .insertOne({
+            _id: myBucketId,
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", visible: true, translate: true}
+              },
+              description: {
+                type: "textarea",
+                title: "description",
+                description: "Description of the row",
+                options: {position: "right"}
+              }
+            }
+          });
+
+        //insert some data
+        const bucketdata = new Array(20).fill(undefined).map((_, index) => {
+          return {title: `new title${index + 1}`, description: `new description${index + 1}`};
+        });
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .insertMany(bucketdata);
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteOne({_id: myBucketId});
+        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
+      });
+
+      it("test", async () => {
+        const response = await req.get(
+          `/bucket/56cb91bdc3464f14678934ca/data`,
+          {},
+          {"accept-language": "tr_TR"}
+        );
+        expect(response.body).toEqual({} as any);
+      });
+    });
+
+    fdescribe("translate", () => {
+      beforeAll(async () => {
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
+            }
+          }
+        };
+        await req.post("/bucket", myBucket);
+
+        const myTranslatableData = [
+          {
+            title: JSON.stringify({en_US: "something", tr_TR: "birşeyler"}),
+            description: "description"
+          },
+          {
+            title: JSON.stringify({en_US: "something new", tr_TR: " yeni birşeyler"}),
+            description: "description"
+          },
+          {
+            title: JSON.stringify({en_US: "something only english"}),
+            description: "description"
+          },
+          {
+            title: JSON.stringify({tr_TR: "yalnızca türkçe birşeyler"}),
+            description: "description"
+          }
+        ];
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[0]);
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[1]);
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[2]);
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[3]);
+      });
+
+      it("it should show data which is translated to english", async () => {
+        const response = await req.get(
+          "/bucket/56cb91bdc3464f14678934ca/data",
+          {translate: "true"},
+          {"accept-language": "en_US"}
+        );
+        expect(response.body).toEqual({} as any);
       });
     });
   });

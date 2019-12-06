@@ -54,7 +54,7 @@ export class BucketController {
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  //@UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     bucket._id = new ObjectId(bucket._id);
     return this.bs.replaceOne(bucket).then(() => bucket);

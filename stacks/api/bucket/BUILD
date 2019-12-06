@@ -45,6 +45,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//packages/database",
         "//stacks/api/preference",
         "@npm//@nestjs/testing",
         "@npm//@nestjs/common",
