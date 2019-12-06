@@ -34,20 +34,20 @@ if (!process.env.ENTRYPOINT) {
       callArguments[0] = new Request(request);
       callArguments[1] = new Response(
         async e => {
-          console.log('CALLING WRITEHEAD');
+          console.log("CALLING WRITEHEAD");
           e.id = event.id;
           await httpQueue.writeHead(e);
         },
         async e => {
-          console.log('CALLING WRITE');
+          console.log("CALLING WRITE");
           e.id = event.id;
           await httpQueue.write(e);
         },
         async e => {
-          console.log('CALLING END');
+          console.log("CALLING END");
           e.id = event.id;
           await httpQueue.end(e);
-          console.log('CALLING ENDD');
+          console.log("CALLING ENDD");
         }
       );
       break;

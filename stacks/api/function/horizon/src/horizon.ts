@@ -16,7 +16,7 @@ export class Horizon {
     this.queue.addQueue(this.httpQueue);
   }
 
-  enqueue(event: Event.Event) {    
+  enqueue(event: Event.Event) {
     this.runtime.execute({
       eventId: event.id,
       cwd: event.target.cwd

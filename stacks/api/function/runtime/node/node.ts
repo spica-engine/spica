@@ -57,7 +57,7 @@ export class Node extends Runtime {
           cwd: path.join(execution.cwd, ".build")
         }
       );
-      
+
       worker.once("error", e => {
         reject(e);
       });

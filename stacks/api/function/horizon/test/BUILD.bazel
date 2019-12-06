@@ -7,13 +7,13 @@ ts_library(
     name = "horizon",
     srcs = glob(["*.ts"]),
     deps = [
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
         "//stacks/api/function/horizon",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/runtime/testing",
-    ]
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
 )
 
 jasmine_node_test(

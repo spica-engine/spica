@@ -7,7 +7,7 @@ proto_library(
     name = "protos",
     srcs = [
         "event.proto",
-        "http.proto"
+        "http.proto",
     ],
 )
 
@@ -16,13 +16,12 @@ proto_library(
 #     proto = ":protos",
 # )
 
-
 ts_library(
     name = "proto",
-    module_name = "@spica-server/function/queue/proto",
     srcs = glob(["*.ts"]),
+    module_name = "@spica-server/function/queue/proto",
     deps = [
+        "@npm//google-protobuf",
         "@npm//grpc",
-        "@npm//google-protobuf"
-    ]
+    ],
 )

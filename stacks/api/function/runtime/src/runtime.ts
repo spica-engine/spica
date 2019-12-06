@@ -31,7 +31,7 @@ export abstract class Runtime {
 export interface Execution {
   env?: {
     [k: string]: string;
-  },
+  };
   memoryLimit?: number;
   timeout?: number;
   cwd: string;

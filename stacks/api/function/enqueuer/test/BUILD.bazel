@@ -1,4 +1,3 @@
-
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
@@ -8,10 +7,10 @@ ts_library(
     name = "enqueuer_test_lib",
     srcs = glob(["*.spec.ts"]),
     deps = [
+        "//packages/core/testing",
         "//stacks/api/function/enqueuer",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
-        "//packages/core/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/testing",

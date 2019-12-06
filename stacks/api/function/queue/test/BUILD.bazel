@@ -12,7 +12,7 @@ ts_library(
         "//stacks/api/function/queue/proto",
         "@npm//@types/jasmine",
         "@npm//@types/node",
-        "@npm//grpc"
+        "@npm//grpc",
     ],
 )
 

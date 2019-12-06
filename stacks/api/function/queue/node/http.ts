@@ -1,4 +1,4 @@
-import { Http } from "@spica-server/function/queue/proto";
+import {Http} from "@spica-server/function/queue/proto";
 import * as grpc from "grpc";
 
 export class HttpQueue {

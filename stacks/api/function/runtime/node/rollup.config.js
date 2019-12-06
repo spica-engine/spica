@@ -8,7 +8,7 @@ module.exports = {
     }),
     commonjs()
   ],
-  external: ["grpc", "google-protobuf", "path"],
+  external: ["grpc", "path"],
   onwarn: (warning, next) => {
     if (warning.code === "THIS_IS_UNDEFINED") return;
     next(warning);

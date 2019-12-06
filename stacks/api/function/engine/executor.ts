@@ -14,7 +14,7 @@ export class NodeExecutor extends FunctionExecutor {
       const worker = child_process.fork(path.join(__dirname, "runtime", "node.js"), [], {
         stdio: "inherit",
         env: {
-          FUNCTION_SCRIPT: path.join(execution.cwd, 'index.ts')
+          FUNCTION_SCRIPT: path.join(execution.cwd, "index.ts")
         },
         cwd: execution.cwd,
         detached: true

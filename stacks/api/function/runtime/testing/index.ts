@@ -1,1 +1,1 @@
-export * from './bed';
+export * from "./bed";

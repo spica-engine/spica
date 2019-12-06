@@ -11,7 +11,7 @@ describe("horizon", () => {
 
   afterEach(() => {
     horizon.kill();
-  })
+  });
 
   it("should create horizon", () => {
     expect(horizon).toBeTruthy();
