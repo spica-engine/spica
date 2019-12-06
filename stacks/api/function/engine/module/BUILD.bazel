@@ -17,6 +17,7 @@ ts_library(
     deps = [
         ":module",
         "//packages/database",
+        "//stacks/api/function/engine/trigger",
         "@npm//@nestjs/common",
         "@npm//@types/mongodb",
     ],
