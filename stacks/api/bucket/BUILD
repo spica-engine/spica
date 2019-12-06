@@ -32,10 +32,10 @@ ts_library(
 )
 
 ts_library(
-    name = "test_lib",
+    name = "bucket-data_test_lib",
     testonly = True,
     srcs = [
-        "bucket.service.spec.ts",
+        
         "bucket-data.service.spec.ts",
         "bucket-data.acceptance.spec.ts"
     ],
@@ -56,6 +56,29 @@ ts_library(
 )
 
 ts_library(
+    name = "bucket_test_lib",
+    testonly = True,
+    srcs = [
+        "bucket.service.spec.ts",
+    ],
+    deps = [
+        ":bucket",
+        "//packages/core",
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/preference",
+        "@npm//@nestjs/testing",
+        "@npm//@nestjs/common",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//bson",
+        "@npm//@types/bson",
+    ],
+)
+
+
+ts_library(
     name = "scheduler_test_lib",
     testonly = True,
     srcs = [
@@ -71,12 +94,24 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "test",
+    name = "scheduler-test",
     deps = [
-        ":scheduler_test_lib",
-        ":test_lib",
+        ":scheduler_test_lib"
     ],
 )
+jasmine_node_test(
+    name = "bucket-data-test",
+    deps = [
+        ":bucket-data_test_lib"
+    ],
+)
+jasmine_node_test(
+    name = "bucket-test",
+    deps = [
+        ":bucket_test_lib"
+    ],
+)
+
 
 docs(
     name = "docs",

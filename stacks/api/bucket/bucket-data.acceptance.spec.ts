@@ -51,13 +51,13 @@ describe("Bucket-Data acceptance", () => {
           });
 
         //insert some data
-        const bucketDatas = new Array(20).fill(undefined).map((_, index) => {
+        const bucketdata = new Array(20).fill(undefined).map((_, index) => {
           return {title: `new title${index + 1}`, description: `new description${index + 1}`};
         });
         await app
           .get(DatabaseService)
           .collection("bucket_56cb91bdc3464f14678934ca")
-          .insertMany(bucketDatas);
+          .insertMany(bucketdata);
       });
 
       afterAll(async () => {
@@ -138,13 +138,13 @@ describe("Bucket-Data acceptance", () => {
           });
 
         //insert some data
-        const bucketDatas = new Array(5).fill(undefined).map((_, index) => {
+        const bucketdata = new Array(5).fill(undefined).map((_, index) => {
           return {title: `new title${index + 1}`, description: `new description${5 - index}`};
         });
         await app
           .get(DatabaseService)
           .collection("bucket_56cb91bdc3464f14678934ca")
-          .insertMany(bucketDatas);
+          .insertMany(bucketdata);
       });
 
       afterAll(async () => {
@@ -199,6 +199,109 @@ describe("Bucket-Data acceptance", () => {
         objects.forEach((val, index) => {
           expect(val.title).toBe(`new title${index + 1}`);
           expect(val.description).toBe(`new description${objects.length - index}`);
+        });
+      });
+    });
+
+    describe("pagination", () => {
+      beforeAll(async () => {
+        //create bucket
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .insertOne({
+            _id: myBucketId,
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", visible: true}
+              },
+              description: {
+                type: "textarea",
+                title: "description",
+                description: "Description of the row",
+                options: {position: "right"}
+              }
+            }
+          });
+
+        //insert some data
+        const bucketdata = new Array(100).fill(undefined).map((_, index) => {
+          return {title: `new title${index + 1}`, description: `new description${index + 1}`};
+        });
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .insertMany(bucketdata);
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteOne({_id: myBucketId});
+        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
+      });
+
+      it("single paginate param", async () => {
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {paginate: "true"});
+        expect(response.body.meta.total).toBe(100);
+        expect(response.body.data.length).toBe(100);
+      });
+
+      it("paginate with limit", async () => {
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+          limit: "20",
+          paginate: "true"
+        });
+        expect(response.body.meta.total).toBe(100);
+
+        const objects = response.body.data;
+        expect(objects.length).toBe(20);
+
+        objects.forEach((val, index) => {
+          expect(val.title).toBe(`new title${index + 1}`);
+          expect(val.description).toBe(`new description${index + 1}`);
+        });
+      });
+
+      it("paginate with skip", async () => {
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+          skip: "20",
+          paginate: "true"
+        });
+        expect(response.body.meta.total).toBe(100);
+
+        const objects = response.body.data;
+        expect(objects.length).toBe(80);
+
+        objects.forEach((val, index) => {
+          expect(val.title).toBe(`new title${index + 20 + 1}`);
+          expect(val.description).toBe(`new description${index + 20 + 1}`);
+        });
+      });
+
+      it("paginate with limit and skip", async () => {
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+          limit: "50",
+          skip: "10",
+          paginate: "true"
+        });
+        expect(response.body.meta.total).toBe(100);
+
+        const objects = response.body.data;
+        expect(objects.length).toBe(50);
+
+        objects.forEach((val, index) => {
+          expect(val.title).toBe(`new title${index + 10 + 1}`);
+          expect(val.description).toBe(`new description${index + 10 + 1}`);
         });
       });
     });
