@@ -19,6 +19,7 @@
     "angular-cropperjs": "^1.0.1",
     "angular-file": "^1.1.1",
     "bson": "^4.0.1",
+    "chart.js": "^2.9.3",
     "core-js": "^2.6.3",
     "cropperjs": "^1.5.1",
     "file-saver": "^2.0.1",
@@ -30,6 +31,7 @@
     "monaco-editor-core": "^0.17.0",
     "monaco-languages": "^1.7.0",
     "ng-pick-datetime": "^7.0.0",
+    "ng2-charts": "^2.3.0",
     "node-sass": "^4.11.0",
     "path-to-regexp": "^3.0.0",
     "rxjs": "^6.4.0",
@@ -67,7 +69,6 @@
     "ts-node": "~8.0.2",
     "tsickle": "0.34.3",
     "tslib": "^1.9.0",
-    "tslint": "~5.12.1",
-    "typescript": "^3.5.0"
+    "tslint": "~5.12.1"
   }
 }

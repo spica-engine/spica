@@ -1,0 +1,32 @@
+<div>
+  <h3>{{ tableData?.title }}</h3>
+  <div class="refresh">
+    <button mat-icon-button matTooltip="Refresh data" (click)="getData()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+  <div *ngIf="tableData?.filters?.length > 0">
+    <span
+      *ngFor="let filter of tableData?.filters"
+      [inputPlacer]="filter"
+      [(ngModel)]="filter.value"
+      (ngModelChange)="filter?.type == 'date' ? callOnChange(filter.key, filter.value) : undefined"
+      (focusout)="filter?.type != 'date' ? callOnChange(filter.key, filter.value) : undefined"
+    ></span>
+  </div>
+
+  <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+    <ng-container *ngFor="let c of displayedColumns" [matColumnDef]="c">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>{{ c }}</mat-header-cell>
+      <mat-cell *matCellDef="let element">{{ element[c] }}</mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+  </mat-table>
+  <mat-paginator
+    *ngIf="tableData?.paginate"
+    [pageSizeOptions]="tableData?.paginate"
+  ></mat-paginator>
+  <mat-paginator *ngIf="!tableData?.paginate" [pageSizeOptions]="[3, 25, 100]"></mat-paginator>
+</div>

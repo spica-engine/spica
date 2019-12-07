@@ -13,6 +13,7 @@ ts_library(
         "//packages/database",
         "//stacks/api/function/engine/language",
         "//stacks/api/function/engine/module",
+        "//stacks/api/function/engine/module:dashboard",
         "//stacks/api/function/engine/module:database",
         "//stacks/api/function/engine/trigger",
         "//stacks/api/function/engine/trigger:database",

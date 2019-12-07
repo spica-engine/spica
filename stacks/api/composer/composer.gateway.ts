@@ -11,7 +11,7 @@ import {promises} from "fs";
 import {JSONSchema7} from "json-schema";
 import * as multimatch from "multimatch";
 import * as path from "path";
-import * as request from "request-promise";
+import * as request from "request-promise-native";
 import {from, fromEvent, Subject, Observable} from "rxjs";
 import {map, tap} from "rxjs/operators";
 import {CollectionDiscovery, CollectionRegistry, ElementFlags, ElementSchema} from "./collection";

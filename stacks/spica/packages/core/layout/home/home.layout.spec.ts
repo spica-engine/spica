@@ -51,7 +51,7 @@ describe("Home Layout", () => {
         "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
       );
 
-      expect(navCategories.length).toBe(0);
+      expect(navCategories.length).toBe(1);
     });
 
     it("should show categories that include first one is selected as default if theres route", fakeAsync(() => {
@@ -72,7 +72,7 @@ describe("Home Layout", () => {
       const navCategories = fixture.debugElement.nativeElement.querySelectorAll(
         "mat-nav-list:first-of-type > mat-list-item:not(:first-of-type)"
       );
-      expect(navCategories.length).toBe(4);
+      expect(navCategories.length).toBe(5);
       expect(navCategories[0].getAttribute("class")).toContain("active");
     }));
 
