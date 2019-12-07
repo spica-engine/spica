@@ -44,43 +44,13 @@ export class HomeLayoutComponent implements OnInit {
     @Optional() @Inject(LAYOUT_ACTIONS) public components: Type<any>[],
     @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[]
   ) {
-    //     switchMap(category => {
-    //       if (!this.expanded) {
-    //         this.toggle();
-    //       }
-    //       return this.routeService.routes.pipe(
-    //         map(routes => routes.filter(r => r.category == category))
-    //       );
-    //     })
-    // =======
-    //     switchMap(category =>
-    //       this.routeService.routes.pipe(
-    //         map(routes => {
-    //           for (const route of routes) {
-    //             if (!this.categories.find(c => c.category == route.category)) {
-    //               this.categories.push({
-    //                 icon: this._categories.get(route.category).icon,
-    //                 category: route.category,
-    //                 index: this._categories.get(route.category).index
-    //               });
-    //             }
-    //           }
-
-    //           this.categories = this.categories.sort((a, b) => a.index - b.index);
-
-    //           !this.currentCategory.value && this.currentCategory.next(this.categories[0].category);
-
-    //           return routes.filter(r => r.category == category);
-    //         })
-    //       )
-    //     )
     this.routes$ = this.currentCategory.pipe(
       switchMap(category => {
         if (!this.expanded) {
           this.toggle();
         }
 
-        this.routeService.routes.pipe(
+        return this.routeService.routes.pipe(
           map(routes => {
             for (const route of routes) {
               if (!this.categories.find(c => c.category == route.category)) {
@@ -98,9 +68,6 @@ export class HomeLayoutComponent implements OnInit {
 
             return routes.filter(r => r.category == category);
           })
-        );
-        return this.routeService.routes.pipe(
-          map(routes => routes.filter(r => r.category == category))
         );
       })
     );
