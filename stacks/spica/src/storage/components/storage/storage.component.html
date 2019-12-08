@@ -1,6 +1,6 @@
 <section>
   <span>
-    <h5 class="mat-h5 mat-hint">{{ schema.title }}</h5>
+    <h5 class="mat-h5 mat-hint">{{ schema.title || schema.$name }}</h5>
     <small class="mat-hint" *ngIf="schema.description">{{ schema.description }}</small>
   </span>
   <span>
@@ -22,7 +22,7 @@
     </button>
   </span>
 </section>
-<section [storagePicker]="{closeOnChange: true}" ngModel (ngModelChange)="pickFromStorage($event)">
+<section storagePicker ngModel (ngModelChange)="pickFromStorage($event)">
   <ng-container *ngIf="blob || value">
     <mat-progress-bar *ngIf="view.ready == false" mode="indeterminate"></mat-progress-bar>
     <storage-view #view [blob]="blob || value"></storage-view>

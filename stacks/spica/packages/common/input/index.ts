@@ -1,15 +1,12 @@
 export {
-  SchemaPlacerOptions,
-  InputSchema,
   EMPTY_INPUT_SCHEMA,
-  INPUT_OPTIONS,
+  InputPlacerWithMetaPlacer,
+  InputSchema,
   INPUT_PLACERS,
   INPUT_SCHEMA,
-  INPUT_SCHEMA_OPTIONS,
-  InputPlacerOptions,
-  InputPlacerWithMetaPlacer
+  InternalPropertySchema
 } from "./input";
-export * from "./input.resolver";
+export {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 export {InputModule} from "./input.module";
 export {InputPlacerComponent} from "./input.placer";
-export {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
+export * from "./input.resolver";

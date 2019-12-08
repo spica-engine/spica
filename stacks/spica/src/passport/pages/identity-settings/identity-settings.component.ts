@@ -113,7 +113,6 @@ export interface PassportPreference extends PreferencesMeta {
 
 export interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
-  readonly?: boolean;
   options?: {
     visible?: boolean;
   };

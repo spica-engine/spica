@@ -28,9 +28,7 @@ export class IdentityService {
   updateOne(identity: Identity): Observable<void> {
     const identityRequest = {
       ...identity,
-      ...{
-        _id: undefined
-      }
+      _id: undefined
     };
     return this.http.post<void>(`api:/passport/identity/${identity._id}`, identityRequest);
   }

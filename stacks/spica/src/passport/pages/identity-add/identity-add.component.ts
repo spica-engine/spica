@@ -1,4 +1,3 @@
-import {Location} from "@angular/common";
 import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {PreferencesService} from "@spica-client/core";
@@ -30,7 +29,6 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     private policyService: PolicyService,
     private identityService: IdentityService,
     private preferencesService: PreferencesService,
-    private location: Location,
     private router: Router
   ) {}
 
@@ -84,33 +82,23 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       });
   }
 
-  createIdentity(): void {
-    this.identityService
-      .insertOne(this.identity)
-      .toPromise()
-      .then(
-        i => {
-          this.identity = i;
-          this.location.replaceState(`passport/identities/${i._id}/edit`);
-        },
-        error => {
-          this.error = error;
-        }
-      );
-  }
-
-  updateIdentity(): void {
-    this.identityService
-      .updateOne(this.identity)
-      .toPromise()
-      .then(() => this.router.navigate(["passport/identity"]));
-  }
-
   upsertIdentity(): void {
     if (this.identity._id) {
-      this.updateIdentity();
+      this.identityService
+        .updateOne(this.identity)
+        .toPromise()
+        .then(() => this.router.navigate(["passport/identity"]));
     } else {
-      this.createIdentity();
+      this.identityService
+        .insertOne(this.identity)
+        .toPromise()
+        .then(
+          identity => {
+            this.identity = identity;
+            this.router.navigate(["passport", "identities", identity._id, "edit"]);
+          },
+          error => (this.error = error)
+        );
     }
   }
 

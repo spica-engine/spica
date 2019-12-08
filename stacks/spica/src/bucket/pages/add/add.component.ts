@@ -3,7 +3,7 @@ import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
-import {map, shareReplay, switchMap, tap} from "rxjs/operators";
+import {flatMap, map, share, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketHistory} from "../../interfaces/bucket-history";
@@ -57,7 +57,7 @@ export class AddComponent implements OnInit {
           this.histories$ = this.bhs.historyList(params.id, params.rid);
         }
       }),
-      switchMap(params => {
+      flatMap(params => {
         if (params.rid) {
           return this.bds.findOne(params.id, params.rid, true).pipe(
             tap(data => {
@@ -89,7 +89,7 @@ export class AddComponent implements OnInit {
         );
         return schema;
       }),
-      shareReplay()
+      share()
     );
   }
 

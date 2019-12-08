@@ -47,8 +47,11 @@ export class BucketModule {
     preference.default({
       scope: "bucket",
       language: {
-        supported_languages: [{code: "en_US", name: "English"}, {code: "tr_TR", name: "Turkish"}],
-        default: {code: "en_US", name: "English"}
+        available: {
+          tr_TR: "Turkish",
+          en_US: "English"
+        },
+        default: "en_US"
       }
     });
   }

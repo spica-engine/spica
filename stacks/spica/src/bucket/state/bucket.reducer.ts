@@ -11,27 +11,27 @@ export enum BucketActionTypes {
 }
 
 export class Add implements Action {
-  public readonly type = BucketActionTypes.ADD;
+  readonly type = BucketActionTypes.ADD;
   constructor(public bucket: Bucket) {}
 }
 
 export class Update implements Action {
-  public readonly type = BucketActionTypes.UPDATE;
+  readonly type = BucketActionTypes.UPDATE;
   constructor(public id: string, public changes: Partial<Bucket>) {}
 }
 
 export class Upsert implements Action {
-  public readonly type = BucketActionTypes.UPSERT;
+  readonly type = BucketActionTypes.UPSERT;
   constructor(public bucket: Bucket) {}
 }
 
 export class Remove implements Action {
-  public readonly type = BucketActionTypes.REMOVE;
+  readonly type = BucketActionTypes.REMOVE;
   constructor(public id: string) {}
 }
 
 export class Retrieve implements Action {
-  public readonly type = BucketActionTypes.RETRIEVE;
+  readonly type = BucketActionTypes.RETRIEVE;
   constructor(public buckets: Bucket[]) {}
 }
 
@@ -76,7 +76,5 @@ export const selectLoaded = createSelector(
 export const selectEmpty = createSelector(
   bucketFeatureSelector,
   selectTotal,
-  (state, total) => {
-    return state.loaded && total == 0;
-  }
+  (state, total) => state.loaded && total == 0
 );

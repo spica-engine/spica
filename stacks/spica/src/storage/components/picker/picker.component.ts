@@ -1,5 +1,5 @@
-import {HttpEventType} from "@angular/common/http";
 import {Component, OnInit, ViewChild} from "@angular/core";
+import {MatDialogRef} from "@angular/material";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
@@ -12,9 +12,9 @@ import {StorageService} from "../../storage.service";
   styleUrls: ["./picker.component.scss"]
 })
 export class PickerComponent implements OnInit {
-  selected: Storage;
-  totalItems: number = 0;
   storages$: Observable<Storage[]>;
+
+  totalItems: number = 0;
   progress: number;
   refresh: Subject<void> = new Subject<void>();
   incomingFile: FileList;
@@ -22,11 +22,8 @@ export class PickerComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) private _paginator: MatPaginator;
 
   _pageSize: number = 8;
-  _onChange: Subject<Storage> = new Subject<Storage>();
 
-  readonly onChange = this._onChange.asObservable();
-
-  constructor(private storage: StorageService) {}
+  constructor(private storage: StorageService, private ref: MatDialogRef<PickerComponent>) {}
 
   ngOnInit(): void {
     this.storages$ = merge(this._paginator.page, of(null)).pipe(
@@ -37,34 +34,14 @@ export class PickerComponent implements OnInit {
         )
       ),
       map(storage => {
-        this._paginator.length =
-          typeof storage.meta === "undefined" || typeof storage.meta.total === "undefined"
-            ? 0
-            : storage.meta.total;
+        this._paginator.length = storage.meta.total;
         this.totalItems = this._paginator.length;
         return storage.data;
       })
     );
   }
-  uploadStorage(file: FileList): void {
-    if (file) {
-      this.storage.insertMany(file).subscribe(
-        response => {
-          if (response.type === HttpEventType.UploadProgress) {
-            this.progress = Math.round((100 * response.loaded) / response.total);
-          } else if (response.type === HttpEventType.Response) {
-            this.selected = response.body[0];
-            this.selected.url = response.url + "/" + response.body[0]._id;
-            this._onChange.next(this.selected);
-            this.progress = undefined;
-            this.refresh.next();
-          }
-        },
-        () => {
-          this.progress = undefined;
-          this.refresh.next();
-        }
-      );
-    }
+
+  close(storage: Storage) {
+    this.ref.close(storage);
   }
 }

@@ -77,27 +77,9 @@
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
             "karmaConfig": "./karma.conf.js",
-            "main": "src/test.ts",
+            "main": "test.ts",
             "tsConfig": "tsconfig.spec.json",
-            "polyfills": "src/polyfills.ts",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "../../node_modules/monaco-editor-core",
-                "output": "./assets/function"
-              },
-              {
-                "glob": "**/*",
-                "input": "../../node_modules/leaflet/dist/images",
-                "output": "assets/"
-              }
-            ],
-            "styles": [
-              "src/styles.scss",
-              "../../node_modules/cropperjs/dist/cropper.css",
-              "../../node_modules/leaflet/dist/leaflet.css"
-            ],
-            "scripts": ["../../node_modules/cropperjs/dist/cropper.js"]
+            "polyfills": "src/polyfills.ts"
           }
         }
       }

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "DashboardReadOnlyAccess",
+  "name": "Dashboard Read Only Access",
+  "description": "Read only access to dashboard service.",
+  "statement": [
+		{
+			"effect": "allow",
+			"action": "dashboard:index",
+			"resource": "dashboard/*",
+			"service": "dashboard"
+		}
+	]
+}

@@ -1,9 +1,9 @@
-import {Component, OnInit, ViewChild} from "@angular/core";
+import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
-import {IdentityService} from "../../services/identity.service";
 import {Identity} from "../../interfaces/identity";
+import {IdentityService} from "../../services/identity.service";
 
 @Component({
   selector: "function-identity-index",
@@ -11,20 +11,21 @@ import {Identity} from "../../interfaces/identity";
   styleUrls: ["./identity-index.component.scss"]
 })
 export class IdentityIndexComponent implements OnInit {
-  @ViewChild("toolbar", {static: true}) toolbar;
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
   identities$: Observable<Identity[]>;
-  refresh: Subject<void> = new Subject<void>();
+  refresh$: Subject<void> = new Subject<void>();
+
   displayedColumns = ["_id", "identifier", "actions"];
 
   constructor(public identity: IdentityService) {}
 
   ngOnInit(): void {
-    this.identities$ = merge(this.paginator.page, of(null), this.refresh).pipe(
+    this.identities$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
         this.identity.find(
-          this.paginator.pageSize || 50,
+          this.paginator.pageSize || 10,
           this.paginator.pageSize * this.paginator.pageIndex
         )
       ),
@@ -39,6 +40,6 @@ export class IdentityIndexComponent implements OnInit {
     this.identity
       .deleteOne(id)
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh$.next());
   }
 }
