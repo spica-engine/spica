@@ -48,11 +48,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       options.method != HttpMethod.Get &&
       options.method != HttpMethod.Head
     ) {
-      this.router.options(
-        path,
-        {[name]: (req, res, next) => Middlewares.Preflight(req, res, next)}[name]
-      );
-      console.log("OPTIONS", this.router.stack);
+      //
+      const fn = (req, res, next) => Middlewares.Preflight(req, res, next);
+
+      Object.defineProperty(fn, "name", {writable: false, value: name});
+
+      this.router.options(path, fn);
     }
 
     if (options.method == HttpMethod.Options) {
@@ -85,17 +86,14 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       }[name]
     );
 
-    console.log("OPTIONS", this.router.stack[2].route);
     this.reorderUnhandledHandle();
   }
 
   unsubscribe(target: Event.Target): void {
     const name = `${target.cwd}_${target.handler}`;
-    this.router.stack = this.router.stack.filter((layer, index) => {
+    this.router.stack = this.router.stack.filter(layer => {
       if (layer.route) {
-        this.router.stack.findIndex(layer => layer.name == name);
-        console.log(layer);
-        return false;
+        return layer.route.stack.some(layer => layer.name == name);
       }
       return true;
     });

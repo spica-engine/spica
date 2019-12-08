@@ -79,7 +79,6 @@ describe("http trigger", () => {
     const invoker = jasmine.createSpy("invoker");
     httpEnqueuer.subscribe(noopTarget, options);
     let response = await req.options("/fn-execute/test");
-    console.log(response);
     expect(response.statusCode).toBe(200);
     expect(response.body).toBeUndefined();
     expect(response.headers["access-control-allow-origin"]).toBe("*");
@@ -87,21 +86,24 @@ describe("http trigger", () => {
     httpEnqueuer.unsubscribe(noopTarget);
   });
 
-  //   it("should not handle preflight requests but route", async () => {
-  //     const options = {method: HttpMethod.Post, path: "/test", preflight: false};
-  //     const invoker = jasmine
-  //       .createSpy(undefined, ({parameters: [req, res]}) => res.send({response: "back"}))
-  //       .and.callThrough();
-  //     httpEnqueuer.register(invoker, noopTarget, options);
+  it("should not handle preflight requests but route", async () => {
+    const options = {method: HttpMethod.Post, path: "/test", preflight: false};
+    const invoker = jasmine
+      .createSpy(undefined, ({parameters: [req, res]}) => res.send({response: "back"}))
+      .and.callThrough();
+    const spy = httpQueue.enqueue.and.callFake((id, req, res) => {
+      res.writeHead(200, undefined, { 'Content-type': 'application/json' });
+    })
+    httpEnqueuer.subscribe(noopTarget, options);
 
-  //     const response = await req.options("/fn-execute/test");
-  //     expect(response.statusCode).toBe(404);
-  //     expect(invoker).not.toHaveBeenCalled();
-  //     const postResponse = await req.post("/fn-execute/test");
-  //     expect(postResponse.body).toEqual({response: "back"});
-  //     expect(invoker).toHaveBeenCalledTimes(1);
-  //     httpEnqueuer.register(null, noopTarget, options);
-  //   });
+    const response = await req.options("/fn-execute/test");
+    expect(response.statusCode).toBe(404);
+    expect(invoker).not.toHaveBeenCalled();
+    const postResponse = await req.post("/fn-execute/test");
+    expect(postResponse.body).toEqual({response: "back"});
+    expect(invoker).toHaveBeenCalledTimes(1);
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
 
   //   it("should not handle preflight requests for get and head method", async () => {
   //     let options = {method: HttpMethod.Get, path: "/test1", preflight: true};
