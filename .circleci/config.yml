@@ -106,7 +106,7 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: "Deploying artifacts"
-          command: ./node_modules/.bin/bazel run deploy.replace -- --force
+          command: (cd stacks/spica && ng build --prod) && ./node_modules/.bin/bazel run deploy.replace -- --force
 
 workflows:
   version: 2
