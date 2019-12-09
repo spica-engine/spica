@@ -96,13 +96,19 @@ describe("Bucket-Data acceptance", () => {
         await req.post("/bucket", myBucket);
 
         //insert some data
-        const bucketdata = new Array(20).fill(undefined).map((_, index) => {
-          return {title: `new title${index + 1}`, description: `new description${index + 1}`};
-        });
+        const bucketdata = [
+          {title: "here is the title", description: "here is the description"},
+          {title: "here is the another title", description: "here is the another description"},
+          {title: "more title", description: "more description"},
+          {title: "one more title", description: "one more description"},
+          {title: "here is the last title", description: "here is the last description"}
+        ];
 
-        for (let i = 0; i < bucketdata.length; i++) {
-          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
-        }
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[0]);
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[1]);
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[2]);
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[3]);
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[4]);
       });
 
       afterAll(async () => {
@@ -120,41 +126,109 @@ describe("Bucket-Data acceptance", () => {
 
       it("should work without query", async () => {
         const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {});
-        expect(response.body.length).toEqual(20);
-        response.body.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 1}`);
-          expect(val.description).toBe(`new description${index + 1}`);
-        });
+        expect(response.body.length).toEqual(5);
+
+        expect(
+          response.body.map(element => {
+            return element.title;
+          })
+        ).toEqual([
+          "here is the title",
+          "here is the another title",
+          "more title",
+          "one more title",
+          "here is the last title"
+        ]);
+        expect(
+          response.body.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          "here is the description",
+          "here is the another description",
+          "more description",
+          "one more description",
+          "here is the last description"
+        ]);
+        
       });
 
       it("should work with limit query", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {limit: "7"});
-        expect(response.body.length).toEqual(7);
-        response.body.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 1}`);
-          expect(val.description).toBe(`new description${index + 1}`);
-        });
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {limit: "3"});
+        expect(response.body.length).toEqual(3);
+        expect(
+          response.body.map(element => {
+            return element.title;
+          })
+        ).toEqual([
+          "here is the title",
+          "here is the another title",
+          "more title",
+          
+        ]);
+        expect(
+          response.body.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          "here is the description",
+          "here is the another description",
+          "more description",
+          
+        ]);
       });
 
       it("should work with skip query", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {skip: "4"});
-        expect(response.body.length).toEqual(16);
-        response.body.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 4 + 1}`);
-          expect(val.description).toBe(`new description${index + 4 + 1}`);
-        });
+        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {skip: "2"});
+        expect(response.body.length).toEqual(3);
+        expect(
+          response.body.map(element => {
+            return element.title;
+          })
+        ).toEqual([
+          
+          "more title",
+          "one more title",
+          "here is the last title"
+        ]);
+        expect(
+          response.body.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          
+          "more description",
+          "one more description",
+          "here is the last description"
+        ]);
       });
 
       it("should work with skip and limit query", async () => {
         const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
-          limit: "15",
-          skip: "2"
+          limit: "2",
+          skip: "1"
         });
-        expect(response.body.length).toEqual(15);
-        response.body.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 2 + 1}`);
-          expect(val.description).toBe(`new description${index + 2 + 1}`);
-        });
+        expect(response.body.length).toEqual(2);
+        expect(
+          response.body.map(element => {
+            return element.title;
+          })
+        ).toEqual([
+          
+          "here is the another title",
+          "more title",
+          
+        ]);
+        expect(
+          response.body.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          
+          "here is the another description",
+          "more description",
+         
+        ]);
       });
     });
 
@@ -445,7 +519,7 @@ describe("Bucket-Data acceptance", () => {
       });
     });
 
-    xdescribe("localize", () => {
+    describe("localize", () => {
       beforeAll(async () => {
         const myBucket = {
           _id: myBucketId,
@@ -471,23 +545,17 @@ describe("Bucket-Data acceptance", () => {
         };
         await req.post("/bucket", myBucket);
 
-        const myTranslatableData = [
-          {
-            title: JSON.stringify({en_US: "something", tr_TR: "birşeyler"}),
-            description: "description"
-          },
-          {
-            title: JSON.stringify({en_US: "something new", tr_TR: "yeni birşeyler"}),
-            description: "description"
-          },
-          {
-            title: JSON.stringify({en_US: "something only english"}),
-            description: "description"
-          }
-        ];
-        for (let i = 0; i < myTranslatableData.length; i++) {
-          await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[i]);
-        }
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", {
+          title: {en_US: "english words", tr_TR: "türkçe kelimeler"}
+        });
+
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", {
+          title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"}
+        });
+
+        await req.post("/bucket/56cb91bdc3464f14678934ca/data", {
+          title: {en_US: "only english words"}
+        });
       });
 
       afterAll(async () => {
@@ -511,25 +579,26 @@ describe("Bucket-Data acceptance", () => {
         )).body;
 
         expect(data.length).toBe(3);
-        expect(data[0].title).toBe("something");
-        expect(data[1].title).toBe("something new");
-        expect(data[2].title).toBe("something only english");
+
+        expect(
+          data.map(element => {
+            return element.title;
+          })
+        ).toEqual(["english words", "new english words", "only english words"]);
       });
 
-      it("it should show data which is translated to turkish", async () => {
+      it("it should show data which is translated to turkish and if it doesnt exist, show data as default language", async () => {
         const data = (await req.get(
           "/bucket/56cb91bdc3464f14678934ca/data",
           {translate: "true"},
           {"accept-language": "tr_TR"}
         )).body;
 
-        expect(data.length).toBe(3);
-        expect(data[0].title).toBe("birşeyler");
-        expect(data[1].title).toBe("yeni birşeyler");
-        expect(data[2].title).toBe(
-          "something only english",
-          "it should work if there is only english data and english is default"
-        );
+        expect(
+          data.map(element => {
+            return element.title;
+          })
+        ).toEqual(["türkçe kelimeler", "yeni türkçe kelimeler", "only english words"]);
       });
     });
   });
