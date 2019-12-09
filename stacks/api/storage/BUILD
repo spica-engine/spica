@@ -28,22 +28,21 @@ ts_library(
     name = "test_lib",
     testonly = True,
     srcs = [
-        "storage.service.spec.ts",
         "storage.controller.spec.ts",
+        "storage.service.spec.ts",
     ],
     deps = [
         ":storage",
-         "//packages/core",
+        "//packages/core",
+        "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
+        "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
-        "@npm//@nestjs/common",
-        "//packages/core/testing",
         "@npm//bson",
-        "@npm//@types/bson",
-
     ],
 )
 

@@ -36,23 +36,21 @@ ts_library(
     testonly = True,
     srcs = [
         "bucket.service.spec.ts",
-        "bucket-data.service.spec.ts"
+        "bucket-data.service.spec.ts",
     ],
     deps = [
         ":bucket",
-         "//packages/core",
+        "//packages/core",
         "//packages/core/schema",
+        "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/preference",
+        "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
+        "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
-        "//packages/core/testing",
-        "@npm//@nestjs/common",
         "@npm//bson",
-        "@npm//@types/bson",
-
-
     ],
 )
 
