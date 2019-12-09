@@ -28,6 +28,7 @@ ts_library(
     name = "test_lib",
     testonly = True,
     srcs = [
+        "storage.acceptance.spec.ts",
         "storage.controller.spec.ts",
         "storage.service.spec.ts",
     ],
