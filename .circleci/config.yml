@@ -1,12 +1,12 @@
 var_1: &job_defaults
   working_directory: ~/spica
   docker:
-    - image: circleci/node:11
+    - image: circleci/node:11-browsers
 
 var_2: &test_defaults
   <<: *job_defaults
   docker:
-    - image: circleci/node:11
+    - image: circleci/node:11-browsers
     - image: circleci/mongo:4.2
 
 var_3: &setup_circleci_bazel_config
@@ -63,22 +63,10 @@ jobs:
       - *setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
+          command: (./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test) && yarn bazel shutdown
       - run:
           name: "Running tests"
-          command: |
-            # Run Unit tests
-            # We need to check the client for AOT errors. 
-            # This is the expensive way to do but ¯\_(ツ)_/¯
-            # After we switch spica(client) to bazel we gonna get rid of this
-            cd stacks/spica
-            rm -rf dist/spica-client
-            # Disable differential loading on patch branches to gain speed up
-            if [ $CIRCLE_BRANCH != "master" ]; then
-              echo "Disabling differential loading"
-              echo "last 2 Chrome versions" > browserslist
-            fi
-            yarn ng build --prod --progress=false
+          command: cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
       - persist_to_workspace:
           root: ~/
           paths:
@@ -106,7 +94,7 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: "Deploying artifacts"
-          command: ./node_modules/.bin/bazel run deploy.replace -- --force
+          command: (cd stacks/spica && ng build --prod) && ./node_modules/.bin/bazel run deploy.replace -- --force
 
 workflows:
   version: 2

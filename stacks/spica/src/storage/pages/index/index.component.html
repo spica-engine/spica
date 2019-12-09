@@ -83,7 +83,7 @@
               [matAwareDialog]="{
                 title: 'Attention',
                 templateOrDescription: dialogTemplate,
-                answer: 'yes'
+                answer: 'agree'
               }"
               (confirm)="delete(storage._id)"
             >
@@ -102,7 +102,9 @@
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>
   <p>
-    This action will permanently delete the <b>"{{ answer }}"</b> and broke the all associations.
+    This action will permanently delete the object and broke the all associations.
   </p>
-  <p>Please type in the name of the storage to confirm.</p>
+  <p>
+    Please type <code>{{ answer }}</code> to confirm.
+  </p>
 </ng-template>

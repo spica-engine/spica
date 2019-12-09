@@ -19,6 +19,9 @@
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
+        <mat-list-item (click)="toggle()">
+          <mat-icon>menu_open</mat-icon>
+        </mat-list-item>
       </mat-nav-list>
       <mat-nav-list>
         <h4>{{ currentCategory | async }}</h4>

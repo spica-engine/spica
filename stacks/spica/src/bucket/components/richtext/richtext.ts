@@ -7,7 +7,11 @@ import {InputSchema, INPUT_SCHEMA} from "@spica-client/common";
   templateUrl: "./richtext.html",
   styleUrls: ["./richtext.scss"],
   viewProviders: [
-    {provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => RichTextEditorComponent)}
+    {
+      provide: NG_VALUE_ACCESSOR,
+      multi: true,
+      useExisting: forwardRef(() => RichTextEditorComponent)
+    }
   ]
 })
 export class RichTextEditorComponent implements ControlValueAccessor {

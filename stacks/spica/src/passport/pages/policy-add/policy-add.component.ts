@@ -70,27 +70,13 @@ export class PolicyAddComponent implements OnInit {
       });
   }
 
-  createPolicy(policy): void {
-    this.policyService
-      .createPolicy(policy)
-      .toPromise()
-      .then(() => this.router.navigate(["passport/policy"]));
-  }
-
-  updatePolicy(policy): void {
-    this.policyService
-      .updatePolicy(policy)
-      .toPromise()
-      .then(() => this.router.navigate(["passport/policy"]));
-  }
-
   submitForm(): void {
-    const policy = this.tidyUpStatements(this.policy);
-    if (this.policy._id) {
-      this.updatePolicy(policy);
-    } else {
-      this.createPolicy(policy);
-    }
+    (this.policy._id
+      ? this.policyService.updatePolicy(this.tidyUpStatements(this.policy))
+      : this.policyService.createPolicy(this.tidyUpStatements(this.policy))
+    )
+      .toPromise()
+      .then(() => this.router.navigate(["passport/policy"]));
   }
 
   addStatement(): void {
@@ -116,6 +102,7 @@ export class PolicyAddComponent implements OnInit {
 
   recheckArgs(sName: string, index: number): void {
     this.policy.statement[index].resource = [];
+    this.policy.statement[index].action = [];
     if (!this.services[sName].$arguments) {
       this.policy.statement[index].resource = null;
     }

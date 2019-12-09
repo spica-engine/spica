@@ -16,7 +16,8 @@ export class MatAwareDialogDirective {
     this.matDialog
       .open(MatAwareDialogComponent, {data: this.options})
       .afterClosed()
-      .subscribe(confirmed => {
+      .toPromise()
+      .then(confirmed => {
         if (confirmed) {
           this.confirm.emit();
         } else {

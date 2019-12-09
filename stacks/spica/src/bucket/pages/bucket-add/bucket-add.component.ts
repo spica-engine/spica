@@ -148,7 +148,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     if (this.bucket.primary === propertyKey) {
       this.bucket.primary = undefined;
     }
-    if (this.bucket.required) {
+
+    if (this.bucket.required && this.bucket.required.includes(propertyKey)) {
       this.bucket.required.splice(this.bucket.required.indexOf(propertyKey), 1);
     }
 

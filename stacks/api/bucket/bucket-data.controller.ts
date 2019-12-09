@@ -160,7 +160,7 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucket"], locale)
+            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
           );
         }
       }
@@ -256,7 +256,7 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucket"], locale)
+            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
           );
         }
       }

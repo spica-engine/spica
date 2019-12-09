@@ -40,6 +40,10 @@ function createActionGuard(actions: string | string[], format?: string): Type<Ca
 
       response.header("X-Resource", resourceName);
 
+      if (request.TESTING_SKIP_CHECK) {
+        return true;
+      }
+
       if (!request.user.policies) {
         this.throwException();
       }

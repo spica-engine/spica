@@ -1,9 +1,10 @@
 <mat-form-field>
-  <mat-label>{{ schema.title }}</mat-label>
+  <mat-label>{{ schema.title || schema.$name }}</mat-label>
   <textarea
     matInput
     rows="10"
     [disabled]="disabled"
+    [name]="schema.$name"
     [placeholder]="schema.title"
     [(ngModel)]="value"
     (ngModelChange)="_onChangeFn($event)"

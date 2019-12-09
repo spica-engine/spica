@@ -7,6 +7,7 @@ import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
 import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
+import {DashboardModule} from "@spica-server/dashboard/dashboard.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
     }),
     PreferenceModule,
     BucketModule,
+    DashboardModule,
     StorageModule.forRoot({
       path: process.env.PERSISTENT_PATH
     }),

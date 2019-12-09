@@ -8,13 +8,7 @@ import {
   Type
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {
-  EMPTY_INPUT_SCHEMA,
-  InputSchema,
-  INPUT_SCHEMA,
-  INPUT_SCHEMA_OPTIONS,
-  SchemaPlacerOptions
-} from "../input";
+import {EMPTY_INPUT_SCHEMA, InputSchema, INPUT_SCHEMA} from "../input";
 import {InputResolver} from "../input.resolver";
 
 @Component({
@@ -40,9 +34,7 @@ import {InputResolver} from "../input.resolver";
 })
 export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   @Input("inputSchemaPlacer") type: string;
-  @Input("options") options: SchemaPlacerOptions = {
-    title: true
-  };
+
   public placer: Type<any>;
   public injector: Injector;
 
@@ -76,12 +68,7 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.type && this.type) {
       for (const key of Object.keys(this.schema)) {
-        if (
-          key === "type" ||
-          (this.options.title && key === "title") ||
-          key === "description" ||
-          key === "options"
-        ) {
+        if (key === "type" || key === "description" || key === "options") {
           continue;
         }
         delete this.schema[key];
@@ -99,10 +86,6 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
           {
             provide: INPUT_SCHEMA,
             useValue: this.schema
-          },
-          {
-            provide: INPUT_SCHEMA_OPTIONS,
-            useValue: this.options
           }
         ],
         this._injector

@@ -6,14 +6,8 @@
     "target": "es2015",
     "module": "esnext",
     "baseUrl": "./",
-    "lib": [
-      "es2018",
-      "dom"
-    ],
+    "lib": ["es2018", "dom"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    "test.ts",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["test.ts", "**/*.spec.ts"]
 }

@@ -1,0 +1,40 @@
+div {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h1 {
+      & > * {
+        vertical-align: middle;
+        display: inline-block;
+      }
+      mat-icon {
+        margin-left: -3px;
+      }
+      span {
+        margin-left: 5px;
+      }
+    }
+  }
+  div {
+    margin-top: -185px;
+    display: block;
+    div.widgets {
+      display: flex;
+      flex-direction: row;
+      flex-grow: 1;
+      flex-wrap: wrap;
+      align-items: stretch;
+      margin: 20px;
+      mat-card {
+        width: 100%;
+        overflow-x: auto;
+        flex-basis: calc(50% - 10px);
+        margin: 5px;
+        flex-grow: 1;
+        min-height: 250px;
+        min-width: 250px;
+      }
+    }
+  }
+}
