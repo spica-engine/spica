@@ -30,7 +30,7 @@
           </mat-expansion-panel-header>
           <div class="resource-input">
             <mat-form-field>
-              <mat-select placeholder="Effect" [(value)]="statement.effect">
+              <mat-select placeholder="Effect" [(ngModel)]="statement.effect">
                 <mat-option value="allow">Allow</mat-option>
                 <mat-option value="deny">Deny</mat-option>
               </mat-select>
@@ -38,6 +38,7 @@
             <mat-form-field>
               <mat-select
                 placeholder="Service"
+                [(ngModel)]="statement.service"
                 [(value)]="statement.service"
                 (selectionChange)="recheckArgs($event.value, i)"
                 #servicePicker
@@ -48,7 +49,7 @@
               </mat-select>
             </mat-form-field>
             <mat-form-field *ngIf="servicePicker.value">
-              <mat-select placeholder="Actions" multiple [(value)]="statement.action">
+              <mat-select placeholder="Actions" multiple [(ngModel)]="statement.action">
                 <mat-option
                   *ngFor="let action of services[servicePicker.value]?.actions"
                   [value]="action"
@@ -62,7 +63,7 @@
           >
             <div class="resource">
               <mat-form-field
-                *ngFor="let resourceInput of services[servicePicker.value].parsedArguments"
+                *ngFor="let resourceInput of services[servicePicker.value]?.parsedArguments"
                 style="width: 500px"
               >
                 <input
@@ -81,7 +82,7 @@
           </ng-container>
           <div
             class="resource"
-            *ngIf="servicePicker.value != null && services[servicePicker.value].parsedArguments"
+            *ngIf="servicePicker.value != null && services[servicePicker.value]?.parsedArguments"
           >
             <button mat-button (click)="addResource(statement)">
               Add Resource

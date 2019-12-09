@@ -96,7 +96,7 @@ export const UNIQUE_ITEMS_VALIDATOR: any = {
 export class UniqueItemsValidator implements Validator, OnChanges {
   private _onChange: () => void;
 
-  @Input() uniqueItems: boolean;
+  @Input() uniqueItems: boolean = true;
 
   @Input() items: Array<any>;
 
@@ -123,10 +123,10 @@ export class UniqueItemsValidator implements Validator, OnChanges {
       ? null
       : sameItems.reduce(
           (error, item) => {
-            error.unique.push(item.index);
+            error.uniqueItems.push(item.index);
             return error;
           },
-          {unique: []}
+          {uniqueItems: []}
         );
   }
 
@@ -164,7 +164,7 @@ export class MinItemsValidator implements Validator, OnChanges {
       return null;
     }
 
-    return {minItems: {expected: this.minItems, current: this.items.length}};
+    return {minItems: {min: this.minItems, actual: this.items.length}};
   }
 
   registerOnValidatorChange(fn: () => void): void {
@@ -201,7 +201,7 @@ export class MaxItemsValidator implements Validator, OnChanges {
       return null;
     }
 
-    return {maxItems: {expected: this.maxItems, current: this.items.length}};
+    return {maxItems: {max: this.maxItems, actual: this.items.length}};
   }
 
   registerOnValidatorChange(fn: () => void): void {

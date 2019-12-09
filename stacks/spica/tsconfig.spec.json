@@ -1,21 +1,14 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../out-tsc/spec",
     "baseUrl": "./",
+    "rootDir": ".",
     "moduleResolution": "node",
-    "target": "es5",
-    "lib": [
-      "es2018",
-      "dom"
-    ],
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2018", "dom"]
   },
-  "files": [
-    "src/test.ts",
-    "src/polyfills.ts"
-  ],
-  "include": [
-    "**/*.spec.ts",
-    "**/*.d.ts",
-  ]
+  "files": ["test.ts", "src/polyfills.ts"],
+  "include": ["./packages/**/*.spec.ts", "./src/**/*.spec.ts"]
 }

@@ -1,0 +1,17 @@
+h3 {
+  text-align: center;
+  margin: 0 0 20px 0;
+}
+
+::ng-deep span {
+  ng-component {
+    width: 33% !important;
+    margin-left: 5px;
+    display: inline-block;
+  }
+}
+
+div.refresh {
+  position: absolute;
+  right: 20px;
+}

@@ -5,6 +5,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
 import * as BSON from "bson";
 import {StorageModule} from "./storage.module";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Storage acceptance test", () => {
   async function addRandomData(count: number) {
@@ -31,7 +32,8 @@ describe("Storage acceptance test", () => {
     module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
+        PassportTestingModule.initialize(),
+        DatabaseTestingModule.create(),
         StorageModule.forRoot({path: "/tmp"})
       ]
     }).compile();
@@ -51,7 +53,7 @@ describe("Storage acceptance test", () => {
     it("should get 10 storage objects if there is no limit ", async () => {
       const response = await req.get("/storage", {});
       expect(response.body.meta.total).toEqual(20);
-      
+
       const objects = response.body.data;
       expect(objects.length).toEqual(10);
       objects.map((value, index) => {
@@ -87,7 +89,7 @@ describe("Storage acceptance test", () => {
     it("should work with skip and limit query", async () => {
       const response = await req.get("/storage", {limit: "15", skip: "3"});
       expect(response.body.meta.total).toEqual(20);
-      
+
       const objects = response.body.data;
       expect(objects.length).toEqual(15);
       objects.map((value, index) => {

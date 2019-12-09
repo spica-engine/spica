@@ -1,0 +1,14 @@
+{
+	"$schema": "http://spica.internal/passport/policy",
+	"_id": "DashboardFullAccess",
+	"name": "Dashboard Full Access",
+	"description": "Full access to dashboard service.",
+	"statement": [
+		{
+			"effect": "allow",
+			"action": "dashboard:*",
+			"resource": "dashboard/*",
+			"service": "dashboard"
+		}
+	]
+}

@@ -1,17 +1,18 @@
 <mat-form-field>
-  <mat-label>{{ schema.title }}</mat-label>
+  <mat-label>{{ schema.title || schema.$name }}</mat-label>
   <input
     matInput
     type="datetime"
+    [name]="schema.$name"
     [disabled]="_disabled"
-    (focus)="dt1.open()"
     [(ngModel)]="_value"
-    (ngModelChange)="callOnChange()"
+    (ngModelChange)="_onChangeFn(this._value)"
+    (blur)="_onTouchedFn()"
+    (focus)="dt1.open()"
     [owlDateTime]="dt1"
     [owlDateTimeTrigger]="dt1"
     placeholder="Date Time"
   />
   <owl-date-time #dt1></owl-date-time>
-
-  <mat-hint>{{ schema.description }}</mat-hint>
+  <mat-hint *ngIf="schema.description">{{ schema.description }}</mat-hint>
 </mat-form-field>

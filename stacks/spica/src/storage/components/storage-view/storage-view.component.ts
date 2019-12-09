@@ -21,13 +21,9 @@ import {Storage} from "../../interfaces/storage";
 })
 export class StorageViewComponent implements OnChanges {
   @Input() blob: string | Blob | Storage;
-
   displayableTypes: RegExp = /image\/.*?|video\/.*?/;
-
-  ready: boolean;
-
-  error: boolean = false;
-
+  ready: boolean = false;
+  error: string;
   contentType: string;
   content: SafeUrl | string;
 
@@ -39,7 +35,8 @@ export class StorageViewComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.blob) {
+    if (changes.blob && changes.blob.currentValue) {
+      this.error = undefined;
       if (typeof this.blob == "string") {
         this.ready = false;
         const url = this.blob;
@@ -53,6 +50,11 @@ export class StorageViewComponent implements OnChanges {
             next: r => {
               this.content = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(r));
               this.ready = true;
+              this.cd.markForCheck();
+            },
+            error: event => {
+              this.ready = true;
+              this.error = event.error.type;
               this.cd.markForCheck();
             },
             complete: () => {
@@ -73,7 +75,7 @@ export class StorageViewComponent implements OnChanges {
   }
 
   viewError(event: MediaError) {
-    this.error = true;
+    this.error = event.message;
   }
 
   private observe() {
