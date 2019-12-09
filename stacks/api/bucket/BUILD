@@ -35,9 +35,7 @@ ts_library(
     name = "bucket-data_test_lib",
     testonly = True,
     srcs = [
-        
         "bucket-data.service.spec.ts",
-        "bucket-data.acceptance.spec.ts"
     ],
     deps = [
         ":bucket",
@@ -45,6 +43,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//stacks/api/passport/testing",
         "//packages/database",
         "//stacks/api/preference",
         "@npm//@nestjs/testing",
@@ -53,6 +52,46 @@ ts_library(
         "@npm//@types/node",
         "@npm//bson",
         "@npm//@types/bson",
+    ],
+)
+
+jasmine_node_test(
+    name = "bucket-data-test",
+    deps = [
+        ":bucket-data_test_lib"
+    ],
+)
+
+
+
+ts_library(
+    name = "bucket-data-acceptance_test_lib",
+    testonly = True,
+    srcs = [
+        "bucket-data.acceptance.spec.ts"
+    ],
+    deps = [
+        ":bucket",
+        "//packages/core",
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/passport/testing",
+        "//packages/database",
+        "//stacks/api/preference",
+        "@npm//@nestjs/testing",
+        "@npm//@nestjs/common",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//bson",
+        "@npm//@types/bson",
+    ],
+)
+
+jasmine_node_test(
+    name = "bucket-data-acceptance-test",
+    deps = [
+        ":bucket-data-acceptance_test_lib"
     ],
 )
 
@@ -78,6 +117,12 @@ ts_library(
     ],
 )
 
+jasmine_node_test(
+    name = "bucket-test",
+    deps = [
+        ":bucket_test_lib"
+    ],
+)
 
 ts_library(
     name = "scheduler_test_lib",
@@ -100,18 +145,14 @@ jasmine_node_test(
         ":scheduler_test_lib"
     ],
 )
-jasmine_node_test(
-    name = "bucket-data-test",
-    deps = [
-        ":bucket-data_test_lib"
-    ],
-)
-jasmine_node_test(
-    name = "bucket-test",
-    deps = [
-        ":bucket_test_lib"
-    ],
-)
+
+
+
+
+
+
+
+
 
 
 docs(

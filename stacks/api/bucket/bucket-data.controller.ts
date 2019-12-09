@@ -142,7 +142,6 @@ export class BucketDataController {
         property => property.options && property.options.translate
       )
     ) {
-      console.log("Im in")
       const locale = await this.getLanguage(acceptedLanguage);
 
       aggregation.push({

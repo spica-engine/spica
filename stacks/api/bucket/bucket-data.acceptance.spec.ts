@@ -8,6 +8,9 @@ import {BucketModule} from "./bucket.module";
 import {SchemaModule} from "@spica-server/core/schema";
 import {Default, Format} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 export const CREATED_AT: Default = {
   keyword: ":created_at",
@@ -53,6 +56,7 @@ describe("Bucket-Data acceptance", () => {
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
+        PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
         BucketModule
       ]
@@ -67,51 +71,54 @@ describe("Bucket-Data acceptance", () => {
     describe("skip and limit", () => {
       beforeAll(async () => {
         //create bucket
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .insertOne({
-            _id: myBucketId,
-            title: "New Bucket",
-            description: "Describe your new bucket",
-            icon: "view_stream",
-            primary: "title",
-            readOnly: false,
-            properties: {
-              title: {
-                type: "string",
-                title: "title",
-                description: "Title of the row",
-                options: {position: "left", visible: true}
-              },
-              description: {
-                type: "textarea",
-                title: "description",
-                description: "Description of the row",
-                options: {position: "right"}
-              }
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
             }
-          });
+          }
+        };
+        await req.post("/bucket", myBucket);
 
         //insert some data
         const bucketdata = new Array(20).fill(undefined).map((_, index) => {
           return {title: `new title${index + 1}`, description: `new description${index + 1}`};
         });
-        await app
-          .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
-          .insertMany(bucketdata);
+
+        for (let i = 0; i < bucketdata.length; i++) {
+          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
+        }
       });
 
       afterAll(async () => {
         await app
           .get(DatabaseService)
           .collection("buckets")
-          .deleteOne({_id: myBucketId});
-        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .deleteMany({})
+          .catch();
       });
 
-      it("should work for any query", async () => {
+      it("should work without query", async () => {
         const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {});
         expect(response.body.length).toEqual(20);
         response.body.forEach((val, index) => {
@@ -154,48 +161,51 @@ describe("Bucket-Data acceptance", () => {
     describe("sorts", () => {
       beforeAll(async () => {
         //create bucket
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .insertOne({
-            _id: myBucketId,
-            title: "New Bucket",
-            description: "Describe your new bucket",
-            icon: "view_stream",
-            primary: "title",
-            readOnly: false,
-            properties: {
-              title: {
-                type: "string",
-                title: "title",
-                description: "Title of the row",
-                options: {position: "left", visible: true}
-              },
-              description: {
-                type: "textarea",
-                title: "description",
-                description: "Description of the row",
-                options: {position: "right"}
-              }
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
             }
-          });
+          }
+        };
+        await req.post("/bucket", myBucket);
 
         //insert some data
         const bucketdata = new Array(5).fill(undefined).map((_, index) => {
           return {title: `new title${index + 1}`, description: `new description${5 - index}`};
         });
-        await app
-          .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
-          .insertMany(bucketdata);
+
+        for (let i = 0; i < bucketdata.length; i++) {
+          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
+        }
       });
 
       afterAll(async () => {
         await app
           .get(DatabaseService)
           .collection("buckets")
-          .deleteOne({_id: myBucketId});
-        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .deleteMany({})
+          .catch();
       });
 
       it("ascend by title", async () => {
@@ -249,48 +259,51 @@ describe("Bucket-Data acceptance", () => {
     describe("pagination", () => {
       beforeAll(async () => {
         //create bucket
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .insertOne({
-            _id: myBucketId,
-            title: "New Bucket",
-            description: "Describe your new bucket",
-            icon: "view_stream",
-            primary: "title",
-            readOnly: false,
-            properties: {
-              title: {
-                type: "string",
-                title: "title",
-                description: "Title of the row",
-                options: {position: "left", visible: true}
-              },
-              description: {
-                type: "textarea",
-                title: "description",
-                description: "Description of the row",
-                options: {position: "right"}
-              }
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
             }
-          });
+          }
+        };
+        await req.post("/bucket", myBucket);
 
         //insert some data
         const bucketdata = new Array(100).fill(undefined).map((_, index) => {
           return {title: `new title${index + 1}`, description: `new description${index + 1}`};
         });
-        await app
-          .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
-          .insertMany(bucketdata);
+
+        for (let i = 0; i < bucketdata.length; i++) {
+          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
+        }
       });
 
       afterAll(async () => {
         await app
           .get(DatabaseService)
           .collection("buckets")
-          .deleteOne({_id: myBucketId});
-        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .deleteMany({})
+          .catch();
       });
 
       it("single paginate param", async () => {
@@ -352,48 +365,51 @@ describe("Bucket-Data acceptance", () => {
     describe("filter", () => {
       beforeAll(async () => {
         //create bucket
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .insertOne({
-            _id: myBucketId,
-            title: "New Bucket",
-            description: "Describe your new bucket",
-            icon: "view_stream",
-            primary: "title",
-            readOnly: false,
-            properties: {
-              title: {
-                type: "string",
-                title: "title",
-                description: "Title of the row",
-                options: {position: "left", visible: true}
-              },
-              description: {
-                type: "textarea",
-                title: "description",
-                description: "Description of the row",
-                options: {position: "right"}
-              }
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
             }
-          });
+          }
+        };
+        await req.post("/bucket", myBucket);
 
         //insert some data
         const bucketdata = new Array(10).fill(undefined).map((_, index) => {
           return {title: `new title${index + 1}`, description: `new description${index + 1}`};
         });
-        await app
-          .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
-          .insertMany(bucketdata);
+
+        for (let i = 0; i < bucketdata.length; i++) {
+          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
+        }
       });
 
       afterAll(async () => {
         await app
           .get(DatabaseService)
           .collection("buckets")
-          .deleteOne({_id: myBucketId});
-        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .deleteMany({})
+          .catch();
       });
 
       it("should filter data which has '1'", async () => {
@@ -429,64 +445,7 @@ describe("Bucket-Data acceptance", () => {
       });
     });
 
-    describe("localization", () => {
-      beforeAll(async () => {
-        //create bucket
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .insertOne({
-            _id: myBucketId,
-            title: "New Bucket",
-            description: "Describe your new bucket",
-            icon: "view_stream",
-            primary: "title",
-            readOnly: false,
-            properties: {
-              title: {
-                type: "string",
-                title: "title",
-                description: "Title of the row",
-                options: {position: "left", visible: true, translate: true}
-              },
-              description: {
-                type: "textarea",
-                title: "description",
-                description: "Description of the row",
-                options: {position: "right"}
-              }
-            }
-          });
-
-        //insert some data
-        const bucketdata = new Array(20).fill(undefined).map((_, index) => {
-          return {title: `new title${index + 1}`, description: `new description${index + 1}`};
-        });
-        await app
-          .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
-          .insertMany(bucketdata);
-      });
-
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: myBucketId});
-        await app.get(DatabaseService).dropCollection("bucket_56cb91bdc3464f14678934ca");
-      });
-
-      it("test", async () => {
-        const response = await req.get(
-          `/bucket/56cb91bdc3464f14678934ca/data`,
-          {},
-          {"accept-language": "tr_TR"}
-        );
-        expect(response.body).toEqual({} as any);
-      });
-    });
-
-    fdescribe("translate", () => {
+    xdescribe("localize", () => {
       beforeAll(async () => {
         const myBucket = {
           _id: myBucketId,
@@ -500,7 +459,7 @@ describe("Bucket-Data acceptance", () => {
               type: "string",
               title: "title",
               description: "Title of the row",
-              options: {position: "left", visible: true}
+              options: {position: "left", translate: true, visible: true}
             },
             description: {
               type: "textarea",
@@ -518,31 +477,59 @@ describe("Bucket-Data acceptance", () => {
             description: "description"
           },
           {
-            title: JSON.stringify({en_US: "something new", tr_TR: " yeni birşeyler"}),
+            title: JSON.stringify({en_US: "something new", tr_TR: "yeni birşeyler"}),
             description: "description"
           },
           {
             title: JSON.stringify({en_US: "something only english"}),
             description: "description"
-          },
-          {
-            title: JSON.stringify({tr_TR: "yalnızca türkçe birşeyler"}),
-            description: "description"
           }
         ];
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[0]);
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[1]);
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[2]);
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[3]);
+        for (let i = 0; i < myTranslatableData.length; i++) {
+          await req.post("/bucket/56cb91bdc3464f14678934ca/data", myTranslatableData[i]);
+        }
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection("bucket_56cb91bdc3464f14678934ca")
+          .deleteMany({})
+          .catch();
       });
 
       it("it should show data which is translated to english", async () => {
-        const response = await req.get(
+        const data = (await req.get(
           "/bucket/56cb91bdc3464f14678934ca/data",
           {translate: "true"},
           {"accept-language": "en_US"}
+        )).body;
+
+        expect(data.length).toBe(3);
+        expect(data[0].title).toBe("something");
+        expect(data[1].title).toBe("something new");
+        expect(data[2].title).toBe("something only english");
+      });
+
+      it("it should show data which is translated to turkish", async () => {
+        const data = (await req.get(
+          "/bucket/56cb91bdc3464f14678934ca/data",
+          {translate: "true"},
+          {"accept-language": "tr_TR"}
+        )).body;
+
+        expect(data.length).toBe(3);
+        expect(data[0].title).toBe("birşeyler");
+        expect(data[1].title).toBe("yeni birşeyler");
+        expect(data[2].title).toBe(
+          "something only english",
+          "it should work if there is only english data and english is default"
         );
-        expect(response.body).toEqual({} as any);
       });
     });
   });
