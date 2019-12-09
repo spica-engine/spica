@@ -36,9 +36,7 @@ ts_library(
     testonly = True,
     srcs = [
         "bucket.service.spec.ts",
-        "bucket-data.service.spec.ts",
-        "bucket-data.acceptance.spec.ts"
-
+        "bucket-data.service.spec.ts"
     ],
     deps = [
         ":bucket",

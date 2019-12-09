@@ -67,7 +67,7 @@ describe("Storage Controller", () => {
   it("should return all storage objects", async () => {
     const getAllSpy = spyOn(storageService, "getAll").and.returnValue(Promise.resolve(mockData));
     return await expectAsync(
-      storageController.findAll(3, 0 , {}).then(result => {
+      storageController.findAll(3, 0, {}).then(result => {
         expect(getAllSpy).toHaveBeenCalledTimes(1);
         expect(getAllSpy).toHaveBeenCalledWith(3, 0, {});
 
