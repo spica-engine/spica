@@ -28,7 +28,6 @@ export class PassportService {
           "SubscriptionFullAccess",
           "BucketFullAccess",
           "DashboardFullAccess"
-          
         ]
       });
     }
