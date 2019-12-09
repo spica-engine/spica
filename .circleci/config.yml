@@ -1,47 +1,51 @@
-var_1: &job_defaults
-  working_directory: ~/spica
-  docker:
-    - image: circleci/node:11-browsers
-
-var_2: &test_defaults
-  <<: *job_defaults
-  docker:
-    - image: circleci/node:11-browsers
-    - image: circleci/mongo:4.2
-
-var_3: &setup_circleci_bazel_config
-  run:
-    name: Setting up CircleCI bazel configuration
-    command: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
-
-var_4: &cache_key infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
-
-var_5: &restore_cache
-  restore_cache:
-    keys:
-      - *cache_key
-      # fallback to using the latest cache if no exact match is found
-      - infra
-
-var_6: &attach_workspace
-  attach_workspace:
-    at: ~/
-
-var_7: &checkout_code
-  checkout:
-    # After checkout, rebase on top of master. By default, PRs are not rebased on top of master,
-    # which we want. See https://discuss.circleci.com/t/1662
-    post: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
+var_1: &cache_key infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
 
 version: 2.1
+commands:
+  setup_circleci_bazel_config:
+    description: Copy RC file that contains common options for CI
+    steps:
+      - run:
+          name: Setting up CircleCI bazel configuration
+          command: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
+  custom_attach_workspace:
+    description: Attach workspace at a predefined location
+    steps:
+      - attach_workspace:
+          at: ~/
+  custom_restore_cache:
+    description: Restore cache through a cache key
+    steps:
+      - restore_cache:
+          keys:
+            - *cache_key
+            # fallback to using the latest cache if no exact match is found
+            - infra
+  checkout_code:
+    description: Checkout repository and rebase on top of the target branch.
+    steps:
+      - checkout:
+          post: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
+
+executors:
+  default-executor:
+    working_directory: ~/spica
+    docker:
+      - image: circleci/node:11-browsers
+
+  api-executor:
+    working_directory: ~/spica
+    docker:
+      - image: circleci/node:11
+      - image: circleci/mongo:4.2
 orbs:
   gcp-gke: circleci/gcp-gke@0.2.0
 jobs:
   setup:
-    <<: *job_defaults
+    executor: default-executor
     steps:
-      - *checkout_code
-      - *restore_cache
+      - checkout_code
+      - custom_restore_cache
       - run:
           name: "Installing dependencies"
           command: yarn install --frozen-lockfile --non-interactive
@@ -51,40 +55,35 @@ jobs:
             - ./spica
             - ./bazel_repository_cache
   lint:
-    <<: *job_defaults
+    executor: default-executor
     steps:
-      - *attach_workspace
+      - custom_attach_workspace
       - run: "yarn bazel:format -mode=check"
       - run: "yarn code:format-check"
-  test:
-    <<: *test_defaults
+
+  test_api:
+    executor: api-executor
     steps:
-      - *attach_workspace
-      - *setup_circleci_bazel_config
+      - custom_attach_workspace
+      - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: (./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test) && yarn bazel shutdown
+          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
+
+  test_spica:
+    executor: default-executor
+    steps:
+      - custom_attach_workspace
       - run:
           name: "Running tests"
           command: cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - ./spica
-            - ./bazel_repository_cache
-      - save_cache:
-          key: *cache_key
-          paths:
-            - "node_modules"
-            - "docs/site/node_modules"
-            - "stacks/spica/node_modules"
-            - "~/bazel_repository_cache"
+
   deploy:
-    <<: *job_defaults
+    executor: default-executor
     steps:
       - setup_remote_docker
-      - *attach_workspace
-      - *setup_circleci_bazel_config
+      - custom_attach_workspace
+      - setup_circleci_bazel_config
       - gcp-gke/install
       - gcp-gke/init
       - run:
@@ -94,7 +93,7 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: "Deploying artifacts"
-          command: (cd stacks/spica && ng build --prod) && ./node_modules/.bin/bazel run deploy.replace -- --force
+          command: (cd stacks/spica && yarn ng build --prod) && ./node_modules/.bin/bazel run deploy.replace -- --force
 
 workflows:
   version: 2
@@ -104,13 +103,16 @@ workflows:
       - lint:
           requires:
             - setup
-      - test:
-          # We should not depend on lint because we want to run them on parallel
+      - test_api:
+          requires:
+            - setup
+      - test_spica:
           requires:
             - setup
       - deploy:
           requires:
-            - test
+            - test_api
+            - test_spica
           filters:
             branches:
               only: master
