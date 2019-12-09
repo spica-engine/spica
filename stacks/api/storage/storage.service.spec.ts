@@ -1,8 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {StorageModule} from "./storage.module";
-import {Storage, StorageObject, StorageResponse} from "./storage.service";
-import {Binary} from "crypto";
+import {Storage, StorageObject} from "./storage.service";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -10,10 +8,11 @@ describe("storage service", () => {
   let module: TestingModule;
   let storageService: Storage;
   let storageObject: StorageObject;
+  let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
   beforeEach(async () => {
     storageObject = {
-      _id: new ObjectId("56cb91bdc3464f14678934ca"),
+      _id: storageObjectId,
       name: "name",
       url: "url",
       content: {
@@ -97,10 +96,8 @@ describe("storage service", () => {
 
   it("should delete single storage object", async () => {
     await expectAsync(storageService.insertMany([storageObject])).toBeResolved();
-    await expectAsync(storageService.deleteOne(storageObject._id as ObjectId)).toBeResolved();
-    return await expectAsync(storageService.get(storageObject._id as ObjectId)).toBeResolvedTo(
-      null
-    );
+    await expectAsync(storageService.deleteOne(storageObjectId)).toBeResolved();
+    return await expectAsync(storageService.get(storageObjectId)).toBeResolvedTo(null);
   });
 
   describe("sorts", () => {

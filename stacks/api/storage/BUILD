@@ -1,11 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "storage",
-    srcs = glob(["*.ts"]),
+    srcs = glob(
+        include = ["**/*.ts"],
+        exclude = ["**/*.spec.ts"],
+    ),
     module_name = "@spica-server/storage",
     deps = [
         "//packages/core",
@@ -26,7 +30,6 @@ ts_library(
     srcs = [
         "storage.service.spec.ts",
         "storage.controller.spec.ts",
-        "storage.acceptance.spec.ts"
     ],
     deps = [
         ":storage",

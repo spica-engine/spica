@@ -34,16 +34,6 @@ export class Storage {
       }
     ];
 
-    let sortAggregation;
-    if (order) {
-      let parsedAggregation = JSON.parse(order);
-      sortAggregation = {
-        $sort: {}
-      };
-      sortAggregation.$sort = parsedAggregation;
-      aggregation.unshift(sortAggregation);
-    }
-
     return this._collection
       .aggregate(aggregation)
       .toArray()
@@ -52,6 +42,7 @@ export class Storage {
 
   async get(id: ObjectId): Promise<StorageObject> {
     const object = await this._collection.findOne({_id: new ObjectId(id)});
+    if(!object) return null;
     const path = this.buildPath(object);
     if (fs.existsSync(path)) {
       object.content.data = fs.readFileSync(path);

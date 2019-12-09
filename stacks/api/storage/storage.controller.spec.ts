@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {StorageController} from "./storage.controller";
-import {Storage, StorageResponse, StorageObject} from "./storage.service";
+import {Storage} from "./storage.service";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {Binary} from "crypto";
 

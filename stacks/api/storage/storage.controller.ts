@@ -80,12 +80,12 @@ export class StorageController {
       object[obj].content.size = object[obj].content.data.byteLength;
 
       insertData.push({
+        name: object[obj].name,
         content: {
           type: object[obj].content.type,
           data: object[obj].content.data,
           size: object[obj].content.size
-        },
-        name: object[obj].content.name
+        }
       });
     }
     return await this.storage.insertMany(insertData);
