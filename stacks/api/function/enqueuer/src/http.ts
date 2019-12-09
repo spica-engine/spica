@@ -48,7 +48,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       options.method != HttpMethod.Get &&
       options.method != HttpMethod.Head
     ) {
-      //
       const fn = (req, res, next) => Middlewares.Preflight(req, res, next);
 
       Object.defineProperty(fn, "name", {writable: false, value: name});
@@ -60,31 +59,42 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       throw new Error("Preflight have been used with with HttpMethod.Options");
     }
 
-    this.router[method](
-      path,
-      {
-        [name]: (req: express.Request, res: express.Response) => {
-          const event = new Event.Event();
-          event.target = target;
-          event.type = Event.Type.HTTP;
-          this.queue.enqueue(event);
-          const request = new Http.Request();
-          request.headers = Object.keys(req.headers).reduce((acc, key) => {
-            const header = new Http.Header();
-            header.key = key;
-            if (typeof req.headers[key] == "string") {
-              header.value = req.headers[key] as string;
-            } else {
-              throw new Error("Implement array headers");
-            }
-
-            acc.push(header);
-            return acc;
-          }, []);
-          this.http.enqueue(event.id, request, res);
+    const fn = (req: express.Request, res: express.Response) => {
+      const event = new Event.Event();
+      event.target = target;
+      event.type = Event.Type.HTTP;
+      this.queue.enqueue(event);
+      const request = new Http.Request();
+      request.method = req.method;
+      request.url = req.url;
+      request.path = req.path;
+      request.statusCode = req.statusCode;
+      request.statusMessage = req.statusMessage;
+      request.params = Object.keys(req.headers).reduce((acc, key) => {
+        const param = new Http.Param();
+        param.key = key;
+        param.value = req.params[key] as string;
+        acc.push(param);
+        return acc;
+      }, []);
+      request.headers = Object.keys(req.headers).reduce((acc, key) => {
+        const header = new Http.Header();
+        header.key = key;
+        if (typeof req.headers[key] == "string") {
+          header.value = req.headers[key] as string;
+        } else {
+          throw new Error("Implement array headers");
         }
-      }[name]
-    );
+
+        acc.push(header);
+        return acc;
+      }, []);
+      this.http.enqueue(event.id, request, res);
+    };
+
+    Object.defineProperty(fn, "name", {writable: false, value: name});
+
+    this.router[method](path, fn);
 
     this.reorderUnhandledHandle();
   }
@@ -93,10 +103,11 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     const name = `${target.cwd}_${target.handler}`;
     this.router.stack = this.router.stack.filter(layer => {
       if (layer.route) {
-        return layer.route.stack.some(layer => layer.name == name);
+        return !layer.route.stack.some(layer => layer.name == name);
       }
       return true;
     });
+    this.reorderUnhandledHandle();
   }
 }
 

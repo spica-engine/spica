@@ -32,6 +32,11 @@ describe("http trigger", () => {
     await app.listen(req.socket);
   });
 
+  afterEach(() => {
+    // Reset enqueue spy in case some of the it blocks might have their spy delegates registered onto.
+    httpQueue.enqueue = jasmine.createSpy();
+  });
+
   //   it("should handle errors", async () => {
   //     const options = {method: HttpMethod.Get, path: "/test", preflight: false};
   //     const invoker = jasmine
@@ -70,7 +75,7 @@ describe("http trigger", () => {
   //   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
-    const response = await req.options("/fn-execute/test");
+    const response = await req.options("/fn-execute/test12312");
     expect(response.statusCode).toBe(404);
   });
 
@@ -88,116 +93,145 @@ describe("http trigger", () => {
 
   it("should not handle preflight requests but route", async () => {
     const options = {method: HttpMethod.Post, path: "/test", preflight: false};
-    const invoker = jasmine
-      .createSpy(undefined, ({parameters: [req, res]}) => res.send({response: "back"}))
-      .and.callThrough();
     const spy = httpQueue.enqueue.and.callFake((id, req, res) => {
-      res.writeHead(200, undefined, { 'Content-type': 'application/json' });
-    })
+      res.writeHead(200, undefined, {"Content-type": "application/json"});
+      res.end(JSON.stringify({response: "back"}));
+    });
     httpEnqueuer.subscribe(noopTarget, options);
 
     const response = await req.options("/fn-execute/test");
     expect(response.statusCode).toBe(404);
-    expect(invoker).not.toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
     const postResponse = await req.post("/fn-execute/test");
     expect(postResponse.body).toEqual({response: "back"});
-    expect(invoker).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
     httpEnqueuer.unsubscribe(noopTarget);
   });
 
-  //   it("should not handle preflight requests for get and head method", async () => {
-  //     let options = {method: HttpMethod.Get, path: "/test1", preflight: true};
-  //     httpEnqueuer.register(jasmine.createSpy("invoker"), noopTarget, options);
-  //     let response = await req.options("/fn-execute/test1");
-  //     expect(response.statusCode).toBe(404);
-  //     httpEnqueuer.register(null, noopTarget, options);
+  it("should not handle preflight requests for get and head method", async () => {
+    let options = {method: HttpMethod.Get, path: "/test1", preflight: true};
+    httpEnqueuer.subscribe(noopTarget, options);
+    let response = await req.options("/fn-execute/test1");
+    expect(response.statusCode).toBe(404);
+    httpEnqueuer.unsubscribe(noopTarget);
 
-  //     options = {method: HttpMethod.Head, path: "/test2", preflight: true};
-  //     httpEnqueuer.register(jasmine.createSpy("invoker"), noopTarget, options);
-  //     response = await req.options("/fn-execute/test2");
-  //     expect(response.statusCode).toBe(404);
-  //     httpEnqueuer.register(null, noopTarget, options);
-  //   });
+    options = {method: HttpMethod.Head, path: "/test2", preflight: true};
+    httpEnqueuer.subscribe(noopTarget, options);
+    response = await req.options("/fn-execute/test2");
+    expect(response.statusCode).toBe(404);
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
 
-  //   it("should handle preflight and route conflicts gracefully", async () => {
-  //     const putSpy = jasmine
-  //       .createSpy(undefined, ({parameters: [req, res]}) => res.send({method: "Put"}))
-  //       .and.callThrough();
-  //     const putOptions = {
-  //       method: HttpMethod.Put,
-  //       path: "/sameroute",
-  //       preflight: true
-  //     };
-  //     httpEnqueuer.register(putSpy, noopTarget, putOptions);
+  it("should handle preflight and route conflicts gracefully", async () => {
+    const spy = httpQueue.enqueue.and.callFake((id, req, res) => {
+      res.writeHead(200, undefined, {"Content-type": "application/json"});
+      res.end(JSON.stringify({method: req.method}));
+    });
 
-  //     let response = await req.options("/fn-execute/sameroute");
-  //     expect(response.statusCode).toBe(200);
-  //     expect(putSpy).not.toHaveBeenCalled();
+    // PUT
+    const putTarget = new Event.Target();
+    putTarget.cwd = "/tmp/fn1";
+    putTarget.handler = "put";
 
-  //     response = await req.put("/fn-execute/sameroute");
-  //     expect(response.statusCode).toBe(200);
-  //     expect(response.body).toEqual({method: "Put"});
-  //     expect(putSpy).toHaveBeenCalled();
+    httpEnqueuer.subscribe(putTarget, {
+      method: HttpMethod.Put,
+      path: "/sameroute",
+      preflight: true
+    });
 
-  //     const postOptions = {
-  //       method: HttpMethod.Post,
-  //       path: "/sameroute",
-  //       preflight: true
-  //     };
-  //     const postSpy = jasmine
-  //       .createSpy(undefined, ({parameters: [req, res]}) => res.send({method: "Post"}))
-  //       .and.callThrough();
-  //     httpEnqueuer.register(postSpy, noopTarget, postOptions);
+    let response = await req.options("/fn-execute/sameroute");
+    expect(response.statusCode).toBe(200);
+    expect(spy).not.toHaveBeenCalled();
 
-  //     response = await req.options("/fn-execute/sameroute");
-  //     expect(response.statusCode).toBe(200);
-  //     expect(postSpy).not.toHaveBeenCalled();
+    response = await req.put("/fn-execute/sameroute");
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({method: "PUT"});
+    expect(spy).toHaveBeenCalledTimes(1);
 
-  //     response = await req.post("/fn-execute/sameroute");
-  //     expect(response.statusCode).toBe(200);
-  //     expect(response.body).toEqual({method: "Post"});
-  //     expect(postSpy).toHaveBeenCalled();
+    // Reset calls
+    spy.calls.reset();
 
-  //     // Test if we still have the preflight route
-  //     httpEnqueuer.register(null, noopTarget, postOptions);
-  //     response = await req.options("/fn-execute/sameroute");
-  //     expect(response.body).toBeUndefined();
-  //     expect(response.headers["access-control-allow-origin"]).toBe("*");
+    // POST
+    const postTarget = new Event.Target();
+    postTarget.cwd = "/tmp/fn1";
+    postTarget.handler = "post";
+    httpEnqueuer.subscribe(postTarget, {
+      method: HttpMethod.Post,
+      path: "/sameroute",
+      preflight: true
+    });
 
-  //     httpEnqueuer.register(null, noopTarget, putOptions);
-  //     response = await req.options("/fn-execute/sameroute");
-  //     expect(response.statusCode).toBe(404);
-  //   });
+    response = await req.options("/fn-execute/sameroute");
+    expect(response.statusCode).toBe(200);
+    expect(spy).not.toHaveBeenCalled();
 
-  //   it("should handle preflight conflicts with get, head and post method on same path", async () => {
-  //     const headOptions = {method: HttpMethod.Head, path: "conflictedpath", preflight: true};
-  //     httpEnqueuer.register(jasmine.createSpy(), noopTarget, headOptions);
+    response = await req.post("/fn-execute/sameroute");
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({method: "POST"});
+    expect(spy).toHaveBeenCalledTimes(1);
 
-  //     const getOptions = {method: HttpMethod.Get, path: "/conflictedpath", preflight: true};
-  //     httpEnqueuer.register(jasmine.createSpy(), noopTarget, getOptions);
+    // Reset calls
+    spy.calls.reset();
 
-  //     httpEnqueuer.register(jasmine.createSpy(), noopTarget, {
-  //       method: HttpMethod.Post,
-  //       path: "/conflictedpath/",
-  //       preflight: true
-  //     });
+    // Remove post target and test if we still have the preflight route
+    httpEnqueuer.unsubscribe(postTarget);
 
-  //     let response = await req.options("/fn-execute/conflictedpath");
-  //     expect(response.statusCode).toBe(200);
-  //     expect(response.headers["access-control-allow-origin"]).toBe("*");
+    response = await req.options("/fn-execute/sameroute");
+    expect(response.body).toBeUndefined();
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    response = await req.options("/fn-execute/sameroute");
+    expect(response.statusCode).toBe(200);
+  });
 
-  //     httpEnqueuer.register(null, noopTarget, headOptions);
+  it("should handle preflight conflicts with get, head and post method on same path", async () => {
+    // HEAD
+    const headTarget = new Event.Target();
+    headTarget.cwd = "/tmp/fn2";
+    headTarget.handler = "fn1";
+    httpEnqueuer.subscribe(headTarget, {
+      method: HttpMethod.Head,
+      path: "conflictedpath",
+      preflight: true
+    });
 
-  //     response = await req.options("/fn-execute/conflictedpath");
-  //     expect(response.statusCode).toBe(200);
-  //     expect(response.headers["access-control-allow-origin"]).toBe("*");
+    // GET
+    const getTarget = new Event.Target();
+    getTarget.cwd = "/tmp/fn2";
+    getTarget.handler = "default";
+    httpEnqueuer.subscribe(getTarget, {
+      method: HttpMethod.Get,
+      path: "/conflictedpath",
+      preflight: true
+    });
 
-  //     httpEnqueuer.register(null, noopTarget, getOptions);
+    // POST
+    const postTarget = new Event.Target();
+    postTarget.cwd = "/tmp/fn2";
+    postTarget.handler = "default";
+    httpEnqueuer.subscribe(postTarget, {
+      method: HttpMethod.Post,
+      path: "/conflictedpath/",
+      preflight: true
+    });
 
-  //     response = await req.options("/fn-execute/conflictedpath");
-  //     expect(response.statusCode).toBe(200);
-  //     expect(response.headers["access-control-allow-origin"]).toBe("*");
-  //   });
+    let response = await req.options("/fn-execute/conflictedpath");
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
+
+    // Remove Head method and see if we still have the preflight.
+    httpEnqueuer.unsubscribe(headTarget);
+
+    response = await req.options("/fn-execute/conflictedpath");
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
+
+    // Remove Get method and see if we still have the preflight.
+    httpEnqueuer.unsubscribe(headTarget);
+
+    response = await req.options("/fn-execute/conflictedpath");
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
+  });
 
   afterAll(() => {
     app.close();
