@@ -555,7 +555,9 @@ describe("Bucket Add Component", () => {
 
       it("should show maxlength error", async () => {
         await fixture.whenStable();
-        input.control.setValue("qwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdffghjklty");
+        input.control.setValue(
+          "qwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdffghjklty"
+        );
         input.control.markAsTouched();
         fixture.detectChanges();
         expect(
