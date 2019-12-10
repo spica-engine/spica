@@ -2,46 +2,42 @@ import {Component, forwardRef, HostListener, Inject, OnInit, ViewChild} from "@a
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatPaginator} from "@angular/material/paginator";
 import {INPUT_SCHEMA} from "@spica-client/common";
-import {PreferencesService} from "@spica-client/core";
-import {merge, Observable, of, Subject} from "rxjs";
+import {merge, Observable, of} from "rxjs";
 import {map, switchMap, tap} from "rxjs/operators";
-import {BucketDataService} from "../../services/bucket-data.service";
-import {BucketService} from "../../services/bucket.service";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData, BucketRow} from "../../interfaces/bucket-entry";
+import {BucketDataService} from "../../services/bucket-data.service";
+import {BucketService} from "../../services/bucket.service";
 import {RelationSchema} from "../relation";
 
 @Component({
   selector: "bucket-relation",
   templateUrl: "./relation.component.html",
   styleUrls: ["./relation.component.scss"],
-  viewProviders: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => RelationComponent)}]
+  providers: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => RelationComponent)}
+  ]
 })
 export class RelationComponent implements ControlValueAccessor, OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
   value: string;
 
-  onTouchedFn: () => void;
-  onChangeFn: (value: string) => void;
+  onTouchedFn: Function = () => {};
+  onChangeFn: Function = () => {};
 
   $row: Observable<BucketRow>;
   $meta: Observable<Bucket>;
   $data: Observable<BucketData>;
 
-  public displayedProperties: Array<string> = [];
-
-  public refresh: Subject<void> = new Subject<void>();
-
-  bucketPrefs;
+  displayedProperties: Array<string> = [];
 
   constructor(
     @Inject(INPUT_SCHEMA) public schema: RelationSchema,
     private bds: BucketDataService,
-    private ss: PreferencesService,
     bs: BucketService
   ) {
-    this.$meta = bs.getBucket(schema.bucket).pipe(
+    this.$meta = bs.getBucket(schema.bucketId).pipe(
       tap(bSchema => {
         if (bSchema) {
           this.displayedProperties = Object.entries(bSchema.properties)
@@ -51,13 +47,12 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
         }
       })
     );
-    this.ss.get("bucket").subscribe(data => (this.bucketPrefs = data));
   }
 
   ngOnInit() {
-    this.$data = merge(this.paginator.page, of(null), this.refresh).pipe(
+    this.$data = merge(this.paginator.page, of(null)).pipe(
       switchMap(() =>
-        this.bds.find(this.schema.bucket, {
+        this.bds.find(this.schema.bucketId, {
           limit: this.paginator.pageSize || 12,
           skip: this.paginator.pageSize * this.paginator.pageIndex
         })
@@ -73,7 +68,7 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
   }
 
   _fetchRow(id: string): void {
-    this.$row = this.bds.findOne(this.schema.bucket, id, false);
+    this.$row = this.bds.findOne(this.schema.bucketId, id, false);
   }
 
   _selectRow(row: BucketRow): void {
@@ -86,16 +81,13 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
 
   @HostListener("click")
   onTouched(): void {
-    if (this.onTouchedFn) {
-      this.onTouchedFn();
-    }
+    this.onTouchedFn();
   }
 
   writeValue(val: string): void {
     this.value = val;
-    if (val) {
-      this._fetchRow(this.value);
-    }
+
+    this._fetchRow(this.value);
   }
 
   registerOnChange(fn: any): void {
@@ -104,10 +96,5 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
 
   registerOnTouched(fn: any): void {
     this.onTouchedFn = fn;
-  }
-
-  // TODO: Filter the fields once there will be a feature like so
-  _normalizeColumns(input: any): string {
-    return input.name;
   }
 }

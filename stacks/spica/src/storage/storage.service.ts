@@ -66,6 +66,7 @@ export class StorageService {
             }
           }))
         );
+
         const request = new HttpRequest("POST", "api:/storage", data.buffer, {
           reportProgress: true,
           headers: new HttpHeaders({"Content-Type": "application/bson"})

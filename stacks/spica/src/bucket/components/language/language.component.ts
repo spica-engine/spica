@@ -21,8 +21,8 @@ export class PropertyLanguageComponent {
   constructor(bs: BucketService) {
     this.languages$ = bs.getPreferences().pipe(
       map(prefs => {
-        this.default = this.selected = prefs.language.default.code;
-        return prefs.language.supported_languages;
+        this.default = this.selected = prefs.language.default;
+        return Object.entries(prefs.language.available).map(([code, name]) => ({code, name}));
       })
     );
   }

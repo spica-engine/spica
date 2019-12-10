@@ -1,4 +1,4 @@
-<ng-container *ngIf="contentType" [ngSwitch]="contentType.split('/')[0]">
+<ng-container *ngIf="contentType && !error" [ngSwitch]="contentType.split('/')[0]">
   <img
     *ngSwitchCase="'image'"
     [src]="content"
@@ -18,7 +18,7 @@
   </video>
   <div *ngSwitchDefault>
     <mat-icon>warning</mat-icon>
-    <h4 class="mat-h3">This object cannot be viewed.</h4>
+    <h3 class="mat-h3">This object cannot be viewed.</h3>
     <small class="mat-small">
       Instead you might want to open it directly.
       <a
@@ -33,3 +33,9 @@
     </small>
   </div>
 </ng-container>
+
+<div *ngIf="error">
+  <mat-icon>error</mat-icon>
+  <h3 class="mat-h3">Could not load the object.</h3>
+  <small class="mat-small">{{ error }}</small>
+</div>

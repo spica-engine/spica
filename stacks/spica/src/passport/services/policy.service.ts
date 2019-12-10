@@ -43,9 +43,7 @@ export class PolicyService {
   updatePolicy(policy: Policy): Observable<Policy> {
     const policyRequest = {
       ...policy,
-      ...{
-        _id: undefined
-      }
+      _id: undefined
     };
     return this.http.post<Policy>(`api:/passport/policy/${policy._id}`, policyRequest);
   }

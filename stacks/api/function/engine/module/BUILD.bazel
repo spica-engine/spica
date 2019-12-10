@@ -22,3 +22,16 @@ ts_library(
         "@npm//@types/mongodb",
     ],
 )
+
+ts_library(
+    name = "dashboard",
+    srcs = [
+        "dashboard.ts",
+        "dashboard-interface.ts",
+    ],
+    data = ["dashboard.d.ts"],
+    deps = [
+        ":module",
+        "@npm//@nestjs/common",
+    ],
+)

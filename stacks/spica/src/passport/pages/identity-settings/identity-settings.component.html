@@ -151,7 +151,7 @@
           required
         />
 
-        <mat-error *ngIf="pnm.value && pnm?.errors?.required">
+        <mat-error *ngIf="pnm?.errors?.required">
           Property name is required.
         </mat-error>
         <mat-error *ngIf="preferences.identity.attributes.properties[pnm?.value?.toLowerCase()]">

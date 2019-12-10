@@ -27,18 +27,14 @@ export class BucketDataController {
   private async getLanguage(language: string) {
     const bucketSettings = await this.bs.getPreferences();
 
-    const supportedLocales = new locale.Locales(
-      bucketSettings.language.supported_languages.map(lang => lang.code)
-    );
+    const supportedLocales = new locale.Locales(Object.keys(bucketSettings.language.available));
     const locales = new locale.Locales(language);
     const bestLocale = locales.best(supportedLocales);
 
     const best =
-      bestLocale && !bestLocale.defaulted
-        ? bestLocale.normalized
-        : bucketSettings.language.default.code;
+      bestLocale && !bestLocale.defaulted ? bestLocale.normalized : bucketSettings.language.default;
 
-    const fallback = bucketSettings.language.default.code;
+    const fallback = bucketSettings.language.default;
 
     return {best, fallback};
   }
@@ -160,7 +156,7 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucket"], locale)
+            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
           );
         }
       }
@@ -256,7 +252,7 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucket"], locale)
+            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
           );
         }
       }

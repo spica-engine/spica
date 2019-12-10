@@ -27,7 +27,6 @@ export class DatabaseTestingModule implements OnModuleDestroy {
           provide: MongoClient,
           useFactory: async (server: MongoMemoryServer) =>
             MongoClient.connect(await server.getConnectionString(), {
-              useNewUrlParser: true,
               // @ts-ignore
               useUnifiedTopology: true
             }),

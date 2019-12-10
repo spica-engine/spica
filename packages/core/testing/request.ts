@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import * as request from "request-promise";
+import * as request from "request-promise-native";
 
 @Injectable()
 export class Request {
@@ -11,24 +11,29 @@ export class Request {
     return this.request<T>({method: "OPTIONS", path});
   }
 
-  get<T>(path: string, query: any) {
-    return this.request<T>({method: "GET", path, qs: query});
+  get<T>(path: string, query: any, headers?: object) {
+    return this.request<T>({method: "GET", path, qs: query, headers});
   }
 
-  post<T>(path: string, body?: object) {
-    return this.request<T>({method: "POST", path, body});
+  delete<T>(path: string) {
+    return this.request<T>({method: "DELETE", path});
   }
 
-  put<T>(path: string, body?: object) {
-    return this.request<T>({method: "PUT", path, body});
+  post<T>(path: string, body?: object, headers?: object) {
+    return this.request<T>({method: "POST", path, body, headers});
+  }
+
+  put<T>(path: string, body?: object, headers?: object) {
+    return this.request<T>({method: "PUT", path, body, headers});
   }
 
   request<T>(options: RequestOptions): Promise<Response<T>> {
-    return request({
-      json: true,
+    const req: any = {
+      headers: options.headers,
       method: options.method,
       body: options.body,
       uri: `http://unix:${this.socket}:${options.path}`,
+      qs: options.qs,
       transform: (body, response) => {
         return {
           headers: response.headers,
@@ -37,9 +42,17 @@ export class Request {
           statusText: response.statusMessage
         };
       }
-    }).catch(e => {
+    };
+
+    if (options.body instanceof Buffer) {
+      req.encoding = null;
+    } else {
+      req.json = true;
+    }
+
+    return request(req).catch(e => {
       const {response} = e;
-      if (typeof response.body == "string") {
+      if (response && typeof response.body == "string") {
         try {
           response.body = JSON.parse(response.body);
         } catch (e) {
@@ -57,6 +70,7 @@ export interface RequestOptions {
   path: string;
   body?: any;
   qs?: object;
+  headers?: object;
 }
 
 export interface Response<T = any> {

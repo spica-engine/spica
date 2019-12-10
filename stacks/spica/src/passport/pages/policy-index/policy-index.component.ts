@@ -1,10 +1,10 @@
-import {Component, OnInit, ViewChild} from "@angular/core";
+import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {Router} from "@angular/router";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
-import {PolicyService} from "../../services/policy.service";
 import {Policy} from "../../interfaces/policy";
+import {PolicyService} from "../../services/policy.service";
 
 @Component({
   selector: "passport-policy-index",
@@ -12,21 +12,22 @@ import {Policy} from "../../interfaces/policy";
   styleUrls: ["./policy-index.component.scss"]
 })
 export class PolicyIndexComponent implements OnInit {
-  @ViewChild("toolbar", {static: true}) toolbar;
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
 
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
   policies$: Observable<Policy[]>;
-  refresh: Subject<void> = new Subject<void>();
+  refresh$: Subject<void> = new Subject<void>();
+
   displayedColumns = ["id", "name", "description", "actions"];
 
   constructor(private policyService: PolicyService, private router: Router) {}
 
   ngOnInit(): void {
-    this.policies$ = merge(this.paginator.page, of(null), this.refresh).pipe(
+    this.policies$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
         this.policyService.find(
-          this.paginator.pageSize || 50,
+          this.paginator.pageSize || 10,
           this.paginator.pageSize * this.paginator.pageIndex
         )
       ),
@@ -48,7 +49,7 @@ export class PolicyIndexComponent implements OnInit {
 
   delete(id): void {
     this.policyService.deletePolicy(id).subscribe(() => {
-      this.refresh.next();
+      this.refresh$.next();
     });
   }
 }
