@@ -11,8 +11,8 @@ export class Request {
     return this.request<T>({method: "OPTIONS", path});
   }
 
-  get<T>(path: string, query: any) {
-    return this.request<T>({method: "GET", path, qs: query});
+  get<T>(path: string, query: any, headers?: object) {
+    return this.request<T>({method: "GET", path, qs: query, headers});
   }
 
   delete<T>(path: string) {
