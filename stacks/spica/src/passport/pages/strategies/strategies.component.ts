@@ -1,9 +1,8 @@
-import {Component, OnInit, ViewChild} from "@angular/core";
-import {MatPaginator} from "@angular/material";
+import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {merge, Observable, of, Subject} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {Strategy} from "../../interfaces/strategy";
-import {StrategyService} from "../../strategy.service";
+import {StrategyService} from "../../services/strategy.service";
 
 @Component({
   selector: "passport-strategies",
@@ -11,20 +10,18 @@ import {StrategyService} from "../../strategy.service";
   styleUrls: ["./strategies.component.scss"]
 })
 export class StrategiesComponent implements OnInit {
-  @ViewChild("toolbar", {static: true}) toolbar;
-
-  @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
-
-  refresh: Subject<void> = new Subject<void>();
-  displayedColumns = ["name", "title", "actions"];
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
 
   strategies$: Observable<Strategy[]>;
+  refresh$: Subject<void> = new Subject<void>();
+
+  displayedColumns = ["name", "title", "actions"];
 
   constructor(private strategiesService: StrategyService) {}
 
   ngOnInit() {
-    this.strategies$ = merge(this.paginator.page, of(null), this.refresh).pipe(
-      switchMap(() => this.strategiesService.getStrategies().toPromise())
+    this.strategies$ = merge(of(null), this.refresh$).pipe(
+      switchMap(() => this.strategiesService.getStrategies())
     );
   }
 
@@ -32,6 +29,6 @@ export class StrategiesComponent implements OnInit {
     this.strategiesService
       .deleteStrategy(id)
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh$.next());
   }
 }

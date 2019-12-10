@@ -58,7 +58,7 @@ export function reducer(state: RouteState = initialState, action: RouteAction): 
     case RouteActionTypes.REMOVE:
       return adapter.removeOne(action.id, state);
     case RouteActionTypes.REMOVECATEGORY:
-      return adapter.removeMany(entity => entity.category === RouteCategory.Content, state);
+      return adapter.removeMany(entity => entity.category == action.category, state);
     case RouteActionTypes.UPDATE:
       return adapter.updateOne({id: action.id, changes: action.changes}, state);
     case RouteActionTypes.UPSERT:

@@ -126,7 +126,7 @@
             Please select a primary property.
           </mat-error>
           <mat-error *ngIf="!isThereVisible">
-            You have to make a least a property visible at the list.
+            You have to make at least a property visible at the list.
           </mat-error>
         </span>
       </span>
@@ -156,7 +156,7 @@
                         role="menuitemcheckbox"
                         disableRipple
                         matTooltip="To change primary property select another property as primary"
-                        [matTooltipDisabled]="bucket.primary != key"
+                        [matTooltipDisabled]="bucket.primary != propertyKv.key"
                         (click)="$event.stopImmediatePropagation()"
                       >
                         <mat-checkbox
@@ -191,13 +191,12 @@
                         matTooltip="You can't change this property after creation."
                       >
                         <mat-checkbox
-                          [disabled]="immutableProperties.includes(key)"
+                          [disabled]="immutableProperties.includes(propertyKv.key)"
                           [(ngModel)]="propertyKv.value.options.translate"
                         >
                           Translate
                         </mat-checkbox>
                       </div>
-
                       <div
                         mat-menu-item
                         role="menuitemcheckbox"
@@ -231,15 +230,10 @@
                     </ng-template>
                   </mat-menu>
                 </button>
-
                 <button
                   mat-icon-button
                   color="warn"
-                  (click)="
-                    $event.stopImmediatePropagation();
-                    deleteProperty(propertyKv.key);
-                    bucket.primary == propertyKv.key ? (bucket.primary = undefined) : null
-                  "
+                  (click)="$event.stopImmediatePropagation(); deleteProperty(propertyKv.key)"
                 >
                   <mat-icon>delete</mat-icon>
                 </button>
@@ -295,22 +289,19 @@
             minlength="3"
             maxlength="25"
           />
-
-          <mat-error *ngIf="pnm.value && pnm?.errors?.required">
+          <mat-error *ngIf="pnm?.errors?.required">
             Property name is required.
           </mat-error>
           <mat-error *ngIf="pnm?.errors?.minlength">
             Length of the property name must be greater than
-            {{ propertyName?.errors?.minlength?.requiredLength }} character.
+            {{ pnm?.errors?.minlength?.requiredLength }} character.
           </mat-error>
           <mat-error *ngIf="pnm?.errors?.maxlength">
             Length of the property name must be less than
-            {{ propertyName?.errors?.maxlength?.requiredLength }} character.
-          </mat-error>
-          <mat-error *ngIf="bucket.properties[pnm?.value?.toLowerCase()]">
-            {{ pnm?.value | lowercase }} already exists.
+            {{ pnm?.errors?.maxlength?.requiredLength }} character.
           </mat-error>
         </mat-form-field>
+
         <button
           mat-button
           [disabled]="pnm.invalid || bucket.properties[pnm?.value?.toLowerCase()]"

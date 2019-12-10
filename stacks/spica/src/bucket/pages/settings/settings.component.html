@@ -7,18 +7,18 @@
 
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
+    {{ settings | json }}
     <mat-list>
       <h3 mat-subheader>Available languages</h3>
-      <mat-list-item *ngFor="let language of bucketSettings?.language.supported_languages">
+      <mat-list-item *ngFor="let languageKv of settings?.language.available | keyvalue">
         <mat-icon
           mat-list-icon
-          [color]="bucketSettings?.language.default.code == language.code ? 'warn' : 'primary'"
+          [color]="settings?.language.default == languageKv.key ? 'warn' : 'primary'"
           matTooltip="This is default language"
-          [matTooltipDisabled]="bucketSettings?.language.default.code != language.code"
-          >language</mat-icon
-        >
-        <h4 mat-line>{{ language.name }} ({{ language.code }})</h4>
-        <p mat-line></p>
+          [matTooltipDisabled]="settings?.language.default != languageKv.key"
+          >language
+        </mat-icon>
+        <h4 mat-line>{{ languageKv.value }} ({{ languageKv.key }})</h4>
       </mat-list-item>
     </mat-list>
 
@@ -27,17 +27,17 @@
       <mat-form-field>
         <mat-label>Choose Language</mat-label>
         <mat-select ngModel #selectedLanguage="ngModel" name="lang">
-          <mat-option *ngFor="let lang of langs" [value]="lang">
-            {{ lang.long }} ( {{ lang.short }})
+          <mat-option *ngFor="let language of languages" [value]="language.code">
+            {{ language.name }} ({{ language.code }})
           </mat-option>
         </mat-select>
       </mat-form-field>
     </form>
-    <!-- TODO: Disable button if language already exists -->
+
     <button
       mat-button
-      [disabled]="addForm.invalid"
-      (click)="addLanguage(selectedLanguage.viewModel.short, selectedLanguage.viewModel.long)"
+      [disabled]="addForm.invalid || settings.language.available[selectedLanguage.value]"
+      (click)="addLanguage(selectedLanguage.value)"
     >
       <mat-icon>add</mat-icon> Add new language
     </button>

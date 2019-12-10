@@ -138,7 +138,7 @@
         <button
           mat-icon-button
           (mousedown)="$event.preventDefault()"
-          [storagePicker]="{closeOnChange: true}"
+          storagePicker
           ngModel
           (ngModelChange)="addImage($event)"
         >

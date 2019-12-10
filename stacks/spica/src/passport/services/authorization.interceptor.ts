@@ -14,7 +14,7 @@ import {PassportService} from "./passport.service";
   providedIn: "root"
 })
 export class AuthorizationInterceptor implements HttpInterceptor {
-  constructor(public passport: PassportService) {}
+  constructor(private passport: PassportService) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (this.passport.token) {
       request = request.clone({setHeaders: {Authorization: `${this.passport.token}`}});

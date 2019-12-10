@@ -1,0 +1,30 @@
+<div *ngIf="widgets$ | async; let dashboard">
+  <mat-toolbar>
+    <h1>
+      <mat-icon> {{ dashboard?.icon }} </mat-icon>
+      <span> {{ dashboard.name }}</span>
+    </h1>
+  </mat-toolbar>
+  <div>
+    <div class="widgets">
+      <mat-card *ngFor="let widget of dashboard?.components">
+        <app-dashboard-chart
+          *ngIf="
+            widget.type == 'line' ||
+            widget.type == 'pie' ||
+            widget.type == 'doughnut' ||
+            widget.type == 'polarArea' ||
+            widget.type == 'scatter' ||
+            widget.type == 'bubble' ||
+            widget.type == 'radar' ||
+            widget.type == 'bar'
+          "
+          [data]="widget"
+        ></app-dashboard-chart>
+        <app-dashboard-table *ngIf="widget.type == 'table'" [data]="widget"></app-dashboard-table>
+
+        <span *ngIf="!widget.type || !widget">This widget is unavailable.</span>
+      </mat-card>
+    </div>
+  </div>
+</div>

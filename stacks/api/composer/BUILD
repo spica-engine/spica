@@ -41,7 +41,7 @@ ts_library(
         "@npm//multimatch",
         "@npm//pacote",
         "@npm//parse5",
-        "@npm//request-promise",
+        "@npm//request-promise-native",
         "@npm//rxjs",
         "@npm//typescript",
     ],

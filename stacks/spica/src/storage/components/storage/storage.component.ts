@@ -1,11 +1,11 @@
 import {HttpEventType} from "@angular/common/http";
 import {Component, forwardRef, HostListener, Inject} from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {InputSchema, INPUT_SCHEMA} from "@spica-client/common";
+import {INPUT_SCHEMA, InternalPropertySchema} from "@spica-client/common";
+import {Observable} from "rxjs";
+import {map, share} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
-import {map} from "rxjs/operators";
-import {Observable} from "rxjs";
 
 @Component({
   selector: "storage",
@@ -36,7 +36,7 @@ export class StorageComponent implements ControlValueAccessor {
   onTouchedFn: () => void = () => {};
 
   constructor(
-    @Inject(INPUT_SCHEMA) public readonly schema: InputSchema,
+    @Inject(INPUT_SCHEMA) public readonly schema: InternalPropertySchema,
     private storage: StorageService
   ) {}
 
@@ -59,7 +59,8 @@ export class StorageComponent implements ControlValueAccessor {
             this.onChangeFn(this.value);
             this.progress$ = undefined;
           }
-        })
+        }),
+        share()
       );
     }
   }

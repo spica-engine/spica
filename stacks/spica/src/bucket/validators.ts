@@ -1,6 +1,7 @@
-import {Directive, forwardRef, Input} from "@angular/core";
+import {Directive, forwardRef, Input, Provider} from "@angular/core";
 import {AbstractControl, NG_VALIDATORS, ValidationErrors, Validator} from "@angular/forms";
-export const TRANSLATE: any = {
+
+export const TRANSLATE: Provider = {
   provide: NG_VALIDATORS,
   useExisting: forwardRef(() => RequiredTranslate),
   multi: true
@@ -13,7 +14,6 @@ export const TRANSLATE: any = {
   host: {"[attr.requiredTranslate]": "requiredTranslate ? requiredTranslate : null"}
 })
 export class RequiredTranslate implements Validator {
-  constructor() {}
   @Input() requiredTranslate: Object;
   @Input() currentLanguage: string;
   @Input() defaultLanguage: string;
