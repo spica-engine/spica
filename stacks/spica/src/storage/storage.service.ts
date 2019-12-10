@@ -59,8 +59,8 @@ export class StorageService {
       flatMap(content => {
         const data = BSON.serialize(
           content.map((c, i) => ({
+            name: files[i].name,
             content: {
-              name: files[i].name,
               data: new BSON.Binary(c),
               type: files[i].type
             }
