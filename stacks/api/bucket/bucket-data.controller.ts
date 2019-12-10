@@ -27,17 +27,12 @@ export class BucketDataController {
   private async getLanguage(language: string) {
     const bucketSettings = await this.bs.getPreferences();
 
-
-    const supportedLocales = new locale.Locales(
-      Object.keys(bucketSettings.language.available)
-    );
+    const supportedLocales = new locale.Locales(Object.keys(bucketSettings.language.available));
     const locales = new locale.Locales(language);
     const bestLocale = locales.best(supportedLocales);
 
     const best =
-      bestLocale && !bestLocale.defaulted
-        ? bestLocale.normalized
-        : bucketSettings.language.default;
+      bestLocale && !bestLocale.defaulted ? bestLocale.normalized : bucketSettings.language.default;
 
     const fallback = bucketSettings.language.default;
 

@@ -127,22 +127,14 @@ describe("Bucket-Data acceptance", () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {});
         expect(response.body.length).toEqual(5);
 
-        expect(
-          response.body.map(element => {
-            return element.title;
-          })
-        ).toEqual([
+        expect(response.body.map(element => element.title)).toEqual([
           "here is the title",
           "here is the another title",
           "more title",
           "one more title",
           "here is the last title"
         ]);
-        expect(
-          response.body.map(element => {
-            return element.description;
-          })
-        ).toEqual([
+        expect(response.body.map(element => element.description)).toEqual([
           "here is the description",
           "here is the another description",
           "more description",
@@ -154,16 +146,12 @@ describe("Bucket-Data acceptance", () => {
       it("should work with limit query", async () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {limit: "3"});
         expect(response.body.length).toEqual(3);
-        expect(
-          response.body.map(element => {
-            return element.title;
-          })
-        ).toEqual(["here is the title", "here is the another title", "more title"]);
-        expect(
-          response.body.map(element => {
-            return element.description;
-          })
-        ).toEqual([
+        expect(response.body.map(element => element.title)).toEqual([
+          "here is the title",
+          "here is the another title",
+          "more title"
+        ]);
+        expect(response.body.map(element => element.description)).toEqual([
           "here is the description",
           "here is the another description",
           "more description"
@@ -173,16 +161,16 @@ describe("Bucket-Data acceptance", () => {
       it("should work with skip query", async () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {skip: "2"});
         expect(response.body.length).toEqual(3);
-        expect(
-          response.body.map(element => {
-            return element.title;
-          })
-        ).toEqual(["more title", "one more title", "here is the last title"]);
-        expect(
-          response.body.map(element => {
-            return element.description;
-          })
-        ).toEqual(["more description", "one more description", "here is the last description"]);
+        expect(response.body.map(element => element.title)).toEqual([
+          "more title",
+          "one more title",
+          "here is the last title"
+        ]);
+        expect(response.body.map(element => element.description)).toEqual([
+          "more description",
+          "one more description",
+          "here is the last description"
+        ]);
       });
 
       it("should work with skip and limit query", async () => {
@@ -191,16 +179,14 @@ describe("Bucket-Data acceptance", () => {
           skip: "1"
         });
         expect(response.body.length).toEqual(2);
-        expect(
-          response.body.map(element => {
-            return element.title;
-          })
-        ).toEqual(["here is the another title", "more title"]);
-        expect(
-          response.body.map(element => {
-            return element.description;
-          })
-        ).toEqual(["here is the another description", "more description"]);
+        expect(response.body.map(element => element.title)).toEqual([
+          "here is the another title",
+          "more title"
+        ]);
+        expect(response.body.map(element => element.description)).toEqual([
+          "here is the another description",
+          "more description"
+        ]);
       });
     });
 
@@ -265,17 +251,13 @@ describe("Bucket-Data acceptance", () => {
         const objects = response.body;
         expect(objects.length).toBe(3);
 
-        expect(
-          objects.map(element => {
-            return element.title;
-          })
-        ).toEqual(["title starts with a", "title starts with b", "title starts with c"]);
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with a",
+          "title starts with b",
+          "title starts with c"
+        ]);
 
-        expect(
-          objects.map(element => {
-            return element.description;
-          })
-        ).toEqual([
+        expect(objects.map(element => element.description)).toEqual([
           "description starts with z",
           "description starts with y",
           "description starts with x"
@@ -289,17 +271,13 @@ describe("Bucket-Data acceptance", () => {
         const objects = response.body;
         expect(objects.length).toBe(3);
 
-        expect(
-          objects.map(element => {
-            return element.title;
-          })
-        ).toEqual(["title starts with c", "title starts with b", "title starts with a"]);
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with c",
+          "title starts with b",
+          "title starts with a"
+        ]);
 
-        expect(
-          objects.map(element => {
-            return element.description;
-          })
-        ).toEqual([
+        expect(objects.map(element => element.description)).toEqual([
           "description starts with x",
           "description starts with y",
           "description starts with z"
@@ -314,17 +292,13 @@ describe("Bucket-Data acceptance", () => {
         const objects = response.body;
         expect(objects.length).toBe(3);
 
-        expect(
-          objects.map(element => {
-            return element.title;
-          })
-        ).toEqual(["title starts with c", "title starts with b", "title starts with a"]);
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with c",
+          "title starts with b",
+          "title starts with a"
+        ]);
 
-        expect(
-          objects.map(element => {
-            return element.description;
-          })
-        ).toEqual([
+        expect(objects.map(element => element.description)).toEqual([
           "description starts with x",
           "description starts with y",
           "description starts with z"
@@ -339,17 +313,13 @@ describe("Bucket-Data acceptance", () => {
         const objects = response.body;
         expect(objects.length).toBe(3);
 
-        expect(
-          objects.map(element => {
-            return element.title;
-          })
-        ).toEqual(["title starts with a", "title starts with b", "title starts with c"]);
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with a",
+          "title starts with b",
+          "title starts with c"
+        ]);
 
-        expect(
-          objects.map(element => {
-            return element.description;
-          })
-        ).toEqual([
+        expect(objects.map(element => element.description)).toEqual([
           "description starts with z",
           "description starts with y",
           "description starts with x"
@@ -419,22 +389,14 @@ describe("Bucket-Data acceptance", () => {
         expect(response.body.meta.total).toBe(5);
         expect(response.body.data.length).toBe(5);
 
-        expect(
-          response.body.data.map(element => {
-            return element.title;
-          })
-        ).toEqual([
+        expect(response.body.data.map(element => element.title)).toEqual([
           "here is the title",
           "here is the another title",
           "more title",
           "one more title",
           "here is the last title"
         ]);
-        expect(
-          response.body.data.map(element => {
-            return element.description;
-          })
-        ).toEqual([
+        expect(response.body.data.map(element => element.description)).toEqual([
           "here is the description",
           "here is the another description",
           "more description",
@@ -451,16 +413,14 @@ describe("Bucket-Data acceptance", () => {
         expect(response.body.meta.total).toBe(5);
         expect(response.body.data.length).toBe(2);
 
-        expect(
-          response.body.data.map(element => {
-            return element.title;
-          })
-        ).toEqual(["here is the title", "here is the another title"]);
-        expect(
-          response.body.data.map(element => {
-            return element.description;
-          })
-        ).toEqual(["here is the description", "here is the another description"]);
+        expect(response.body.data.map(element => element.title)).toEqual([
+          "here is the title",
+          "here is the another title"
+        ]);
+        expect(response.body.data.map(element => element.description)).toEqual([
+          "here is the description",
+          "here is the another description"
+        ]);
       });
 
       it("paginate with skip", async () => {
@@ -471,16 +431,14 @@ describe("Bucket-Data acceptance", () => {
         expect(response.body.meta.total).toBe(5);
         expect(response.body.data.length).toBe(2);
 
-        expect(
-          response.body.data.map(element => {
-            return element.title;
-          })
-        ).toEqual(["one more title", "here is the last title"]);
-        expect(
-          response.body.data.map(element => {
-            return element.description;
-          })
-        ).toEqual(["one more description", "here is the last description"]);
+        expect(response.body.data.map(element => element.title)).toEqual([
+          "one more title",
+          "here is the last title"
+        ]);
+        expect(response.body.data.map(element => element.description)).toEqual([
+          "one more description",
+          "here is the last description"
+        ]);
       });
 
       it("paginate with limit and skip", async () => {
@@ -492,16 +450,16 @@ describe("Bucket-Data acceptance", () => {
         expect(response.body.meta.total).toBe(5);
         expect(response.body.data.length).toBe(3);
 
-        expect(
-          response.body.data.map(element => {
-            return element.title;
-          })
-        ).toEqual(["more title", "one more title", "here is the last title"]);
-        expect(
-          response.body.data.map(element => {
-            return element.description;
-          })
-        ).toEqual(["more description", "one more description", "here is the last description"]);
+        expect(response.body.data.map(element => element.title)).toEqual([
+          "more title",
+          "one more title",
+          "here is the last title"
+        ]);
+        expect(response.body.data.map(element => element.description)).toEqual([
+          "more description",
+          "one more description",
+          "here is the last description"
+        ]);
       });
     });
 
@@ -563,11 +521,7 @@ describe("Bucket-Data acceptance", () => {
         });
 
         expect(response.body.length).toBe(2);
-        expect(
-          response.body.map(element => {
-            return element.name;
-          })
-        ).toEqual(["James", "John"]);
+        expect(response.body.map(element => element.name)).toEqual(["James", "John"]);
       });
 
       it("should filter data which has name Smith", async () => {
@@ -594,11 +548,7 @@ describe("Bucket-Data acceptance", () => {
         });
 
         expect(response.body.length).toBe(2);
-        expect(
-          response.body.map(element => {
-            return element.name;
-          })
-        ).toEqual(["John", "Smith"]);
+        expect(response.body.map(element => element.name)).toEqual(["John", "Smith"]);
       });
 
       it("should filter data which has age less than 25", async () => {
@@ -682,11 +632,11 @@ describe("Bucket-Data acceptance", () => {
 
         expect(response.body.length).toBe(3);
 
-        expect(
-          response.body.map(element => {
-            return element.title;
-          })
-        ).toEqual(["english words", "new english words", "only english words"]);
+        expect(response.body.map(element => element.title)).toEqual([
+          "english words",
+          "new english words",
+          "only english words"
+        ]);
       });
 
       it("it should show data which is translated to turkish and if it doesnt exist, show data as default language", async () => {
@@ -698,11 +648,11 @@ describe("Bucket-Data acceptance", () => {
 
         expect(response.body.length).toBe(3);
 
-        expect(
-          response.body.map(element => {
-            return element.title;
-          })
-        ).toEqual(["türkçe kelimeler", "yeni türkçe kelimeler", "only english words"]);
+        expect(response.body.map(element => element.title)).toEqual([
+          "türkçe kelimeler",
+          "yeni türkçe kelimeler",
+          "only english words"
+        ]);
       });
     });
   });

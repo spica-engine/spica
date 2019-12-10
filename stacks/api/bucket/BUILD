@@ -42,56 +42,54 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/core/testing",
+        "//packages/database",
         "//packages/database/testing",
         "//stacks/api/passport/testing",
-        "//packages/database",
         "//stacks/api/preference",
-        "@npm//@nestjs/testing",
         "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
         "@npm//bson",
-        "@npm//@types/bson",
     ],
 )
 
 jasmine_node_test(
     name = "bucket-data-test",
     deps = [
-        ":bucket-data_test_lib"
+        ":bucket-data_test_lib",
     ],
 )
-
-
 
 ts_library(
     name = "bucket-data-acceptance_test_lib",
     testonly = True,
     srcs = [
-        "bucket-data.acceptance.spec.ts"
+        "bucket-data.acceptance.spec.ts",
     ],
     deps = [
         ":bucket",
         "//packages/core",
         "//packages/core/schema",
         "//packages/core/testing",
+        "//packages/database",
         "//packages/database/testing",
         "//stacks/api/passport/testing",
-        "//packages/database",
         "//stacks/api/preference",
-        "@npm//@nestjs/testing",
         "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
         "@npm//bson",
-        "@npm//@types/bson",
     ],
 )
 
 jasmine_node_test(
     name = "bucket-data-acceptance-test",
     deps = [
-        ":bucket-data-acceptance_test_lib"
+        ":bucket-data-acceptance_test_lib",
     ],
 )
 
@@ -110,17 +108,17 @@ ts_library(
         "//stacks/api/preference",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
+        "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
         "@npm//bson",
-        "@npm//@types/bson",
     ],
 )
 
 jasmine_node_test(
     name = "bucket-test",
     deps = [
-        ":bucket_test_lib"
+        ":bucket_test_lib",
     ],
 )
 
@@ -142,10 +140,9 @@ ts_library(
 jasmine_node_test(
     name = "scheduler-test",
     deps = [
-        ":scheduler_test_lib"
+        ":scheduler_test_lib",
     ],
 )
-
 
 docs(
     name = "docs",
