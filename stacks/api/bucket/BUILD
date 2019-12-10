@@ -110,7 +110,6 @@ ts_library(
         "//stacks/api/preference",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
-        "@npm//@nestjs/common",
         "@npm//@types/jasmine",
         "@npm//@types/node",
         "@npm//bson",

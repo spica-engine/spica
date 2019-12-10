@@ -23,9 +23,9 @@ export class BucketSchemaResolver {
               if (property.options.translate) {
                 accumulator[key] = {
                   type: "object",
-                  required: [prefs.language.default.code],
-                  properties: prefs.language.supported_languages.reduce((props, lang) => {
-                    props[lang.code] = property;
+                  required: [prefs.language.default],
+                  properties: Object.keys(prefs.language.available).reduce((props, key) => {
+                    props[key] = property;
                     return props;
                   }, {}),
                   additionalProperties: false

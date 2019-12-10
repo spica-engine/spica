@@ -27,8 +27,9 @@ export class BucketDataController {
   private async getLanguage(language: string) {
     const bucketSettings = await this.bs.getPreferences();
 
+
     const supportedLocales = new locale.Locales(
-      bucketSettings.language.supported_languages.map(lang => lang.code)
+      Object.keys(bucketSettings.language.available)
     );
     const locales = new locale.Locales(language);
     const bestLocale = locales.best(supportedLocales);
@@ -36,9 +37,9 @@ export class BucketDataController {
     const best =
       bestLocale && !bestLocale.defaulted
         ? bestLocale.normalized
-        : bucketSettings.language.default.code;
+        : bucketSettings.language.default;
 
-    const fallback = bucketSettings.language.default.code;
+    const fallback = bucketSettings.language.default;
 
     return {best, fallback};
   }
@@ -271,7 +272,7 @@ export class BucketDataController {
   }
 
   @Post()
-  //@UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   replaceOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument

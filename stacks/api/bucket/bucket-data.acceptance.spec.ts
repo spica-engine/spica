@@ -3,7 +3,6 @@ import {Test} from "@nestjs/testing";
 import {Middlewares} from "@spica-server/core";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
-import * as BSON from "bson";
 import {BucketModule} from "./bucket.module";
 import {SchemaModule} from "@spica-server/core/schema";
 import {Default, Format} from "@spica-server/core/schema";
@@ -47,7 +46,6 @@ describe("Bucket-Data acceptance", () => {
   let app: INestApplication;
   let req: Request;
   let module;
-  let myBucketId = new BSON.ObjectID("56cb91bdc3464f14678934ca");
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -69,6 +67,7 @@ describe("Bucket-Data acceptance", () => {
 
   describe("get requests", () => {
     describe("skip and limit", () => {
+      let myBucketId = new ObjectId();
       beforeAll(async () => {
         //create bucket
         const myBucket = {
@@ -104,11 +103,11 @@ describe("Bucket-Data acceptance", () => {
           {title: "here is the last title", description: "here is the last description"}
         ];
 
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[0]);
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[1]);
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[2]);
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[3]);
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[4]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[3]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[4]);
       });
 
       afterAll(async () => {
@@ -119,13 +118,13 @@ describe("Bucket-Data acceptance", () => {
           .catch();
         await app
           .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
+          .collection(`bucket_${myBucketId}`)
           .deleteMany({})
           .catch();
       });
 
       it("should work without query", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {});
+        const response = await req.get(`/bucket/${myBucketId}/data`, {});
         expect(response.body.length).toEqual(5);
 
         expect(
@@ -150,22 +149,16 @@ describe("Bucket-Data acceptance", () => {
           "one more description",
           "here is the last description"
         ]);
-        
       });
 
       it("should work with limit query", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {limit: "3"});
+        const response = await req.get(`/bucket/${myBucketId}/data`, {limit: "3"});
         expect(response.body.length).toEqual(3);
         expect(
           response.body.map(element => {
             return element.title;
           })
-        ).toEqual([
-          "here is the title",
-          "here is the another title",
-          "more title",
-          
-        ]);
+        ).toEqual(["here is the title", "here is the another title", "more title"]);
         expect(
           response.body.map(element => {
             return element.description;
@@ -173,38 +166,27 @@ describe("Bucket-Data acceptance", () => {
         ).toEqual([
           "here is the description",
           "here is the another description",
-          "more description",
-          
+          "more description"
         ]);
       });
 
       it("should work with skip query", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {skip: "2"});
+        const response = await req.get(`/bucket/${myBucketId}/data`, {skip: "2"});
         expect(response.body.length).toEqual(3);
         expect(
           response.body.map(element => {
             return element.title;
           })
-        ).toEqual([
-          
-          "more title",
-          "one more title",
-          "here is the last title"
-        ]);
+        ).toEqual(["more title", "one more title", "here is the last title"]);
         expect(
           response.body.map(element => {
             return element.description;
           })
-        ).toEqual([
-          
-          "more description",
-          "one more description",
-          "here is the last description"
-        ]);
+        ).toEqual(["more description", "one more description", "here is the last description"]);
       });
 
       it("should work with skip and limit query", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           limit: "2",
           skip: "1"
         });
@@ -213,26 +195,17 @@ describe("Bucket-Data acceptance", () => {
           response.body.map(element => {
             return element.title;
           })
-        ).toEqual([
-          
-          "here is the another title",
-          "more title",
-          
-        ]);
+        ).toEqual(["here is the another title", "more title"]);
         expect(
           response.body.map(element => {
             return element.description;
           })
-        ).toEqual([
-          
-          "here is the another description",
-          "more description",
-         
-        ]);
+        ).toEqual(["here is the another description", "more description"]);
       });
     });
 
     describe("sorts", () => {
+      let myBucketId = new ObjectId();
       beforeAll(async () => {
         //create bucket
         const myBucket = {
@@ -260,13 +233,15 @@ describe("Bucket-Data acceptance", () => {
         await req.post("/bucket", myBucket);
 
         //insert some data
-        const bucketdata = new Array(5).fill(undefined).map((_, index) => {
-          return {title: `new title${index + 1}`, description: `new description${5 - index}`};
-        });
+        const bucketdata = [
+          {title: "title starts with a", description: "description starts with z"},
+          {title: "title starts with b", description: "description starts with y"},
+          {title: "title starts with c", description: "description starts with x"}
+        ];
 
-        for (let i = 0; i < bucketdata.length; i++) {
-          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
-        }
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
       });
 
       afterAll(async () => {
@@ -277,60 +252,113 @@ describe("Bucket-Data acceptance", () => {
           .catch();
         await app
           .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
+          .collection(`bucket_${myBucketId}`)
           .deleteMany({})
           .catch();
       });
 
       it("ascend by title", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           sort: JSON.stringify({title: 1})
         });
 
         const objects = response.body;
-        objects.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 1}`);
-          expect(val.description).toBe(`new description${objects.length - index}`);
-        });
+        expect(objects.length).toBe(3);
+
+        expect(
+          objects.map(element => {
+            return element.title;
+          })
+        ).toEqual(["title starts with a", "title starts with b", "title starts with c"]);
+
+        expect(
+          objects.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          "description starts with z",
+          "description starts with y",
+          "description starts with x"
+        ]);
       });
       it("descend by title", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           sort: JSON.stringify({title: -1})
         });
 
         const objects = response.body;
-        objects.forEach((val, index) => {
-          expect(val.title).toBe(`new title${objects.length - index}`);
-          expect(val.description).toBe(`new description${index + 1}`);
-        });
+        expect(objects.length).toBe(3);
+
+        expect(
+          objects.map(element => {
+            return element.title;
+          })
+        ).toEqual(["title starts with c", "title starts with b", "title starts with a"]);
+
+        expect(
+          objects.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          "description starts with x",
+          "description starts with y",
+          "description starts with z"
+        ]);
       });
 
       it("ascend by description", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           sort: JSON.stringify({description: 1})
         });
 
         const objects = response.body;
-        objects.forEach((val, index) => {
-          expect(val.title).toBe(`new title${objects.length - index}`);
-          expect(val.description).toBe(`new description${index + 1}`);
-        });
+        expect(objects.length).toBe(3);
+
+        expect(
+          objects.map(element => {
+            return element.title;
+          })
+        ).toEqual(["title starts with c", "title starts with b", "title starts with a"]);
+
+        expect(
+          objects.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          "description starts with x",
+          "description starts with y",
+          "description starts with z"
+        ]);
       });
 
       it("descend by description", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           sort: JSON.stringify({description: -1})
         });
 
         const objects = response.body;
-        objects.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 1}`);
-          expect(val.description).toBe(`new description${objects.length - index}`);
-        });
+        expect(objects.length).toBe(3);
+
+        expect(
+          objects.map(element => {
+            return element.title;
+          })
+        ).toEqual(["title starts with a", "title starts with b", "title starts with c"]);
+
+        expect(
+          objects.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          "description starts with z",
+          "description starts with y",
+          "description starts with x"
+        ]);
       });
     });
 
     describe("pagination", () => {
+      let myBucketId = new ObjectId();
       beforeAll(async () => {
         //create bucket
         const myBucket = {
@@ -358,13 +386,19 @@ describe("Bucket-Data acceptance", () => {
         await req.post("/bucket", myBucket);
 
         //insert some data
-        const bucketdata = new Array(100).fill(undefined).map((_, index) => {
-          return {title: `new title${index + 1}`, description: `new description${index + 1}`};
-        });
+        const bucketdata = [
+          {title: "here is the title", description: "here is the description"},
+          {title: "here is the another title", description: "here is the another description"},
+          {title: "more title", description: "more description"},
+          {title: "one more title", description: "one more description"},
+          {title: "here is the last title", description: "here is the last description"}
+        ];
 
-        for (let i = 0; i < bucketdata.length; i++) {
-          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
-        }
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[3]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[4]);
       });
 
       afterAll(async () => {
@@ -375,68 +409,104 @@ describe("Bucket-Data acceptance", () => {
           .catch();
         await app
           .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
+          .collection(`bucket_${myBucketId}`)
           .deleteMany({})
           .catch();
       });
 
       it("single paginate param", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {paginate: "true"});
-        expect(response.body.meta.total).toBe(100);
-        expect(response.body.data.length).toBe(100);
+        const response = await req.get(`/bucket/${myBucketId}/data`, {paginate: "true"});
+        expect(response.body.meta.total).toBe(5);
+        expect(response.body.data.length).toBe(5);
+
+        expect(
+          response.body.data.map(element => {
+            return element.title;
+          })
+        ).toEqual([
+          "here is the title",
+          "here is the another title",
+          "more title",
+          "one more title",
+          "here is the last title"
+        ]);
+        expect(
+          response.body.data.map(element => {
+            return element.description;
+          })
+        ).toEqual([
+          "here is the description",
+          "here is the another description",
+          "more description",
+          "one more description",
+          "here is the last description"
+        ]);
       });
 
       it("paginate with limit", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
-          limit: "20",
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          limit: "2",
           paginate: "true"
         });
-        expect(response.body.meta.total).toBe(100);
+        expect(response.body.meta.total).toBe(5);
+        expect(response.body.data.length).toBe(2);
 
-        const objects = response.body.data;
-        expect(objects.length).toBe(20);
-
-        objects.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 1}`);
-          expect(val.description).toBe(`new description${index + 1}`);
-        });
+        expect(
+          response.body.data.map(element => {
+            return element.title;
+          })
+        ).toEqual(["here is the title", "here is the another title"]);
+        expect(
+          response.body.data.map(element => {
+            return element.description;
+          })
+        ).toEqual(["here is the description", "here is the another description"]);
       });
 
       it("paginate with skip", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
-          skip: "20",
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          skip: "3",
           paginate: "true"
         });
-        expect(response.body.meta.total).toBe(100);
+        expect(response.body.meta.total).toBe(5);
+        expect(response.body.data.length).toBe(2);
 
-        const objects = response.body.data;
-        expect(objects.length).toBe(80);
-
-        objects.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 20 + 1}`);
-          expect(val.description).toBe(`new description${index + 20 + 1}`);
-        });
+        expect(
+          response.body.data.map(element => {
+            return element.title;
+          })
+        ).toEqual(["one more title", "here is the last title"]);
+        expect(
+          response.body.data.map(element => {
+            return element.description;
+          })
+        ).toEqual(["one more description", "here is the last description"]);
       });
 
       it("paginate with limit and skip", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
-          limit: "50",
-          skip: "10",
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          limit: "3",
+          skip: "2",
           paginate: "true"
         });
-        expect(response.body.meta.total).toBe(100);
+        expect(response.body.meta.total).toBe(5);
+        expect(response.body.data.length).toBe(3);
 
-        const objects = response.body.data;
-        expect(objects.length).toBe(50);
-
-        objects.forEach((val, index) => {
-          expect(val.title).toBe(`new title${index + 10 + 1}`);
-          expect(val.description).toBe(`new description${index + 10 + 1}`);
-        });
+        expect(
+          response.body.data.map(element => {
+            return element.title;
+          })
+        ).toEqual(["more title", "one more title", "here is the last title"]);
+        expect(
+          response.body.data.map(element => {
+            return element.description;
+          })
+        ).toEqual(["more description", "one more description", "here is the last description"]);
       });
     });
 
     describe("filter", () => {
+      let myBucketId = new ObjectId();
       beforeAll(async () => {
         //create bucket
         const myBucket = {
@@ -447,16 +517,16 @@ describe("Bucket-Data acceptance", () => {
           primary: "title",
           readOnly: false,
           properties: {
-            title: {
+            name: {
               type: "string",
-              title: "title",
-              description: "Title of the row",
+              title: "name",
+              description: "Name of the row",
               options: {position: "left", visible: true}
             },
-            description: {
-              type: "textarea",
-              title: "description",
-              description: "Description of the row",
+            age: {
+              type: "number",
+              title: "age",
+              description: "Age of row",
               options: {position: "right"}
             }
           }
@@ -464,13 +534,14 @@ describe("Bucket-Data acceptance", () => {
         await req.post("/bucket", myBucket);
 
         //insert some data
-        const bucketdata = new Array(10).fill(undefined).map((_, index) => {
-          return {title: `new title${index + 1}`, description: `new description${index + 1}`};
-        });
-
-        for (let i = 0; i < bucketdata.length; i++) {
-          await req.post("/bucket/56cb91bdc3464f14678934ca/data", bucketdata[i]);
-        }
+        const bucketdata = [
+          {name: "James", age: 23},
+          {name: "John", age: 36},
+          {name: "Smith", age: 44}
+        ];
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
       });
 
       afterAll(async () => {
@@ -481,45 +552,68 @@ describe("Bucket-Data acceptance", () => {
           .catch();
         await app
           .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
+          .collection(`bucket_${myBucketId}`)
           .deleteMany({})
           .catch();
       });
 
-      it("should filter data which has '1'", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
-          filter: JSON.stringify({title: {$regex: "1"}})
+      it("should filter data which name contains 'J'", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({name: {$regex: "J"}})
         });
 
-        const objects = response.body;
-
-        expect(objects.length).toBe(2);
+        expect(response.body.length).toBe(2);
         expect(
-          objects.map((val, index) => {
-            return val.title;
+          response.body.map(element => {
+            return element.name;
           })
-        ).toEqual(["new title1", "new title10"]);
+        ).toEqual(["James", "John"]);
       });
 
-      it("filter with pagination", async () => {
-        const response = await req.get(`/bucket/56cb91bdc3464f14678934ca/data`, {
-          paginate: "true",
-          filter: JSON.stringify({title: {$regex: "1"}})
+      it("should filter data which has name Smith", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({name: "Smith"})
         });
 
-        expect(response.body.meta.total).toBe(2);
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].name).toBe("Smith");
+      });
 
-        const objects = response.body.data;
-        expect(objects.length).toBe(2);
+      it("should filter data which has age 36", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({age: 36})
+        });
+
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].name).toBe("John");
+      });
+
+      it("should filter data which has age grater than or equal 36", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({age: {$gte: 36}})
+        });
+
+        expect(response.body.length).toBe(2);
         expect(
-          objects.map((val, index) => {
-            return val.title;
+          response.body.map(element => {
+            return element.name;
           })
-        ).toEqual(["new title1", "new title10"]);
+        ).toEqual(["John", "Smith"]);
+      });
+
+      it("should filter data which has age less than 25", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({age: {$lt: 25}})
+        });
+
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].name).toBe("James");
       });
     });
 
     describe("localize", () => {
+      let myBucketId = new ObjectId();
+
       beforeAll(async () => {
         const myBucket = {
           _id: myBucketId,
@@ -545,17 +639,25 @@ describe("Bucket-Data acceptance", () => {
         };
         await req.post("/bucket", myBucket);
 
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", {
-          title: {en_US: "english words", tr_TR: "türkçe kelimeler"}
-        });
+        //insert some data
+        const myTranslatableData = [
+          {
+            title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
+            description: "description"
+          },
+          {
+            title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
+            description: "description"
+          },
+          {
+            title: {en_US: "only english words"},
+            description: "description"
+          }
+        ];
 
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", {
-          title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"}
-        });
-
-        await req.post("/bucket/56cb91bdc3464f14678934ca/data", {
-          title: {en_US: "only english words"}
-        });
+        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[0]);
+        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[1]);
+        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[2]);
       });
 
       afterAll(async () => {
@@ -566,36 +668,38 @@ describe("Bucket-Data acceptance", () => {
           .catch();
         await app
           .get(DatabaseService)
-          .collection("bucket_56cb91bdc3464f14678934ca")
+          .collection(`bucket_${myBucketId}`)
           .deleteMany({})
           .catch();
       });
 
       it("it should show data which is translated to english", async () => {
-        const data = (await req.get(
-          "/bucket/56cb91bdc3464f14678934ca/data",
+        const response = await req.get(
+          `/bucket/${myBucketId}/data`,
           {translate: "true"},
           {"accept-language": "en_US"}
-        )).body;
+        );
 
-        expect(data.length).toBe(3);
+        expect(response.body.length).toBe(3);
 
         expect(
-          data.map(element => {
+          response.body.map(element => {
             return element.title;
           })
         ).toEqual(["english words", "new english words", "only english words"]);
       });
 
       it("it should show data which is translated to turkish and if it doesnt exist, show data as default language", async () => {
-        const data = (await req.get(
-          "/bucket/56cb91bdc3464f14678934ca/data",
+        const response = await req.get(
+          `/bucket/${myBucketId}/data`,
           {translate: "true"},
           {"accept-language": "tr_TR"}
-        )).body;
+        );
+
+        expect(response.body.length).toBe(3);
 
         expect(
-          data.map(element => {
+          response.body.map(element => {
             return element.title;
           })
         ).toEqual(["türkçe kelimeler", "yeni türkçe kelimeler", "only english words"]);
