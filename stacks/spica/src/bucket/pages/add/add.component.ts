@@ -3,7 +3,7 @@ import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
-import {flatMap, map, share, switchMap, tap} from "rxjs/operators";
+import {flatMap, map, shareReplay, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketHistory} from "../../interfaces/bucket-history";
@@ -89,7 +89,7 @@ export class AddComponent implements OnInit {
         );
         return schema;
       }),
-      share()
+      shareReplay()
     );
   }
 
