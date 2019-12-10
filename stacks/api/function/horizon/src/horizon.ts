@@ -4,6 +4,7 @@ import {Enqueuer, HttpEnqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 import {Node} from "@spica-server/function/runtime/node";
+import { Runtime } from "@spica-server/function/runtime";
 
 @Injectable()
 export class Horizon implements OnModuleInit {
@@ -11,6 +12,7 @@ export class Horizon implements OnModuleInit {
   private httpQueue: HttpQueue;
   private runtime: Node;
 
+  readonly runtimes = new Set<Runtime>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
 
   constructor(private http: HttpAdapterHost) {
@@ -30,7 +32,6 @@ export class Horizon implements OnModuleInit {
   }
 
   enqueue(event: Event.Event) {
-    this.runtime = new Node();
     this.runtime.execute({
       eventId: event.id,
       cwd: event.target.cwd

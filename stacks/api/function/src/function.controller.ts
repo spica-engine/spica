@@ -35,6 +35,21 @@ export class FunctionController {
     private horizon: Horizon
   ) {}
 
+  @Get("engine")
+  @UseGuards(AuthGuard())
+  trigger() {
+    const enqueuers = {};
+    const runtimes = {};
+    for (const enqueuer of this.horizon.enqueuers) {
+      enqueuers[enqueuer.description.name] = {
+        description: enqueuer.description,
+        schema: this.engine.schemas.get(enqueuer.description.name)
+      };
+    }
+
+    return enqueuers;
+  }
+
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
   index() {
@@ -45,19 +60,6 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   add(@Body(Schema.validate(generate)) fn: Function) {
     return this.fs.findOneAndReplace({_id: fn._id}, fn, {upsert: true});
-  }
-
-  @Get("enqueuers")
-  @UseGuards(AuthGuard())
-  trigger(@Query("scope") scope: string) {
-    const enqueuers = {};
-    for (const enqueuer of this.horizon.enqueuers) {
-      enqueuers[enqueuer.description.name] = {
-        description: enqueuer.description,
-        schema: this.engine.schemas.get(enqueuer.description.name)
-      };
-    }
-    return enqueuers;
   }
 
   @Get(":id")
