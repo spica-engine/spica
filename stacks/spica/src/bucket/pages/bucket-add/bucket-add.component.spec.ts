@@ -562,7 +562,7 @@ describe("Bucket Add Component", () => {
           fixture.debugElement.query(
             By.css("mat-card mat-list-item:first-of-type form mat-form-field mat-error")
           ).nativeElement.textContent
-        ).toBe(" Length of the name must be less than 15 character. ");
+        ).toBe(" Length of the name must be less than 100 character. ");
       });
     });
 
