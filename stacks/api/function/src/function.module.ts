@@ -1,6 +1,7 @@
 import {DynamicModule, Module} from "@nestjs/common";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseModule} from "@spica-server/database";
+import {HorizonModule} from "@spica-server/function/horizon";
 import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
@@ -16,8 +17,9 @@ export class FunctionModule {
       imports: [
         DatabaseModule,
         SchemaModule.forChild({
-          schemas: [require("./schema/function.schema.json")]
-        })
+          schemas: [require("./schema/function.json")]
+        }),
+        HorizonModule
       ],
       controllers: [FunctionController],
       providers: [

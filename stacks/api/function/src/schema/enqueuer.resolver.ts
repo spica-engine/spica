@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
-import {Function} from "../../interface";
+import {Function} from "../interface";
 import {FunctionEngine} from "../engine";
 
 // TODO(thesayyn): Provide a schema invalidator

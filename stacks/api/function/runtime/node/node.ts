@@ -36,7 +36,7 @@ export class Node extends Runtime {
     program.emit();
   }
 
-  execute(execution: Execution): Promise<number> {
+  async execute(execution: Execution): Promise<number> {
     return new Promise((resolve, reject) => {
       const worker = child_process.spawn(
         `node`,
