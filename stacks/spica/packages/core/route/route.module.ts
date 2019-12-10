@@ -28,7 +28,11 @@ export class RouteModule {
           useFactory: routeInitializer,
           deps: [RouteInitializer]
         },
-        {provide: RouteService, useClass: RouteService, deps: [Store, ROUTE_FILTERS]}
+        {
+          provide: RouteService,
+          useClass: RouteService,
+          deps: [Store, [ROUTE_FILTERS, new Optional()]]
+        }
       ]
     };
   }

@@ -17,9 +17,10 @@ import {icon, LatLngExpression, LeafletMouseEvent, marker, Marker, tileLayer} fr
 @Component({
   templateUrl: "./location.component.html",
   styleUrls: ["./location.component.scss"],
-  providers: [
+  viewProviders: [
     {
       provide: NG_VALUE_ACCESSOR,
+      multi: true,
       useExisting: forwardRef(() => LocationComponent)
     }
   ],

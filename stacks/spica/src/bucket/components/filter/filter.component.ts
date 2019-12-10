@@ -8,7 +8,7 @@ import {Bucket, PropertyOptions} from "../../interfaces/bucket";
   styleUrls: ["./filter.component.scss"]
 })
 export class FilterComponent implements OnChanges {
-  @Input() meta: Bucket;
+  @Input() schema: Bucket;
   @Input() filter: any;
   @Output() filterChange = new EventEmitter();
 
@@ -28,9 +28,9 @@ export class FilterComponent implements OnChanges {
   constructor(private resolver: InputResolver) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.meta && this.meta) {
+    if (changes.schema && this.schema) {
       this.property = undefined;
-      for (const [key, value] of Object.entries(this.meta.properties)) {
+      for (const [key, value] of Object.entries(this.schema.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
           if (this.typeMappings.has(value.type)) {

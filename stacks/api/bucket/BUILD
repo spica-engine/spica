@@ -108,6 +108,7 @@ ts_library(
         "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/preference",
+        "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@nestjs/common",
         "@npm//@types/jasmine",
@@ -145,14 +146,6 @@ jasmine_node_test(
         ":scheduler_test_lib"
     ],
 )
-
-
-
-
-
-
-
-
 
 
 docs(

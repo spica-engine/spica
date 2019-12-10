@@ -1,0 +1,29 @@
+<div *ngIf="observable | async">
+  <div class="refresh">
+    <button mat-icon-button mat-flat-button matTooltip="Refresh data" (click)="getData()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+  <h3>{{ chartData.title }}</h3>
+
+  <div *ngIf="chartData?.filters?.length > 0">
+    <span
+      *ngFor="let filter of chartData?.filters"
+      [inputPlacer]="filter"
+      [(ngModel)]="filter.value"
+      (ngModelChange)="filter?.type == 'date' ? callOnChange(filter.key, filter.value) : undefined"
+      (focusout)="filter?.type != 'date' ? callOnChange(filter.key, filter.value) : undefined"
+    ></span>
+  </div>
+  <canvas
+    baseChart
+    [data]="chartData?.data"
+    [datasets]="chartData?.datasets"
+    [labels]="chartData?.label"
+    [options]="chartData?.options"
+    [colors]="chartData?.colors"
+    [legend]="chartData?.legend"
+    [chartType]="chartData?.type"
+  >
+  </canvas>
+</div>

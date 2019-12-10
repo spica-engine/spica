@@ -1,4 +1,3 @@
-import {Inject, Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {from, isObservable, Observable, of} from "rxjs";
 import {
@@ -11,16 +10,12 @@ import {
   map,
   switchMap
 } from "rxjs/operators";
-import {Route, RouteFilter, ROUTE_FILTERS} from "./route";
+import {Route, RouteFilter} from "./route";
 import {RouteAction, RouteState, selectRoutes} from "./route.reducer";
 
-@Injectable()
 export class RouteService {
   public readonly routes: Observable<Route[]>;
-  constructor(
-    private store: Store<RouteState>,
-    @Inject(ROUTE_FILTERS) private filters: RouteFilter[]
-  ) {
+  constructor(private store: Store<RouteState>, private filters: RouteFilter[]) {
     function wrap<T>(value: T | Promise<T> | Observable<T>) {
       if (isObservable(value)) {
         return value.pipe(first());

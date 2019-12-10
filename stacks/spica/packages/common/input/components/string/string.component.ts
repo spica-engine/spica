@@ -1,11 +1,13 @@
 import {Component, forwardRef, Inject, ViewChild} from "@angular/core";
-import {ControlValueAccessor, NG_VALUE_ACCESSOR, NgModel} from "@angular/forms";
-import {InputPlacerOptions, INPUT_OPTIONS, INPUT_SCHEMA, InternalPropertySchema} from "../../input";
+import {ControlValueAccessor, NgModel, NG_VALUE_ACCESSOR} from "@angular/forms";
+import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
 @Component({
   templateUrl: "./string.component.html",
   styleUrls: ["./string.component.scss"],
-  providers: [{provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => StringComponent)}]
+  viewProviders: [
+    {provide: NG_VALUE_ACCESSOR, multi: true, useExisting: forwardRef(() => StringComponent)}
+  ]
 })
 export class StringComponent implements ControlValueAccessor {
   value: string;
@@ -15,10 +17,7 @@ export class StringComponent implements ControlValueAccessor {
 
   @ViewChild(NgModel, {static: false}) model: NgModel;
 
-  constructor(
-    @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
-    @Inject(INPUT_OPTIONS) public options: InputPlacerOptions
-  ) {}
+  constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
   writeValue(val: string): void {
     this.value = val;

@@ -77,13 +77,15 @@ export class IndexComponent implements OnInit {
             this.refresh.next();
           }
         },
-        () => {
-          this.sortStorage({direction: "desc", name: "_id"});
-          this.progress = undefined;
-          this.refresh.next();
-        }
+        () => this.uploadDone()
       );
     }
+  }
+
+  uploadDone() {
+    this.sortStorage({direction: "desc", name: "_id"});
+    this.progress = undefined;
+    this.refresh.next();
   }
 
   delete(id: string): void {

@@ -7,8 +7,8 @@ export class MixinNoopStrategy extends AbstractStrategy {
   }
 
   authenticate(req: any) {
-    req.user = {identifier: "noop"};
-    this["success"]({identifier: "noop"}, {});
+    req.TESTING_SKIP_CHECK = true;
+    this["success"]({identifier: "noop", policies: []}, {});
   }
 }
 

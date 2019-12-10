@@ -1,21 +1,9 @@
-<mat-form-field input>
-  <mat-select
-    placeholder="Relation type"
-    #typeModel="ngModel"
-    [(ngModel)]="schema.relationType"
-    required
-  >
-    <mat-option value="manytomany">Many to Many</mat-option>
-    <mat-option disabled>One to Many</mat-option>
-    <mat-option disabled>One to One</mat-option>
-  </mat-select>
-  <mat-error *ngIf="typeModel?.errors?.required">You must select a relation type</mat-error>
-</mat-form-field>
-<mat-form-field input>
-  <mat-select placeholder="Bucket" #bucketModel="ngModel" [(ngModel)]="schema.bucket" required>
+<mat-form-field>
+  <mat-select placeholder="Bucket" #model="ngModel" [(ngModel)]="schema.bucketId" required>
     <mat-option *ngFor="let bucket of buckets | async" [value]="bucket._id">
       {{ bucket.title }}
     </mat-option>
   </mat-select>
-  <mat-error *ngIf="bucketModel?.errors?.required">You must select a bucket</mat-error>
+  <mat-error *ngIf="model?.errors?.required">You must select a bucket</mat-error>
 </mat-form-field>
+{{ schema.bucketId }}

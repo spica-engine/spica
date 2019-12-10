@@ -22,7 +22,7 @@ export class PassportService {
     localStorage.setItem("access_token", token);
   }
 
-  get decodedToken(): any {
+  get decodedToken(): Identity & {exp: number} {
     const decodedToken = this.token.replace(/\w*\s\b/g, "");
     return jwt_decode(decodedToken);
   }
