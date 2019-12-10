@@ -1,1 +1,1 @@
-export {FunctionModule} from "./function.module";
+export * from "./src/index";

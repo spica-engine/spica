@@ -7,6 +7,7 @@ ts_library(
     srcs = [
         "database.module.ts",
         "database.service.ts",
+        "collection.ts",
         "index.ts",
         "pipes.ts",
     ],
