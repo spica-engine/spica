@@ -189,6 +189,143 @@ describe("Bucket-Data acceptance", () => {
         ]);
       });
     });
+
+    describe("sorts", () => {
+      let myBucketId = new ObjectId();
+      beforeAll(async () => {
+        //create bucket
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
+            }
+          }
+        };
+        await req.post("/bucket", myBucket);
+
+        //insert some data
+        const bucketdata = [
+          {title: "title starts with a", description: "description starts with z"},
+          {title: "title starts with b", description: "description starts with y"},
+          {title: "title starts with c", description: "description starts with x"}
+        ];
+
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection(`bucket_${myBucketId}`)
+          .deleteMany({})
+          .catch();
+      });
+
+      it("ascend by title", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          sort: JSON.stringify({title: 1})
+        });
+
+        const objects = response.body;
+        expect(objects.length).toBe(3);
+
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with a",
+          "title starts with b",
+          "title starts with c"
+        ]);
+
+        expect(objects.map(element => element.description)).toEqual([
+          "description starts with z",
+          "description starts with y",
+          "description starts with x"
+        ]);
+      });
+      it("descend by title", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          sort: JSON.stringify({title: -1})
+        });
+
+        const objects = response.body;
+        expect(objects.length).toBe(3);
+
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with c",
+          "title starts with b",
+          "title starts with a"
+        ]);
+
+        expect(objects.map(element => element.description)).toEqual([
+          "description starts with x",
+          "description starts with y",
+          "description starts with z"
+        ]);
+      });
+
+      it("ascend by description", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          sort: JSON.stringify({description: 1})
+        });
+
+        const objects = response.body;
+        expect(objects.length).toBe(3);
+
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with c",
+          "title starts with b",
+          "title starts with a"
+        ]);
+
+        expect(objects.map(element => element.description)).toEqual([
+          "description starts with x",
+          "description starts with y",
+          "description starts with z"
+        ]);
+      });
+
+      it("descend by description", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          sort: JSON.stringify({description: -1})
+        });
+
+        const objects = response.body;
+        expect(objects.length).toBe(3);
+
+        expect(objects.map(element => element.title)).toEqual([
+          "title starts with a",
+          "title starts with b",
+          "title starts with c"
+        ]);
+
+        expect(objects.map(element => element.description)).toEqual([
+          "description starts with z",
+          "description starts with y",
+          "description starts with x"
+        ]);
+      });
+    });
   });
 
   afterAll(async () => {
