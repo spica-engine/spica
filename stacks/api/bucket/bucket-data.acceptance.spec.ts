@@ -208,8 +208,8 @@ describe("Bucket-Data acceptance", () => {
               description: "Title of the row",
               options: {position: "left", visible: true}
             },
-            description: {
-              type: "textarea",
+            age: {
+              type: "number",
               title: "description",
               description: "Description of the row",
               options: {position: "right"}
@@ -220,9 +220,9 @@ describe("Bucket-Data acceptance", () => {
 
         //insert some data
         const bucketdata = [
-          {title: "title starts with a", description: "description starts with z"},
-          {title: "title starts with b", description: "description starts with y"},
-          {title: "title starts with c", description: "description starts with x"}
+          {title: "title starts with a", age: 15},
+          {title: "title starts with b", age: 10},
+          {title: "title starts with c", age: 5}
         ];
 
         await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
@@ -256,12 +256,6 @@ describe("Bucket-Data acceptance", () => {
           "title starts with b",
           "title starts with c"
         ]);
-
-        expect(objects.map(element => element.description)).toEqual([
-          "description starts with z",
-          "description starts with y",
-          "description starts with x"
-        ]);
       });
       it("descend by title", async () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {
@@ -276,54 +270,28 @@ describe("Bucket-Data acceptance", () => {
           "title starts with b",
           "title starts with a"
         ]);
-
-        expect(objects.map(element => element.description)).toEqual([
-          "description starts with x",
-          "description starts with y",
-          "description starts with z"
-        ]);
       });
 
-      it("ascend by description", async () => {
+      it("ascend by age", async () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {
-          sort: JSON.stringify({description: 1})
+          sort: JSON.stringify({age: 1})
         });
 
         const objects = response.body;
         expect(objects.length).toBe(3);
 
-        expect(objects.map(element => element.title)).toEqual([
-          "title starts with c",
-          "title starts with b",
-          "title starts with a"
-        ]);
-
-        expect(objects.map(element => element.description)).toEqual([
-          "description starts with x",
-          "description starts with y",
-          "description starts with z"
-        ]);
+        expect(objects.map(element => element.age)).toEqual([5, 10, 15]);
       });
 
-      it("descend by description", async () => {
+      it("descend by age", async () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {
-          sort: JSON.stringify({description: -1})
+          sort: JSON.stringify({age: -1})
         });
 
         const objects = response.body;
         expect(objects.length).toBe(3);
 
-        expect(objects.map(element => element.title)).toEqual([
-          "title starts with a",
-          "title starts with b",
-          "title starts with c"
-        ]);
-
-        expect(objects.map(element => element.description)).toEqual([
-          "description starts with z",
-          "description starts with y",
-          "description starts with x"
-        ]);
+        expect(objects.map(element => element.age)).toEqual([15, 10, 5]);
       });
     });
   });
