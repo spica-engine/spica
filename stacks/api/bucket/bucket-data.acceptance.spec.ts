@@ -430,6 +430,230 @@ describe("Bucket-Data acceptance", () => {
         ]);
       });
     });
+
+    describe("filter", () => {
+      let myBucketId = new ObjectId();
+      beforeAll(async () => {
+        //create bucket
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            name: {
+              type: "string",
+              title: "name",
+              description: "Name of the row",
+              options: {position: "left", visible: true}
+            },
+            age: {
+              type: "number",
+              title: "age",
+              description: "Age of row",
+              options: {position: "right"}
+            }
+          }
+        };
+        await req.post("/bucket", myBucket);
+
+        //insert some data
+        const bucketdata = [
+          {name: "James", age: 23},
+          {name: "John", age: 36},
+          {name: "Smith", age: 44}
+        ];
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection(`bucket_${myBucketId}`)
+          .deleteMany({})
+          .catch();
+      });
+
+      it("should filter data which name contains 'J'", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({name: {$regex: "J"}})
+        });
+
+        expect(response.body.length).toBe(2);
+        expect(response.body.map(element => element.name)).toEqual(["James", "John"]);
+      });
+
+      it("should filter data which has name Smith", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({name: "Smith"})
+        });
+
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].name).toBe("Smith");
+      });
+
+      it("should filter data which has age 36", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({age: 36})
+        });
+
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].name).toBe("John");
+      });
+
+      it("should filter data which has age grater than or equal 36", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({age: {$gte: 36}})
+        });
+
+        expect(response.body.length).toBe(2);
+        expect(response.body.map(element => element.name)).toEqual(["John", "Smith"]);
+      });
+
+      it("should filter data which has age less than 25", async () => {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
+          filter: JSON.stringify({age: {$lt: 25}})
+        });
+
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].name).toBe("James");
+      });
+    });
+
+    describe("localize", () => {
+      let myBucketId = new ObjectId();
+
+      beforeAll(async () => {
+        const myBucket = {
+          _id: myBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", translate: true, visible: true}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
+            }
+          }
+        };
+        await req.post("/bucket", myBucket);
+
+        //insert some data
+        const myTranslatableData = [
+          {
+            title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
+            description: "description"
+          },
+          {
+            title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
+            description: "description"
+          },
+          {
+            title: {en_US: "only english words"},
+            description: "description"
+          }
+        ];
+
+        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[0]);
+        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[1]);
+        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[2]);
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteOne({_id: myBucketId})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection(`bucket_${myBucketId}`)
+          .deleteMany({})
+          .catch();
+      });
+
+      it("should return english titles", async () => {
+        const response = await req.get(
+          `/bucket/${myBucketId}/data`,{},
+          {"accept-language": "en_US"}
+        );
+
+        expect(response.body.length).toBe(3);
+
+        expect(response.body.map(element => element.title)).toEqual([
+          "english words",
+          "new english words",
+          "only english words"
+        ]);
+      });
+
+      it("should return turkish titles", async () => {
+        const response = await req.get(
+          `/bucket/${myBucketId}/data`,{},
+          {"accept-language": "tr_TR"}
+        );
+
+        expect(response.body.length).toBe(3);
+
+        expect(response.body.map(element => element.title)).toEqual([
+          "türkçe kelimeler",
+          "yeni türkçe kelimeler",
+          "only english words"
+        ]);
+      });
+
+      it("should return titles with available languages when localize parameter is false", async () => {
+        const response = await req.get(
+          `/bucket/${myBucketId}/data`,
+          {localize: "false"},
+          {"accept-language": "tr_TR"}
+        );
+
+        expect(response.body.length).toBe(3);
+
+        expect(response.body.map(element => element.title)).toEqual([
+          {en_US: "english words", tr_TR: "türkçe kelimeler"},
+          {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
+          {en_US: "only english words"}
+        ]);
+      });
+
+      it("should return english titles when request's 'accepted-language' isn't available for titles" , async() => {
+        const response = await req.get(
+          `/bucket/${myBucketId}/data`,{},
+          {"accept-language": "fr_FR"}
+        );
+
+        expect(response.body.length).toBe(3);
+
+        expect(response.body.map(element => element.title)).toEqual([
+          "english words",
+          "new english words",
+          "only english words"
+        ]);
+      });
+
+    });
+
   });
 
   afterAll(async () => {
