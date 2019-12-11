@@ -10,6 +10,7 @@ ts_library(
         "database.service.ts",
         "index.ts",
         "levenshtein.ts",
+        "operators.ts",
         "stream.ts",
     ],
     module_name = "@spica-server/database/realtime",
@@ -27,6 +28,7 @@ ts_library(
     name = "test_lib",
     testonly = True,
     srcs = [
+        "database.service.spec.ts",
         "levenshtein.spec.ts",
     ],
     deps = [

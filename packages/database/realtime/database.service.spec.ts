@@ -6,9 +6,9 @@ import {RealtimeDatabaseService} from "./database.service";
 import {SequenceKind} from "./levenshtein";
 import {ChunkKind} from "./stream";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 8000;
+const LATENCY = 70;
 
-function wait(time: number = 100) {
+function wait(time: number = LATENCY) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
@@ -30,7 +30,7 @@ describe("realtime database", () => {
         return actual.equals(expected);
       }
     });
-  });
+  }, 7000);
 
   it("should complete observable when collection dropped", async done => {
     await database.collection("willbedropped").insertMany([{test: 1}, {test: 2}]);
@@ -41,6 +41,23 @@ describe("realtime database", () => {
         take(1)
       )
       .subscribe(() => database.dropCollection("willbedropped"), undefined, () => done());
+  });
+
+  it("should sync late subscribers", async done => {
+    await database.collection("test19").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
+    const source = realtime.find("test19", {filter: {stars: {$gt: 3}}}).pipe(bufferCount(3));
+
+    source.subscribe(([first, second, endofinitial]) => {
+      expect(first.document.stars).toBe(4);
+      expect(second.document.stars).toBe(5);
+      expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
+      source.subscribe(([first, second, endofinitial]) => {
+        expect(first.document.stars).toBe(4);
+        expect(second.document.stars).toBe(5);
+        expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
+        done();
+      });
+    });
   });
 
   describe("without match, sort and limit", () => {
@@ -67,9 +84,7 @@ describe("realtime database", () => {
           done();
         });
 
-      setTimeout(() => {
-        database.collection("test1").insertOne({test: 1});
-      }, 100);
+      setTimeout(() => database.collection("test1").insertOne({test: 1}), LATENCY);
     });
 
     it("should return initial and added document in order", async done => {
@@ -88,9 +103,7 @@ describe("realtime database", () => {
           expect(secondInsert.document.test).toBe(3);
           done();
         });
-      setTimeout(() => {
-        coll.insertMany([{test: 2}, {test: 3}]);
-      }, 500);
+      setTimeout(() => coll.insertMany([{test: 2}, {test: 3}]), LATENCY);
     });
 
     it("should return deleted document", async done => {
@@ -107,9 +120,7 @@ describe("realtime database", () => {
           expect(inserted.insertedIds[1].equals(deleted.document._id)).toBeTruthy();
           done();
         });
-      setTimeout(() => {
-        coll.deleteOne({test: 3});
-      }, 1);
+      setTimeout(() => coll.deleteOne({test: 3}), LATENCY);
     });
 
     it("should return edited document", async done => {
@@ -126,9 +137,7 @@ describe("realtime database", () => {
           expect(updated.document.test).toBe(4);
           done();
         });
-      setTimeout(() => {
-        coll.findOneAndUpdate({test: 2}, {$set: {test: 4}});
-      }, 1);
+      setTimeout(() => coll.findOneAndUpdate({test: 2}, {$set: {test: 4}}), LATENCY);
     });
   });
 
@@ -161,9 +170,11 @@ describe("realtime database", () => {
           expect(third.document.anotherfilter).toBe(true);
           done();
         });
-      setTimeout(() => {
-        database.collection("test6").insertMany([{stars: 6}, {stars: 7, anotherfilter: true}]);
-      }, 1);
+      setTimeout(
+        () =>
+          database.collection("test6").insertMany([{stars: 6}, {stars: 7, anotherfilter: true}]),
+        LATENCY
+      );
     });
 
     it("should return deleted document", async done => {
@@ -187,7 +198,7 @@ describe("realtime database", () => {
       setTimeout(async () => {
         await coll.deleteOne({test: 3, has_star: false});
         await coll.deleteOne({test: 3, has_star: true});
-      }, 1);
+      }, LATENCY);
     });
 
     it("should return edited document", async done => {
@@ -204,9 +215,7 @@ describe("realtime database", () => {
           expect(updated.document.test).toBe(4);
           done();
         });
-      setTimeout(() => {
-        coll.findOneAndUpdate({test: 2}, {$set: {test: 4}});
-      }, 1);
+      setTimeout(() => coll.findOneAndUpdate({test: 2}, {$set: {test: 4}}), LATENCY);
     });
 
     it("should return updated document if it does not match with filter anymore", async done => {
@@ -222,9 +231,7 @@ describe("realtime database", () => {
           expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
           done();
         });
-      setTimeout(() => {
-        coll.findOneAndUpdate({_id: id}, {$set: {subfilter: false}});
-      }, 1);
+      setTimeout(() => coll.findOneAndUpdate({_id: id}, {$set: {subfilter: false}}), LATENCY);
     });
 
     it("should return replaced document if it does not match with filter anymore", async done => {
@@ -240,9 +247,7 @@ describe("realtime database", () => {
           expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
           done();
         });
-      setTimeout(() => {
-        coll.findOneAndReplace({_id: id}, {test: 2, subfilter: false});
-      }, 1);
+      setTimeout(() => coll.findOneAndReplace({_id: id}, {test: 2, subfilter: false}), LATENCY);
     });
   });
 
@@ -287,7 +292,7 @@ describe("realtime database", () => {
         // These operations should not affect anything in our cursor
         await coll.updateOne({_id: insertedIds[1]}, {$set: {test: 25}});
         await coll.deleteOne({_id: insertedIds[1]});
-      }, 1);
+      }, LATENCY);
     });
 
     it("should limit to N items", async done => {
@@ -329,7 +334,7 @@ describe("realtime database", () => {
         // These operations should not affect anything in our cursor
         await coll.insertMany([{test: 12}, {test: 19.5}]);
         await coll.deleteOne({_id: insertedIds[2]});
-      }, 1);
+      }, LATENCY);
     });
 
     it("should skip and limit to N items", async done => {
@@ -361,9 +366,7 @@ describe("realtime database", () => {
           }
         });
 
-      setTimeout(async () => {
-        await coll.deleteOne({_id: insertedIds[3]});
-      }, 1);
+      setTimeout(() => coll.deleteOne({_id: insertedIds[3]}), LATENCY);
     });
   });
 
@@ -432,13 +435,13 @@ describe("realtime database", () => {
                   kind: SequenceKind.Substitute,
                   item: insertedIds[0].toHexString(),
                   with: insertedIds[2].toHexString(),
-                  at: 0
+                  at: 2
                 },
                 {
                   kind: SequenceKind.Substitute,
                   item: insertedIds[2].toHexString(),
                   with: insertedIds[0].toHexString(),
-                  at: 2
+                  at: 0
                 }
               ]
             }
@@ -448,7 +451,7 @@ describe("realtime database", () => {
       setTimeout(async () => {
         await coll.updateOne({_id: insertedIds[2]}, {$set: {test: 1}});
         await coll.updateOne({_id: insertedIds[0]}, {$set: {test: 3}});
-      }, 1);
+      }, LATENCY);
     });
   });
 });
