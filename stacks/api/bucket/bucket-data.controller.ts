@@ -214,6 +214,8 @@ export class BucketDataController {
         aggregation.push({$limit: limit});
       }
 
+      console.log("bucketId:" + bucketId);
+      console.log(JSON.stringify(aggregation));
       return this.bds
         .find(bucketId, aggregation)
         .catch((error: MongoError) =>
