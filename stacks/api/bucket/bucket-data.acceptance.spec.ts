@@ -487,6 +487,8 @@ describe("Bucket-Data acceptance", () => {
           filter: JSON.stringify({name: {$regex: "J"}})
         });
 
+        console.log(response);
+
         expect(response.body.length).toBe(2);
         expect(response.body.map(element => element.name)).toEqual(["James", "John"]);
       });
