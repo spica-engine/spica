@@ -9,7 +9,7 @@ import {Default, Format} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 export const CREATED_AT: Default = {
   keyword: ":created_at",
@@ -484,6 +484,15 @@ describe("Bucket-Data acceptance", () => {
       });
 
       it("should filter data which name contains 'J'", async () => {
+        console.log(
+          JSON.stringify(
+            await app
+              .get(DatabaseService)
+              .collection(`bucket_${myBucketId}`)
+              .find({})
+              .toArray()
+          )
+        );
         const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({name: {$regex: "J"}})
         });
