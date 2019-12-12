@@ -30,6 +30,7 @@ import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
 import {RequiredTranslate} from "../../validators";
 import {AddComponent} from "./add.component";
+import {delay} from "rxjs/operators";
 
 describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;
@@ -115,7 +116,7 @@ describe("AddComponent", () => {
   });
 
   describe("basic behavior", () => {
-    beforeEach(() => {
+    beforeEach(fakeAsync(() => {
       bucket.next({
         properties: {
           test: {
@@ -127,15 +128,17 @@ describe("AddComponent", () => {
         }
       });
       fixture.detectChanges();
-    });
+      tick(1);
+    }));
 
-    it("should render bucket information", () => {
+    it("should render bucket information", fakeAsync(() => {
       bucket.next({
         title: "My Bucket",
         description: "My buckets description.",
         icon: "test",
         properties: {}
       });
+      tick(1);
       fixture.detectChanges();
       expect(
         fixture.debugElement.query(By.css("mat-toolbar > span > h4 > mat-icon")).nativeElement
@@ -152,15 +155,15 @@ describe("AddComponent", () => {
       expect(bucketService.getBucket).toHaveBeenCalledTimes(1);
       expect(bucketDataService.findOne).not.toHaveBeenCalled();
       expect(bucketHistoryService.historyList).not.toHaveBeenCalled();
-    });
+    }));
 
     it("should show readonly badge", fakeAsync(() => {
       bucket.next({
         readOnly: true,
         properties: {}
       });
+      tick(1);
       fixture.detectChanges();
-      tick();
       expect(
         fixture.debugElement.query(By.css("mat-toolbar > span > h4 > mat-chip-list mat-chip"))
           .nativeElement.textContent
@@ -171,19 +174,22 @@ describe("AddComponent", () => {
       expect(bucketHistoryService.historyList).not.toHaveBeenCalled();
     }));
 
-    it("should disable add/update button when readonly", () => {
+    it("should disable add/update button when readonly", fakeAsync(() => {
       bucket.next({
         readOnly: true,
         properties: {}
       });
+      tick(1);
       fixture.detectChanges();
       expect(
         fixture.debugElement.query(By.css("mat-card > mat-card-actions > button:last-of-type"))
           .nativeElement.disabled
       ).toBe(true);
-    });
+    }));
 
-    it("should show add button", () => {
+    it("should show add button", fakeAsync(() => {
+      tick(1);
+      fixture.detectChanges();
       expect(
         fixture.debugElement.query(
           By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
@@ -195,7 +201,7 @@ describe("AddComponent", () => {
           By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
         ).nativeElement.textContent
       ).toBe("add");
-    });
+    }));
 
     it("should show update button", () => {
       fixture.componentInstance.data._id = "1";
@@ -288,7 +294,7 @@ describe("AddComponent", () => {
   });
 
   describe("properties", () => {
-    it("should render with positions", () => {
+    it("should render with positions", fakeAsync(() => {
       bucket.next({
         properties: {
           test: {
@@ -317,6 +323,7 @@ describe("AddComponent", () => {
           }
         }
       });
+      tick(1);
       fixture.detectChanges();
 
       let bottomProperties = fixture.debugElement.queryAll(
@@ -331,9 +338,9 @@ describe("AddComponent", () => {
       expect(bottomProperties.length).toBe(2);
       expect(leftProperties.length).toBe(1);
       expect(rightProperties.length).toBe(1);
-    });
+    }));
 
-    it("should write value to data", () => {
+    it("should write value to data", fakeAsync(() => {
       bucket.next({
         properties: {
           test: {
@@ -344,6 +351,7 @@ describe("AddComponent", () => {
           }
         }
       });
+      tick(1);
       fixture.detectChanges();
       const property = fixture.debugElement.query(
         By.css("mat-card > mat-card-content > form > div.bottom > div")
@@ -351,11 +359,11 @@ describe("AddComponent", () => {
       const ngModel = property.injector.get(NgModel);
       ngModel.viewToModelUpdate("test");
       expect(fixture.componentInstance.data.test).toEqual("test");
-    });
+    }));
 
     describe("translated", () => {
       let translatedProperty: DebugElement;
-      beforeEach(() => {
+      beforeEach(fakeAsync(() => {
         bucket.next({
           properties: {
             test: {
@@ -367,11 +375,12 @@ describe("AddComponent", () => {
             }
           }
         });
+        tick(1);
         fixture.detectChanges(false);
         translatedProperty = fixture.debugElement.query(
           By.css("mat-card > mat-card-content > form > div.bottom > div")
         );
-      });
+      }));
 
       it("should render translated properties and coerce data", () => {
         expect(translatedProperty).toBeTruthy();
@@ -396,7 +405,7 @@ describe("AddComponent", () => {
   });
 
   describe("validation", () => {
-    it("should be valid when there is no property required", () => {
+    it("should be valid when there is no property required", fakeAsync(() => {
       bucket.next({
         properties: {
           test: {
@@ -407,11 +416,12 @@ describe("AddComponent", () => {
           }
         }
       });
+      tick(1);
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.directive(NgForm)).injector.get(NgForm).invalid).toBe(
         false
       );
-    });
+    }));
 
     it("should be invalid when a property is required", fakeAsync(() => {
       bucket.next({
@@ -425,8 +435,9 @@ describe("AddComponent", () => {
           }
         }
       });
+      tick(1);
       fixture.detectChanges();
-      tick();
+      tick(1);
       expect(fixture.debugElement.query(By.directive(NgForm)).injector.get(NgForm).invalid).toBe(
         true
       );
@@ -444,8 +455,9 @@ describe("AddComponent", () => {
           }
         }
       });
-      fixture.detectChanges();
-      tick();
+      tick(1);
+      fixture.detectChanges(true);
+      tick(1);
       fixture.detectChanges();
       expect(
         fixture.debugElement.query(By.css("mat-card > mat-card-actions > button:last-of-type"))
