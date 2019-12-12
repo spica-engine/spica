@@ -591,69 +591,134 @@ describe("Bucket-Data acceptance", () => {
           .catch();
       });
 
-      it("should return english titles", async () => {
-        const response = await req.get(
-          `/bucket/${myBucketId}/data`,{},
-          {"accept-language": "en_US"}
-        );
+      describe("find requests", () => {
+        it("should return english titles", async () => {
+          const response = await req.get(
+            `/bucket/${myBucketId}/data`,
+            {},
+            {"accept-language": "en_US"}
+          );
 
-        expect(response.body.length).toBe(3);
+          expect(response.body.length).toBe(3);
 
-        expect(response.body.map(element => element.title)).toEqual([
-          "english words",
-          "new english words",
-          "only english words"
-        ]);
+          expect(response.body.map(element => element.title)).toEqual([
+            "english words",
+            "new english words",
+            "only english words"
+          ]);
+        });
+
+        it("should return turkish titles", async () => {
+          const response = await req.get(
+            `/bucket/${myBucketId}/data`,
+            {},
+            {"accept-language": "tr_TR"}
+          );
+
+          expect(response.body.length).toBe(3);
+
+          expect(response.body.map(element => element.title)).toEqual([
+            "türkçe kelimeler",
+            "yeni türkçe kelimeler",
+            "only english words"
+          ]);
+        });
+
+        it("should return titles with available languages when localize parameter is false", async () => {
+          const response = await req.get(
+            `/bucket/${myBucketId}/data`,
+            {localize: "false"},
+            {"accept-language": "tr_TR"}
+          );
+
+          expect(response.body.length).toBe(3);
+
+          expect(response.body.map(element => element.title)).toEqual([
+            {en_US: "english words", tr_TR: "türkçe kelimeler"},
+            {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
+            {en_US: "only english words"}
+          ]);
+        });
+
+        it("should return english titles when request's 'accepted-language' isn't available for titles", async () => {
+          const response = await req.get(
+            `/bucket/${myBucketId}/data`,
+            {},
+            {"accept-language": "fr_FR"}
+          );
+
+          expect(response.body.length).toBe(3);
+
+          expect(response.body.map(element => element.title)).toEqual([
+            "english words",
+            "new english words",
+            "only english words"
+          ]);
+        });
       });
 
-      it("should return turkish titles", async () => {
-        const response = await req.get(
-          `/bucket/${myBucketId}/data`,{},
-          {"accept-language": "tr_TR"}
-        );
+      describe("findOne requests", () => {
+        let allData;
+        beforeAll(async () => {
+          allData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
+        });
 
-        expect(response.body.length).toBe(3);
+        it("should return 'english words' title ", async () => {
+          //select one of them randomly
+          const selectedDataId = allData[0]._id;
 
-        expect(response.body.map(element => element.title)).toEqual([
-          "türkçe kelimeler",
-          "yeni türkçe kelimeler",
-          "only english words"
-        ]);
+          //get selected data
+          const selectedDataResponse = await req.get(
+            `/bucket/${myBucketId}/data/${selectedDataId}`,
+            {},
+            {"accept-language": "en_US"}
+          );
+          expect(selectedDataResponse.body.title).toBe("english words");
+        });
+
+        it("should return 'yeni türkçe kelimeler' title ", async () => {
+          //select one of them randomly
+          const selectedDataId = allData[1]._id;
+
+          //get selected data
+          const selectedDataResponse = await req.get(
+            `/bucket/${myBucketId}/data/${selectedDataId}`,
+            {},
+            {"accept-language": "tr_TR"}
+          );
+          expect(selectedDataResponse.body.title).toBe("yeni türkçe kelimeler");
+        });
+
+        it("should return data with avaliable languages when localize is false", async () => {
+          //select one of them randomly
+          const selectedDataId = allData[0]._id;
+
+          //get selected data
+          const selectedDataResponse = await req.get(
+            `/bucket/${myBucketId}/data/${selectedDataId}`,
+            {localize: "false"},
+            {"accept-language": "tr_TR"}
+          );
+          expect(selectedDataResponse.body.title).toEqual({
+            en_US: "english words",
+            tr_TR: "türkçe kelimeler"
+          });
+        });
+
+        it("should return 'only english words' title when request's 'accepted-language' isn't available for title", async () => {
+          //select one of them randomly
+          const selectedDataId = allData[2]._id;
+
+          //get selected data
+          const selectedDataResponse = await req.get(
+            `/bucket/${myBucketId}/data/${selectedDataId}`,
+            {},
+            {"accept-language": "tr_TR"}
+          );
+          expect(selectedDataResponse.body.title).toBe("only english words");
+        });
       });
-
-      it("should return titles with available languages when localize parameter is false", async () => {
-        const response = await req.get(
-          `/bucket/${myBucketId}/data`,
-          {localize: "false"},
-          {"accept-language": "tr_TR"}
-        );
-
-        expect(response.body.length).toBe(3);
-
-        expect(response.body.map(element => element.title)).toEqual([
-          {en_US: "english words", tr_TR: "türkçe kelimeler"},
-          {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
-          {en_US: "only english words"}
-        ]);
-      });
-
-      it("should return english titles when request's 'accepted-language' isn't available for titles" , async() => {
-        const response = await req.get(
-          `/bucket/${myBucketId}/data`,{},
-          {"accept-language": "fr_FR"}
-        );
-
-        expect(response.body.length).toBe(3);
-
-        expect(response.body.map(element => element.title)).toEqual([
-          "english words",
-          "new english words",
-          "only english words"
-        ]);
-      });
-
     });
-
   });
 
   afterAll(async () => {
