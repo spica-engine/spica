@@ -164,7 +164,6 @@ describe("Entrypoint", () => {
     // });
 
     it("should send the response", async () => {
-      console.log("\n\n\n\n\n\n");
       await initializeFn(`export default function(req, res) {
         res.send({ oughtToSerialize: true  })
       }`);

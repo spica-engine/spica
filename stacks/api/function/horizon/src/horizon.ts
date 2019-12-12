@@ -16,6 +16,7 @@ export class Horizon implements OnModuleInit {
   readonly enqueuers = new Set<Enqueuer<unknown>>();
 
   constructor(private http: HttpAdapterHost) {
+    this.runtime = new Node();
     this.queue = new EventQueue(this.enqueue);
     this.httpQueue = new HttpQueue();
     this.queue.addQueue(this.httpQueue);
