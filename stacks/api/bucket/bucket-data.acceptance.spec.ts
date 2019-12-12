@@ -432,11 +432,10 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("filter", () => {
-      const MYSPESIFICBUCKETID = new ObjectId("5df24cc986050a0fbb5c0ceb");
+      let myBucketId;
       beforeAll(async () => {
         //create bucket
         const myBucket = {
-          _id: MYSPESIFICBUCKETID,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -457,7 +456,7 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
-        await req.post("/bucket", myBucket);
+        myBucketId = (await req.post("/bucket", myBucket)).body._id;
 
         //insert some data
         const bucketdata = [
@@ -465,86 +464,64 @@ describe("Bucket-Data acceptance", () => {
           {name: "John", age: 36},
           {name: "Smith", age: 44}
         ];
-        await req.post(`/bucket/${MYSPESIFICBUCKETID}/data`, bucketdata[0]);
-        await req.post(`/bucket/${MYSPESIFICBUCKETID}/data`, bucketdata[1]);
-        await req.post(`/bucket/${MYSPESIFICBUCKETID}/data`, bucketdata[2]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
+        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
       });
 
       afterAll(async () => {
         await app
           .get(DatabaseService)
           .collection("buckets")
-          .deleteOne({_id: MYSPESIFICBUCKETID})
+          .deleteOne({_id: myBucketId})
           .catch();
         await app
           .get(DatabaseService)
-          .collection(`bucket_${MYSPESIFICBUCKETID}`)
+          .collection(`bucket_${myBucketId}`)
           .deleteMany({})
           .catch();
       });
 
       it("should filter data which name contains 'J'", async () => {
-        console.log(
-          JSON.stringify(
-            await app
-              .get(DatabaseService)
-              .collection(`bucket_${MYSPESIFICBUCKETID}`)
-              .find({})
-              .toArray()
-          )
-        );
-
-        console.log(await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {}));
-
-        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({name: {$regex: "J"}})
         });
-
-        console.log(response);
 
         expect(response.body.length).toBe(2);
         expect(response.body.map(element => element.name)).toEqual(["James", "John"]);
       });
 
       it("should filter data which has name Smith", async () => {
-        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({name: "Smith"})
         });
-
-        console.log(response);
 
         expect(response.body.length).toBe(1);
         expect(response.body[0].name).toBe("Smith");
       });
 
       it("should filter data which has age 36", async () => {
-        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({age: 36})
         });
-
-        console.log(response);
 
         expect(response.body.length).toBe(1);
         expect(response.body[0].name).toBe("John");
       });
 
       it("should filter data which has age grater than or equal 36", async () => {
-        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({age: {$gte: 36}})
         });
-
-        console.log(response);
 
         expect(response.body.length).toBe(2);
         expect(response.body.map(element => element.name)).toEqual(["John", "Smith"]);
       });
 
       it("should filter data which has age less than 25", async () => {
-        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
+        const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({age: {$lt: 25}})
         });
-
-        console.log(response);
 
         expect(response.body.length).toBe(1);
         expect(response.body[0].name).toBe("James");

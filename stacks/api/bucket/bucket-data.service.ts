@@ -21,7 +21,6 @@ export class BucketDataService {
 
   find<T = BucketDocument>(bucketId: string | ObjectId, aggregate?: any): Promise<Array<T>> {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
-    console.log("founded collection:" + JSON.stringify(collection));
     return collection.aggregate(aggregate).toArray();
   }
 
