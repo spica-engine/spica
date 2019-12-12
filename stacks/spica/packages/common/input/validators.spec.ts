@@ -42,7 +42,7 @@ describe("Validators", () => {
       validator.min = 2;
       validator.ngOnChanges({min: new SimpleChange(undefined, 2, true)});
       expect(validator.validate(new FormControl(2))).toBeNull();
-      expect(validator.validate(new FormControl(15))).toBeNull();
+      expect(validator.validate(new FormControl(100))).toBeNull();
     });
 
     it("should return errors", () => {

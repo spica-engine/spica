@@ -65,10 +65,11 @@
     margin: 30px;
     margin-top: -110px;
     // For proper border radius
-    overflow: hidden;
+    overflow: auto;
 
     mat-table {
-      width: 100%;
+      min-width: 100%;
+      width: max-content;
 
       mat-header-cell.action,
       mat-cell.action {

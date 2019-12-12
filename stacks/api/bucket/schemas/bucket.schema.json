@@ -19,7 +19,7 @@
       "title": "Title of the bucket",
       "description": "Title will appear within the related bucket pages.",
       "examples": ["New bucket"],
-      "maxLength": 15,
+      "maxLength": 100,
       "minLength": 4
     },
     "description": {
