@@ -3,7 +3,7 @@ import {BucketDataService, BucketModule} from "@spica-server/bucket";
 import {DocumentScheduler} from "@spica-server/bucket/scheduler";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe("scheduler", () => {
   let bds: BucketDataService;

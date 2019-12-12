@@ -9,7 +9,7 @@ import {Default, Format} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 1200000;
 
 export const CREATED_AT: Default = {
   keyword: ":created_at",
