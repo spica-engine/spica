@@ -495,6 +495,11 @@ describe("Bucket-Data acceptance", () => {
         );
 
         console.log(await req.get(`/bucket/${myBucketId}/data`, {}));
+        console.log(
+          await req.get(`/bucket/${myBucketId}/data`, {
+            filter: JSON.stringify({name: {$regex: "J"}})
+          })
+        );
 
         const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({name: {$regex: "J"}})
