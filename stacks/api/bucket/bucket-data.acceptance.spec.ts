@@ -432,11 +432,11 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("filter", () => {
-      let myBucketId = new ObjectId();
+      const MYSPESIFICBUCKETID = new ObjectId("5df24cc986050a0fbb5c0ceb");
       beforeAll(async () => {
         //create bucket
         const myBucket = {
-          _id: myBucketId,
+          _id: MYSPESIFICBUCKETID,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -465,20 +465,20 @@ describe("Bucket-Data acceptance", () => {
           {name: "John", age: 36},
           {name: "Smith", age: 44}
         ];
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
+        await req.post(`/bucket/${MYSPESIFICBUCKETID}/data`, bucketdata[0]);
+        await req.post(`/bucket/${MYSPESIFICBUCKETID}/data`, bucketdata[1]);
+        await req.post(`/bucket/${MYSPESIFICBUCKETID}/data`, bucketdata[2]);
       });
 
       afterAll(async () => {
         await app
           .get(DatabaseService)
           .collection("buckets")
-          .deleteOne({_id: myBucketId})
+          .deleteOne({_id: MYSPESIFICBUCKETID})
           .catch();
         await app
           .get(DatabaseService)
-          .collection(`bucket_${myBucketId}`)
+          .collection(`bucket_${MYSPESIFICBUCKETID}`)
           .deleteMany({})
           .catch();
       });
@@ -488,15 +488,15 @@ describe("Bucket-Data acceptance", () => {
           JSON.stringify(
             await app
               .get(DatabaseService)
-              .collection(`bucket_${myBucketId}`)
+              .collection(`bucket_${MYSPESIFICBUCKETID}`)
               .find({})
               .toArray()
           )
         );
 
-        console.log(await req.get(`/bucket/${myBucketId}/data`, {}));
+        console.log(await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {}));
 
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
           filter: JSON.stringify({name: {$regex: "J"}})
         });
 
@@ -507,7 +507,7 @@ describe("Bucket-Data acceptance", () => {
       });
 
       it("should filter data which has name Smith", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
           filter: JSON.stringify({name: "Smith"})
         });
 
@@ -518,7 +518,7 @@ describe("Bucket-Data acceptance", () => {
       });
 
       it("should filter data which has age 36", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
           filter: JSON.stringify({age: 36})
         });
 
@@ -529,7 +529,7 @@ describe("Bucket-Data acceptance", () => {
       });
 
       it("should filter data which has age grater than or equal 36", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
           filter: JSON.stringify({age: {$gte: 36}})
         });
 
@@ -540,7 +540,7 @@ describe("Bucket-Data acceptance", () => {
       });
 
       it("should filter data which has age less than 25", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const response = await req.get(`/bucket/${MYSPESIFICBUCKETID}/data`, {
           filter: JSON.stringify({age: {$lt: 25}})
         });
 
