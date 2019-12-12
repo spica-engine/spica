@@ -63,7 +63,7 @@ Bucket Create/Edit form divides into a few sections.
 
 On top bar you'll see and icon as default. You can click to change the icon of the Bucket. That icon will be shown on the sidebar next to the Bucket title.
 
-To save the Bucket, you have to enter a Title and a Description to explain the Bucket's purpose. While the Title is limited with 15 characters, Description is limited with 250.
+To save the Bucket, you have to enter a Title and a Description to explain the Bucket's purpose. While the Title is limited with 100 characters, Description is limited with 250.
 
 #### Properties
 
