@@ -495,15 +495,12 @@ describe("Bucket-Data acceptance", () => {
         );
 
         console.log(await req.get(`/bucket/${myBucketId}/data`, {}));
-        console.log(
-          await req.get(`/bucket/${myBucketId}/data`, {
-            filter: JSON.stringify({name: {$regex: "J"}})
-          })
-        );
 
         const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({name: {$regex: "J"}})
         });
+
+        console.log(response);
 
         expect(response.body.length).toBe(2);
         expect(response.body.map(element => element.name)).toEqual(["James", "John"]);
@@ -514,6 +511,8 @@ describe("Bucket-Data acceptance", () => {
           filter: JSON.stringify({name: "Smith"})
         });
 
+        console.log(response);
+
         expect(response.body.length).toBe(1);
         expect(response.body[0].name).toBe("Smith");
       });
@@ -522,6 +521,8 @@ describe("Bucket-Data acceptance", () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({age: 36})
         });
+
+        console.log(response);
 
         expect(response.body.length).toBe(1);
         expect(response.body[0].name).toBe("John");
@@ -532,6 +533,8 @@ describe("Bucket-Data acceptance", () => {
           filter: JSON.stringify({age: {$gte: 36}})
         });
 
+        console.log(response);
+
         expect(response.body.length).toBe(2);
         expect(response.body.map(element => element.name)).toEqual(["John", "Smith"]);
       });
@@ -540,6 +543,8 @@ describe("Bucket-Data acceptance", () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({age: {$lt: 25}})
         });
+
+        console.log(response);
 
         expect(response.body.length).toBe(1);
         expect(response.body[0].name).toBe("James");
