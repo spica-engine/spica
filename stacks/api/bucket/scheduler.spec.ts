@@ -36,6 +36,6 @@ describe("scheduler", () => {
       expect(scheduledDocument._id).toBe(documentId);
       expect(scheduledDocument.test).toBe(123);
       done();
-    }, 1000);
+    }, 2000);
   });
 });
