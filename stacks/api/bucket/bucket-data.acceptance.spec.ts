@@ -507,13 +507,99 @@ describe("Bucket-Data acceptance", () => {
         title: "updated title",
         description: "updated description"
       };
-      await req.post(`/bucket/${myBucketId}/data`, updatedData);
+      expect((await req.post(`/bucket/${myBucketId}/data`, updatedData)).body).toBe(
+        myBucketData._id.toHexString()
+      );
 
       const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
 
       expect(bucketData.length).toBe(1);
       expect(bucketData[0].title).toBe("updated title");
       expect(bucketData[0].description).toBe("updated description");
+    });
+  });
+
+  describe("delete requests", () => {
+    const myBucketId = new ObjectId();
+    let myBucketData;
+
+    beforeAll(async () => {
+      const myBucket = {
+        _id: myBucketId,
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left", visible: true}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
+        }
+      };
+      await req.post("/bucket", myBucket);
+    });
+
+    beforeEach(async () => {
+      myBucketData = [
+        {_id: new ObjectId(), title: "first title", description: "first description"},
+        {_id: new ObjectId(), title: "last title", description: "last description"}
+      ];
+      //clear bucket-data
+      await app
+        .get(DatabaseService)
+        .collection(`bucket_${myBucketId}`)
+        .deleteMany({})
+        .catch();
+
+      //add data
+      await req.post(`/bucket/${myBucketId}/data`, myBucketData[0]);
+      await req.post(`/bucket/${myBucketId}/data`, myBucketData[1]);
+    });
+
+    afterAll(async () => {
+      await app
+        .get(DatabaseService)
+        .collection(`bucket_${myBucketId}`)
+        .deleteMany({})
+        .catch();
+      await app
+        .get(DatabaseService)
+        .collection("buckets")
+        .deleteOne({_id: myBucketId})
+        .catch();
+    });
+
+    it("should delete last data and return deletedCount as 1", async () => {
+      const response = await req.delete(`/bucket/${myBucketId}/data/${myBucketData[1]._id}`);
+      expect(response.body.deletedCount).toBe(1);
+
+      const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
+
+      expect(bucketData.length).toBe(1);
+      expect(bucketData[0].title).toBe("first title");
+      expect(bucketData[0].description).toBe("first description");
+    });
+
+    it("should delete multiple data and return deletedCount as 2", async () => {
+      const response = await req.delete(`/bucket/${myBucketId}/data`, [
+        myBucketData[0]._id.toHexString(),
+        myBucketData[1]._id.toHexString()
+      ]);
+      expect(response.body.deletedCount).toBe(2);
+
+      const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
+
+      expect(bucketData).toEqual([]);
     });
   });
 
