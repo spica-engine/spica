@@ -163,13 +163,13 @@ export class BucketDataController {
     }
 
     if (typeof filter == "object") {
-      // aggregation.push({
-      //   $set: {
-      //     _id: {
-      //       $toString: `$_id`
-      //     }
-      //   }
-      // });
+      aggregation.push({
+        $set: {
+          _id: {
+            $toString: `$_id`
+          }
+        }
+      });
 
       aggregation.push({$match: filter});
     }

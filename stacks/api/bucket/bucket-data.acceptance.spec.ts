@@ -432,10 +432,11 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("filter", () => {
-      let myBucketId;
+      const myBucketId = new ObjectId();
       beforeAll(async () => {
         //create bucket
         const myBucket = {
+          _id: myBucketId,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -456,7 +457,7 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
-        myBucketId = (await req.post("/bucket", myBucket)).body._id;
+        await req.post("/bucket", myBucket);
 
         //insert some data
         const bucketdata = [
@@ -486,8 +487,6 @@ describe("Bucket-Data acceptance", () => {
         const response = await req.get(`/bucket/${myBucketId}/data`, {
           filter: JSON.stringify({name: {$regex: "J"}})
         });
-
-        console.log(response);
 
         expect(response.body.length).toBe(2);
         expect(response.body.map(element => element.name)).toEqual(["James", "John"]);

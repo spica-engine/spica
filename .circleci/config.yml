@@ -37,7 +37,7 @@ executors:
     working_directory: ~/spica
     docker:
       - image: circleci/node:11
-      - image: circleci/mongo:4.2
+      - image: circleci/mongo:4.2.1
 orbs:
   gcp-gke: circleci/gcp-gke@0.2.0
 jobs:
