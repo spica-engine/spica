@@ -464,7 +464,16 @@ describe("Bucket-Data acceptance", () => {
       await app
         .get(DatabaseService)
         .collection(`bucket_${myBucketId}`)
-        .deleteMany({});
+        .deleteMany({})
+        .catch();
+    });
+
+    afterAll(async () => {
+      await app
+        .get(DatabaseService)
+        .collection("buckets")
+        .deleteOne({_id: myBucketId})
+        .catch();
     });
 
     it("should add data to bucket and return added bucket-data id", async () => {
