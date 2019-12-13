@@ -1,17 +1,18 @@
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
 import {BucketDataService, BucketModule} from "@spica-server/bucket";
 import {DocumentScheduler} from "@spica-server/bucket/scheduler";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 12000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe("scheduler", () => {
   let bds: BucketDataService;
   let scheduler: DocumentScheduler;
   const bucketId = new ObjectId();
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet(), BucketModule]
     })
       .overrideProvider(BucketDataService)
@@ -37,5 +38,9 @@ describe("scheduler", () => {
       expect(scheduledDocument.test).toBe(123);
       done();
     }, 1000);
+  });
+
+  afterAll(async () => {
+    await module.close();
   });
 });

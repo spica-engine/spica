@@ -432,7 +432,7 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("filter", () => {
-      let myBucketId = new ObjectId();
+      const myBucketId = new ObjectId();
       beforeAll(async () => {
         //create bucket
         const myBucket = {
