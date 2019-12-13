@@ -507,7 +507,9 @@ describe("Bucket-Data acceptance", () => {
         title: "updated title",
         description: "updated description"
       };
-      await req.post(`/bucket/${myBucketId}/data`, updatedData);
+      expect((await req.post(`/bucket/${myBucketId}/data`, updatedData)).body).toBe(
+        myBucketData._id.toHexString()
+      );
 
       const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
 
