@@ -1,10 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
 
 ts_library(
     name = "preference",
-    srcs = glob(["*.ts"]),
+    srcs = glob(
+        include = ["**/*.ts"],
+        exclude = ["**/*.spec.ts"],
+    ),
     module_name = "@spica-server/preference",
     deps = [
         "//packages/database",
@@ -12,5 +17,30 @@ ts_library(
         "@npm//@nestjs/core",
         "@npm//@types/mongodb",
         "@npm//rxjs",
+    ],
+)
+
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "preference.service.spec.ts"
+    ],
+    deps = [
+        ":preference",
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    deps = [
+        ":test_lib",
     ],
 )
