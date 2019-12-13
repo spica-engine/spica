@@ -719,6 +719,139 @@ describe("Bucket-Data acceptance", () => {
         });
       });
     });
+
+    describe("relation", () => {
+      const staticsBucketId = new ObjectId();
+      const usersBucketId = new ObjectId();
+      const achievementsBucketId = new ObjectId();
+
+      const userId = new ObjectId();
+      const achievementId = new ObjectId();
+
+      beforeAll(async () => {
+        //create buckets
+        const staticsBucket = {
+          _id: staticsBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            achievement: {
+              type: "relation",
+              title: "achievement",
+              description: "Title of the row",
+              options: {position: "left", visible: true},
+              bucketId: achievementsBucketId
+            },
+            user: {
+              type: "relation",
+              title: "user",
+              description: "Description of the row",
+              options: {position: "right"},
+              bucketId: usersBucketId
+            }
+          }
+        };
+
+        const achievementsBucket = {
+          _id: achievementsBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            achievement_name: {
+              type: "string",
+              title: "achievement",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            }
+          }
+        };
+
+        const usersBucket = {
+          _id: usersBucketId,
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            username: {
+              type: "string",
+              title: "username",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            }
+          }
+        };
+
+        await req.post("/bucket", staticsBucket);
+        await req.post("/bucket", achievementsBucket);
+        await req.post("/bucket", usersBucket);
+
+        const userData = {
+          _id: userId,
+          username: "user66"
+        };
+
+        const achievementData = {
+          _id: achievementId,
+          achievement_name: "do something until something happens"
+        };
+
+        const staticsData = {
+          user: userId,
+          achievement: achievementId
+        };
+
+        await req.post(`/bucket/${usersBucketId}/data`, userData);
+        await req.post(`/bucket/${achievementsBucketId}/data`, achievementData);
+        await req.post(`/bucket/${staticsBucketId}/data`, staticsData);
+      });
+
+      afterAll(async () => {
+        await app
+          .get(DatabaseService)
+          .collection("buckets")
+          .deleteMany({})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection(`bucket_${staticsBucketId}`)
+          .deleteMany({})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection(`bucket_${usersBucketId}`)
+          .deleteMany({})
+          .catch();
+        await app
+          .get(DatabaseService)
+          .collection(`bucket_${achievementsBucketId}`)
+          .deleteMany({})
+          .catch();
+      });
+
+      it("should get statics with username and achievement name", async () => {
+        const response = await req.get(`/bucket/${staticsBucketId}/data`, {relation: true});
+
+        expect(response.body[0].user.username).toBe("user66");
+        expect(response.body[0].achievement.achievement_name).toBe(
+          "do something until something happens"
+        );
+      });
+
+      it("should get statics with only id", async () => {
+        const response = await req.get(`/bucket/${staticsBucketId}/data`, {relation: false});
+
+        expect(response.body[0].user).toEqual(userId.toHexString());
+        expect(response.body[0].achievement).toEqual(achievementId.toHexString());
+      });
+    });
   });
 
   afterAll(async () => {
