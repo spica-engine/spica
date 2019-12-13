@@ -35,7 +35,7 @@ export class FunctionEngine {
           const context: Context = {process: {env: fn.env}};
           const execution: Execution = {
             id: shortId.generate(),
-            script: script,
+            script: this.host.read(fn),
             cwd: this.host.getRoot(fn),
             timeout: fn.timeout,
             memoryLimit: fn.memoryLimit,

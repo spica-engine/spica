@@ -1,85 +1,73 @@
+import {ObjectId} from "@spica-server/database";
+
 export function levenshtein(
   a: Set<string> | Array<string>,
   b: Set<string> | Array<string>
 ): {distance: number; sequence: Sequence[]} {
   a = Array.from(a);
   b = Array.from(b);
-  const an = a.length;
-  const bn = b.length;
 
-  const matrix = new Array<number[]>(bn + 1);
+  const m = new Array(a.length + 1);
 
-  for (let m = 0; m <= bn; ++m) {
-    let row = (matrix[m] = new Array<number>(an + 1));
-    row[0] = m;
+  for (let i = 0; i < m.length; i++) {
+    m[i] = new Array(b.length + 1);
+
+    for (let j = 0; j < m[i].length; j++) {
+      if (i === 0) m[i][j] = j;
+      if (j === 0) m[i][j] = i;
+    }
   }
 
-  for (let n = 1; n <= an; ++n) {
-    matrix[0][n] = n;
-  }
-
-  for (let m = 1; m <= bn; ++m) {
-    for (let n = 1; n <= an; ++n) {
-      if (b[m - 1] === a[n - 1]) {
-        matrix[m][n] = matrix[m - 1][n - 1];
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        m[i][j] = m[i - 1][j - 1];
       } else {
-        matrix[m][n] =
-          Math.min(
-            matrix[m - 1][n - 1], // substitution
-            matrix[m][n - 1], // insertion
-            matrix[m - 1][n] // deletion
-          ) + 1;
+        m[i][j] = Math.min(m[i - 1][j], m[i][j - 1], m[i - 1][j - 1]) + 1;
       }
     }
   }
 
-  let n = an,
-    m = bn;
+  let i = a.length,
+    j = b.length;
 
   const sequence = new Array<Sequence>();
 
-  while (n != 0 || m != 0) {
-    if (m - 1 < 0) {
-      sequence.push({kind: SequenceKind.Insert, item: a[n - 1], at: n - 1});
-
-      n--;
-      continue;
-    }
-
-    if (n - 1 < 0) {
-      sequence.push({kind: SequenceKind.Delete, item: b[m - 1], at: m - 1});
-      m--;
-      continue;
-    }
-
-    const deletion = matrix[m - 1][n],
-      insertion = matrix[m][n - 1],
-      substitution = matrix[m - 1][n - 1],
-      min = Math.min(substitution, insertion, deletion);
-
-    if (min == substitution) {
-      if (substitution == matrix[m][n] - 1) {
-        sequence.push({kind: SequenceKind.Substitute, item: b[m - 1], with: a[n - 1], at: m - 1});
-      }
-      m--;
-      n--;
-    } else if (min == insertion) {
-      sequence.push({kind: SequenceKind.Insert, item: a[n - 1], at: n - 1});
-      n--;
-    } else if (min == deletion) {
-      sequence.push({kind: SequenceKind.Delete, item: b[m - 1], at: m - 1});
-      m--;
+  while (i !== 0 && j !== 0) {
+    if (a[i - 1] === b[j - 1]) {
+      // NO-OP
+      i--;
+      j--;
+    } else if (m[i - 1][j] < m[i][j - 1]) {
+      sequence.push({kind: SequenceKind.Delete, item: a[i - 1], at: i - 1});
+      i--;
+    } else if (m[i - 1][j] === m[i][j - 1]) {
+      sequence.push({kind: SequenceKind.Substitute, item: a[i - 1], with: b[j - 1], at: i - 1});
+      i--;
+      j--;
+    } else {
+      sequence.push({kind: SequenceKind.Insert, item: b[j - 1], at: j - 1});
+      j--;
     }
   }
 
-  return {distance: matrix[bn][an], sequence};
+  if (i === 0 && j > 0) {
+    for (let n = j - 1; n >= 0; n--) {
+      sequence.push({kind: SequenceKind.Insert, item: b[n], at: n});
+    }
+  } else if (j === 0 && i > 0) {
+    for (let m = i - 1; m >= 0; m--) {
+      sequence.push({kind: SequenceKind.Delete, item: a[m], at: m});
+    }
+  }
+  return {distance: m[a.length][b.length], sequence};
 }
 
 export interface Sequence {
   kind: SequenceKind;
-  item: string;
+  item: string | ObjectId;
   at: number;
-  with?: string;
+  with?: string | ObjectId;
 }
 
 export enum SequenceKind {

@@ -8,6 +8,8 @@ import {ChunkKind} from "./stream";
 
 const LATENCY = 70;
 
+const SKIP = new Object();
+
 function wait(time: number = LATENCY) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
@@ -26,11 +28,37 @@ describe("realtime database", () => {
     database = bed.get(DatabaseService);
 
     jasmine.addCustomEqualityTester((actual, expected) => {
-      if (actual instanceof ObjectId && expected instanceof ObjectId) {
-        return actual.equals(expected);
+      if (expected == SKIP) {
+        return true;
+      }
+      if (
+        (actual instanceof ObjectId && expected instanceof ObjectId) ||
+        (typeof expected == "string" && actual instanceof ObjectId) ||
+        (typeof actual == "string" && expected instanceof ObjectId)
+      ) {
+        return new ObjectId(actual).equals(expected);
       }
     });
-  }, 7000);
+  }, 8000);
+
+  it("should sync late subscribers", async done => {
+    await database.collection("test19").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
+    const source = realtime.find("test19", {filter: {stars: {$gt: 3}}}).pipe(bufferCount(3));
+
+    source.subscribe(([first, second, endofinitial]) => {
+      expect(first.document.stars).toBe(4);
+      expect(second.document.stars).toBe(5);
+      expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
+      const prevStreamCount = realtime["_streamCount"];
+      source.subscribe(([first, second, endofinitial]) => {
+        expect(prevStreamCount).toBe(realtime["_streamCount"]);
+        expect(first.document.stars).toBe(4);
+        expect(second.document.stars).toBe(5);
+        expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
+        done();
+      });
+    });
+  });
 
   it("should complete observable when collection dropped", async done => {
     await database.collection("willbedropped").insertMany([{test: 1}, {test: 2}]);
@@ -43,24 +71,7 @@ describe("realtime database", () => {
       .subscribe(() => database.dropCollection("willbedropped"), undefined, () => done());
   });
 
-  it("should sync late subscribers", async done => {
-    await database.collection("test19").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
-    const source = realtime.find("test19", {filter: {stars: {$gt: 3}}}).pipe(bufferCount(3));
-
-    source.subscribe(([first, second, endofinitial]) => {
-      expect(first.document.stars).toBe(4);
-      expect(second.document.stars).toBe(5);
-      expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
-      source.subscribe(([first, second, endofinitial]) => {
-        expect(first.document.stars).toBe(4);
-        expect(second.document.stars).toBe(5);
-        expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
-        done();
-      });
-    });
-  });
-
-  describe("without match, sort and limit", () => {
+  describe("without filter, sort and limit", () => {
     it("should return inital value", done => {
       realtime
         .find("test")
@@ -92,7 +103,10 @@ describe("realtime database", () => {
       await coll.insertOne({test: 1});
       realtime
         .find("test2")
-        .pipe(bufferCount(4))
+        .pipe(
+          take(4),
+          bufferCount(4)
+        )
         .subscribe(([initial, endofinitial, firstInsert, secondInsert]) => {
           expect(initial.kind).toBe(ChunkKind.Initial);
           expect(initial.document.test).toBe(1);
@@ -141,7 +155,7 @@ describe("realtime database", () => {
     });
   });
 
-  describe("with query", () => {
+  describe("with filter", () => {
     it("should return inital value", async done => {
       await database.collection("test5").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
       realtime
@@ -366,17 +380,15 @@ describe("realtime database", () => {
           }
         });
 
-      setTimeout(() => coll.deleteOne({_id: insertedIds[3]}), LATENCY);
+      setTimeout(async () => await coll.deleteOne({_id: insertedIds[3]}), LATENCY);
     });
   });
 
   describe("with sort", () => {
     it("should order descending by id", async () => {
       const coll = database.collection("test14");
-      const insertedIds = await coll
-        .insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}])
-        .then(r => r.insertedIds);
-
+      const insertedIds = (await coll.insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}]))
+        .insertedIds;
       realtime
         .find("test14", {sort: {_id: -1}})
         .pipe(bufferCount(5))
@@ -393,9 +405,8 @@ describe("realtime database", () => {
 
     it("should order ascending by id", async () => {
       const coll = database.collection("test15");
-      const insertedIds = await coll
-        .insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}])
-        .then(r => r.insertedIds);
+      const insertedIds = (await coll.insertMany([{test: 1}, {test: 2}, {test: 4}, {test: 5}]))
+        .insertedIds;
 
       realtime
         .find("test15", {sort: {_id: 1}})
@@ -433,14 +444,14 @@ describe("realtime database", () => {
               sequence: [
                 {
                   kind: SequenceKind.Substitute,
-                  item: insertedIds[0].toHexString(),
-                  with: insertedIds[2].toHexString(),
+                  item: insertedIds[2],
+                  with: insertedIds[0],
                   at: 2
                 },
                 {
                   kind: SequenceKind.Substitute,
-                  item: insertedIds[2].toHexString(),
-                  with: insertedIds[0].toHexString(),
+                  item: insertedIds[0],
+                  with: insertedIds[2],
                   at: 0
                 }
               ]
@@ -448,10 +459,146 @@ describe("realtime database", () => {
           ]);
           done();
         });
-      setTimeout(async () => {
-        await coll.updateOne({_id: insertedIds[2]}, {$set: {test: 1}});
-        await coll.updateOne({_id: insertedIds[0]}, {$set: {test: 3}});
-      }, LATENCY);
+      await wait(LATENCY);
+      await Promise.all([
+        coll.updateOne({_id: insertedIds[2]}, {$set: {test: 1}}),
+        coll.updateOne({_id: insertedIds[0]}, {$set: {test: 3}})
+      ]);
+    });
+
+    it("should order descending by _id property and limit to 2", async done => {
+      const coll = database.collection("test17");
+      const insertedId = await coll.insertOne({test: 1}).then(r => r.insertedId);
+      realtime
+        .find("test17", {sort: {_id: -1}, limit: 2})
+        .pipe(bufferCount(4))
+        .subscribe(chunks => {
+          expect(chunks).toEqual([
+            {kind: ChunkKind.Initial, document: {_id: insertedId, test: 1}},
+            {kind: ChunkKind.EndOfInitial},
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedId, test: 2}},
+            {
+              kind: ChunkKind.Order,
+              sequence: [
+                {
+                  kind: SequenceKind.Substitute,
+                  item: laterInsertedId,
+                  with: insertedId,
+                  at: 1
+                },
+                {
+                  kind: SequenceKind.Substitute,
+                  item: insertedId,
+                  with: laterInsertedId,
+                  at: 0
+                }
+              ]
+            }
+          ]);
+          done();
+        });
+      await wait(LATENCY);
+      const laterInsertedId = (await coll.insertOne({test: 2})).insertedId;
+    });
+
+    it("should order descending by _id property and limit to one", async done => {
+      const coll = database.collection("test18");
+      const insertedId = await coll.insertOne({test: 1}).then(r => r.insertedId);
+      realtime
+        .find("test18", {sort: {_id: -1}, limit: 1})
+        .pipe(bufferCount(4))
+        .subscribe(chunks => {
+          expect(chunks).toEqual([
+            {kind: ChunkKind.Initial, document: {_id: insertedId, test: 1}},
+            {kind: ChunkKind.EndOfInitial},
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedId, test: 2}},
+            {
+              kind: ChunkKind.Order,
+              sequence: [
+                {
+                  kind: SequenceKind.Delete,
+                  at: 0,
+                  item: insertedId
+                }
+              ]
+            }
+          ]);
+          done();
+        });
+      await wait(LATENCY);
+      const laterInsertedId = (await coll.insertOne({test: 2})).insertedId;
+    });
+
+    it("should order descending by _id property and limit to one and expunge", async done => {
+      const coll = database.collection("test19");
+      const insertedId = await coll.insertOne({test: 1}).then(r => r.insertedId);
+      realtime
+        .find("test19", {sort: {_id: -1}, limit: 4})
+        .pipe(bufferCount(10))
+        .subscribe(chunks => {
+          expect(chunks).toEqual([
+            {kind: ChunkKind.Initial, document: {_id: insertedId, test: 1}},
+            {kind: ChunkKind.EndOfInitial},
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedIds[2], test: 4}},
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedIds[1], test: 3}},
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedIds[0], test: 2}},
+            // Move first added item to last
+            {
+              kind: ChunkKind.Order,
+              sequence: [
+                {kind: SequenceKind.Insert, item: insertedId, at: 3},
+                {kind: SequenceKind.Delete, item: insertedId, at: 0}
+              ]
+            },
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedIds2[2], test: 7}},
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedIds2[1], test: 6}},
+            {kind: ChunkKind.Insert, document: {_id: laterInsertedIds2[0], test: 5}},
+            {
+              kind: ChunkKind.Order,
+              sequence: [
+                {kind: SequenceKind.Insert, item: laterInsertedIds[2], at: 3},
+                {kind: SequenceKind.Delete, item: insertedId, at: 3},
+                {kind: SequenceKind.Delete, item: laterInsertedIds[0], at: 2},
+                {kind: SequenceKind.Delete, item: laterInsertedIds[1], at: 1},
+                {kind: SequenceKind.Delete, item: laterInsertedIds[2], at: 0}
+              ]
+            }
+          ]);
+          done();
+        });
+      await wait(LATENCY);
+      const laterInsertedIds = (await coll.insertMany([{test: 2}, {test: 3}, {test: 4}]))
+        .insertedIds;
+      await wait(LATENCY);
+      const laterInsertedIds2 = (await coll.insertMany([{test: 5}, {test: 6}, {test: 7}]))
+        .insertedIds;
+    });
+
+    it("should order descending by _id property and limit to one and expunge", async done => {
+      const coll = database.collection("test20");
+      const initiallyInsertedIds = (await coll.insertMany([{test: 1}, {test: 2}])).insertedIds;
+      realtime
+        .find("test20", {sort: {_id: -1}, limit: 2})
+        .pipe(bufferCount(6))
+        .subscribe(chunks => {
+          expect(chunks).toEqual([
+            {kind: ChunkKind.Initial, document: {_id: initiallyInsertedIds[1], test: 2}},
+            {kind: ChunkKind.Initial, document: {_id: initiallyInsertedIds[0], test: 1}},
+            {kind: ChunkKind.EndOfInitial},
+            {kind: ChunkKind.Insert, document: {_id: insertedIds[1], test: 4}},
+            {kind: ChunkKind.Insert, document: {_id: insertedIds[0], test: 3}},
+            {
+              kind: ChunkKind.Order,
+              sequence: [
+                {kind: SequenceKind.Delete, item: initiallyInsertedIds[0], at: 1},
+                {kind: SequenceKind.Delete, item: initiallyInsertedIds[1], at: 0}
+              ]
+            }
+          ]);
+          done();
+        });
+      await wait(LATENCY * 2);
+      const insertedIds = (await coll.insertMany([{test: 3}, {test: 4}])).insertedIds;
     });
   });
 });
