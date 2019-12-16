@@ -87,11 +87,9 @@ describe("Preference Service", () => {
   });
 
   it("should return pref", () => {
-     preferenceService
+    preferenceService
       .watch("bucket", {propagateOnStart: true})
-      .toPromise()
-      .then(value => {
-        expect(value).toEqual({scope: "bucket", property: "ıuqhweqwoıdjs propery"});
-      });
+      .subscribe(next => console.log(next), error => console.log(error), () => console.log("done"));
+      
   });
 });
