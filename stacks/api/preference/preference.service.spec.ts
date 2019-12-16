@@ -1,7 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, ObjectId, DatabaseService} from "@spica-server/database/testing";
+import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
 import {PreferenceService} from "./preference.service";
 import {Preference} from "./interface";
+import {Observable} from "rxjs";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -16,7 +17,7 @@ describe("Preference Service", () => {
   let preferenceService: PreferenceService;
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.replicaSet()],
       providers: [PreferenceService]
     }).compile();
     preferenceService = module.get(PreferenceService);
@@ -37,6 +38,10 @@ describe("Preference Service", () => {
     await addPref(prefs);
   });
 
+  afterAll(async () => {
+    await module.close();
+  });
+
   it("should get passport preferences", async () => {
     const passportPref = await preferenceService.get("passport");
 
@@ -44,7 +49,7 @@ describe("Preference Service", () => {
     expect(passportPref.property).toBe("passport property");
   });
 
-  it("should get default preference if scope doesnt exist but default exist", async () => {
+  it("should get default preference if scope doesnt exist but default exists", async () => {
     await preferenceService.default({scope: "function", property: "default function property"});
     const functionPref = await preferenceService.get("function");
 
@@ -76,5 +81,17 @@ describe("Preference Service", () => {
     expect(functionPref.property).toBe("function property");
   });
 
-  //get info about mongo watcher the write 'watch' test
+  it("should return observable when called watch method", () => {
+    const obs = preferenceService.watch("bucket");
+    expect(obs instanceof Observable).toBe(true);
+  });
+
+  it("should return pref", () => {
+     preferenceService
+      .watch("bucket", {propagateOnStart: true})
+      .toPromise()
+      .then(value => {
+        expect(value).toEqual({scope: "bucket", property: "ıuqhweqwoıdjs propery"});
+      });
+  });
 });

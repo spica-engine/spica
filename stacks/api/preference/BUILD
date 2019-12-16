@@ -21,10 +21,10 @@ ts_library(
 )
 
 ts_library(
-    name = "test_lib",
+    name = "test_lib_preference-service",
     testonly = True,
     srcs = [
-        "preference.service.spec.ts"
+        "preference.service.spec.ts",
     ],
     deps = [
         ":preference",
@@ -35,12 +35,41 @@ ts_library(
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",
+        "@npm//rxjs",
     ],
 )
 
 jasmine_node_test(
-    name = "test",
+    name = "test-preference-service",
     deps = [
-        ":test_lib",
+        ":test_lib_preference-service",
     ],
 )
+
+ts_library(
+    name = "test_lib_preference-acceptance",
+    testonly = True,
+    srcs = [
+        "preference.acceptance.spec.ts"
+    ],
+    deps = [
+        ":preference",
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//rxjs",
+    ],
+)
+
+jasmine_node_test(
+    name = "test-preference-acceptance",
+    deps = [
+        ":test_lib_preference-acceptance",
+    ],
+)
+
+
