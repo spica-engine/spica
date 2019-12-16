@@ -5,6 +5,7 @@ load("//tools/dgeni:index.bzl", "docs")
 docs(
     name = "guide",
     srcs = [
+        "index.md",
         "bucket.md",
         "function.md",
         "getting-started.md",
