@@ -18,10 +18,12 @@
       min-width: 250px;
 
       section.routes {
-        height: 100%;
         display: flex;
         flex-flow: row;
         justify-content: stretch;
+        mat-nav-list:last-child {
+          min-height: 100vh;
+        }
         mat-nav-list {
           &:first-of-type {
             background: rgba(var(--background-background-rgb), 0.9);
