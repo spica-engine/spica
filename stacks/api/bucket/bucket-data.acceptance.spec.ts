@@ -854,6 +854,93 @@ describe("Bucket-Data acceptance", () => {
     });
   });
 
+  describe("post requests", () => {
+    const myBucketId = new ObjectId();
+    beforeAll(async () => {
+      const myBucket = {
+        _id: myBucketId,
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left", visible: true}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
+        }
+      };
+      await req.post("/bucket", myBucket);
+    });
+
+    afterEach(async () => {
+      await app
+        .get(DatabaseService)
+        .collection(`bucket_${myBucketId}`)
+        .deleteMany({})
+        .catch();
+    });
+
+    afterAll(async () => {
+      await app
+        .get(DatabaseService)
+        .collection("buckets")
+        .deleteOne({_id: myBucketId})
+        .catch();
+    });
+
+    it("should add data to bucket and return added bucket-data id", async () => {
+      const myBucketData = {
+        _id: new ObjectId(),
+        title: "first title",
+        description: "first description"
+      };
+
+      expect((await req.post(`/bucket/${myBucketId}/data`, myBucketData)).body).toBe(
+        myBucketData._id.toHexString()
+      );
+
+      const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
+
+      expect(bucketData.length).toBe(1);
+      expect(bucketData[0].title).toBe("first title");
+      expect(bucketData[0].description).toBe("first description");
+    });
+
+    it("should update data if it exists", async () => {
+      const myBucketData = {
+        _id: new ObjectId(),
+        title: "first title",
+        description: "first description"
+      };
+      await req.post(`/bucket/${myBucketId}/data`, myBucketData);
+
+      const updatedData = {
+        _id: myBucketData._id,
+        title: "updated title",
+        description: "updated description"
+      };
+      expect((await req.post(`/bucket/${myBucketId}/data`, updatedData)).body).toBe(
+        myBucketData._id.toHexString()
+      );
+
+      const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
+
+      expect(bucketData.length).toBe(1);
+      expect(bucketData[0].title).toBe("updated title");
+      expect(bucketData[0].description).toBe("updated description");
+    });
+  });
+
   afterAll(async () => {
     await app.close();
   });
