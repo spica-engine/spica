@@ -46,12 +46,8 @@ describe("Preference Service", () => {
   });
 
   it("should get preference", async () => {
-    await req.post("/preference", 
-      {scope: "bucket", property: "bucket props"},
-    );
-    await req.post("/preference", 
-      {scope: "function", property: "function props"},
-    );
+    await req.post("/preference", {scope: "bucket", property: "bucket props"});
+    await req.post("/preference", {scope: "function", property: "function props"});
 
     const bucketPref = (await req.get("/preference/bucket", {})).body;
     expect(bucketPref.scope).toBe("bucket");

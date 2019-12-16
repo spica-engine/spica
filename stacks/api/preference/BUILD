@@ -3,7 +3,6 @@ package(default_visibility = ["//visibility:public"])
 load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
-
 ts_library(
     name = "preference",
     srcs = glob(
@@ -50,7 +49,7 @@ ts_library(
     name = "test_lib_preference-acceptance",
     testonly = True,
     srcs = [
-        "preference.acceptance.spec.ts"
+        "preference.acceptance.spec.ts",
     ],
     deps = [
         ":preference",
@@ -71,5 +70,3 @@ jasmine_node_test(
         ":test_lib_preference-acceptance",
     ],
 )
-
-
