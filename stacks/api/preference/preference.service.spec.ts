@@ -1,10 +1,9 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
-import {PreferenceService} from "./preference.service";
-import {Preference} from "./interface";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {Observable} from "rxjs";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
+import {take} from "rxjs/operators";
+import {Preference} from "./interface";
+import {PreferenceService} from "./preference.service";
 
 describe("Preference Service", () => {
   async function addPref(prefs: Preference[]) {
@@ -21,7 +20,7 @@ describe("Preference Service", () => {
       providers: [PreferenceService]
     }).compile();
     preferenceService = module.get(PreferenceService);
-  });
+  }, 12000);
 
   beforeEach(async () => {
     // clear prefs
@@ -81,15 +80,38 @@ describe("Preference Service", () => {
     expect(functionPref.property).toBe("function property");
   });
 
-  it("should return observable when called watch method", () => {
-    const obs = preferenceService.watch("bucket");
-    expect(obs instanceof Observable).toBe(true);
-  });
+  describe("watch requests", () => {
+    it("should return observable when called with propageOnStart is false", () => {
+      const obs = preferenceService.watch("bucket");
+      expect(obs instanceof Observable).toBe(true);
+    });
 
-  it("should return pref", () => {
-    preferenceService
-      .watch("bucket", {propagateOnStart: true})
-      .subscribe(next => console.log(next), error => console.log(error), () => console.log("done"));
-      
+    it("should return pref when called with propageOnStart is true", done => {
+      preferenceService
+        .watch("bucket", {propagateOnStart: true})
+        .pipe(take(1))
+        .subscribe(next => {
+          expect(next.scope).toBe("bucket");
+          expect(next.property).toBe("bucket property");
+          done();
+        });
+    });
+
+    it("should return updated pref when pref value updated on db", done => {
+      preferenceService
+        .watch("bucket")
+        .pipe(take(1))
+        .subscribe(next => {
+          expect(next.scope).toBe("bucket");
+          expect(next.property).toBe("updated bucket property");
+          done();
+        });
+
+      setTimeout(() => {
+        preferenceService["_collection"]
+          .updateOne({scope: "bucket"}, {$set: {property: "updated bucket property"}})
+          .catch();
+      }, 100);
+    });
   });
 });
