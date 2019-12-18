@@ -24,7 +24,7 @@ export class HistoryController {
   ) {
     const document = await this.historyService.getDocument(bucketId, documentId);
     const schema = await this.historyService.getSchema(bucketId);
-    const history = await this.historyService.findBetweenNow(historyId);
+    const history = await this.historyService.findBetweenNow(bucketId, documentId, historyId);
     const compiledSchema = compile(schema);
     history.forEach(history => applyPatch(history.changes, document, compiledSchema));
     return document;

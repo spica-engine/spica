@@ -3,9 +3,11 @@ import {
   DatabaseTestingModule,
   DatabaseService,
   ObjectId,
-  DeleteWriteOpResultObject
+  DeleteWriteOpResultObject,
+  InsertOneWriteOpResult
 } from "@spica-server/database/testing";
 import {HistoryService} from "./history.service";
+import {diff} from "./differ";
 
 describe("History Service", () => {
   let module: TestingModule;
@@ -93,27 +95,58 @@ describe("History Service", () => {
 
   describe("history methods", () => {
     describe("get", () => {
+      const myBucketId = new ObjectId();
+      const myDocumentId = new ObjectId();
+      const anotherDocumentId = new ObjectId();
+
+      const myFirstHistoryId = new ObjectId(
+        Math.floor(new Date(2018, 11, 22).getTime() / 1000).toString(16) + "0000000000000000"
+      );
+      const mySecondHistoryId = new ObjectId(
+        Math.floor(new Date(2018, 11, 24).getTime() / 1000).toString(16) + "0000000000000000"
+      );
+      const myThirdHistoryId = new ObjectId(
+        Math.floor(new Date(2018, 11, 26).getTime() / 1000).toString(16) + "0000000000000000"
+      );
+
       beforeAll(async () => {
         const myFirstHistory = {
+          _id: myFirstHistoryId,
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
           title: "first history",
-          changes: [],
-          date: new Date(2018, 11, 22)
+          changes: diff({title: "previous title"}, {title: "edited title"})
         };
         const mySecondHistory = {
+          _id: mySecondHistoryId,
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
           title: "second history",
-          changes: [],
-          date: new Date(2018, 11, 24)
+          changes: diff({title: "will be deleted title"}, {description: "new added description"})
         };
         const myThirdHistory = {
+          _id: myThirdHistoryId,
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
           title: "third history",
-          changes: [],
-          date: new Date(2018, 11, 26)
+          changes: diff(
+            {},
+            {title: "new added title", description: "new added description", name: "new added name"}
+          )
+        };
+        const anotherHistory = {
+          bucket_id: myBucketId,
+          document_id: anotherDocumentId,
+          title: "another document history",
+          changes: []
         };
 
-        //we need to insert stories one by one cause of id value calculates by inserted date
-        await historyService.collection.insertOne(myFirstHistory);
-        await historyService.collection.insertOne(mySecondHistory);
-        await historyService.collection.insertOne(myThirdHistory);
+        await historyService.collection.insertMany([
+          myFirstHistory,
+          mySecondHistory,
+          myThirdHistory,
+          anotherHistory
+        ]);
       });
 
       afterAll(async () => {
@@ -121,71 +154,234 @@ describe("History Service", () => {
       });
 
       it("should get history from title", async () => {
-        let myHistory = await historyService.getHistory({title: "third history"});
-        delete myHistory._id;
+        const myHistory = await historyService.getHistory({title: "third history"});
         expect(myHistory).toEqual({
+          _id: myThirdHistoryId,
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
           title: "third history",
-          changes: [],
-          date: new Date(2018, 11, 26)
+          changes: diff(
+            {},
+            {title: "new added title", description: "new added description", name: "new added name"}
+          )
         });
       });
 
-      it("should get histories from spesific history to now", async () => {
-        //first we need to get story which is we want
-        const myLimitHistoryId = (await historyService.getHistory({title: "second history"}))._id;
+      it("should get histories from spesific history to now for spesific bucket document", async () => {
+        //first we need to get story which we want
+        const myLimitHistoryId = mySecondHistoryId;
 
-        //then we will get histories from spesific histories to now
-        let myHistories = await historyService.findBetweenNow(new ObjectId(myLimitHistoryId));
-        expect(myHistories.filter(history => delete history._id)).toEqual([
+        //then we will get histories from spesific history to now
+        const myHistories = await historyService.findBetweenNow(
+          myBucketId,
+          myDocumentId,
+          myLimitHistoryId
+        );
+        expect(myHistories).toEqual([
           {
+            _id: myThirdHistoryId,
+            bucket_id: myBucketId,
+            document_id: myDocumentId,
             title: "third history",
-            changes: [],
-            date: new Date(2018, 11, 26)
+            changes: diff(
+              {},
+              {
+                title: "new added title",
+                description: "new added description",
+                name: "new added name"
+              }
+            )
           },
           {
+            _id: mySecondHistoryId,
+            bucket_id: myBucketId,
+            document_id: myDocumentId,
             title: "second history",
-            changes: [],
-            date: new Date(2018, 11, 24)
+            changes: diff({title: "will be deleted title"}, {description: "new added description"})
           }
+        ]);
+      });
+
+      it("should get all histories of spesific bucket document", async () => {
+        const myHistories = await historyService.find({document_id: myDocumentId});
+        expect(myHistories).toEqual([
+          {
+            _id: myThirdHistoryId,
+            date: new Date(2018, 11, 26),
+            changes: 3
+          } as any,
+          {
+            _id: mySecondHistoryId,
+            date: new Date(2018, 11, 24),
+            changes: 2
+          } as any,
+          {
+            _id: myFirstHistoryId,
+            date: new Date(2018, 11, 22),
+            changes: 1
+          } as any
         ]);
       });
     });
 
     describe("delete", () => {
-      beforeAll(async () => {
+      const myBucketId = new ObjectId();
+      const myDocumentId = new ObjectId();
+      const anotherDocumentId = new ObjectId();
+
+      beforeEach(async () => {
         const myFirstHistory = {
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
           title: "first history",
-          changes: [],
-          date: new Date(2018, 11, 22)
+          changes: diff({title: "previous title"}, {title: "edited title"})
         };
         const mySecondHistory = {
+          bucket_id: myBucketId,
+          document_id: anotherDocumentId,
           title: "second history",
-          changes: [],
-          date: new Date(2018, 11, 24)
+          changes: diff(
+            {title: null},
+            {title: "new added title", description: "new added description"}
+          )
         };
         const myThirdHistory = {
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
           title: "third history",
-          changes: [],
-          date: new Date(2018, 11, 26)
+          changes: diff({description: ["first,second"]}, {description: ["new first,new second"]})
         };
 
-        //we need to insert stories one by one cause of id value calculates by inserted date
-        await historyService.collection.insertOne(myFirstHistory);
-        await historyService.collection.insertOne(mySecondHistory);
-        await historyService.collection.insertOne(myThirdHistory);
+        await historyService.collection.insertMany([
+          myFirstHistory,
+          mySecondHistory,
+          myThirdHistory
+        ]);
       });
 
-      afterAll(async () => {
+      afterEach(async () => {
         await historyService.collection.deleteMany({});
       });
 
-      xit("it should delete multiple history", async () => {
+      it("should delete spesific bucket document histories", async () => {
         const response: DeleteWriteOpResultObject = await historyService.deleteMany({
-          title: ["second history", "third history"]
+          $and: [{bucket_id: myBucketId}, {document_id: myDocumentId}]
+        });
+        expect(response.deletedCount).toBe(2);
+
+        const histories = (await historyService.collection.find({}).toArray()).filter(
+          history => delete history._id
+        );
+        expect(histories).toEqual([
+          {
+            bucket_id: myBucketId,
+            document_id: anotherDocumentId,
+            title: "second history",
+            changes: diff(
+              {title: null},
+              {title: "new added title", description: "new added description"}
+            )
+          }
+        ]);
+      });
+
+      it("shouldn't delete anything", async () => {
+        const response: DeleteWriteOpResultObject = await historyService.deleteMany({
+          document_id: new ObjectId()
+        });
+        expect(response.deletedCount).toBe(0);
+      });
+
+      it("should delete all of them", async () => {
+        const response: DeleteWriteOpResultObject = await historyService.deleteMany({});
+        expect(response.deletedCount).toBe(3);
+      });
+
+      it("should delete histories which contains changes about only title field ,should remove title changes on histories which contains changes about title and more, shouldn't update which doesnt contain changes about title", async () => {
+        const response = await historyService.deleteHistoryAtPath(myBucketId, ["title"]);
+        expect(response.deletedCount).toBe(1);
+
+        const histories = (await historyService.collection.find({}).toArray()).map(
+          history => history.changes
+        );
+        expect(histories).toEqual([
+          diff({}, {description: "new added description"}),
+          diff({description: ["first,second"]}, {description: ["new first,new second"]})
+        ]);
+      });
+    });
+
+    describe("insert", () => {
+      const myBucketId = new ObjectId();
+      const myDocumentId = new ObjectId();
+
+      afterEach(async () => {
+        await historyService.collection.deleteMany({});
+      });
+
+      it("should delete first history before add new history if history count is ten or more", async () => {
+        //fill the collection
+        const histories = Array.from(new Array(10), (val, index) => ({
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
+          //index starts with 0
+          title: `${index + 1}. history`
+        }));
+        await historyService.collection.insertMany(histories);
+
+        //add history
+        const response: InsertOneWriteOpResult = await historyService.insertOne({
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
+          title: "add me"
+        });
+        expect(response.insertedCount).toBe(1);
+
+        const historyTitles = (await historyService.collection.find({}).toArray()).map(
+          history => history.title
+        );
+        expect(historyTitles.length).toBe(10);
+        expect(historyTitles).toEqual([
+          "2. history",
+          "3. history",
+          "4. history",
+          "5. history",
+          "6. history",
+          "7. history",
+          "8. history",
+          "9. history",
+          "10. history",
+          "add me"
+        ]);
+      });
+
+      it("should add new history without delete any", async () => {
+        await historyService.collection.insertOne({
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
+          title: "first title"
         });
 
-        expect(response).toEqual({} as any);
-        expect(historyService.collection.find({})).toEqual({} as any);
+        const response: InsertOneWriteOpResult = await historyService.insertOne({
+          bucket_id: myBucketId,
+          document_id: myDocumentId,
+          title: "new title"
+        });
+        expect(response.insertedCount).toBe(1);
+
+        const histories = await historyService.collection.find({}).toArray();
+        expect(histories.filter(history => delete history._id)).toEqual([
+          {
+            bucket_id: myBucketId,
+            document_id: myDocumentId,
+            title: "first title"
+          },
+          {
+            bucket_id: myBucketId,
+            document_id: myDocumentId,
+            title: "new title"
+          }
+        ]);
       });
     });
   });

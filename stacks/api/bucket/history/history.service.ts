@@ -6,7 +6,8 @@ import {
   FilterQuery,
   ObjectId,
   ReadPreference,
-  ReplaceWriteOpResult
+  ReplaceWriteOpResult,
+  InsertOneWriteOpResult
 } from "@spica-server/database";
 import {ChangePaths} from "./differ";
 import {BucketDocument, History} from "./interfaces";
@@ -53,11 +54,11 @@ export class HistoryService {
     );
   }
 
-  findBetweenNow(id: ObjectId) {
+  findBetweenNow(bucketId: ObjectId, documentId: ObjectId, id: ObjectId) {
     return this.collection
       .aggregate([
         {
-          $match: {_id: {$gte: id}}
+          $match: {$and: [{bucket_id: bucketId}, {document_id: documentId}, {_id: {$gte: id}}]}
         },
         {
           $sort: {_id: -1}
@@ -74,7 +75,6 @@ export class HistoryService {
         },
         {
           $project: {
-            id: true,
             date: {$convert: {input: "$_id", to: "date"}},
             changes: {$size: "$changes"}
           }
@@ -117,15 +117,17 @@ export class HistoryService {
     return this.collection.deleteMany(filter);
   }
 
-  async upsertOne(history: History): Promise<ReplaceWriteOpResult> {
-    const recordCount = await this.collection.find({document_id: history.document_id}).count();
+  async insertOne(history: History): Promise<InsertOneWriteOpResult> {
+    const recordCount = await this.collection
+      .find({$and: [{bucket_id: history.bucket_id}, {document_id: history.document_id}]})
+      .count();
 
     if (recordCount >= 10) {
-      await this.collection.deleteOne({document_id: history.document_id});
+      await this.collection.deleteOne({
+        $and: [{bucket_id: history.bucket_id}, {document_id: history.document_id}]
+      });
     }
 
-    return this.collection.replaceOne({_id: new ObjectId(history._id)}, history, {
-      upsert: true
-    });
+    return this.collection.insertOne({...history, _id: new ObjectId(history._id)});
   }
 }
