@@ -240,7 +240,11 @@ describe("History Service", () => {
           title: "second history",
           changes: diff(
             {title: null},
-            {title: "new added title", description: "new added description"}
+            {
+              title: "new added title",
+              description: "new added description",
+              news: {title: "news title", description: "new description"}
+            }
           )
         };
         const myThirdHistory = {
@@ -277,7 +281,11 @@ describe("History Service", () => {
             title: "second history",
             changes: diff(
               {title: null},
-              {title: "new added title", description: "new added description"}
+              {
+                title: "new added title",
+                description: "new added description",
+                news: {title: "news title", description: "new description"}
+              }
             )
           }
         ]);
@@ -295,7 +303,7 @@ describe("History Service", () => {
         expect(response.deletedCount).toBe(3);
       });
 
-      it("should delete histories which contains changes about only title field ,should remove title changes on histories which contains changes about title and more, shouldn't update which doesnt contain changes about title", async () => {
+      it("should delete histories which contain changes about only title field ,should remove title changes on histories which contain changes about title and more, shouldn't update which doesnt contain changes about title", async () => {
         const response = await historyService.deleteHistoryAtPath(myBucketId, ["title"]);
         expect(response.deletedCount).toBe(1);
 
@@ -303,7 +311,13 @@ describe("History Service", () => {
           history => history.changes
         );
         expect(histories).toEqual([
-          diff({}, {description: "new added description"}),
+          diff(
+            {},
+            {
+              description: "new added description",
+              news: {title: "news title", description: "new description"}
+            }
+          ),
           diff({description: ["first,second"]}, {description: ["new first,new second"]})
         ]);
       });
