@@ -63,7 +63,7 @@ describe("Bucket-Data acceptance", () => {
     app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
     await app.listen(req.socket);
-  });
+  },30000);
 
   describe("get requests", () => {
     describe("skip and limit", () => {

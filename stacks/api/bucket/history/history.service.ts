@@ -6,7 +6,6 @@ import {
   FilterQuery,
   ObjectId,
   ReadPreference,
-  ReplaceWriteOpResult,
   InsertOneWriteOpResult
 } from "@spica-server/database";
 import {ChangePaths} from "./differ";

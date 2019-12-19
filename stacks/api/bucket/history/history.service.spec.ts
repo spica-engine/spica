@@ -19,7 +19,7 @@ describe("History Service", () => {
       providers: [HistoryService]
     }).compile();
     historyService = module.get(HistoryService);
-  }, 12000);
+  }, 30000);
 
   afterAll(async () => {
     await module.close();
