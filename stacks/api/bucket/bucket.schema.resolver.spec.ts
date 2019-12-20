@@ -55,6 +55,10 @@ describe("bucket service", () => {
   }, 30000);
 
   afterAll(async () => {
+    await module
+      .get(DatabaseService)
+      .collection("buckets")
+      .deleteOne({_id: bucketId});
     await module.close();
   });
 
