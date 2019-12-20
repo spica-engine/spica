@@ -60,5 +60,5 @@ done
 
 # Publish npm packages
 for PACKAGE_LABEL in $NPM_PACKAGE_LABELS; do
-  $BAZEL run -- ${PACKAGE_LABEL}.publish --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release --access public --tag $1
+  $BAZEL run -- ${PACKAGE_LABEL}.publish --config=release --access public --tag $TAG
 done
