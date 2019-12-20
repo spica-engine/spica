@@ -4,8 +4,6 @@ import {TestingModule, Test} from "@nestjs/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {DatabaseTestingModule, DatabaseService, ObjectId} from "@spica-server/database/testing";
 import {HistoryModule} from "./history.module";
-import {ChangeKind, diff} from "./differ";
-import {HistoryService} from "./history.service";
 
 describe("History Acceptance", () => {
   let app: INestApplication;
@@ -67,39 +65,98 @@ describe("History Acceptance", () => {
       .get(DatabaseService)
       .collection(`bucket_${bucketId}`)
       .insertMany([
-        {_id: documentId, title: "current title", description: "current description"},
+        //we need to keep last updated data
+        {
+          _id: documentId,
+          title: "last updated title",
+          description: "last updated description"
+        },
         {
           _id: anotherDocumentId,
-          title: "another document title",
-          description: "another document description"
+          title: "another title",
+          description: "another description"
         }
       ]);
     //add histories
-    await app.get(HistoryService).insertOne({
-      bucket_id: bucketId,
-      document_id: documentId,
-      title: "first history",
-      changes: diff(
-        {title: "current title", description: "current description"},
-        {title: "updated title", description: "updated description"}
-      )
-    });
-    await app.get(HistoryService).insertOne({
-      bucket_id: bucketId,
-      document_id: documentId,
-      title: "second history",
-      changes: diff(
-        {title: "updated title", description: "updated description"},
-        {title: "last updated title", description: "last updated description"}
-      )
-    });
-  }, 100000);
+
+    await app
+      .get(DatabaseService)
+      .collection("history")
+      .insertMany([
+        {
+          _id: firstHistoryId,
+          bucket_id: bucketId,
+          document_id: documentId,
+          changes: [
+            {
+              kind: 1,
+              path: ["title"],
+              patches: [
+                {
+                  diffs: [[-1, "updated"], [1, "current"], [0, " tit"]],
+                  start1: 0,
+                  start2: 0,
+                  length1: 11,
+                  length2: 11
+                }
+              ]
+            },
+            {
+              kind: 1,
+              path: ["description"],
+              patches: [
+                {
+                  diffs: [[-1, "updated"], [1, "current"], [0, " des"]],
+                  start1: 0,
+                  start2: 0,
+                  length1: 11,
+                  length2: 11
+                }
+              ]
+            }
+          ]
+        },
+        {
+          _id: secondHistoryId,
+          bucket_id: bucketId,
+          document_id: documentId,
+          changes: [
+            {
+              kind: 1,
+              path: ["title"],
+              patches: [
+                {
+                  diffs: [[-1, "last "], [0, "upda"]],
+                  start1: 0,
+                  start2: 0,
+                  length1: 9,
+                  length2: 4
+                }
+              ]
+            },
+            {
+              kind: 1,
+              path: ["description"],
+              patches: [
+                {
+                  diffs: [[-1, "last "], [0, "upda"]],
+                  start1: 0,
+                  start2: 0,
+                  length1: 9,
+                  length2: 4
+                }
+              ]
+            }
+          ]
+        }
+      ]);
+  }, 120000);
 
   afterAll(async () => {
     await app
       .get(DatabaseService)
       .collection("buckets")
-      .deleteOne({_id: bucketId});
+      .deleteMany({});
     await app
       .get(DatabaseService)
       .collection(`bucket_${bucketId}`)
@@ -123,14 +180,31 @@ describe("History Acceptance", () => {
     ]);
   });
 
-  xit("should get spesific document", async () => {
-    const second = await app
-      .get(HistoryService)
-      .collection.find({})
-      .toArray()[1]._id;
+  it("should get document as reverted one change", async () => {
+    const response = await req.get(
+      `/bucket/${bucketId}/history/${documentId}/${secondHistoryId}`,
+      {}
+    );
+    expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
 
-    const response = await req.get(`/bucket/${bucketId}/history/${documentId}/${second}`, {});
+    expect(response.body).toEqual({
+      _id: documentId.toHexString(),
+      title: "updated title",
+      description: "updated description"
+    });
+  });
 
-    expect(response.body).toEqual({} as any);
+  it("should get document as reverted two changes", async () => {
+    const response = await req.get(
+      `/bucket/${bucketId}/history/${documentId}/${firstHistoryId}`,
+      {}
+    );
+    expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+
+    expect(response.body).toEqual({
+      _id: documentId.toHexString(),
+      title: "current title",
+      description: "current description"
+    });
   });
 });
