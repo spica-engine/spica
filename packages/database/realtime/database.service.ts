@@ -8,7 +8,7 @@ import {ChunkKind, StreamChunk} from "./stream";
 
 @Injectable()
 export class RealtimeDatabaseService {
-  private _streamCount = 0;
+  _streamCount = 0;
 
   constructor(private database: DatabaseService) {}
 
@@ -193,9 +193,9 @@ export class RealtimeDatabaseService {
                   if (options.limit && ids.size < options.limit) {
                     getMore();
                   }
-                  if (options.sort) {
-                    //sortDataSet();
-                  }
+                  // if (options.sort) {
+                  //   sort.next(change);
+                  // }
                 }
                 break;
               case "replace":
@@ -236,20 +236,19 @@ export class RealtimeDatabaseService {
       );
 
       this._streamCount += streams.size;
-      console.log("Change streams opened " + this._streamCount);
       return () => {
         this._streamCount -= streams.size;
-        console.log("Change streams opened " + this._streamCount);
         if (sortSubscription) {
           sortSubscription.unsubscribe();
         }
         for (const stream of streams) {
           stream.close();
         }
+        ids.clear();
       };
     }).pipe(
       share(),
-      late(subscriber => {
+      late((subscriber, connect) => {
         let stream = this.database.collection(name).find(options.filter);
         if (options.sort) {
           stream = stream.sort(options.sort);
@@ -266,6 +265,7 @@ export class RealtimeDatabaseService {
         });
         stream.on("end", () => {
           subscriber.next({kind: ChunkKind.EndOfInitial});
+          connect();
         });
       })
     );

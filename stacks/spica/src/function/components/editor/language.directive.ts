@@ -67,6 +67,7 @@ export class LanguageDirective implements OnDestroy {
         }
       }),
       monaco.languages.registerCompletionItemProvider("typescript", {
+        triggerCharacters: ["."],
         provideCompletionItems: async (model, position, context) => {
           return this.ls
             .request<any[]>("completions", {

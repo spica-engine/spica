@@ -16,7 +16,14 @@ export class FirehoseClient {
   }
 
   send(name: string, data: any) {
-    this.client.send(JSON.stringify({name, data}));
+    return new Promise((resolve, reject) => {
+      this.client.send(JSON.stringify({name, data}), err => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    });
   }
 }
 
@@ -109,8 +116,6 @@ export class FirehoseTrigger implements Trigger<FirehoseOptions>, OnModuleInit {
     });
   }
 
-  handleUpgrade() {}
-
   invoke(name: string, client: any, data?: any) {
     for (const pair of this.eventTargetMap.values()) {
       if (
@@ -118,7 +123,6 @@ export class FirehoseTrigger implements Trigger<FirehoseOptions>, OnModuleInit {
         pair.event == "*" ||
         (pair.event == "**" && (name == "connection" || name == "close"))
       ) {
-        console.log(name);
         pair.invoker({
           target: pair.target,
           parameters: [

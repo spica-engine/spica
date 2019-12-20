@@ -108,7 +108,7 @@ export class FunctionController {
     return this.loggerHost.query(id.toHexString(), {
       from: begin,
       until: end,
-      sort: 1
+      sort: -1
     });
   }
 

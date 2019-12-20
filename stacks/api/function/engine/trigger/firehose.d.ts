@@ -5,11 +5,11 @@ declare namespace triggers.firehose {
   }
   export interface Pool {
     readonly size: number;
-    send(event: string, data: any): void;
+    send(event: string, data: any): Promise<void>;
   }
   export interface Client {
     readonly remoteAddress: string;
-    send(event: string, data: any): void;
+    send(event: string, data: any): Promise<void>;
     close(): void;
   }
   export interface Event<T = any> {
