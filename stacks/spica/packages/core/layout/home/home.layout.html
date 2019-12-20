@@ -42,7 +42,7 @@
         type="button"
         aria-label="Toggle sidenav"
         mat-icon-button
-        (click)="drawer.toggle()"
+        (click)="drawer.toggle(); expanded = true"
         *ngIf="isHandset$ | async"
       >
         <mat-icon aria-label="Side nav toggle icon">sort</mat-icon>
