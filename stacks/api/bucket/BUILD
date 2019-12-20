@@ -123,6 +123,38 @@ jasmine_node_test(
 )
 
 ts_library(
+    name = "bucket-acceptance_test_lib",
+    testonly = True,
+    srcs = [
+        "bucket.acceptance.spec.ts",
+    ],
+    deps = [
+        ":bucket",
+        "//packages/core",
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/preference",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/bson",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "//stacks/api/passport/testing",
+        "//packages/database",
+
+
+    ],
+)
+
+jasmine_node_test(
+    name = "bucket-acceptance-test",
+    deps = [
+        ":bucket-acceptance_test_lib",
+    ],
+)
+
+ts_library(
     name = "scheduler_test_lib",
     testonly = True,
     srcs = [
