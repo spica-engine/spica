@@ -16,13 +16,14 @@ import {
   MatSortModule,
   MatTableModule,
   MatToolbarModule,
-  MatTooltipModule
+  MatTooltipModule,
+  MatExpansionModule
 } from "@angular/material";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
-import {InputModule} from "@spica-client/common";
+import {InputModule, CommonModule as SpicaCommon} from "@spica-client/common";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
@@ -33,7 +34,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
 
-describe("IndexComponent", () => {
+fdescribe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let bucket = new Subject<Partial<Bucket>>();
   let rows = new Subject<BucketRow[]>();
@@ -82,9 +83,12 @@ describe("IndexComponent", () => {
         MatClipboardModule,
         RouterTestingModule,
         MatDividerModule,
+        MatExpansionModule,
         FormsModule,
+        SpicaCommon,
         NoopAnimationsModule
       ],
+
       providers: [
         {
           provide: BucketService,
