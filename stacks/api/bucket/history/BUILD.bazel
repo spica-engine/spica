@@ -34,31 +34,6 @@ docs(
 )
 
 ts_library(
-    name = "test_lib-history-service",
-    testonly = True,
-    srcs = [
-        "history.service.spec.ts",
-    ],
-    deps = [
-        ":history",
-        "//packages/database/testing",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-        "@npm//@types/json-schema",
-        "@npm//@types/node",
-        "//packages/core/testing",
-        "//stacks/api/passport/testing",
-        "@npm//@nestjs/common",
-        "//packages/core",
-    ],
-)
-
-jasmine_node_test(
-    name = "test-history-service",
-    srcs = [":test_lib-history-service"],
-)
-
-ts_library(
     name = "test_lib-history-acceptance",
     testonly = True,
     srcs = [
