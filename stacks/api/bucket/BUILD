@@ -133,17 +133,15 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/core/testing",
+        "//packages/database",
         "//packages/database/testing",
+        "//stacks/api/passport/testing",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
-        "//stacks/api/passport/testing",
-        "//packages/database",
-
-
     ],
 )
 
