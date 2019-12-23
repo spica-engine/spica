@@ -34,7 +34,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
 
-fdescribe("IndexComponent", () => {
+describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let bucket = new Subject<Partial<Bucket>>();
   let rows = new Subject<BucketRow[]>();
