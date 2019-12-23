@@ -115,7 +115,9 @@
       ></bucket-filter>
     </mat-menu>
   </button>
-
+  <button mat-icon-button (click)="guide = !guide">
+    <mat-icon>contact_support</mat-icon>
+  </button>
   <button mat-icon-button matTooltip="Refresh data" (click)="refresh.next()">
     <mat-icon>refresh</mat-icon>
   </button>
@@ -131,80 +133,256 @@
   </button>
 </mat-toolbar>
 
-<mat-card class="mat-elevation-z25">
-  <mat-card-content>
-    <mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
-      <ng-container matColumnDef="$$spicainternal_select">
-        <mat-header-cell class="select" *matHeaderCellDef>
-          <mat-checkbox
-            *ngIf="dataIds?.length > 0"
-            color="primary"
-            [indeterminate]="selectedItems.length < dataIds.length && selectedItems.length > 0"
-            [ngModel]="selectedItems.length == dataIds.length"
-            (ngModelChange)="selectedItems = $event ? [].concat(dataIds) : []"
-          ></mat-checkbox>
-        </mat-header-cell>
-        <mat-cell class="select" *matCellDef="let row">
-          <mat-checkbox
-            color="primary"
-            (ngModelChange)="
-              $event
-                ? selectedItems.push(row._id)
-                : selectedItems.splice(selectedItems.indexOf(row._id), 1)
-            "
-            [ngModel]="selectedItems.indexOf(row._id) > -1"
-          ></mat-checkbox>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="$$spicainternal_schedule">
-        <mat-header-cell class="scheduled" *matHeaderCellDef>Scheduled</mat-header-cell>
-        <mat-cell class="scheduled" *matCellDef="let row">
-          {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="$$spicainternal_actions">
-        <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="action" *matCellDef="let row">
-          <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
-            <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
-          </button>
+<div class="data-guide">
+  <mat-card class="mat-elevation-z25" [class.with-examples]="guide">
+    <mat-card-content>
+      <mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
+        <ng-container matColumnDef="$$spicainternal_select">
+          <mat-header-cell class="select" *matHeaderCellDef>
+            <mat-checkbox
+              *ngIf="dataIds?.length > 0"
+              color="primary"
+              [indeterminate]="selectedItems.length < dataIds.length && selectedItems.length > 0"
+              [ngModel]="selectedItems.length == dataIds.length"
+              (ngModelChange)="selectedItems = $event ? [].concat(dataIds) : []"
+            ></mat-checkbox>
+          </mat-header-cell>
+          <mat-cell class="select" *matCellDef="let row">
+            <mat-checkbox
+              color="primary"
+              (ngModelChange)="
+                $event
+                  ? selectedItems.push(row._id)
+                  : selectedItems.splice(selectedItems.indexOf(row._id), 1)
+              "
+              [ngModel]="selectedItems.indexOf(row._id) > -1"
+            ></mat-checkbox>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="$$spicainternal_schedule">
+          <mat-header-cell class="scheduled" *matHeaderCellDef>Scheduled</mat-header-cell>
+          <mat-cell class="scheduled" *matCellDef="let row">
+            {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="$$spicainternal_actions">
+          <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell class="action" *matCellDef="let row">
+            <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
+              <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
+            </button>
 
-          <button
-            mat-icon-button
-            [disabled]="readOnly"
-            canInteract="bucket:data:update"
-            color="warn"
-            [matAwareDialog]="{
-              title: 'Attention',
-              templateOrDescription: dialogTemplate,
-              answer: 'agree'
-            }"
-            (confirm)="delete(row._id)"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
+            <button
+              mat-icon-button
+              [disabled]="readOnly"
+              canInteract="bucket:data:update"
+              color="warn"
+              [matAwareDialog]="{
+                title: 'Attention',
+                templateOrDescription: dialogTemplate,
+                answer: 'agree'
+              }"
+              (confirm)="delete(row._id)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container
-        *ngFor="let property of (schema$ | async)?.properties | keyvalue"
-        [matColumnDef]="property.key"
-      >
-        <mat-header-cell *matHeaderCellDef mat-sort-header>
-          {{ property.value.title }}
-        </mat-header-cell>
-        <mat-cell *matCellDef="let row"> {{ row[property.key] }}</mat-cell>
-      </ng-container>
+        <ng-container
+          *ngFor="let property of (schema$ | async)?.properties | keyvalue"
+          [matColumnDef]="property.key"
+        >
+          <mat-header-cell *matHeaderCellDef mat-sort-header>
+            {{ property.value.title }}
+          </mat-header-cell>
+          <mat-cell *matCellDef="let row"> {{ row[property.key] }}</mat-cell>
+        </ng-container>
 
-      <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>
+        <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>
 
-      <mat-row *matRowDef="let row; columns: displayedProperties"></mat-row>
-    </mat-table>
-    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
-  </mat-card-content>
-</mat-card>
+        <mat-row *matRowDef="let row; columns: displayedProperties"></mat-row>
+      </mat-table>
+      <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+    </mat-card-content>
+  </mat-card>
 
-<ng-template #deleteRowsDialog let-answer="answer">
+  <mat-card class="mat-elevation-z25 guide" [class.hide]="!guide">
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-description>
+            Get All Data With Limit
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <a (click)="guideRequest(guideUrls?.getAllWithLimit, 'getAllWithLimit')" class="guide-link">
+          {{ guideUrls?.getAllWithLimit }}
+        </a>
+        <mat-chip *ngIf="guideResponse.getAllWithLimit" color="warn" selected>Return Data</mat-chip>
+        <p
+          *ngIf="guideResponse.getAllWithLimit"
+          [innerHtml]="
+            guideResponse.getAllWithLimit
+              ? (guideResponse.getAllWithLimit | highlight | async)
+              : 'Data is not found'
+          "
+          class="guide-response"
+        ></p>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-description>
+            Get All Data With Sort
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <a (click)="guideRequest(guideUrls?.getAllWithSort, 'getAllWithSort')" class="guide-link">
+          {{ guideUrls?.getAllWithSort }}
+        </a>
+        <mat-chip *ngIf="guideResponse.getAllWithSort" color="warn" selected>Return Data</mat-chip>
+        <p
+          *ngIf="guideResponse.getAllWithSort"
+          class="guide-response"
+          [innerHtml]="
+            guideResponse.getAllWithSort
+              ? (guideResponse.getAllWithSort | highlight | async)
+              : 'Data is not found'
+          "
+        ></p>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-description>
+            Get Data With Filter
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <a (click)="guideRequest(guideUrls?.getWithFilter, 'getWithFilter')" class="guide-link">
+          {{ guideUrls?.getWithFilter }}
+        </a>
+        <mat-chip *ngIf="guideResponse.getWithFilter" color="warn" selected>Return Data</mat-chip>
+        <p
+          *ngIf="guideResponse?.getWithFilter"
+          class="guide-response"
+          [innerHtml]="
+            guideResponse?.getWithFilter.length > 0
+              ? (guideResponse?.getWithFilter | highlight | async)
+              : 'Data is not found'
+          "
+        ></p>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-description>
+            Get Data With Like
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <a (click)="guideRequest(guideUrls?.getWithLike, 'getWithLike')" class="guide-link">
+          {{ guideUrls?.getWithLike }}
+        </a>
+        <mat-chip *ngIf="guideResponse.getWithLike" color="warn" selected>Return Data</mat-chip>
+        <p
+          *ngIf="guideResponse?.getWithLike"
+          class="guide-response"
+          [innerHtml]="
+            guideResponse?.getWithLike.length > 0
+              ? (guideResponse?.getWithLike | highlight | async)
+              : 'Data is not found'
+          "
+        ></p>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-description>
+            Get Data With Double Filter
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <a
+          (click)="guideRequest(guideUrls?.getWithDoubleFilter, 'getWithDoubleFilter')"
+          class="guide-link"
+        >
+          {{ guideUrls?.getWithDoubleFilter }}
+        </a>
+        <mat-chip *ngIf="guideResponse.getWithDoubleFilter" color="warn" selected
+          >Return Data</mat-chip
+        >
+        <p
+          *ngIf="guideResponse?.getWithDoubleFilter"
+          class="guide-response"
+          [innerHtml]="
+            guideResponse?.getWithDoubleFilter.length > 0
+              ? (guideResponse?.getWithDoubleFilter | highlight | async)
+              : 'Data is not found'
+          "
+        ></p>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-description>
+            Get Data Only Scheduled
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <a
+          (click)="guideRequest(guideUrls?.getOnlyScheduled, 'getOnlyScheduled')"
+          class="guide-link"
+        >
+          {{ guideUrls?.getOnlyScheduled }}
+        </a>
+        <mat-chip *ngIf="guideResponse.getOnlyScheduled" color="warn" selected
+          >Return Data</mat-chip
+        >
+        <p
+          *ngIf="guideResponse?.getOnlyScheduled"
+          class="guide-response"
+          [innerHtml]="
+            guideResponse?.getOnlyScheduled.length > 0
+              ? (guideResponse?.getOnlyScheduled | highlight | async)
+              : 'Data is not found'
+          "
+        ></p>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-description>
+            Get Data With Language
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <a (click)="guideRequest(guideUrls?.getDataWithLang, 'getDataWithLang')" class="guide-link">
+          {{ guideUrls?.getDataWithLang }}
+          <p>headers: "Accept-Language": "tr-TR"</p>
+        </a>
+        <mat-chip *ngIf="guideResponse.getDataWithLang" color="warn" selected>Return Data</mat-chip>
+        <p
+          *ngIf="guideResponse?.getDataWithLang"
+          class="guide-response"
+          [innerHtml]="
+            guideResponse?.getDataWithLang.length > 0
+              ? (guideResponse?.getDataWithLang | highlight | async)
+              : 'Data is not found'
+          "
+        ></p>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </mat-card>
+</div>
+<ng-template #deleteRowsDialog let-answer="answer"
+  >Î
   <p>This action cannot be undone.</p>
   <p>
     This action will permanently delete selected <code>{{ selectedItems.length }}</code> rows and
