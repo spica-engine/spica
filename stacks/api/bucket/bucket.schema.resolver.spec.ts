@@ -69,7 +69,9 @@ describe("bucket service", () => {
     schemaResolver = new BucketSchemaResolver(bs);
   });
 
-  afterAll(async () => {});
+  afterAll(async () => {
+    await module.close();
+  });
 
   it("should resolve bucket", async () => {
     const response = await schemaResolver.resolve(bucket._id.toHexString());
