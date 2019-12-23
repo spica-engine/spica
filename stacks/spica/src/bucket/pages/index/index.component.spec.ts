@@ -315,7 +315,7 @@ fdescribe("IndexComponent", () => {
     it("should refresh", () => {
       bucketDataService.find.calls.reset();
       fixture.debugElement
-        .query(By.css("mat-toolbar > button:nth-of-type(5)"))
+        .query(By.css("mat-toolbar > button:nth-of-type(6)"))
         .nativeElement.click();
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
@@ -329,6 +329,19 @@ fdescribe("IndexComponent", () => {
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
       expect(bucketDataService.find.calls.mostRecent().args[1].schedule).toBe(true);
+    });
+
+    it("should show guide button", () => {
+      expect(
+        fixture.debugElement.query(By.css("mat-toolbar > button:nth-of-type(5)")).nativeElement
+      ).toBeTruthy();
+    });
+    it("should show guide panel when clicked guide button", () => {
+      fixture.debugElement
+        .query(By.css("mat-toolbar > button:nth-of-type(5)"))
+        .nativeElement.click();
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css("mat-card.hide"))).toBeNull();
     });
   });
 
