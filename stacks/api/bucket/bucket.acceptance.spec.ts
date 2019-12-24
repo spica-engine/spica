@@ -38,7 +38,7 @@ export const OBJECT_ID: Format = {
   }
 };
 
-describe("Bucket-Data acceptance", () => {
+describe("Bucket acceptance", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
@@ -89,7 +89,7 @@ describe("Bucket-Data acceptance", () => {
       .get(DatabaseService)
       .collection("buckets")
       .deleteMany({})
-      .catch();
+      .catch(error => console.log(error));
   });
 
   afterAll(async () => {
@@ -247,7 +247,6 @@ describe("Bucket-Data acceptance", () => {
     it("should add new bucket and return it", async () => {
       const response = await req.post("/bucket", bucket);
       expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
-
       expect(response.body).toEqual({
         _id: bucket._id.toHexString(),
         title: "New Bucket",
@@ -271,7 +270,7 @@ describe("Bucket-Data acceptance", () => {
         }
       });
 
-      //check db
+      //get buckets to check updates
       const buckets = (await req.get("/bucket", {})).body;
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual({
@@ -363,7 +362,7 @@ describe("Bucket-Data acceptance", () => {
         }
       });
 
-      //check db
+      //get buckets to check updates
       const buckets = (await req.get("/bucket", {})).body;
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual({
@@ -594,5 +593,192 @@ describe("Bucket-Data acceptance", () => {
         }
       });
     });
+  });
+
+  describe("validation", () => {
+    const validBucket: any = {
+      _id: new ObjectId(),
+      title: "New Bucket",
+      description: "Describe your new bucket",
+      icon: "view_stream",
+      primary: "title",
+      readOnly: false,
+      properties: {
+        title: {
+          type: "string",
+          title: "title",
+          description: "Title of the row",
+          options: {position: "left", visible: true}
+        },
+        description: {
+          type: "textarea",
+          title: "description",
+          description: "Description of the row",
+          options: {position: "right"}
+        }
+      }
+    };
+
+    it("should show error about id type", async () => {
+      const invalidBucket = {...bucket, _id: "invalid id type"};
+      const response = await req.post("/bucket", invalidBucket);
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect([response.body.error, response.body.message]).toEqual([
+        "._id should match format 'objectid'",
+        "validation failed"
+      ]);
+    });
+
+    describe("title", () => {
+      it("should show error about minlength ", async () => {
+        const invalidBucket = {...validBucket, title: "asd"};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".title should NOT be shorter than 4 characters",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about maxLength ", async () => {
+        const invalidBucket = {...validBucket, title: "a".repeat(101)};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".title should NOT be longer than 100 characters",
+          "validation failed"
+        ]);
+      });
+    });
+
+    describe("description", () => {
+      it("should show error about minlength ", async () => {
+        const invalidBucket = {...validBucket, description: "asde"};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".description should NOT be shorter than 5 characters",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about maxLength ", async () => {
+        const invalidBucket = {...validBucket, description: "a".repeat(251)};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".description should NOT be longer than 250 characters",
+          "validation failed"
+        ]);
+      });
+    });
+
+    describe("icon", () => {
+      it("should show error about type", async () => {
+        const invalidBucket = {...validBucket, icon: 333};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".icon should be string",
+          "validation failed"
+        ]);
+      });
+
+      it("should set 'view_stream' as default value", async () => {
+        let newBucket = validBucket;
+        delete newBucket.icon;
+        const response = await req.post("/bucket", newBucket);
+        expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+        expect(response.body.icon).toEqual("view_stream");
+      });
+    });
+
+    //unique item?
+    describe("required", () => {
+      it("should show error about type", async () => {
+        const invalidBucket = {...validBucket, required: {asd: "qwe"}};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".required should be array",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about array items type", async () => {
+        const invalidBucket = {...validBucket, required: ["asd", 1]};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".required[1] should be string",
+          "validation failed"
+        ]);
+      });
+    });
+
+    it("should show error about primary type", async () => {
+      const invalidBucket = {...validBucket, primary: []};
+      const response = await req.post("/bucket", invalidBucket);
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect([response.body.error, response.body.message]).toEqual([
+        ".primary should be string",
+        "validation failed"
+      ]);
+    });
+
+    it("should show error about order type", async () => {
+      const invalidBucket = {...validBucket, order: "1"};
+      const response = await req.post("/bucket", invalidBucket);
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect([response.body.error, response.body.message]).toEqual([
+        ".order should be number",
+        "validation failed"
+      ]);
+    });
+
+    it("should show error about readonly type", async () => {
+      const invalidBucket = {...validBucket, readOnly: "true"};
+      const response = await req.post("/bucket", invalidBucket);
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect([response.body.error, response.body.message]).toEqual([
+        ".readOnly should be boolean",
+        "validation failed"
+      ]);
+    });
+
+    describe("properties", () => {
+      it("should show error about type", async () => {
+        const invalidBucket = {...validBucket, properties: 1};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties should be object",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about type", async () => {
+        let invalidBucket = {...validBucket, properties: "prop"};
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties should be object",
+          "validation failed"
+        ]);
+      });
+
+      xit("should show error about visible type", async () => {
+        let invalidBucket = validBucket;
+        invalidBucket.properties.title.options.visible = "asd";
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties['title'].options.visible should be boolean",
+          "validation failed"
+        ]);
+      });
+    });
+
+    //additional properties
   });
 });
