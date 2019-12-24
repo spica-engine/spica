@@ -123,6 +123,33 @@ jasmine_node_test(
 )
 
 ts_library(
+    name = "bucket-schema-resolver_test_lib",
+    testonly = True,
+    srcs = [
+        "bucket.schema.resolver.spec.ts",
+    ],
+    deps = [
+        ":bucket",
+        "//packages/core",
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/preference",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "bucket-schema-resolver-test",
+    deps = [
+        ":bucket-schema-resolver_test_lib",
+    ],
+)
+
+ts_library(
     name = "scheduler_test_lib",
     testonly = True,
     srcs = [
