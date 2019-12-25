@@ -734,8 +734,8 @@ describe("Bucket acceptance", () => {
         ]);
       });
 
-      it("should show error about when array items arent unique ", async () => {
-        const invalidBucket = {...validBucket, required: ["asd", "asd","qwe","zxc"]};
+      it("should show error when array items arent unique ", async () => {
+        const invalidBucket = {...validBucket, required: ["asd", "asd", "qwe", "zxc"]};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.error, response.body.message]).toEqual([
@@ -743,7 +743,6 @@ describe("Bucket acceptance", () => {
           "validation failed"
         ]);
       });
-
     });
 
     it("should show error about readonly type", async () => {

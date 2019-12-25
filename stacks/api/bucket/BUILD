@@ -122,12 +122,11 @@ jasmine_node_test(
     ],
 )
 
-
 ts_library(
     name = "bucket-acceptance_test_lib",
     testonly = True,
     srcs = [
-        "bucket.acceptance.spec.ts"
+        "bucket.acceptance.spec.ts",
     ],
     deps = [
         ":bucket",
@@ -149,7 +148,8 @@ ts_library(
 jasmine_node_test(
     name = "bucket-acceptance-test",
     deps = [
-        ":bucket-acceptance_test_lib"]
+        ":bucket-acceptance_test_lib",
+    ],
 )
 
 ts_library(
