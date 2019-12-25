@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module, OnModuleDestroy} from "@nestjs/common";
 import {ModuleRef} from "@nestjs/core";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {DatabaseService, MongoClient, ReadPreference} from "@spica-server/database";
 import * as fs from "fs";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server-core";
 @Global()
@@ -56,7 +56,14 @@ export class DatabaseTestingModule implements OnModuleDestroy {
                   ? "/usr/bin/mongod"
                   : "/usr/local/bin/mongod"
               },
-              instanceOpts: [{storageEngine: "wiredTiger"}, {storageEngine: "wiredTiger"}]
+              replSet: {
+                count: 3
+              },
+              instanceOpts: [
+                {storageEngine: "wiredTiger",},
+                {storageEngine: "wiredTiger"},
+                {storageEngine: "wiredTiger"}
+              ]
             })
         },
         {
@@ -71,7 +78,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
               {
                 useNewUrlParser: true,
                 replicaSet: server.opts.replSet.name,
-                poolSize: 200
+                poolSize: 200,
               }
             );
           },

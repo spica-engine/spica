@@ -19,7 +19,7 @@ describe("History Service", () => {
       providers: [HistoryService]
     }).compile();
     historyService = module.get(HistoryService);
-  }, 12000);
+  }, 35000);
 
   afterAll(async () => {
     await module.close();
@@ -63,6 +63,51 @@ describe("History Service", () => {
         .collection(`bucket_${myBucketId}`)
         .deleteMany({})
         .catch();
+    });
+
+    xit("should get previous bucket schema", async () => {
+      let config = (await module.get(DatabaseService).executeDbAdminCommand({replSetGetConfig: 1}))
+        .config;
+      config.version = config.version + 1;
+      config.members[2] = {
+        ...config.members[2],
+        hidden: true,
+        priority: 0,
+        slaveDelay: 5,
+        tags: {slaveDelay: "true"}
+      };
+
+      await module.get(DatabaseService).executeDbAdminCommand({replSetReconfig: config});
+      console.log(JSON.stringify(await module.get(DatabaseService).executeDbAdminCommand({replSetGetConfig: 1})));
+      //await module.get(DatabaseService).executeDbAdminCommand({replSetInitiate: config})
+
+      await module
+        .get(DatabaseService)
+        .collection("buckets")
+        .replaceOne(
+          {_id: myBucketId},
+          {
+            _id: myBucketId,
+            primary: "description",
+            properties: {
+              title: {
+                type: "string"
+              },
+              description: {
+                type: "string"
+              }
+            }
+          }
+        );
+      let res = await module.get(DatabaseService).executeDbAdminCommand({replSetGetStatus: 1});
+      console.log([
+        {"current:": res.date},
+        {firstRep: res.members[1].lastHeartbeat},
+        {secondRep: res.members[2].lastHeartbeat}
+      ]);
+      const newSchema = await historyService.getSchema(myBucketId);
+      const oldSchema = await historyService.getPreviousSchema(myBucketId);
+      expect(newSchema).not.toEqual(oldSchema);
     });
 
     it("should get bucket schema", async () => {
