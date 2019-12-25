@@ -42,16 +42,16 @@ describe("realtime database", () => {
   }, 8000);
 
   it("should sync late subscribers", async done => {
-    await database.collection("test19").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
-    const source = realtime.find("test19", {filter: {stars: {$gt: 3}}}).pipe(bufferCount(3));
+    await database.collection("test21").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
+    const source = realtime.find("test21", {filter: {stars: {$gt: 3}}}).pipe(bufferCount(3));
 
     source.subscribe(([first, second, endofinitial]) => {
       expect(first.document.stars).toBe(4);
       expect(second.document.stars).toBe(5);
       expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
-      const prevStreamCount = realtime["_streamCount"];
+      const prevStreamCount = realtime._streamCount;
       source.subscribe(([first, second, endofinitial]) => {
-        expect(prevStreamCount).toBe(realtime["_streamCount"]);
+        expect(prevStreamCount).toBe(realtime._streamCount);
         expect(first.document.stars).toBe(4);
         expect(second.document.stars).toBe(5);
         expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
@@ -232,7 +232,7 @@ describe("realtime database", () => {
       setTimeout(() => coll.findOneAndUpdate({test: 2}, {$set: {test: 4}}), LATENCY);
     });
 
-    it("should return updated document if it does not match with filter anymore", async done => {
+    it("should expunge updated document if it does not match the filter anymore", async done => {
       const coll = database.collection("test9");
       const id = await coll.insertOne({test: 2, subfilter: true}).then(r => r.insertedId);
       realtime
@@ -248,11 +248,27 @@ describe("realtime database", () => {
       setTimeout(() => coll.findOneAndUpdate({_id: id}, {$set: {subfilter: false}}), LATENCY);
     });
 
-    it("should return replaced document if it does not match with filter anymore", async done => {
+    it("should expunge updated document if it does not match the filter condition anymore", async done => {
+      const coll = database.collection("test22");
+      const id = await coll.insertOne({status: "active"}).then(r => r.insertedId);
+      realtime
+        .find("test22", {filter: {status: "active"}})
+        .pipe(
+          skip(2),
+          take(1)
+        )
+        .subscribe(updated => {
+          expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
+          done();
+        });
+      setTimeout(() => coll.updateOne({_id: id}, {$set: {status: false}}), LATENCY);
+    });
+
+    it("should expunge replaced document if it does not match the filter conditions anymore", async done => {
       const coll = database.collection("test10");
       const id = await coll.insertOne({test: 2, subfilter: true}).then(r => r.insertedId);
       realtime
-        .find("test10", {filter: {subfilter: true}})
+        .find("test10", {filter: {subfilter: true, test: 2}})
         .pipe(
           skip(2),
           take(1)

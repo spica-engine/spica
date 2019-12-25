@@ -134,18 +134,16 @@ export class RealtimeDatabaseService {
             .watch(
               [
                 {
-                  $match: Object.keys(options.filter).reduce(
-                    (accumulator, key) => {
+                  $match: {
+                    $or: Object.keys(options.filter).map(key => {
                       const value = options.filter[key];
-                      accumulator[`fullDocument.${key}`] =
-                        typeof value == "object" ? {$not: value} : {$ne: value};
-                      return accumulator;
-                    },
-                    {
-                      "ns.coll": name,
-                      operationType: {$regex: "update|replace"}
-                    }
-                  )
+                      return {
+                        [`fullDocument.${key}`]:
+                          typeof value == "object" ? {$not: value} : {$ne: value}
+                      };
+                    }),
+                    operationType: {$regex: "update|replace"}
+                  }
                 }
               ],
               {
