@@ -65,7 +65,7 @@ describe("History Service", () => {
         .catch();
     });
 
-    xit("should get previous bucket schema", async () => {
+    it("should get previous bucket schema", async () => {
       let config = (await module.get(DatabaseService).executeDbAdminCommand({replSetGetConfig: 1}))
         .config;
       config.version = config.version + 1;
@@ -78,37 +78,41 @@ describe("History Service", () => {
       };
 
       await module.get(DatabaseService).executeDbAdminCommand({replSetReconfig: config});
-      console.log(JSON.stringify(await module.get(DatabaseService).executeDbAdminCommand({replSetGetConfig: 1})));
-      //await module.get(DatabaseService).executeDbAdminCommand({replSetInitiate: config})
-
-      await module
-        .get(DatabaseService)
-        .collection("buckets")
-        .replaceOne(
-          {_id: myBucketId},
-          {
-            _id: myBucketId,
-            primary: "description",
-            properties: {
-              title: {
-                type: "string"
-              },
-              description: {
-                type: "string"
+      await new Promise(resolve => setTimeout(resolve, 10000)).then(async () => {
+        await module
+          .get(DatabaseService)
+          .collection("buckets")
+          .replaceOne(
+            {_id: myBucketId},
+            {
+              _id: myBucketId,
+              primary: "title",
+              properties: {
+                title: {
+                  type: "string"
+                },
+                description: {
+                  type: "number"
+                }
               }
             }
+          );
+        const previousSchema = await historyService.getPreviousSchema(myBucketId);
+
+        expect(previousSchema).toEqual({
+          _id: myBucketId,
+          primary: "title",
+          properties: {
+            title: {
+              type: "string"
+            },
+            description: {
+              type: "string"
+            }
           }
-        );
-      let res = await module.get(DatabaseService).executeDbAdminCommand({replSetGetStatus: 1});
-      console.log([
-        {"current:": res.date},
-        {firstRep: res.members[1].lastHeartbeat},
-        {secondRep: res.members[2].lastHeartbeat}
-      ]);
-      const newSchema = await historyService.getSchema(myBucketId);
-      const oldSchema = await historyService.getPreviousSchema(myBucketId);
-      expect(newSchema).not.toEqual(oldSchema);
-    });
+        });
+      });
+    }, 20000);
 
     it("should get bucket schema", async () => {
       const mybucketSchema = await historyService.getSchema(myBucketId);
