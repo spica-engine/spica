@@ -1,221 +1,201 @@
 import {BucketWatcher} from "./watcher";
 import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, DatabaseService, ObjectId} from "@spica-server/database/testing";
-import {HistoryModule} from "./history.module";
+import {
+  DatabaseTestingModule,
+  DatabaseService,
+  ObjectId,
+  MongoClient
+} from "@spica-server/database/testing";
+import {HistoryService} from "./history.service";
 
-describe("Watcher", () => {
+describe("Watcher unit", () => {
   let module: TestingModule;
-
-  const firstBucket = {
-    _id: new ObjectId(),
-    title: "New Bucket",
-    description: "Describe your new bucket",
-    icon: "view_stream",
-    primary: "title",
-    readOnly: false,
-    properties: {
-      title: {
-        type: "string",
-        title: "title",
-        description: "Title of the row",
-        options: {position: "left", visible: true}
-      },
-      description: {
-        type: "textarea",
-        title: "description",
-        description: "Description of the row",
-        options: {position: "right"}
+  let bucketWatcher: BucketWatcher;
+  const buckets = [
+    {
+      _id: new ObjectId(),
+      title: "New Bucket",
+      description: "Describe your new bucket",
+      icon: "view_stream",
+      primary: "title",
+      readOnly: false,
+      properties: {
+        title: {
+          type: "string",
+          title: "title",
+          description: "Title of the row",
+          options: {position: "left", visible: true}
+        },
+        description: {
+          type: "textarea",
+          title: "description",
+          description: "Description of the row",
+          options: {position: "right"}
+        }
+      }
+    },
+    {
+      _id: new ObjectId(),
+      title: "New Bucket",
+      description: "Describe your new bucket",
+      icon: "view_stream",
+      primary: "title",
+      readOnly: false,
+      properties: {
+        name: {
+          type: "string",
+          title: "title",
+          description: "Name of the row",
+          options: {position: "left", visible: true}
+        },
+        age: {
+          type: "number",
+          title: "description",
+          description: "Number of the row",
+          options: {position: "right"}
+        }
       }
     }
-  };
+  ];
 
   const firstBucketDocuments = [
     {
       _id: new ObjectId(),
-      title: "first bucket first title",
-      description: "first bucket first description"
+      bucket_id: buckets[0]._id,
+      title: "first title",
+      description: "first description"
     },
     {
       _id: new ObjectId(),
-      title: "first bucket second title",
-      description: "first bucket second description"
+      bucket_id: buckets[0]._id,
+      title: "second title",
+      description: "second description"
     }
   ];
-
-  const firstBucketDocumentsHistories = [
-    {
-      bucket_id: firstBucket._id,
-      document_id: firstBucketDocuments[0]._id,
-      title: "first bucket first document first history"
-    },
-    {
-      bucket_id: firstBucket._id,
-      document_id: firstBucketDocuments[0]._id,
-      title: "first bucket first document second history"
-    },
-    {
-      bucket_id: firstBucket._id,
-      document_id: firstBucketDocuments[1]._id,
-      title: "first bucket second document first history"
-    },
-    {
-      bucket_id: firstBucket._id,
-      document_id: firstBucketDocuments[1]._id,
-      title: "first bucket second document second history"
-    }
-  ];
-
-  const secondBucket = {
-    _id: new ObjectId(),
-    title: "New Bucket",
-    description: "Describe your new bucket",
-    icon: "view_stream",
-    primary: "title",
-    readOnly: false,
-    properties: {
-      title: {
-        type: "string",
-        title: "title",
-        description: "Title of the row",
-        options: {position: "left", visible: true}
-      },
-      description: {
-        type: "textarea",
-        title: "description",
-        description: "Description of the row",
-        options: {position: "right"}
-      }
-    }
-  };
-
   const secondBucketDocuments = [
     {
       _id: new ObjectId(),
-      title: "second bucket first title",
-      description: "second bucket first description"
+      bucket_id: buckets[1]._id,
+      name: "first name",
+      age: 10
     },
     {
       _id: new ObjectId(),
-      title: "second bucket second title",
-      description: "second bucket second description"
+      bucket_id: buckets[1]._id,
+      name: "second name",
+      age: 20
     }
   ];
 
-  const secondBucketDocumentsHistories = [
-    {
-      bucket_id: secondBucket._id,
-      document_id: secondBucketDocuments[0]._id,
-      title: "second bucket first document first history"
-    },
-    {
-      bucket_id: secondBucket._id,
-      document_id: secondBucketDocuments[0]._id,
-      title: "second bucket first document second history"
-    },
-    {
-      bucket_id: secondBucket._id,
-      document_id: secondBucketDocuments[1]._id,
-      title: "second bucket second document first history"
-    },
-    {
-      bucket_id: secondBucket._id,
-      document_id: secondBucketDocuments[1]._id,
-      title: "second bucket second document second history"
-    }
-  ];
+  const mockHistoryService = {
+    deleteMany: jasmine.createSpy("deleteMany"),
+    getPreviousSchema: jasmine
+      .createSpy("getPreviousSchema")
+      .and.returnValue(Promise.resolve(buckets[0])),
+    deleteHistoryAtPath: jasmine.createSpy("deleteHistoryAtPath")
+  };
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), HistoryModule]
+      imports: [DatabaseTestingModule.replicaSet()],
+      providers: [
+        {
+          provide: HistoryService,
+          useValue: mockHistoryService
+        }
+      ]
     }).compile();
-    // add buckets
+    //insert buckets
     await module
       .get(DatabaseService)
       .collection("buckets")
-      .insertMany([firstBucket, secondBucket]);
-
-    //add documents
+      .insertMany(buckets);
+    //insert documents
     await module
       .get(DatabaseService)
-      .collection(`bucket_${firstBucket._id}`)
+      .collection(`bucket_${buckets[0]._id}`)
       .insertMany(firstBucketDocuments);
     await module
       .get(DatabaseService)
-      .collection(`bucket_${secondBucket._id}`)
+      .collection(`bucket_${buckets[1]._id}`)
       .insertMany(secondBucketDocuments);
-
-    //add histories
-    await module
-      .get(DatabaseService)
-      .collection("history")
-      .insertMany(firstBucketDocumentsHistories);
-    await module
-      .get(DatabaseService)
-      .collection("history")
-      .insertMany(secondBucketDocumentsHistories);
+    //create watcher and call watch
+    bucketWatcher = new BucketWatcher(module.get(MongoClient), module.get(HistoryService));
+    bucketWatcher.watch();
+    //wait until watcher initialized
+    await new Promise(resolve => setTimeout(resolve, 100));
   }, 30000);
 
   afterAll(async () => {
     await module.close();
   });
 
-  //add tests after replica set story done
-  describe("bucket changes", () => {
-    it("should delete first bucket histories on history collection when first bucket deleted", done => {
-      setTimeout(async () => {
-        await module
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: firstBucket._id})
-          .then(() => {
-            setTimeout(async () => {
-              expect(
-                (await module
-                  .get(DatabaseService)
-                  .collection("history")
-                  .find({})
-                  .toArray()).map(history => history.title)
-              ).toEqual([
-                "second bucket first document first history",
-                "second bucket first document second history",
-                "second bucket second document first history",
-                "second bucket second document second history"
-              ]);
-              done();
-            }, 100);
-          });
-      }, 100);
+  it("should delete histories of bucket which is deleted", async () => {
+    await module
+      .get(DatabaseService)
+      .collection("buckets")
+      .deleteOne({_id: buckets[1]._id});
+    //wait until changes detected
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const deleteManySpy = bucketWatcher["historyService"].deleteMany;
+    expect(deleteManySpy).toHaveBeenCalledWith({
+      bucket_id: buckets[1]._id
     });
+    expect(deleteManySpy).toHaveBeenCalledTimes(1);
+    deleteManySpy.calls.reset();
   });
 
-  //add tests after replica set story done
-  describe("bucket document changes", () => {
-    it("should delete first bucket first document histories on history collection when first bucket first document deleted", done => {
-      setTimeout(async () => {
-        await module
-          .get(DatabaseService)
-          .collection(`bucket_${firstBucket._id}`)
-          .deleteOne({_id: firstBucketDocuments[0]._id})
-          .then(() => {
-            setTimeout(async () => {
-              expect(
-                (await module
-                  .get(DatabaseService)
-                  .collection("history")
-                  .find({})
-                  .toArray()).map(history => history.title)
-              ).toEqual([
-                "first bucket second document first history",
-                "first bucket second document second history",
-                "second bucket first document first history",
-                "second bucket first document second history",
-                "second bucket second document first history",
-                "second bucket second document second history"
-              ]);
-              done();
-            }, 100);
-          });
-      }, 100);
+  it("should delete histories of bucket document which is deleted", async () => {
+    await module
+      .get(DatabaseService)
+      .collection(`bucket_${buckets[1]._id}`)
+      .deleteOne({_id: secondBucketDocuments[1]._id});
+    //wait until changes detected
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const deleteManySpy = bucketWatcher["historyService"].deleteMany;
+    expect(deleteManySpy).toHaveBeenCalledWith({
+      document_id: secondBucketDocuments[1]._id
     });
+    expect(deleteManySpy).toHaveBeenCalledTimes(1);
+    deleteManySpy.calls.reset();
+  });
+
+  it("should delete histories of bucket which is updated", async () => {
+    let updatedBucket = {
+      title: "New Bucket",
+      description: "Describe your new bucket",
+      icon: "view_stream",
+      primary: "title",
+      readOnly: false,
+      properties: {
+        title: {
+          type: "string",
+          title: "title",
+          description: "Title of the row",
+          options: {position: "left", visible: true}
+        },
+        updatedField: {
+          type: "textarea",
+          title: "description",
+          description: "Description of the row",
+          options: {position: "right"}
+        }
+      }
+    };
+    await module
+      .get(DatabaseService)
+      .collection("buckets")
+      .replaceOne({_id: buckets[0]._id}, updatedBucket);
+    //wait until changes detected
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const previousSchemaSpy = bucketWatcher["historyService"].getPreviousSchema;
+    expect(previousSchemaSpy).toHaveBeenCalledTimes(1);
+    expect(previousSchemaSpy).toHaveBeenCalledWith(buckets[0]._id);
+
+    const deleteAtPathSpy = bucketWatcher["historyService"].deleteHistoryAtPath;
+    expect(deleteAtPathSpy).toHaveBeenCalledTimes(1);
+    expect(deleteAtPathSpy).toHaveBeenCalledWith(buckets[0]._id, ["description"]);
   });
 });

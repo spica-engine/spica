@@ -51,7 +51,6 @@ export class BucketWatcher {
                       lastPath[0] == "type" ||
                       (lastPath[0] == "options" && lastPath[1] == "translate"))))
             );
-
             changes.forEach(change => {
               this.historyService.deleteHistoryAtPath(rawChange.documentKey._id, change.path);
             });
