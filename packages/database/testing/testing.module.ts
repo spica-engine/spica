@@ -60,7 +60,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
                 count: 3
               },
               instanceOpts: [
-                {storageEngine: "wiredTiger",},
+                {storageEngine: "wiredTiger"},
                 {storageEngine: "wiredTiger"},
                 {storageEngine: "wiredTiger"}
               ]
@@ -78,7 +78,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
               {
                 useNewUrlParser: true,
                 replicaSet: server.opts.replSet.name,
-                poolSize: 200,
+                poolSize: 200
               }
             );
           },
@@ -94,6 +94,23 @@ export class DatabaseTestingModule implements OnModuleDestroy {
       exports: [DatabaseService, MongoClient]
     };
   }
+
+  static async setDelayedReplica(dbService: DatabaseService) {
+    //get current configure and reconfigure it
+    let config = (await dbService.executeDbAdminCommand({replSetGetConfig: 1})).config;
+    config.version = config.version + 1;
+    config.members[2] = {
+      ...config.members[2],
+      hidden: true,
+      priority: 0,
+      slaveDelay: 5,
+      tags: {slaveDelay: "true"}
+    };
+    await dbService.executeDbAdminCommand({replSetReconfig: config});
+    //wait until replicaSet reconfigured
+    await new Promise(resolve => setTimeout(resolve, 10000));
+  }
+
   onModuleDestroy() {
     try {
       this.moduleRef.get(MongoMemoryServer).stop();
