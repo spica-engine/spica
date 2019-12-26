@@ -49,7 +49,6 @@ export class HomeLayoutComponent implements OnInit {
         if (!this.expanded) {
           this.toggle();
         }
-
         return this.routeService.routes.pipe(
           map(routes => {
             for (const route of routes) {
