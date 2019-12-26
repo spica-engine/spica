@@ -71,7 +71,7 @@ describe("History Service", () => {
         .get(DatabaseService)
         .collection(`bucket_${bucket._id}`)
         .replaceOne({_id: bucketDocument._id}, updatedDocument);
-    }, 30000);
+    }, 60000);
 
     afterAll(async () => {
       await module
@@ -288,11 +288,7 @@ describe("History Service", () => {
         const limitHistoryId = secondHistoryId;
 
         //then we will get histories from spesific history to now
-        const histories = await historyService.findBetweenNow(
-          bucketId,
-          documentId,
-          limitHistoryId
-        );
+        const histories = await historyService.findBetweenNow(bucketId, documentId, limitHistoryId);
         expect(histories).toEqual([
           {
             _id: thirdHistoryId,
@@ -372,11 +368,7 @@ describe("History Service", () => {
           changes: diff({description: ["first,second"]}, {description: ["new first,new second"]})
         };
 
-        await historyService.collection.insertMany([
-          firstHistory,
-          secondHistory,
-          thirdHistory
-        ]);
+        await historyService.collection.insertMany([firstHistory, secondHistory, thirdHistory]);
       });
 
       afterEach(async () => {
