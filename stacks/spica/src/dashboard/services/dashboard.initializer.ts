@@ -1,5 +1,6 @@
 import {Injectable} from "@angular/core";
-import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core";
+import {RouteCategory, RouteService, Upsert} from "@spica-client/core";
+import {CherryPickAndRemove} from "@spica-server/core/route/route.reducer";
 import {PassportService} from "../../passport";
 import {DashboardService} from "./dashboard.service";
 
@@ -11,12 +12,12 @@ export class DashboardInitializer {
     private passport: PassportService
   ) {
     ds.getDashboards().subscribe(dashboards => {
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Content));
+      this.routeService.dispatch(new CherryPickAndRemove(e => e.id.startsWith("dashboard/")));
       dashboards.forEach(dashboard => {
         this.routeService.dispatch(
           new Upsert({
             category: RouteCategory.Primary,
-            id: `dashboard_${dashboard.key}`,
+            id: `dashboard/${dashboard.key}`,
             icon: dashboard.icon,
             path: `/dashboard/${dashboard.key}`,
             display: dashboard.name
@@ -33,8 +34,8 @@ export class DashboardInitializer {
     ) {
       this.ds.retrieve().toPromise();
     } else {
-      // Clean up the content category if the user has no permission to see.
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Content));
+      // Remove dashboard items if the user has no permission to see.
+      this.routeService.dispatch(new CherryPickAndRemove(e => e.id.startsWith("dashboard/")));
     }
   }
 }

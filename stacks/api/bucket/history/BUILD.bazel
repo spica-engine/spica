@@ -51,3 +51,26 @@ jasmine_node_test(
     name = "test-watcher",
     srcs = [":test_lib-watcher"],
 )
+
+ts_library(
+    name = "test_lib-history-acceptance",
+    testonly = True,
+    srcs = [
+        "history.controller.spec.ts",
+    ],
+    deps = [
+        ":history",
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "test-history-acceptance",
+    srcs = [":test_lib-history-acceptance"],
+)

@@ -56,7 +56,9 @@ export class DatabaseTestingModule implements OnModuleDestroy {
                   ? "/usr/bin/mongod"
                   : "/usr/local/bin/mongod"
               },
-              replSet: {count: 3},
+              replSet: {
+                count: 3
+              },
               instanceOpts: [
                 {storageEngine: "wiredTiger"},
                 {storageEngine: "wiredTiger"},
