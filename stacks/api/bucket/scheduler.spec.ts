@@ -20,7 +20,7 @@ describe("scheduler", () => {
       .compile();
     bds = module.get(BucketDataService);
     scheduler = module.get(DocumentScheduler);
-  });
+  }, 30000);
 
   it("should publish immediately if the date is past", done => {
     const documentId = new ObjectId();
