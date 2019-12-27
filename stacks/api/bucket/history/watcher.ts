@@ -78,7 +78,7 @@ export class BucketWatcher {
                   document_id: documentId,
                   changes
                 };
-                await this.historyService.upsertOne(history);
+                await this.historyService.insertOne(history);
               } else {
                 throw new Error(`
                   Database propagated changes but state of previous and current documents is equal so there is no change in between documents. 

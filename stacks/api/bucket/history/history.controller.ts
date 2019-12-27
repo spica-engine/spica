@@ -11,8 +11,11 @@ export class HistoryController {
 
   @Get()
   @UseGuards(AuthGuard())
-  getHistories(@Param("documentId", OBJECT_ID) id: ObjectId) {
-    return this.historyService.find({document_id: id});
+  getHistories(
+    @Param("bucketId", OBJECT_ID) bucket_id: ObjectId,
+    @Param("documentId", OBJECT_ID) document_id: ObjectId
+  ) {
+    return this.historyService.find({$and: [{bucket_id: bucket_id}, {document_id: document_id}]});
   }
 
   @Get(":historyId")
@@ -24,7 +27,7 @@ export class HistoryController {
   ) {
     const document = await this.historyService.getDocument(bucketId, documentId);
     const schema = await this.historyService.getSchema(bucketId);
-    const history = await this.historyService.findBetweenNow(historyId);
+    const history = await this.historyService.findBetweenNow(bucketId, documentId, historyId);
     const compiledSchema = compile(schema);
     history.forEach(history => applyPatch(history.changes, document, compiledSchema));
     return document;

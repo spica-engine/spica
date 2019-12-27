@@ -66,7 +66,7 @@ ts_library(
     name = "bucket-data-acceptance_test_lib",
     testonly = True,
     srcs = [
-        "bucket-data.acceptance.spec.ts",
+        "bucket-data.controller.spec.ts",
     ],
     deps = [
         ":bucket",
@@ -126,7 +126,7 @@ ts_library(
     name = "bucket-acceptance_test_lib",
     testonly = True,
     srcs = [
-        "bucket.acceptance.spec.ts",
+        "bucket.controller.spec.ts",
     ],
     deps = [
         ":bucket",
