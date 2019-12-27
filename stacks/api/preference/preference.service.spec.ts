@@ -20,7 +20,7 @@ describe("Preference Service", () => {
       providers: [PreferenceService]
     }).compile();
     preferenceService = module.get(PreferenceService);
-  }, 12000);
+  }, 30000);
 
   beforeEach(async () => {
     // clear prefs

@@ -7,7 +7,6 @@
 
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
-    {{ settings | json }}
     <mat-list>
       <h3 mat-subheader>Available languages</h3>
       <mat-list-item *ngFor="let languageKv of settings?.language.available | keyvalue">

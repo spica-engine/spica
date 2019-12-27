@@ -40,6 +40,8 @@ ts_library(
     tsconfig = "//:tsconfig.json",
     deps = [
         ":history",
+        "//packages/database/testing",
+        "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
         "@npm//@types/json-schema",
         "@npm//@types/node",
