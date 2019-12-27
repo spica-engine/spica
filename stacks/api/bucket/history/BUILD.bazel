@@ -37,7 +37,7 @@ ts_library(
     name = "test_lib-history-acceptance",
     testonly = True,
     srcs = [
-        "history.acceptance.spec.ts",
+        "history.controller.spec.ts",
     ],
     deps = [
         ":history",
