@@ -70,7 +70,6 @@ export class BucketWatcher {
 
             if (previousDocument) {
               const changes = diff(currentDocument, previousDocument);
-
               if (changes.length > 0) {
                 const history: History = {
                   bucket_id: bucketId,
@@ -79,10 +78,9 @@ export class BucketWatcher {
                 };
                 await this.historyService.insertOne(history);
               } else {
-                throw new Error(`
-                  Database propagated changes but state of previous and current documents is equal so there is no change in between documents. 
-                  This usually happens when there is no replication member that has slaveDelay.
-                `);
+                throw new Error(
+                  `Database propagated changes but state of previous and current documents is equal so there is no change in between documents. This usually happens when there is no replication member that has slaveDelay.`
+                );
               }
             }
             break;

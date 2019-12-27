@@ -44,7 +44,6 @@ ts_library(
         "//packages/database/testing",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-
     ],
 )
 
