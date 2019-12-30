@@ -427,7 +427,11 @@ describe("Bucket acceptance", () => {
       await req.post("/bucket", thirdBucket);
 
       //update their indexes
-      await req.put("/bucket", [{...firstBucket,order:3},{...secondBucket,order:1},{...thirdBucket,order:2}]);
+      await req.put("/bucket", [
+        {...firstBucket, order: 3},
+        {...secondBucket, order: 1},
+        {...thirdBucket, order: 2}
+      ]);
 
       const buckets = (await req.get("/bucket", {})).body;
 
@@ -636,8 +640,7 @@ describe("Bucket acceptance", () => {
       ]);
     });
 
-    //@TODO: delete 'x' after refactored bucket.schema.json properties 'anyof'
-    xdescribe("properties", () => {
+    describe("properties", () => {
       it("should show error about type", async () => {
         const invalidBucket = {...validBucket, properties: 1};
         const response = await req.post("/bucket", invalidBucket);
@@ -648,7 +651,63 @@ describe("Bucket acceptance", () => {
         ]);
       });
 
-      it("should show error about visible type", async () => {
+      it("should show error about title type", async () => {
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
+        invalidBucket.properties.title.type = 333;
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties['title'].type should be string",
+          "validation failed"
+        ]);
+      });
+
+      //add type enums
+      xit("should show error about title type which isnt available", async () => {
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
+        invalidBucket.properties.title.type = "hashmap";
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties['title'].type should be equal to one of the allowed values",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about title title", async () => {
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
+        invalidBucket.properties.title.title = 333;
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties['title'].title should be string",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about title description", async () => {
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
+        invalidBucket.properties.title.description = ["asdqwe", "ahsgdasd"];
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties['title'].description should be string",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about title options type", async () => {
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
+        invalidBucket.properties.title.options = "asd";
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.error, response.body.message]).toEqual([
+          ".properties['title'].options should be object",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about title visible type", async () => {
         const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.visible = "asd";
         const response = await req.post("/bucket", invalidBucket);
@@ -659,7 +718,7 @@ describe("Bucket acceptance", () => {
         ]);
       });
 
-      it("should show error about translate type", async () => {
+      it("should show error about title translate type", async () => {
         const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.translate = 33;
         const response = await req.post("/bucket", invalidBucket);
@@ -670,7 +729,7 @@ describe("Bucket acceptance", () => {
         ]);
       });
 
-      it("should show error about history type", async () => {
+      it("should show error about title history type", async () => {
         const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.history = "false";
         const response = await req.post("/bucket", invalidBucket);
@@ -681,7 +740,7 @@ describe("Bucket acceptance", () => {
         ]);
       });
 
-      it("should show error about position type", async () => {
+      it("should show error about title position type", async () => {
         const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.position = ["bottom,left"];
         const response = await req.post("/bucket", invalidBucket);
@@ -692,7 +751,7 @@ describe("Bucket acceptance", () => {
         ]);
       });
 
-      it("should show error about position value which isn't available", async () => {
+      it("should show error about title position value which isn't available", async () => {
         const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.position = "top";
         const response = await req.post("/bucket", invalidBucket);
