@@ -395,11 +395,11 @@ describe("Bucket acceptance", () => {
       });
     });
 
-    it("should update multiple buckets with indexes", async () => {
+    it("should update bucket indexes", async () => {
       //add buckets
       let firstBucket: any = {
         _id: new ObjectId(),
-        title: "New Bucket",
+        title: "First Bucket",
         description: "Describe your new bucket",
         icon: "view_stream",
         primary: "title",
@@ -419,141 +419,22 @@ describe("Bucket acceptance", () => {
           }
         }
       };
-      let secondBucket: any = {
-        _id: new ObjectId(),
-        title: "New Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        properties: {
-          name: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          age: {
-            type: "number",
-            title: "Age",
-            description: "Age of the row",
-            options: {position: "right", visible: true}
-          }
-        }
-      };
+      let secondBucket = {...firstBucket, _id: new ObjectId(), title: "Second Bucket"};
+      let thirdBucket = {...firstBucket, _id: new ObjectId(), title: "Third Bucket"};
+
       await req.post("/bucket", firstBucket);
       await req.post("/bucket", secondBucket);
+      await req.post("/bucket", thirdBucket);
 
-      //update buckets
-      firstBucket = {
-        _id: firstBucket._id,
-        title: "Updated First Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "description",
-        readOnly: false,
-        properties: {
-          title: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "right", visible: true}
-          },
-          description: {
-            type: "string",
-            title: "description",
-            description: "Description of the row",
-            options: {position: "left", visible: true}
-          }
-        }
-      };
-      secondBucket = {
-        _id: secondBucket._id,
-        title: "Updated Second Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        properties: {
-          newProp: {
-            type: "boolean",
-            title: "newProp",
-            description: "newProp of the row",
-            options: {position: "left", visible: true}
-          },
-          surname: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          lastname: {
-            type: "number",
-            title: "Age",
-            description: "Age of the row",
-            options: {position: "right", visible: true}
-          }
-        }
-      };
-
-      const response = await req.put("/bucket", [secondBucket, firstBucket]);
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+      //update their indexes
+      await req.put("/bucket", [{...firstBucket,order:3},{...secondBucket,order:1},{...thirdBucket,order:2}]);
 
       const buckets = (await req.get("/bucket", {})).body;
-      expect(buckets.length).toBe(2);
-      expect(buckets).toEqual([
-        {
-          _id: firstBucket._id.toHexString(),
-          title: "Updated First Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "description",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "right", visible: true}
-            },
-            description: {
-              type: "string",
-              title: "description",
-              description: "Description of the row",
-              options: {position: "left", visible: true}
-            }
-          },
-          "[1]": firstBucket._id.toHexString()
-        },
-        {
-          _id: secondBucket._id.toHexString(),
-          title: "Updated Second Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            newProp: {
-              type: "boolean",
-              title: "newProp",
-              description: "newProp of the row",
-              options: {position: "left", visible: true}
-            },
-            surname: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            },
-            lastname: {
-              type: "number",
-              title: "Age",
-              description: "Age of the row",
-              options: {position: "right", visible: true}
-            }
-          },
-          "[0]": secondBucket._id.toHexString()
-        }
+
+      expect(buckets.map(bucket => bucket.title)).toEqual([
+        "Second Bucket",
+        "Third Bucket",
+        "First Bucket"
       ]);
     });
   });
@@ -630,7 +511,7 @@ describe("Bucket acceptance", () => {
     });
 
     describe("title", () => {
-      it("should show error about minlength ", async () => {
+      it("should show error about minLength ", async () => {
         const invalidBucket = {...validBucket, title: "asd"};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
@@ -685,7 +566,7 @@ describe("Bucket acceptance", () => {
       });
 
       it("should set 'view_stream' as default value", async () => {
-        let newBucket = validBucket;
+        let newBucket = {...validBucket};
         delete newBucket.icon;
         const response = await req.post("/bucket", newBucket);
         expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
@@ -768,7 +649,7 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about visible type", async () => {
-        let invalidBucket = validBucket;
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.visible = "asd";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
@@ -779,8 +660,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about translate type", async () => {
-        let invalidBucket = validBucket;
-        invalidBucket.properties.title.options.translate = 333;
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
+        invalidBucket.properties.title.options.translate = 33;
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.error, response.body.message]).toEqual([
@@ -790,7 +671,7 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about history type", async () => {
-        let invalidBucket = validBucket;
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.history = "false";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
@@ -801,8 +682,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about position type", async () => {
-        let invalidBucket = validBucket;
-        invalidBucket.properties.title.options.position = [5, 15];
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
+        invalidBucket.properties.title.options.position = ["bottom,left"];
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.error, response.body.message]).toEqual([
@@ -812,7 +693,7 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about position value which isn't available", async () => {
-        let invalidBucket = validBucket;
+        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.options.position = "top";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
