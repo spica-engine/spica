@@ -6,7 +6,21 @@
     "type": {
       "type": "string",
       "title": "Type of the property",
-      "description": "Type of the property"
+      "description": "Type of the property",
+      "enum": [
+        "storage",
+        "richtext",
+        "string",
+        "object",
+        "number",
+        "boolean",
+        "date",
+        "textarea",
+        "array",
+        "color",
+        "relation",
+        "location"
+      ]
     },
     "title": {
       "type": "string",

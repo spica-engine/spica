@@ -662,8 +662,7 @@ describe("Bucket acceptance", () => {
         ]);
       });
 
-      //add type enums
-      xit("should show error about title type which isnt available", async () => {
+      it("should show error about title type which isnt available", async () => {
         const invalidBucket = JSON.parse(JSON.stringify(validBucket));
         invalidBucket.properties.title.type = "hashmap";
         const response = await req.post("/bucket", invalidBucket);
