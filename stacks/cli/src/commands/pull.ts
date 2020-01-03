@@ -9,7 +9,7 @@ import {Command} from "../interface";
 import * as fs from "fs";
 import * as request from "request-promise-native";
 import {homedir} from "os";
-import * as yaml from "js-yaml";
+import * as yaml from "yaml";
 
 export class PullCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
@@ -43,16 +43,22 @@ export class PullCommand extends Command {
         json: true
       };
       let functions = await request(requestOptions);
+
       for (let index = 0; index < functions.length; index++) {
         let functionIndex = await request({
           ...requestOptions,
           uri: `${options["url"]}/function/${functions[index]._id}/index`
         });
-        functions[index] = {...functions[index], index: functionIndex.index};
+        functions[index] = {
+          ...functions[index],
+          path: `${homedir}/${functions[index].path}/index.ts`
+        };
+        if (!fs.existsSync(`${homedir}/${functions[index]._id}`))
+          fs.mkdirSync(`${homedir}/${functions[index]._id}`);
+        fs.writeFileSync(`${homedir}/${functions[index].path}`, functionIndex);
       }
-      const yamlFile = yaml.safeLoad(JSON.stringify(functions));
-      console.log(yamlFile)
-      
+      const yamlFile = yaml.stringify(functions);
+      console.log(yamlFile);
     } catch (error) {
       this.namespace.logger.error(error.message);
     }
