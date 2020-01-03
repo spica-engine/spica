@@ -2,6 +2,7 @@ import {CommandMap, execute, NamespaceMetadata, DEFAULT_COLORS} from "@ionic/cli
 import {ListCommand} from "./commands/list";
 import {RemoveCommand} from "./commands/remove";
 import {ServeCommand} from "./commands/serve";
+import {LoginCommand} from "./commands/login";
 import {SpicaNamespace} from "./interface";
 import {Logger} from "./logger";
 import chalk from "chalk";
@@ -20,7 +21,8 @@ class RootNamespace extends SpicaNamespace {
     return new CommandMap([
       ["serve", async () => new ServeCommand(this)],
       ["ls", async () => new ListCommand(this)],
-      ["rm", async () => new RemoveCommand(this)]
+      ["rm", async () => new RemoveCommand(this)],
+      ["login", async () => new LoginCommand(this)]
     ]);
   }
 }
