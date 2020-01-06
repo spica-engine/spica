@@ -25,7 +25,6 @@ class RootNamespace extends SpicaNamespace {
       ["rm", async () => new RemoveCommand(this)],
       ["login", async () => new LoginCommand(this)],
       ["pull", async () => new PullCommand(this)]
-
     ]);
   }
 }

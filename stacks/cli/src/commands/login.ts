@@ -28,8 +28,7 @@ export class LoginCommand extends Command {
       options: [
         {
           name: "url",
-          summary:
-            "URL of the spica server that will identify your credentials.",
+          summary: "URL of the spica server that will identify your credentials.",
           type: String,
           default: "http://localhost:4300"
         }
@@ -47,7 +46,7 @@ export class LoginCommand extends Command {
     }
     const requestOptions = {
       method: "GET",
-      uri: `${options['url']}/passport/identify?password=${password}&identifier=${username}`,
+      uri: `${options["url"]}/passport/identify?password=${password}&identifier=${username}`,
       json: true
     };
 
