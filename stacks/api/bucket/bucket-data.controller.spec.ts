@@ -939,6 +939,34 @@ describe("Bucket-Data acceptance", () => {
       expect(bucketData[0].title).toBe("updated title");
       expect(bucketData[0].description).toBe("updated description");
     });
+
+    it("should return error if title isnt valid for bucket", async () => {
+      const invalidData = {
+        _id: new ObjectId(),
+        title: true,
+        description: "valid description"
+      };
+      const response = await req.post(`/bucket/${myBucketId}/data`, invalidData);
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect([response.body.error, response.body.message]).toEqual([
+        ".title should be string",
+        "validation failed"
+      ]);
+    });
+
+    it("should return error if description isnt valid for bucket", async () => {
+      const invalidData = {
+        _id: new ObjectId(),
+        title: "title",
+        description: [1, 2, 3]
+      };
+      const response = await req.post(`/bucket/${myBucketId}/data`, invalidData);
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect([response.body.error, response.body.message]).toEqual([
+        ".description should be string",
+        "validation failed"
+      ]);
+    });
   });
 
   describe("delete requests", () => {
