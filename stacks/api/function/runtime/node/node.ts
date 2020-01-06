@@ -1,20 +1,32 @@
-import {Compilation, Execution, Runtime} from "@spica-server/function/runtime";
+import {Compilation, Description, Execution, Runtime} from "@spica-server/function/runtime";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
 
 export class Node extends Runtime {
-  name: string = this.constructor.name;
+  description: Description = {
+    name: "node",
+    title: "Node.js 12",
+    description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
+  };
 
   async compile(compilation: Compilation): Promise<void> {
     await super.prepare(compilation);
 
-    await fs.promises.symlink(
-      path.join(compilation.cwd, "node_modules"),
-      path.join(compilation.cwd, ".build", "node_modules"),
-      "dir"
-    );
+    await fs.promises
+      .symlink(
+        path.join(compilation.cwd, "node_modules"),
+        path.join(compilation.cwd, ".build", "node_modules"),
+        "dir"
+      )
+      .catch(e => {
+        if (e.code == "EEXIST") {
+          // Do nothing.
+          return;
+        }
+        return Promise.reject(e);
+      });
 
     const entrypoint = path.resolve(compilation.cwd, compilation.entrypoint);
 
@@ -33,7 +45,11 @@ export class Node extends Runtime {
       options
     });
 
-    program.emit();
+    const result = program.emit();
+
+    if (result.emitSkipped) {
+      return Promise.reject("Compilation skipped.");
+    }
   }
 
   async execute(execution: Execution): Promise<number> {

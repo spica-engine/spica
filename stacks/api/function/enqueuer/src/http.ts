@@ -3,6 +3,8 @@ import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
+import read = require("body-parser/lib/read");
+import bodyParser = require("body-parser");
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   description: Description = {
@@ -16,8 +18,18 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
   constructor(private queue: EventQueue, private http: HttpQueue, httpServer: express.Application) {
     super();
+    this.router.use(
+      bodyParser.raw({
+        limit: "10mb",
+        type: "*/*"
+      })
+    );
     this.router.use(this.handleUnhandled);
+    const stack = httpServer._router.stack;
     httpServer.use("/fn-execute", this.router);
+    const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
+    const layer = stack.splice(stack.length - 1, 1)[0];
+    stack.splice(expressInitIndex, 0, layer);
   }
 
   private handleUnhandled(req, res) {
@@ -70,13 +82,14 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       request.path = req.path;
       request.statusCode = req.statusCode;
       request.statusMessage = req.statusMessage;
-      request.params = Object.keys(req.headers).reduce((acc, key) => {
+      request.params = Object.keys(req.params).reduce((acc, key) => {
         const param = new Http.Param();
         param.key = key;
         param.value = req.params[key] as string;
         acc.push(param);
         return acc;
       }, []);
+      request.body = new Uint8Array(req.body);
       request.headers = Object.keys(req.headers).reduce((acc, key) => {
         const header = new Http.Header();
         header.key = key;

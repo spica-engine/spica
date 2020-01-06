@@ -13,6 +13,7 @@ ts_library(
         "//stacks/api/function/runtime/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",
+        "@npm//express",
     ],
 )
 

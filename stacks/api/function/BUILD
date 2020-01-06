@@ -31,18 +31,18 @@ ts_library(
     ],
 )
 
-docs(
-    name = "docs",
-    srcs = [
-        "function.controller.ts",
-        "subscription.controller.ts",
-    ],
-    tags = ["function-docs"],
-    exports = [
-        "FunctionController",
-        "SubscriptionController",
-    ],
-    deps = [
-        "//packages/database",
-    ],
-)
+# docs(
+#     name = "docs",
+#     srcs = [
+#         "function.controller.ts",
+#         "subscription.controller.ts",
+#     ],
+#     tags = ["function-docs"],
+#     exports = [
+#         "FunctionController",
+#         "SubscriptionController",
+#     ],
+#     deps = [
+#         "//packages/database",
+#     ],
+# )

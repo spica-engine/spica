@@ -9,7 +9,7 @@ describe("Http", () => {
       header.key = "test";
       header.value = "test";
       req.headers = [header];
-      // We test integrity of the data here leave it as is.
+      // We test integrity of the data here. leave it as is.
       const r = Http.Request.deserialize(req.serialize());
       const request = new Request(r);
       expect(request.headers.get("test")).toBe("test");
@@ -22,6 +22,18 @@ describe("Http", () => {
       param.value = "test";
       req.params = [param];
       const request = new Request(req);
+      expect(request.params.get("test")).toBe("test");
+    });
+
+    it("should set body as UInt8Array", () => {
+      const req = new Http.Request();
+      req.body = new Uint8Array([0x2, 0x3]);
+      const param = new Http.Param();
+      param.key = "test";
+      param.value = "test";
+      req.params = [param];
+      const request = new Request(req);
+      expect(Array.from(request.body)).toEqual([0x2, 0x3]);
       expect(request.params.get("test")).toBe("test");
     });
 

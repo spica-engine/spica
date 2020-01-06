@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
-import {Function} from "../interface";
 import {FunctionEngine} from "../engine";
+import {Function} from "../interface";
 
 // TODO(thesayyn): Provide a schema invalidator
 // in order to catch up latest schemas from triggers
@@ -10,7 +10,7 @@ export class EnqueuerSchemaResolver {
   constructor(private registry: FunctionEngine) {}
 
   resolve(uri: string): Promise<object> | undefined {
-    const match = /http:\/\/spica\.internal\/function\/enqueuer\/(.*?)/g.exec(uri);
+    const match = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);
 
     if (this.registry.schemas.has(match[1])) {
       return Promise.resolve(this.registry.schemas.get(match[1]));

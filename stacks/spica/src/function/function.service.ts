@@ -4,7 +4,7 @@ import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
 import {map, tap} from "rxjs/operators";
 import {DeleteFunction, LoadFunctions, UpsertFunction} from "./actions/function.actions";
-import {Function, LogFilter} from "./interface";
+import {Function, Information, LogFilter} from "./interface";
 import * as fromFunction from "./reducers/function.reducer";
 
 @Injectable({providedIn: "root"})
@@ -45,10 +45,8 @@ export class FunctionService {
     return this.http.get<{declarations: string}>(`api:/function/declaration`);
   }
 
-  getTriggers(scope?: string): Observable<any> {
-    const params: any = {};
-    params.scope = scope || "";
-    return this.http.get(`api:/function/trigger`, {params: params});
+  information(scope?: string): Observable<Information> {
+    return this.http.get<Information>(`api:/function/information`);
   }
 
   upsertOne(fn: Function): Observable<Function> {

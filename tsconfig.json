@@ -13,8 +13,14 @@
     "baseUrl": "./",
     "lib": ["es2015", "dom"],
     "paths": {
-      "@spica-server/*": ["./packages/*", "./stacks/api/*", "./stacks/api/*/src"],
-      "@spica-client/*": ["./stacks/spica/packages/*", "./stacks/spica/src/*"]
+      "@spica-server/*": [
+        "./packages/*",
+        "./stacks/api/*"
+      ],
+      "@spica-client/*": [
+        "./packages/*",
+        "./stacks/spica/src/*"
+      ]
     }
   },
   "bazelOptions": {

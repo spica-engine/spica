@@ -1,5 +1,5 @@
 {
-  "$id": "http://spica.internal/function/triggers/http/schema",
+  "$id": "http://spica.internal/function/enqueuer/http",
   "title": "Http",
   "description": "Http enqueuer for functions",
   "type": "object",

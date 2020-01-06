@@ -6,7 +6,7 @@ describe("horizon", () => {
   let horizon: Horizon;
 
   beforeEach(() => {
-    horizon = new Horizon();
+    horizon = new Horizon(null);
   });
 
   afterEach(() => {

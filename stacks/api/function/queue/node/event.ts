@@ -8,10 +8,8 @@ export class EventQueue {
     this.client = new Event.QueueClient("0.0.0.0:5678", grpc.credentials.createInsecure());
   }
 
-  pop(): Promise<Event.Event> {
+  pop(pop: Event.Pop): Promise<Event.Event> {
     return new Promise((resolve, reject) => {
-      const pop = new Event.Pop();
-      pop.id = process.env.EVENT_ID;
       this.client.pop(pop, (error, event) => {
         if (error) {
           reject(error);

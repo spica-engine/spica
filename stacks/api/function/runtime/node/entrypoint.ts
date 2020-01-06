@@ -6,10 +6,15 @@ if (!process.env.ENTRYPOINT) {
   exitAbnormally("Environment variable ENTRYPOINT was not set.");
 }
 
+if (!process.env.EVENT_ID) {
+  exitAbnormally("Environment variable EVENT_ID was not set.");
+}
+
 (async () => {
   const queue = new EventQueue();
-
-  const event = await queue.pop().catch(e => {
+  const pop = new Event.Pop();
+  pop.id = process.env.EVENT_ID;
+  const event = await queue.pop(pop).catch(e => {
     console.log(e);
     return undefined;
   });
@@ -34,20 +39,16 @@ if (!process.env.ENTRYPOINT) {
       callArguments[0] = new Request(request);
       callArguments[1] = new Response(
         async e => {
-          console.log("CALLING WRITEHEAD");
           e.id = event.id;
           await httpQueue.writeHead(e);
         },
         async e => {
-          console.log("CALLING WRITE");
           e.id = event.id;
           await httpQueue.write(e);
         },
         async e => {
-          console.log("CALLING END");
           e.id = event.id;
           await httpQueue.end(e);
-          console.log("CALLING ENDD");
         }
       );
       break;

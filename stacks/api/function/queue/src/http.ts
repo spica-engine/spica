@@ -41,7 +41,10 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
       serverResponse.writeHead(
         call.request.statusCode,
         call.request.statusMessage,
-        (call.request.headers || []).reduce((acc, header) => (acc[header.key] = header.value), {})
+        (call.request.headers || []).reduce((acc, header) => {
+          acc[header.key] = header.value;
+          return acc;
+        }, {})
       );
       callback(undefined, new Http.WriteHead.Result());
     }
@@ -53,7 +56,6 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
       this.queue.delete(call.request.id);
-      console.log(call.request.data);
       serverResponse.end(Buffer.from(call.request.data), call.request.encoding, () => {
         callback(undefined, new Http.End.Result());
       });

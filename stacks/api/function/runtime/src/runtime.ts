@@ -6,8 +6,7 @@ import * as util from "util";
 import {Compilation} from "./compilation";
 
 export abstract class Runtime {
-  abstract readonly name: string;
-
+  abstract description: Description;
   abstract execute(execution: Execution): Promise<unknown>;
   abstract compile(compilation: Compilation): Promise<void>;
 
@@ -26,6 +25,12 @@ export abstract class Runtime {
     shasum.update(code);
     shasum.digest("hex").toString();
   }
+}
+
+export interface Description {
+  name: string;
+  title: string;
+  description?: string;
 }
 
 export interface Execution {

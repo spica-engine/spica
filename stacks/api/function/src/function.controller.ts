@@ -8,8 +8,8 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  Patch,
   Post,
-  Query,
   // Res,
   UseGuards
 } from "@nestjs/common";
@@ -35,19 +35,26 @@ export class FunctionController {
     private horizon: Horizon
   ) {}
 
-  @Get("engine")
-  @UseGuards(AuthGuard())
-  trigger() {
-    const enqueuers = {};
-    const runtimes = {};
+  @Get("information")
+  // @UseGuards(AuthGuard())
+  information() {
+    const enqueuers = [];
+
     for (const enqueuer of this.horizon.enqueuers) {
-      enqueuers[enqueuer.description.name] = {
+      enqueuers.push({
         description: enqueuer.description,
-        schema: this.engine.schemas.get(enqueuer.description.name)
-      };
+        options: this.engine.schemas.get(enqueuer.description.name)
+      });
     }
 
-    return enqueuers;
+    const runtimes = [];
+    for (const runtime of this.horizon.runtimes) {
+      runtimes.push({
+        description: runtime.description
+      });
+    }
+
+    return {enqueuers, runtimes};
   }
 
   @Get()
@@ -56,15 +63,9 @@ export class FunctionController {
     return this.fs.find();
   }
 
-  @Post("add")
-  @UseGuards(AuthGuard(), ActionGuard("function:update"))
-  add(@Body(Schema.validate(generate)) fn: Function) {
-    return this.fs.findOneAndReplace({_id: fn._id}, fn, {upsert: true});
-  }
-
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
-  show(@Param("id", OBJECT_ID) id: ObjectId) {
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.fs.findOne({_id: id});
   }
 
@@ -76,6 +77,42 @@ export class FunctionController {
     if (deletedCount == 0) {
       throw new NotFoundException("Couldn't find the function.");
     }
+  }
+
+  @Patch(":id")
+  @UseGuards(AuthGuard(), ActionGuard("function:update"))
+  updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body(Schema.validate(generate)) fn: Function) {
+    delete fn._id;
+    return this.fs.updateOne({_id: id}, {$set: fn});
+  }
+
+  @Post()
+  @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  insertOne(@Body(Schema.validate(generate)) fn: Function) {
+    fn._id = new ObjectId();
+    return this.fs.insertOne(fn);
+  }
+
+  @Post(":id/index")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  async updateIndex(@Param("id", OBJECT_ID) id: ObjectId, @Body("index") index: string) {
+    const fn = await this.fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Cannot find function.");
+    }
+    return this.engine.update(fn, index);
+  }
+
+  @Get(":id/index")
+  @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
+  async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
+    const fn = await this.fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Can not find function.");
+    }
+    const index = await this.engine.read(fn);
+    return {index};
   }
 
   // @Get(":id/run/:target")
@@ -108,28 +145,6 @@ export class FunctionController {
   // clearLogs(@Param("id", OBJECT_ID) id: ObjectId) {
   //   return this.loggerHost.clear(id.toHexString());
   // }
-
-  @Post(":id/index")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  async addIndex(@Param("id", OBJECT_ID) id: ObjectId, @Body("index") index: string) {
-    const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Cannot find function.");
-    }
-    return this.engine.update(fn, index);
-  }
-
-  @Get(":id/index")
-  @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
-  async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOne({_id: id});
-    if (!fn) {
-      throw new NotFoundException("Can not find function.");
-    }
-    const index = await this.engine.read(fn);
-    return {index};
-  }
 
   // @Post(":id/dependencies")
   // @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))

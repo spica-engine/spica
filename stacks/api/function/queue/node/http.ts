@@ -67,7 +67,7 @@ export class Request {
   query = new Map<string, string>();
   params = new Map<string, string>();
   cookies = new Map<string, string>();
-  body: undefined | object;
+  body: undefined | Uint8Array;
 
   constructor(req: Http.Request) {
     this.statusCode = req.statusCode;
@@ -85,7 +85,7 @@ export class Request {
     }
 
     if (req.body) {
-      // TODO: parse body
+      this.body = req.body;
     }
   }
 }
@@ -102,7 +102,6 @@ export class Response {
   ) {}
 
   send(body: Buffer | Array<any> | object | string) {
-    console.log("CALLED");
     let type: string;
     let chunk: Buffer;
     if (Buffer.isBuffer(body)) {
@@ -115,10 +114,11 @@ export class Response {
       type = "text/html";
       chunk = Buffer.from(body);
     }
-    this.writeHead(200, "OK", {"Content-type": type});
-    console.log("dwefwfwewfew");
+    this.writeHead(this.statusCode || 200, "OK", {
+      "Content-type": type,
+      "Content-length": String(Buffer.byteLength(chunk))
+    });
     this.end(chunk, "utf-8");
-    console.log("end");
   }
 
   write(chunk: string | Buffer, encoding?: BufferEncoding) {

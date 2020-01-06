@@ -1,4 +1,5 @@
 import {InjectionToken} from "@angular/core";
+import {JSONSchema7} from "json-schema";
 
 export interface FunctionOptions {
   url: string;
@@ -36,10 +37,10 @@ export interface Triggers {
   [key: string]: Trigger;
 }
 
-export interface Trigger {
+export interface Trigger<T = any> {
   type: string;
   active?: boolean;
-  options: any;
+  options: T | any;
 }
 
 export function emptyFunction(): Function {
@@ -64,11 +65,20 @@ export interface Subscription {
   url: string;
 }
 
-export interface Trigger<T = any> {
-  type: string;
-  options: T | any;
-}
-
 export function emptySubscription(): Subscription {
   return {trigger: {type: undefined, options: {}}, url: undefined};
+}
+
+export interface Enqueuer {
+  description: {
+    icon: string;
+    name: string;
+    title: string;
+    description: string;
+  };
+  options: JSONSchema7;
+}
+
+export interface Information {
+  enqueuers: Enqueuer[];
 }

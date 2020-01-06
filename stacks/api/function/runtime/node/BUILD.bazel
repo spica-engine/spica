@@ -17,7 +17,7 @@ ts_library(
     deps = [
         "//stacks/api/function/runtime",
         "@npm//@types/node",
-        "@npm//typescript"
+        "@npm//typescript",
     ],
 )
 
@@ -58,7 +58,7 @@ ts_library(
     deps = [
         "//stacks/api/function/queue/node",
         "//stacks/api/function/queue/proto",
-        "@npm//@types/node"
+        "@npm//@types/node",
     ],
 )
 

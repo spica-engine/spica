@@ -5,7 +5,11 @@ import {HttpEnqueuer, HttpMethod} from "@spica-server/function/enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 
-describe("http trigger", () => {
+/**
+ * TODO: Provide some tests for req.query, req.headers and req.params
+ * TODO: Check if req.method, req.url, req.path is set
+ */
+describe("http enqueuer", () => {
   let app: INestApplication;
   let req: Request;
   let httpEnqueuer: HttpEnqueuer;
@@ -37,43 +41,6 @@ describe("http trigger", () => {
     httpQueue.enqueue = jasmine.createSpy();
   });
 
-  //   it("should handle errors", async () => {
-  //     const options = {method: HttpMethod.Get, path: "/test", preflight: false};
-  //     const invoker = jasmine
-  //       .createSpy("invoker")
-  //       .and.callFake(() => Promise.reject({message: "some evil error"}));
-  //     httpEnqueuer.subscribe(noopTarget, options);
-  //     const response = await req.get("/fn-execute/test", {});
-  //     expect(response.statusCode).toBe(500);
-  //     expect(response.body).toEqual({message: "some evil error"});
-  //     httpEnqueuer.register(null, noopTarget, options);
-  //   });
-
-  //   it("should send the value returned from invoker as body", async () => {
-  //     const options = {method: HttpMethod.Get, path: "/test", preflight: false};
-  //     const invoker = jasmine
-  //       .createSpy("invoker")
-  //       .and.callFake(() => Promise.resolve({message: "here is the result"}));
-  //     httpEnqueuer.subscribe(noopTarget, options);
-  //     const response = await req.get("/fn-execute/test", {});
-  //     expect(response.statusCode).toBe(200);
-  //     expect(response.body).toEqual({message: "here is the result"});
-  //     httpEnqueuer.register(null, noopTarget, options);
-  //   });
-
-  //   it("should send the value returned from invoker as body if body has not been sent", async () => {
-  //     const options = {method: HttpMethod.Get, path: "/test", preflight: false};
-  //     const invoker = jasmine.createSpy("invoker").and.callFake(({parameters: [req, res]}) => {
-  //       res.send({should: "send this instead."});
-  //       return Promise.resolve({message: "here is the result"});
-  //     });
-  //     httpEnqueuer.register(invoker, noopTarget, options);
-  //     const response = await req.get("/fn-execute/test", {});
-  //     expect(response.statusCode).toBe(200);
-  //     expect(response.body).toEqual({should: "send this instead."});
-  //     httpEnqueuer.register(null, noopTarget, options);
-  //   });
-
   it("should not handle preflight requests on indistinct paths", async () => {
     const response = await req.options("/fn-execute/test12312");
     expect(response.statusCode).toBe(404);
@@ -81,23 +48,21 @@ describe("http trigger", () => {
 
   it("should handle preflight requests", async () => {
     const options = {method: HttpMethod.Post, path: "/test", preflight: true};
-    const invoker = jasmine.createSpy("invoker");
     httpEnqueuer.subscribe(noopTarget, options);
     let response = await req.options("/fn-execute/test");
     expect(response.statusCode).toBe(200);
     expect(response.body).toBeUndefined();
     expect(response.headers["access-control-allow-origin"]).toBe("*");
-    expect(invoker).not.toHaveBeenCalled();
     httpEnqueuer.unsubscribe(noopTarget);
   });
 
   it("should not handle preflight requests but route", async () => {
-    const options = {method: HttpMethod.Post, path: "/test", preflight: false};
     const spy = httpQueue.enqueue.and.callFake((id, req, res) => {
       res.writeHead(200, undefined, {"Content-type": "application/json"});
       res.end(JSON.stringify({response: "back"}));
     });
-    httpEnqueuer.subscribe(noopTarget, options);
+
+    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test", preflight: false});
 
     const response = await req.options("/fn-execute/test");
     expect(response.statusCode).toBe(404);
@@ -109,14 +74,12 @@ describe("http trigger", () => {
   });
 
   it("should not handle preflight requests for get and head method", async () => {
-    let options = {method: HttpMethod.Get, path: "/test1", preflight: true};
-    httpEnqueuer.subscribe(noopTarget, options);
+    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Get, path: "/test1", preflight: true});
     let response = await req.options("/fn-execute/test1");
     expect(response.statusCode).toBe(404);
     httpEnqueuer.unsubscribe(noopTarget);
 
-    options = {method: HttpMethod.Head, path: "/test2", preflight: true};
-    httpEnqueuer.subscribe(noopTarget, options);
+    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Head, path: "/test2", preflight: true});
     response = await req.options("/fn-execute/test2");
     expect(response.statusCode).toBe(404);
     httpEnqueuer.unsubscribe(noopTarget);
@@ -231,6 +194,27 @@ describe("http trigger", () => {
     response = await req.options("/fn-execute/conflictedpath");
     expect(response.statusCode).toBe(200);
     expect(response.headers["access-control-allow-origin"]).toBe("*");
+  });
+
+  it("should forward body", async () => {
+    // End the request immediately.
+    httpQueue.enqueue.and.callFake((id, req, res) => res.end());
+
+    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test", preflight: false});
+    await req.post("/fn-execute/test", {test: 1}, {"Content-type": "application/json"});
+    expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
+    expect(Array.from(httpQueue.enqueue.calls.mostRecent().args[1].body)).toEqual([
+      123,
+      34,
+      116,
+      101,
+      115,
+      116,
+      34,
+      58,
+      49,
+      125
+    ]);
   });
 
   afterAll(() => {
