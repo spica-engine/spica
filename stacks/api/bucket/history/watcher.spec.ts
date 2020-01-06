@@ -11,6 +11,7 @@ import {HistoryService} from "./history.service";
 describe("Watcher", () => {
   let module: TestingModule;
   let bucketWatcher: BucketWatcher;
+  let databaseService: DatabaseService;
   const buckets = [
     {
       _id: new ObjectId(),
@@ -111,20 +112,14 @@ describe("Watcher", () => {
         }
       ]
     }).compile();
+
+    databaseService = await module.get(DatabaseService);
+
     //insert buckets
-    await module
-      .get(DatabaseService)
-      .collection("buckets")
-      .insertMany(buckets);
+    await databaseService.collection("buckets").insertMany(buckets);
     //insert documents
-    await module
-      .get(DatabaseService)
-      .collection(`bucket_${buckets[0]._id}`)
-      .insertMany(firstBucketDocuments);
-    await module
-      .get(DatabaseService)
-      .collection(`bucket_${buckets[1]._id}`)
-      .insertMany(secondBucketDocuments);
+    await databaseService.collection(`bucket_${buckets[0]._id}`).insertMany(firstBucketDocuments);
+    await databaseService.collection(`bucket_${buckets[1]._id}`).insertMany(secondBucketDocuments);
     //create watcher and call watch
     bucketWatcher = new BucketWatcher(module.get(MongoClient), module.get(HistoryService));
     bucketWatcher.watch();
@@ -136,40 +131,28 @@ describe("Watcher", () => {
     deleteAtPathSpy = bucketWatcher["historyService"].deleteHistoryAtPath;
     previousDocumentSpy = bucketWatcher["historyService"].getPreviousDocument;
     insertOneSpy = bucketWatcher["historyService"].insertOne;
-  }, 30000);
+  }, 120000);
 
   afterEach(async () => {
     //delete buckets
-    await module
-      .get(DatabaseService)
+    await databaseService
       .collection("buckets")
       .deleteMany({})
       .catch();
     //delete documents
-    await module
-      .get(DatabaseService)
+    await databaseService
       .collection(`bucket_${buckets[0]._id}`)
       .deleteMany({})
       .catch();
-    await module
-      .get(DatabaseService)
+    await databaseService
       .collection(`bucket_${buckets[1]._id}`)
       .deleteMany({})
       .catch();
     //insert buckets
-    await module
-      .get(DatabaseService)
-      .collection("buckets")
-      .insertMany(buckets);
+    await databaseService.collection("buckets").insertMany(buckets);
     //insert documents
-    await module
-      .get(DatabaseService)
-      .collection(`bucket_${buckets[0]._id}`)
-      .insertMany(firstBucketDocuments);
-    await module
-      .get(DatabaseService)
-      .collection(`bucket_${buckets[1]._id}`)
-      .insertMany(secondBucketDocuments);
+    await databaseService.collection(`bucket_${buckets[0]._id}`).insertMany(firstBucketDocuments);
+    await databaseService.collection(`bucket_${buckets[1]._id}`).insertMany(secondBucketDocuments);
     //wait until spies called, then reset all of them
     await new Promise(resolve => setTimeout(resolve, 100));
     deleteManySpy.calls.reset();
@@ -184,10 +167,7 @@ describe("Watcher", () => {
   });
 
   it("should delete histories of bucket which is deleted", async () => {
-    await module
-      .get(DatabaseService)
-      .collection("buckets")
-      .deleteOne({_id: buckets[1]._id});
+    await databaseService.collection("buckets").deleteOne({_id: buckets[1]._id});
 
     //wait until changes detected
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -199,8 +179,7 @@ describe("Watcher", () => {
   });
 
   it("should delete histories of bucket document which is deleted", async () => {
-    await module
-      .get(DatabaseService)
+    await databaseService
       .collection(`bucket_${buckets[1]._id}`)
       .deleteOne({_id: secondBucketDocuments[1]._id});
 
@@ -238,10 +217,7 @@ describe("Watcher", () => {
         }
       }
     };
-    await module
-      .get(DatabaseService)
-      .collection("buckets")
-      .replaceOne({_id: buckets[0]._id}, updatedBucket);
+    await databaseService.collection("buckets").replaceOne({_id: buckets[0]._id}, updatedBucket);
 
     //wait until changes detected
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -260,8 +236,7 @@ describe("Watcher", () => {
 
     let updatedDocument = {...secondBucketDocuments[1], name: "updated second name", age: 21};
 
-    await module
-      .get(DatabaseService)
+    await databaseService
       .collection(`bucket_${buckets[1]._id}`)
       .replaceOne({_id: updatedDocument._id}, updatedDocument);
 
@@ -313,8 +288,7 @@ describe("Watcher", () => {
     const updatedDocument = {...firstBucketDocuments[0], title: "new title"};
     previousDocumentSpy.and.returnValue(Promise.resolve(updatedDocument));
 
-    await module
-      .get(DatabaseService)
+    await databaseService
       .collection(`bucket_${buckets[0]._id}`)
       .replaceOne({_id: updatedDocument._id}, updatedDocument);
 
@@ -325,5 +299,5 @@ describe("Watcher", () => {
     expect(previousDocumentSpy).toHaveBeenCalledWith(buckets[0]._id, firstBucketDocuments[0]._id);
 
     expect(insertOneSpy).toHaveBeenCalledTimes(0);
-  });
+  }, 35000);
 });
