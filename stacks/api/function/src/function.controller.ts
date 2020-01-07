@@ -83,14 +83,15 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body(Schema.validate(generate)) fn: Function) {
     delete fn._id;
-    return this.fs.updateOne({_id: id}, {$set: fn});
+    return this.fs.findOneAndUpdate({_id: id}, {$set: fn});
   }
 
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  insertOne(@Body(Schema.validate(generate)) fn: Function) {
+  async insertOne(@Body(Schema.validate(generate)) fn: Function) {
     fn._id = new ObjectId();
-    return this.fs.insertOne(fn);
+    await this.fs.insertOne(fn);
+    return fn;
   }
 
   @Post(":id/index")

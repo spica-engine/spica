@@ -23,8 +23,12 @@ export class FunctionEngine {
         case ChangeKind.Added:
           this.subscribe(change);
           break;
-
-        default:
+        case ChangeKind.Updated:
+          this.unsubscribe(path.join(this.options.root, change.target.id));
+          this.subscribe(change);
+          break;
+        case ChangeKind.Removed:
+          this.unsubscribe(path.join(this.options.root, change.target.id));
           break;
       }
     });
@@ -32,6 +36,7 @@ export class FunctionEngine {
 
   async update(fn: Function, index: string): Promise<void> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
+    await fs.promises.mkdir(functionRoot, {recursive: true});
     await fs.promises.writeFile(path.join(functionRoot, "index.ts"), index);
     return this.horizon.runtime.compile({
       cwd: functionRoot,
@@ -50,7 +55,6 @@ export class FunctionEngine {
   }
 
   subscribe(change: TargetChange) {
-    console.log(change);
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
       const target = new Event.Target();
@@ -62,5 +66,11 @@ export class FunctionEngine {
     }
   }
 
-  unsubscribe(fn: Function) {}
+  unsubscribe(cwd: string) {
+    for (const enqueuer of this.horizon.enqueuers) {
+      const target = new Event.Target();
+      target.cwd = cwd;
+      enqueuer.unsubscribe(target);
+    }
+  }
 }

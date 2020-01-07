@@ -3,10 +3,17 @@ import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/co
 import {ActivatedRoute, Router} from "@angular/router";
 import {Scheme, SchemeObserver} from "@spica-server/core";
 import {Observable, Subscription} from "rxjs";
-import {delay, filter, map, switchMap, takeUntil, tap} from "rxjs/operators";
+import {delay, filter, switchMap, take, takeUntil, tap} from "rxjs/operators";
 import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
-import {emptyFunction, Enqueuer, Function, Information, Trigger} from "../../interface";
+import {
+  denormalizeFunction,
+  emptyFunction,
+  emptyTrigger,
+  Information,
+  NormalizedFunction,
+  normalizeFunction
+} from "../../interface";
 
 @Component({
   selector: "functions-add",
@@ -16,7 +23,7 @@ import {emptyFunction, Enqueuer, Function, Information, Trigger} from "../../int
 export class AddComponent implements OnInit, OnDestroy {
   @ViewChild("toolbar", {static: true}) toolbar;
 
-  function: Function = emptyFunction();
+  function: NormalizedFunction = emptyFunction();
 
   information: Observable<Information>;
 
@@ -42,6 +49,7 @@ export class AddComponent implements OnInit, OnDestroy {
   ) {
     this.mediaMatchObserver = schemeObserver
       .observe(Scheme.Dark)
+      .pipe(takeUntil(this.dispose))
       .subscribe(r => this.changeScheme(r));
 
     this.information = this.functionService.information();
@@ -57,12 +65,9 @@ export class AddComponent implements OnInit, OnDestroy {
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
-        switchMap(params => this.functionService.getFunction(params.id)),
+        switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
-          this.function = {
-            ...fn,
-            env: Object.entries(fn.env as any).map(([name, value]) => ({name, value})) as any
-          };
+          this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.dependencies = this.http.get(`api:/function/${fn._id}/dependencies`);
         }),
@@ -97,6 +102,10 @@ export class AddComponent implements OnInit, OnDestroy {
   //     );
   // }
 
+  addTrigger() {
+    this.function.triggers.push(emptyTrigger());
+  }
+
   addVariable() {
     this.function.env.push({value: undefined, name: undefined});
   }
@@ -125,14 +134,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   save() {
     this.clearEmptyEnvVars();
-    this.functionService
-      .upsertOne({
-        ...this.function,
-        env: this.function.env.reduce((acc, env) => {
-          acc[env.name] = env.value;
-          return acc;
-        }, {}) as any
-      })
+    const fn = denormalizeFunction(this.function);
+    (this.function._id ? this.functionService.updateOne(fn) : this.functionService.insertOne(fn))
       .pipe(switchMap(fn => this.functionService.updateIndex(fn._id, this.index)))
       .toPromise()
       .then(() => this.router.navigate(["function"]));

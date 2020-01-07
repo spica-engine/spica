@@ -29,7 +29,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     httpServer.use("/fn-execute", this.router);
     const expressInitIndex = stack.findIndex(l => l.name === "expressInit");
     const layer = stack.splice(stack.length - 1, 1)[0];
-    stack.splice(expressInitIndex, 0, layer);
+    stack.splice(expressInitIndex + 1, 0, layer);
   }
 
   private handleUnhandled(req, res) {
@@ -53,7 +53,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   subscribe(target: Event.Target, options: HttpOptions): void {
     const method = options.method.toLowerCase();
     const path = options.path.replace(/^\/?(.*?)\/?$/, "/$1");
-    const name = `${target.cwd}_${target.handler}`;
 
     if (
       options.preflight &&
@@ -62,7 +61,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     ) {
       const fn = (req, res, next) => Middlewares.Preflight(req, res, next);
 
-      Object.defineProperty(fn, "name", {writable: false, value: name});
+      Object.defineProperty(fn, "target", {writable: false, value: target});
 
       this.router.options(path, fn);
     }
@@ -105,7 +104,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       this.http.enqueue(event.id, request, res);
     };
 
-    Object.defineProperty(fn, "name", {writable: false, value: name});
+    Object.defineProperty(fn, "target", {writable: false, value: target});
 
     this.router[method](path, fn);
 
@@ -113,10 +112,18 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   }
 
   unsubscribe(target: Event.Target): void {
-    const name = `${target.cwd}_${target.handler}`;
     this.router.stack = this.router.stack.filter(layer => {
       if (layer.route) {
-        return !layer.route.stack.some(layer => layer.name == name);
+        return !layer.route.stack.some(layer => {
+          if (!target.handler) {
+            return layer.handle["target"].cwd == target.cwd;
+          } else {
+            return (
+              layer.handle["target"].cwd == target.cwd &&
+              layer.handle["target"].handler == target.handler
+            );
+          }
+        });
       }
       return true;
     });

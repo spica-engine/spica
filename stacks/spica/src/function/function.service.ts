@@ -49,9 +49,15 @@ export class FunctionService {
     return this.http.get<Information>(`api:/function/information`);
   }
 
-  upsertOne(fn: Function): Observable<Function> {
+  insertOne(fn: Function): Observable<Function> {
     return this.http
-      .post<Function>(`api:/function/add`, fn)
+      .post<Function>(`api:/function`, fn)
+      .pipe(tap(fn => this.store.dispatch(new UpsertFunction({function: fn}))));
+  }
+
+  updateOne(fn: Function): Observable<Function> {
+    return this.http
+      .patch<Function>(`api:/function/${fn._id}`, fn)
       .pipe(tap(fn => this.store.dispatch(new UpsertFunction({function: fn}))));
   }
 

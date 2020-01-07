@@ -32,8 +32,8 @@ describe("http enqueuer", () => {
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
     httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue"]);
 
-    httpEnqueuer = new HttpEnqueuer(eventQueue, httpQueue, app as any);
     await app.listen(req.socket);
+    httpEnqueuer = new HttpEnqueuer(eventQueue, httpQueue, app.getHttpAdapter().getInstance());
   });
 
   afterEach(() => {
