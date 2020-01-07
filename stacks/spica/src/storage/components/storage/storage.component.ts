@@ -14,7 +14,7 @@ import {StorageService} from "../../storage.service";
   viewProviders: [
     {
       provide: NG_VALUE_ACCESSOR,
-      multi:true,
+      multi: true,
       useExisting: forwardRef(() => StorageComponent)
     }
   ],
