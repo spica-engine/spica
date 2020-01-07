@@ -9,9 +9,7 @@ import {
 import {Command} from "../interface";
 import * as fs from "fs";
 import * as request from "request-promise-native";
-import {homedir} from "os";
-import * as yaml from "yaml";
-import {Service} from "../service";
+import * as service from "../service";
 
 export class PullCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
@@ -55,21 +53,20 @@ export class PullCommand extends Command {
   }
 
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
-    const service = new Service();
-    const loginData = await service.getLoginData().catch(error => {
-      this.namespace.logger.error(
-        "You need to login before this action. To login, use this command:"
-      );
-      this.namespace.logger.info("spica login <username> <password>");
-    });
-    if (!loginData) return;
+    const data = await service.pullFunctions(inputs[0].toString()).catch(error => this.namespace.logger.error(error.message));
+    if(!data) return
+    console.log(JSON.stringify(data))
+    // const loginData = await service.checkLoginStatus().catch(error => {
+    //   this.namespace.logger.error(
+    //     "You need to login before this action. To login, use this command:"
+    //   );
+    //   this.namespace.logger.info("spica login <username> <password>");
+    // });
+    // if (!loginData) return;
 
-    const functions = await service
-      .getData(loginData.token, `${loginData.server}/function`)
-      .catch(error => this.namespace.logger.error(error.message));
-    if (!functions) return;
-    
-
-
+    // const functions = await service
+    //   .getData(loginData.token, `${loginData.server}/function`)
+    //   .catch(error => this.namespace.logger.error(error.message));
+    // if (!functions) return;
   }
 }
