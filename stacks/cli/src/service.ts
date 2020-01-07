@@ -1,35 +1,29 @@
 import * as request from "request-promise-native";
 import * as fs from "fs";
-import {homedir} from "os";
+import * as os from "os";
+import * as path from "path";
 
-export class Service {
-  async login(username: string, password: string, url: string): Promise<string> {
-    const requestOptions = {
-      method: "GET",
-      uri: `${url}/passport/identify?password=${password}&identifier=${username}`,
-      json: true
-    };
+export async function login(username: string, password: string, url: string): Promise<string> {
+  const requestOptions = {
+    method: "GET",
+    uri: `${url}/passport/identify?password=${password}&identifier=${username}`,
+    json: true
+  };
 
-    try {
-      const response = await request(requestOptions);
-      const data = {
-        token: response.token,
-        server: url
-      };
-      this.writeFiletoPath(`${homedir}`, ".spicarc", data);
-      return "Successfully logged in.";
-    } catch (error) {
-      throw error;
-    }
-  }
+  const response = await request(requestOptions);
+  const data = {
+    token: response.token,
+    server: url
+  };
+  return await writeFile(getRcPath(), JSON.stringify(data)).then(_ => "Successfully logged in.");
+}
 
-  writeFiletoPath(path: string, fileName: string, data: any): string {
-    try {
-      fs.mkdirSync(path, {recursive: true});
-      fs.writeFileSync(`${path}/${fileName}`, JSON.stringify(data));
-      return `Writing file is successfull. Check: ${path}/${fileName}`;
-    } catch (error) {
-      throw error;
-    }
-  }
+function getRcPath() {
+  return path.join(os.homedir(), ".spicarc");
+}
+
+async function writeFile(fullPath: string, data: string): Promise<void> {
+  const dirName = path.dirname(fullPath);
+  await fs.promises.mkdir(dirName, {recursive: true});
+  return await fs.promises.writeFile(fullPath, data);
 }
