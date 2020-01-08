@@ -3,7 +3,6 @@ import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
-import read = require("body-parser/lib/read");
 import bodyParser = require("body-parser");
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
@@ -59,15 +58,15 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       options.method != HttpMethod.Get &&
       options.method != HttpMethod.Head
     ) {
+      if (options.method == HttpMethod.Options) {
+        throw new Error("Preflight option was used with HttpMethod.Options");
+      }
+
       const fn = (req, res, next) => Middlewares.Preflight(req, res, next);
 
       Object.defineProperty(fn, "target", {writable: false, value: target});
 
       this.router.options(path, fn);
-    }
-
-    if (options.method == HttpMethod.Options) {
-      throw new Error("Preflight have been used with with HttpMethod.Options");
     }
 
     const fn = (req: express.Request, res: express.Response) => {
