@@ -1,7 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load("//tools/proto:index.bzl", "ts_proto_library")
 
 proto_library(
     name = "protos",
@@ -10,11 +9,6 @@ proto_library(
         "http.proto",
     ],
 )
-
-# ts_proto_library(
-#     name = "proto_lib",
-#     proto = ":protos",
-# )
 
 ts_library(
     name = "proto",
