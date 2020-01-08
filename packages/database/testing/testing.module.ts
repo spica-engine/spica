@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module, OnModuleDestroy} from "@nestjs/common";
 import {ModuleRef} from "@nestjs/core";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {DatabaseService, MongoClient, ReadPreference} from "@spica-server/database";
 import * as fs from "fs";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server-core";
 @Global()
@@ -56,7 +56,14 @@ export class DatabaseTestingModule implements OnModuleDestroy {
                   ? "/usr/bin/mongod"
                   : "/usr/local/bin/mongod"
               },
-              instanceOpts: [{storageEngine: "wiredTiger"}, {storageEngine: "wiredTiger"}]
+              replSet: {
+                count: 3
+              },
+              instanceOpts: [
+                {storageEngine: "wiredTiger"},
+                {storageEngine: "wiredTiger"},
+                {storageEngine: "wiredTiger"}
+              ]
             })
         },
         {
@@ -87,6 +94,23 @@ export class DatabaseTestingModule implements OnModuleDestroy {
       exports: [DatabaseService, MongoClient]
     };
   }
+
+  static async setDelayedReplica(dbService: DatabaseService) {
+    //get current configure and reconfigure it
+    let config = (await dbService.executeDbAdminCommand({replSetGetConfig: 1})).config;
+    config.version = config.version + 1;
+    config.members[2] = {
+      ...config.members[2],
+      hidden: true,
+      priority: 0,
+      slaveDelay: 5,
+      tags: {slaveDelay: "true"}
+    };
+    await dbService.executeDbAdminCommand({replSetReconfig: config});
+    //wait until replicaSet reconfigured
+    await new Promise(resolve => setTimeout(resolve, 10000));
+  }
+
   onModuleDestroy() {
     try {
       this.moduleRef.get(MongoMemoryServer).stop();

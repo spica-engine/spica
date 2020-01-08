@@ -113,4 +113,8 @@ export class BucketService {
   createFromTemplate(template: BucketTemplate): Observable<any> {
     return this.http.post(`api:/bucket/templates`, template);
   }
+
+  guideRequest(request: string, headers?: object): Observable<any> {
+    return this.http.get(`api:${request}`, headers);
+  }
 }

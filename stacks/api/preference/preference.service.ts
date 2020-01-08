@@ -21,14 +21,16 @@ export class PreferenceService {
         this.get<T>(scope).then(pref => observer.next(pref));
       }
 
-      const watcher = this._collection.watch([
-        {
-          $match: {
-            "fullDocument.scope": scope
+      const watcher = this._collection.watch(
+        [
+          {
+            $match: {
+              "fullDocument.scope": {$eq: scope}
+            }
           }
-        }
-      ]);
-
+        ],
+        {fullDocument: "updateLookup"}
+      );
       watcher.on("change", change => observer.next(change.fullDocument as T));
       return () => {
         if (!watcher.isClosed()) {

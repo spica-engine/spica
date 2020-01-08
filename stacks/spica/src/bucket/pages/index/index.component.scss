@@ -60,56 +60,100 @@
       margin-right: 20px;
     }
   }
-
-  mat-card {
-    margin: 30px;
-    margin-top: -110px;
-    // For proper border radius
-    overflow: hidden;
-
-    mat-table {
-      width: 100%;
-
-      mat-header-cell.action,
-      mat-cell.action {
-        max-width: 150px;
+  ::ng-deep div.monaco-editor {
+    display: none;
+  }
+  div.data-guide {
+    display: flex;
+    align-items: start;
+    mat-card {
+      &.with-examples {
+        margin-right: 5px;
+        width: 66%;
       }
-      mat-header-cell.select,
-      mat-cell.select {
-        max-width: 60px;
-      }
-      mat-header-cell.scheduled,
-      mat-cell.scheduled {
-        max-width: 200px;
-      }
-      .mat-header-row {
-        mat-header-cell {
-          mat-checkbox {
-            height: 0px;
-            margin-bottom: 15px;
-          }
-          &:first-of-type {
-            padding-left: 10px;
-          }
-          &:last-of-type {
-            justify-content: flex-end;
+
+      &.guide {
+        margin-left: unset;
+        margin-right: unset;
+        width: 29%;
+        padding: unset;
+        &.hide {
+          width: 0;
+          mat-list {
+            height: 0;
           }
         }
+        .guide-link {
+          display: block;
+          font-size: 13px;
+          margin-bottom: 10px;
+          cursor: pointer;
+        }
+        mat-chip {
+          padding: 3px 10px;
+          border-radius: 5px;
+        }
+        p.guide-response {
+          padding: 7px 10px;
+          border-radius: 5px;
+          background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+          max-height: 400px;
+          overflow-y: auto;
+        }
       }
-      .mat-row {
-        mat-cell {
-          mat-checkbox {
-            height: 0px;
-            margin-bottom: 15px;
+      transition: width 1s;
+      display: inline-block;
+      width: calc(100% - 60px);
+      margin: 30px;
+      margin-top: -110px;
+      // For proper border radius
+      overflow: auto;
+
+      mat-table {
+        min-width: 100%;
+        width: max-content;
+
+        mat-header-cell.action,
+        mat-cell.action {
+          max-width: 150px;
+        }
+        mat-header-cell.select,
+        mat-cell.select {
+          max-width: 60px;
+        }
+        mat-header-cell.scheduled,
+        mat-cell.scheduled {
+          max-width: 200px;
+        }
+        .mat-header-row {
+          mat-header-cell {
+            mat-checkbox {
+              height: 0px;
+              margin-bottom: 15px;
+            }
+            &:first-of-type {
+              padding-left: 10px;
+            }
+            &:last-of-type {
+              justify-content: flex-end;
+            }
           }
-          &:first-of-type {
-            padding-left: 10px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-          &:last-of-type {
-            justify-content: flex-end;
+        }
+        .mat-row {
+          mat-cell {
+            mat-checkbox {
+              height: 0px;
+              margin-bottom: 15px;
+            }
+            &:first-of-type {
+              padding-left: 10px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+            &:last-of-type {
+              justify-content: flex-end;
+            }
           }
         }
       }

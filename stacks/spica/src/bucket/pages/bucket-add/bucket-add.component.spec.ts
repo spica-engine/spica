@@ -555,14 +555,16 @@ describe("Bucket Add Component", () => {
 
       it("should show maxlength error", async () => {
         await fixture.whenStable();
-        input.control.setValue("qwertyuıopğüasdfghjkl");
+        input.control.setValue(
+          "qwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdfghjklqwertyuıopğüasdffghjklty"
+        );
         input.control.markAsTouched();
         fixture.detectChanges();
         expect(
           fixture.debugElement.query(
             By.css("mat-card mat-list-item:first-of-type form mat-form-field mat-error")
           ).nativeElement.textContent
-        ).toBe(" Length of the name must be less than 15 character. ");
+        ).toBe(" Length of the name must be less than 100 character. ");
       });
     });
 

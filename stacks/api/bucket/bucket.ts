@@ -31,17 +31,10 @@ export interface BucketDocument {
 
 export interface BucketPreferences extends Preference {
   _id?: any;
-  language: {
-    // TODO(tolga): use map like array
-    supported_languages: Array<{
-      code: string;
-      name: string;
-    }>;
-    default: {
-      code: string;
-      name: string;
-    };
+  available: {
+    [code: string]: string;
   };
+  default: string;
 }
 
 export interface ImportFile {

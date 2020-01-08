@@ -51,7 +51,6 @@ export class BucketDataService {
     if (schedule) {
       params = params.set("schedule", String(schedule));
     }
-
     return this.http.get<IndexResult<BucketEntry>>(`api:/bucket/${bucketId}/data`, {
       params,
       headers
