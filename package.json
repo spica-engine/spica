@@ -27,7 +27,6 @@
     "@angular-devkit/architect": "^0.800.0-beta.14",
     "@angular-devkit/core": "^8.0.0-beta.14",
     "@angular-devkit/schematics": "^8.0.0-beta.14",
-    "@grpc/proto-loader": "^0.5.3",
     "@ionic/cli-framework": "^2.1.6",
     "@nestjs/common": "^6.1.1",
     "@nestjs/core": "^6.1.1",
@@ -115,7 +114,6 @@
     "conventional-changelog-cli": "^2.0.21",
     "dgeni": "^0.4.12",
     "dgeni-packages": "^0.27.3",
-    "grpc-tools": "^1.8.0",
     "mdast-util-toc": "^4.2.0",
     "prettier": "1.18.2",
     "remark": "^10.0.1",
@@ -126,7 +124,6 @@
     "rollup": "^1.27.5",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "ts-protoc-gen": "^0.12.0",
     "yaml": "^1.6.0"
   }
 }

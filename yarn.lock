@@ -113,14 +113,6 @@
     source-map-support "0.5.9"
     tsutils "2.27.2"
 
-"@grpc/proto-loader@^0.5.3":
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/@grpc/proto-loader/-/proto-loader-0.5.3.tgz#a233070720bf7560c4d70e29e7950c72549a132c"
-  integrity sha512-8qvUtGg77G2ZT2HqdqYoM/OY97gQd/0crSG34xNmZ4ZOsv3aQT/FQV9QfZPazTGna6MIoyUd+u6AxsoZjJ/VMQ==
-  dependencies:
-    lodash.camelcase "^4.3.0"
-    protobufjs "^6.8.6"
-
 "@ionic/cli-framework@^2.1.6":
   version "2.1.6"
   resolved "https://registry.yarnpkg.com/@ionic/cli-framework/-/cli-framework-2.1.6.tgz#db7b6e75ab238e85d74e29fc006d355f2d0b31d3"
@@ -2955,7 +2947,7 @@ glob@^7.1.3:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-google-protobuf@^3.10.0, google-protobuf@^3.6.1:
+google-protobuf@^3.10.0:
   version "3.10.0"
   resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.10.0.tgz#f36171128090615049f9b0e42252b1a10a4bc534"
   integrity sha512-d0cMO8TJ6xtB/WrVHCv5U81L2ulX+aCD58IljyAN6mHwdHHJ2jbcauX5glvivi3s3hx7EYEo7eUA9WftzamMnw==
@@ -2979,13 +2971,6 @@ graceful-fs@^4.1.6, graceful-fs@^4.2.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/graceful-readlink/-/graceful-readlink-1.0.1.tgz#4cafad76bc62f02fa039b2f94e9a3dd3a391a725"
   integrity sha1-TK+tdrxi8C+gObL5Tpo906ORpyU=
-
-grpc-tools@^1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/grpc-tools/-/grpc-tools-1.8.0.tgz#db438dbd0cfb43d412dc02a767d5fb2193636847"
-  integrity sha512-GzYHjPQ/sbV/DmnNRksapMlLj26Tvq2Qppmzjmd+lHYZNeWM1feiGsYCduzJLyy295P+3uYIPy2/w/1thAnOow==
-  dependencies:
-    node-pre-gyp "^0.12.0"
 
 grpc@^1.24.2:
   version "1.24.2"
@@ -5273,7 +5258,7 @@ property-information@^5.0.0:
   dependencies:
     xtend "^4.0.1"
 
-protobufjs@6.8.8, protobufjs@^6.8.6, protobufjs@^6.8.8:
+protobufjs@6.8.8, protobufjs@^6.8.8:
   version "6.8.8"
   resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-6.8.8.tgz#c8b4f1282fd7a90e6f5b109ed11c84af82908e7c"
   integrity sha512-AAmHtD5pXgZfi7GMpllpO3q1Xw1OYldr+dMUlAnffGTAhqkg72WdmSY71uKBF/JuyiKs8psYbtKrhi0ASCD8qw==
@@ -6760,13 +6745,6 @@ trough@^1.0.0:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/trough/-/trough-1.0.4.tgz#3b52b1f13924f460c3fbfd0df69b587dbcbc762e"
   integrity sha512-tdzBRDGWcI1OpPVmChbdSKhvSVurznZ8X36AYURAcl+0o2ldlCY2XPzyXNNxwJwwyIU+rIglTCG4kxtNKBQH7Q==
-
-ts-protoc-gen@^0.12.0:
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/ts-protoc-gen/-/ts-protoc-gen-0.12.0.tgz#932e5738f14b67e7202825b06f8c548cb7d8ef34"
-  integrity sha512-V7jnICJxKqalBrnJSMTW5tB9sGi48gOC325bfcM7TDNUItVOlaMM//rQmuo49ybipk/SyJTnWXgtJnhHCevNJw==
-  dependencies:
-    google-protobuf "^3.6.1"
 
 tslib@^1.8.1, tslib@^1.9.0:
   version "1.10.0"
