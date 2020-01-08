@@ -60,7 +60,6 @@
     "htmlparser": "^1.7.7",
     "http-proxy-middleware": "^0.19.1",
     "locale": "^0.1.0",
-    "long": "^4.0.0",
     "matcher": "^1.1.1",
     "mime-types": "^2.1.24",
     "mongodb": "^3.1.13",
