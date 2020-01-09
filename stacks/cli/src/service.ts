@@ -16,19 +16,22 @@ export async function login(username: string, password: string, url: string): Pr
     token: response.token,
     server: url
   };
-  return await writeFile(getRcPath(), JSON.stringify(data)).then(_ => "Successfully logged in.");
+  return await writeFile(getRcPath(), JSON.stringify(data)).then(
+    result => "Successfully logged in."
+  );
 }
 
 export async function pullFunctions(folderName: string) {
   const folderPath = path.join(process.cwd(), folderName);
   const loginData: LoginData = await getLoginData();
   const functions: Function[] = await getDataRequest(loginData, `${loginData.server}/function`);
+  let assets: Asset[] = [];
   for (let index = 0; index < functions.length; index++) {
     const functionIndex: FunctionIndex = await getDataRequest(
       loginData,
       `${loginData.server}/function/${functions[index]._id}/index`
     ).catch(error => {
-      //we need to keep writing functions even some of them hasn't been created any index yet.
+      //we need to keep writing functions even some of them hasn't any index.
       if (error.statusCode == 500)
         return {
           index: ""
@@ -38,27 +41,36 @@ export async function pullFunctions(folderName: string) {
       `${folderPath}/functions/${functions[index]._id}/index.ts`,
       functionIndex.index
     );
-  }
-  let assets: Asset[] = [];
-  for (let index = 0; index < functions.length; index++) {
+
+    const functionDependencies: Dependency[] = await getDataRequest(
+      loginData,
+      `${loginData.server}/function/${functions[index]._id}/dependencies`
+    ).catch(error => {
+      //we need to keep writing functions even some of them hasn't any dependency.
+      if (error.statusCode == 500) return {};
+    });
+    
     const asset = createFunctionAsset(
       functions[index],
-      `${folderPath}/function/${functions[index]._id}/index.ts`
+      `${folderPath}/function/${functions[index]._id}/index.ts`,
+      functionDependencies
     );
     assets.push(asset);
   }
+
   return await writeFile(`${folderPath}/asset.yaml`, yaml.stringify(assets)).then(
     result => `Successfully pulled assets to: ${folderPath}`
   );
 }
 
-function createFunctionAsset(func: Function, path: string): Asset {
+function createFunctionAsset(func: Function, path: string, dependencies: Dependency[]): Asset {
   const asset: Asset = {
     kind: "Function",
     metadata: func._id,
     spec: func
   };
-  asset.spec.srcPath = path;
+  asset.spec.indexPath = path;
+  asset.spec.dependencies = dependencies;
   delete asset.spec._id;
   delete asset.spec.info;
   return asset;
@@ -83,20 +95,16 @@ async function getLoginData() {
 }
 
 async function getDataRequest(loginData: LoginData, url: string) {
-  try {
-    const requestOptions = {
-      headers: {
-        Authorization: loginData.token
-      },
-      method: "GET",
-      uri: url,
-      json: true
-    };
-    const response = await request(requestOptions);
-    return response;
-  } catch (error) {
-    throw error;
-  }
+  const requestOptions = {
+    headers: {
+      Authorization: loginData.token
+    },
+    method: "GET",
+    uri: url,
+    json: true
+  };
+  const response = await request(requestOptions);
+  return response;
 }
 
 function getRcPath() {
@@ -121,7 +129,8 @@ export interface Function {
   memoryLimit?: number;
   timeout?: number;
   info?: any;
-  srcPath?: string;
+  indexPath?: string;
+  dependencies: string[];
 }
 
 export interface Environment {
@@ -147,4 +156,8 @@ export interface Asset {
   kind: string;
   metadata: string;
   spec: any;
+}
+
+export interface Dependency {
+  [key: string]: string;
 }
