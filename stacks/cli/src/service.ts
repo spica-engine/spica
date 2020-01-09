@@ -2,7 +2,7 @@ import * as request from "request-promise-native";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import * as yaml from "yaml"
+import * as yaml from "yaml";
 
 export async function login(username: string, password: string, url: string): Promise<string> {
   const requestOptions = {
@@ -19,33 +19,49 @@ export async function login(username: string, password: string, url: string): Pr
   return await writeFile(getRcPath(), JSON.stringify(data)).then(_ => "Successfully logged in.");
 }
 
-export async function pullFunctions(folderPath: string) {
-  //check login status
+export async function pullFunctions(folderName: string) {
+  const folderPath = path.join(process.cwd(), folderName);
   const loginData: LoginData = await getLoginData();
-  //send pull request
   const functions: Function[] = await getDataRequest(loginData, `${loginData.server}/function`);
-  //write functions
   for (let index = 0; index < functions.length; index++) {
     const functionIndex: FunctionIndex = await getDataRequest(
       loginData,
       `${loginData.server}/function/${functions[index]._id}/index`
+    ).catch(error => {
+      //we need to keep writing functions even some of them hasn't been created any index yet.
+      if (error.statusCode == 500)
+        return {
+          index: ""
+        };
+    });
+    await writeFile(
+      `${folderPath}/functions/${functions[index]._id}/index.ts`,
+      functionIndex.index
     );
-    await writeFile(path.join(folderPath, functions[index]._id, "index.ts"), functionIndex.index);
   }
-  //write yaml
-  let yamlFile: YamlObject[] = [];
+  let assets: Asset[] = [];
   for (let index = 0; index < functions.length; index++) {
-    const yamlObject:YamlObject = {
-      kind:"Function",
-      metadata:functions[index]._id,
-      spec:functions[index]
-    }
-    delete yamlObject.spec._id;
-    delete yamlObject.spec.info;
-    yamlFile.push(yamlObject)
+    const asset = createFunctionAsset(
+      functions[index],
+      `${folderPath}/function/${functions[index]._id}/index.ts`
+    );
+    assets.push(asset);
   }
-  return yamlFile;
-  //return success
+  return await writeFile(`${folderPath}/asset.yaml`, yaml.stringify(assets)).then(
+    result => `Successfully pulled assets to: ${folderPath}`
+  );
+}
+
+function createFunctionAsset(func: Function, path: string): Asset {
+  const asset: Asset = {
+    kind: "Function",
+    metadata: func._id,
+    spec: func
+  };
+  asset.spec.srcPath = path;
+  delete asset.spec._id;
+  delete asset.spec.info;
+  return asset;
 }
 
 async function getLoginData() {
@@ -67,16 +83,20 @@ async function getLoginData() {
 }
 
 async function getDataRequest(loginData: LoginData, url: string) {
-  const requestOptions = {
-    headers: {
-      Authorization: loginData.token
-    },
-    method: "GET",
-    uri: url,
-    json: true
-  };
-  const response = await request(requestOptions);
-  return response;
+  try {
+    const requestOptions = {
+      headers: {
+        Authorization: loginData.token
+      },
+      method: "GET",
+      uri: url,
+      json: true
+    };
+    const response = await request(requestOptions);
+    return response;
+  } catch (error) {
+    throw error;
+  }
 }
 
 function getRcPath() {
@@ -100,7 +120,8 @@ export interface Function {
   triggers: Triggers;
   memoryLimit?: number;
   timeout?: number;
-  info?:any
+  info?: any;
+  srcPath?: string;
 }
 
 export interface Environment {
@@ -122,9 +143,8 @@ export interface FunctionIndex {
   index: string;
 }
 
-export interface YamlObject {
+export interface Asset {
   kind: string;
-  metadata: string ;
-  spec: Function
+  metadata: string;
+  spec: any;
 }
-
