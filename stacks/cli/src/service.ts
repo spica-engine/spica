@@ -24,11 +24,14 @@ export async function login(username: string, password: string, url: string): Pr
 export async function pullFunctions(folderName: string) {
   const folderPath = path.join(process.cwd(), folderName);
   const loginData: LoginData = await getLoginData();
-  const functions: Function[] = await getDataRequest(loginData, `${loginData.server}/function`);
+  const functions: Function[] = await sendGetRequest(
+    loginData.token,
+    `${loginData.server}/function`
+  );
   let assets: Asset[] = [];
   for (let index = 0; index < functions.length; index++) {
-    const functionIndex: FunctionIndex = await getDataRequest(
-      loginData,
+    const functionIndex: FunctionIndex = await sendGetRequest(
+      loginData.token,
       `${loginData.server}/function/${functions[index]._id}/index`
     ).catch(error => {
       //we need to keep writing functions even some of them hasn't any index.
@@ -42,17 +45,17 @@ export async function pullFunctions(folderName: string) {
       functionIndex.index
     );
 
-    const functionDependencies: Dependency[] = await getDataRequest(
-      loginData,
+    const functionDependencies: Dependency[] = await sendGetRequest(
+      loginData.token,
       `${loginData.server}/function/${functions[index]._id}/dependencies`
     ).catch(error => {
       //we need to keep writing functions even some of them hasn't any dependency.
       if (error.statusCode == 500) return {};
     });
-    
+
     const asset = createFunctionAsset(
       functions[index],
-      `${folderPath}/function/${functions[index]._id}/index.ts`,
+      `${folderPath}/functions/${functions[index]._id}/index.ts`,
       functionDependencies
     );
     assets.push(asset);
@@ -61,6 +64,58 @@ export async function pullFunctions(folderName: string) {
   return await writeFile(`${folderPath}/asset.yaml`, yaml.stringify(assets)).then(
     result => `Successfully pulled assets to: ${folderPath}`
   );
+}
+
+export async function pushFunctions(filePath: string) {
+  //check login status
+  const loginData: LoginData = await getLoginData();
+
+  //prepare your request
+  //read file
+  let assets: Asset[] = [];
+  const data = await fs.promises.readFile(filePath);
+  try {
+    assets = yaml.parse(data.toString());
+    if (!assets.length) throw {message: "Make sure this file has correct syntax."};
+  } catch (error) {
+    throw {message: "Make sure this file has correct syntax."};
+  }
+  //delete functions
+
+  const functionIds: string[] = ((await sendGetRequest(
+    loginData.token,
+    `${loginData.server}/function`
+  )) as Array<Function>).map(func => func._id);
+  for (let index = 0; index < functionIds.length; index++) {
+    await sendDeleteRequest(loginData.token, `${loginData.server}/function/${functionIds[index]}`);
+    await sendDeleteRequest(loginData.token, `${loginData.server}/function/${functionIds[index]}/logs`)
+    //also we will need to delete rest of function files which isn't accessible from rest api
+  }
+  //create json post data
+  for (let index = 0; index < assets.length; index++) {
+    const func: Function = assets[index].spec;
+    //add requets
+    const addBody = filterFunctionFields(func);
+    //await sendPostRequest(loginData.token, `${loginData.server}/function/add`, addBody);
+    //dependency request
+    const dependencyBody = func.dependencies ? Object.keys(func.dependencies) : {};
+    //last
+
+    //index requets
+    //const indexBody = (await fs.promises.readFile(func.indexPath)) || {index: ""};
+  }
+
+  //send request
+
+  //return response
+}
+
+function filterFunctionFields(func: Function) {
+  delete func._id;
+  delete func.dependencies;
+  delete func.indexPath;
+  delete func.info;
+  return func;
 }
 
 function createFunctionAsset(func: Function, path: string, dependencies: Dependency[]): Asset {
@@ -94,12 +149,39 @@ async function getLoginData() {
   }
 }
 
-async function getDataRequest(loginData: LoginData, url: string) {
+async function sendGetRequest(token: string, url: string) {
   const requestOptions = {
     headers: {
-      Authorization: loginData.token
+      Authorization: token
     },
     method: "GET",
+    uri: url,
+    json: true
+  };
+  const response = await request(requestOptions);
+  return response;
+}
+
+async function sendDeleteRequest(token: string, url: string) {
+  const requestOptions = {
+    headers: {
+      Authorization: token
+    },
+    method: "DELETE",
+    uri: url,
+    json: true
+  };
+  const response = await request(requestOptions);
+  return response;
+}
+
+async function sendPostRequest(token: string, url: string, body: Object) {
+  const requestOptions = {
+    headers: {
+      Authorization: token
+    },
+    method: "POST",
+    body: body,
     uri: url,
     json: true
   };
@@ -130,7 +212,7 @@ export interface Function {
   timeout?: number;
   info?: any;
   indexPath?: string;
-  dependencies: string[];
+  dependencies?: string[];
 }
 
 export interface Environment {
