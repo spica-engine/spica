@@ -3,13 +3,11 @@ import {
   CommandMetadata,
   CommandMetadataInput,
   CommandMetadataOption,
-  CommandLineInputs
+  CommandLineInputs,
+  validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as request from "request-promise-native";
-import * as fs from "fs";
-import {homedir} from "os";
-
+import * as service from "../service";
 export class LoginCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
     return {
@@ -18,18 +16,19 @@ export class LoginCommand extends Command {
       inputs: [
         {
           name: "username",
-          summary: "Username of your account"
+          summary: "Username of your account",
+          validators: [validators.required]
         },
         {
           name: "password",
-          summary: "Password of your account"
+          summary: "Password of your account",
+          validators: [validators.required]
         }
       ],
       options: [
         {
-          name: "url",
-          summary:
-            "URL of the spica server that will identify your credentials.",
+          name: "server",
+          summary: "URL of the spica server that will identify your credentials.",
           type: String,
           default: "http://localhost:4300"
         }
@@ -41,25 +40,9 @@ export class LoginCommand extends Command {
     const username = inputs[0];
     const password = inputs[1];
 
-    if (!(username && password)) {
-      this.namespace.logger.error("Username and password are required fields");
-      return;
-    }
-    const requestOptions = {
-      method: "GET",
-      uri: `${options['url']}/passport/identify?password=${password}&identifier=${username}`,
-      json: true
-    };
-
-    try {
-      const token = (await request(requestOptions)).token;
-      fs.writeFile(`${homedir}/.spicarc`, JSON.stringify({token: token}), error => {
-        error
-          ? this.namespace.logger.error(error.message)
-          : this.namespace.logger.success("Successfully logged in.");
-      });
-    } catch (error) {
-      this.namespace.logger.error(error.message);
-    }
+    await service
+      .login(username, password, options["server"].toString())
+      .then(response => this.namespace.logger.success(response))
+      .catch(error => this.namespace.logger.error(error.message));
   }
 }
