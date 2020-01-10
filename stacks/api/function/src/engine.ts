@@ -54,7 +54,7 @@ export class FunctionEngine {
     return enq.find(e => e.description.name == name);
   }
 
-  subscribe(change: TargetChange) {
+  private subscribe(change: TargetChange) {
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
       const target = new Event.Target();
@@ -66,7 +66,7 @@ export class FunctionEngine {
     }
   }
 
-  unsubscribe(cwd: string) {
+  private unsubscribe(cwd: string) {
     for (const enqueuer of this.horizon.enqueuers) {
       const target = new Event.Target();
       target.cwd = cwd;

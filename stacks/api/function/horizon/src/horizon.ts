@@ -33,13 +33,17 @@ export class Horizon implements OnModuleInit {
     this.enqueuers.add(httpEnqueuer);
   }
 
-  enqueue(event: Event.Event) {
+  private enqueue(event: Event.Event) {
     this.runtime.execute({
       eventId: event.id,
       cwd: event.target.cwd
     });
   }
 
+  /**
+   * ATTENTION: Do not use this method since it is only designed for testing.
+   * @internal
+   */
   kill() {
     this.queue.kill();
   }
