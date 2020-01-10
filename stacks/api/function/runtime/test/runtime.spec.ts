@@ -4,7 +4,6 @@ import * as fs from "fs";
 class FooRuntime extends Runtime {
   description = undefined;
 
-
   execute(): Promise<void> {
     throw new Error("Method not implemented.");
   }

@@ -8,6 +8,7 @@ ts_library(
     srcs = glob(["*.spec.ts"]),
     deps = [
         "//packages/core/testing",
+        "//packages/database/testing",
         "//stacks/api/function/enqueuer",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",

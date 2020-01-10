@@ -1,4 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
+import {DatabaseService} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {Event} from "@spica-server/function/queue/proto";
 import * as fs from "fs";
@@ -9,15 +10,18 @@ import {Function, FUNCTION_OPTIONS, Options} from "./interface";
 
 @Injectable()
 export class FunctionEngine {
-  readonly schemas = new Map<string, JSONSchema7>();
+  readonly schemas = new Map<string, JSONSchema7 | (() => Promise<JSONSchema7>)>([
+    ["http", require("./schema/http.json")],
+    ["database", () => getDatabaseSchema(this.db)]
+  ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
 
   constructor(
     private fs: FunctionService,
+    private db: DatabaseService,
     private horizon: Horizon,
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {
-    this.schemas.set("http", require("./schema/http.json"));
     this.fs.targets().subscribe(change => {
       switch (change.kind) {
         case ChangeKind.Added:
@@ -49,6 +53,18 @@ export class FunctionEngine {
     return fs.promises.readFile(path.join(functionRoot, "index.ts")).then(b => b.toString());
   }
 
+  getSchema(name: string): Promise<JSONSchema7 | null> {
+    const schema = this.schemas.get(name);
+    if (schema) {
+      if (typeof schema == "function") {
+        return schema();
+      } else {
+        return Promise.resolve(schema);
+      }
+    }
+    return Promise.resolve(null);
+  }
+
   getEnqueuer(name: string) {
     const enq = Array.from(this.horizon.enqueuers);
     return enq.find(e => e.description.name == name);
@@ -73,4 +89,32 @@ export class FunctionEngine {
       enqueuer.unsubscribe(target);
     }
   }
+}
+
+export function getDatabaseSchema(db: DatabaseService): Promise<JSONSchema7> {
+  return db
+    .listCollections()
+    .toArray()
+    .then(collections => {
+      const scheme: JSONSchema7 = {
+        $id: "http://spica.internal/function/enqueuer/database",
+        type: "object",
+        required: ["collection", "type"],
+        properties: {
+          collection: {
+            title: "Collection Name",
+            type: "string",
+            enum: collections.map(c => c.name).sort((a, b) => a.localeCompare(b))
+          },
+          type: {
+            title: "Operation type",
+            description: "Event Type",
+            type: "string",
+            enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+          }
+        },
+        additionalProperties: false
+      };
+      return scheme;
+    });
 }

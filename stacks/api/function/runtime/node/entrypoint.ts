@@ -1,5 +1,12 @@
-import {EventQueue, HttpQueue, Request, Response} from "@spica-server/function/queue/node";
-import {Event, Http} from "@spica-server/function/queue/proto";
+import {
+  Change,
+  DatabaseQueue,
+  EventQueue,
+  HttpQueue,
+  Request,
+  Response
+} from "@spica-server/function/queue/node";
+import {Database, Event, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
 
 if (!process.env.ENTRYPOINT) {
@@ -23,19 +30,15 @@ if (!process.env.EVENT_ID) {
     exitAbnormally("There is no event in the queue.");
   }
 
-  const fn = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
-
   const callArguments = [];
-
-  let httpQueue: HttpQueue;
 
   switch (event.type) {
     case Event.Type.HTTP:
-      httpQueue = new HttpQueue();
+      const httpQueue = new HttpQueue();
       // TODO: change this particular pop message with the generic Event.Pop message.
-      const pop = new Http.Request.Pop();
-      pop.id = event.id;
-      const request = await httpQueue.pop(pop);
+      const httpPop = new Http.Request.Pop();
+      httpPop.id = event.id;
+      const request = await httpQueue.pop(httpPop);
       callArguments[0] = new Request(request);
       callArguments[1] = new Response(
         async e => {
@@ -53,7 +56,11 @@ if (!process.env.EVENT_ID) {
       );
       break;
     case Event.Type.DATABASE:
-      // TODO
+      const database = new DatabaseQueue();
+      const databasePop = new Database.Change.Pop();
+      databasePop.id = event.id;
+      const change = await database.pop(databasePop);
+      callArguments[0] = new Change(change);
       break;
     case Event.Type.FIREHOSE:
       // TODO
@@ -69,6 +76,8 @@ if (!process.env.EVENT_ID) {
       exitAbnormally(`Invalid event type received. (${event.type})`);
       break;
   }
+
+  const fn = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
 
   // Call the function
   fn[event.target.handler](...callArguments);

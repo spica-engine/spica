@@ -10,6 +10,7 @@ ts_library(
     ]),
     module_name = "@spica-server/function/queue",
     deps = [
+        "//packages/database",
         "//stacks/api/function/queue/proto",
         "@npm//@types/node",
         "@npm//google-protobuf",
