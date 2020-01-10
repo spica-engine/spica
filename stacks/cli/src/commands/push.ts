@@ -24,6 +24,6 @@ export class PushCommand extends Command {
     await service
       .pushFunctions(inputs[0])
       .then(result => this.namespace.logger.success(result))
-      .catch(error => this.namespace.logger.error(error.message));
+      .catch(error => this.namespace.logger.error(error));
   }
 }

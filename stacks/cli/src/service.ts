@@ -45,18 +45,17 @@ export async function pullFunctions(folderName: string) {
       functionIndex.index
     );
 
-    const functionDependencies: Dependency[] = await sendGetRequest(
+    const functionDependencies = await sendGetRequest(
       loginData.token,
       `${loginData.server}/function/${functions[index]._id}/dependencies`
     ).catch(error => {
       //we need to keep writing functions even some of them hasn't any dependency.
-      if (error.statusCode == 500) return {};
+      if (error.statusCode == 500) return [];
     });
-
     const asset = createFunctionAsset(
       functions[index],
       `${folderPath}/functions/${functions[index]._id}/index.ts`,
-      functionDependencies
+      formatDependencies(functionDependencies || {})
     );
     assets.push(asset);
   }
@@ -66,48 +65,72 @@ export async function pullFunctions(folderName: string) {
   );
 }
 
-export async function pushFunctions(filePath: string) {
-  //check login status
-  const loginData: LoginData = await getLoginData();
+async function checkFunctionAsset(asset: Asset): Promise<boolean> {
+  return asset.kind == "Function" && asset.spec.dependencies && fs.existsSync(asset.spec.indexPath)
+    ? true
+    : false;
+}
 
-  //prepare your request
-  //read file
-  let assets: Asset[] = [];
-  const data = await fs.promises.readFile(filePath);
-  try {
-    assets = yaml.parse(data.toString());
-    if (!assets.length) throw {message: "Make sure this file has correct syntax."};
-  } catch (error) {
-    throw {message: "Make sure this file has correct syntax."};
-  }
-  //delete functions
+async function deleteFunctions() {
+
+}
+
+
+
+export async function pushFunctions(filePath: string) {
+  if (!fs.existsSync(filePath)) throw {message: "Make sure file path is correct."};
+
+  const assetData: Asset[] = yaml.parse((await fs.promises.readFile(filePath)).toString());
+
+  await Promise.all(
+    assetData.map( async asset => {
+      if (!( await checkFunctionAsset(asset))) {
+        throw {message: "Make sure this file has right syntax."};
+      }
+    })
+  );
+
+
+  const loginData: LoginData = await getLoginData();
 
   const functionIds: string[] = ((await sendGetRequest(
     loginData.token,
     `${loginData.server}/function`
   )) as Array<Function>).map(func => func._id);
-  for (let index = 0; index < functionIds.length; index++) {
-    await sendDeleteRequest(loginData.token, `${loginData.server}/function/${functionIds[index]}`);
-    await sendDeleteRequest(loginData.token, `${loginData.server}/function/${functionIds[index]}/logs`)
-    //also we will need to delete rest of function files which isn't accessible from rest api
+  await Promise.all(
+    functionIds.map(async id => {
+      await sendDeleteRequest(loginData.token, `${loginData.server}/function/${id}`);
+    })
+  )
+
+  for (let index = 0; index < assetData.length; index++) {
+    const func: Function = assetData[index].spec;
+    const addBody = filterFunctionFields({...func});
+    const functionId = await sendPostRequest(
+      loginData.token,
+      `${loginData.server}/function/add`,
+      addBody
+    ).then(result => result._id);
+    
+      for (let index = 0; index < func.dependencies.length; index++) {
+        await sendPostRequest(
+          `${loginData.token}`,
+          `${loginData.server}/function/${functionId}/dependencies`,
+          {name: Object.keys(func.dependencies[index])[0]}
+        );
+      }
+    
+      const functionIndex = (await fs.promises.readFile(func.indexPath)).toString();
+      const indexBody = {
+        index: functionIndex
+      };
+      await sendPostRequest(
+        `${loginData.token}`,
+        `${loginData.server}/function/${functionId}/index`,
+        indexBody
+      );
   }
-  //create json post data
-  for (let index = 0; index < assets.length; index++) {
-    const func: Function = assets[index].spec;
-    //add requets
-    const addBody = filterFunctionFields(func);
-    //await sendPostRequest(loginData.token, `${loginData.server}/function/add`, addBody);
-    //dependency request
-    const dependencyBody = func.dependencies ? Object.keys(func.dependencies) : {};
-    //last
-
-    //index requets
-    //const indexBody = (await fs.promises.readFile(func.indexPath)) || {index: ""};
-  }
-
-  //send request
-
-  //return response
+  return "Successfully pushed your assets.";
 }
 
 function filterFunctionFields(func: Function) {
@@ -129,6 +152,18 @@ function createFunctionAsset(func: Function, path: string, dependencies: Depende
   delete asset.spec._id;
   delete asset.spec.info;
   return asset;
+}
+
+function formatDependencies(dependencies: object): Dependency[] {
+  if (!Object.keys(dependencies)) return [];
+  let formattedDependencies: Dependency[] = [];
+  for (let index = 0; index < Object.keys(dependencies).length; index++) {
+    const dependency: Dependency = {
+      [Object.keys(dependencies)[index]]: Object.values(dependencies)[index]
+    };
+    formattedDependencies.push(dependency);
+  }
+  return formattedDependencies;
 }
 
 async function getLoginData() {
@@ -175,7 +210,7 @@ async function sendDeleteRequest(token: string, url: string) {
   return response;
 }
 
-async function sendPostRequest(token: string, url: string, body: Object) {
+async function sendPostRequest(token: string, url: string, body: object) {
   const requestOptions = {
     headers: {
       Authorization: token
@@ -212,7 +247,7 @@ export interface Function {
   timeout?: number;
   info?: any;
   indexPath?: string;
-  dependencies?: string[];
+  dependencies?: Dependency[];
 }
 
 export interface Environment {
