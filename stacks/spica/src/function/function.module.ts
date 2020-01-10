@@ -14,6 +14,7 @@ import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from "@angular/material/table";
 import {MatTabsModule} from "@angular/material/tabs";
@@ -24,19 +25,17 @@ import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
-import {MatSlideToggleModule} from "@angular/material/slide-toggle";
-
 import {PassportModule} from "../passport/passport.module";
-
 import {EditorComponent} from "./components/editor/editor.component";
 import {LanguageDirective} from "./components/editor/language.directive";
 import {FunctionRoutingModule} from "./function-routing.module";
-import {FUNCTION_OPTIONS, FunctionOptions} from "./interface";
+import {FunctionOptions, FUNCTION_OPTIONS} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {TabsComponent} from "./pages/tabs/tabs.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
+import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {SubscriptionModule} from "./subscription.module";
 
@@ -48,7 +47,8 @@ import {SubscriptionModule} from "./subscription.module";
     WelcomeComponent,
     TabsComponent,
     EditorComponent,
-    LanguageDirective
+    LanguageDirective,
+    EnqueuerPipe
   ],
   imports: [
     CommonModule,

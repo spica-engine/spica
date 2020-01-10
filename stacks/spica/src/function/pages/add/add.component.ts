@@ -1,12 +1,19 @@
-import {HttpClient, HttpEvent, HttpEventType, HttpRequest} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {SchemeObserver, Scheme} from "@spica-server/core";
+import {Scheme, SchemeObserver} from "@spica-server/core";
 import {Observable, Subscription} from "rxjs";
-import {delay, filter, scan, switchMap, takeUntil, tap} from "rxjs/operators";
+import {delay, filter, switchMap, take, takeUntil, tap} from "rxjs/operators";
 import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
-import {emptyFunction, Function, Trigger} from "../../interface";
+import {
+  denormalizeFunction,
+  emptyFunction,
+  emptyTrigger,
+  Information,
+  NormalizedFunction,
+  normalizeFunction
+} from "../../interface";
 
 @Component({
   selector: "functions-add",
@@ -16,27 +23,19 @@ import {emptyFunction, Function, Trigger} from "../../interface";
 export class AddComponent implements OnInit, OnDestroy {
   @ViewChild("toolbar", {static: true}) toolbar;
 
-  public function: Function = emptyFunction();
-  public triggers: Observable<Trigger[]>;
-  public dependencies: Observable<any>;
-  public dependencyInstallPending = false;
+  function: NormalizedFunction = emptyFunction();
+
+  information: Observable<Information>;
+
+  dependencies: Observable<any>;
+  dependencyInstallPending = false;
 
   private mediaMatchObserver: Subscription;
 
-  public editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
-  public index: string;
-  public lastSaved: Date;
-  public isSaving: boolean = false;
-
-  public $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
-
-  public logLevelMapping = {
-    log: {icon: "bug_report", color: "#6b6b6b"},
-    error: {icon: "error", color: "red"},
-    warn: {icon: "warning", color: "orange"},
-    debug: {icon: "bug_report", color: "#6b6b6b"},
-    info: {icon: "flag", color: "#0079f7"}
-  };
+  editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
+  index: string;
+  lastSaved: Date;
+  isSaving: boolean = false;
 
   private dispose = new EventEmitter();
 
@@ -50,8 +49,10 @@ export class AddComponent implements OnInit, OnDestroy {
   ) {
     this.mediaMatchObserver = schemeObserver
       .observe(Scheme.Dark)
+      .pipe(takeUntil(this.dispose))
       .subscribe(r => this.changeScheme(r));
-    this.triggers = this.functionService.getTriggers();
+
+    this.information = this.functionService.information();
   }
 
   ngOnInit() {
@@ -64,12 +65,9 @@ export class AddComponent implements OnInit, OnDestroy {
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
-        switchMap(params => this.functionService.getFunction(params.id)),
+        switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
-          this.function = {
-            ...fn,
-            env: Object.entries(fn.env as any).map(([name, value]) => ({name, value})) as any
-          };
+          this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.dependencies = this.http.get(`api:/function/${fn._id}/dependencies`);
         }),
@@ -79,29 +77,33 @@ export class AddComponent implements OnInit, OnDestroy {
       .subscribe(response => (this.index = response.index));
   }
 
-  run(handler: string) {
-    this.$run = this.http
-      .request(
-        new HttpRequest("GET", `api:/function/${this.function._id}/run/${handler}`, {
-          reportProgress: true,
-          responseType: "text"
-        })
-      )
-      .pipe(
-        scan((accumulator: any, event: HttpEvent<any>) => {
-          if (event.type == HttpEventType.Sent) {
-            accumulator.state = "running";
-          } else if (event.type == HttpEventType.DownloadProgress) {
-            accumulator.logs = String(event["partialText"] || "")
-              .split("\n")
-              .filter(line => !!line)
-              .map(line => JSON.parse(line));
-          } else if (event.type == HttpEventType.Response) {
-            accumulator.state = accumulator.logs.pop().state || "failed";
-          }
-          return accumulator;
-        }, {})
-      );
+  // run(handler: string) {
+  //   this.$run = this.http
+  //     .request(
+  //       new HttpRequest("GET", `api:/function/${this.function._id}/run/${handler}`, {
+  //         reportProgress: true,
+  //         responseType: "text"
+  //       })
+  //     )
+  //     .pipe(
+  //       scan((accumulator: any, event: HttpEvent<any>) => {
+  //         if (event.type == HttpEventType.Sent) {
+  //           accumulator.state = "running";
+  //         } else if (event.type == HttpEventType.DownloadProgress) {
+  //           accumulator.logs = String(event["partialText"] || "")
+  //             .split("\n")
+  //             .filter(line => !!line)
+  //             .map(line => JSON.parse(line));
+  //         } else if (event.type == HttpEventType.Response) {
+  //           accumulator.state = accumulator.logs.pop().state || "failed";
+  //         }
+  //         return accumulator;
+  //       }, {})
+  //     );
+  // }
+
+  addTrigger() {
+    this.function.triggers.push(emptyTrigger());
   }
 
   addVariable() {
@@ -132,14 +134,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   save() {
     this.clearEmptyEnvVars();
-    this.functionService
-      .upsertOne({
-        ...this.function,
-        env: this.function.env.reduce((acc, env) => {
-          acc[env.name] = env.value;
-          return acc;
-        }, {}) as any
-      })
+    const fn = denormalizeFunction(this.function);
+    (this.function._id ? this.functionService.updateOne(fn) : this.functionService.insertOne(fn))
       .pipe(switchMap(fn => this.functionService.updateIndex(fn._id, this.index)))
       .toPromise()
       .then(() => this.router.navigate(["function"]));
