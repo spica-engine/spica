@@ -54,7 +54,6 @@ export class Horizon implements OnModuleInit {
 
   /**
    * ATTENTION: Do not use this method since it is only designed for testing.
-   * @internal
    */
   kill() {
     this.queue.kill();
