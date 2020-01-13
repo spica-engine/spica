@@ -5,11 +5,7 @@ import {StdOut, StdOutOptions} from "./stdout";
 export class DatabaseOutput extends StdOut {
   constructor(private db: DatabaseService) {
     super();
-    this.db
-      .createCollection("function_logs", {capped: true, size: 419430400 /* 400Mi */})
-      .catch(error => {
-        console.log(error);
-      });
+    this.db.createCollection("function_logs", {capped: true, size: 419430400 /* 400Mi */});
   }
 
   create(options: StdOutOptions, callback?: () => void): Writable {
