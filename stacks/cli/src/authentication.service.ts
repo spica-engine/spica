@@ -1,4 +1,4 @@
-import * as httpService from "./http.service";
+import * as httpService from "./request";
 
 export function authenticate(username: string, password: string, serverUrl: string): Promise<any> {
   return httpService.getRequest(
