@@ -7,7 +7,7 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as service from "../service";
+import * as authenticationService from "../authentication.service";
 
 export class PullCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
@@ -25,9 +25,15 @@ export class PullCommand extends Command {
   }
 
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
-    await service
-      .pullFunctions(inputs[0].toString())
-      .then(result => this.namespace.logger.success(result))
-      .catch(error => this.namespace.logger.error(error.message));
+    try {
+      const loginStatus = JSON.parse(await authenticationService.getLoginStatus().toString());
+    } catch (error) {
+      this.namespace.logger.error("You need to login before start this action. To login: ");
+      this.namespace.logger.info("spica login <username> <password>");
+    }
+    // await service
+    //   .pullFunctions(inputs[0].toString())
+    //   .then(result => this.namespace.logger.success(result))
+    //   .catch(error => this.namespace.logger.error(error.message));
   }
 }
