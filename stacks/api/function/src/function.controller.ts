@@ -36,14 +36,14 @@ export class FunctionController {
   ) {}
 
   @Get("information")
-  // @UseGuards(AuthGuard())
-  information() {
+  @UseGuards(AuthGuard())
+  async information() {
     const enqueuers = [];
 
     for (const enqueuer of this.horizon.enqueuers) {
       enqueuers.push({
         description: enqueuer.description,
-        options: this.engine.schemas.get(enqueuer.description.name)
+        options: await this.engine.getSchema(enqueuer.description.name)
       });
     }
 

@@ -34,7 +34,6 @@ export class EventQueue {
 
   /**
    * ATTENTION: Do not use this method since it is only designed for testing.
-   * @internal
    */
   kill(): Promise<void> {
     return new Promise(resolve => this.server.tryShutdown(resolve));

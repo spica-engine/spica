@@ -1,5 +1,5 @@
-import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {Event, Http} from "@spica-server/function/queue/proto";
+import {DatabaseQueue, EventQueue, HttpQueue} from "@spica-server/function/queue";
+import {Database, Event, Http} from "@spica-server/function/queue/proto";
 import {Compilation} from "@spica-server/function/runtime";
 import {Node} from "@spica-server/function/runtime/node";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
@@ -73,12 +73,12 @@ describe("Entrypoint", () => {
       queue.listen();
     });
 
-    it("should pop from http queue", async () => {
+    it("should pop from the queue", async () => {
       await initializeFn(`export default function() {}`);
 
       const event = new Event.Event();
-      event.id = "2";
       event.type = Event.Type.HTTP;
+
       event.target = new Event.Target();
       event.target.cwd = compilation.cwd;
       event.target.handler = "default";
@@ -102,14 +102,12 @@ describe("Entrypoint", () => {
 
     it("should pass request to fn", async () => {
       await initializeFn(`export default function(req) {
-        console.log(JSON.stringify(req.headers));
         if ( req.headers.get('content-type') == 'application/json' ) {
           process.exit(4);
         }
       }`);
 
       const event = new Event.Event();
-      event.id = "3";
       event.type = Event.Type.HTTP;
       event.target = new Event.Target();
       event.target.cwd = compilation.cwd;
@@ -142,7 +140,6 @@ describe("Entrypoint", () => {
       }`);
 
       const event = new Event.Event();
-      event.id = "4";
       event.type = Event.Type.HTTP;
       event.target = new Event.Target();
       event.target.cwd = compilation.cwd;
@@ -169,7 +166,6 @@ describe("Entrypoint", () => {
       }`);
 
       const event = new Event.Event();
-      event.id = "5";
       event.type = Event.Type.HTTP;
       event.target = new Event.Target();
       event.target.cwd = compilation.cwd;
@@ -196,6 +192,76 @@ describe("Entrypoint", () => {
       expect(httpQueue.size).toBe(0);
       expect(serverResponse.writeHead).toHaveBeenCalledTimes(1);
       expect(serverResponse.end).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("database", () => {
+    let databaseQueue: DatabaseQueue;
+
+    beforeEach(() => {
+      queue.drain();
+      databaseQueue = new DatabaseQueue();
+      queue.addQueue(databaseQueue);
+      queue.listen();
+    });
+
+    it("should pop from the queue", async () => {
+      await initializeFn(`export default function() {}`);
+
+      const event = new Event.Event();
+      event.type = Event.Type.DATABASE;
+
+      event.target = new Event.Target();
+      event.target.cwd = compilation.cwd;
+      event.target.handler = "default";
+
+      queue.enqueue(event);
+
+      const change = new Database.Change();
+
+      databaseQueue.enqueue(event.id, change);
+
+      expect(databaseQueue.size).toBe(1);
+
+      await runtime.execute({
+        eventId: event.id,
+        cwd: event.target.cwd
+      });
+
+      expect(databaseQueue.size).toBe(0);
+    });
+
+    it("should pass change to fn", async () => {
+      await initializeFn(`export default function(change) {
+        console.log(change, change.kind);
+        if ( change.kind == 'insert' && change.collection == 'test') {
+          process.exit(4);
+        }
+      }`);
+
+      const event = new Event.Event();
+      event.type = Event.Type.DATABASE;
+
+      event.target = new Event.Target();
+      event.target.cwd = compilation.cwd;
+      event.target.handler = "default";
+
+      queue.enqueue(event);
+
+      const change = new Database.Change();
+      change.kind = Database.Change.Kind.INSERT;
+      change.collection = "test";
+
+      databaseQueue.enqueue(event.id, change);
+
+      const exitCode = await runtime
+        .execute({
+          eventId: event.id,
+          cwd: event.target.cwd
+        })
+        .catch(e => e);
+
+      expect(exitCode).toBe(4);
     });
   });
 });

@@ -11,6 +11,7 @@ ts_library(
     module_name = "@spica-server/function/enqueuer",
     deps = [
         "//packages/core",
+        "//packages/database",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
     ],

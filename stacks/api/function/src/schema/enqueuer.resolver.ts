@@ -13,7 +13,7 @@ export class EnqueuerSchemaResolver {
     const match = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);
 
     if (this.registry.schemas.has(match[1])) {
-      return Promise.resolve(this.registry.schemas.get(match[1]));
+      return this.registry.getSchema(match[1]);
     } else {
       console.warn(`Couldn't find the enqueuer with name ${match[1]}`);
     }

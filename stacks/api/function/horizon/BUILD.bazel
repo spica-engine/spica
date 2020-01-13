@@ -10,6 +10,7 @@ ts_library(
     ]),
     module_name = "@spica-server/function/horizon",
     deps = [
+        "//packages/database",
         "//stacks/api/function/enqueuer",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",

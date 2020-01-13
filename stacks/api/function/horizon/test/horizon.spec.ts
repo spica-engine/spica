@@ -6,7 +6,7 @@ describe("horizon", () => {
   let horizon: Horizon;
 
   beforeEach(() => {
-    horizon = new Horizon(null);
+    horizon = new Horizon(null, null);
   });
 
   afterEach(() => {
@@ -23,9 +23,9 @@ describe("horizon", () => {
       entrypoint: "index.ts"
     };
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
-      await horizon["runtime"].compile(compilation);
+      await horizon.runtime.compile(compilation);
     });
 
     it("should execute", () => {
