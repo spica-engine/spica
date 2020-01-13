@@ -7,7 +7,9 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as loginService from "../login.service";
+import * as authenticationService from "../authentication.service";
+import * as fileService from "../file.service";
+
 export class LoginCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
     return {
@@ -39,10 +41,17 @@ export class LoginCommand extends Command {
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
     const username = inputs[0];
     const password = inputs[1];
+    const server = options["server"].toString();
 
-    await loginService
-      .login(username, password, options["server"].toString())
-      .then(response => this.namespace.logger.success(response))
-      .catch(error => this.namespace.logger.error(error.message));
+    try {
+      const response = await authenticationService.identify(username, password, server);
+      await fileService.writeFile(`${fileService.getRcPath()}`, {
+        token: response.token,
+        server: server
+      })
+      this.namespace.logger.success("Successfully logged in.");
+    } catch (error) {
+      this.namespace.logger.error(error.message);
+    }
   }
 }

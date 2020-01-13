@@ -1,13 +1,12 @@
 import * as request from "request-promise-native";
 
-export async function getRequest(url: string): Promise<any> {
+export function getRequest(url: string): Promise<any> {
   const requestOptions = {
     method: "GET",
     uri: url,
     json: true
   };
-  const response = await request(requestOptions);
-  return response;
+  return request(requestOptions);
 }
 
 export async function postRequest(url: string, body?: object, header?: object): Promise<any> {
@@ -18,8 +17,7 @@ export async function postRequest(url: string, body?: object, header?: object): 
     body: body,
     header: header
   };
-  const response = await request(requestOptions);
-  return response;
+  return request(requestOptions);
 }
 
 export async function deleteRequest(url: string, header?: object): Promise<any> {
@@ -29,8 +27,5 @@ export async function deleteRequest(url: string, header?: object): Promise<any> 
     json: true,
     header: header
   };
-  const response = await request(requestOptions);
-  return response;
+  return request(requestOptions);
 }
-
-
