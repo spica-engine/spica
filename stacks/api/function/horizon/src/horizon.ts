@@ -1,7 +1,12 @@
 import {Injectable, OnModuleInit} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
-import {DatabaseEnqueuer, Enqueuer, HttpEnqueuer} from "@spica-server/function/enqueuer";
+import {
+  DatabaseEnqueuer,
+  Enqueuer,
+  HttpEnqueuer,
+  ScheduleEnqueuer
+} from "@spica-server/function/enqueuer";
 import {DatabaseQueue, EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 import {Runtime} from "@spica-server/function/runtime";
@@ -37,15 +42,13 @@ export class Horizon implements OnModuleInit {
   }
 
   onModuleInit() {
-    const httpEnqueuer = new HttpEnqueuer(
-      this.queue,
-      this.httpQueue,
-      this.http.httpAdapter.getInstance()
+    this.enqueuers.add(
+      new HttpEnqueuer(this.queue, this.httpQueue, this.http.httpAdapter.getInstance())
     );
-    this.enqueuers.add(httpEnqueuer);
 
-    const databaseEnqueuer = new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database);
-    this.enqueuers.add(databaseEnqueuer);
+    this.enqueuers.add(new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database));
+
+    this.enqueuers.add(new ScheduleEnqueuer(this.queue));
   }
 
   private enqueue(event: Event.Event) {
