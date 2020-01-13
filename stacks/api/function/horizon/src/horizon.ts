@@ -45,7 +45,7 @@ export class Horizon implements OnModuleInit {
     this.enqueuers.add(databaseEnqueuer);
   }
 
-  enqueue(event: Event.Event) {
+  private enqueue(event: Event.Event) {
     this.runtime.execute({
       eventId: event.id,
       cwd: event.target.cwd
