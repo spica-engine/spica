@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 load("//tools/dgeni:index.bzl", "docs")
 
@@ -66,7 +66,7 @@ ts_library(
     name = "bucket-data-acceptance_test_lib",
     testonly = True,
     srcs = [
-        "bucket-data.acceptance.spec.ts",
+        "bucket-data.controller.spec.ts",
     ],
     deps = [
         ":bucket",
@@ -119,6 +119,36 @@ jasmine_node_test(
     name = "bucket-test",
     deps = [
         ":bucket_test_lib",
+    ],
+)
+
+ts_library(
+    name = "bucket-acceptance_test_lib",
+    testonly = True,
+    srcs = [
+        "bucket.controller.spec.ts",
+    ],
+    deps = [
+        ":bucket",
+        "//packages/core",
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/database",
+        "//packages/database/testing",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/bson",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "bucket-acceptance-test",
+    deps = [
+        ":bucket-acceptance_test_lib",
     ],
 )
 

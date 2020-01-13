@@ -44,11 +44,11 @@ export class LoginCommand extends Command {
     const server = options["server"].toString();
 
     try {
-      const response = await authenticationService.identify(username, password, server);
+      const response = await authenticationService.authenticate(username, password, server);
       await fileService.writeFile(`${fileService.getRcPath()}`, {
         token: response.token,
         server: server
-      })
+      });
       this.namespace.logger.success("Successfully logged in.");
     } catch (error) {
       this.namespace.logger.error(error.message);

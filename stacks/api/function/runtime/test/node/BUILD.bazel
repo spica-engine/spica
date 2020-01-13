@@ -1,0 +1,23 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "node_runtime_test_lib",
+    srcs = glob(["*.spec.ts"]),
+    deps = [
+        "//stacks/api/function/queue",
+        "//stacks/api/function/queue/proto",
+        "//stacks/api/function/runtime",
+        "//stacks/api/function/runtime/node",
+        "//stacks/api/function/runtime/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "node_runtime_test",
+    srcs = [":node_runtime_test_lib"],
+)
