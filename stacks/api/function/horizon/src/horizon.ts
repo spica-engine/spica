@@ -5,6 +5,7 @@ import {DatabaseEnqueuer, Enqueuer, HttpEnqueuer} from "@spica-server/function/e
 import {DatabaseQueue, EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 import {Runtime} from "@spica-server/function/runtime";
+import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
 
 @Injectable()
@@ -13,12 +14,14 @@ export class Horizon implements OnModuleInit {
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
 
+  private output: StdOut;
   runtime: Node;
 
   readonly runtimes = new Set<Runtime>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
 
   constructor(private http: HttpAdapterHost, private database: DatabaseService) {
+    this.output = new DatabaseOutput(database);
     this.runtime = new Node();
     this.runtimes.add(this.runtime);
 
@@ -45,10 +48,16 @@ export class Horizon implements OnModuleInit {
     this.enqueuers.add(databaseEnqueuer);
   }
 
-  enqueue(event: Event.Event) {
+  private enqueue(event: Event.Event) {
+    const path = event.target.cwd.split("/");
+    const functionId = path[path.length - 1];
     this.runtime.execute({
       eventId: event.id,
-      cwd: event.target.cwd
+      cwd: event.target.cwd,
+      stdout: this.output.create({
+        eventId: event.id,
+        functionId
+      })
     });
   }
 

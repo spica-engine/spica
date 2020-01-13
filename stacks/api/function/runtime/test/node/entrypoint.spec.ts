@@ -3,6 +3,7 @@ import {Database, Event, Http} from "@spica-server/function/queue/proto";
 import {Compilation} from "@spica-server/function/runtime";
 import {Node} from "@spica-server/function/runtime/node";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
+import {PassThrough} from "stream";
 
 describe("Entrypoint", () => {
   let queue: EventQueue;
@@ -27,7 +28,7 @@ describe("Entrypoint", () => {
   });
 
   afterEach(() => {
-    queue.kill();
+    queue["kill"]();
   });
 
   it("should pop the latest event from queue", async () => {
@@ -45,7 +46,8 @@ describe("Entrypoint", () => {
 
     await runtime.execute({
       cwd: compilation.cwd,
-      eventId: event.id
+      eventId: event.id,
+      stdout: "inherit"
     });
     expect(queue.size).toBe(0);
   });
@@ -57,10 +59,43 @@ describe("Entrypoint", () => {
       await runtime
         .execute({
           cwd: compilation.cwd,
-          eventId: "1"
+          eventId: "1",
+          stdout: "inherit"
         })
         .catch(e => e)
     ).toBe(126);
+  });
+
+  it("should redirect output to stream", async () => {
+    await initializeFn(`export default function() {
+      console.log('this should appear in the logs');
+      console.warn('this also should appear in the logs');
+    }`);
+
+    const event = new Event.Event();
+    event.target = new Event.Target();
+    event.id = "1";
+    event.type = -1 /* NO-OP */;
+    event.target.cwd = compilation.cwd;
+    event.target.handler = "default";
+
+    queue.enqueue(event);
+
+    const stream = new PassThrough();
+
+    const writeSpy = spyOn(stream, "write").and.callThrough();
+
+    await runtime.execute({
+      cwd: compilation.cwd,
+      eventId: event.id,
+      stdout: stream
+    });
+
+    expect(writeSpy).toHaveBeenCalledTimes(2);
+    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+      "this should appear in the logs\n",
+      "this also should appear in the logs\n"
+    ]);
   });
 
   describe("http", () => {
@@ -93,7 +128,8 @@ describe("Entrypoint", () => {
 
       await runtime.execute({
         eventId: event.id,
-        cwd: event.target.cwd
+        cwd: event.target.cwd,
+        stdout: "inherit"
       });
 
       // It gets deleted after the response is completed
@@ -125,7 +161,8 @@ describe("Entrypoint", () => {
       const exitCode = await runtime
         .execute({
           eventId: event.id,
-          cwd: event.target.cwd
+          cwd: event.target.cwd,
+          stdout: "inherit"
         })
         .catch(e => e);
 
@@ -153,7 +190,8 @@ describe("Entrypoint", () => {
       const exitCode = await runtime
         .execute({
           eventId: event.id,
-          cwd: event.target.cwd
+          cwd: event.target.cwd,
+          stdout: "inherit"
         })
         .catch(e => e);
 
@@ -186,7 +224,8 @@ describe("Entrypoint", () => {
 
       await runtime.execute({
         eventId: event.id,
-        cwd: event.target.cwd
+        cwd: event.target.cwd,
+        stdout: "inherit"
       });
 
       expect(httpQueue.size).toBe(0);

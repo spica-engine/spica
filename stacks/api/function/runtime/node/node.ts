@@ -2,7 +2,25 @@ import {Compilation, Description, Execution, Runtime} from "@spica-server/functi
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import {Transform} from "stream";
 import * as ts from "typescript";
+
+class FilterExperimentalWarnings extends Transform {
+  _transform(rawChunk: Buffer, encoding: string, cb: Function) {
+    const chunk = rawChunk.toString();
+    if (
+      chunk.indexOf("ExperimentalWarning: The ESM module loader is experimental.") == -1 &&
+      chunk.indexOf(
+        "ExperimentalWarning: --experimental-loader is an experimental feature. This feature could change at any time"
+      ) == -1
+    ) {
+      this.push(rawChunk, encoding);
+      cb();
+    } else {
+      cb();
+    }
+  }
+}
 
 export class Node extends Runtime {
   description: Description = {
@@ -63,7 +81,11 @@ export class Node extends Runtime {
           `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap.js")}`
         ],
         {
-          stdio: "inherit",
+          stdio: [
+            "ignore",
+            typeof execution.stdout == "string" ? execution.stdout : "pipe",
+            typeof execution.stdout == "string" ? execution.stdout : "pipe"
+          ],
           env: {
             PATH: process.env.PATH,
             EVENT_ID: execution.eventId,
@@ -73,6 +95,11 @@ export class Node extends Runtime {
           cwd: path.join(execution.cwd, ".build")
         }
       );
+
+      if (typeof execution.stdout == "object") {
+        worker.stdout.pipe(execution.stdout);
+        worker.stderr.pipe(new FilterExperimentalWarnings()).pipe(execution.stdout);
+      }
 
       worker.once("error", e => {
         reject(e);

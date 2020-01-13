@@ -7,6 +7,7 @@ import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {FunctionService} from "./function.service";
 import {FUNCTION_OPTIONS} from "./interface";
+import {LogService} from "./log.service";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 
 @Module({})
@@ -25,6 +26,7 @@ export class FunctionModule {
       providers: [
         FunctionEngine,
         FunctionService,
+        LogService,
         {provide: FUNCTION_OPTIONS, useValue: {root: path.join(options.path, "functions")}},
         {
           provide: EnqueuerSchemaResolver,

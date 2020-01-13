@@ -2,6 +2,7 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import * as rimraf from "rimraf";
+import {Writable} from "stream";
 import * as util from "util";
 import {Compilation} from "./compilation";
 
@@ -34,6 +35,7 @@ export interface Description {
 }
 
 export interface Execution {
+  stdout: Writable | "ignore" | "inherit";
   env?: {
     [k: string]: string;
   };

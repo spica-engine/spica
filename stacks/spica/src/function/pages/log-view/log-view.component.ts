@@ -28,7 +28,7 @@ export class LogViewComponent implements OnInit {
   public dateRange: {begin: string; end: string};
   public refresh: Subject<void> = new Subject<void>();
 
-  public displayedColumns: string[] = ["execution", "level", "timestamp", "message"];
+  public displayedColumns: string[] = ["execution", "timestamp", "message"];
   public dataSource: Observable<object>;
 
   public maxDate = new Date();
@@ -39,14 +39,6 @@ export class LogViewComponent implements OnInit {
   );
 
   public function: Observable<Function>;
-
-  public logLevelMapping = {
-    log: {icon: "bug_report", color: "#6b6b6b"},
-    error: {icon: "error", color: "red"},
-    warn: {icon: "warning", color: "orange"},
-    debug: {icon: "bug_report", color: "#6b6b6b"},
-    info: {icon: "flag", color: "#0079f7"}
-  };
 
   constructor(private route: ActivatedRoute, private fs: FunctionService) {}
 
