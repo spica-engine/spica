@@ -7,7 +7,7 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as service from "../service";
+import * as loginService from "../login.service";
 export class LoginCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
     return {
@@ -40,7 +40,7 @@ export class LoginCommand extends Command {
     const username = inputs[0];
     const password = inputs[1];
 
-    await service
+    await loginService
       .login(username, password, options["server"].toString())
       .then(response => this.namespace.logger.success(response))
       .catch(error => this.namespace.logger.error(error.message));
