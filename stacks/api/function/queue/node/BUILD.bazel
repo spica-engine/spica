@@ -1,0 +1,20 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+
+ts_library(
+    name = "node",
+    srcs = [
+        "database.ts",
+        "event.ts",
+        "http.ts",
+        "index.ts",
+    ],
+    module_name = "@spica-server/function/queue/node",
+    deps = [
+        "//stacks/api/function/queue/proto",
+        "@npm//@types/node",
+        "@npm//google-protobuf",
+        "@npm//grpc",
+    ],
+)

@@ -107,52 +107,64 @@
           </function-editor>
         </mat-list-item>
         <mat-divider></mat-divider>
-        <h4 mat-subheader>
-          <mat-icon>swap_horiz</mat-icon> Triggers
-          <button mat-icon-button matTooltip="Multiple trigger support is coming soon!">
-            <mat-icon>add</mat-icon>
-          </button>
-        </h4>
-        <mat-list-item class="trigger" *ngFor="let trigger of function.triggers | keyvalue">
-          <mat-form-field class="trigger">
+        <h4 mat-subheader><mat-icon>swap_horiz</mat-icon> Triggers</h4>
+        <mat-list-item
+          class="triggers"
+          *ngFor="let trigger of function.triggers; let i = index"
+          [ngModelGroup]="i"
+        >
+          <mat-form-field>
             <mat-label>Handler</mat-label>
-            <mat-select [disabled]="true" value="trigger.key">
-              <mat-option value="trigger.key">{{ trigger.key }}</mat-option>
+            <mat-select [disabled]="true" [value]="trigger.handler">
+              <mat-option [value]="trigger.handler">{{ trigger.handler }}</mat-option>
             </mat-select>
           </mat-form-field>
 
-          <ng-container *ngIf="triggers | async; let triggers">
-            <mat-form-field class="trigger">
+          <ng-container *ngIf="information | async; let information">
+            <mat-form-field>
               <mat-label>Type</mat-label>
               <mat-select
                 #typeModel="ngModel"
-                name="triggerType"
-                [(ngModel)]="trigger.value.type"
-                (ngModelChange)="trigger.value.options = {}"
+                name="type"
+                [(ngModel)]="trigger.type"
+                (ngModelChange)="trigger.options = {}"
                 required
               >
-                <mat-option
-                  *ngFor="let triggerPair of triggers | keyvalue"
-                  [value]="triggerPair.key"
+                <mat-select-trigger
+                  *ngIf="information.enqueuers | enqueuer: trigger.type; let enqueuer"
                 >
-                  {{ triggerPair.value?.title || triggerPair.key }}
+                  <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                  <mat-label>{{ enqueuer.description.title }}</mat-label>
+                </mat-select-trigger>
+                <mat-option
+                  *ngFor="let enqueuer of information.enqueuers"
+                  [value]="enqueuer.description.name"
+                >
+                  <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                  <mat-label>
+                    <span>{{ enqueuer.description.title }}</span> —
+                    <small class="mat-small">{{ enqueuer.description.description }}</small>
+                  </mat-label>
                 </mat-option>
               </mat-select>
-              <mat-error *ngIf="typeModel.errors?.required">You must select a trigger.</mat-error>
+              <mat-error *ngIf="typeModel.errors?.required">You must select an enqueuer.</mat-error>
             </mat-form-field>
 
-            <ng-container ngModelGroup="triggerOptions">
+            <ng-container
+              ngModelGroup="triggerOptions"
+              *ngIf="(information.enqueuers | enqueuer: trigger.type)?.options; let options"
+            >
               <span
                 class="margin"
-                *ngFor="let propertyKv of triggers[trigger.value.type]?.properties | keyvalue"
+                *ngFor="let propertyKv of options.properties | keyvalue"
                 [inputPlacer]="propertyKv.value"
-                [(ngModel)]="trigger.value.options[propertyKv.key]"
+                [(ngModel)]="trigger.options[propertyKv.key]"
                 [name]="propertyKv.key"
-                [required]="triggers[trigger.value.type]?.required.indexOf(propertyKv.key) > -1"
+                [required]="options.required?.indexOf(propertyKv.key) > -1"
               >
               </span>
-              <mat-slide-toggle name="status" [(ngModel)]="trigger.value.status">{{
-                trigger.value.status ? "Active" : "Deactive"
+              <mat-slide-toggle name="status" [(ngModel)]="trigger.status">{{
+                trigger.status ? "Active" : "Deactive"
               }}</mat-slide-toggle>
             </ng-container>
           </ng-container>
