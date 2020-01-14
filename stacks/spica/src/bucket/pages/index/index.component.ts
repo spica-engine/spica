@@ -120,11 +120,11 @@ export class IndexComponent implements OnInit {
           const propertyNameSecond =
             this.properties.length >= 3 ? this.properties[2].name : undefined;
           const propertyDataFirst =
-            response.data.length > 0 && this.properties.length > 0
+            response.data.length > 0 && this.properties.length >= 2
               ? response.data[0][this.properties[1].name]
               : "";
           const propertyDataSecond =
-            response.data.length > 0 && this.properties.length > 1
+            response.data.length > 0 && this.properties.length >= 3
               ? response.data[0][this.properties[2].name]
               : "";
           this.guideUrls = {
