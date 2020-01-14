@@ -11,7 +11,7 @@ import * as authentication from "../authentication.service";
 import * as request from "../request";
 import * as utilities from "../utilities";
 import * as formatter from "../formatter";
-import {Function} from "../interface";
+import {Function, Asset} from "../interface";
 import * as path from "path";
 import * as yaml from "yaml";
 
@@ -32,7 +32,7 @@ export class PullCommand extends Command {
 
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
     const outputPath = path.join(process.cwd(), inputs[0]);
-    let assets = [];
+    let assets: Asset[] = [];
     let token;
     let server;
 
