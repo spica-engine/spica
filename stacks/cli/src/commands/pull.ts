@@ -35,10 +35,9 @@ export class PullCommand extends Command {
     let server;
 
     try {
-      const loginData = JSON.parse((await authenticationService.getLoginData()).toString());
+      const loginData = await authenticationService.getLoginData();
       token = loginData.token;
       server = loginData.server;
-      if (!token || !server) throw {};
     } catch (error) {
       this.namespace.logger.error("You need to login before start this action. To login: ");
       this.namespace.logger.info("spica login <username> <password>");

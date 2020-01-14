@@ -22,7 +22,11 @@ export function createAsset(kind: string, spec: any): Asset {
   return asset;
 }
 
-interface Asset {
+export function filterFunctionsOnAssets(assets: Asset[]): Asset[] {
+  return assets.filter(asset => asset.kind == "Function");
+}
+
+export interface Asset {
   kind: string;
   metadata: MetaData;
   spec: any;
