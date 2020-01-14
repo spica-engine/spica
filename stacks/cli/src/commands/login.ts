@@ -45,10 +45,13 @@ export class LoginCommand extends Command {
 
     try {
       const response = await authentication.authenticate(username, password, server);
-      await utilities.writeFile(`${utilities.getRcPath()}`, {
-        token: response.token,
-        server: server
-      });
+      await utilities.writeFile(
+        `${utilities.getRcPath()}`,
+        JSON.stringify({
+          token: response.token,
+          server: server
+        })
+      );
       this.namespace.logger.success("Successfully logged in.");
     } catch (error) {
       this.namespace.logger.error(error.message);
