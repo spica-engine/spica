@@ -69,17 +69,19 @@ export class PullCommand extends Command {
             dependencies: dependencies
           };
           assets.push(utilities.createAsset("Function", func));
-          const result = utilities
+          await utilities
             .writeFile(func.indexPath, index.index)
             .then(result => this.namespace.logger.info(result))
             .catch(error => this.namespace.logger.info(error.message));
         })
       );
 
-      const result = utilities
+      await utilities
         .writeFile(`${outputPath}/asset.yaml`, yaml.stringify(assets))
         .then(result => this.namespace.logger.info(result))
         .catch(error => this.namespace.logger.info(error.message));
+
+      this.namespace.logger.success("Pulled action completed.");
     } catch (error) {
       this.namespace.logger.error(error.message);
     }
