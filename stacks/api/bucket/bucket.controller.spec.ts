@@ -82,7 +82,7 @@ describe("Bucket acceptance", () => {
     app = module.createNestApplication();
     req = module.get(Request);
     await app.listen(req.socket);
-  }, 35000);
+  }, 120000);
 
   afterEach(async () => {
     await module

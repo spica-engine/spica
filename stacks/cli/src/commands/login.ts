@@ -7,7 +7,7 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as authenticationService from "../authentication.service";
+import * as authentication from "../authentication.service";
 import * as utilities from "../utilities";
 
 export class LoginCommand extends Command {
@@ -44,7 +44,7 @@ export class LoginCommand extends Command {
     const server = options["server"].toString();
 
     try {
-      const response = await authenticationService.authenticate(username, password, server);
+      const response = await authentication.authenticate(username, password, server);
       await utilities.writeFile(`${utilities.getRcPath()}`, {
         token: response.token,
         server: server

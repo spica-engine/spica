@@ -1,7 +1,7 @@
-import * as httpService from "./request";
+import * as request from "./request";
 
 export function authenticate(username: string, password: string, serverUrl: string): Promise<any> {
-  return httpService.getRequest(
+  return request.getRequest(
     `${serverUrl}/passport/identify?password=${password}&identifier=${username}`
   );
 }
