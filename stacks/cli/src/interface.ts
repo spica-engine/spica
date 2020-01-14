@@ -59,3 +59,8 @@ export interface Asset {
 export interface MetaData {
   name: string; //id
 }
+
+export interface LoginData {
+  token: string;
+  server: string;
+}

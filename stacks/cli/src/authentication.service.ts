@@ -1,6 +1,7 @@
 import * as utilities from "./utilities";
 import * as fs from "fs";
 import * as request from "./request";
+import {LoginData} from "./interface";
 
 export function authenticate(username: string, password: string, serverUrl: string): Promise<any> {
   return request.getRequest(
@@ -8,6 +9,13 @@ export function authenticate(username: string, password: string, serverUrl: stri
   );
 }
 
-export function getLoginData(): Promise<Buffer> {
-  return fs.promises.readFile(utilities.getRcPath());
+export async function getLoginData(): Promise<LoginData> {
+  const rcFile = JSON.parse((await fs.promises.readFile(utilities.getRcPath())).toString());
+  const loginData: LoginData = {
+    token: rcFile.token,
+    server: rcFile.server
+  };
+  if (!loginData.token || !loginData.server)
+    throw {message: "Token or server information is missing."};
+  return loginData;
 }
