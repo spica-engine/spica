@@ -114,10 +114,11 @@ export class IndexComponent implements OnInit {
         let bucketUrl = `/bucket/${this.bucketId}/data?`;
 
         setTimeout(() => {
+          console.log(this.properties)
           const propertyNameFirst =
-            this.properties.length > 0 ? this.properties[1].name : undefined;
+            this.properties.length >= 2 ? this.properties[1].name : undefined;
           const propertyNameSecond =
-            this.properties.length > 1 ? this.properties[2].name : undefined;
+            this.properties.length >= 3 ? this.properties[2].name : undefined;
           const propertyDataFirst =
             response.data.length > 0 && this.properties.length > 0
               ? response.data[0][this.properties[1].name]
