@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module, OnModuleDestroy} from "@nestjs/common";
 import {ModuleRef} from "@nestjs/core";
-import {DatabaseService, MongoClient, ReadPreference} from "@spica-server/database";
+import {DatabaseService, MongoClient} from "@spica-server/database";
 import * as fs from "fs";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server-core";
 @Global()

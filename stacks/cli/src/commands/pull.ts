@@ -7,9 +7,11 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as authenticationService from "../authentication.service";
-import * as httpService from "../request";
+import * as authentication from "../authentication.service";
+import * as request from "../request";
 import * as utilities from "../utilities";
+import * as formatter from "../formatter";
+import {Function, Asset} from "../interface";
 import * as path from "path";
 import * as yaml from "yaml";
 
@@ -30,12 +32,12 @@ export class PullCommand extends Command {
 
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
     const outputPath = path.join(process.cwd(), inputs[0]);
-    let assets = [];
+    let assets: Asset[] = [];
     let token;
     let server;
 
     try {
-      const loginData = await authenticationService.getLoginData();
+      const loginData = await authentication.getLoginData();
       token = loginData.token;
       server = loginData.server;
     } catch (error) {
@@ -45,21 +47,21 @@ export class PullCommand extends Command {
     }
 
     try {
-      let functions = (await httpService.getRequest(`${server}/function`, {
+      let functions = (await request.getRequest(`${server}/function`, {
         Authorization: token
-      })) as Array<any>;
+      })) as Array<Function>;
       if (!functions.length) return;
 
       await Promise.all(
         functions.map(async func => {
-          const index = await httpService
+          const index = await request
             .getRequest(`${server}/function/${func._id}/index`, {
               Authorization: token
             })
             .catch(error => {
               return {index: null};
             });
-          const dependencies = await httpService
+          const dependencies = await request
             .getRequest(`${server}/function/${func._id}/dependencies`, {Authorization: token})
             .catch(error => []);
           func = {
@@ -67,20 +69,18 @@ export class PullCommand extends Command {
             indexPath: `${outputPath}/${func._id}/index.ts`,
             dependencies: dependencies
           };
-          assets.push(utilities.createAsset("Function", func));
+          assets.push(formatter.createFunctionAsset(func));
           await utilities
             .writeFile(func.indexPath, index.index)
-            .then(result => this.namespace.logger.info(result))
+            .then(result => this.namespace.logger.success(result))
             .catch(error => this.namespace.logger.info(error.message));
         })
       );
 
       await utilities
         .writeFile(`${outputPath}/asset.yaml`, yaml.stringify(assets))
-        .then(result => this.namespace.logger.info(result))
+        .then(result => this.namespace.logger.success(result))
         .catch(error => this.namespace.logger.info(error.message));
-
-      this.namespace.logger.success("Pulled action completed.");
     } catch (error) {
       this.namespace.logger.error(error.message);
     }

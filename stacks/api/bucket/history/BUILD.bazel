@@ -34,6 +34,25 @@ docs(
 )
 
 ts_library(
+    name = "test_lib-watcher",
+    testonly = True,
+    srcs = [
+        "watcher.spec.ts",
+    ],
+    deps = [
+        ":history",
+        "//packages/database/testing",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "test-watcher",
+    srcs = [":test_lib-watcher"],
+)
+
+ts_library(
     name = "test_lib-history-acceptance",
     testonly = True,
     srcs = [
@@ -48,8 +67,6 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//@types/json-schema",
-        "@npm//@types/node",
     ],
 )
 

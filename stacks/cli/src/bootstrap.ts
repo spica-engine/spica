@@ -4,7 +4,7 @@ import {RemoveCommand} from "./commands/remove";
 import {ServeCommand} from "./commands/serve";
 import {LoginCommand} from "./commands/login";
 import {PullCommand} from "./commands/pull";
-import { PushCommand } from "./commands/push";
+import {PushCommand} from "./commands/push";
 import {SpicaNamespace} from "./interface";
 import {Logger} from "./logger";
 import chalk from "chalk";

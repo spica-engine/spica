@@ -11,27 +11,3 @@ export async function writeFile(fullPath: string, data: any): Promise<any> {
   await fs.promises.mkdir(dirName, {recursive: true});
   return fs.promises.writeFile(fullPath, data).then(_ => `${fullPath} created.`);
 }
-
-export function createAsset(kind: string, spec: any): Asset {
-  let asset: Asset = {
-    kind: kind,
-    metadata: {name: spec._id},
-    spec: spec
-  };
-  delete asset.spec._id;
-  return asset;
-}
-
-export function filterFunctionsOnAssets(assets: Asset[]): Asset[] {
-  return assets.filter(asset => asset.kind == "Function");
-}
-
-export interface Asset {
-  kind: string;
-  metadata: MetaData;
-  spec: any;
-}
-
-interface MetaData {
-  name: string; //id
-}
