@@ -1,4 +1,5 @@
 import {InjectionToken} from "@angular/core";
+import {JSONSchema7} from "json-schema";
 
 export interface FunctionOptions {
   url: string;
@@ -6,20 +7,37 @@ export interface FunctionOptions {
 
 export const FUNCTION_OPTIONS = new InjectionToken<FunctionOptions>("FUNCTION_OPTIONS");
 
-export interface Function {
+export interface FunctionDescription {
   _id?: string;
   name: string;
   description: string;
-  triggers: Triggers;
-  dependencies?: Dependency;
-  env?: Environment[];
-  flags?: FunctionFlags;
   memoryLimit?: number;
   timeout?: number;
 }
 
-export enum FunctionFlags {
-  Editable = 1
+export interface NormalizedFunction extends FunctionDescription {
+  triggers: Trigger[];
+  env: Environment[];
+}
+
+export interface Function extends FunctionDescription {
+  triggers: {
+    default: TriggerDescription;
+    [key: string]: TriggerDescription;
+  };
+  env: {
+    [key: string]: string;
+  };
+}
+
+export interface Trigger extends TriggerDescription {
+  handler: string;
+}
+
+export interface TriggerDescription<T = any> {
+  type: string;
+  active?: boolean;
+  options: T;
 }
 
 export interface Environment {
@@ -28,27 +46,58 @@ export interface Environment {
 }
 
 export interface Dependency {
-  [key: string]: string;
+  name: string;
+  version: string;
 }
 
-export interface Triggers {
-  default: Trigger;
-  [key: string]: Trigger;
-}
-
-export interface Trigger {
-  type: string;
-  active?: boolean;
-  options: any;
-}
-
-export function emptyFunction(): Function {
+export function emptyFunction(): NormalizedFunction {
   return {
     name: undefined,
     description: undefined,
-    triggers: {default: {type: undefined, active: true, options: {}}},
-    env: [],
-    flags: FunctionFlags.Editable
+    triggers: [emptyTrigger("default")],
+    env: []
+  };
+}
+
+export function emptyTrigger(handler?: string): Trigger {
+  return {
+    handler: handler,
+    options: {},
+    type: undefined
+  };
+}
+
+export function normalizeFunction(fn: Function): NormalizedFunction {
+  const {triggers, env, ...fnDescription} = fn;
+  return {
+    ...fnDescription,
+    triggers: Object.keys(triggers).reduce((acc, handler) => {
+      acc.push({...triggers[handler], handler});
+      return acc;
+    }, new Array<Trigger>()),
+    env: Object.keys(env).reduce((acc, name) => {
+      acc.push({name, value: env[name]});
+      return acc;
+    }, new Array<Environment>())
+  };
+}
+
+export function denormalizeFunction(fn: NormalizedFunction): Function {
+  const {triggers, env, ...fnDescription} = fn;
+  return {
+    ...fnDescription,
+    triggers: triggers.reduce(
+      (acc, trigger) => {
+        const {handler, ...triggerDescription} = trigger;
+        acc[handler] = triggerDescription;
+        return acc;
+      },
+      {default: undefined}
+    ),
+    env: env.reduce((acc, env) => {
+      acc[env.name] = env.value;
+      return acc;
+    }, {})
   };
 }
 
@@ -60,15 +109,24 @@ export interface LogFilter {
 
 export interface Subscription {
   _id?: string;
-  trigger: Trigger;
+  trigger: TriggerDescription;
   url: string;
-}
-
-export interface Trigger<T = any> {
-  type: string;
-  options: T | any;
 }
 
 export function emptySubscription(): Subscription {
   return {trigger: {type: undefined, options: {}}, url: undefined};
+}
+
+export interface Enqueuer {
+  description: {
+    icon: string;
+    name: string;
+    title: string;
+    description: string;
+  };
+  options: JSONSchema7;
+}
+
+export interface Information {
+  enqueuers: Enqueuer[];
 }

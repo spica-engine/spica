@@ -21,7 +21,7 @@ export class SubscriptionAddComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private router: Router
   ) {
-    this.triggers = this.functionService.getTriggers("subscription");
+    //this.triggers = this.functionService.getTriggers("subscription");
   }
 
   ngOnInit() {

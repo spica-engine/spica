@@ -1,0 +1,27 @@
+{
+  "$id": "http://spica.internal/function/enqueuer/http",
+  "title": "Http",
+  "description": "Http enqueuer for functions",
+  "type": "object",
+  "required": ["path", "method"],
+  "properties": {
+    "method": {
+      "title": "Method",
+      "description": "Http trigger would rely on request method.",
+      "type": "string",
+      "enum": ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"]
+    },
+    "path": {
+      "title": "Path",
+      "description": "Full route path that function will be served on. eg /books",
+      "type": "string"
+    },
+    "preflight": {
+      "title": "Preflight",
+      "description": "Whether preflight requests should be handled.",
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "additionalProperties": false
+}

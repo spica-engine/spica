@@ -7,7 +7,11 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as service from "../service";
+import * as authenticationService from "../authentication.service";
+import * as httpService from "../request";
+import * as utilities from "../utilities";
+import * as path from "path";
+import * as yaml from "yaml";
 
 export class PullCommand extends Command {
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
@@ -25,9 +29,61 @@ export class PullCommand extends Command {
   }
 
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
-    await service
-      .pullFunctions(inputs[0].toString())
-      .then(result => this.namespace.logger.success(result))
-      .catch(error => this.namespace.logger.error(error.message));
+    const outputPath = path.join(process.cwd(), inputs[0]);
+    let assets = [];
+    let token;
+    let server;
+
+    try {
+      const loginData = JSON.parse((await authenticationService.getLoginData()).toString());
+      token = loginData.token;
+      server = loginData.server;
+      if (!token || !server) throw {};
+    } catch (error) {
+      this.namespace.logger.error("You need to login before start this action. To login: ");
+      this.namespace.logger.info("spica login <username> <password>");
+      return;
+    }
+
+    try {
+      let functions = (await httpService.getRequest(`${server}/function`, {
+        Authorization: token
+      })) as Array<any>;
+      if (!functions.length) return;
+
+      await Promise.all(
+        functions.map(async func => {
+          const index = await httpService
+            .getRequest(`${server}/function/${func._id}/index`, {
+              Authorization: token
+            })
+            .catch(error => {
+              return {index: null};
+            });
+          const dependencies = await httpService
+            .getRequest(`${server}/function/${func._id}/dependencies`, {Authorization: token})
+            .catch(error => []);
+          func = {
+            ...func,
+            indexPath: `${outputPath}/${func._id}/index.ts`,
+            dependencies: dependencies
+          };
+          assets.push(utilities.createAsset("Function", func));
+          await utilities
+            .writeFile(func.indexPath, index.index)
+            .then(result => this.namespace.logger.info(result))
+            .catch(error => this.namespace.logger.info(error.message));
+        })
+      );
+
+      await utilities
+        .writeFile(`${outputPath}/asset.yaml`, yaml.stringify(assets))
+        .then(result => this.namespace.logger.info(result))
+        .catch(error => this.namespace.logger.info(error.message));
+
+      this.namespace.logger.success("Pulled action completed.");
+    } catch (error) {
+      this.namespace.logger.error(error.message);
+    }
   }
 }
