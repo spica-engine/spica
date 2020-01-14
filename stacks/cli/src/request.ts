@@ -1,31 +1,32 @@
 import * as request from "request-promise-native";
 
-export function getRequest(url: string): Promise<any> {
+export function getRequest(url: string, headers?: object): Promise<any> {
   const requestOptions = {
     method: "GET",
     uri: url,
-    json: true
+    json: true,
+    headers: headers
   };
   return request(requestOptions);
 }
 
-export async function postRequest(url: string, body?: object, header?: object): Promise<any> {
+export async function postRequest(url: string, body?: object, headers?: object): Promise<any> {
   const requestOptions = {
     method: "POST",
     uri: url,
     json: true,
     body: body,
-    header: header
+    headers: headers
   };
   return request(requestOptions);
 }
 
-export async function deleteRequest(url: string, header?: object): Promise<any> {
+export async function deleteRequest(url: string, headers?: object): Promise<any> {
   const requestOptions = {
     method: "DELETE",
     uri: url,
     json: true,
-    header: header
+    headers: headers
   };
   return request(requestOptions);
 }

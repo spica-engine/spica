@@ -8,6 +8,6 @@ export function authenticate(username: string, password: string, serverUrl: stri
   );
 }
 
-export function getLoginStatus(): Promise<Buffer> {
+export function getLoginData(): Promise<Buffer> {
   return fs.promises.readFile(utilities.getRcPath());
 }
