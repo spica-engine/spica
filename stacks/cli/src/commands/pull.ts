@@ -61,14 +61,13 @@ export class PullCommand extends Command {
             .catch(error => {
               return {index: ""};
             });
+          func.indexPath = `${outputPath}/${func._id}/index.ts`;
+
           const dependencies = await request
             .getRequest(`${server}/function/${func._id}/dependencies`, {Authorization: token})
             .catch(error => []);
-          func = {
-            ...func,
-            indexPath: `${outputPath}/${func._id}/index.ts`,
-            dependencies: dependencies
-          };
+          func.dependencies = dependencies;
+
           assets.push(formatter.createFunctionAsset(func));
           await utilities
             .writeFile(func.indexPath, index.index)
