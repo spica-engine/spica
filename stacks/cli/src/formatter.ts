@@ -9,3 +9,7 @@ export function createFunctionAsset(spec: Function): Asset {
   delete asset.spec._id;
   return asset;
 }
+
+export function filterFunctionsOnAssets(assets: Asset[]): Asset[] {
+  return assets.filter(asset => asset.kind == "Function");
+}

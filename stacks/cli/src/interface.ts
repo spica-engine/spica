@@ -53,7 +53,7 @@ export interface Dependency {
 export interface Asset {
   kind: string;
   metadata: MetaData;
-  spec: Function | any;
+  spec: any;
 }
 
 export interface MetaData {
