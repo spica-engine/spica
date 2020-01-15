@@ -14,5 +14,6 @@ ts_library(
         "//packages/database",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
+        "@npm//cron",
     ],
 )
