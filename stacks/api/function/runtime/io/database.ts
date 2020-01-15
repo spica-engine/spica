@@ -9,7 +9,9 @@ export class DatabaseOutput extends StdOut {
   }
 
   create(options: StdOutOptions, callback?: () => void): Writable {
-    callback();
+    if (callback) {
+      callback();
+    }
     return new PassThrough().on("data", data => {
       this.db.collection("function_logs").insertOne({
         function: options.functionId,
