@@ -51,7 +51,6 @@ export class BucketWatcher {
                       lastPath[0] == "type" ||
                       (lastPath[0] == "options" && lastPath[1] == "translate"))))
             );
-
             changes.forEach(change => {
               this.historyService.deleteHistoryAtPath(rawChange.documentKey._id, change.path);
             });
@@ -71,19 +70,17 @@ export class BucketWatcher {
 
             if (previousDocument) {
               const changes = diff(currentDocument, previousDocument);
-
               if (changes.length > 0) {
                 const history: History = {
                   bucket_id: bucketId,
                   document_id: documentId,
                   changes
                 };
-                await this.historyService.upsertOne(history);
+                await this.historyService.insertOne(history);
               } else {
-                throw new Error(`
-                  Database propagated changes but state of previous and current documents is equal so there is no change in between documents. 
-                  This usually happens when there is no replication member that has slaveDelay.
-                `);
+                throw new Error(
+                  `Database propagated changes but state of previous and current documents is equal so there is no change in between documents. This usually happens when there is no replication member that has slaveDelay.`
+                );
               }
             }
             break;

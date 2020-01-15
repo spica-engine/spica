@@ -8,6 +8,7 @@ docs(
         "bucket.md",
         "function.md",
         "getting-started.md",
+        "index.md",
         "introduction.md",
         "passport.md",
         "storage.md",

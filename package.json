@@ -47,7 +47,6 @@
     "color-name-list": "^3.75.0",
     "columnify": "^1.5.4",
     "cron": "^1.7.1",
-    "cronstrue": "^1.81.0",
     "css-tree": "^1.0.0-alpha.29",
     "deep-diff": "^1.0.2",
     "diff-match-patch": "^1.0.4",
@@ -55,6 +54,8 @@
     "error-stack-parser": "^2.0.2",
     "fast-glob": "^2.2.6",
     "get-port": "^5.0.0",
+    "google-protobuf": "^3.10.0",
+    "grpc": "^1.24.2",
     "htmlparser": "^1.7.7",
     "http-proxy-middleware": "^0.19.1",
     "locale": "^0.1.0",
@@ -90,8 +91,9 @@
     "@bazel/bazel": "^0.27.0",
     "@bazel/buildifier": "^0.26.0",
     "@bazel/ibazel": "^0.10.3",
-    "@bazel/jasmine": "^0.35.0",
-    "@bazel/typescript": "^0.35.0",
+    "@bazel/jasmine": "^0.42.1",
+    "@bazel/rollup": "^0.42.1",
+    "@bazel/typescript": "^0.42.1",
     "@nestjs/testing": "^6.3.0",
     "@types/archiver": "^3.0.0",
     "@types/css-tree": "^1.0.0",
@@ -116,6 +118,9 @@
     "remark-highlight.js": "^5.1.1",
     "remark-html": "^9.0.1",
     "remark-slug": "^5.1.2",
+    "rollup": "^1.27.5",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
     "yaml": "^1.6.0"
   }
 }

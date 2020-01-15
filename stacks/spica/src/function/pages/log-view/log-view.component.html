@@ -34,33 +34,19 @@
 <mat-card class="mat-elevation-z25">
   <table mat-table matSort [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z0">
     <ng-container matColumnDef="execution">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Execution id</th>
-      <td mat-cell *matCellDef="let log">{{ log.execution }}</td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Event Id</th>
+      <td mat-cell *matCellDef="let log">{{ log.event_id }}</td>
     </ng-container>
 
     <ng-container matColumnDef="timestamp">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Execution Time</th>
-      <td mat-cell *matCellDef="let log">{{ log.timestamp | date: "medium" }}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="level">
-      <th mat-header-cell *matHeaderCellDef>Level</th>
-      <td mat-cell *matCellDef="let log" [matTooltip]="log.level">
-        <mat-icon [style.color]="logLevelMapping[log.level]?.color">{{
-          logLevelMapping[log.level]?.icon
-        }}</mat-icon>
-      </td>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Time</th>
+      <td mat-cell *matCellDef="let log">{{ log.created_at | date: "medium" }}</td>
     </ng-container>
 
     <ng-container matColumnDef="message">
       <th mat-header-cell *matHeaderCellDef>Message</th>
       <td mat-cell *matCellDef="let log">
-        <span *ngIf="log.durationMs">
-          <mat-icon level>timer</mat-icon>
-          <b>{{ log.durationMs }}</b
-          >ms.
-        </span>
-        {{ log.message }}
+        {{ log.content }}
       </td>
     </ng-container>
 
@@ -70,9 +56,7 @@
           class="element-detail"
           [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'"
         >
-          <span>
-            {{ element.message }}
-          </span>
+          <pre> {{ element.content }} </pre>
         </div>
       </td>
     </ng-container>

@@ -1,0 +1,78 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_rollup//:index.bzl", "rollup_bundle")
+load("@build_bazel_rules_nodejs//:index.bzl", "npm_package")
+
+ts_library(
+    name = "node",
+    srcs = [
+        "index.ts",
+        "node.ts",
+    ],
+    data = [
+        ":runtime",
+    ],
+    module_name = "@spica-server/function/runtime/node",
+    deps = [
+        "//stacks/api/function/runtime",
+        "@npm//@types/node",
+        "@npm//typescript",
+    ],
+)
+
+npm_package(
+    name = "runtime",
+    srcs = [
+        "@npm//ansi-regex:ansi-regex__files",
+        "@npm//ascli:ascli__files",
+        "@npm//bytebuffer:bytebuffer__files",
+        "@npm//camelcase:camelcase__files",
+        "@npm//cliui:cliui__files",
+        "@npm//code-point-at:code-point-at__files",
+        "@npm//colour:colour__files",
+        "@npm//decamelize:decamelize__files",
+        "@npm//grpc:grpc__files",
+        "@npm//invert-kv:invert-kv__files",
+        "@npm//lcid:lcid__files",
+        "@npm//lodash.camelcase:lodash.camelcase__files",
+        "@npm//lodash.clone:lodash.clone__files",
+        "@npm//nan:nan__files",
+        "@npm//number-is-nan:number-is-nan__files",
+        "@npm//optjs:optjs__files",
+        "@npm//os-locale:os-locale__files",
+        "@npm//string-width:string-width__files",
+        "@npm//window-size:window-size__files",
+        "@npm//wrap-ansi:wrap-ansi__files",
+        "@npm//y18n:y18n__files",
+        "@npm//yargs:yargs__files",
+    ],
+    deps = [
+        ":entrypoint",
+    ],
+)
+
+ts_library(
+    name = "entrypoint_lib",
+    srcs = ["entrypoint.ts"],
+    deps = [
+        "//stacks/api/function/queue/node",
+        "//stacks/api/function/queue/proto",
+        "@npm//@types/node",
+    ],
+)
+
+rollup_bundle(
+    name = "entrypoint",
+    config_file = "rollup.config.js",
+    entry_points = {
+        ":entrypoint.ts": "bootstrap",
+    },
+    format = "cjs",
+    sourcemap = "true",
+    deps = [
+        ":entrypoint_lib",
+        "@npm//rollup-plugin-commonjs",
+        "@npm//rollup-plugin-node-resolve",
+    ],
+)

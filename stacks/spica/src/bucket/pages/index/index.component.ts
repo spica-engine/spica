@@ -4,13 +4,13 @@ import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
 import {merge, Observable} from "rxjs";
-import {flatMap, map, publishReplay, refCount, switchMap, tap} from "rxjs/operators";
+import {flatMap, map, publishReplay, refCount, switchMap, tap, retry} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
-
+import {environment} from "../../../../environments/environment";
 @Component({
   selector: "bucket-index",
   templateUrl: "./index.component.html",
@@ -42,9 +42,12 @@ export class IndexComponent implements OnInit {
 
   $preferences: Observable<BucketSettings>;
   language: string;
-
   selectedItems: Array<string> = [];
   dataIds: Array<string> = [];
+
+  guide: boolean = false;
+  guideResponse = new Map<string, object>();
+  guideUrls: any;
 
   constructor(
     private bs: BucketService,
@@ -65,6 +68,7 @@ export class IndexComponent implements OnInit {
       }),
       flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
+        this.guideResponse = new Map<string, object>();
         this.readOnly = schema.readOnly;
         this.properties = [
           ...Object.entries(schema.properties).map(([name, value]) => ({
@@ -107,6 +111,33 @@ export class IndexComponent implements OnInit {
         this.paginator.length = (response.meta && response.meta.total) || 0;
         this.dataIds = response.data.map(d => d._id);
         this.loaded = true;
+        let bucketUrl = `/bucket/${this.bucketId}/data?`;
+
+        setTimeout(() => {
+          console.log(this.properties);
+          const propertyNameFirst =
+            this.properties.length >= 2 ? this.properties[1].name : undefined;
+          const propertyNameSecond =
+            this.properties.length >= 3 ? this.properties[2].name : undefined;
+          const propertyDataFirst =
+            response.data.length > 0 && this.properties.length >= 2
+              ? response.data[0][this.properties[1].name]
+              : "";
+          const propertyDataSecond =
+            response.data.length > 0 && this.properties.length >= 3
+              ? response.data[0][this.properties[2].name]
+              : "";
+          this.guideUrls = {
+            getAllWithLimit: `${bucketUrl}limit=3`,
+            getAllWithSort: `${bucketUrl}limit=3&sort={"${propertyNameFirst}":1}`,
+            getWithFilter: `${bucketUrl}limit=3&filter={"${propertyNameFirst}":{"$regex":"${propertyDataFirst}"}}`,
+            getWithLike: `${bucketUrl}limit=3&filter={"${propertyNameFirst}":{"$regex":"${propertyDataFirst}"}}`,
+            getWithDoubleFilter: `${bucketUrl}limit=1&filter={"${propertyNameFirst}":{"$regex":"${propertyDataFirst}"},"${propertyNameSecond}":{"$regex":"${propertyDataSecond}"}}`,
+            getOnlyScheduled: `${bucketUrl}paginate=true&limit=3&schedule=true`,
+            getDataWithLang: `${bucketUrl}limit=3`
+          };
+        }, 1000);
+
         return response.data;
       })
     );
@@ -176,5 +207,12 @@ export class IndexComponent implements OnInit {
       .deleteMany(this.bucketId, this.selectedItems)
       .toPromise()
       .then(() => this.refresh.emit());
+  }
+  guideRequest(url: string, key: string) {
+    this.bs
+      .guideRequest(url, key == "getDataWithLang" ? {headers: {"Accept-Language": "tr-TR"}} : {})
+      .subscribe(returnData => {
+        this.guideResponse[key] = returnData;
+      });
   }
 }

@@ -110,6 +110,16 @@
           height: 80px;
           mat-form-field {
             margin-right: 20px;
+            mat-select {
+              mat-select-trigger {
+                & > * {
+                  vertical-align: middle;
+                }
+                mat-label {
+                  padding-left: 10px;
+                }
+              }
+            }
           }
         }
       }

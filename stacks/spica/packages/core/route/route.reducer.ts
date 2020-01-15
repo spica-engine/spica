@@ -7,6 +7,7 @@ export enum RouteActionTypes {
   ADD = "ROUTE_ADD",
   REMOVE = "ROUTE_REMOVE",
   REMOVECATEGORY = "ROUTE_REMOVE_CATEGORY",
+  CHERRYPICKANDREMOVE = "ROUTE_CHERRYPICK_AND_REMOVE",
   UPDATE = "ROUTE_UPDATE",
   UPSERT = "ROUTE_UPSERT"
 }
@@ -36,12 +37,24 @@ export class RemoveCategory implements Action {
   constructor(public category: RouteCategory) {}
 }
 
+export class CherryPickAndRemove implements Action {
+  public readonly type = RouteActionTypes.CHERRYPICKANDREMOVE;
+  constructor(public filterer: (e: Route) => boolean) {}
+}
+
 export class Retrieve implements Action {
   public readonly type = RouteActionTypes.RETRIEVE;
   constructor(public routes: Route[]) {}
 }
 
-export type RouteAction = Retrieve | Add | Update | Remove | Upsert | RemoveCategory;
+export type RouteAction =
+  | Retrieve
+  | Add
+  | Update
+  | Remove
+  | Upsert
+  | RemoveCategory
+  | CherryPickAndRemove;
 
 export interface RouteState extends EntityState<Route> {}
 
@@ -59,6 +72,8 @@ export function reducer(state: RouteState = initialState, action: RouteAction): 
       return adapter.removeOne(action.id, state);
     case RouteActionTypes.REMOVECATEGORY:
       return adapter.removeMany(entity => entity.category == action.category, state);
+    case RouteActionTypes.CHERRYPICKANDREMOVE:
+      return adapter.removeMany(action.filterer, state);
     case RouteActionTypes.UPDATE:
       return adapter.updateOne({id: action.id, changes: action.changes}, state);
     case RouteActionTypes.UPSERT:

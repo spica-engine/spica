@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 load("//tools/dgeni:index.bzl", "docs")
 
@@ -34,19 +34,43 @@ docs(
 )
 
 ts_library(
-    name = "test_lib",
+    name = "test_lib-watcher",
     testonly = True,
-    srcs = glob(["*.spec.ts"]),
-    tsconfig = "//:tsconfig.json",
+    srcs = [
+        "watcher.spec.ts",
+    ],
     deps = [
         ":history",
+        "//packages/database/testing",
+        "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//@types/json-schema",
-        "@npm//@types/node",
     ],
 )
 
 jasmine_node_test(
-    name = "test",
-    srcs = [":test_lib"],
+    name = "test-watcher",
+    srcs = [":test_lib-watcher"],
+)
+
+ts_library(
+    name = "test_lib-history-acceptance",
+    testonly = True,
+    srcs = [
+        "history.controller.spec.ts",
+    ],
+    deps = [
+        ":history",
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "test-history-acceptance",
+    srcs = [":test_lib-history-acceptance"],
 )
