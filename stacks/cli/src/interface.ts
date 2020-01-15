@@ -64,8 +64,3 @@ export interface LoginData {
   token: string;
   server: string;
 }
-
-export interface LoginData {
-  token: string;
-  server: string;
-}
