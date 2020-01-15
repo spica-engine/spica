@@ -23,7 +23,7 @@ export class PullCommand extends Command {
       inputs: [
         {
           name: "Output folder",
-          summary: "Name of output folder to store assets.",
+          summary: "Name of the output folder to store assets.",
           validators: [validators.required]
         }
       ]

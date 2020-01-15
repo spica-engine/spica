@@ -16,6 +16,6 @@ export async function getLoginData(): Promise<LoginData> {
     server: rcFile.server
   };
   if (!loginData.token || !loginData.server)
-    throw {message: "Token or server information is missing."};
+    throw new Error("Token or server information is missing.");
   return loginData;
 }
