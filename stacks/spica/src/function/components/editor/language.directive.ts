@@ -60,14 +60,10 @@ export class LanguageDirective implements OnDestroy {
       }),
       monaco.languages.registerCodeLensProvider("typescript", {
         provideCodeLenses: () => {
-          return this.ls.request("codeLenses", runCommand).then(r => ({
-            lenses: r as monaco.languages.CodeLens[],
-            dispose: () => {}
-          }));
+          return this.ls.request("codeLenses", runCommand);
         }
       }),
       monaco.languages.registerCompletionItemProvider("typescript", {
-        triggerCharacters: ["."],
         provideCompletionItems: async (model, position, context) => {
           return this.ls
             .request<any[]>("completions", {
