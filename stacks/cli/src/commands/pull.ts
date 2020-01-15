@@ -7,7 +7,7 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as authentication from "../authentication.service";
+import * as authentication from "../authentication";
 import * as request from "../request";
 import * as utilities from "../utilities";
 import * as formatter from "../formatter";
@@ -59,7 +59,7 @@ export class PullCommand extends Command {
               Authorization: token
             })
             .catch(error => {
-              return {index: null};
+              return {index: ""};
             });
           const dependencies = await request
             .getRequest(`${server}/function/${func._id}/dependencies`, {Authorization: token})
