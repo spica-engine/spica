@@ -5,7 +5,7 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "queue_test_lib",
-    srcs = glob(["**/*.spec.ts"]),
+    srcs = glob(["*.spec.ts"]),
     deps = [
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/node",
