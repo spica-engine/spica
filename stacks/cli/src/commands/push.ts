@@ -7,12 +7,10 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command, Function} from "../interface";
-import * as authentication from "../authentication.service";
+import * as authentication from "../authentication";
 import * as request from "../request";
-import * as utilites from "../utilities";
 import {Asset} from "../interface";
 import * as formatter from "../formatter";
-
 import * as fs from "fs";
 import * as yaml from "yaml";
 
@@ -82,9 +80,7 @@ export class PushCommand extends Command {
               Authorization: token
             }
           )
-          .then(_ =>
-            this.namespace.logger.success(`'${funcAsset.spec.name}' function pushed.`)
-          )
+          .then(_ => this.namespace.logger.success(`'${funcAsset.spec.name}' function pushed.`))
           .catch(error => this.namespace.logger.error(error.message));
       })
     );

@@ -7,7 +7,7 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as authentication from "../authentication.service";
+import * as authentication from "../authentication";
 import * as utilities from "../utilities";
 
 export class LoginCommand extends Command {

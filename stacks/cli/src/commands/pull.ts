@@ -7,7 +7,7 @@ import {
   validators
 } from "@ionic/cli-framework";
 import {Command} from "../interface";
-import * as authentication from "../authentication.service";
+import * as authentication from "../authentication";
 import * as request from "../request";
 import * as utilities from "../utilities";
 import * as formatter from "../formatter";
@@ -59,16 +59,15 @@ export class PullCommand extends Command {
               Authorization: token
             })
             .catch(error => {
-              return {index: null};
+              return {index: ""};
             });
+          func.indexPath = `${outputPath}/${func._id}/index.ts`;
+
           const dependencies = await request
             .getRequest(`${server}/function/${func._id}/dependencies`, {Authorization: token})
             .catch(error => []);
-          func = {
-            ...func,
-            indexPath: `${outputPath}/${func._id}/index.ts`,
-            dependencies: dependencies
-          };
+          func.dependencies = dependencies;
+
           assets.push(formatter.createFunctionAsset(func));
           await utilities
             .writeFile(func.indexPath, index.index)
