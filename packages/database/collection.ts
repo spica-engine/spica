@@ -1,5 +1,7 @@
 import {
+  AggregationCursor,
   Collection,
+  CollectionAggregationOptions,
   FilterQuery,
   FindOneAndDeleteOption,
   FindOneAndReplaceOption,
@@ -20,6 +22,10 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
 
     constructor(public db: DatabaseService, public _collection: string = collection) {
       this._coll = db.collection(this._collection);
+    }
+
+    aggregate(pipeline?: object[], options?: CollectionAggregationOptions): AggregationCursor<T> {
+      return this._coll.aggregate(pipeline, options);
     }
 
     // Insert
@@ -47,6 +53,10 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
 
     deleteOne(filter: FilterQuery<T>, options?: FindOneAndDeleteOption): Promise<number> {
       return this._coll.deleteOne(filter, options).then(r => r.deletedCount);
+    }
+
+    deleteMany(filter: FilterQuery<T>, options?: FindOneAndDeleteOption): Promise<number> {
+      return this._coll.deleteMany(filter, options).then(r => r.deletedCount);
     }
 
     // Replace

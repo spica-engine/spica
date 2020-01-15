@@ -70,7 +70,6 @@ if (!process.env.EVENT_ID) {
       break;
     case -1:
       // NO OP
-      console.warn("NO-OP event type received");
       break;
     default:
       exitAbnormally(`Invalid event type received. (${event.type})`);
