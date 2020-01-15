@@ -9,5 +9,5 @@ export function getRcPath() {
 export async function writeFile(fullPath: string, data: any): Promise<any> {
   const dirName = path.dirname(fullPath);
   await fs.promises.mkdir(dirName, {recursive: true});
-  return fs.promises.writeFile(fullPath, data);
+  return fs.promises.writeFile(fullPath, data).then(_ => `${fullPath} created.`);
 }

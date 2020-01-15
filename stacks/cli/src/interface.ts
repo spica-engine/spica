@@ -18,3 +18,49 @@ export abstract class Command extends BaseCommand<
   CommandMetadataInput,
   CommandMetadataOption
 > {}
+
+export interface Function {
+  _id?: string;
+  name?: string;
+  description?: string;
+  env?: Environment;
+  triggers: Triggers;
+  memoryLimit?: number;
+  timeout?: number;
+  indexPath?: string;
+  dependencies?: string;
+}
+
+export interface Triggers {
+  default: Trigger;
+  [key: string]: Trigger;
+}
+
+export interface Trigger {
+  type: string;
+  active?: boolean;
+  options: any;
+}
+
+export interface Environment {
+  [key: string]: string;
+}
+
+export interface Dependency {
+  [key: string]: string;
+}
+
+export interface Asset {
+  kind: string;
+  metadata: MetaData;
+  spec: Function | any;
+}
+
+export interface MetaData {
+  name: string; //id
+}
+
+export interface LoginData {
+  token: string;
+  server: string;
+}

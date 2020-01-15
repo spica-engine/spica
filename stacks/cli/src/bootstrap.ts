@@ -3,6 +3,7 @@ import {ListCommand} from "./commands/list";
 import {RemoveCommand} from "./commands/remove";
 import {ServeCommand} from "./commands/serve";
 import {LoginCommand} from "./commands/login";
+import {PullCommand} from "./commands/pull";
 import {SpicaNamespace} from "./interface";
 import {Logger} from "./logger";
 import chalk from "chalk";
@@ -22,7 +23,8 @@ class RootNamespace extends SpicaNamespace {
       ["serve", async () => new ServeCommand(this)],
       ["ls", async () => new ListCommand(this)],
       ["rm", async () => new RemoveCommand(this)],
-      ["login", async () => new LoginCommand(this)]
+      ["login", async () => new LoginCommand(this)],
+      ["pull", async () => new PullCommand(this)]
     ]);
   }
 }
