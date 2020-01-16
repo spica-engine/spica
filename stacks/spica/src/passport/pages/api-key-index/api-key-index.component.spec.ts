@@ -1,16 +1,15 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 
-import { ApiKeyIndexComponent } from './api-key-index.component';
+import {ApiKeyIndexComponent} from "./api-key-index.component";
 
-describe('ApiKeyIndexComponent', () => {
+describe("ApiKeyIndexComponent", () => {
   let component: ApiKeyIndexComponent;
   let fixture: ComponentFixture<ApiKeyIndexComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ApiKeyIndexComponent ]
-    })
-    .compileComponents();
+      declarations: [ApiKeyIndexComponent]
+    }).compileComponents();
   }));
 
   beforeEach(() => {
@@ -19,7 +18,7 @@ describe('ApiKeyIndexComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 });
