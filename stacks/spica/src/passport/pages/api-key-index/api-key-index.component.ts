@@ -3,6 +3,7 @@ import {MatPaginator} from "@angular/material";
 import {ApiKey} from "src/passport/interfaces/api-key";
 import {Observable, of, Subject, merge} from "rxjs";
 import {switchMap, map} from "rxjs/operators";
+import {ApiKeyService} from "src/passport/services/api-key.service";
 
 @Component({
   selector: "app-api-key-index",
@@ -18,41 +19,15 @@ export class ApiKeyIndexComponent implements OnInit {
   apiKeys$: Observable<ApiKey[]>;
   refresh$: Subject<void> = new Subject<void>();
 
-  keys: ApiKey[] = [
-    {
-      _id: "1",
-      description: "description1",
-      name: "name1",
-      policies: [],
-      active: true
-    },
-    {
-      _id: "2",
-      description: "description2",
-      name: "name2",
-      policies: [],
-      active: true
-    },
-    {
-      _id: "3",
-      description: "description3",
-      name: "name3",
-      policies: [],
-      active: true
-    }
-  ];
-
-  constructor() {}
+  constructor(private apiKeyService: ApiKeyService) {}
 
   ngOnInit(): void {
     this.apiKeys$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
-        of({
-          meta: {
-            total: 3
-          },
-          data: this.keys
-        })
+        this.apiKeyService.getApiKeys(
+          this.paginator.pageSize || 10,
+          this.paginator.pageSize * this.paginator.pageIndex
+        )
       ),
       map(response => {
         this.paginator.length = response.meta.total;

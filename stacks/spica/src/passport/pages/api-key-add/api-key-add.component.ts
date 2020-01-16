@@ -1,8 +1,8 @@
 import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {ApiKey, emptyApiKey} from "src/passport/interfaces/api-key";
 import {Router, ActivatedRoute} from "@angular/router";
-import {filter, switchMap, take} from "rxjs/operators";
-import {of} from "rxjs";
+import {filter, switchMap, take, tap} from "rxjs/operators";
+import {ApiKeyService} from "src/passport/services/api-key.service";
 
 @Component({
   selector: "app-api-key-add",
@@ -13,45 +13,31 @@ export class ApiKeyAddComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
   public apiKey: ApiKey = emptyApiKey();
 
-  keys: ApiKey[] = [
-    {
-      _id: "1",
-      description: "description1",
-      name: "name1",
-      policies: [],
-      active: true
-    },
-    {
-      _id: "2",
-      description: "description2",
-      name: "name2",
-      policies: [],
-      active: true
-    },
-    {
-      _id: "3",
-      description: "description3",
-      name: "name3",
-      policies: [],
-      active: true
-    }
-  ];
+  keys: ApiKey[] = [];
 
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private apiKeyService: ApiKeyService
+  ) {}
 
   ngOnInit() {
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
-        switchMap(params => of(this.keys.find(val => val._id == params.id) as ApiKey)),
+        switchMap(params => this.apiKeyService.getApiKey(params.id)),
         take(1)
       )
       .subscribe(apiKey => (this.apiKey = apiKey));
   }
 
   saveApiKey() {
-    //save logic
-    //then
-    this.router.navigate(["passport/api-key"]);
+    (this.apiKey._id
+      ? this.apiKeyService.updateApiKey(this.apiKey)
+      : this.apiKeyService.insertApiKey(this.apiKey)
+    )
+      .toPromise()
+      .then(() => this.router.navigate(["passport/api-key"]))
+      .catch(error => console.log(error));
   }
 }
