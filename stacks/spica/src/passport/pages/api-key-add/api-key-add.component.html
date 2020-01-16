@@ -2,7 +2,7 @@
   <mat-toolbar-row>
     <h4>
       <mat-icon>vpn_key</mat-icon>
-      <span>{{apiKey.key ? apiKey.name : "Create API Key"}}</span>
+      <span>{{ apiKey._id ? apiKey.name : "Create API Key" }}</span>
     </h4>
   </mat-toolbar-row>
 </ng-template>
@@ -10,13 +10,13 @@
 <mat-card>
   <mat-card-content>
     <form #apiKeyForm="ngForm">
-      <mat-form-field *ngIf="apiKey.key">
+      <mat-form-field *ngIf="apiKey._id">
         <input
           matInput
-          name="apiKeyKey"
+          name="apiKeyId"
           placeholder="API Key"
           disabled
-          [(ngModel)]="apiKey.key"
+          [(ngModel)]="apiKey._id"
           required
         />
       </mat-form-field>
@@ -38,11 +38,7 @@
           placeholder="Description"
           [(ngModel)]="apiKey.description"
           #apiKeyDescriptionModel="ngModel"
-          required
         ></textarea>
-        <mat-error *ngIf="apiKeyDescriptionModel?.errors?.required"
-          >This field is required.</mat-error
-        >
       </mat-form-field>
       <button
         [disabled]="apiKeyForm.invalid"

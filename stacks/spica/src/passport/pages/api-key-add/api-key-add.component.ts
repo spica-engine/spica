@@ -13,24 +13,27 @@ export class ApiKeyAddComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
   public apiKey: ApiKey = emptyApiKey();
 
-  keys = [
+  keys: ApiKey[] = [
     {
       _id: "1",
-      key: "key1",
       description: "description1",
-      name: "name1"
+      name: "name1",
+      policies: [],
+      active: true
     },
     {
       _id: "2",
-      key: "key2",
       description: "description2",
-      name: "name2"
+      name: "name2",
+      policies: [],
+      active: true
     },
     {
       _id: "3",
-      key: "key3",
       description: "description3",
-      name: "name3"
+      name: "name3",
+      policies: [],
+      active: true
     }
   ];
 

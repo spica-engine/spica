@@ -19,7 +19,7 @@
     <mat-table [dataSource]="apiKeys$">
       <ng-container matColumnDef="key">
         <mat-header-cell *matHeaderCellDef>API Key</mat-header-cell>
-        <mat-cell *matCellDef="let apiKey">{{ apiKey.key }}</mat-cell>
+        <mat-cell *matCellDef="let apiKey">{{ apiKey._id }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="name">

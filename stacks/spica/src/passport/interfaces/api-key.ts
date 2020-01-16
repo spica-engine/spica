@@ -1,14 +1,19 @@
+import {Policy} from "./policy";
+
 export interface ApiKey {
   _id?: string;
-  key: string;
   name: string;
-  description: string;
+  description?: string;
+  policies: Policy[];
+  active: boolean;
 }
 
 export function emptyApiKey(): ApiKey {
   return {
-    key: undefined,
+    _id: undefined,
     name: undefined,
-    description: undefined
+    description: undefined,
+    policies: [],
+    active: true
   };
 }
