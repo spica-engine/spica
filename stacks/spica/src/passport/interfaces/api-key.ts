@@ -4,3 +4,11 @@ export interface ApiKey {
   name: string;
   description: string;
 }
+
+export function emptyApiKey(): ApiKey {
+  return {
+    key: undefined,
+    name: undefined,
+    description: undefined
+  };
+}

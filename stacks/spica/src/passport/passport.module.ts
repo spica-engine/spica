@@ -42,6 +42,7 @@ import {MatListModule} from "@angular/material/list";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
 import { ApiKeyIndexComponent } from './pages/api-key-index/api-key-index.component';
+import { ApiKeyAddComponent } from './pages/api-key-add/api-key-add.component';
 
 @NgModule({
   declarations: [
@@ -56,7 +57,8 @@ import { ApiKeyIndexComponent } from './pages/api-key-index/api-key-index.compon
     StrategiesComponent,
     StrategiesAddComponent,
     CanInteractDirective,
-    ApiKeyIndexComponent
+    ApiKeyIndexComponent,
+    ApiKeyAddComponent
   ],
   imports: [
     CommonModule,

@@ -1,0 +1,58 @@
+<ng-template #toolbar>
+  <mat-toolbar-row>
+    <h4>
+      <mat-icon>vpn_key</mat-icon>
+      <span>{{apiKey.key ? apiKey.name : "Create API Key"}}</span>
+    </h4>
+  </mat-toolbar-row>
+</ng-template>
+
+<mat-card>
+  <mat-card-content>
+    <form #apiKeyForm="ngForm">
+      <mat-form-field *ngIf="apiKey.key">
+        <input
+          matInput
+          name="apiKeyKey"
+          placeholder="API Key"
+          disabled
+          [(ngModel)]="apiKey.key"
+          required
+        />
+      </mat-form-field>
+      <mat-form-field>
+        <input
+          matInput
+          name="apiKeyName"
+          placeholder="Name"
+          [(ngModel)]="apiKey.name"
+          #apiKeyNameModel="ngModel"
+          required
+        />
+        <mat-error *ngIf="apiKeyNameModel?.errors?.required">This field is required.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <textarea
+          matInput
+          name="apiKeyDescription"
+          placeholder="Description"
+          [(ngModel)]="apiKey.description"
+          #apiKeyDescriptionModel="ngModel"
+          required
+        ></textarea>
+        <mat-error *ngIf="apiKeyDescriptionModel?.errors?.required"
+          >This field is required.</mat-error
+        >
+      </mat-form-field>
+      <button
+        [disabled]="apiKeyForm.invalid"
+        mat-button
+        color="primary"
+        type="submit"
+        (click)="saveApiKey()"
+      >
+        Save
+      </button>
+    </form>
+  </mat-card-content>
+</mat-card>
