@@ -41,6 +41,7 @@ import {MatGridListModule} from "@angular/material";
 import {MatListModule} from "@angular/material/list";
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
+import { ApiKeyIndexComponent } from './pages/api-key-index/api-key-index.component';
 
 @NgModule({
   declarations: [
@@ -54,7 +55,8 @@ import {CommonModule as SpicaCommon} from "@spica-client/common";
     TabsComponent,
     StrategiesComponent,
     StrategiesAddComponent,
-    CanInteractDirective
+    CanInteractDirective,
+    ApiKeyIndexComponent
   ],
   imports: [
     CommonModule,

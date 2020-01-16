@@ -35,6 +35,16 @@
       </a>
       <a
         mat-tab-link
+        routerLink="api-key"
+        routerLinkActive
+        #rlaApiKey="routerLinkActive"
+        [active]="rlaApiKey.isActive"
+      >
+        <mat-icon>vpn_key</mat-icon>
+        API Keys
+      </a>
+      <a
+        mat-tab-link
         routerLink="settings"
         routerLinkActive
         #rlaSetting="routerLinkActive"

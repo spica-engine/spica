@@ -1,0 +1,68 @@
+<ng-template #toolbar>
+  <mat-toolbar-row>
+    <h4>
+      <mat-icon>vpn_key</mat-icon>
+      <span>API Keys</span>
+    </h4>
+    <span class="space-between"></span>
+    <button mat-icon-button (click)="refresh$.next()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+    <button mat-icon-button>
+      <mat-icon>add</mat-icon>
+    </button>
+  </mat-toolbar-row>
+</ng-template>
+
+<mat-card class="mat-elevation-z25">
+  <mat-card-content>
+    <mat-table [dataSource]="apiKeys$">
+      <ng-container matColumnDef="key">
+        <mat-header-cell *matHeaderCellDef>API Key</mat-header-cell>
+        <mat-cell *matCellDef="let apiKey">{{ apiKey.key }}123</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let apiKey">{{ apiKey.name }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="description">
+        <mat-header-cell *matHeaderCellDef>Description</mat-header-cell>
+        <mat-cell *matCellDef="let apiKey">{{ apiKey.description }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let apiKey">
+          <button mat-icon-button>
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            color="warn"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: 'yes'
+            }"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+  </mat-card-content>
+
+  <mat-card-footer>
+    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </mat-card-footer>
+</mat-card>
+
+<ng-template #dialogTemplate let-answer="answer">
+  <p>This action will delete the API key.</p>
+  <p>Please type {{ answer }} to confirm.</p>
+</ng-template>
