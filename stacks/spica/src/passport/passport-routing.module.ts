@@ -13,7 +13,7 @@ import {PolicyGuard} from "./services/policy.guard";
 import {StrategiesComponent} from "./pages/strategies/strategies.component";
 import {StrategiesAddComponent} from "./pages/strategies-add/strategies-add.component";
 import {ApiKeyIndexComponent} from "./pages/api-key-index/api-key-index.component";
-import { ApiKeyAddComponent } from "./pages/api-key-add/api-key-add.component";
+import {ApiKeyAddComponent} from "./pages/api-key-add/api-key-add.component";
 
 const routes: Routes = [
   {path: "passport/identify", component: IdentifyComponent, data: {layout: false}},
@@ -53,7 +53,14 @@ const routes: Routes = [
         ]
       },
       {path: "settings", component: IdentitySettingsComponent},
-      {path: "api-key", children: [{path: "", component: ApiKeyIndexComponent},{path: "add", component: ApiKeyAddComponent}]}
+      {
+        path: "api-key",
+        children: [
+          {path: "", component: ApiKeyIndexComponent},
+          {path: "add", component: ApiKeyAddComponent},
+          {path: ":id/edit", component: ApiKeyAddComponent}
+        ]
+      }
     ]
   }
 ];

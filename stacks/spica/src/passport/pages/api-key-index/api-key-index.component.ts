@@ -20,24 +20,22 @@ export class ApiKeyIndexComponent implements OnInit {
 
   keys = [
     {
-      key: "dkjasdajsd",
-      description: "test description",
-      name: "test name"
+      _id: "1",
+      key: "key1",
+      description: "description1",
+      name: "name1"
     },
     {
-      key: "dkjasdajsd",
-      description: "test description",
-      name: "test name"
+      _id: "2",
+      key: "key2",
+      description: "description2",
+      name: "name2"
     },
     {
-      key: "dkjasdajsd",
-      description: "test description",
-      name: "test name"
-    },
-    {
-      key: "dkjasdajsd",
-      description: "test description",
-      name: "test name"
+      _id: "3",
+      key: "key3",
+      description: "description3",
+      name: "name3"
     }
   ];
 
@@ -48,7 +46,7 @@ export class ApiKeyIndexComponent implements OnInit {
       switchMap(() =>
         of({
           meta: {
-            total: 4
+            total: 3
           },
           data: this.keys
         })
