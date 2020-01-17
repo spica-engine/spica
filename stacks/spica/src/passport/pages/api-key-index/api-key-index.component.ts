@@ -21,7 +21,7 @@ export class ApiKeyIndexComponent implements OnInit {
 
   constructor(private apiKeyService: MockService) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.apiKeys$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
         this.apiKeyService.getAll(

@@ -1,6 +1,5 @@
 import {Injectable} from "@angular/core";
 import {ApiKey, ApiKeyService} from "../interfaces/api-key";
-import {HttpClient} from "@angular/common/http";
 import {of} from "rxjs";
 import {ObjectId} from "bson";
 import {IndexResult} from "@spica-server/core";

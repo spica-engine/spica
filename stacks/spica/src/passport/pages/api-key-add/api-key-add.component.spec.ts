@@ -63,14 +63,14 @@ describe("ApiKeyAddComponent", () => {
     await fixture.whenStable();
   });
 
-  it("should show emptyApiKey if this page navigated from add button", () => {
+  it("should set apiKey as emptyApiKey if this page navigated from add button", () => {
     expect(component.apiKey).toEqual({
       name: undefined,
       active: true
     });
   });
 
-  it("should show api key which return from service if this page navigated from edit button", async () => {
+  it("should set apiKey which return from service if this page navigated from edit button", async () => {
     component["activatedRoute"].params = of({id: "1"});
     component["apiKeyService"].get = () =>
       of({
