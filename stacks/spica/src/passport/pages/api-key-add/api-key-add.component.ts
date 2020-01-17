@@ -1,7 +1,7 @@
 import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {ApiKey, emptyApiKey} from "src/passport/interfaces/api-key";
 import {Router, ActivatedRoute} from "@angular/router";
-import {filter, switchMap, take} from "rxjs/operators";
+import {filter, switchMap, take, tap} from "rxjs/operators";
 import {MockService} from "src/passport/services/api-key.service";
 
 @Component({
@@ -20,6 +20,10 @@ export class ApiKeyAddComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.getApiKeyFromId();
+  }
+
+  getApiKeyFromId() {
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
