@@ -10,13 +10,13 @@
 <mat-card>
   <mat-card-content>
     <form #apiKeyForm="ngForm">
-      <mat-form-field *ngIf="apiKey._id">
+      <mat-form-field *ngIf="apiKey.key">
         <input
           matInput
-          name="apiKeyId"
+          name="apiKeyKey"
           placeholder="API Key"
           disabled
-          [(ngModel)]="apiKey._id"
+          [(ngModel)]="apiKey.key"
           required
         />
       </mat-form-field>

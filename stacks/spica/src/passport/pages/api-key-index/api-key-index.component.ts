@@ -3,7 +3,7 @@ import {MatPaginator} from "@angular/material";
 import {ApiKey} from "src/passport/interfaces/api-key";
 import {Observable, of, Subject, merge} from "rxjs";
 import {switchMap, map} from "rxjs/operators";
-import {ApiKeyService} from "src/passport/services/api-key.service";
+import {MockService} from "src/passport/services/api-key.service";
 
 @Component({
   selector: "app-api-key-index",
@@ -19,12 +19,12 @@ export class ApiKeyIndexComponent implements OnInit {
   apiKeys$: Observable<ApiKey[]>;
   refresh$: Subject<void> = new Subject<void>();
 
-  constructor(private apiKeyService: ApiKeyService) {}
+  constructor(private apiKeyService: MockService) {}
 
   ngOnInit(): void {
     this.apiKeys$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
-        this.apiKeyService.getApiKeys(
+        this.apiKeyService.getAll(
           this.paginator.pageSize || 10,
           this.paginator.pageSize * this.paginator.pageIndex
         )

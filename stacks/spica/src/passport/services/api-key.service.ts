@@ -1,18 +1,18 @@
 import {Injectable} from "@angular/core";
-import {ApiKey} from "../interfaces/api-key";
+import {ApiKey, ApiKeyService} from "../interfaces/api-key";
 import {HttpClient} from "@angular/common/http";
-import {of, Observable} from "rxjs";
+import {of} from "rxjs";
 import {ObjectId} from "bson";
 import {IndexResult} from "@spica-server/core";
 
 @Injectable({providedIn: "root"})
-export class ApiKeyService {
+export class MockService implements ApiKeyService {
   apiKeys: ApiKey[] = [];
-  constructor(private http: HttpClient) {
+  constructor() {
     this.apiKeys = JSON.parse(localStorage.getItem("apiKeys")) || [];
   }
 
-  getApiKeys(limit?: number, skip?: number): Observable<IndexResult<ApiKey>> {
+  getAll(limit?: number, skip?: number) {
     if (limit || skip) {
       let copyApiKeys = JSON.parse(JSON.stringify(this.apiKeys));
       return of({
@@ -25,29 +25,27 @@ export class ApiKeyService {
     } else {
       return of({meta: {total: this.apiKeys.length}, data: this.apiKeys} as IndexResult<ApiKey>);
     }
-
-    //return this.http.get<ApiKey>(`api:/api-key`);
   }
 
-  getApiKey(id: string) {
+  get(id: string) {
     return of(this.apiKeys.find(apiKey => apiKey._id == id));
-    //return this.http.get<ApiKey>(`api:/api-key/${id}`);
   }
 
-  updateApiKey(apiKey: ApiKey) {
+  update(apiKey: ApiKey) {
     this.apiKeys.map(val => {
       if (val._id == apiKey._id) val = apiKey;
     });
     localStorage.setItem("apiKeys", JSON.stringify(this.apiKeys));
-    return of(apiKey._id);
-    //return this.http.put<ApiKey>(`api:/api-key/${apiKey._id}`, apiKey);
+    return of(apiKey);
   }
 
-  insertApiKey(apiKey: ApiKey) {
-    const _id = new ObjectId().toHexString();
-    this.apiKeys.push({...apiKey, _id: _id});
+  insert(apiKey: ApiKey) {
+    this.apiKeys.push({
+      ...apiKey,
+      key: new ObjectId().toHexString(),
+      _id: new ObjectId().toHexString()
+    });
     localStorage.setItem("apiKeys", JSON.stringify(this.apiKeys));
-    return of(_id);
-    //return this.http.post<ApiKey>(`api:/api-key`, apiKey);
+    return of(apiKey);
   }
 }
