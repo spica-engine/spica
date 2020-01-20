@@ -5,6 +5,8 @@ import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference";
 import {readdirSync} from "fs";
+import {ApiKeyController} from "./apikey/apikey.controller";
+import {ApiKeyService} from "./apikey/apikey.service";
 import {IdentityService} from "./identity";
 import {IdentityController} from "./identity/identity.controller";
 import {PassportOptions, PASSPORT_OPTIONS} from "./interface";
@@ -25,7 +27,10 @@ class PassportCoreModule {
     return {
       module: PassportCoreModule,
       imports: [
-        CorePassportModule.register({defaultStrategy: "jwt", session: false}),
+        CorePassportModule.register({
+          defaultStrategy: options.defaultStrategy || "jwt",
+          session: false
+        }),
         JwtModule.register({
           secret: options.secretOrKey,
           signOptions: {audience: options.audience, issuer: options.issuer, expiresIn: "2 days"}
@@ -69,7 +74,13 @@ export class PassportModule {
   static forRoot(options: PassportOptions): DynamicModule {
     return {
       module: PassportModule,
-      controllers: [PassportController, IdentityController, PolicyController, StrategyController],
+      controllers: [
+        PassportController,
+        IdentityController,
+        PolicyController,
+        StrategyController,
+        ApiKeyController
+      ],
       imports: [
         PassportCoreModule.initialize(options),
         SchemaModule.forChild({
@@ -79,6 +90,7 @@ export class PassportModule {
         })
       ],
       providers: [
+        ApiKeyService,
         StrategyService,
         SamlService,
         JwtStrategy,
