@@ -37,7 +37,10 @@ describe("ApiKey", () => {
   describe("find", () => {
     it("should return empty index", async () => {
       const res = await req.get("/passport/apikey", undefined);
-      expect(res.body).toEqual([]);
+      expect(res.body).toEqual({
+        meta: {total: 0},
+        data: []
+      });
     });
 
     it("should not return empty index", async () => {
@@ -46,7 +49,67 @@ describe("ApiKey", () => {
         description: "test"
       });
       const res = await req.get("/passport/apikey", undefined);
-      expect(res.body).toEqual([apiKey]);
+      expect(res.body).toEqual({
+        data: [apiKey],
+        meta: {total: 1}
+      });
+    });
+
+    it("should sort", async () => {
+      const {body: firstKey} = await req.post("/passport/apikey", {
+        name: "test",
+        description: "test"
+      });
+
+      const {body: secondKey} = await req.post("/passport/apikey", {
+        name: "test1",
+        description: "test1"
+      });
+
+      const {body: keys} = await req.get(`/passport/apikey`, {sort: JSON.stringify({name: -1})});
+
+      expect(keys).toEqual({
+        meta: {total: 2},
+        data: [secondKey, firstKey]
+      });
+    });
+
+    it("should skip", async () => {
+      await req.post("/passport/apikey", {
+        name: "test",
+        description: "test"
+      });
+
+      const {body: secondKey} = await req.post("/passport/apikey", {
+        name: "test1",
+        description: "test1"
+      });
+
+      const {body: keys} = await req.get(`/passport/apikey`, {skip: 1});
+
+      expect(keys).toEqual({
+        meta: {total: 2},
+        data: [secondKey]
+      });
+    });
+
+    it("should limit", async () => {
+      const {body: firstKey} = await req.post("/passport/apikey", {
+        name: "test",
+        description: "test"
+      });
+
+      await req.post("/passport/apikey", {
+        name: "test1",
+        description: "test1"
+      });
+
+      const {body: keys} = await req.get(`/passport/apikey`, {limit: 1});
+
+      expect(keys).toEqual({
+        meta: {total: 2},
+        data: [firstKey]
+      });
     });
   });
 

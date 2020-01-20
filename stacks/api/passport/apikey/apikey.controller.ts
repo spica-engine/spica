@@ -6,9 +6,11 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
   UseGuards
 } from "@nestjs/common";
 import {AuthGuard} from "@nestjs/passport";
+import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import * as uniqid from "uniqid";
@@ -22,8 +24,38 @@ export class ApiKeyController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:index"))
-  find() {
-    return this.aks.find();
+  find(
+    @Query("limit", DEFAULT(10), NUMBER) limit: number,
+    @Query("skip", DEFAULT(0), NUMBER) skip: number,
+    @Query("sort", JSONP) sort: {[k: string]: number}
+  ) {
+    const dataPipeline: object[] = [{$skip: skip}, {$limit: limit}];
+    if (sort) {
+      dataPipeline.push({$sort: sort});
+    }
+    const pipeline = [
+      {
+        $facet: {
+          meta: [{$count: "total"}],
+          data: dataPipeline
+        }
+      },
+      {
+        $set: {
+          meta: {
+            $cond: [
+              {$arrayElemAt: ["$meta", 0]},
+              {$arrayElemAt: ["$meta", 0]},
+              {$const: {total: 0}}
+            ]
+          }
+        }
+      }
+    ];
+    return this.aks
+      .aggregate(pipeline)
+      .toArray()
+      .then(r => r[0]);
   }
 
   @Get(":id")
