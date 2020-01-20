@@ -1,11 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "passport",
-    srcs = glob(["**/*.ts"]),
+    srcs = glob(
+        include = ["**/*.ts"],
+        exclude = ["**/*.spec.ts"],
+    ),
     data = glob(["**/*.json"]),
     module_name = "@spica-server/passport",
     deps = [
@@ -29,6 +33,30 @@ ts_library(
         "@npm//pem",
         "@npm//rxjs",
         "@npm//saml2-js",
+        "@npm//uniqid",
+    ],
+)
+
+ts_library(
+    name = "passport_test_lib",
+    testonly = True,
+    srcs = glob(["**/*.spec.ts"]),
+    deps = [
+        ":passport",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "passport_test",
+    deps = [
+        ":passport_test_lib",
     ],
 )
 
