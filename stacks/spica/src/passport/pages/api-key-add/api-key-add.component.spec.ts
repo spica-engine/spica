@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
+import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 import {ApiKeyAddComponent} from "./api-key-add.component";
 import {
   MatIconModule,
@@ -9,8 +9,9 @@ import {
 } from "@angular/material";
 import {FormsModule} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {ActivatedRoute, Router} from "@angular/router";
+import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";
+import {RouterTestingModule} from "@angular/router/testing";
 
 import {MockService} from "../../services/api-key.service";
 import {ApiKey} from "../../interfaces/api-key";
@@ -28,6 +29,7 @@ describe("ApiKeyAddComponent", () => {
         MatFormFieldModule,
         MatInputModule,
         FormsModule,
+        RouterTestingModule,
         NoopAnimationsModule
       ],
       providers: [
@@ -38,7 +40,7 @@ describe("ApiKeyAddComponent", () => {
           }
         },
         {
-          provide: Router,
+          provide: RouterTestingModule,
           useValue: {
             navigate: () => {}
           }

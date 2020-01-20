@@ -7,11 +7,10 @@ import {IndexResult} from "@spica-server/core";
 @Injectable({providedIn: "root"})
 export class MockService implements ApiKeyService {
   apiKeys: ApiKey[] = [];
-  constructor() {
-    this.apiKeys = JSON.parse(localStorage.getItem("apiKeys")) || [];
-  }
+  constructor() {}
 
   getAll(limit?: number, skip?: number) {
+    this.apiKeys = JSON.parse(localStorage.getItem("apiKeys")) || [];
     if (limit || skip) {
       let copyApiKeys = JSON.parse(JSON.stringify(this.apiKeys));
       return of({

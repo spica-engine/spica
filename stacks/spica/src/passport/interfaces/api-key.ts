@@ -8,7 +8,7 @@ export interface ApiKey {
   key?: string;
   name: string;
   description?: string;
-  policies?: Policy[];
+  policies?: string[];
   active: boolean;
 }
 
