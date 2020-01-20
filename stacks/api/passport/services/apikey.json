@@ -1,0 +1,12 @@
+{
+	"$schema": "http://spica.internal/passport/service",
+	"$id": "http://spica.internal/passport/apikey",
+	"$resource": "passport:apikey",
+	"title": "Passport Api Key",
+	"actions": [
+		"passport:apikey:index",
+		"passport:apikey:show",
+		"passport:apikey:update",
+		"passport:apikey:delete"
+	]
+}

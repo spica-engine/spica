@@ -1,0 +1,14 @@
+{
+    "$schema": "http://spica.internal/passport/policy",
+    "_id": "ApiKeyReadOnlyAccess",
+    "name": "ApiKey Read Only Access",
+    "description": "Read only access to passport apikey service.",
+    "statement": [
+      {
+        "effect": "allow",
+        "action": "passport:apikey:index",
+        "resource": "*",
+        "service": "passport:apikey"
+      }
+    ]
+  }
