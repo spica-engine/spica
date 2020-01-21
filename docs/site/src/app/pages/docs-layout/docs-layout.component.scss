@@ -61,7 +61,6 @@
 
     mat-sidenav-content {
       ::ng-deep {
-
         app-doc,
         app-doc-list {
           flex: 1;
@@ -76,8 +75,8 @@
     flex: 1 1 auto;
   }
 
-  // Added: 
-  @media screen and (max-width:1280px) {
+  // Added:
+  @media screen and (max-width: 1280px) {
     mat-sidenav-container {
       &.handset {
         margin: 0 !important;
@@ -89,14 +88,12 @@
           left: 0;
         }
       }
-
     }
   }
 
-  @media screen and (min-width:600px) {
+  @media screen and (min-width: 600px) {
     .nav-mobile {
       visibility: hidden !important;
     }
   }
-
 }

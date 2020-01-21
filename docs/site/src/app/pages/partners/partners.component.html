@@ -92,7 +92,7 @@
   subtitle="Don’t hesitate to contact them for:"
 >
   <div fxLayout="row" fxFlex="100%" fxLayoutAlign="flex-end">
-    <div fxFlex.gt-sm="25%" fxflex.lt-md="100%"  fxLayoutAlign="center center">
+    <div fxFlex.gt-sm="25%" fxflex.lt-md="100%" fxLayoutAlign="center center">
       <div fxFlex="75%">
         <mat-form-field appearance="outline">
           <mat-label>Select from country for see partner.</mat-label>
@@ -112,7 +112,7 @@
   </div>
 
   <div fxFlex="100">
-    <div fxFlex="60"  fxLayout="row wrap" fxLayoutAlign="start" fxLayoutGap="5px grid">
+    <div fxFlex="60" fxLayout="row wrap" fxLayoutAlign="start" fxLayoutGap="5px grid">
       <div intersect="fly" fxFlex.lt-md="100%" fxFlex="50%" *ngFor="let item of partnerFilter">
         <a href="{{ item.url }}" target="_blank">
           <img src="{{ item.logo }}" width="250" height="125" />

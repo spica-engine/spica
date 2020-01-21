@@ -1,15 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from "@angular/core";
 
 @Component({
-  selector: 'app-limit-policy',
-  templateUrl: './limit-policy.component.html',
-  styleUrls: ['./limit-policy.component.scss']
+  selector: "app-limit-policy",
+  templateUrl: "./limit-policy.component.html",
+  styleUrls: ["./limit-policy.component.scss"]
 })
 export class LimitPolicyComponent implements OnInit {
+  constructor() {}
 
-  constructor() { }
-
-  ngOnInit() {
-  }
-
+  ngOnInit() {}
 }

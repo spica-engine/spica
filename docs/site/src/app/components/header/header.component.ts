@@ -45,8 +45,5 @@ export class HeaderComponent implements OnInit {
       .pipe(map((data: any) => data.stargazers_count));
   }
 
-
-  ngOnInit() {
-    
-  }
+  ngOnInit() {}
 }

@@ -2,7 +2,8 @@
 
 @include mat-core(mat-typography-config($font-family: '"Ubuntu", sans-serif'));
 
-$spica-primary: (50: #e4e4ea,
+$spica-primary: (
+  50: #e4e4ea,
   100: #bbbbcb,
   200: #8e8ea8,
   300: #606085,
@@ -16,7 +17,8 @@ $spica-primary: (50: #e4e4ea,
   A200: #3131ff,
   A400: #0000fd,
   A700: #0000e4,
-  contrast: (50: #000000,
+  contrast: (
+    50: #000000,
     100: #000000,
     200: #000000,
     300: #ffffff,
@@ -29,9 +31,12 @@ $spica-primary: (50: #e4e4ea,
     A100: #ffffff,
     A200: #ffffff,
     A400: #ffffff,
-    A700: #ffffff));
+    A700: #ffffff
+  )
+);
 
-$spica-accent: (50: #e3f7fc,
+$spica-accent: (
+  50: #e3f7fc,
   100: #b9ebf8,
   200: #8adef4,
   300: #5bd1ef,
@@ -45,7 +50,8 @@ $spica-accent: (50: #e3f7fc,
   A200: #ceeeff,
   A400: #9bddff,
   A700: #81d4ff,
-  contrast: (50: #000000,
+  contrast: (
+    50: #000000,
     100: #000000,
     200: #000000,
     300: #000000,
@@ -58,9 +64,12 @@ $spica-accent: (50: #e3f7fc,
     A100: #000000,
     A200: #000000,
     A400: #000000,
-    A700: #000000));
+    A700: #000000
+  )
+);
 
-$spica-light: (50: #fdfdfd,
+$spica-light: (
+  50: #fdfdfd,
   100: #fbfbfb,
   200: #f8f9f9,
   300: #f5f6f6,
@@ -74,7 +83,8 @@ $spica-light: (50: #fdfdfd,
   A200: #ffffff,
   A400: #ffffff,
   A700: #ffffff,
-  contrast: (50: #000000,
+  contrast: (
+    50: #000000,
     100: #000000,
     200: #000000,
     300: #000000,
@@ -87,7 +97,9 @@ $spica-light: (50: #fdfdfd,
     A100: #000000,
     A200: #000000,
     A400: #000000,
-    A700: #000000));
+    A700: #000000
+  )
+);
 
 $spica-app-primary: mat-palette($spica-primary);
 $spica-app-accent: mat-palette($spica-accent);
@@ -147,8 +159,7 @@ body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
-
-// 
+//
 doc-cards {
   @media screen and(max-width:1280px) {
     doc-card {

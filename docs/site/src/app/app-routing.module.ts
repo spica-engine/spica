@@ -11,6 +11,7 @@ import {PartnersComponent} from "./pages/partners/partners.component";
 import {SupportPolicyComponent} from "./pages/support-policy/support-policy.component";
 import {LimitPolicyComponent} from "./pages/limit-policy/limit-policy.component";
 import {FairusagePolicyComponent} from "./pages/fairusage-policy/fairusage-policy.component";
+import {CalendlyComponent} from "./pages/calendly/calendly.component";
 
 const routes: Routes = [
   {
@@ -66,6 +67,10 @@ const routes: Routes = [
   {
     path: "fairusage-policy",
     component: FairusagePolicyComponent
+  },
+  {
+    path: "calendly",
+    component: CalendlyComponent
   }
 ];
 
