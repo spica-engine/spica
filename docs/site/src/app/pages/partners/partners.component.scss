@@ -6,34 +6,90 @@
   home-section.partners {
     div.left {
       flex-flow: inherit;
+
       div {
         margin-top: 10px;
       }
+
       img {
         max-width: 10% !important;
       }
+
       p {
         align-self: center;
         text-align: left;
         margin: 10px;
+
         span {
           margin-top: 2px;
           display: block;
         }
       }
     }
+
     .mobile {
       div {
         img {
           max-width: 30% !important;
         }
+
         p {
           font-size: 11px !important;
         }
       }
     }
+
     .mobile-img {
       max-width: 100%;
     }
+  }
+
+  mat-form-field {
+    width: 100%;
+
+
+  }
+
+  mat-card {
+    mat-toolbar {
+      margin-bottom: 14px;
+    }
+
+    mat-expansion-panel {
+      box-shadow: unset;
+    }
+  }
+
+  .companyImage {
+    vertical-align: middle;
+  }
+
+  .partnerInformation {
+    width: 100%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .partner {
+    padding: 25px;
+    border: 1px solid #efefef;
+    border-radius: 8px;
+  }
+
+
+}
+
+::ng-deep .mat-form-field-wrapper {
+  margin: 0 10px 0 0 !important;
+  padding: 0 !important;
+}
+
+.partnerSearch {
+  height: 100%;
+
+  button {
+    height: 100%!important;
   }
 }

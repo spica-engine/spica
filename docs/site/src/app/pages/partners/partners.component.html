@@ -1,3 +1,87 @@
+<!--<app-header></app-header>
+
+<home-section
+  class="partners"
+  title="Best Partners For Your Needs"
+  description="Choose a best partner for your needs. There are dozens of
+  selected partner agencies in the world. All of them are licensed agencies and having official Spica tests."
+  subtitle="Don’t hesitate to contact them for:"
+>
+
+  <div intersect="fly" class="left" fxFlex.gt-md="60" fxFlex.lt-md="100%" ngClass.lt-md="mobile">
+    <div fxFlex="50">
+      <img fxFlex="50" src="assets/icons/setting.svg" alt="Setting" />
+      <p fxFlex="50">Technical <span>Consulting</span></p>
+    </div>
+    <div fxFlex="50">
+      <img fxFlex="50" src="assets/icons/close.svg" alt="close" />
+      <p fxFlex="50">Spica <span>Implementation</span></p>
+    </div>
+    <div fxFlex="50">
+      <img fxFlex="50" src="assets/icons/monitor.svg" alt="Monitor" />
+      <p fxFlex="50">Spica <span>Maintenance</span></p>
+    </div>
+    <div fxFlex="50">
+      <img fxFlex="50" src="assets/icons/bulb.svg" alt="Buld" />
+      <p fxFlex="50">Creating Your <span>Spica Architecture</span></p>
+    </div>
+    <div fxFlex="50">
+      <img fxFlex="50" src="assets/icons/draw.svg" alt="Draw" />
+      <p fxFlex="50">Build Your <span>Next Unicorn Project</span></p>
+    </div>
+  </div>
+
+  <div fxLayout="row" fxLayout.lt-md="column" fxLayoutGap="20px" fxFlex.gt-sm="100%">
+    <div fxFlex="30%" fxFlex.lt-md="100%">
+      <mat-card>
+        <mat-toolbar><mat-icon>filter_list</mat-icon> Filter </mat-toolbar>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Select from country for see partner.</mat-label>
+          <mat-select
+            name="country"
+            (selectionChange)="countrySelect()"
+            [(value)]="selectedCountry"
+          >
+            <mat-option *ngFor="let country of countryList | keyvalue" [value]="country.key">
+              {{ country.value }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-card>
+    </div>
+    <div fxFlex="70%" fxFlex.lt-md="100%" *ngIf="partnerFilter.length > 0; else nopartnerFound">
+      <mat-card>
+        <mat-accordion *ngFor="let item of partnerFilter">
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{ item.companyName }}
+              </mat-panel-title>
+              <mat-panel-description>
+                {{ item.country }}
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <mat-label>
+              <img src="{{ item.logo }}" />
+              {{ item.description }}
+            </mat-label>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </mat-card>
+    </div>
+
+    <ng-template #nopartnerFound>
+      <div>No results were found for your filters.</div>
+    </ng-template>
+  </div>
+</home-section>
+
+<app-footer></app-footer>
+
+  -->
+
 <app-header></app-header>
 
 <home-section
@@ -7,6 +91,36 @@
   selected partner agencies in the world. All of them are licensed agencies and having official Spica tests."
   subtitle="Don’t hesitate to contact them for:"
 >
+  <div fxLayout="row" fxFlex="100%" fxLayoutAlign="flex-end">
+    <div fxFlex.gt-sm="25%" fxflex.lt-md="100%"  fxLayoutAlign="center center">
+      <div fxFlex="75%">
+        <mat-form-field appearance="outline">
+          <mat-label>Select from country for see partner.</mat-label>
+          <mat-select name="country" [(value)]="selectedCountry">
+            <mat-option *ngFor="let country of countryList | keyvalue" [value]="country.key">
+              {{ country.value }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div fxFlex="25%" class="partnerSearch">
+        <button mat-flat-button color="primary" class="btn" (click)="countrySelect()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div fxFlex="100">
+    <div fxFlex="60"  fxLayout="row wrap" fxLayoutAlign="start" fxLayoutGap="5px grid">
+      <div intersect="fly" fxFlex.lt-md="100%" fxFlex="50%" *ngFor="let item of partnerFilter">
+        <a href="{{ item.url }}" target="_blank">
+          <img src="{{ item.logo }}" width="250" height="125" />
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div intersect="fly" class="left" fxFlex.gt-md="60" fxFlex.lt-md="100%" ngClass.lt-md="mobile">
     <div fxFlex="50">
       <img fxFlex="50" src="assets/icons/setting.svg" alt="Setting" />
@@ -31,13 +145,30 @@
   </div>
   <img
     fxFlex.gt-md="40"
-    fxFlex.gt-xs="100%"
+    fxFlex.gt-xs="auto"
     ngClass.lt-md="mobile-img"
     intersect="flyOne"
     wait="true"
     src="assets/artboard/partner.svg"
     alt="Partner"
   />
+
+  <div
+    fxLayout="row wrap"
+    fxLayout.lt-md="column"
+    fxLayoutGap="1% grid"
+    fxLayoutAlign="left center"
+    fxFlex.gt-sm="column"
+  >
+    <!--
+    <ng-template #nopartnerFound>
+      <div class="partnerInformation">
+        <mat-icon>info</mat-icon> No results were found for your filters.
+      </div>
+    </ng-template>
+
+    -->
+  </div>
 </home-section>
 
 <app-footer></app-footer>
