@@ -1,8 +1,20 @@
-<app-header>
+<app-header *ngIf="innerWidth > 1280">
   <button slot="beforelogo" mat-icon-button fxHide.gt-md="true" (click)="drawer.toggle()">
     <mat-icon>sort</mat-icon>
   </button>
 </app-header>
+
+<mat-toolbar color="primary" *ngIf="innerWidth <= 1280">
+  <button mat-icon-button (click)="drawer.toggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <!-- This fills the remaining space of the current row -->
+  <span class="fill-space"></span>
+  <!--
+  <span>Spica</span>
+  -->
+</mat-toolbar>
 
 <mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
   <mat-sidenav
@@ -11,6 +23,12 @@
     [opened]="!(isHandset$ | async)"
     ngClass.gt-md="desktop"
   >
+    <mat-nav-list *ngIf="innerWidth <= 1280">
+      <a href="https://spicaengine.com/" target="_blank">
+        <h6 mat-subheader>Website <mat-icon>open_in_new</mat-icon></h6>
+      </a>
+    </mat-nav-list>
+
     <mat-nav-list *ngFor="let contentDoc of ($contentDocs | async)?.children">
       <h6 mat-subheader [routerLink]="[contentDoc.name]" routerLinkActive="active">
         {{ contentDoc.name }}

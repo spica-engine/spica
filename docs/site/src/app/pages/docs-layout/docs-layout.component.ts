@@ -1,5 +1,5 @@
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, HostListener} from "@angular/core";
 import {Observable} from "rxjs";
 import {map, startWith} from "rxjs/operators";
 import {DocService} from "../../services/doc.service";
@@ -10,6 +10,8 @@ import {DocService} from "../../services/doc.service";
   styleUrls: ["./docs-layout.component.scss"]
 })
 export class DocsLayoutComponent implements OnInit {
+  innerWidth:number;
+
   $apiDocs: Observable<any>;
   $contentDocs: Observable<any>;
   isHandset$: Observable<boolean> = this.breakpointObserver
@@ -23,6 +25,13 @@ export class DocsLayoutComponent implements OnInit {
     this.$apiDocs = docs.getApiDocs();
     this.$contentDocs = docs.getContentDocs();
   }
+  @HostListener("window:resize", ["$event"])
+  onResize(event) {
+    this.innerWidth = window.innerWidth;
+    console.log(this.innerWidth);
+  }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.innerWidth = window.innerWidth;
+  }
 }
