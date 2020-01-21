@@ -309,6 +309,7 @@
           font-size: 36px;
           margin: 5px 0px;
           height: 50px;
+
           .period {
             font-size: 14px;
             display: block;
@@ -317,5 +318,15 @@
         }
       }
     }
+  }
+
+  .end {
+
+
+    .link-button {
+      height: 50px;
+      font-size: 125%;
+    }
+
   }
 }
