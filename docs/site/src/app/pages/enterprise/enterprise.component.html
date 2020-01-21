@@ -1,5 +1,6 @@
 <app-header></app-header>
 
+<!--
 <home-section
   class="enterprise"
   title="For Enterprise/Agency"
@@ -7,15 +8,15 @@
   deploy for every device. You can develop mobile application,
   website or PWA faster and secure."
 >
-  <img
-    intersect="flyOne"
-    wait="true"
-    ngClass.lt-md="mobile-img"
-    fxFlex.lt-md="30%"
-    fxFlex.gt-sm="35%"
-    src="assets/artboard/enterprise.svg"
-    alt="Enterprise"
-  />
+  <div fxFlex.lt-md="30%" fxFlex.gt-sm="35%">
+    <img
+      intersect="flyOne"
+      wait="true"
+      ngClass.lt-md="mobile-img"
+      src="assets/artboard/enterprise.svg"
+      alt="Enterprise"
+    />
+  </div>
   <ul fxFlex.lt-md="100%" fxFlex="60%" fxLayout="column" fxLayoutAlign="space-between">
     <li>
       <h3>Dedicated Solution Architects</h3>
@@ -44,5 +45,447 @@
     </li>
   </ul>
 </home-section>
+-->
 
+<home-section
+  class="enterprise"
+  title="Spica Services"
+  description="You don’t need to have full stack team from now. Set the rules once,
+  deploy for every device. You can develop mobile application,
+  website or PWA faster and secure."
+>
+  <div class="content-wrapper">
+    <div fxFlex.lt-md="30%" fxFlex.gt-sm="35%">
+      <img
+        intersect="flyOne"
+        wait="true"
+        ngClass.lt-md="mobile-img"
+        src="assets/artboard/enterprise.svg"
+        alt="Enterprise"
+      />
+    </div>
+
+    <div
+      fxFlex.lt-md="100%"
+      fxFlex="60%"
+      fxLayout.lt-md="row wrap"
+      fxLayoutGap="14px grid"
+      fxLayout="column"
+      fxLayoutAlign="space-between"
+    >
+      <h3 class="description-title">Managed Spica</h3>
+      <p>
+        To start faster and focus better on products, we have a SaaS solution for you. Just create a
+        running Spica Instance less than 2 minutes. We take care all DevOps in our cloud servers.
+      </p>
+
+      <!--      <div fxLayoutAlign="space-between" class="enterprise-button-wrapper">
+        <button
+          fxFlex="45%"
+          fxLayoutAlign="center"
+          fxLayout="column"
+          mat-flat-button
+          color="primary"
+        >
+          Register For Free
+        </button>
+        <button
+          fxFlex="45%"
+          fxLayoutAlign="center"
+          fxLayout="column"
+          mat-flat-button
+          color="primary"
+        >
+          Sign In
+        </button>
+      </div>
+      -->
+    </div>
+  </div>
+</home-section>
+
+<section class="content-wrapper pt-0">
+  <div class="container  unset-padding" fxFlex="100%" fxLayoutAlign="space-around">
+    <div fxFlex="30" fxFlex.lt-md="100%" fxLayout="column">
+      <h3 class="description-title">Don’t Spend Time on Maintenance</h3>
+      <p>
+        We handle all Spica Instances and keep them up-to-date with the latest Spica versions. Don’t
+        spend time on data security, backups or server maintenance.
+      </p>
+    </div>
+
+    <div fxFlex="30" fxFlex.lt-md="100%" fxLayout="column">
+      <h3 class="description-title">Copy Images</h3>
+      <p>
+        Do you need another Spica Instance for your other client? Copy your server images just with
+        one click.
+      </p>
+    </div>
+
+    <div fxFlex="30" fxFlex.lt-md="100%" fxLayout="column">
+      <h3 class="description-title">One Account</h3>
+      <p>
+        Manage your clients or projects with one account. With a multi-tenant architecture, you can
+        manage multiple projects in the easiest way.
+      </p>
+    </div>
+  </div>
+
+  <div class="container unset-padding" fxFlex="100%" fxLayoutAlign="space-around ">
+    <div fxFlex="100">
+      <h4 class="info text-default">
+        Speed up the development with Managed Spica. With our scalable infrastructure, you will love
+        pay-as-you-go billing.
+      </h4>
+    </div>
+  </div>
+
+  <div class="flex-margin br-bottom"></div>
+
+  <div class="container" fxFlex="100%" fxLayoutAlign="space-around">
+    <div fxFlex="100%">
+      <ul fxLayout="row wrap">
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">update</mat-icon> <span>Auto-Updates</span>
+        </li>
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">supervised_user_circle</mat-icon>
+          <span>Unlimited Roles</span>
+        </li>
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">translate</mat-icon> <span>Unlimited Locales</span>
+        </li>
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">code</mat-icon> <span>GraphQL+REST API</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">location_city</mat-icon> <span>Monitoring</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">content_copy</mat-icon> <span>Team Management</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">photo_size_select_small</mat-icon>
+          <span>Automatic Backups</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">timeline</mat-icon> <span>Tier Resizing</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">flash_on</mat-icon> <span>Blazingly Fast</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">exit_to_app</mat-icon> <span>No Commitment</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="flex-margin br-bottom"></div>
+
+  <div class="container" fxFlex="100%" fxLayoutAlign="space-around">
+    <div fxFlex="100%">
+      <div class="packet" fxFlex="20%">
+        <mat-card class="unset-padding">
+          <mat-toolbar class="bg-black">
+            <mat-icon class="packet-icon">star_border</mat-icon>
+          </mat-toolbar>
+          <mat-card-content>
+            <h4 class="packet-title">Small</h4>
+            <ul class="packet-information">
+              <li>5.000 Entries</li>
+              <li>100.000 Requests</li>
+              <li>2GB Storage Limit</li>
+              <li class="price">29$ <span class="period">per month</span></li>
+            </ul>
+            <div class="get">
+              <a href="https://github.com/spica-engine/spica" target="_blank">
+                <button mat-flat-button class="gray">Get Started</button>
+              </a>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="packet" fxFlex="20%">
+        <mat-card class="unset-padding">
+          <mat-toolbar class="blue">
+            <mat-icon class="packet-icon">star_border</mat-icon>
+          </mat-toolbar>
+          <mat-card-content>
+            <h4 class="packet-title">Medium</h4>
+
+            <ul class="packet-information">
+              <li>50.000 Entries</li>
+              <li>400.000 Requests</li>
+              <li>10GB Storage Limit</li>
+              <li class="price">49$ <span class="period">per month</span></li>
+            </ul>
+            <div class="get">
+              <button mat-flat-button class="gray">Get Started</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="packet" fxFlex="20%">
+        <mat-card class="unset-padding">
+          <mat-toolbar class="blue">
+            <mat-icon class="packet-icon">star_border</mat-icon>
+          </mat-toolbar>
+          <mat-card-content>
+            <h4 class="packet-title">Large</h4>
+            <ul class="packet-information">
+              <li>250.000 Entries</li>
+              <li>1.000.000 Requests</li>
+              <li>50GB Storage Limit</li>
+              <li class="price">99$ <span class="period">per month</span></li>
+            </ul>
+            <div class="get">
+              <button mat-flat-button class="gray">Get Started</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="packet" fxFlex="20%">
+        <mat-card class="unset-padding">
+          <mat-toolbar class="blue">
+            <mat-icon class="packet-icon">star_border</mat-icon>
+          </mat-toolbar>
+          <mat-card-content>
+            <h4 class="packet-title">xLarge</h4>
+            <ul class="packet-information">
+              <li>750.000 Entries</li>
+              <li>10.000.000 Requests</li>
+              <li>250GB Storage Limit</li>
+              <li class="price">269$ <span class="period">per month</span></li>
+            </ul>
+            <div class="get">
+              <button mat-flat-button class="gray">Get Started</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="packet" fxFlex="20%">
+        <mat-card class="unset-padding">
+          <mat-toolbar class="gray">
+            <mat-icon class="packet-icon">star_border</mat-icon>
+          </mat-toolbar>
+          <mat-card-content>
+            <h4 class="packet-title">Enterprise</h4>
+            <ul class="packet-information">
+              <li>Custom Entries</li>
+              <li>Custom Requests</li>
+              <li>Custom Storage Limit</li>
+              <li class="price"></li>
+            </ul>
+            <div class="get">
+              <button mat-flat-button class="gray">Talk to us</button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" fxFlex="100%" fxLayout="row" fxLayoutAlign="center center">
+    <div>
+      <p>
+        All tiers are subject to our
+        <a [routerLink]="['/limit-policy']"> Technical Limits Policy</a>,
+        <a [routerLink]="['/support-policy']">Support Policy</a>, and
+        <a [routerLink]="['/fairusage-policy']">Usage Policy</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="content-wrapper">
+  <div class="container plugin" fxFlex="100%" fxLayout="column">
+    <div>
+      <div fxFlex="70">
+        <h3><mat-icon>info</mat-icon> On-Premise License</h3>
+        <p>
+          The on-premise license allows you to use exclusive features, have the premium support and
+          Spica Services such as Assetstore.
+        </p>
+      </div>
+      <div fxFlex="30" class="price" fxLayoutAlign="center center" fxLayout="column">
+        <h3>Starting at 30$</h3>
+        <span class="text-default">per month</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container plugin" fxFlex="100%" fxLayout="column">
+    <div>
+      <div fxFlex="70">
+        <h3><mat-icon>info</mat-icon> Solution Architect</h3>
+        <p>
+          Our solution architects scan your projects monthly and work on your project a full day per
+          month. We research on how we can improve and optimize your Spica architecture.
+        </p>
+      </div>
+      <div fxFlex="30" class="price" fxLayoutAlign="center center" fxLayout="column">
+        <h3>Starting at 30$</h3>
+        <span class="text-default">per month</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container plugin" fxFlex="100%" fxLayout="column">
+    <div>
+      <div fxFlex="70">
+        <h3><mat-icon>info</mat-icon> Training Onboarding</h3>
+        <p>
+          We train you about our tools, Spica environment, and Spica services. We analyze your
+          project needs first. Then we help you to understand how Spica can improve your development
+          stack. In three hours, we co-work with you and show the best practices for your project.
+        </p>
+      </div>
+      <div fxFlex="30" class="price" fxLayoutAlign="center center" fxLayout="column">
+        <h3>Starting at 30$</h3>
+        <span class="text-default">per month</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container plugin" fxFlex="100%" fxLayout="column">
+    <div>
+      <div fxFlex="70">
+        <h3><mat-icon>info</mat-icon> Premium Support Service</h3>
+        <p>
+          For critic projects, customer support services are very important. We know each second is
+          valuable for high volume projects, start-ups, and enterprises. We create a private slack
+          channel with you and prioritize your emails.
+        </p>
+      </div>
+      <div fxFlex="30" class="price" fxLayoutAlign="center center" fxLayout="column">
+        <h3>Starting at 30$</h3>
+        <span class="text-default">per month</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content-wrapper bg-black">
+  <div class="container" fxFlex="100%" fxLayoutAlign="center">
+    <div fxFlex="100">
+      <h1 class="info text-white">
+        REQUEST A DEMO
+      </h1>
+      <h4 class="info text-white">
+        Options for Premium Support, On-Boarding, Exclusive Integrations and Integrated Success
+        Services guarantees your success.
+      </h4>
+
+      <button mat-flat-button class="contact-button">Talk to an expert</button>
+    </div>
+  </div>
+
+  <div class="container" fxFlex="100%" fxLayoutAlign="space-around">
+    <div fxFlex="100%">
+      <ul fxLayout="row wrap">
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">update</mat-icon> <span>Auto-Updates</span>
+        </li>
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">supervised_user_circle</mat-icon>
+          <span>Unlimited Roles</span>
+        </li>
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">translate</mat-icon> <span>Unlimited Locales</span>
+        </li>
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">code</mat-icon> <span>GraphQL+REST API</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">location_city</mat-icon> <span>Monitoring</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">content_copy</mat-icon> <span>Team Management</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">photo_size_select_small</mat-icon>
+          <span>Automatic Backups</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">timeline</mat-icon> <span>Tier Resizing</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">flash_on</mat-icon> <span>Blazingly Fast</span>
+        </li>
+
+        <li class="enterprise-property" fxFlex="20%">
+          <mat-icon class="enterprise-icon">exit_to_app</mat-icon> <span>No Commitment</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="content-wrapper">
+  <div class="container" fxFlex="100%" fxLayoutAlign="center center">
+    <div fxFlex.lt-md="30%" fxFlex.gt-sm="35%">
+      <img
+        intersect="flyOne"
+        wait="true"
+        ngClass.lt-md="mobile-img"
+        src="assets/artboard/partner.svg"
+        alt="Enterprise"
+      />
+    </div>
+
+    <div
+      fxFlex.lt-md="100%"
+      fxFlex="60%"
+      fxLayout.lt-md="row wrap"
+      fxLayoutGap="14px grid"
+      fxLayout="column"
+    >
+      <h3 class="description-title">Free for Open Source</h3>
+      <p>
+        Free Starter repository plan for Open Source and Open Content projects. Spica has been
+        licensed under GNU Affero General Public License for non-commercial projects, open content,
+        academic studies and projects in development.
+        <a href="https://github.com/spica-engine/spica" target="_blank">
+          Visit GitHub for Open Source
+        </a>
+      </p>
+
+      <div fxFlex="100%" fxLayoutAlign="space-between" class="enterprise-button-wrapper">
+        <a fxFlex="45%" fxLayoutAlign="center" fxLayout="column" href="#" target="_blank">
+          <button class="link-button" mat-flat-button color="primary">
+            Request a demo
+          </button>
+        </a>
+
+        <a
+          fxFlex="45%"
+          fxLayoutAlign="center"
+          fxLayout="column"
+          href="https://github.com/spica-engine/spica"
+          target="_blank"
+        >
+          <button class="link-button" mat-flat-button color="primary">
+            Get started
+          </button>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
 <app-footer></app-footer>
