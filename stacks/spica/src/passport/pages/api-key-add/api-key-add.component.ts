@@ -23,10 +23,6 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.getApiKeyFromId();
-  }
-
-  getApiKeyFromId() {
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),

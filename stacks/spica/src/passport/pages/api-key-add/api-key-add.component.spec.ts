@@ -83,7 +83,7 @@ describe("ApiKeyAddComponent", () => {
         policies: [],
         description: "test description"
       } as ApiKey);
-    component.getApiKeyFromId();
+    component.ngOnInit();
 
     fixture.detectChanges();
 
