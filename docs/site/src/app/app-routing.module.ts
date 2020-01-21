@@ -8,6 +8,9 @@ import {HomeComponent} from "./pages/home/home.component";
 import {FeaturesComponent} from "./pages/features/features.component";
 import {EnterpriseComponent} from "./pages/enterprise/enterprise.component";
 import {PartnersComponent} from "./pages/partners/partners.component";
+import {SupportPolicyComponent} from "./pages/support-policy/support-policy.component";
+import {LimitPolicyComponent} from "./pages/limit-policy/limit-policy.component";
+import {FairusagePolicyComponent} from "./pages/fairusage-policy/fairusage-policy.component";
 
 const routes: Routes = [
   {
@@ -45,18 +48,33 @@ const routes: Routes = [
     component: FeaturesComponent
   },
   {
-    path: "enterprise",
+    path: "services",
     component: EnterpriseComponent
   },
   {
     path: "partners",
     component: PartnersComponent
+  },
+  {
+    path: "support-policy",
+    component: SupportPolicyComponent
+  },
+  {
+    path: "limit-policy",
+    component: LimitPolicyComponent
+  },
+  {
+    path: "fairusage-policy",
+    component: FairusagePolicyComponent
   }
 ];
 
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, {anchorScrolling: "enabled", scrollPositionRestoration: "enabled"})
+    RouterModule.forRoot(routes, {
+      anchorScrolling: "enabled",
+      scrollPositionRestoration: "enabled"
+    })
   ],
   exports: [RouterModule]
 })
