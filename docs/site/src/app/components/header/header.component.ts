@@ -1,4 +1,4 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, HostListener} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {map} from "rxjs/operators";
 import {Observable} from "rxjs";
@@ -45,5 +45,8 @@ export class HeaderComponent implements OnInit {
       .pipe(map((data: any) => data.stargazers_count));
   }
 
-  ngOnInit() {}
+
+  ngOnInit() {
+    
+  }
 }
