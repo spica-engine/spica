@@ -60,7 +60,10 @@
               "src/styles.scss",
               "../../node_modules/highlight.js/styles/darcula.css"
             ],
-            "scripts": []
+            "scripts": [
+           
+              { "input": "calendly.js", "inject": false, "bundleName": "external-module" }
+            ]
           },
           "configurations": {
             "production": {
