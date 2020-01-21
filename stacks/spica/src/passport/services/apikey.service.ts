@@ -6,12 +6,11 @@ import {IndexResult} from "@spica-server/core";
 import {HttpClient} from "@angular/common/http";
 
 @Injectable({providedIn: "root"})
-export class MockService implements ApiKeyService {
+export class MockApiKeyService implements ApiKeyService {
   apiKeys: ApiKey[] = [];
   constructor() {}
 
   getAll(limit?: number, skip?: number) {
-    this.apiKeys = JSON.parse(localStorage.getItem("apiKeys")) || [];
     if (limit || skip) {
       let copyApiKeys = JSON.parse(JSON.stringify(this.apiKeys));
       return of({
@@ -31,21 +30,19 @@ export class MockService implements ApiKeyService {
   }
 
   update(apiKey: ApiKey) {
-    this.apiKeys.map(val => {
-      if (val._id == apiKey._id) val = apiKey;
+    this.apiKeys = this.apiKeys.map(val => {
+      if (val._id == apiKey._id) return apiKey;
     });
-    localStorage.setItem("apiKeys", JSON.stringify(this.apiKeys));
     return of(apiKey);
   }
 
   insert(apiKey: ApiKey) {
-    this.apiKeys.push({
+    const insertedApiKey = {
       ...apiKey,
-      key: new ObjectId().toHexString(),
       _id: new ObjectId().toHexString()
-    });
-    localStorage.setItem("apiKeys", JSON.stringify(this.apiKeys));
-    return of(apiKey);
+    };
+    this.apiKeys.push(insertedApiKey);
+    return of(insertedApiKey);
   }
 }
 

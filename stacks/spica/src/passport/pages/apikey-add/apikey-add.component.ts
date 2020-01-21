@@ -40,8 +40,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
       : this.apiKeyService.insert(this.apiKey)
     )
       .toPromise()
-      .then(() => this.router.navigate(["passport/apikey"]))
-      .catch(error => console.log(error));
+      .then(() => this.router.navigate(["passport/apikey"]));
   }
 
   ngOnDestroy() {

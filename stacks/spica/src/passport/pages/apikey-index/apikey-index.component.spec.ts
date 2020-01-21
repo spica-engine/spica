@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
+import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 import {ApiKeyIndexComponent} from "./apikey-index.component";
 import {
   MatIconModule,
@@ -8,11 +8,9 @@ import {
   MatPaginatorModule
 } from "@angular/material";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {of} from "rxjs";
-
-import {IndexResult} from "@spica-server/core";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
-import {MockService} from "../../services/apikey.service";
+import {MockApiKeyService, apiKeyService} from "../../services/apikey.service";
 import {RouterTestingModule} from "@angular/router/testing";
 import {ApiKey} from "../../interfaces/apikey";
 import {By} from "@angular/platform-browser";
@@ -31,37 +29,36 @@ describe("ApiKeyIndexComponent", () => {
         MatPaginatorModule,
         RouterTestingModule,
         MatAwareDialogModule,
+        HttpClientTestingModule,
         NoopAnimationsModule
       ],
       providers: [
         {
-          provide: MockService,
-          useValue: {
-            getAll: () =>
-              of({
-                meta: {total: 1},
-                data: [
-                  {_id: "1", key: "testkey1", name: "testname1", description: "testdescription1"}
-                ]
-              } as IndexResult<ApiKey>)
-          }
+          provide: apiKeyService,
+          useClass: MockApiKeyService
         }
       ],
       declarations: [ApiKeyIndexComponent]
     }).compileComponents();
   }));
 
-  beforeEach(() => {
+  beforeEach(async () => {
     fixture = TestBed.createComponent(ApiKeyIndexComponent);
     component = fixture.componentInstance;
+    await component["apiKeyService"].insert({
+      key: "testkey",
+      name: "testname",
+      active: true,
+      description: "testdescription",
+      policies: []
+    } as ApiKey);
     fixture.detectChanges();
   });
 
-  it("should show apikeys", () => {
+  it("should show apikeys", async () => {
     const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
-
-    expect(cells[0].nativeElement.textContent).toBe("testkey1");
-    expect(cells[1].nativeElement.textContent).toBe("testname1");
-    expect(cells[2].nativeElement.textContent).toBe("testdescription1");
+    expect(cells[0].nativeElement.textContent).toBe("testkey");
+    expect(cells[1].nativeElement.textContent).toBe("testname");
+    expect(cells[2].nativeElement.textContent).toBe("testdescription");
   });
 });

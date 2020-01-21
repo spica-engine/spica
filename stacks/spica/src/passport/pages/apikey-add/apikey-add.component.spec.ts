@@ -12,8 +12,8 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";
 import {RouterTestingModule} from "@angular/router/testing";
-
-import {MockService} from "../../services/apikey.service";
+import {IndexResult} from "@spica-server/core";
+import {MockApiKeyService, apiKeyService} from "../../services/apikey.service";
 import {ApiKey} from "../../interfaces/apikey";
 
 describe("ApiKeyAddComponent", () => {
@@ -34,6 +34,10 @@ describe("ApiKeyAddComponent", () => {
       ],
       providers: [
         {
+          provide: apiKeyService,
+          useClass: MockApiKeyService
+        },
+        {
           provide: ActivatedRoute,
           useValue: {
             params: of({})
@@ -43,14 +47,6 @@ describe("ApiKeyAddComponent", () => {
           provide: RouterTestingModule,
           useValue: {
             navigate: () => {}
-          }
-        },
-        {
-          provide: MockService,
-          useValue: {
-            get: () => of(null),
-            update: () => {},
-            insert: () => {}
           }
         }
       ],
@@ -65,32 +61,33 @@ describe("ApiKeyAddComponent", () => {
     await fixture.whenStable();
   });
 
-  it("should set apiKey as emptyApiKey if this page navigated from add button", () => {
+  it("should set apiKey as emptyApiKey when this page navigated from add button", () => {
     expect(component.apiKey).toEqual({
       name: undefined,
       active: true
     });
   });
 
-  it("should set apiKey which return from service if this page navigated from edit button", async () => {
-    component["activatedRoute"].params = of({id: "1"});
-    component["apiKeyService"].get = () =>
-      of({
+  it("should set apiKey which return from service when this page navigated from edit button", async () => {
+    const _id = await component["apiKeyService"]
+      .insert({
         name: "test name",
         active: true,
-        _id: "1",
         key: "test key",
         policies: [],
         description: "test description"
-      } as ApiKey);
+      } as ApiKey)
+      .toPromise()
+      .then(apiKey => apiKey._id);
+    component["activatedRoute"].params = of({id: _id.toString()});
+
+    component.ngOnDestroy();
     component.ngOnInit();
 
-    fixture.detectChanges();
-
     expect(component.apiKey).toEqual({
+      _id: _id,
       name: "test name",
       active: true,
-      _id: "1",
       key: "test key",
       policies: [],
       description: "test description"
@@ -98,8 +95,20 @@ describe("ApiKeyAddComponent", () => {
   });
 
   it("should update apikey and navite to index page", async () => {
+    const insertedId = await component["apiKeyService"]
+      .insert({
+        key: "key",
+        name: "name",
+        description: "description",
+        policies: [],
+        active: true
+      })
+      .toPromise()
+      .then(apiKey => apiKey._id);
+
     component.apiKey = {
-      _id: "123",
+      _id: insertedId.toString(),
+      key: "updated key",
       name: "updated name",
       description: "updated description",
       policies: [],
@@ -107,26 +116,26 @@ describe("ApiKeyAddComponent", () => {
     };
 
     const routeSpy = spyOn(component["router"], "navigate");
-    const updateSpy = spyOn(component["apiKeyService"], "update").and.returnValue(of(null));
 
     component.saveApiKey();
-    await fixture.whenStable();
 
-    expect(updateSpy).toHaveBeenCalledTimes(1);
-    expect(updateSpy).toHaveBeenCalledWith({
-      _id: "123",
+    const updatedApiKey = await component["apiKeyService"].get(insertedId).toPromise();
+
+    expect(updatedApiKey).toEqual({
+      _id: insertedId,
+      key: "updated key",
       name: "updated name",
       description: "updated description",
       policies: [],
       active: true
     });
-
     expect(routeSpy).toHaveBeenCalledTimes(1);
     expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
   });
 
   it("should insert apikey and navigate to index page", async () => {
     component.apiKey = {
+      key: "new key",
       name: "new name",
       description: "new description",
       policies: [],
@@ -134,18 +143,21 @@ describe("ApiKeyAddComponent", () => {
     };
 
     const routeSpy = spyOn(component["router"], "navigate");
-    const insertSpy = spyOn(component["apiKeyService"], "insert").and.returnValue(of(null));
 
     component.saveApiKey();
-    await fixture.whenStable();
 
-    expect(insertSpy).toHaveBeenCalledTimes(1);
-    expect(insertSpy).toHaveBeenCalledWith({
-      name: "new name",
-      description: "new description",
-      policies: [],
-      active: true
-    });
+    const apiKeys = ((await component["apiKeyService"].getAll().toPromise()) as IndexResult<ApiKey>)
+      .data;
+    delete apiKeys[0]._id;
+    expect(apiKeys).toEqual([
+      {
+        key: "new key",
+        name: "new name",
+        description: "new description",
+        policies: [],
+        active: true
+      }
+    ]);
 
     expect(routeSpy).toHaveBeenCalledTimes(1);
     expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
