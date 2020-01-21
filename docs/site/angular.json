@@ -56,8 +56,9 @@
               "src/manifest.webmanifest"
             ],
             "styles": [
+              "./node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "src/styles.scss",
-              "../../node_modules/highlight.js/styles/github.css"
+              "../../node_modules/highlight.js/styles/darcula.css"
             ],
             "scripts": []
           },
@@ -108,7 +109,8 @@
           }
         }
       }
-    }},
+    }
+  },
   "defaultProject": "site",
   "cli": {
     "packageManager": "yarn"
