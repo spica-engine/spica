@@ -1,5 +1,5 @@
 import {async, ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
-import {ApiKeyIndexComponent} from "./api-key-index.component";
+import {ApiKeyIndexComponent} from "./apikey-index.component";
 import {
   MatIconModule,
   MatToolbarModule,
@@ -12,9 +12,9 @@ import {of} from "rxjs";
 
 import {IndexResult} from "@spica-server/core";
 import {MatAwareDialogModule} from "@spica-client/material";
-import {MockService} from "../../services/api-key.service";
+import {MockService} from "../../services/apikey.service";
 import {RouterTestingModule} from "@angular/router/testing";
-import {ApiKey} from "../../interfaces/api-key";
+import {ApiKey} from "../../interfaces/apikey";
 import {By} from "@angular/platform-browser";
 
 describe("ApiKeyIndexComponent", () => {

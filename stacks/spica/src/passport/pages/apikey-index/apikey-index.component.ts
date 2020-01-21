@@ -1,14 +1,14 @@
 import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material";
-import {ApiKey} from "src/passport/interfaces/api-key";
+import {ApiKey} from "src/passport/interfaces/apikey";
 import {Observable, of, Subject, merge} from "rxjs";
 import {switchMap, map} from "rxjs/operators";
-import {MockService} from "src/passport/services/api-key.service";
+import {apiKeyService} from "src/passport/services/apikey.service";
 
 @Component({
-  selector: "app-api-key-index",
-  templateUrl: "./api-key-index.component.html",
-  styleUrls: ["./api-key-index.component.scss"]
+  selector: "app-apikey-index",
+  templateUrl: "./apikey-index.component.html",
+  styleUrls: ["./apikey-index.component.scss"]
 })
 export class ApiKeyIndexComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
@@ -19,7 +19,7 @@ export class ApiKeyIndexComponent implements OnInit {
   apiKeys$: Observable<ApiKey[]>;
   refresh$: Subject<void> = new Subject<void>();
 
-  constructor(private apiKeyService: MockService) {}
+  constructor(private apiKeyService: apiKeyService) {}
 
   ngOnInit() {
     this.apiKeys$ = merge(this.paginator.page, of(null), this.refresh$).pipe(

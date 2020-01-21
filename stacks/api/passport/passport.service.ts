@@ -20,6 +20,7 @@ export class PassportService {
         identifier: "spica",
         password: this.options.defaultPassword,
         policies: [
+          "ApiKeyFullAccess",
           "PassportFullAccess",
           "IdentityFullAccess",
           "StorageFullAccess",

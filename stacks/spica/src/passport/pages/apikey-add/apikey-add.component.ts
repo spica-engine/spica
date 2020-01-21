@@ -1,14 +1,14 @@
 import {Component, OnInit, TemplateRef, ViewChild, OnDestroy} from "@angular/core";
-import {ApiKey, emptyApiKey} from "src/passport/interfaces/api-key";
+import {ApiKey, emptyApiKey} from "src/passport/interfaces/apikey";
 import {Router, ActivatedRoute} from "@angular/router";
 import {filter, switchMap, takeUntil} from "rxjs/operators";
-import {MockService} from "src/passport/services/api-key.service";
+import {apiKeyService} from "src/passport/services/apikey.service";
 import {Subject} from "rxjs";
 
 @Component({
-  selector: "app-api-key-add",
-  templateUrl: "./api-key-add.component.html",
-  styleUrls: ["./api-key-add.component.scss"]
+  selector: "app-apikey-add",
+  templateUrl: "./apikey-add.component.html",
+  styleUrls: ["./apikey-add.component.scss"]
 })
 export class ApiKeyAddComponent implements OnInit, OnDestroy {
   @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
@@ -19,7 +19,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private apiKeyService: MockService
+    private apiKeyService: apiKeyService
   ) {}
 
   ngOnInit() {
@@ -40,7 +40,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
       : this.apiKeyService.insert(this.apiKey)
     )
       .toPromise()
-      .then(() => this.router.navigate(["passport/api-key"]))
+      .then(() => this.router.navigate(["passport/apikey"]))
       .catch(error => console.log(error));
   }
 

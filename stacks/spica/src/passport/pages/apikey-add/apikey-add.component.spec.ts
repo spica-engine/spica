@@ -1,5 +1,5 @@
 import {async, ComponentFixture, TestBed} from "@angular/core/testing";
-import {ApiKeyAddComponent} from "./api-key-add.component";
+import {ApiKeyAddComponent} from "./apikey-add.component";
 import {
   MatIconModule,
   MatToolbarModule,
@@ -13,8 +13,8 @@ import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";
 import {RouterTestingModule} from "@angular/router/testing";
 
-import {MockService} from "../../services/api-key.service";
-import {ApiKey} from "../../interfaces/api-key";
+import {MockService} from "../../services/apikey.service";
+import {ApiKey} from "../../interfaces/apikey";
 
 describe("ApiKeyAddComponent", () => {
   let component: ApiKeyAddComponent;
@@ -122,7 +122,7 @@ describe("ApiKeyAddComponent", () => {
     });
 
     expect(routeSpy).toHaveBeenCalledTimes(1);
-    expect(routeSpy).toHaveBeenCalledWith(["passport/api-key"]);
+    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
   });
 
   it("should insert apikey and navigate to index page", async () => {
@@ -148,6 +148,6 @@ describe("ApiKeyAddComponent", () => {
     });
 
     expect(routeSpy).toHaveBeenCalledTimes(1);
-    expect(routeSpy).toHaveBeenCalledWith(["passport/api-key"]);
+    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
   });
 });
