@@ -45,6 +45,7 @@ import {IntersectDirective} from "./directives/intersect.directive";
 import { SupportPolicyComponent } from './pages/support-policy/support-policy.component';
 import { LimitPolicyComponent } from './pages/limit-policy/limit-policy.component';
 import { FairusagePolicyComponent } from './pages/fairusage-policy/fairusage-policy.component';
+import { CalendlyComponent } from './calendly/calendly.component';
 @NgModule({
   imports: [
     BrowserModule,
@@ -94,7 +95,8 @@ import { FairusagePolicyComponent } from './pages/fairusage-policy/fairusage-pol
     IntersectDirective,
     SupportPolicyComponent,
     LimitPolicyComponent,
-    FairusagePolicyComponent
+    FairusagePolicyComponent,
+    CalendlyComponent
   ],
   entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
   providers: [],
