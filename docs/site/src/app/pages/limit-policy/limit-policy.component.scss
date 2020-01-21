@@ -1,0 +1,79 @@
+:host {
+    app-header {
+        min-height: 200px;
+    }
+
+    .info {
+        font-weight: unset;
+        text-align: center;
+        line-height: 30px;
+        max-width: 800px;
+        margin: 20px auto;
+    }
+
+    h3 {
+        color: #1c1c50;
+        margin-bottom: 12px;
+    }
+
+    .padding-left {
+        padding-left: 50px;
+    }
+
+    li {
+        color: #78909c;
+
+    }
+
+    p {
+        color: #78909c;
+        line-height: 1.7;
+        margin: 5px 0px;
+    }
+
+    .content-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 4% 0;
+        flex-flow: row wrap;
+        box-sizing: border-box;
+        display: flex;
+        place-content: center space-around;
+        align-items: center;
+
+
+
+        .container {
+            margin: auto;
+            max-width: 1224px !important;
+
+            img {
+                display: block;
+                margin: auto;
+            }
+        }
+
+    }
+
+    .flex-margin {
+        margin: 15px 0;
+        width: 100%;
+        display: flex;
+    }
+
+    .limits {
+        width: 100%;
+
+        tr {
+            color: #78909c;
+            
+
+        }
+
+        td {
+            padding: 12px 0px;
+            border-bottom: 1px solid #efefef;
+        }
+    }
+
+}
