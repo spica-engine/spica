@@ -6,7 +6,28 @@ import {IndexResult} from "@spica-server/core";
 import {HttpClient} from "@angular/common/http";
 
 @Injectable({providedIn: "root"})
-export class MockApiKeyService implements ApiKeyService {
+export class apiKeyService implements ApiKeyService {
+  constructor(private http: HttpClient) {}
+  getAll(limit?: number, skip?: number) {
+    return this.http.get<IndexResult<ApiKey>>("api:/passport/apikey", {
+      params: {limit: limit.toString(), skip: skip.toString()}
+    });
+  }
+
+  get(id: string) {
+    return this.http.get<ApiKey>(`api:/passport/apikey/${id}`);
+  }
+
+  insert(apiKey: ApiKey) {
+    return this.http.post<ApiKey>(`api:/passport/apikey`, apiKey);
+  }
+
+  update(apiKey: ApiKey) {
+    return this.http.post<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
+  }
+}
+
+export class MockApiKeyService {
   apiKeys: ApiKey[] = [];
   constructor() {}
 
@@ -43,27 +64,5 @@ export class MockApiKeyService implements ApiKeyService {
     };
     this.apiKeys.push(insertedApiKey);
     return of(insertedApiKey);
-  }
-}
-
-@Injectable({providedIn: "root"})
-export class apiKeyService implements ApiKeyService {
-  constructor(private http: HttpClient) {}
-  getAll(limit?: number, skip?: number) {
-    return this.http.get<IndexResult<ApiKey>>("api:/passport/apikey", {
-      params: {limit: limit.toString(), skip: skip.toString()}
-    });
-  }
-
-  get(id: string) {
-    return this.http.get<ApiKey>(`api:/passport/apikey/${id}`);
-  }
-
-  insert(apiKey: ApiKey) {
-    return this.http.post<ApiKey>(`api:/passport/apikey`, apiKey);
-  }
-
-  update(apiKey: ApiKey) {
-    return this.http.post<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
   }
 }
