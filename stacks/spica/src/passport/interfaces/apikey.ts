@@ -17,9 +17,9 @@ export function emptyApiKey(): ApiKey {
   };
 }
 
-export interface ApiKeyService {
-  get(id: string): Observable<ApiKey>;
-  getAll(limit?: number, skip?: number): Observable<IndexResult<ApiKey>>;
-  update(apiKey: ApiKey): Observable<ApiKey>;
-  insert(apiKey: ApiKey): Observable<ApiKey>;
+export abstract class ApiKeyService {
+  get(id: string) {}
+  getAll(limit?: number, skip?: number) {}
+  update(apiKey: ApiKey) {}
+  insert(apiKey: ApiKey) {}
 }

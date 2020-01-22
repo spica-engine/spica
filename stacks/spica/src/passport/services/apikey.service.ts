@@ -1,13 +1,15 @@
 import {Injectable} from "@angular/core";
 import {ApiKey, ApiKeyService} from "../interfaces/apikey";
-import {of} from "rxjs";
-import {ObjectId} from "bson";
 import {IndexResult} from "@spica-server/core";
 import {HttpClient} from "@angular/common/http";
+import {of} from "rxjs";
+import {ObjectId} from "bson";
 
 @Injectable({providedIn: "root"})
-export class apiKeyService implements ApiKeyService {
-  constructor(private http: HttpClient) {}
+export class apiKeyService extends ApiKeyService {
+  constructor(private http: HttpClient) {
+    super();
+  }
   getAll(limit?: number, skip?: number) {
     return this.http.get<IndexResult<ApiKey>>("api:/passport/apikey", {
       params: {limit: limit.toString(), skip: skip.toString()}
@@ -27,9 +29,11 @@ export class apiKeyService implements ApiKeyService {
   }
 }
 
-export class MockApiKeyService {
+export class MockApiKeyService extends ApiKeyService {
   apiKeys: ApiKey[] = [];
-  constructor() {}
+  constructor() {
+    super();
+  }
 
   getAll(limit?: number, skip?: number) {
     if (limit || skip) {

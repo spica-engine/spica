@@ -13,8 +13,8 @@ import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";
 import {RouterTestingModule} from "@angular/router/testing";
 import {IndexResult} from "@spica-server/core";
-import {MockApiKeyService, apiKeyService} from "../../services/apikey.service";
 import {ApiKey} from "../../interfaces/apikey";
+import {apiKeyService, MockApiKeyService} from "../../services/apikey.service";
 
 describe("ApiKeyAddComponent", () => {
   let component: ApiKeyAddComponent;
@@ -35,7 +35,7 @@ describe("ApiKeyAddComponent", () => {
       providers: [
         {
           provide: apiKeyService,
-          useClass: MockApiKeyService
+          useValue: new MockApiKeyService()
         },
         {
           provide: ActivatedRoute,

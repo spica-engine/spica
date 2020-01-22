@@ -10,7 +10,7 @@ import {
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
-import {MockApiKeyService, apiKeyService} from "../../services/apikey.service";
+import {apiKeyService, MockApiKeyService} from "../../services/apikey.service";
 import {RouterTestingModule} from "@angular/router/testing";
 import {ApiKey} from "../../interfaces/apikey";
 import {By} from "@angular/platform-browser";
@@ -35,7 +35,7 @@ describe("ApiKeyIndexComponent", () => {
       providers: [
         {
           provide: apiKeyService,
-          useClass: MockApiKeyService
+          useValue: new MockApiKeyService()
         }
       ],
       declarations: [ApiKeyIndexComponent]
