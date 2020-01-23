@@ -1,16 +1,29 @@
-import {Injectable} from "@nestjs/common";
-import {AbstractStrategy, PassportStrategy} from "@nestjs/passport";
+import { Injectable } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import * as passport from "passport";
 
-export class MixinNoopStrategy extends AbstractStrategy {
-  validate(...args: any[]) {
-    return Promise.resolve({identifier: "noop"});
+class _NoopStrategy extends passport.Strategy {
+  constructor(private callback: (req) => void) {
+    super();
   }
 
   authenticate(req: any) {
     req.TESTING_SKIP_CHECK = true;
-    this["success"]({identifier: "noop", policies: []}, {});
+    this.callback((err, user, reason) => {
+        if (err) {
+          this["error"](err);
+        } else if (!user) {
+          this["fail"](reason);
+        } else {
+          this["success"](user, reason);
+        }
+      });
   }
 }
 
 @Injectable()
-export class NoopStrategy extends PassportStrategy(MixinNoopStrategy, "noop") {}
+export class NoopStrategy extends PassportStrategy(_NoopStrategy, "noop") {
+  validate() {
+    return Promise.resolve({identifier: "noop", policies: []});
+  }
+}

@@ -19,6 +19,7 @@ import {SamlService} from "./saml.service";
 import {provideSchemaResolver, SchemaResolver} from "./schema.resolver";
 import {StrategyController} from "./strategies/strategy.controller";
 import {StrategyService} from "./strategies/strategy.service";
+import {ApiKeyStrategy} from "./apikey.strategy";
 
 @Global()
 @Module({})
@@ -28,7 +29,7 @@ class PassportCoreModule {
       module: PassportCoreModule,
       imports: [
         CorePassportModule.register({
-          defaultStrategy: options.defaultStrategy || "jwt",
+          defaultStrategy: "apikey" ,
           session: false
         }),
         JwtModule.register({
@@ -94,6 +95,7 @@ export class PassportModule {
         StrategyService,
         SamlService,
         JwtStrategy,
+        ApiKeyStrategy,
         {provide: PASSPORT_OPTIONS, useValue: options},
         {
           provide: PassportService,
