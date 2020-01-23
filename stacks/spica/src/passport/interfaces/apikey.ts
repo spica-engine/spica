@@ -13,4 +13,3 @@ export function emptyApiKey(): ApiKey {
     active: true
   };
 }
-
