@@ -2,11 +2,11 @@ import {Component, OnInit, TemplateRef, ViewChild, OnDestroy} from "@angular/cor
 import {ApiKey, emptyApiKey} from "src/passport/interfaces/apikey";
 import {Router, ActivatedRoute} from "@angular/router";
 import {filter, switchMap, takeUntil} from "rxjs/operators";
-import {apiKeyService} from "src/passport/services/apikey.service";
+import {ApiKeyService} from "src/passport/services/apikey.service";
 import {Subject} from "rxjs";
 
 @Component({
-  selector: "app-apikey-add",
+  selector: "passport-apikey-add",
   templateUrl: "./apikey-add.component.html",
   styleUrls: ["./apikey-add.component.scss"]
 })
@@ -19,7 +19,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private apiKeyService: apiKeyService
+    private apiKeyService: ApiKeyService
   ) {}
 
   ngOnInit() {
