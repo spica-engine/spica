@@ -5,7 +5,7 @@ import {PassportOptions, PASSPORT_OPTIONS} from "./interface";
 import {IdentityService} from "./identity/identity.service";
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(
     private identity: IdentityService,
     @Inject(PASSPORT_OPTIONS) options: PassportOptions
