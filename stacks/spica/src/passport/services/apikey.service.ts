@@ -9,8 +9,11 @@ export class ApiKeyService {
   constructor(private http: HttpClient) {}
 
   getAll(limit?: number, skip?: number): Observable<IndexResult<ApiKey>> {
+    let params = {};
+    if (limit) params = {...params, limit: limit};
+    if (skip) params = {...params, skip: skip};
     return this.http.get<IndexResult<ApiKey>>("api:/passport/apikey", {
-      params: {limit: limit.toString(), skip: skip.toString()}
+      params: params
     });
   }
 
