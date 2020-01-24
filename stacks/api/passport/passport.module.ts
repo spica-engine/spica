@@ -19,6 +19,7 @@ import {SamlService} from "./saml.service";
 import {provideSchemaResolver, SchemaResolver} from "./schema.resolver";
 import {StrategyController} from "./strategies/strategy.controller";
 import {StrategyService} from "./strategies/strategy.service";
+import {ApiKeyStrategy} from "./apikey.strategy";
 
 @Global()
 @Module({})
@@ -94,6 +95,7 @@ export class PassportModule {
         StrategyService,
         SamlService,
         JwtStrategy,
+        ApiKeyStrategy,
         {provide: PASSPORT_OPTIONS, useValue: options},
         {
           provide: PassportService,

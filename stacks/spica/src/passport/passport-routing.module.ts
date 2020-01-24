@@ -12,6 +12,8 @@ import {TabsComponent} from "./pages/tabs/tabs.component";
 import {PolicyGuard} from "./services/policy.guard";
 import {StrategiesComponent} from "./pages/strategies/strategies.component";
 import {StrategiesAddComponent} from "./pages/strategies-add/strategies-add.component";
+import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component";
+import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
 
 const routes: Routes = [
   {path: "passport/identify", component: IdentifyComponent, data: {layout: false}},
@@ -50,7 +52,17 @@ const routes: Routes = [
           {path: ":id/edit", component: StrategiesAddComponent, data: {action: "show"}}
         ]
       },
-      {path: "settings", component: IdentitySettingsComponent}
+      {path: "settings", component: IdentitySettingsComponent},
+      {
+        path: "apikey",
+        canActivateChild: [PolicyGuard],
+        data: {service: "passport:apikey"},
+        children: [
+          {path: "", component: ApiKeyIndexComponent, data: {action: "index"}},
+          {path: "add", component: ApiKeyAddComponent, data: {action: "update"}},
+          {path: ":id/edit", component: ApiKeyAddComponent, data: {action: "show"}}
+        ]
+      }
     ]
   }
 ];
@@ -79,6 +91,14 @@ const route: Route[] = [
     path: "/passport/strategies",
     icon: "linear_scale",
     data: {action: "passport:strategy:index"}
+  },
+  {
+    id: "passport.apikey",
+    category: RouteCategory.System,
+    display: "API Keys",
+    path: "/passport/apikey",
+    icon: "vpn_key",
+    data: {action: "passport:apikey:index"}
   }
 ];
 
