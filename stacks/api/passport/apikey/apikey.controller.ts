@@ -86,6 +86,7 @@ export class ApiKeyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
   ) {
+    delete apiKey._id;
     return this.aks.findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false}).then(r => {
       if (!r) {
         throw new NotFoundException();
