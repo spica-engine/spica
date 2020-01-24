@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { PassportStrategy } from "@nestjs/passport";
+import {Injectable} from "@nestjs/common";
+import {PassportStrategy} from "@nestjs/passport";
 import * as passport from "passport";
 
 class _NoopStrategy extends passport.Strategy {
@@ -10,14 +10,14 @@ class _NoopStrategy extends passport.Strategy {
   authenticate(req: any) {
     req.TESTING_SKIP_CHECK = true;
     this.callback((err, user, reason) => {
-        if (err) {
-          this["error"](err);
-        } else if (!user) {
-          this["fail"](reason);
-        } else {
-          this["success"](user, reason);
-        }
-      });
+      if (err) {
+        this["error"](err);
+      } else if (!user) {
+        this["fail"](reason);
+      } else {
+        this["success"](user, reason);
+      }
+    });
   }
 }
 
