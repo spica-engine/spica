@@ -416,7 +416,7 @@ describe("Entrypoint", () => {
 
       const socketSpy = jasmine.createSpyObj("Socket", ["close"]);
       socketSpy.readyState = 1;
-      
+
       firehoseQueue.enqueue(
         event.id,
         new Firehose.Message.Incoming({

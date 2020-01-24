@@ -81,7 +81,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
       });
     });
 
-    // Send ping requests event 30 seconds and kill clients which
+    // Send ping requests every 30 seconds and kill clients which
     // has been inactive and did not respond to ping request
     // https://tools.ietf.org/html/rfc6455#section-5.5.2
     setInterval(() => {

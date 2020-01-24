@@ -52,7 +52,7 @@ export class Horizon implements OnModuleInit {
     this.enqueuers.add(new HttpEnqueuer(this.queue, this.httpQueue, httpServer));
 
     this.enqueuers.add(new FirehoseEnqueuer(this.queue, this.firehoseQueue, httpServer));
-    
+
     this.enqueuers.add(new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database));
 
     this.enqueuers.add(new ScheduleEnqueuer(this.queue));
