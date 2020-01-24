@@ -10,6 +10,7 @@ export interface ApiKey {
 export function emptyApiKey(): ApiKey {
   return {
     name: undefined,
-    active: true
+    active: true,
+    policies: []
   };
 }

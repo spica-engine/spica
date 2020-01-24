@@ -1,9 +1,11 @@
 import {Component, OnInit, TemplateRef, ViewChild, OnDestroy} from "@angular/core";
 import {ApiKey, emptyApiKey} from "src/passport/interfaces/apikey";
 import {Router, ActivatedRoute} from "@angular/router";
-import {filter, switchMap, takeUntil} from "rxjs/operators";
+import {filter, switchMap, takeUntil, tap} from "rxjs/operators";
 import {ApiKeyService} from "src/passport/services/apikey.service";
 import {Subject} from "rxjs";
+import {Policy} from "src/passport/interfaces/policy";
+import {PolicyService} from "src/passport/services/policy.service";
 
 @Component({
   selector: "passport-apikey-add",
@@ -16,13 +18,19 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
 
   private onDestroy: Subject<void> = new Subject<void>();
 
+  private ownablePolicies: Policy[] = [];
+  private ownedPolicies: Policy[] = [];
+
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private apiKeyService: ApiKeyService
+    private apiKeyService: ApiKeyService,
+    private policyService: PolicyService
   ) {}
 
   ngOnInit() {
+    this.filterPolicies();
+
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
@@ -31,7 +39,25 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
       )
       .subscribe(apiKey => {
         this.apiKey = apiKey;
+        this.filterPolicies();
       });
+  }
+
+  filterPolicies() {
+    this.policyService
+      .find()
+      .toPromise()
+      .then(policies => {
+        policies.data.forEach(policy => {
+          this.pushToCategory(policy);
+        });
+      });
+  }
+
+  pushToCategory(policy: Policy) {
+    this.apiKey.policies.includes(policy._id)
+      ? this.ownedPolicies.push(policy)
+      : this.ownablePolicies.push(policy);
   }
 
   saveApiKey() {
@@ -41,6 +67,16 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
     )
       .toPromise()
       .then(() => this.router.navigate(["passport/apikey"]));
+  }
+
+  attachPolicy(policy: Policy) {
+    this.ownablePolicies = this.ownablePolicies.filter(item => item._id != policy._id);
+    this.ownedPolicies.push(policy);
+  }
+
+  detachPolicy(policy: Policy) {
+    this.ownedPolicies = this.ownedPolicies.filter(item => item._id != policy._id);
+    this.ownablePolicies.push(policy);
   }
 
   ngOnDestroy() {

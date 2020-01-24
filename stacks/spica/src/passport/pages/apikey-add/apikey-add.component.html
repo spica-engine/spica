@@ -39,6 +39,42 @@
           [(ngModel)]="apiKey.description"
         ></textarea>
       </mat-form-field>
+
+      <div class="policies">
+        <mat-list>
+          <h3 mat-subheader>Owned Policies</h3>
+          <mat-list-item *ngFor="let policy of ownedPolicies">
+            <mat-icon mat-list-icon>layers</mat-icon>
+            <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+            <button
+              mat-icon-button
+              matTooltip="Detach this policy"
+              (click)="detachPolicy(policy)"
+              color="warn"
+            >
+              <mat-icon>link_off</mat-icon>
+            </button>
+          </mat-list-item>
+        </mat-list>
+
+        <mat-list>
+          <h3 mat-subheader>Ownable Policies</h3>
+          <ng-container *ngFor="let policy of ownablePolicies">
+            <mat-list-item>
+              <mat-icon mat-list-icon>layers</mat-icon>
+              <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
+              <button
+                mat-icon-button
+                matTooltip="Attach this policy"
+                (click)="attachPolicy(policy)"
+              >
+                <mat-icon>link</mat-icon>
+              </button>
+            </mat-list-item>
+          </ng-container>
+        </mat-list>
+      </div>
+
       <button
         [disabled]="apiKeyForm.invalid"
         mat-button
