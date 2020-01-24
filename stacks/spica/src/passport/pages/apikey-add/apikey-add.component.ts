@@ -29,8 +29,6 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.filterPolicies();
-
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
@@ -61,12 +59,15 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
   }
 
   saveApiKey() {
-    (this.apiKey._id
-      ? this.apiKeyService.update(this.apiKey)
-      : this.apiKeyService.insert(this.apiKey)
-    )
-      .toPromise()
-      .then(() => this.router.navigate(["passport/apikey"]));
+    this.apiKey._id
+      ? this.apiKeyService
+          .update({...this.apiKey, policies: this.ownedPolicies.map(policy => policy._id)})
+          .toPromise()
+          .then(() => this.router.navigate(["passport/apikey"]))
+      : this.apiKeyService
+          .insert(this.apiKey)
+          .toPromise()
+          .then(apikey => this.router.navigate(["passport/apikey", apikey._id, "edit"]));
   }
 
   attachPolicy(policy: Policy) {
