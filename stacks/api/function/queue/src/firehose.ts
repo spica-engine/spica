@@ -1,18 +1,43 @@
 import {Firehose} from "@spica-server/function/queue/proto";
 import * as grpc from "grpc";
+import * as Websocket from "ws";
 import {Queue} from "./queue";
 
-export class FirehoseQueue extends Queue<any> {
+export function parseMessage(message: Firehose.Message): {name: string; data?: unknown} {
+  const parsedMessage: {name: string; data?: unknown} = {
+    name: message.name
+  };
+  if (message.data) {
+    parsedMessage.data = JSON.parse(message.data);
+  }
+  return parsedMessage;
+}
+
+export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
   readonly TYPE = Firehose.Queue;
 
   private queue = new Map<string, Firehose.Message.Incoming>();
+
+  private sockets = new Map<string, Websocket>();
 
   get size(): number {
     return this.queue.size;
   }
 
-  enqueue(id: string, change: Firehose.Message.Incoming) {
-    this.queue.set(id, change);
+  constructor() {
+    super();
+  }
+
+  enqueue(id: string, message: Firehose.Message.Incoming, socket: Websocket) {
+    this.queue.set(id, message);
+
+    if (message.message && message.message.name == "connection") {
+      this.sockets.set(message.client.id, socket);
+    }
+
+    if (message.message && message.message.name == "close") {
+      this.sockets.delete(message.client.id);
+    }
   }
 
   pop(
@@ -24,16 +49,64 @@ export class FirehoseQueue extends Queue<any> {
     } else {
       callback(undefined, this.queue.get(call.request.id));
       this.queue.delete(call.request.id);
-      console.log('called back');
+    }
+  }
+
+  sendAll(
+    call: grpc.ServerUnaryCall<Firehose.Message>,
+    callback: grpc.sendUnaryData<Firehose.Message.Result>
+  ) {
+    const message = JSON.stringify(parseMessage(call.request));
+    for (const socket of this.sockets.values()) {
+      if (socket.readyState == Websocket.OPEN) {
+        socket.send(message);
+      }
+    }
+    callback(undefined, new Firehose.Message.Result());
+  }
+
+  send(
+    call: grpc.ServerUnaryCall<Firehose.Message.Outgoing>,
+    callback: grpc.sendUnaryData<Firehose.Message.Result>
+  ) {
+    const socket = this.sockets.get(call.request.client.id);
+
+    if (!socket) {
+      callback(new Error(`Can not find socket with id ${call.request.client.id}`), undefined);
+    } else {
+      if (socket.readyState != socket.OPEN) {
+        callback(new Error(`Socket ${call.request.client.id} is not open.`), undefined);
+      } else {
+        socket.send(JSON.stringify(parseMessage(call.request.message)));
+        callback(undefined, new Firehose.Message.Result());
+      }
+    }
+  }
+
+  close(
+    call: grpc.ServerUnaryCall<Firehose.Close>,
+    callback: grpc.sendUnaryData<Firehose.Close.Result>
+  ) {
+    const socket = this.sockets.get(call.request.client.id);
+    if (!socket) {
+      callback(new Error(`Can not find socket with id ${call.request.client.id}`), undefined);
+    } else {
+      if (socket.readyState == socket.OPEN) {
+        callback(new Error(`Socket ${call.request.client.id} is not open.`), undefined);
+      } else {
+        socket.close();
+        this.sockets.delete(call.request.client.id);
+        callback(undefined, new Firehose.Message.Result());
+      }
     }
   }
 
   create() {
     return {
       pop: this.pop.bind(this),
-      sendAll: () => console.log("sendAll"),
-      send: () => console.log("sendAll"),
-      close: () => console.log("sendAll")
+      sendAll: this.sendAll.bind(this),
+      send: this.send.bind(this),
+      close: this.close.bind(this)
     };
   }
 }

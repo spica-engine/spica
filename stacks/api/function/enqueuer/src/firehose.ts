@@ -6,7 +6,7 @@ import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 
 interface FirehoseOptions {
-  event: "*" | "**" | "connection" | "disconnect" | string;
+  event: "*" | "**" | "connection" | "close" | string;
 }
 
 export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
@@ -45,40 +45,15 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
       }
     });
 
-    const invoke = (cl: Firehose.ClientDescription, name: string, data?: any) => {
-      for (const pair of this.eventTargetPairs) {
-        if (
-          pair.name == name ||
-          pair.name == "*" ||
-          (pair.name == "**" && (name == "connection" || name == "close"))
-        ) {
-          const event = new Event.Event();
-          event.target = pair.target;
-          event.type = Event.Type.FIREHOSE;
-
-          this.queue.enqueue(event);
-
-          const incomingMessage = new Firehose.Message.Incoming();
-          incomingMessage.client = cl;
-          incomingMessage.message = new Firehose.Message();
-          incomingMessage.message.name = name;
-          if (data) {
-            incomingMessage.message.data = JSON.stringify(data);
-          }
-
-          this.firehoseQueue.enqueue(event.id, incomingMessage);
-        }
-      }
-    };
-
     this.wss.on("connection", (ws, req) => {
       ws["alive"] = true;
 
-      const clDescription = new Firehose.ClientDescription();
-      clDescription.id = String(ws["_socket"]["_handle"]["fd"]);
-      clDescription.remoteAddress = req.connection.remoteAddress;
+      const clDescription = new Firehose.ClientDescription({
+        id: String(ws["_socket"]["_handle"]["fd"]),
+        remoteAddress: req.connection.remoteAddress
+      });
 
-      invoke(clDescription, "connection");
+      this.invoke(ws, clDescription, "connection");
 
       const messageHandler = (raw: string) => {
         ws["alive"] = true;
@@ -86,7 +61,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
         try {
           const event = JSON.parse(raw);
           if (typeof event.name == "string") {
-            invoke(clDescription, event.name, event.data);
+            this.invoke(ws, clDescription, event.name, event.data);
           }
         } catch {}
       };
@@ -94,11 +69,15 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
 
       // Handle pong events
       // https://tools.ietf.org/html/rfc6455#section-5.5.3
-      ws.on("pong", () => (ws["alive"] = true));
+
+      const pongHandler = () => (ws["alive"] = true);
+
+      ws.on("pong", pongHandler);
 
       ws.once("close", () => {
         ws.off("message", messageHandler);
-        invoke(clDescription, "close");
+        ws.off("pong", pongHandler);
+        this.invoke(ws, clDescription, "close");
       });
     });
 
@@ -114,12 +93,42 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
     }, 30000);
   }
 
+  private invoke(ws: ws, cl: Firehose.ClientDescription, name: string, data?: any) {
+    for (const pair of this.eventTargetPairs) {
+      if (
+        pair.name == name ||
+        pair.name == "*" ||
+        (pair.name == "**" && (name == "connection" || name == "close"))
+      ) {
+        const event = new Event.Event();
+        event.target = pair.target;
+        event.type = Event.Type.FIREHOSE;
+
+        this.queue.enqueue(event);
+
+        const incomingMessage = new Firehose.Message.Incoming({
+          client: cl,
+          message: new Firehose.Message({
+            name
+          })
+        });
+
+        if (data) {
+          incomingMessage.message.data = JSON.stringify(data);
+        }
+
+        this.firehoseQueue.enqueue(event.id, incomingMessage, ws);
+      }
+    }
+  }
+
   subscribe(target: Event.Target, options: FirehoseOptions): void {
     this.eventTargetPairs.add({
       name: options.event,
       target
     });
   }
+
   unsubscribe(target: Event.Target): void {
     for (const pair of this.eventTargetPairs) {
       if (

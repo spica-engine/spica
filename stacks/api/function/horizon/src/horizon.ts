@@ -5,9 +5,10 @@ import {
   DatabaseEnqueuer,
   Enqueuer,
   HttpEnqueuer,
-  ScheduleEnqueuer
+  ScheduleEnqueuer,
+  FirehoseEnqueuer
 } from "@spica-server/function/enqueuer";
-import {DatabaseQueue, EventQueue, HttpQueue} from "@spica-server/function/queue";
+import {DatabaseQueue, EventQueue, HttpQueue, FirehoseQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 import {Runtime} from "@spica-server/function/runtime";
 import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
@@ -18,6 +19,7 @@ export class Horizon implements OnModuleInit {
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
+  private firehoseQueue: FirehoseQueue;
 
   private output: StdOut;
   runtime: Node;
@@ -38,14 +40,19 @@ export class Horizon implements OnModuleInit {
     this.databaseQueue = new DatabaseQueue();
     this.queue.addQueue(this.databaseQueue);
 
+    this.firehoseQueue = new FirehoseQueue();
+    this.queue.addQueue(this.firehoseQueue);
+
     this.queue.listen();
   }
 
   onModuleInit() {
-    this.enqueuers.add(
-      new HttpEnqueuer(this.queue, this.httpQueue, this.http.httpAdapter.getInstance())
-    );
+    const httpServer = this.http.httpAdapter.getInstance();
 
+    this.enqueuers.add(new HttpEnqueuer(this.queue, this.httpQueue, httpServer));
+
+    this.enqueuers.add(new FirehoseEnqueuer(this.queue, this.firehoseQueue, httpServer));
+    
     this.enqueuers.add(new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database));
 
     this.enqueuers.add(new ScheduleEnqueuer(this.queue));

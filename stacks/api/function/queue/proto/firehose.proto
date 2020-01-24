@@ -4,11 +4,12 @@ package Firehose;
 
 message Message {
     string name = 1;
-    string value = 2;
+    string data = 2;
 
     message Incoming {
         ClientDescription client = 1;
-        Message message = 2;
+        PoolDescription pool = 2;
+        Message message = 3;
     }
 
     message Outgoing {

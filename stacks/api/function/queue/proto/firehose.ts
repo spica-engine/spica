@@ -2,9 +2,16 @@ import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "grpc";
 export namespace Firehose {
     export class Message extends pb_1.Message {
-        constructor(data?: any[]) {
+        constructor(data?: any[] | {
+            name?: string;
+            data?: string;
+        }) {
             super();
-            pb_1.Message.initialize(this, data, 0, -1, [], null);
+            pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+            if (!Array.isArray(data) && typeof data == "object") {
+                this.name = data.name;
+                this.data = data.data;
+            }
         }
         get name(): string | undefined {
             return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -53,9 +60,18 @@ export namespace Firehose {
     }
     export namespace Message {
         export class Incoming extends pb_1.Message {
-            constructor(data?: any[]) {
+            constructor(data?: any[] | {
+                client?: ClientDescription;
+                pool?: PoolDescription;
+                message?: Message;
+            }) {
                 super();
-                pb_1.Message.initialize(this, data, 0, -1, [], null);
+                pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    this.client = data.client;
+                    this.pool = data.pool;
+                    this.message = data.message;
+                }
             }
             get client(): ClientDescription | undefined {
                 return pb_1.Message.getWrapperField(this, ClientDescription, 1) as ClientDescription | undefined;
@@ -63,24 +79,33 @@ export namespace Firehose {
             set client(value: ClientDescription) {
                 pb_1.Message.setWrapperField(this, 1, value);
             }
+            get pool(): PoolDescription | undefined {
+                return pb_1.Message.getWrapperField(this, PoolDescription, 2) as PoolDescription | undefined;
+            }
+            set pool(value: PoolDescription) {
+                pb_1.Message.setWrapperField(this, 2, value);
+            }
             get message(): Message | undefined {
-                return pb_1.Message.getWrapperField(this, Message, 2) as Message | undefined;
+                return pb_1.Message.getWrapperField(this, Message, 3) as Message | undefined;
             }
             set message(value: Message) {
-                pb_1.Message.setWrapperField(this, 2, value);
+                pb_1.Message.setWrapperField(this, 3, value);
             }
             toObject() {
                 return {
-                    client: this.client,
-                    message: this.message
+                    client: this.client && this.client.toObject(),
+                    pool: this.pool && this.pool.toObject(),
+                    message: this.message && this.message.toObject()
                 };
             }
             serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
                 const writer = w || new pb_1.BinaryWriter();
                 if (this.client)
-                    writer.writeMessage(1, this.client, () => { });
+                    writer.writeMessage(1, this.client, () => this.client.serialize(writer));
+                if (this.pool)
+                    writer.writeMessage(2, this.pool, () => this.pool.serialize(writer));
                 if (this.message)
-                    writer.writeMessage(2, this.message, () => { });
+                    writer.writeMessage(3, this.message, () => this.message.serialize(writer));
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -94,6 +119,9 @@ export namespace Firehose {
                             reader.readMessage(message.client, () => message.client = ClientDescription.deserialize(reader));
                             break;
                         case 2:
+                            reader.readMessage(message.pool, () => message.pool = PoolDescription.deserialize(reader));
+                            break;
+                        case 3:
                             reader.readMessage(message.message, () => message.message = Message.deserialize(reader));
                             break;
                         default: reader.skipField();
@@ -103,9 +131,16 @@ export namespace Firehose {
             }
         }
         export class Outgoing extends pb_1.Message {
-            constructor(data?: any[]) {
+            constructor(data?: any[] | {
+                client?: ClientDescription;
+                message?: Message;
+            }) {
                 super();
-                pb_1.Message.initialize(this, data, 0, -1, [], null);
+                pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    this.client = data.client;
+                    this.message = data.message;
+                }
             }
             get client(): ClientDescription | undefined {
                 return pb_1.Message.getWrapperField(this, ClientDescription, 1) as ClientDescription | undefined;
@@ -121,16 +156,16 @@ export namespace Firehose {
             }
             toObject() {
                 return {
-                    client: this.client,
-                    message: this.message
+                    client: this.client && this.client.toObject(),
+                    message: this.message && this.message.toObject()
                 };
             }
             serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
                 const writer = w || new pb_1.BinaryWriter();
                 if (this.client)
-                    writer.writeMessage(1, this.client, () => { });
+                    writer.writeMessage(1, this.client, () => this.client.serialize(writer));
                 if (this.message)
-                    writer.writeMessage(2, this.message, () => { });
+                    writer.writeMessage(2, this.message, () => this.message.serialize(writer));
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -153,9 +188,14 @@ export namespace Firehose {
             }
         }
         export class Pop extends pb_1.Message {
-            constructor(data?: any[]) {
+            constructor(data?: any[] | {
+                id?: string;
+            }) {
                 super();
-                pb_1.Message.initialize(this, data, 0, -1, [], null);
+                pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    this.id = data.id;
+                }
             }
             get id(): string | undefined {
                 return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -191,9 +231,10 @@ export namespace Firehose {
             }
         }
         export class Result extends pb_1.Message {
-            constructor(data?: any[]) {
+            constructor(data?: any[] | {}) {
                 super();
-                pb_1.Message.initialize(this, data, 0, -1, [], null);
+                pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+                if (!Array.isArray(data) && typeof data == "object") { }
             }
             toObject() {
                 return {};
@@ -217,9 +258,14 @@ export namespace Firehose {
         }
     }
     export class PoolDescription extends pb_1.Message {
-        constructor(data?: any[]) {
+        constructor(data?: any[] | {
+            size?: number;
+        }) {
             super();
-            pb_1.Message.initialize(this, data, 0, -1, [], null);
+            pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+            if (!Array.isArray(data) && typeof data == "object") {
+                this.size = data.size;
+            }
         }
         get size(): number | undefined {
             return pb_1.Message.getFieldWithDefault(this, 1, undefined) as number | undefined;
@@ -255,9 +301,16 @@ export namespace Firehose {
         }
     }
     export class ClientDescription extends pb_1.Message {
-        constructor(data?: any[]) {
+        constructor(data?: any[] | {
+            id?: string;
+            remoteAddress?: string;
+        }) {
             super();
-            pb_1.Message.initialize(this, data, 0, -1, [], null);
+            pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+            if (!Array.isArray(data) && typeof data == "object") {
+                this.id = data.id;
+                this.remoteAddress = data.remoteAddress;
+            }
         }
         get id(): string | undefined {
             return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -305,9 +358,14 @@ export namespace Firehose {
         }
     }
     export class Close extends pb_1.Message {
-        constructor(data?: any[]) {
+        constructor(data?: any[] | {
+            client?: ClientDescription;
+        }) {
             super();
-            pb_1.Message.initialize(this, data, 0, -1, [], null);
+            pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+            if (!Array.isArray(data) && typeof data == "object") {
+                this.client = data.client;
+            }
         }
         get client(): ClientDescription | undefined {
             return pb_1.Message.getWrapperField(this, ClientDescription, 1) as ClientDescription | undefined;
@@ -317,13 +375,13 @@ export namespace Firehose {
         }
         toObject() {
             return {
-                client: this.client
+                client: this.client && this.client.toObject()
             };
         }
         serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
             const writer = w || new pb_1.BinaryWriter();
             if (this.client)
-                writer.writeMessage(1, this.client, () => { });
+                writer.writeMessage(1, this.client, () => this.client.serialize(writer));
             if (!w)
                 return writer.getResultBuffer();
         }
@@ -344,9 +402,10 @@ export namespace Firehose {
     }
     export namespace Close {
         export class Result extends pb_1.Message {
-            constructor(data?: any[]) {
+            constructor(data?: any[] | {}) {
                 super();
-                pb_1.Message.initialize(this, data, 0, -1, [], null);
+                pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+                if (!Array.isArray(data) && typeof data == "object") { }
             }
             toObject() {
                 return {};
