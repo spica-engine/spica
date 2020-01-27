@@ -106,7 +106,7 @@ k8s_defaults(
         "gke",
         "spica-239113",
         "us-central1-a",
-        "master",  # Change to "ssl-cluster", to deploy prod.
+        "godfather",  # Change to "ssl-cluster", to deploy prod.
     ]),
     image_chroot = "index.docker.io",
     kind = "deployment",
