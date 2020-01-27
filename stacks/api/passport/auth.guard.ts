@@ -15,14 +15,18 @@ export type IAuthGuard = CanActivate & {
   logIn<TRequest extends {logIn: Function} = any>(request: TRequest): Promise<void>;
   handleRequest<TUser = any>(err, user, info, context): TUser;
 };
-export const AuthGuard: (type?: string | string[]) => Type<IAuthGuard> = memoize(createAuthGuard);
+export const AuthGuard: (type?: string) => Type<IAuthGuard> = memoize(createAuthGuard);
 
 const NO_STRATEGY_ERROR = `In order to use "defaultStrategy", please, ensure to import PassportModule in each place where AuthGuard() is being used. Otherwise, passport won't work correctly.`;
 
-function createAuthGuard(type?: string | string[]): Type<CanActivate> {
+function createAuthGuard(type?: string): Type<CanActivate> {
   class MixinAuthGuard<TUser = any> implements CanActivate {
     constructor(@Optional() protected readonly options?: AuthModuleOptions) {
-      this.options = this.options || {};
+      if (Array.isArray(this.options.defaultStrategy)) {
+        throw "Default strategy can not be array.";
+      } else {
+        type = this.options.defaultStrategy;
+      }
     }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -30,7 +34,11 @@ function createAuthGuard(type?: string | string[]): Type<CanActivate> {
       const [request, response] = [this.getRequest(context), context.switchToHttp().getResponse()];
       const passportFn = createPassportContext(request, response);
 
-      const strategyType = parseAuthHeader(request.headers.authorization).scheme;
+      const parsedAuth = parseAuthHeader(request.headers.authorization);
+      let strategyType = type;
+      if (parsedAuth) {
+        strategyType = parsedAuth.scheme;
+      }
 
       const user = await passportFn(strategyType.toLowerCase(), options, (err, user, info) =>
         this.handleRequest(err, user, info, context)

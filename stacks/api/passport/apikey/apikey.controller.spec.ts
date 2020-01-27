@@ -156,7 +156,7 @@ describe("ApiKey", () => {
     });
   });
 
-  describe("updatOne", () => {
+  describe("updateOne", () => {
     it("should update the apiKey", async () => {
       const {body} = await req.post("/passport/apikey", {
         name: "test",
@@ -186,6 +186,25 @@ describe("ApiKey", () => {
         .catch(r => r);
 
       expect(res.statusCode).toBe(404);
+    });
+  });
+
+  describe("attach/detach", () => {
+    it("should attach policy to apikey", async () => {
+      const insertedId = (await req.post("/passport/apikey", {name: "test", policies: []})).body
+        ._id;
+
+      const response = await req.put(`/passport/apikey/${insertedId}/attach-policy`, [
+        "test policy"
+      ]);
+      expect(response.statusCode).toBe(200);
+      delete response.body.key;
+      expect(response.body).toEqual({
+        _id: insertedId,
+        name: "test",
+        active: true,
+        policies: ["test policy"]
+      });
     });
   });
 });

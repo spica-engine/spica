@@ -29,6 +29,7 @@ class PassportCoreModule {
       module: PassportCoreModule,
       imports: [
         CorePassportModule.register({
+          defaultStrategy: options.defaultStrategy,
           session: false
         }),
         JwtModule.register({
