@@ -17,7 +17,7 @@ import {PassportService} from "../passport.service";
 import {Identity} from "./interface";
 import {IdentityService} from "./identity.service";
 import {NUMBER} from "@spica-server/core";
-import {AuthGuard} from "@nestjs/passport";
+import {AuthGuard} from "../auth.guard";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
 @Controller("passport/identity")

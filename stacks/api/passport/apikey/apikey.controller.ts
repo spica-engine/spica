@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {AuthGuard} from "@nestjs/passport";
+import {AuthGuard} from "../auth.guard";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";

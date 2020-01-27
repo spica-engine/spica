@@ -7,6 +7,7 @@
 		"passport:apikey:index",
 		"passport:apikey:show",
 		"passport:apikey:update",
-		"passport:apikey:delete"
+		"passport:apikey:delete",
+		"passport:apikey:policy"
 	]
 }

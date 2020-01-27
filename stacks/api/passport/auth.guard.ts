@@ -23,9 +23,6 @@ function createAuthGuard(type?: string | string[]): Type<CanActivate> {
   class MixinAuthGuard<TUser = any> implements CanActivate {
     constructor(@Optional() protected readonly options?: AuthModuleOptions) {
       this.options = this.options || {};
-      if (!type && !this.options.defaultStrategy) {
-        new Logger("AuthGuard").error(NO_STRATEGY_ERROR);
-      }
     }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {

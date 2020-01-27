@@ -1,6 +1,6 @@
 import {Controller, Get, Param, UseGuards} from "@nestjs/common";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {AuthGuard} from "@spica-server/passport";
+import {AuthGuard} from "../../passport/auth.guard";
 import {applyPatch} from "./differ";
 import {HistoryService} from "./history.service";
 import {compile} from "./schema";
