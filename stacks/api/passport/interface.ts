@@ -7,6 +7,7 @@ export interface PassportOptions {
   audience?: string;
   secretOrKey: string;
   defaultPassword?: string;
+  defaultStrategy?: string;
 }
 
 export interface Strategy {
