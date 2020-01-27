@@ -20,6 +20,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
 
   private ownablePolicies: Policy[] = [];
   private ownedPolicies: Policy[] = [];
+  private allPolicies: Policy[] = [];
 
   constructor(
     private router: Router,
@@ -37,31 +38,30 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
       )
       .subscribe(apiKey => {
         this.apiKey = apiKey;
-        this.filterPolicies();
+        this.policyService
+          .find()
+          .toPromise()
+          .then(policies => {
+            this.allPolicies = policies.data;
+            this.filterPolicies(this.allPolicies);
+          });
       });
   }
 
-  filterPolicies() {
-    this.policyService
-      .find()
-      .toPromise()
-      .then(policies => {
-        policies.data.forEach(policy => {
-          this.pushToCategory(policy);
-        });
-      });
-  }
-
-  pushToCategory(policy: Policy) {
-    this.apiKey.policies.includes(policy._id)
-      ? this.ownedPolicies.push(policy)
-      : this.ownablePolicies.push(policy);
+  filterPolicies(policies: Policy[]) {
+    this.ownedPolicies = [];
+    this.ownablePolicies = [];
+    policies.forEach(policy => {
+      this.apiKey.policies.includes(policy._id)
+        ? this.ownedPolicies.push(policy)
+        : this.ownablePolicies.push(policy);
+    });
   }
 
   saveApiKey() {
     this.apiKey._id
       ? this.apiKeyService
-          .update({...this.apiKey, policies: this.ownedPolicies.map(policy => policy._id)})
+          .update(this.apiKey)
           .toPromise()
           .then(() => this.router.navigate(["passport/apikey"]))
       : this.apiKeyService
@@ -70,14 +70,24 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
           .then(apikey => this.router.navigate(["passport/apikey", apikey._id, "edit"]));
   }
 
-  attachPolicy(policy: Policy) {
-    this.ownablePolicies = this.ownablePolicies.filter(item => item._id != policy._id);
-    this.ownedPolicies.push(policy);
+  attachPolicy(policyId: string) {
+    this.apiKeyService
+      .attachPolicy(policyId, this.apiKey)
+      .toPromise()
+      .then(apiKey => {
+        this.apiKey = apiKey;
+        this.filterPolicies(this.allPolicies);
+      });
   }
 
-  detachPolicy(policy: Policy) {
-    this.ownedPolicies = this.ownedPolicies.filter(item => item._id != policy._id);
-    this.ownablePolicies.push(policy);
+  detachPolicy(policyId: string) {
+    this.apiKeyService
+      .detachPolicy(policyId, this.apiKey)
+      .toPromise()
+      .then(apiKey => {
+        this.apiKey = apiKey;
+        this.filterPolicies(this.allPolicies);
+      });
   }
 
   ngOnDestroy() {

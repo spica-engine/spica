@@ -49,7 +49,7 @@
             <button
               mat-icon-button
               matTooltip="Detach this policy"
-              (click)="detachPolicy(policy)"
+              (click)="detachPolicy(policy._id)"
               color="warn"
             >
               <mat-icon>link_off</mat-icon>
@@ -66,7 +66,7 @@
               <button
                 mat-icon-button
                 matTooltip="Attach this policy"
-                (click)="attachPolicy(policy)"
+                (click)="attachPolicy(policy._id)"
               >
                 <mat-icon>link</mat-icon>
               </button>
@@ -77,6 +77,7 @@
 
       <button
         [disabled]="apiKeyForm.invalid"
+        canInteract="passport:apikey:update"
         mat-button
         color="primary"
         type="submit"

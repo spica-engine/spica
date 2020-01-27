@@ -75,7 +75,7 @@ export class IdentityController {
     return identity;
   }
   @Post("create")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:create"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   insertOne(
     @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
     identity: Identity

@@ -28,6 +28,14 @@ export class ApiKeyService {
   update(apiKey: ApiKey): Observable<ApiKey> {
     return this.http.post<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
   }
+
+  attachPolicy(policyId: string, apiKey: ApiKey): Observable<ApiKey> {
+    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKey._id}/attach-policy`, [policyId]);
+  }
+
+  detachPolicy(policyId: string, apiKey: ApiKey): Observable<ApiKey> {
+    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKey._id}/detach-policy`, [policyId]);
+  }
 }
 
 export class MockApiKeyService extends ApiKeyService {
