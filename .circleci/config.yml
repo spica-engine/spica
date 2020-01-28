@@ -41,6 +41,7 @@ executors:
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.0
   gcp-cli: circleci/gcp-cli@1.0.0
+version: 2.1
 jobs:
   setup:
     executor: default-executor
@@ -85,7 +86,8 @@ jobs:
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
-      - gcp-cli/install_and_initialize_cli
+      - gcp-cli/install
+      - gcp-cli/initialize
       - gcp-gke/install
       - run:
           name: "Configuring docker"
