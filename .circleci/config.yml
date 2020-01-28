@@ -101,6 +101,8 @@ jobs:
             $SUDO gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json  &&
             $SUDO gcloud --quiet config set project $GOOGLE_PROJECT_ID &&
             $SUDO gcloud --quiet config set compute/zone $GOOGLE_COMPUTE_ZONE &&
+            $SUDO gcloud auth login &&
+            # $SUDO gcloud config set account circle@spica-239113.iam.gserviceaccount.com &&
             gcloud container clusters get-credentials $CLUSTER_NAME --zone $GOOGLE_COMPUTE_ZONE --project $GOOGLE_PROJECT_ID &&
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
