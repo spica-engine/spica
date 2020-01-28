@@ -32,7 +32,6 @@ executors:
     working_directory: ~/spica
     docker:
       - image: circleci/node:11-browsers
-
   # api-executor:
   #   working_directory: ~/spica
   #   docker:
@@ -51,7 +50,7 @@ jobs:
           name: "Installing dependencies"
           command: yarn install --frozen-lockfile --non-interactive
       - run:
-          name : "update apt"
+          name: "update apt"
           command: ( sudo apt-get update || sudo apt-get update ) && sudo apt-get -y install apt-utils
       - persist_to_workspace:
           root: ~/
@@ -85,6 +84,9 @@ jobs:
   deploy:
     executor: default-executor
     steps:
+      - run:
+          name: "update apt"
+          command: ( sudo apt-get update || sudo apt-get update ) && sudo apt-get -y install apt-utils
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
@@ -114,7 +116,9 @@ workflows:
       # - test_spica:
       #     requires:
       #       - setup
-      - deploy
+      - deploy:
+          requires:
+            - lint
           # requires:
           #   # - test_api
           #   - test_spica
