@@ -39,8 +39,8 @@ executors:
   #     - image: circleci/node:11
   #     - image: circleci/mongo:4.2.1
 orbs:
-  gcp-gke: circleci/gcp-gke@0.1.0
-  gcr: circleci/gcp-gcr@0.0.2
+  gcp-gke: circleci/gcp-gke@1.0.0
+  gcp-cli: circleci/gcp-cli@1.0.0
 jobs:
   setup:
     executor: default-executor
@@ -82,15 +82,14 @@ jobs:
   deploy:
     executor: default-executor
     steps:
+      - run:
+          command: apt-get update 
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
       - gcp-gke/install
-      - run:
-          command : echo "giriş";
-      - gcp-gke/init
-      - run:
-          command : echo "çıkış";
+      - gcp-cli/install
+      - gcp-cli/initialize
       - run:
           name: "Configuring docker"
           command: |
@@ -102,7 +101,7 @@ jobs:
 
 workflows:
   version: 2
-  default:
+  main:
     jobs:
       - setup
       - lint:
