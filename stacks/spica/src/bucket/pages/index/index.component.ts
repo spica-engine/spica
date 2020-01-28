@@ -46,7 +46,7 @@ export class IndexComponent implements OnInit {
   dataIds: Array<string> = [];
 
   guide: boolean = false;
-  guideResponse = new Map<string, object>();
+  guideResponse: {[key: string]: string};
   guideUrls: any;
 
   constructor(
@@ -68,7 +68,7 @@ export class IndexComponent implements OnInit {
       }),
       flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
-        this.guideResponse = new Map<string, object>();
+        this.guideResponse = {};
         this.readOnly = schema.readOnly;
         this.properties = [
           ...Object.entries(schema.properties).map(([name, value]) => ({
@@ -114,7 +114,6 @@ export class IndexComponent implements OnInit {
         let bucketUrl = `/bucket/${this.bucketId}/data?`;
 
         setTimeout(() => {
-          console.log(this.properties);
           const propertyNameFirst =
             this.properties.length >= 2 ? this.properties[1].name : undefined;
           const propertyNameSecond =
