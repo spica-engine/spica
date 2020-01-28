@@ -85,7 +85,11 @@ jobs:
       - custom_attach_workspace
       - setup_circleci_bazel_config
       - gcp-gke/install
+      - run:
+          command : echo "giriş";
       - gcp-gke/init
+      - run:
+          command : echo "çıkış";
       - run:
           name: "Configuring docker"
           command: |
