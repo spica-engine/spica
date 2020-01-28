@@ -82,8 +82,6 @@ jobs:
   deploy:
     executor: default-executor
     steps:
-      - run:
-          command: sudo apt-get update  || sudo apt-get update 
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
@@ -103,6 +101,8 @@ workflows:
   version: 2
   main:
     jobs:
+      - run:
+          command: sudo apt-get update && sudo apt-get -y install apt-utils
       - setup
       - lint:
           requires:
@@ -110,13 +110,13 @@ workflows:
       # - test_api:
       #     requires:
       #       - setup
-      - test_spica:
-          requires:
-            - setup
+      # - test_spica:
+      #     requires:
+      #       - setup
       - deploy:
-          requires:
-            # - test_api
-            - test_spica
+      #     requires:
+      #       # - test_api
+      #       - test_spica
           # filters:
           #   branches:
           #     only: master
