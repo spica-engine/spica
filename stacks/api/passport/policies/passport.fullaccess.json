@@ -21,6 +21,12 @@
       "action": "passport:strategy:*",
       "resource": "*",
       "service": "passport:strategy"
+    },
+    {
+      "effect": "allow",
+      "action": "passport:apikey:*",
+      "resource": "*",
+      "service": "passport:apikey"
     }
   ]
 }

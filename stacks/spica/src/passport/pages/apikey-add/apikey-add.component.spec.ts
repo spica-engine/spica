@@ -1,11 +1,14 @@
 import {async, ComponentFixture, TestBed} from "@angular/core/testing";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {ApiKeyAddComponent} from "./apikey-add.component";
 import {
   MatIconModule,
   MatToolbarModule,
   MatCardModule,
   MatFormFieldModule,
-  MatInputModule
+  MatInputModule,
+  MatTooltipModule,
+  MatListModule
 } from "@angular/material";
 import {FormsModule} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -15,6 +18,8 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {IndexResult} from "@spica-server/core";
 import {ApiKey} from "../../interfaces/apikey";
 import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
+import {PolicyService} from "../../services/policy.service";
+import {By} from "@angular/platform-browser";
 
 describe("ApiKeyAddComponent", () => {
   let component: ApiKeyAddComponent;
@@ -25,17 +30,34 @@ describe("ApiKeyAddComponent", () => {
       imports: [
         MatIconModule,
         MatToolbarModule,
+        MatTooltipModule,
+        MatListModule,
         MatCardModule,
         MatFormFieldModule,
         MatInputModule,
         FormsModule,
         RouterTestingModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        HttpClientTestingModule
       ],
       providers: [
         {
           provide: ApiKeyService,
           useValue: new MockApiKeyService()
+        },
+        {
+          provide: PolicyService,
+          useValue: {
+            find: () => {
+              return of({
+                meta: 2,
+                data: [
+                  {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
+                  {_id: "AnotherPolicy", name: "another policy", description: "test", statement: []}
+                ]
+              });
+            }
+          }
         },
         {
           provide: ActivatedRoute,
@@ -64,7 +86,8 @@ describe("ApiKeyAddComponent", () => {
   it("should set apiKey as emptyApiKey when this page navigated from add button", () => {
     expect(component.apiKey).toEqual({
       name: undefined,
-      active: true
+      active: true,
+      policies: []
     });
   });
 
@@ -133,7 +156,7 @@ describe("ApiKeyAddComponent", () => {
     expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
   });
 
-  it("should insert apikey and navigate to index page", async () => {
+  it("should insert apikey and navigate to edit page", async () => {
     component.apiKey = {
       key: "new key",
       name: "new name",
@@ -160,6 +183,67 @@ describe("ApiKeyAddComponent", () => {
     ]);
 
     expect(routeSpy).toHaveBeenCalledTimes(1);
-    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
+    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey", "0", "edit"]);
+  });
+
+  describe("attach/detach", () => {
+    beforeEach(async () => {
+      const _id = await component["apiKeyService"]
+        .insert({
+          name: "test name",
+          active: true,
+          key: "test key",
+          policies: [],
+          description: "test description"
+        } as ApiKey)
+        .toPromise()
+        .then(apiKey => apiKey._id);
+      component["activatedRoute"].params = of({id: _id.toString()});
+
+      component.ngOnDestroy();
+      component.ngOnInit();
+
+      await fixture.whenStable();
+      fixture.detectChanges();
+    });
+
+    it("should show policies", () => {
+      expect(component["ownedPolicies"]).toEqual([]);
+      expect(component["ownablePolicies"]).toEqual([
+        {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
+        {_id: "AnotherPolicy", name: "another policy", description: "test", statement: []}
+      ]);
+    });
+
+    it("should attach and detach policy", async () => {
+      const firstOwnablePolicyButon = fixture.debugElement.query(
+        By.css("mat-list:last-of-type button:first-of-type")
+      ).nativeElement;
+      firstOwnablePolicyButon.click();
+
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(component["ownedPolicies"]).toEqual([
+        {_id: "TestPolicy", name: "test policy", description: "test", statement: []}
+      ]);
+      expect(component["ownablePolicies"]).toEqual([
+        {_id: "AnotherPolicy", name: "another policy", description: "test", statement: []}
+      ]);
+
+      const firstOwnedPolicyButon = fixture.debugElement.query(
+        By.css("mat-list:first-of-type button:first-of-type")
+      ).nativeElement;
+      firstOwnedPolicyButon.click();
+
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(component["ownedPolicies"]).toEqual([]);
+      expect(component["ownablePolicies"]).toEqual([
+        {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
+        {_id: "AnotherPolicy", name: "another policy", description: "test", statement: []}
+      ]);
+    });
   });
 });

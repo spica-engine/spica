@@ -17,7 +17,7 @@ import {PassportService} from "../passport.service";
 import {Identity} from "./interface";
 import {IdentityService} from "./identity.service";
 import {NUMBER} from "@spica-server/core";
-import {AuthGuard} from "@nestjs/passport";
+import {AuthGuard} from "../auth.guard";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
 @Controller("passport/identity")
@@ -75,7 +75,7 @@ export class IdentityController {
     return identity;
   }
   @Post("create")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:create"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   insertOne(
     @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
     identity: Identity
