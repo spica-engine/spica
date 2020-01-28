@@ -94,6 +94,9 @@ jobs:
       - gcp-cli/initialize
       - gcp-gke/install
       - run:
+          name: "Auth GCP"
+          command: gcloud auth login
+      - run:
           name: "Configuring docker"
           command: |
             gcloud container clusters get-credentials $CLUSTER_NAME --zone $GOOGLE_COMPUTE_ZONE --project $GOOGLE_PROJECT_ID
