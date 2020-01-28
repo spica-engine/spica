@@ -49,9 +49,6 @@ jobs:
       - run:
           name: "Installing dependencies"
           command: yarn install --frozen-lockfile --non-interactive
-      # - run:
-      #     name: "update apt"
-      #     command: ( sudo apt-get update || sudo apt-get update ) && sudo apt-get -y install apt-utils
       - persist_to_workspace:
           root: ~/
           paths:
@@ -84,9 +81,6 @@ jobs:
   deploy:
     executor: default-executor
     steps:
-      # - run:
-      #     name: "update apt"
-      #     command: ( sudo apt-get update || sudo apt-get update ) && sudo apt-get -y install apt-utils
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
