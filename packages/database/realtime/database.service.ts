@@ -1,15 +1,104 @@
 import {Injectable} from "@nestjs/common";
-import {ChangeStream, DatabaseService, Document, FilterQuery} from "@spica-server/database";
+import {
+  ChangeStream,
+  DatabaseService,
+  Document,
+  FilterQuery,
+  ObjectId
+} from "@spica-server/database";
 import {Observable, Subject, Subscription} from "rxjs";
 import {bufferTime, filter, share} from "rxjs/operators";
 import {levenshtein} from "./levenshtein";
 import {late} from "./operators";
 import {ChunkKind, StreamChunk} from "./stream";
 
+/**
+ * Converts the filter to not form
+ * @example { 'subfilter': true } -> { 'fullDocument.subfilter': { '$ne': true } }
+ * @example { 'fullDocument.stars': { '$gt': 1 } }  -> { 'fullDocument.stars': { '$not': { $gt: 1 } } }
+ */
+function reverseFilter<T>(filter: FilterQuery<T>) {
+  return Object.keys(filter).map(key => {
+    const value = filter[key];
+    return {
+      [`fullDocument.${key}`]: typeof value == "object" ? {$not: value} : {$ne: value}
+    };
+  });
+}
+
+function getSortedKeys(sort: {[k: string]: -1 | 1}) {
+  return Object.keys(sort);
+}
+
+function doesTheChangeAffectTheSortedCursor(
+  sortedKeys: string[],
+  change: {operationType: string; updateDescription: any}
+): boolean {
+  // If the change occurred because of an update operation, we can check if the change affects our cursor by
+  // comparing the changed keys and our sorted keys
+  if (change.operationType == "update") {
+    // TODO: Check this for subdocument updates (optimization)
+    // This check can be optimized for subdocument updates.
+    // Right now it only checks the root properties.
+    const changedKeys: string[] = (change.updateDescription.removedFields || []).concat(
+      Object.keys(change.updateDescription.updatedFields || {})
+    );
+    return changedKeys.some(k => sortedKeys.indexOf(k) > -1);
+  }
+
+  return true;
+}
+
+function fetchSortedIdsOfTheCursor<T>(
+  name: string,
+  db: DatabaseService,
+  options: FindOptions<T>
+): Promise<string[]> {
+  const pipeline = [];
+
+  if (options.filter) {
+    pipeline.push({
+      $match: options.filter
+    });
+  }
+
+  if (options.sort) {
+    pipeline.push({
+      $sort: options.sort
+    });
+  }
+
+  if (options.skip) {
+    pipeline.push({
+      $skip: options.skip
+    });
+  }
+
+  if (options.limit) {
+    pipeline.push({
+      $limit: options.limit
+    });
+  }
+
+  pipeline.push({
+    $project: {
+      _id: 1
+    }
+  });
+
+  return db
+    .collection(name)
+    .aggregate(pipeline)
+    .toArray()
+    .then(r => r.map(r => r._id.toString()));
+}
+
+function hasChangeAlreadyPresentInCursor(ids: Set<string>, change: {documentKey: {_id: ObjectId}}) {
+  return ids.has(change.documentKey._id.toHexString());
+}
+
 @Injectable()
 export class RealtimeDatabaseService {
-  _streamCount = 0;
-
   constructor(private database: DatabaseService) {}
 
   find<T extends Document = any>(
@@ -19,33 +108,23 @@ export class RealtimeDatabaseService {
     options = options || {};
     let ids = new Set<string>();
     return new Observable<StreamChunk<T>>(observer => {
-      options = options || {};
-
       const streams = new Set<ChangeStream>();
       const pipeline: object[] = [];
       const sort = new Subject<any>();
       let sortSubscription: Subscription;
 
       if (options.sort) {
-        const sortedKeys = Object.keys(options.sort);
+        const sortedKeys = getSortedKeys(options.sort);
+
         sortSubscription = sort
           .pipe(
-            filter(change => {
-              if (change.operationType == "update") {
-                // TODO: Check this for subdocument updates
-                const changedKeys: string[] = (change.updateDescription.removedFields || []).concat(
-                  Object.keys(change.updateDescription.updatedFields || {})
-                );
-                return changedKeys.some(k => sortedKeys.indexOf(k) > -1);
-              }
-              return true;
-            }),
+            filter(change => doesTheChangeAffectTheSortedCursor(sortedKeys, change)),
             bufferTime(70),
             filter(changes => changes.length > 0)
           )
           .subscribe(async events => {
-            let syncedIds: string[];
-
+            // This optimizes sorting by sending inserts in reverse order
+            // if the cursor sorted by _id property.
             if (
               sortedKeys.length == 1 &&
               sortedKeys[0] == "_id" &&
@@ -54,61 +133,19 @@ export class RealtimeDatabaseService {
             ) {
               events = events.reverse();
             }
-
             for (const change of events) {
-              // TODO: enqueue this events and sent if needed.
               if (change.operationType == "insert") {
                 observer.next({kind: ChunkKind.Insert, document: change.fullDocument});
                 ids.add(change.documentKey._id.toString());
               }
             }
 
-            // if (
-            //   !options.skip &&
-            //   options.limit &&
-            //   sortedKeys.length == 1 &&
-            //   sortedKeys[0] == "_id"
-            // ) {
-            //   console.log("Falling to local sort.");
-            //   syncedIds = Array.from(ids)
-            //     .sort((a, b) =>
-            //       options.sort._id == 1
-            //         ? new ObjectId(a).generationTime - new ObjectId(b).generationTime
-            //         : new ObjectId(b).generationTime - new ObjectId(a).generationTime
-            //     )
-            //     .slice(0, options.limit);
-            // } else {
-            let stream = this.database.collection(name).find(options.filter);
-            if (options.sort) {
-              stream = stream.sort(options.sort);
-            }
-
-            if (options.skip) {
-              stream = stream.skip(options.skip);
-            }
-
-            if (options.limit) {
-              stream = stream.limit(options.limit);
-            }
-            syncedIds = await stream.toArray().then(datas => datas.map(r => r._id.toString()));
-            // }
+            const syncedIds = await fetchSortedIdsOfTheCursor(name, this.database, options);
             const changeSequence = levenshtein(ids, syncedIds);
             ids = new Set(syncedIds);
             observer.next({kind: ChunkKind.Order, sequence: changeSequence.sequence});
           });
       }
-
-      const getMore = () => {
-        this.database
-          .collection(name)
-          .find(options.filter)
-          .skip((options.skip && options.skip + ids.size) || ids.size)
-          .limit(options.limit - ids.size)
-          .on("data", data => {
-            observer.next({kind: ChunkKind.Initial, document: data});
-            ids.add(data._id.toString());
-          });
-      };
 
       if (options.filter) {
         pipeline.push({
@@ -135,13 +172,7 @@ export class RealtimeDatabaseService {
               [
                 {
                   $match: {
-                    $or: Object.keys(options.filter).map(key => {
-                      const value = options.filter[key];
-                      return {
-                        [`fullDocument.${key}`]:
-                          typeof value == "object" ? {$not: value} : {$ne: value}
-                      };
-                    }),
+                    $or: reverseFilter(options.filter),
                     operationType: {$regex: "update|replace"}
                   }
                 }
@@ -151,7 +182,7 @@ export class RealtimeDatabaseService {
               }
             )
             .on("change", change => {
-              if (ids.has(change.documentKey._id.toString())) {
+              if (hasChangeAlreadyPresentInCursor(ids, change)) {
                 observer.next({
                   kind: ChunkKind.Expunge,
                   document: change.documentKey
@@ -161,6 +192,18 @@ export class RealtimeDatabaseService {
             })
         );
       }
+
+      const fetchMoreItemToFillTheCursor = () => {
+        this.database
+          .collection(name)
+          .find(options.filter)
+          .skip((options.skip && options.skip + ids.size) || ids.size)
+          .limit(options.limit - ids.size)
+          .on("data", data => {
+            observer.next({kind: ChunkKind.Initial, document: data});
+            ids.add(data._id.toString());
+          });
+      };
 
       streams.add(
         this.database
@@ -175,25 +218,23 @@ export class RealtimeDatabaseService {
                   return;
                 }
 
+                // If sorting enabled hand over the event to sort
                 if (options.sort) {
-                  // If sorting enabled hand over the event to sort
-                  sort.next(change);
-                } else {
-                  observer.next({kind: ChunkKind.Insert, document: change.fullDocument});
-                  ids.add(change.documentKey._id.toString());
+                  return sort.next(change);
                 }
+
+                observer.next({kind: ChunkKind.Insert, document: change.fullDocument});
+                ids.add(change.documentKey._id.toString());
+
                 break;
               case "delete":
                 if (ids.has(change.documentKey._id.toString())) {
                   observer.next({kind: ChunkKind.Delete, document: change.documentKey});
                   ids.delete(change.documentKey._id.toString());
-                  // TODO: check this
+
                   if (options.limit && ids.size < options.limit) {
-                    getMore();
+                    fetchMoreItemToFillTheCursor();
                   }
-                  // if (options.sort) {
-                  //   sort.next(change);
-                  // }
                 }
                 break;
               case "replace":
@@ -201,21 +242,14 @@ export class RealtimeDatabaseService {
                 if (options.sort) {
                   sort.next(change);
                 }
+                // prettier-ignore
                 if (
-                  !options.filter &&
-                  options.skip &&
-                  !ids.has(change.documentKey._id.toString())
+                  (!options.filter && options.skip && !hasChangeAlreadyPresentInCursor(ids, change)) ||
+                  (options.limit && ids.size >= options.limit && !hasChangeAlreadyPresentInCursor(ids, change))
                 ) {
                   return;
                 }
 
-                if (
-                  options.limit &&
-                  ids.size >= options.limit &&
-                  !ids.has(change.documentKey._id.toString())
-                ) {
-                  return;
-                }
                 // If the updated or replaced document is deleted immediately
                 // after update/replace operation fullDocument will be empty.
                 if (change.fullDocument != null) {
@@ -233,9 +267,7 @@ export class RealtimeDatabaseService {
           })
       );
 
-      this._streamCount += streams.size;
       return () => {
-        this._streamCount -= streams.size;
         if (sortSubscription) {
           sortSubscription.unsubscribe();
         }

@@ -6,6 +6,8 @@ import {RealtimeDatabaseService} from "./database.service";
 import {SequenceKind} from "./levenshtein";
 import {ChunkKind} from "./stream";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 8000;
+
 const LATENCY = 70;
 
 const SKIP = new Object();
@@ -39,25 +41,38 @@ describe("realtime database", () => {
         return new ObjectId(actual).equals(expected);
       }
     });
-  }, 8000);
+  });
 
   it("should sync late subscribers", async done => {
     await database.collection("test21").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
-    const source = realtime.find("test21", {filter: {stars: {$gt: 3}}}).pipe(bufferCount(3));
-
-    source.subscribe(([first, second, endofinitial]) => {
-      expect(first.document.stars).toBe(4);
-      expect(second.document.stars).toBe(5);
-      expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
-      const prevStreamCount = realtime._streamCount;
-      source.subscribe(([first, second, endofinitial]) => {
-        expect(prevStreamCount).toBe(realtime._streamCount);
-        expect(first.document.stars).toBe(4);
-        expect(second.document.stars).toBe(5);
-        expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
-        done();
+    const source = realtime.find("test21", {filter: {stars: {$gt: 3}}});
+    const firstSubscription = source
+      .pipe(
+        bufferCount(3),
+        take(1)
+      )
+      .subscribe({
+        next: ([first, second, endofinitial]) => {
+          expect(first.document.stars).toBe(4);
+          expect(second.document.stars).toBe(5);
+          expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
+          const secondSubscription = source
+            .pipe(
+              bufferCount(3),
+              take(1)
+            )
+            .subscribe({
+              next: ([first, second, endofinitial]) => {
+                expect(first.document.stars).toBe(4);
+                expect(second.document.stars).toBe(5);
+                expect(endofinitial).toEqual({kind: ChunkKind.EndOfInitial});
+                secondSubscription.unsubscribe();
+                firstSubscription.unsubscribe();
+              }
+            });
+        },
+        complete: () => done()
       });
-    });
   });
 
   it("should complete observable when collection dropped", async done => {

@@ -57,7 +57,8 @@ export class DatabaseTestingModule implements OnModuleDestroy {
                   : "/usr/local/bin/mongod"
               },
               replSet: {
-                count: 3
+                count: 3,
+                dbName: undefined
               },
               instanceOpts: [
                 {storageEngine: "wiredTiger"},
