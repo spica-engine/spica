@@ -97,7 +97,7 @@ jobs:
 
 workflows:
   version: 2
-  main:
+  default:
     jobs:
       - setup
       - lint:
