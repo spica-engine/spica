@@ -25,7 +25,7 @@ function createAuthGuard(type?: string): Type<CanActivate> {
       if (Array.isArray(this.options.defaultStrategy)) {
         throw "Default strategy can not be array.";
       } else {
-        type = this.options.defaultStrategy;
+        type = type || this.options.defaultStrategy;
       }
     }
 
@@ -35,9 +35,11 @@ function createAuthGuard(type?: string): Type<CanActivate> {
       const passportFn = createPassportContext(request, response);
 
       const parsedAuth = parseAuthHeader(request.headers.authorization);
-      let strategyType = type;
+      let strategyType;
       if (parsedAuth) {
         strategyType = parsedAuth.scheme;
+      } else {
+        strategyType = type;
       }
 
       const user = await passportFn(strategyType.toLowerCase(), options, (err, user, info) =>
