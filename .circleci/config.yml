@@ -90,9 +90,9 @@ jobs:
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
-      - gcp-gke/install
-      - gcp-cli/install
+       - gcp-cli/install
       - gcp-cli/initialize
+      - gcp-gke/install
       - run:
           name: "Configuring docker"
           command: |
