@@ -40,6 +40,7 @@ executors:
   #     - image: circleci/mongo:4.2.1
 orbs:
   gcp-gke: circleci/gcp-gke@0.1.0
+  gcr: circleci/gcp-gcr@0.0.2
 jobs:
   setup:
     executor: default-executor
