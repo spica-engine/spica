@@ -102,7 +102,7 @@ workflows:
   main:
     jobs:
       - run:
-          command: sudo apt-get update && sudo apt-get -y install apt-utils
+          command: ( sudo apt-get update || sudo apt-get update ) && sudo apt-get -y install apt-utils
       - setup
       - lint:
           requires:
