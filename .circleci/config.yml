@@ -83,7 +83,7 @@ jobs:
     executor: default-executor
     steps:
       - run:
-          command: apt-get update 
+          command: sudo apt-get update  || sudo apt-get update 
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
