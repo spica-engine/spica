@@ -95,6 +95,9 @@ jobs:
       - gcp-gke/install
       - run:
           name: "Configuring docker"
+          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json  | gcloud config set account  circle@spica-239113.iam.gserviceaccount.com
+      - run:
+          name: "Configuring docker"
           command: |
             gcloud container clusters get-credentials $CLUSTER_NAME --zone $GOOGLE_COMPUTE_ZONE --project $GOOGLE_PROJECT_ID
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
