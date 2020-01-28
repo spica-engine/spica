@@ -85,7 +85,6 @@ jobs:
       - custom_attach_workspace
       - setup_circleci_bazel_config
       - gcp-gke/install
-      - gcp-gke/init
       - run:
           name: "Configuring docker"
           command: |
@@ -97,7 +96,7 @@ jobs:
 
 workflows:
   version: 2
-  default:
+  main:
     jobs:
       - setup
       - lint:
