@@ -72,7 +72,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
 
   attachPolicy(policyId: string) {
     this.apiKeyService
-      .attachPolicy(policyId, this.apiKey)
+      .attachPolicy(policyId, this.apiKey._id)
       .toPromise()
       .then(apiKey => {
         this.apiKey = apiKey;
@@ -82,7 +82,7 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
 
   detachPolicy(policyId: string) {
     this.apiKeyService
-      .detachPolicy(policyId, this.apiKey)
+      .detachPolicy(policyId, this.apiKey._id)
       .toPromise()
       .then(apiKey => {
         this.apiKey = apiKey;
