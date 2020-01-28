@@ -95,7 +95,7 @@ jobs:
       - gcp-gke/install
       - run:
           name: "Auth GCP"
-          command: sudo gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json && sudo gcloud --quiet config set project $GOOGLE_PROJECT_ID && sudo gcloud --quiet config set compute/zone $GOOGLE_COMPUTE_ZONE
+          command: sudo gcloud auth list && sudo gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json && sudo gcloud --quiet config set project $GOOGLE_PROJECT_ID && sudo gcloud --quiet config set compute/zone $GOOGLE_COMPUTE_ZONE
       - run:
           name: "Configuring docker"
           command: |
