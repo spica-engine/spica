@@ -22,7 +22,7 @@ describe("DatabaseEnqueuer", () => {
     noopTarget.handler = "default";
 
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    databaseQueue = jasmine.createSpyObj("httpQueue", ["enqueue"]);
+    databaseQueue = jasmine.createSpyObj("databaseQueue", ["enqueue"]);
     databaseEnqueuer = new DatabaseEnqueuer(eventQueue, databaseQueue, database);
   }, 7000);
 

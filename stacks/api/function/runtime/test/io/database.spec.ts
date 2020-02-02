@@ -21,7 +21,9 @@ describe("IO Database", () => {
   });
 
   it("should create writable stream and a capped collection", done => {
-    const stream = dbOutput.create({eventId: "test", functionId: "fn1"}, async () => {
+    const stream = dbOutput.create({eventId: "test", functionId: "fn1"});
+    setTimeout(async () => {
+      expect(stream.writable).toBe(true);
       expect(
         await Promise.all(
           (await db.collections()).map(async c => ({
@@ -36,22 +38,20 @@ describe("IO Database", () => {
         }
       ]);
       done();
-    });
-    expect(stream.writable).toBe(true);
+    }, 500);
   });
 
   it("should write to collection", done => {
-    const stream = dbOutput.create({eventId: "event", functionId: "1"}, async () => {
-      stream.write(Buffer.from("this is my message"), async err => {
-        expect(err).toBeUndefined();
-        expect(await db.collection("function_logs").findOne({})).toEqual({
-          _id: "__skip",
-          content: "this is my message",
-          event_id: "event",
-          function: "1"
-        });
-        done();
+    const stream = dbOutput.create({eventId: "event", functionId: "1"});
+    stream.write(Buffer.from("this is my message"), async err => {
+      expect(err).toBeUndefined();
+      expect(await db.collection("function_logs").findOne({})).toEqual({
+        _id: "__skip",
+        content: "this is my message",
+        event_id: "event",
+        function: "1"
       });
+      done();
     });
   });
 });

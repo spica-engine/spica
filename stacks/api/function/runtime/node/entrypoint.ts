@@ -2,11 +2,15 @@ import {
   Change,
   DatabaseQueue,
   EventQueue,
+  FirehosePool,
+  FirehoseQueue,
+  FirehoseSocket,
   HttpQueue,
+  Message,
   Request,
   Response
 } from "@spica-server/function/queue/node";
-import {Database, Event, Http} from "@spica-server/function/queue/proto";
+import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
 
 if (!process.env.ENTRYPOINT) {
@@ -35,7 +39,6 @@ if (!process.env.EVENT_ID) {
   switch (event.type) {
     case Event.Type.HTTP:
       const httpQueue = new HttpQueue();
-      // TODO: change this particular pop message with the generic Event.Pop message.
       const httpPop = new Http.Request.Pop();
       httpPop.id = event.id;
       const request = await httpQueue.pop(httpPop);
@@ -63,7 +66,35 @@ if (!process.env.EVENT_ID) {
       callArguments[0] = new Change(change);
       break;
     case Event.Type.FIREHOSE:
-      // TODO
+      const firehose = new FirehoseQueue();
+      const {client: clientDescription, pool: poolDescription, message} = await firehose.pop(
+        new Firehose.Message.Pop({
+          id: event.id
+        })
+      );
+      callArguments[1] = new Message(message);
+      callArguments[0] = {
+        socket: new FirehoseSocket(
+          clientDescription,
+          () => {
+            firehose.close(
+              new Firehose.Close({
+                client: clientDescription
+              })
+            );
+          },
+          message => {
+            firehose.send(
+              new Firehose.Message.Outgoing({
+                client: clientDescription,
+                message
+              })
+            );
+          }
+        ),
+        pool: new FirehosePool(poolDescription, message => firehose.sendAll(message))
+      };
+
       break;
     case Event.Type.SCHEDULE:
       // TODO

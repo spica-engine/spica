@@ -1,5 +1,5 @@
-import {DatabaseQueue, EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {Database, Event, Http} from "@spica-server/function/queue/proto";
+import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
+import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {Compilation} from "@spica-server/function/runtime";
 import {Node} from "@spica-server/function/runtime/node";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
@@ -264,7 +264,8 @@ describe("Entrypoint", () => {
 
       await runtime.execute({
         eventId: event.id,
-        cwd: event.target.cwd
+        cwd: event.target.cwd,
+        stdout: "inherit"
       });
 
       expect(databaseQueue.size).toBe(0);
@@ -296,11 +297,205 @@ describe("Entrypoint", () => {
       const exitCode = await runtime
         .execute({
           eventId: event.id,
-          cwd: event.target.cwd
+          cwd: event.target.cwd,
+          stdout: "inherit"
         })
         .catch(e => e);
 
       expect(exitCode).toBe(4);
+    });
+  });
+
+  describe("Firehose", () => {
+    let firehoseQueue: FirehoseQueue;
+
+    beforeEach(() => {
+      queue.drain();
+      firehoseQueue = new FirehoseQueue();
+      queue.addQueue(firehoseQueue);
+      queue.listen();
+    });
+
+    it("pop from the queue", async () => {
+      await initializeFn(`export default function({socket, pool}, message) {
+        console.log(arguments);
+        if ( 
+          socket.remoteAddress == "[::1]" && 
+          socket.id == "1" &&
+          pool.size == 21 &&
+          message.name == "test" && 
+          message.data == "test"
+        ) {
+          process.exit(4);
+        }
+      }`);
+
+      const event = new Event.Event();
+      event.type = Event.Type.FIREHOSE;
+
+      event.target = new Event.Target();
+      event.target.cwd = compilation.cwd;
+      event.target.handler = "default";
+
+      queue.enqueue(event);
+
+      firehoseQueue.enqueue(
+        event.id,
+        new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "1",
+            remoteAddress: "[::1]"
+          }),
+          message: new Firehose.Message({name: "test", data: JSON.stringify("test")}),
+          pool: new Firehose.PoolDescription({size: 21})
+        }),
+        undefined
+      );
+
+      const exitCode = await runtime
+        .execute({
+          eventId: event.id,
+          cwd: event.target.cwd,
+          stdout: "inherit"
+        })
+        .catch(r => r);
+      expect(exitCode).toBe(4, "Assertion failed.");
+    });
+
+    it("should send message to socket", async () => {
+      await initializeFn(`export default function({socket, pool}, message) {
+        socket.send('test', 'thisisthedata');
+      }`);
+
+      const event = new Event.Event();
+      event.type = Event.Type.FIREHOSE;
+
+      event.target = new Event.Target();
+      event.target.cwd = compilation.cwd;
+      event.target.handler = "default";
+
+      queue.enqueue(event);
+
+      const socketSpy = jasmine.createSpyObj("Socket", ["send"]);
+
+      firehoseQueue.enqueue(
+        event.id,
+        new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "1",
+            remoteAddress: "[::1]"
+          }),
+          message: new Firehose.Message({name: "connection"}),
+          pool: new Firehose.PoolDescription({size: 21})
+        }),
+        socketSpy
+      );
+
+      await runtime.execute({
+        eventId: event.id,
+        cwd: event.target.cwd,
+        stdout: "inherit"
+      });
+      expect(socketSpy.send).toHaveBeenCalledTimes(1);
+      expect(socketSpy.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+    });
+
+    it("should close the socket connection", async () => {
+      await initializeFn(`export default function({socket, pool}, message) {
+        socket.close();
+      }`);
+
+      const event = new Event.Event();
+      event.type = Event.Type.FIREHOSE;
+
+      event.target = new Event.Target();
+      event.target.cwd = compilation.cwd;
+      event.target.handler = "default";
+
+      queue.enqueue(event);
+
+      const socketSpy = jasmine.createSpyObj("Socket", ["close"]);
+      socketSpy.readyState = 1;
+
+      firehoseQueue.enqueue(
+        event.id,
+        new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "1",
+            remoteAddress: "[::1]"
+          }),
+          message: new Firehose.Message({name: "connection"}),
+          pool: new Firehose.PoolDescription({size: 21})
+        }),
+        socketSpy
+      );
+
+      await runtime.execute({
+        eventId: event.id,
+        cwd: event.target.cwd,
+        stdout: "inherit"
+      });
+      expect(socketSpy.close).toHaveBeenCalledTimes(1);
+    });
+
+    it("should send message to all sockets", async () => {
+      await initializeFn(`export default function({socket, pool}, message) {
+        pool.send('test', 'thisisthedata');
+      }`);
+
+      const event = new Event.Event();
+      event.type = Event.Type.FIREHOSE;
+
+      event.target = new Event.Target();
+      event.target.cwd = compilation.cwd;
+      event.target.handler = "default";
+
+      queue.enqueue(event);
+
+      const pool = new Firehose.PoolDescription({size: 21}),
+        message = new Firehose.Message({name: "connection"});
+
+      const firstSocket = jasmine.createSpyObj("firstSocket", ["send"]);
+      firstSocket.readyState = 1; /* OPEN */
+
+      firehoseQueue.enqueue(
+        event.id,
+        new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "1",
+            remoteAddress: "[::1]"
+          }),
+          message,
+          pool
+        }),
+        firstSocket
+      );
+
+      const secondSocket = jasmine.createSpyObj("secondSocket", ["send"]);
+      secondSocket.readyState = 1; /* OPEN */
+
+      firehoseQueue.enqueue(
+        event.id,
+        new Firehose.Message.Incoming({
+          client: new Firehose.ClientDescription({
+            id: "2",
+            remoteAddress: "[::1]"
+          }),
+          message,
+          pool
+        }),
+        secondSocket
+      );
+
+      await runtime.execute({
+        eventId: event.id,
+        cwd: event.target.cwd,
+        stdout: "inherit"
+      });
+      expect(firstSocket.send).toHaveBeenCalledTimes(1);
+      expect(firstSocket.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
+      expect(secondSocket.send).toHaveBeenCalledTimes(1);
+      expect(secondSocket.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
     });
   });
 });

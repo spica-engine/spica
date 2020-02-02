@@ -5,13 +5,18 @@ import {StdOut, StdOutOptions} from "./stdout";
 export class DatabaseOutput extends StdOut {
   constructor(private db: DatabaseService) {
     super();
-    this.db.createCollection("function_logs", {capped: true, size: 419430400 /* 400Mi */});
+    this.db
+      .createCollection("function_logs", {capped: true, size: 419430400 /* 400Mi */})
+      .catch(e => {
+        if (e.codeName == "NamespaceExists") {
+          // Do nothing
+        } else {
+          return Promise.reject(e);
+        }
+      });
   }
 
-  create(options: StdOutOptions, callback?: () => void): Writable {
-    if (callback) {
-      callback();
-    }
+  create(options: StdOutOptions): Writable {
     return new PassThrough().on("data", data => {
       this.db.collection("function_logs").insertOne({
         function: options.functionId,
