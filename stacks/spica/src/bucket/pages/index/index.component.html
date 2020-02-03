@@ -219,7 +219,9 @@
         <a (click)="guideRequest(guideUrls?.getAllWithLimit, 'getAllWithLimit')" class="guide-link">
           {{ guideUrls?.getAllWithLimit }}
         </a>
-        <mat-chip *ngIf="guideResponse?.getAllWithLimit" color="warn" selected>Return Data</mat-chip>
+        <mat-chip *ngIf="guideResponse?.getAllWithLimit" color="warn" selected
+          >Return Data</mat-chip
+        >
         <p
           *ngIf="guideResponse?.getAllWithLimit"
           [innerHtml]="
@@ -367,7 +369,9 @@
           {{ guideUrls?.getDataWithLang }}
           <p>headers: "Accept-Language": "tr-TR"</p>
         </a>
-        <mat-chip *ngIf="guideResponse?.getDataWithLang" color="warn" selected>Return Data</mat-chip>
+        <mat-chip *ngIf="guideResponse?.getDataWithLang" color="warn" selected
+          >Return Data</mat-chip
+        >
         <p
           *ngIf="guideResponse?.getDataWithLang"
           class="guide-response"

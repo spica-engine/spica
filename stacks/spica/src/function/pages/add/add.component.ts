@@ -39,6 +39,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   private dispose = new EventEmitter();
 
+  $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
@@ -77,30 +79,30 @@ export class AddComponent implements OnInit, OnDestroy {
       .subscribe(response => (this.index = response.index));
   }
 
-  // run(handler: string) {
-  //   this.$run = this.http
-  //     .request(
-  //       new HttpRequest("GET", `api:/function/${this.function._id}/run/${handler}`, {
-  //         reportProgress: true,
-  //         responseType: "text"
-  //       })
-  //     )
-  //     .pipe(
-  //       scan((accumulator: any, event: HttpEvent<any>) => {
-  //         if (event.type == HttpEventType.Sent) {
-  //           accumulator.state = "running";
-  //         } else if (event.type == HttpEventType.DownloadProgress) {
-  //           accumulator.logs = String(event["partialText"] || "")
-  //             .split("\n")
-  //             .filter(line => !!line)
-  //             .map(line => JSON.parse(line));
-  //         } else if (event.type == HttpEventType.Response) {
-  //           accumulator.state = accumulator.logs.pop().state || "failed";
-  //         }
-  //         return accumulator;
-  //       }, {})
-  //     );
-  // }
+  run(handler: string) {
+    // this.$run = this.http
+    //   .request(
+    //     new HttpRequest("GET", `api:/function/${this.function._id}/run/${handler}`, {
+    //       reportProgress: true,
+    //       responseType: "text"
+    //     })
+    //   )
+    //   .pipe(
+    //     scan((accumulator: any, event: HttpEvent<any>) => {
+    //       if (event.type == HttpEventType.Sent) {
+    //         accumulator.state = "running";
+    //       } else if (event.type == HttpEventType.DownloadProgress) {
+    //         accumulator.logs = String(event["partialText"] || "")
+    //           .split("\n")
+    //           .filter(line => !!line)
+    //           .map(line => JSON.parse(line));
+    //       } else if (event.type == HttpEventType.Response) {
+    //         accumulator.state = accumulator.logs.pop().state || "failed";
+    //       }
+    //       return accumulator;
+    //     }, {})
+    //   );
+  }
 
   addTrigger() {
     this.function.triggers.push(emptyTrigger());
