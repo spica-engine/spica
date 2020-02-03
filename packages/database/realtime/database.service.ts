@@ -94,7 +94,7 @@ function fetchSortedIdsOfTheCursor<T>(
 }
 
 function hasChangeAlreadyPresentInCursor(ids: Set<string>, change: {documentKey: {_id: ObjectId}}) {
-  return ids.has(change.documentKey._id.toHexString());
+  return ids.has(change.documentKey._id.toString());
 }
 
 @Injectable()
