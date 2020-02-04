@@ -80,8 +80,9 @@ export class MockApiKeyService extends ApiKeyService {
   }
 
   delete(id: string) {
-    this.apiKeys.splice(this.apiKeys.indexOf(this.apiKeys.find(apikey => apikey._id == id)));
-    return null;
+    const deletedItem = this.apiKeys.find(apiKey => apiKey._id === id);
+    this.apiKeys = this.apiKeys.filter(apiKey => apiKey != deletedItem);
+    return of(null)
   }
 
   attachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
