@@ -1,11 +1,4 @@
-import {
-  async,
-  ComponentFixture,
-  TestBed,
-  tick,
-  fakeAsync,
-  flushMicrotasks
-} from "@angular/core/testing";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ApiKeyIndexComponent} from "./apikey-index.component";
 import {
   MatIconModule,
