@@ -1,5 +1,5 @@
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
-import {Component, OnInit, HostListener} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import {Observable} from "rxjs";
 import {map, startWith} from "rxjs/operators";
 import {DocService} from "../../services/doc.service";
@@ -25,13 +25,6 @@ export class DocsLayoutComponent implements OnInit {
     this.$apiDocs = docs.getApiDocs();
     this.$contentDocs = docs.getContentDocs();
   }
-  @HostListener("window:resize", ["$event"])
-  onResize(event) {
-    this.innerWidth = window.innerWidth;
 
-  }
-
-  ngOnInit() {
-    this.innerWidth = window.innerWidth;
-  }
+  ngOnInit() {}
 }
