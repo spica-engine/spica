@@ -13,11 +13,15 @@ export class MatClipboardDirective {
     if (!this.text) {
       return;
     }
-    const clipboard = document.createElement("input");
-    clipboard.innerText = this.text;
-    clipboard.select();
-    clipboard.setSelectionRange(0, this.text.length);
+
+    const clipBoard = document.createElement("input");
+    clipBoard.value = this.text;
+    document.body.appendChild(clipBoard);
+    clipBoard.focus();
+    clipBoard.select();
     document.execCommand("copy");
+    document.body.removeChild(clipBoard);
+
     this.icon = "check";
     setTimeout(() => {
       this.icon = "info";
