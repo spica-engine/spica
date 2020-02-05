@@ -61,7 +61,7 @@ describe("ApiKeyIndexComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should show apikeys", async () => {
+  it("should show apikeys", () => {
     const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
     expect(cells[0].nativeElement.textContent).toBe("testkey");
     expect(cells[1].nativeElement.textContent).toBe("testname");
@@ -69,14 +69,11 @@ describe("ApiKeyIndexComponent", () => {
   });
 
   it("should delete apikey", async () => {
-    await component.deleteApiKey("0");
+    component.deleteApiKey("0");
 
     await fixture.whenStable();
-    fixture.detectChanges();
 
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(1).toBe(1);
+    const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
+    expect(cells).toEqual([]);
   });
 });
