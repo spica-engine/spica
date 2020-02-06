@@ -95,7 +95,7 @@ jobs:
       - run:
           name: "Deploying artifacts"
           command: |
-            cd stacks/spica && yarn ng build --prod
+            (cd stacks/spica && yarn ng build --prod)
             ./node_modules/.bin/bazel run deploy.replace -- --force
 
 workflows:
