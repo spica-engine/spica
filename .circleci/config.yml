@@ -116,7 +116,6 @@ workflows:
       - deploy:
           requires:
             - setup
-          requires:
             # - test_api
             - test_spica
           filters:
