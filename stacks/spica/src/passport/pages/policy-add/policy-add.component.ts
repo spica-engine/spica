@@ -132,17 +132,27 @@ export class PolicyAddComponent implements OnInit {
     });
   }
 
+  compareActions(serviceActions: string | string[], selectedActions: string | string[]): boolean {
+    if (!Array.isArray(serviceActions)) {
+      serviceActions = [serviceActions];
+    }
+    if (!Array.isArray(selectedActions)) {
+      selectedActions = [selectedActions];
+    }
+
+    return serviceActions.every(action => selectedActions.includes(action));
+  }
+
   private tidyUpStatements(policy: Policy): Policy {
     const nStatement = policy.statement.map(statement => {
-      const arrayEquality =
-        Array.isArray(statement.action) &&
-        statement.action.every(value => {
-          return this.services[statement.service].actions.indexOf(value) >= 0;
-        });
+      const isSelectedAll = this.compareActions(
+        this.services[statement.service].actions,
+        statement.action
+      );
 
-      const shrinkedAction = arrayEquality
+      const shrinkedAction = isSelectedAll
         ? this.services[statement.service].$resource + ":*"
-        : this.services[statement.service].$resource;
+        : statement.action;
 
       let formattedResource = [];
 
