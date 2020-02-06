@@ -13,6 +13,7 @@ export class FunctionEngine {
   readonly schemas = new Map<string, JSONSchema7 | (() => Promise<JSONSchema7>)>([
     ["http", require("./schema/http.json")],
     ["schedule", require("./schema/schedule.json")],
+    ["firehose", require("./schema/firehose.json")],
     ["database", () => getDatabaseSchema(this.db)]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();

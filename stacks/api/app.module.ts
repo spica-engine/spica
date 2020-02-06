@@ -13,7 +13,8 @@ import {DashboardModule} from "@spica-server/dashboard/dashboard.module";
   imports: [
     DatabaseModule.withConnection(process.env.DATABASE_URI, {
       database: process.env.DATABASE_NAME,
-      replicaSet: process.env.REPLICA_SET
+      replicaSet: process.env.REPLICA_SET,
+      poolSize: Number(process.env.POOL_SIZE || 50)
     }),
     SchemaModule.forRoot({
       formats: [OBJECT_ID],

@@ -28,6 +28,14 @@ export class ApiKeyService {
   update(apiKey: ApiKey): Observable<ApiKey> {
     return this.http.post<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
   }
+
+  attachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
+    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKeyId}/attach-policy`, [policyId]);
+  }
+
+  detachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
+    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKeyId}/detach-policy`, [policyId]);
+  }
 }
 
 export class MockApiKeyService extends ApiKeyService {
@@ -65,5 +73,33 @@ export class MockApiKeyService extends ApiKeyService {
     };
     this.apiKeys.push(insertedApiKey);
     return of(insertedApiKey);
+  }
+
+  attachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
+    return of(
+      this.apiKeys.find(apikey => {
+        if (apikey._id == apiKeyId) {
+          apikey.policies = new Array(...apikey.policies, ...[policyId]).filter(
+            (policy, index, array) => {
+              return array.indexOf(policy) === index;
+            }
+          );
+          return apikey;
+        }
+      })
+    );
+  }
+
+  detachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
+    return of(
+      this.apiKeys.find(apikey => {
+        if (apikey._id == apiKeyId) {
+          apikey.policies = new Array(...apikey.policies).filter(
+            policy => [policyId].indexOf(policy) === -1
+          );
+          return apikey;
+        }
+      })
+    );
   }
 }

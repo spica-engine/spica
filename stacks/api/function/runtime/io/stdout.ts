@@ -1,5 +1,4 @@
-import {DatabaseService} from "@spica-server/database";
-import {Duplex, Writable} from "stream";
+import {Writable} from "stream";
 
 export interface StdOutOptions {
   eventId: string;

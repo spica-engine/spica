@@ -57,7 +57,8 @@ export class DatabaseTestingModule implements OnModuleDestroy {
                   : "/usr/local/bin/mongod"
               },
               replSet: {
-                count: 3
+                count: 3,
+                dbName: undefined
               },
               instanceOpts: [
                 {storageEngine: "wiredTiger"},
@@ -72,7 +73,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
             await server.waitUntilRunning();
             const connectionString = await server.getConnectionString();
             // Issue: https://github.com/nodkz/mongodb-memory-server/issues/166
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             return MongoClient.connect(
               `${connectionString}?replicaSet=${server.opts.replSet.name}`,
               {
@@ -88,6 +89,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
           provide: DatabaseService,
           useFactory: async (client: MongoClient, server: MongoMemoryReplSet) =>
             client.db(await server.getDbName()),
+
           inject: [MongoClient, MongoMemoryReplSet]
         }
       ],

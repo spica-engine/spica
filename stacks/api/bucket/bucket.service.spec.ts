@@ -5,8 +5,6 @@ import {PreferenceModule} from "@spica-server/preference";
 import {Bucket} from "./bucket";
 import {BucketService} from "./bucket.service";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
-
 describe("bucket service", () => {
   let module: TestingModule;
   let bs: BucketService;

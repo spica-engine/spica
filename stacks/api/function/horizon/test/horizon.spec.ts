@@ -1,12 +1,23 @@
-import {Horizon} from "@spica-server/function/horizon/src";
+import {Test} from "@nestjs/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {Horizon, HorizonModule} from "@spica-server/function/horizon";
 import {Event} from "@spica-server/function/queue/proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
+import {INestApplication} from "@nestjs/common";
 
 describe("horizon", () => {
   let horizon: Horizon;
+  let app: INestApplication;
 
-  beforeEach(() => {
-    horizon = new Horizon(null, null);
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      imports: [DatabaseTestingModule.create(), HorizonModule]
+    }).compile();
+
+    horizon = module.get(Horizon);
+
+    app = module.createNestApplication();
+    await app.init();
   });
 
   afterEach(() => {
@@ -35,7 +46,7 @@ describe("horizon", () => {
       target.cwd = compilation.cwd;
       event.type = Event.Type.HTTP;
       event.target = target;
-      horizon.enqueue(event);
+      horizon["enqueue"](event);
     });
   });
 });

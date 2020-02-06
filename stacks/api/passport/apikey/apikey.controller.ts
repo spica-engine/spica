@@ -7,9 +7,10 @@ import {
   Param,
   Post,
   Query,
-  UseGuards
+  UseGuards,
+  Put
 } from "@nestjs/common";
-import {AuthGuard} from "@nestjs/passport";
+import {AuthGuard} from "../auth.guard";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -70,7 +71,7 @@ export class ApiKeyController {
   }
 
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:add"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
     delete apiKey._id;
     apiKey.key = uniqid();
@@ -81,7 +82,7 @@ export class ApiKeyController {
   }
 
   @Post(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:add"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
   updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
@@ -104,5 +105,38 @@ export class ApiKeyController {
       }
       return r;
     });
+  }
+
+  @Put(":id/attach-policy")
+  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
+  async attachPolicy(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
+  ) {
+    const apiKey = await this.aks.findOne({_id: id});
+    if (!apiKey) throw new NotFoundException();
+
+    apiKey.policies = new Array(...apiKey.policies, ...policies).filter((policy, index, array) => {
+      return array.indexOf(policy) === index;
+    });
+
+    delete apiKey._id;
+    return this.aks.findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false});
+  }
+  @Put(":id/detach-policy")
+  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
+  async detachPolicy(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
+  ) {
+    const apiKey = await this.aks.findOne({_id: id});
+    if (!apiKey) throw new NotFoundException();
+
+    apiKey.policies = new Array(...apiKey.policies).filter(
+      policy => policies.indexOf(policy) === -1
+    );
+
+    delete apiKey._id;
+    return this.aks.findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false});
   }
 }

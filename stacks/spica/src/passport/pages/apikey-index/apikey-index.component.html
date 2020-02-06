@@ -8,7 +8,7 @@
     <button mat-icon-button (click)="refresh$.next()">
       <mat-icon>refresh</mat-icon>
     </button>
-    <button mat-icon-button routerLink="/passport/apikey/add">
+    <button mat-icon-button canInteract="passport:apikey:insert" routerLink="/passport/apikey/add">
       <mat-icon>add</mat-icon>
     </button>
   </mat-toolbar-row>
@@ -40,6 +40,7 @@
           </button>
           <button
             mat-icon-button
+            canInteract="passport:apikey:delete"
             color="warn"
             [matAwareDialog]="{
               title: 'Confirmation',

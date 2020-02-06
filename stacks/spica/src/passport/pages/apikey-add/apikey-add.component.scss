@@ -11,4 +11,13 @@
   mat-expansion-panel {
     margin-top: 10px;
   }
+  div.policies {
+    flex: 1;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-between;
+    mat-list {
+      flex-grow: 1;
+    }
+  }
 }
