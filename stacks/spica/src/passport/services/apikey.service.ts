@@ -29,6 +29,10 @@ export class ApiKeyService {
     return this.http.post<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
   }
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`api:/passport/apikey/${id}`);
+  }
+
   attachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
     return this.http.put<ApiKey>(`api:/passport/apikey/${apiKeyId}/attach-policy`, [policyId]);
   }
@@ -73,6 +77,12 @@ export class MockApiKeyService extends ApiKeyService {
     };
     this.apiKeys.push(insertedApiKey);
     return of(insertedApiKey);
+  }
+
+  delete(id: string) {
+    const deletedItem = this.apiKeys.find(apiKey => apiKey._id === id);
+    this.apiKeys = this.apiKeys.filter(apiKey => apiKey != deletedItem);
+    return of(null);
   }
 
   attachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {

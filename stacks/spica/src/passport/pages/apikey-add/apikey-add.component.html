@@ -10,6 +10,12 @@
 <mat-card>
   <mat-card-content>
     <form #apiKeyForm="ngForm">
+      <div class="status" *ngIf="apiKey._id">
+        <h3>Status</h3>
+        <mat-slide-toggle name="toggleStatus" [(ngModel)]="apiKey.active">
+          {{ apiKey.active ? "Active" : "Deactive" }}
+        </mat-slide-toggle>
+      </div>
       <mat-form-field *ngIf="apiKey.key">
         <input
           matInput

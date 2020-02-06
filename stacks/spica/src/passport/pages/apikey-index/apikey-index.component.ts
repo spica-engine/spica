@@ -35,4 +35,11 @@ export class ApiKeyIndexComponent implements OnInit {
       })
     );
   }
+
+  deleteApiKey(id: string) {
+    this.apiKeyService
+      .delete(id)
+      .toPromise()
+      .then(() => this.refresh$.next());
+  }
 }

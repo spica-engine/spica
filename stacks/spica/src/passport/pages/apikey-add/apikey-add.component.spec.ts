@@ -8,7 +8,8 @@ import {
   MatFormFieldModule,
   MatInputModule,
   MatTooltipModule,
-  MatListModule
+  MatListModule,
+  MatSlideToggleModule
 } from "@angular/material";
 import {FormsModule} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -35,6 +36,7 @@ describe("ApiKeyAddComponent", () => {
         MatCardModule,
         MatFormFieldModule,
         MatInputModule,
+        MatSlideToggleModule,
         FormsModule,
         RouterTestingModule,
         NoopAnimationsModule,

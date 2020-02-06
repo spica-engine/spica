@@ -189,6 +189,42 @@ describe("ApiKey", () => {
     });
   });
 
+  describe("delete", () => {
+    let insertedApiKey;
+    beforeEach(async () => {
+      insertedApiKey = (await req.post("/passport/apikey", {
+        name: "test",
+        policies: [],
+        active: true
+      })).body;
+    });
+    it("should delete apiKey", async () => {
+      const response = await req.delete(`/passport/apikey/${insertedApiKey._id}`);
+      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+
+      const apiKeys = (await req.get("/passport/apikey", {})).body;
+      expect(apiKeys).toEqual({
+        meta: {
+          total: 0
+        },
+        data: []
+      });
+    });
+
+    it("should throw NotFoundExpection", async () => {
+      const responseBody = (await req.delete(`/passport/apikey/${new ObjectId()}`)).body;
+      expect([responseBody.statusCode, responseBody.error]).toEqual([404, "Not Found"]);
+
+      const apiKeys = (await req.get("/passport/apikey", {})).body;
+      expect(apiKeys).toEqual({
+        meta: {
+          total: 1
+        },
+        data: [insertedApiKey]
+      });
+    });
+  });
+
   describe("attach/detach", () => {
     it("should attach policy to apikey", async () => {
       const insertedApiKey = (await req.post("/passport/apikey", {

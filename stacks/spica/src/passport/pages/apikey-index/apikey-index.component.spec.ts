@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed} from "@angular/core/testing";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ApiKeyIndexComponent} from "./apikey-index.component";
 import {
   MatIconModule,
@@ -19,7 +19,7 @@ describe("ApiKeyIndexComponent", () => {
   let component: ApiKeyIndexComponent;
   let fixture: ComponentFixture<ApiKeyIndexComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
         MatIconModule,
@@ -40,9 +40,7 @@ describe("ApiKeyIndexComponent", () => {
       ],
       declarations: [ApiKeyIndexComponent]
     }).compileComponents();
-  }));
 
-  beforeEach(async () => {
     fixture = TestBed.createComponent(ApiKeyIndexComponent);
     component = fixture.componentInstance;
     await component["apiKeyService"].insert({
@@ -52,13 +50,23 @@ describe("ApiKeyIndexComponent", () => {
       description: "testdescription",
       policies: []
     } as ApiKey);
+
     fixture.detectChanges();
   });
 
-  it("should show apikeys", async () => {
+  it("should show apikeys", () => {
     const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
     expect(cells[0].nativeElement.textContent).toBe("testkey");
     expect(cells[1].nativeElement.textContent).toBe("testname");
     expect(cells[2].nativeElement.textContent).toBe("testdescription");
+  });
+
+  it("should delete apikey", async () => {
+    component.deleteApiKey("0");
+
+    await fixture.whenStable();
+
+    const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
+    expect(cells).toEqual([]);
   });
 });
