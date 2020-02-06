@@ -2,10 +2,10 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load(":defs.bzl", "ts_library_d")
+load(":index.bzl", "pickup_es5_sources")
 
 ts_library(
-    name = "init_sources",
+    name = "initcontainer_sources",
     srcs = ["init.ts"],
     deps = [
         "@npm//@types/node",
@@ -13,10 +13,10 @@ ts_library(
     ],
 )
 
-ts_library_d(
-    name = "init_sources_d",
-    libraries = [
-        ":init_sources",
+pickup_es5_sources(
+    name = "initcontainer_es5_sources",
+    srcs = [
+        ":initcontainer_sources",
     ],
 )
 
@@ -24,7 +24,7 @@ container_image(
     name = "initcontainer",
     base = "@initcontainer_base//image:dockerfile_image.tar",
     cmd = ["init.js"],
-    files = [":init_sources_d"],
+    files = [":initcontainer_es5_sources"],
     labels = {
         "maintainer": "Spica maintainers <dev@spicanengine.com>",
     },

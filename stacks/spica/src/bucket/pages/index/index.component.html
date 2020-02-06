@@ -219,12 +219,14 @@
         <a (click)="guideRequest(guideUrls?.getAllWithLimit, 'getAllWithLimit')" class="guide-link">
           {{ guideUrls?.getAllWithLimit }}
         </a>
-        <mat-chip *ngIf="guideResponse.getAllWithLimit" color="warn" selected>Return Data</mat-chip>
+        <mat-chip *ngIf="guideResponse?.getAllWithLimit" color="warn" selected
+          >Return Data</mat-chip
+        >
         <p
-          *ngIf="guideResponse.getAllWithLimit"
+          *ngIf="guideResponse?.getAllWithLimit"
           [innerHtml]="
-            guideResponse.getAllWithLimit
-              ? (guideResponse.getAllWithLimit | highlight | async)
+            guideResponse?.getAllWithLimit
+              ? (guideResponse?.getAllWithLimit | highlight | async)
               : 'Data is not found'
           "
           class="guide-response"
@@ -241,13 +243,13 @@
         <a (click)="guideRequest(guideUrls?.getAllWithSort, 'getAllWithSort')" class="guide-link">
           {{ guideUrls?.getAllWithSort }}
         </a>
-        <mat-chip *ngIf="guideResponse.getAllWithSort" color="warn" selected>Return Data</mat-chip>
+        <mat-chip *ngIf="guideResponse?.getAllWithSort" color="warn" selected>Return Data</mat-chip>
         <p
-          *ngIf="guideResponse.getAllWithSort"
+          *ngIf="guideResponse?.getAllWithSort"
           class="guide-response"
           [innerHtml]="
-            guideResponse.getAllWithSort
-              ? (guideResponse.getAllWithSort | highlight | async)
+            guideResponse?.getAllWithSort
+              ? (guideResponse?.getAllWithSort | highlight | async)
               : 'Data is not found'
           "
         ></p>
@@ -264,7 +266,7 @@
         <a (click)="guideRequest(guideUrls?.getWithFilter, 'getWithFilter')" class="guide-link">
           {{ guideUrls?.getWithFilter }}
         </a>
-        <mat-chip *ngIf="guideResponse.getWithFilter" color="warn" selected>Return Data</mat-chip>
+        <mat-chip *ngIf="guideResponse?.getWithFilter" color="warn" selected>Return Data</mat-chip>
         <p
           *ngIf="guideResponse?.getWithFilter"
           class="guide-response"
@@ -287,7 +289,7 @@
         <a (click)="guideRequest(guideUrls?.getWithLike, 'getWithLike')" class="guide-link">
           {{ guideUrls?.getWithLike }}
         </a>
-        <mat-chip *ngIf="guideResponse.getWithLike" color="warn" selected>Return Data</mat-chip>
+        <mat-chip *ngIf="guideResponse?.getWithLike" color="warn" selected>Return Data</mat-chip>
         <p
           *ngIf="guideResponse?.getWithLike"
           class="guide-response"
@@ -313,7 +315,7 @@
         >
           {{ guideUrls?.getWithDoubleFilter }}
         </a>
-        <mat-chip *ngIf="guideResponse.getWithDoubleFilter" color="warn" selected
+        <mat-chip *ngIf="guideResponse?.getWithDoubleFilter" color="warn" selected
           >Return Data</mat-chip
         >
         <p
@@ -341,7 +343,7 @@
         >
           {{ guideUrls?.getOnlyScheduled }}
         </a>
-        <mat-chip *ngIf="guideResponse.getOnlyScheduled" color="warn" selected
+        <mat-chip *ngIf="guideResponse?.getOnlyScheduled" color="warn" selected
           >Return Data</mat-chip
         >
         <p
@@ -367,7 +369,9 @@
           {{ guideUrls?.getDataWithLang }}
           <p>headers: "Accept-Language": "tr-TR"</p>
         </a>
-        <mat-chip *ngIf="guideResponse.getDataWithLang" color="warn" selected>Return Data</mat-chip>
+        <mat-chip *ngIf="guideResponse?.getDataWithLang" color="warn" selected
+          >Return Data</mat-chip
+        >
         <p
           *ngIf="guideResponse?.getDataWithLang"
           class="guide-response"

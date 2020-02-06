@@ -1,6 +1,7 @@
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
+  namespace: master
   name: database
 spec:
   serviceName: mongo
@@ -18,13 +19,6 @@ spec:
       containers:
         - name: mongo
           image: mongo:4.2
-          resources:
-            requests:
-              memory: "100Mi"
-              cpu: "100m"
-            limits:
-              memory: "200Mi"
-              cpu: "250m"
           command:
             - mongod
             - "--replSet"
@@ -32,12 +26,19 @@ spec:
             - "--bind_ip_all"
           ports:
             - containerPort: 27017
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "10m"
+            limits:
+              memory: "250Mi"
+              cpu: "150m"
           volumeMounts:
-            - name: database-data
+            - name: master-data
               mountPath: /data/db
   volumeClaimTemplates:
     - metadata:
-        name: database-data
+        name: master-data
       spec:
         accessModes:
           - ReadWriteOnce
@@ -48,6 +49,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: master
   name: mongo
 spec:
   publishNotReadyAddresses: true
@@ -61,6 +63,7 @@ spec:
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
+  namespace: master
   name: spica
 spec:
   serviceName: spica
@@ -74,29 +77,32 @@ spec:
         - name: spica
           image: spicaengine/spica:master
           imagePullPolicy: Always
+          ports:
+            - containerPort: 80
           resources:
             requests:
               memory: "10Mi"
               cpu: "10m"
             limits:
-              memory: "20Mi"
-              cpu: "20m"
-          ports:
-            - containerPort: 80
+              memory: "100Mi"
+              cpu: "50m"
         - name: api
           image: spicaengine/api:master
           imagePullPolicy: Always
           resources:
+            requests:
+              memory: "10Mi"
+              cpu: "10m"
             limits:
-              memory: "400Mi"
-              cpu: "500m"
+              memory: "250Mi"
+              cpu: "150m"
           ports:
             - containerPort: 4300
           env:
             - name: PORT
               value: "4300"
             - name: DATABASE_URI
-              value: mongodb://database-0.mongo.default.svc.cluster.local,database-1.mongo.default.svc.cluster.local,database-2.mongo.default.svc.cluster.local
+              value: mongodb://database-0.mongo.master.svc.cluster.local,database-1.mongo.master.svc.cluster.local,database-2.mongo.master.svc.cluster.local
             - name: REPLICA_SET
               value: rs0
             - name: DATABASE_NAME
@@ -110,21 +116,22 @@ spec:
             - name: PERSISTENT_PATH
               value: /data
           volumeMounts:
-            - name: spica-data
+            - name: master-data
               mountPath: /data
   volumeClaimTemplates:
     - metadata:
-        name: spica-data
+        name: master-data
       spec:
         accessModes:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 10Gi
+            storage: 2Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: master
   name: spica
 spec:
   type: NodePort
@@ -141,16 +148,19 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
+  namespace: master
   name: gateway
   annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 15M
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 15M
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     kubernetes.io/ingress.class: nginx
-    certmanager.k8s.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
     - hosts:
         - master.spicaengine.com
-      secretName: master-spicaengine
+      secretName: master-spica
   rules:
     - host: master.spicaengine.com
       http:
