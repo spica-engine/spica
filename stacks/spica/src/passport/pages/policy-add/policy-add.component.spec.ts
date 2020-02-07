@@ -391,4 +391,29 @@ describe("Policy Add Component", () => {
       expect(navigateSpy).toHaveBeenCalledWith(["passport/policy"]);
     }));
   });
+
+  describe("compare available and selected actions", () => {
+    let availableActions: string[];
+    beforeAll(() => {
+      availableActions = ["bucket:index", "bucket:delete", "bucket:update"];
+    });
+
+    it("should return true when all actions are selected", () => {
+      const selectedActions = ["bucket:index", "bucket:delete", "bucket:update"];
+      const isAllSelected = fixture.componentInstance.compareActions(
+        availableActions,
+        selectedActions
+      );
+      expect(isAllSelected).toBe(true);
+    });
+
+    it("should return false when all actions arent selected", () => {
+      const selectedActions = ["bucket:index", "bucket:delete"];
+      const isAllSelected = fixture.componentInstance.compareActions(
+        availableActions,
+        selectedActions
+      );
+      expect(isAllSelected).toBe(false);
+    });
+  });
 });
