@@ -1,11 +1,8 @@
 import {Component, DebugElement, ViewChild} from "@angular/core";
 import {ComponentFixture, TestBed, tick, fakeAsync, async} from "@angular/core/testing";
 import {MatClipboardDirective} from "./clipboard.directive";
-import {By} from "@angular/platform-browser";
 import {MatClipboardModule} from "./clipboard.module";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
-
-//UNDONE
 
 @Component({
   template: `
@@ -30,6 +27,8 @@ describe("ClipboardDirective", () => {
     let component: TestClipBoardComponent;
     let fixture: ComponentFixture<TestClipBoardComponent>;
 
+    let copyButton: HTMLElement;
+
     beforeEach(() => {
       TestBed.configureTestingModule({
         imports: [MatClipboardModule, BrowserAnimationsModule],
@@ -38,31 +37,37 @@ describe("ClipboardDirective", () => {
       });
       fixture = TestBed.createComponent(TestClipBoardComponent);
       component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      copyButton = fixture.debugElement.nativeElement.querySelector("button");
     });
 
     it("should create component", () => {
-      fixture.detectChanges();
       expect(component).toBeDefined();
       expect(component.directive.text).toBe("test");
     });
 
     it("should change icon as check while copying text", () => {
+      copyButton.click();
       fixture.detectChanges();
-      const button = fixture.debugElement.nativeElement.querySelector("button");
-      button.click();
-      fixture.detectChanges();
-      expect(button.textContent).toBe("check");
+      expect(copyButton.textContent).toBe("check");
     });
 
     it("should back to info icon and copied the text ", fakeAsync(async () => {
-      fixture.detectChanges();
-      const button = fixture.debugElement.nativeElement.querySelector("button");
-      button.click();
+      copyButton.click();
       tick(1001);
       fixture.detectChanges();
       await fixture.whenStable();
-      expect(button.textContent).toBe("info");
+      expect(copyButton.textContent).toBe("info");
     }));
+
+    it("should prepare input element for copying", () => {
+      component.directive.prepareClipBoard("test123");
+      const inputs = document.getElementsByTagName("input");
+      expect([inputs.length, inputs[0].value]).toEqual([1, "test123"]);
+      const focusedElement = document.activeElement;
+      expect(focusedElement.tagName).toBe("INPUT");
+    });
   });
 
   describe("test for undefined text", () => {
@@ -77,20 +82,20 @@ describe("ClipboardDirective", () => {
       });
       fixture = TestBed.createComponent(TestClipBoardComponentNull);
       component = fixture.componentInstance;
+
+      fixture.detectChanges();
     });
 
     it("should create component", () => {
-      fixture.detectChanges();
       expect(component).toBeDefined();
       expect(component.directive.text).toBeUndefined();
     });
 
     it("should not change icon", () => {
+      const copyButton = fixture.debugElement.nativeElement.querySelector("button");
+      copyButton.click();
       fixture.detectChanges();
-      const button = fixture.debugElement.nativeElement.querySelector("button");
-      button.click();
-      fixture.detectChanges();
-      expect(button.textContent).toBe("info");
+      expect(copyButton.textContent).toBe("info");
     });
   });
 });
