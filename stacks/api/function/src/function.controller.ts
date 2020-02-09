@@ -87,7 +87,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body(Schema.validate(generate)) fn: Function) {
     delete fn._id;
-    return this.fs.findOneAndUpdate({_id: id}, {$set: fn});
+    return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
   @Post()
