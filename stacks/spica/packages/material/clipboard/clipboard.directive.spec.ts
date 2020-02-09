@@ -62,11 +62,21 @@ describe("ClipboardDirective", () => {
     }));
 
     it("should prepare input element for copying", () => {
-      component.directive.prepareClipBoard("test123");
-      const inputs = document.getElementsByTagName("input");
-      expect([inputs.length, inputs[0].value]).toEqual([1, "test123"]);
-      const focusedElement = document.activeElement;
-      expect(focusedElement.tagName).toBe("INPUT");
+      const input = component.directive.prepareElement("test123");
+      expect(input.tagName).toBe("INPUT");
+      expect(input.value).toBe("test123");
+    });
+
+    it("should copy value on given element to clipboard", () => {
+      const input = component.directive.prepareElement("test1");
+
+      const copySpy = spyOn(document, "execCommand").and.callThrough();
+
+      fixture.componentInstance.directive.copyToClipBoard(input);
+
+      expect(document.getSelection().toString()).toBe("test1");
+      expect(copySpy).toHaveBeenCalledTimes(1);
+      expect(copySpy).toHaveBeenCalledWith("copy");
     });
   });
 

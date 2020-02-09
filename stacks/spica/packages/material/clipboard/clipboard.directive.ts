@@ -8,19 +8,17 @@ export class MatClipboardDirective {
   @Input() icon: string = "info";
   @Input("matClipboard") text: string;
 
-  clipBoardElement: HTMLInputElement;
-
   @HostListener("click")
   copy() {
     if (!this.text) {
       return;
     }
 
-    this.prepareClipBoard(this.text);
+    const element = this.prepareElement(this.text);
 
-    document.execCommand("copy");
+    this.copyToClipBoard(element);
 
-    document.body.removeChild(this.clipBoardElement);
+    document.body.removeChild(element);
 
     this.icon = "check";
     setTimeout(() => {
@@ -28,11 +26,16 @@ export class MatClipboardDirective {
     }, 1000);
   }
 
-  prepareClipBoard(text: string) {
-    this.clipBoardElement = document.createElement("input");
-    this.clipBoardElement.value = text;
-    document.body.appendChild(this.clipBoardElement);
-    this.clipBoardElement.focus();
-    this.clipBoardElement.select();
+  copyToClipBoard(element: HTMLInputElement) {
+    document.body.appendChild(element);
+    element.focus();
+    element.select();
+    document.execCommand("copy");
+  }
+
+  prepareElement(text: string): HTMLInputElement {
+    const input = document.createElement("input");
+    input.value = text;
+    return input;
   }
 }
