@@ -124,6 +124,9 @@ export class AddComponent implements OnInit {
           this.router.navigate(["bucket", this.bucketId]);
         }
         this.histories$ = this.bhs.historyList(this.bucketId, data);
+      })
+      .catch(() => {
+        this.savingBucketState = false;
       });
   }
 }
