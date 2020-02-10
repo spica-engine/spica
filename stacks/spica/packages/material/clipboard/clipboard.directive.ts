@@ -1,5 +1,7 @@
 import {Directive, HostListener, Input} from "@angular/core";
 
+//TODO: We should refactor copy method when ClipBoard API ready to use for all browsers: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API
+
 @Directive({
   selector: "[matClipboard]",
   exportAs: "matClipboard"
