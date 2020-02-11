@@ -46,6 +46,19 @@
         color: #15bde8;
       }
     }
+    a {
+      color: inherit;
+      text-decoration: none;
+      mat-icon {
+        font-size: 14px;
+        transition: transform 0.1s ease-out;
+        transform: translateY(-4px);
+      }
+
+      &:hover mat-icon {
+        transform: translate(1px, -5px);
+      }
+    }
     ul {
       list-style-type: none;
       display: flex;

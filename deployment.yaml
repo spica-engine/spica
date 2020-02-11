@@ -79,6 +79,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          env:
+            - name: BASE_URI
+              value: "/spica/"
           resources:
             requests:
               memory: "10Mi"
