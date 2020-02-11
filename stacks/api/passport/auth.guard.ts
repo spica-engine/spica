@@ -1,10 +1,10 @@
 import {
   CanActivate,
   ExecutionContext,
-  Logger,
   mixin,
   Optional,
-  UnauthorizedException
+  UnauthorizedException,
+  BadRequestException
 } from "@nestjs/common";
 import * as passport from "passport";
 import {Type, AuthModuleOptions} from "@nestjs/passport";
@@ -61,8 +61,11 @@ function createAuthGuard(type?: string): Type<CanActivate> {
     }
 
     handleRequest(err, user, info, context): TUser {
-      if (err || !user) {
-        throw err || new UnauthorizedException();
+      if (err) {
+        throw new BadRequestException(err.message);
+      }
+      if (!user) {
+        throw new UnauthorizedException();
       }
       return user;
     }
@@ -80,7 +83,7 @@ const createPassportContext = (request, response) => (type, options, callback: F
       } catch (err) {
         reject(err);
       }
-    })(request, response, err => (err ? reject(err) : resolve))
+    })(request, response, err => (err ? resolve(callback(err)) : resolve))
   );
 
 function parseAuthHeader(hdrValue) {
