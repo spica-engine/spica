@@ -30,6 +30,8 @@ export class AddComponent implements OnInit, OnDestroy {
   dependencies: Observable<any>;
   dependencyInstallPending = false;
 
+  isHandlerDuplicated = false;
+
   private mediaMatchObserver: Subscription;
 
   editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
@@ -177,5 +179,22 @@ export class AddComponent implements OnInit, OnDestroy {
       .catch(() => {
         this.dependencyInstallPending = false;
       });
+  }
+
+  checkHandlers() {
+    this.isHandlerDuplicated = false;
+    this.function.triggers.forEach(trigger => {
+      const duplicatedHandler = this.function.triggers.filter(
+        item => item.handler == trigger.handler
+      );
+      if (duplicatedHandler.length > 1) {
+        this.isHandlerDuplicated = true;
+      }
+    });
+  }
+
+  deleteTrigger(i: number) {
+    this.function.triggers = this.function.triggers.filter((val, index) => index != i);
+    this.checkHandlers();
   }
 }
