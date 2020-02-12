@@ -1,0 +1,38 @@
+The performance optimizations should be investigated under two topics:
+
+CPU optimizationThis is important for the meditation sequence.Findings:
+
+3dSequenceCamera must be disabled when 3d globe passed
+
+3dRenderBackground must be disabled when 3d globe passed
+
+TransitionCamera must be disabled when 3d globe passed
+
+GlobeRoot must be disabled when 3d globe passed
+
+MeditationSequence::SpinGlobe continues spinning the 3d globe object. Must be stoped. (Little optimization)
+
+Bezier: DrawCubicCurve should be investigated.
+
+Important:
+
+These objects might be left active intentionally because of not breaking the sequence(directors, etc). This must be investigated carefully. Moving the whole globe to another scene and loading/unloading it additively when needed might be a better solution generally.
+
+Memory optimizationFindings:
+
+Because the globe and UI are in the same scene, the app crashes on iPhone6 while playing the splash video. The app loads the Agartha scene while playing the video. Once the scene is loaded, the app consumes the highest memory which exceeds 600 MB and thus crashes the ios. Fixes: 
+
+Using shaders instead of texture animations
+
+Moving globe to another scene and load additive when the splash pass.
+
+There're some obsolete gameobjects and components in the Agartha scene. 
+
+LabelPrefab
+
+LineMain
+
+Recogniser
+
+Repository scripts may be consuming unneeded memory because of having reference to the same circles fetched by separately.
+

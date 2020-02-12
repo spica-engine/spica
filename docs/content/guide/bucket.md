@@ -14,7 +14,7 @@ You can find the list of your Bucket by clicking on the **Bucket** from the side
 
 ### With API
 
-URL of request:
+URL of the request:
 
 > GET "{baseUrl}/bucket"
 
