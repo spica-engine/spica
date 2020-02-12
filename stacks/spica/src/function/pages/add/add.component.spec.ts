@@ -21,7 +21,7 @@ import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {FUNCTION_OPTIONS, emptyTrigger} from "../../interface";
 import {SchemeObserver} from "../../../../packages/core/layout/scheme.observer";
 
-describe("Functon Add", () => {
+describe("Function Add", () => {
   let fixture: ComponentFixture<AddComponent>;
   beforeEach(() => {
     TestBed.configureTestingModule({
