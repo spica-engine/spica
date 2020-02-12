@@ -127,7 +127,7 @@
     </button>
     <button
       canInteract="bucket:data:update"
-      [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly"
+      [disabled]="savingBucketState || form.invalid || scheduleForm?.invalid || bucket.readOnly"
       mat-button
       (click)="saveBucketRow()"
     >

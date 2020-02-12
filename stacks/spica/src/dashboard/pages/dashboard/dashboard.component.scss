@@ -8,9 +8,15 @@
           color: unset;
           font-size: 14px;
           font-weight: bold;
+
           mat-icon {
             margin-left: 4px;
             font-size: 14px;
+            transition: transform 0.1s ease-out;
+          }
+
+          &:hover mat-icon {
+            transform: translate(1px, -1px);
           }
         }
       }
