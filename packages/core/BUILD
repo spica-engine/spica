@@ -31,6 +31,7 @@ ts_library(
     tsconfig = "//:tsconfig.json",
     deps = [
         ":core",
+        "@npm//@nestjs/common",
         "@npm//@types/jasmine",
         "@npm//@types/json-schema",
         "@npm//@types/node",

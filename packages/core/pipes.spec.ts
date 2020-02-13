@@ -1,4 +1,5 @@
 import {BOOLEAN, DATE, DEFAULT, JSONP, NUMBER} from "./pipes";
+import {HttpException} from "@nestjs/common";
 
 describe("core pipes", () => {
   it("NUMBER pipe should convert string into number", () => {
@@ -17,6 +18,12 @@ describe("core pipes", () => {
 
     expect(Array.isArray(result)).toBe(true);
     expect(result).toEqual([1, 2, 3]);
+  });
+
+  it("JSONP pipe should throw BadRequestException when given json is invalid", () => {
+    expect(() => {
+      JSONP.transform('*{"key":"value"}', undefined);
+    }).toThrow(new HttpException("Unexpected token * in JSON at position 0", 400));
   });
 
   it("BOOLEAN pipe should work with 1 - 0 string", () => {
