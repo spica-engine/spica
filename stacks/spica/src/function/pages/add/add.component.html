@@ -198,16 +198,25 @@
           </button>
         </mat-list-item>
 
-        <ng-container *ngIf="function?._id" class="dependencies">
+        <ng-container *ngIf="function?._id" class="dependencies" ngModelGroup="dependencies">
           <mat-divider></mat-divider>
-          <h4 mat-subheader><mat-icon>layers</mat-icon> Dependencies</h4>
+          <h4 mat-subheader>
+            <mat-icon>layers</mat-icon> Dependencies
+            <mat-progress-spinner
+              *ngIf="dependencyInstallPending"
+              matSuffix
+              diameter="25"
+              mode="indeterminate"
+            >
+            </mat-progress-spinner>
+          </h4>
           <mat-list-item
             class="dependency"
-            *ngFor="let data of dependencies | async | keyvalue; let index = index"
+            *ngFor="let dependency of dependencies | async; let index = index"
           >
-            <span class="name">{{ data.key }}</span>
-            <span class="version">{{ data.value }}</span>
-            <button mat-icon-button class="delete" (click)="deleteDependency(data.key)">
+            <span class="name">{{ dependency.name }}</span>
+            <span class="version">{{ dependency.version }}</span>
+            <button mat-icon-button (click)="deleteDependency(dependency.name)">
               <mat-icon>delete</mat-icon>
             </button>
           </mat-list-item>
@@ -217,30 +226,24 @@
               <input
                 matInput
                 placeholder="Dependency Name"
-                (keyup.enter)="addDependency(dependencyModel.value); dependencyModel.reset()"
+                (keyup.enter)="addDependency(dependencyModel.value)"
+                name="dependencyName"
+                required
                 #dependencyModel="ngModel"
                 ngModel
-                name="dependencyName"
                 [ngModelOptions]="{standalone: true}"
-                required
+                [disabled]="dependencyInstallPending"
               />
 
-              <mat-error *ngIf="dependencyModel?.errors?.required"
-                >This field is required.</mat-error
-              >
-              <mat-progress-spinner
-                *ngIf="dependencyInstallPending"
-                matSuffix
-                diameter="25"
-                mode="indeterminate"
-              >
-              </mat-progress-spinner>
+              <mat-error *ngIf="dependencyModel?.errors?.required">
+                This field is required.
+              </mat-error>
             </mat-form-field>
 
             <button
-              mat-icon-button
+              mat-button
               (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
-              [disabled]="dependencyModel.invalid"
+              [disabled]="dependencyModel.invalid || dependencyInstallPending"
             >
               <mat-icon>add</mat-icon> Add
             </button>

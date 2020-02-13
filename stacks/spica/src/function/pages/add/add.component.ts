@@ -73,7 +73,7 @@ export class AddComponent implements OnInit, OnDestroy {
         tap(fn => {
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
-          this.dependencies = this.http.get(`api:/function/${fn._id}/dependencies`);
+          this.getDependencies();
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
         takeUntil(this.dispose)
@@ -145,13 +145,27 @@ export class AddComponent implements OnInit, OnDestroy {
       .then(() => this.router.navigate(["function"]));
   }
 
+  changeScheme(isDark: boolean) {
+    this.editorOptions = {...this.editorOptions, theme: isDark ? "vs-dark" : "vs-light"};
+  }
+
+  ngOnDestroy() {
+    this.dispose.emit();
+    this.ls.close();
+    this.mediaMatchObserver.unsubscribe();
+  }
+
+  getDependencies() {
+    this.dependencies = this.http.get(`api:/function/${this.function._id}/dependencies`);
+  }
+
   addDependency(name: string) {
     this.dependencyInstallPending = true;
     this.http
       .post(`api:/function/${this.function._id}/dependencies`, {name})
       .toPromise()
       .then(() => {
-        this.dependencies = this.http.get(`api:/function/${this.function._id}/dependencies`);
+        this.getDependencies();
         this.dependencyInstallPending = false;
       })
       .catch(() => {
@@ -159,18 +173,10 @@ export class AddComponent implements OnInit, OnDestroy {
       });
   }
 
-  changeScheme(isDark: boolean) {
-    this.editorOptions = {...this.editorOptions, theme: isDark ? "vs-dark" : "vs-light"};
-  }
-  ngOnDestroy() {
-    this.dispose.emit();
-    this.ls.close();
-    this.mediaMatchObserver.unsubscribe();
-  }
   deleteDependency(name: string) {
     this.dependencyInstallPending = true;
     this.http
-      .post(`api:/function/${this.function._id}/delete-dependency`, {name})
+      .delete(`api:/function/${this.function._id}/dependencies/${name}`)
       .toPromise()
       .then(() => {
         this.dependencies = this.http.get(`api:/function/${this.function._id}/dependencies`);

@@ -1,6 +1,7 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {DatabaseService} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
+import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {Event} from "@spica-server/function/queue/proto";
 import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
@@ -40,10 +41,44 @@ export class FunctionEngine {
     });
   }
 
+  private getDefaultPackageManager(): PackageManager {
+    return this.horizon.pkgmanagers.get(this.horizon.runtime.description.name);
+  }
+
+  getPackages(fn: Function): Promise<Package[]> {
+    const functionRoot = path.join(this.options.root, fn._id.toString());
+    return this.getDefaultPackageManager().ls(functionRoot);
+  }
+
+  addPackage(fn: Function, qualifiedName: string): Promise<void> {
+    const functionRoot = path.join(this.options.root, fn._id.toString());
+    return this.getDefaultPackageManager().install(functionRoot, qualifiedName);
+  }
+
+  removePackage(fn: Function, name: string): Promise<void> {
+    const functionRoot = path.join(this.options.root, fn._id.toString());
+    return this.getDefaultPackageManager().uninstall(functionRoot, name);
+  }
+
   async update(fn: Function, index: string): Promise<void> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
     await fs.promises.mkdir(functionRoot, {recursive: true});
     await fs.promises.writeFile(path.join(functionRoot, "index.ts"), index);
+    // See: https://docs.npmjs.com/files/package.json#dependencies
+    const packageJson = {
+      name: fn.name,
+      description: fn.description || "No description.",
+      version: "0.0.1",
+      private: true,
+      main: "index.ts",
+      keywords: ["spica", "function", "node.js"],
+      license: "UNLICENSED"
+    };
+
+    await fs.promises.writeFile(
+      path.join(functionRoot, "package.json"),
+      JSON.stringify(packageJson, null, 2)
+    );
     return this.horizon.runtime.compile({
       cwd: functionRoot,
       entrypoint: "index.ts"

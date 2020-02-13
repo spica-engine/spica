@@ -12,6 +12,8 @@ ts_library(
     deps = [
         "//packages/database",
         "//stacks/api/function/enqueuer",
+        "//stacks/api/function/pkgmanager",
+        "//stacks/api/function/pkgmanager/node",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/runtime",

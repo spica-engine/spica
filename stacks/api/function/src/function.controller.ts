@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -15,7 +16,6 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {DATE, DEFAULT} from "@spica-server/core";
-// import {DATE, DEFAULT} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
@@ -167,47 +167,39 @@ export class FunctionController {
     });
   }
 
-  // @Post(":id/dependencies")
-  // @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  // async addDependency(@Param("id", OBJECT_ID) id: ObjectId, @Body("name") dependency: string) {
-  //   if (!dependency) {
-  //     throw new BadRequestException("Dependency name is required!");
-  //   }
+  @Get(":id/dependencies")
+  @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
+  async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
+    const fn = await this.fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
+    return this.engine.getPackages(fn);
+  }
 
-  //   const fn = await this.fs.findOne({_id: id});
-  //   if (!fn) {
-  //     throw new NotFoundException("Cannot find the function.");
-  //   }
+  @Post(":id/dependencies")
+  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  async addDependency(@Param("id", OBJECT_ID) id: ObjectId, @Body("name") name: string) {
+    const fn = await this.fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
 
-  //   const parsed = npa(dependency);
-  //   if (!parsed.registry) {
-  //     throw new BadRequestException("Dependency must refer to to package that hosted on registry.");
-  //   }
+    return this.engine.addPackage(fn, name).catch(error => {
+      throw new BadRequestException(error.message);
+    });
+  }
 
-  //   const version = semver.valid(parsed.fetchSpec);
-  //   if (parsed.type != "tag" && !version) {
-  //     throw new BadRequestException("Dependency version is not valid.");
-  //   }
-
-  //   return this.engine.host.addDependency(fn, dependency);
-  // }
-
-  // @Post(":id/delete-dependency")
-  // @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Body("name") dependency: string) {
-  //   const fn = await this.fs.findOne({_id: id});
-
-  //   return this.engine.host.deleteDependency(fn, dependency);
-  // }
-
-  // @Get(":id/dependencies")
-  // @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
-  // async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
-  //   const fn = await this.fs.findOne({_id: id});
-  //   if (!fn) {
-  //     throw new NotFoundException("Can not find the function.");
-  //   }
-  //   return this.engine.host.getDependencies(fn);
-  // }
+  @Delete(":id/dependencies/:name")
+  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
+    const fn = await this.fs.findOne({_id: id});
+    if (!fn) {
+      throw new NotFoundException("Could not find the function.");
+    }
+    return this.engine.removePackage(fn, name).catch(error => {
+      throw new BadRequestException(error.message);
+    });
+  }
 }
