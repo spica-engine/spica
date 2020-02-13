@@ -1,4 +1,4 @@
-import {PipeTransform} from "@nestjs/common";
+import {PipeTransform, HttpException} from "@nestjs/common";
 
 /**
  * An pipe converts string to number
@@ -13,7 +13,11 @@ export const NUMBER: PipeTransform<string, number> = {
 export const JSONP: PipeTransform<string, object> = {
   transform: value => {
     if (typeof value == "string") {
-      return global.JSON.parse(value);
+      try {
+        return global.JSON.parse(value);
+      } catch (error) {
+        throw new HttpException(error.message, 400);
+      }
     }
     return value;
   }

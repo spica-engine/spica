@@ -34,6 +34,7 @@ ts_library(
         "@npm//@types/jasmine",
         "@npm//@types/json-schema",
         "@npm//@types/node",
+        "@npm//@nestjs/common"
     ],
 )
 
