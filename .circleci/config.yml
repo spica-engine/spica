@@ -27,8 +27,9 @@ commands:
       #     name: "Rebase the branch on top of the target branch."
       #     command: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
       - run:
-          name: "Fetch tags"
+          name: "Fetch tags and unshallow "
           command: |
+            git fetch --unshallow
             git fetch --tags
             git tag -l
             git describe --abbrev=7 --tags HEAD 
