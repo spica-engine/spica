@@ -23,15 +23,13 @@ commands:
     description: Checkout repository and rebase on top of the target branch.
     steps:
       - checkout
+      - run: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
       # - run:
       #     name: "Rebase the branch on top of the target branch."
       #     command: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
-      # - run:
-      #     name: "Fetch tags and unshallow "
-      #     command: |
-      #       git fetch --tags --prune-tags
-      #       git tag -l
-      #       git describe --abbrev=7 --tags HEAD 
+      - run:
+          name: "Fetch tags and unshallow "
+          command: git describe --abbrev=7 --tags HEAD 
 
 executors:
   default-executor:
