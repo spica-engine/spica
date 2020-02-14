@@ -83,8 +83,6 @@ jobs:
 
   deploy:
     executor: default-executor
-    environment:
-      BUILD_SCM_VERSION_OVERRIDE: "$CIRCLE_BRANCH"
     steps:
       - setup_remote_docker
       - custom_attach_workspace
@@ -100,6 +98,7 @@ jobs:
       - run:
           name: "Deploying artifacts"
           command: |
+            git tag master
             (cd stacks/spica && yarn ng build --prod --progress=false)
             ./node_modules/.bin/bazel run deploy.replace --config=release -- --force
 
