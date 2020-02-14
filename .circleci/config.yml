@@ -23,13 +23,9 @@ commands:
     description: Checkout repository and rebase on top of the target branch.
     steps:
       - checkout
-      - run: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
-      # - run:
-      #     name: "Rebase the branch on top of the target branch."
-      #     command: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
       - run:
-          name: "Fetch tags and unshallow "
-          command: git describe --abbrev=7 --tags HEAD 
+          name: "Rebase the branch on top of the target branch."
+          command: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
 
 executors:
   default-executor:
@@ -101,7 +97,6 @@ jobs:
       - run:
           name: "Deploying artifacts"
           command: |
-            git tag master
             (cd stacks/spica && yarn ng build --prod --progress=false)
             ./node_modules/.bin/bazel run deploy.replace --config=release -- --force
 
