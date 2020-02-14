@@ -122,6 +122,6 @@ workflows:
             - setup
             # - test_api
             # - test_spica
-          filters:
-            branches:
-              only: master
+          # filters:
+          #   branches:
+          #     only: master
