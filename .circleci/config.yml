@@ -1,4 +1,5 @@
 version: 2.1
+
 commands:
   setup_circleci_bazel_config:
     description: Copy RC file that contains common options for CI
@@ -25,10 +26,7 @@ commands:
       - run:
           name: "Rebase the branch on top of the target branch."
           command: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
-      - run:
-          name: "Fetch tags"
-          command: git fetch --tags
-      - run: "git describe --abbrev=7 --tags HEAD"
+
 executors:
   default-executor:
     working_directory: ~/spica
@@ -39,9 +37,11 @@ executors:
     docker:
       - image: circleci/node:11
       - image: circleci/mongo:4.2.1
+
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
   gcp-cli: circleci/gcp-cli@1.8.3
+
 jobs:
   setup:
     executor: default-executor
@@ -83,6 +83,8 @@ jobs:
 
   deploy:
     executor: default-executor
+    environment:
+      BUILD_SCM_VERSION_OVERRIDE: "$CIRCLE_BRANCH"
     steps:
       - setup_remote_docker
       - custom_attach_workspace
