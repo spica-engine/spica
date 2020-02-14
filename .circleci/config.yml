@@ -23,9 +23,10 @@ commands:
     description: Checkout repository and rebase on top of the target branch.
     steps:
       - checkout
+      - 
       - run:
-          name: "Rebase the branch on top of the target branch."
-          command: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
+          name: "Rebase the branch on top of the master branch."
+          command: jq
 
 executors:
   default-executor:
@@ -41,6 +42,7 @@ executors:
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
   gcp-cli: circleci/gcp-cli@1.8.3
+  gh-pr: narrativescience/ghpr@0.0.5
 
 jobs:
   setup:
