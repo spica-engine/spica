@@ -23,7 +23,6 @@ commands:
     description: Checkout repository and rebase on top of the target branch.
     steps:
       - checkout
-      - 
       - run:
           name: "Rebase the branch on top of the master branch."
           command: jq
