@@ -11,7 +11,6 @@ function getMappingsFromVolatileFile(stampFilePath) {
     .readFileSync(stampFilePath, {encoding: "utf-8"})
     .trim()
     .split("\n");
-  console.log(stampFileLines);
   const stampMap = {};
   for (const line of stampFileLines) {
     const [key, value] = line.split(" ");
