@@ -12,6 +12,7 @@ import {CUSTOM_TYPES} from "./bucket.schema.types";
 import {BucketService} from "./bucket.service";
 import {BucketCache, provideBucketCache} from "./cache";
 import {DocumentScheduler} from "./scheduler";
+import {BucketHooksModule} from "./hooks/hook.module";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
@@ -25,7 +26,8 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
     SchemaModule.forChild({
       keywords: [CUSTOM_TYPES],
       schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
-    })
+    }),
+    BucketHooksModule
   ],
   providers: [
     BucketService,

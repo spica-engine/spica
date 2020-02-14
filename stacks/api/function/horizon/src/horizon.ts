@@ -1,4 +1,4 @@
-import {Injectable, OnModuleInit} from "@nestjs/common";
+import {Injectable, OnModuleInit, Inject, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {
@@ -13,6 +13,7 @@ import {Event} from "@spica-server/function/queue/proto";
 import {Runtime} from "@spica-server/function/runtime";
 import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
+import {SCHEDULER, Scheduler} from "./scheduler";
 
 @Injectable()
 export class Horizon implements OnModuleInit {
@@ -27,7 +28,13 @@ export class Horizon implements OnModuleInit {
   readonly runtimes = new Set<Runtime>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
 
-  constructor(private http: HttpAdapterHost, private database: DatabaseService) {
+  constructor(
+    private http: HttpAdapterHost,
+    private database: DatabaseService,
+    @Optional() @Inject(SCHEDULER) private enqueuer: Scheduler<unknown, unknown>
+  ) {
+    console.log(enqueuer);
+
     this.output = new DatabaseOutput(database);
     this.runtime = new Node();
     this.runtimes.add(this.runtime);

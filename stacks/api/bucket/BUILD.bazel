@@ -26,6 +26,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/bucket/history",
+        "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/realtime",
         "//stacks/api/passport",
         "//stacks/api/preference",

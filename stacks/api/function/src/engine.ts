@@ -1,4 +1,4 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {Inject, Injectable, Optional} from "@nestjs/common";
 import {DatabaseService} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {Event} from "@spica-server/function/queue/proto";
@@ -7,10 +7,11 @@ import {JSONSchema7} from "json-schema";
 import * as path from "path";
 import {ChangeKind, FunctionService, TargetChange} from "./function.service";
 import {Function, FUNCTION_OPTIONS, Options} from "./interface";
+import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
 
 @Injectable()
 export class FunctionEngine {
-  readonly schemas = new Map<string, JSONSchema7 | (() => Promise<JSONSchema7>)>([
+  readonly schemas = new Map<string, Schema>([
     ["http", require("./schema/http.json")],
     ["schedule", require("./schema/schedule.json")],
     ["firehose", require("./schema/firehose.json")],
@@ -22,8 +23,12 @@ export class FunctionEngine {
     private fs: FunctionService,
     private db: DatabaseService,
     private horizon: Horizon,
-    @Inject(FUNCTION_OPTIONS) private options: Options
+    @Inject(FUNCTION_OPTIONS) private options: Options,
+    @Optional() @Inject(SCHEMA) private schema: SchemaWithName
   ) {
+    if (schema) {
+      this.schemas.set(this.schema.name, this.schema.schema);
+    }
     this.fs.targets().subscribe(change => {
       switch (change.kind) {
         case ChangeKind.Added:
