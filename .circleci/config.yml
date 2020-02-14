@@ -26,7 +26,8 @@ commands:
       - run:
           name: "Rebase the branch on top of the target branch."
           command: |
-            export CIRCLE_TARGET_BRANCH=$(curl -s https://api.github.com/repos/spica-engine/spica/pulls/172 | jq -e '.base.ref' | tr -d '"')
+            URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${CI_PULL_REQUEST//*pull\//}"
+            export CIRCLE_TARGET_BRANCH=$(curl -s "$URL" | jq -e '.base.ref' | tr -d '"')
             git merge --ff-only "origin/$CIRCLE_TARGET_BRANCH"
 
 executors:
