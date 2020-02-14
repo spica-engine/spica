@@ -109,6 +109,7 @@ export class BucketDataController {
 
   @Get()
   async find(
+    @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers("accept-language") acceptedLanguage: string,
     @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false,
@@ -224,6 +225,7 @@ export class BucketDataController {
 
   @Get(":documentId")
   async findOne(
+    @Headers("strategy-type") strategyType: string,
     @Headers("accept-language") acceptedLanguage: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -269,6 +271,7 @@ export class BucketDataController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   replaceOne(
+    @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
