@@ -26,6 +26,12 @@ commands:
       - run:
           name: "Rebase the branch on top of the target branch."
           command: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
+      - run:
+          name: "Fetch tags"
+          command: |
+            git fetch --tags
+            git tag -l
+            git describe --abbrev=7 --tags HEAD 
 
 executors:
   default-executor:
@@ -47,7 +53,6 @@ jobs:
     executor: default-executor
     steps:
       - checkout_code
-      - run: git tag -l
       - custom_restore_cache
       - run:
           name: "Installing dependencies"
