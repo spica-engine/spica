@@ -24,8 +24,10 @@ commands:
     steps:
       - checkout
       - run:
-          name: "Rebase the branch on top of the master branch."
-          command: jq
+          name: "Rebase the branch on top of the target branch."
+          command: |
+            export CIRCLE_TARGET_BRANCH=$(curl -s https://api.github.com/repos/spica-engine/spica/pulls/172 | jq -e '.base.ref' | tr -d '"')
+            git merge --ff-only "origin/$CIRCLE_TARGET_BRANCH"
 
 executors:
   default-executor:
@@ -41,7 +43,7 @@ executors:
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
   gcp-cli: circleci/gcp-cli@1.8.3
-  
+
 jobs:
   setup:
     executor: default-executor
