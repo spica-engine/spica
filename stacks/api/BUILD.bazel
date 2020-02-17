@@ -61,7 +61,6 @@ nodejs_image(
     base = ":api_image_base",
     data = ["//stacks/api"],
     entry_point = "//stacks/api:main.ts",
-    node_modules = "@npm//:node_modules",
 )
 
 container_push(

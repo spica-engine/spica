@@ -4,6 +4,7 @@
 """
 
 load("@build_bazel_rules_nodejs//internal/providers:npm_package_info.bzl", "NpmPackageInfo", "node_modules_aspect")
+load("@build_bazel_rules_nodejs//internal/providers:declaration_info.bzl", "DeclarationInfo")
 load("@npm_bazel_typescript//internal:common/compilation.bzl", "DEPS_ASPECTS")
 
 DocSources = provider(
@@ -32,9 +33,9 @@ def _docs(ctx):
             # Dependencies from node_module should appear in execroot.
             node_module = dep[NpmPackageInfo]
             sources = depset(transitive = [sources, node_module.sources])
-        if hasattr(dep, "typescript"):
+        if DeclarationInfo in dep:
             # We need to pass all transitive deps as well to let typescript resolve everything.
-            sources = depset(transitive = [sources, dep.typescript.transitive_declarations])
+            sources = depset(transitive = [sources, dep[DeclarationInfo].transitive_declarations])
         if hasattr(dep, "es6_module_mappings"):
             # We need to pass mappings to paths of dgeni
             mappings.update(dep.es6_module_mappings)

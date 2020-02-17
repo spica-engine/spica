@@ -2,7 +2,7 @@ package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_rollup//:index.bzl", "rollup_bundle")
-load("@build_bazel_rules_nodejs//:index.bzl", "npm_package")
+load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 
 ts_library(
     name = "node",
@@ -21,31 +21,11 @@ ts_library(
     ],
 )
 
-npm_package(
+pkg_npm(
     name = "runtime",
     srcs = [
-        "@npm//ansi-regex:ansi-regex__files",
-        "@npm//ascli:ascli__files",
-        "@npm//bytebuffer:bytebuffer__files",
-        "@npm//camelcase:camelcase__files",
-        "@npm//cliui:cliui__files",
-        "@npm//code-point-at:code-point-at__files",
-        "@npm//colour:colour__files",
-        "@npm//decamelize:decamelize__files",
-        "@npm//grpc:grpc__files",
-        "@npm//invert-kv:invert-kv__files",
-        "@npm//lcid:lcid__files",
-        "@npm//lodash.camelcase:lodash.camelcase__files",
-        "@npm//lodash.clone:lodash.clone__files",
-        "@npm//nan:nan__files",
-        "@npm//number-is-nan:number-is-nan__files",
-        "@npm//optjs:optjs__files",
-        "@npm//os-locale:os-locale__files",
-        "@npm//string-width:string-width__files",
-        "@npm//window-size:window-size__files",
-        "@npm//wrap-ansi:wrap-ansi__files",
-        "@npm//y18n:y18n__files",
-        "@npm//yargs:yargs__files",
+        "@npm//grpc",
+        "@npm//node-pre-gyp",
     ],
     deps = [
         ":entrypoint",

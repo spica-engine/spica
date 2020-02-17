@@ -5,12 +5,6 @@ query --output=label_kind
 # This allows us to avoid installing a second copy of node_modules
 common --experimental_allow_incremental_repository_updates
 
-# Show which actions are running under which workers and print all
-# the actions running in parallel. This shows that Bazel runs on all
-# cores of a CPU.
-build --experimental_ui
-test --experimental_ui
-
 
 # Make TypeScript compilation fast, by keeping a few
 # copies of the compiler running as daemons, and cache SourceFile
