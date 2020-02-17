@@ -30,7 +30,7 @@ function normalizeSubstitutions(substitutionsArg, stampFilePath) {
     if (substituteWith.match(/^{.*?}$/)) {
       substituteWith = substituteWith.replace(/^{(.*?)}$/, "$1");
       if (!stampMap[substituteWith]) {
-        throw new Error(`Can not find ${substituteWith} key in volatile-status file.`);
+        throw new Error(`Could not find ${substituteWith} key in volatile-status file.`);
       }
       substituteWith = stampMap[substituteWith];
       normalizedSubstitutions[occurrence] = substituteWith;
