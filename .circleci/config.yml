@@ -75,8 +75,8 @@ jobs:
       - custom_attach_workspace
       - setup_circleci_bazel_config
       - run:
-          name: "Running tests (Exclusive)"
-          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test --test_strategy=exclusive
+          name: "Running tests"
+          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
 
   test_spica:
     executor: default-executor
