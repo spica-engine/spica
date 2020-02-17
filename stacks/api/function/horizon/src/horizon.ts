@@ -4,11 +4,13 @@ import {DatabaseService} from "@spica-server/database";
 import {
   DatabaseEnqueuer,
   Enqueuer,
+  FirehoseEnqueuer,
   HttpEnqueuer,
-  ScheduleEnqueuer,
-  FirehoseEnqueuer
+  ScheduleEnqueuer
 } from "@spica-server/function/enqueuer";
-import {DatabaseQueue, EventQueue, HttpQueue, FirehoseQueue} from "@spica-server/function/queue";
+import {PackageManager} from "@spica-server/function/pkgmanager";
+import {Npm} from "@spica-server/function/pkgmanager/node";
+import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 import {Runtime} from "@spica-server/function/runtime";
 import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
@@ -25,12 +27,16 @@ export class Horizon implements OnModuleInit {
   runtime: Node;
 
   readonly runtimes = new Set<Runtime>();
+  readonly pkgmanagers = new Map<string, PackageManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
 
   constructor(private http: HttpAdapterHost, private database: DatabaseService) {
     this.output = new DatabaseOutput(database);
+
     this.runtime = new Node();
     this.runtimes.add(this.runtime);
+
+    this.pkgmanagers.set(this.runtime.description.name, new Npm());
 
     this.queue = new EventQueue(this.enqueue.bind(this));
 

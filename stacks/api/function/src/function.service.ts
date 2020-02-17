@@ -38,7 +38,6 @@ export class FunctionService extends BaseCollection<Function>("function") {
         fullDocument: "updateLookup"
       });
       stream.on("change", change => {
-        console.log(change);
         switch (change.operationType) {
           case "replace":
           case "update":

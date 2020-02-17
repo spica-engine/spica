@@ -17,6 +17,7 @@ ts_library(
         "//packages/database",
         "//stacks/api/function/enqueuer",
         "//stacks/api/function/horizon",
+        "//stacks/api/function/pkgmanager",
         "//stacks/api/function/queue/proto",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
@@ -26,23 +27,22 @@ ts_library(
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//rxjs",
-        "@npm//semver",
         "@npm//typescript",
     ],
 )
 
-# docs(
-#     name = "docs",
-#     srcs = [
-#         "function.controller.ts",
-#         "subscription.controller.ts",
-#     ],
-#     tags = ["function-docs"],
-#     exports = [
-#         "FunctionController",
-#         "SubscriptionController",
-#     ],
-#     deps = [
-#         "//packages/database",
-#     ],
-# )
+docs(
+    name = "docs",
+    srcs = [
+        "src/function.controller.ts",
+        #"src/subscription.controller.ts",
+    ],
+    tags = ["function-docs"],
+    exports = [
+        "FunctionController",
+        #"SubscriptionController",
+    ],
+    deps = [
+        "//packages/database",
+    ],
+)
