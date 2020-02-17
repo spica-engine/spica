@@ -26,6 +26,9 @@ commands:
       - run:
           name: "Rebase the branch on top of the target branch."
           command: |
+            # We do this because we want our tests to be prospective. Basically, we test whether will these test pass if we merge it onto target branch.
+            # NOTE: Branches that have conflicts with the target branch will fail directly.
+            # See: https://ideas.circleci.com/ideas/CCI-I-926
             URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${CI_PULL_REQUEST//*pull\//}"
             export CIRCLE_TARGET_BRANCH=$(curl -s "$URL" | jq -e '.base.ref' | tr -d '"')
             git merge --ff-only "origin/$CIRCLE_TARGET_BRANCH"
@@ -122,6 +125,6 @@ workflows:
             - setup
             # - test_api
             - test_spica
-          # filters:
-          #   branches:
-          #     only: master
+          filters:
+            branches:
+              only: master
