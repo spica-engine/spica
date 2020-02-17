@@ -80,12 +80,11 @@ describe("horizon", () => {
       horizon = module.get(Horizon);
 
       app = module.createNestApplication();
-
       await app.init();
     });
 
-    afterEach(() => {});
-
-    it("should inject provided scheduler", () => {});
+    it("should inject provided scheduler", () => {
+      expect(horizon["schedulerFactory"]).toBeDefined();
+    });
   });
 });
