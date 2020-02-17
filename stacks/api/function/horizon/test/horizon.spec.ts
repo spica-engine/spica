@@ -3,7 +3,28 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {Horizon, HorizonModule} from "@spica-server/function/horizon";
 import {Event} from "@spica-server/function/queue/proto";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
-import {INestApplication} from "@nestjs/common";
+import {INestApplication, Global, Module} from "@nestjs/common";
+import {Scheduler} from "../src";
+import {SCHEDULER} from "../src/scheduler";
+
+const provideScheduler: Scheduler<unknown, unknown> = () => {
+  return {
+    enqueuer: null,
+    queue: null
+  };
+};
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: SCHEDULER,
+      useValue: provideScheduler
+    }
+  ],
+  exports: [SCHEDULER]
+})
+export class MockProviderModule {}
 
 describe("horizon", () => {
   let horizon: Horizon;
@@ -48,5 +69,23 @@ describe("horizon", () => {
       event.target = target;
       horizon["enqueue"](event);
     });
+  });
+
+  describe("adding queue and enqueuer", () => {
+    beforeEach(async () => {
+      const module = await Test.createTestingModule({
+        imports: [DatabaseTestingModule.create(), HorizonModule, MockProviderModule]
+      }).compile();
+
+      horizon = module.get(Horizon);
+
+      app = module.createNestApplication();
+
+      await app.init();
+    });
+
+    afterEach(() => {});
+
+    it("should inject provided scheduler", () => {});
   });
 });

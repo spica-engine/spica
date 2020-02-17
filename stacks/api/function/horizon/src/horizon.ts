@@ -31,10 +31,8 @@ export class Horizon implements OnModuleInit {
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
-    @Optional() @Inject(SCHEDULER) private enqueuer: Scheduler<unknown, unknown>
+    @Optional() @Inject(SCHEDULER) private schedulerFactory: Scheduler<unknown, unknown>
   ) {
-    console.log(enqueuer);
-
     this.output = new DatabaseOutput(database);
     this.runtime = new Node();
     this.runtimes.add(this.runtime);
@@ -49,6 +47,12 @@ export class Horizon implements OnModuleInit {
 
     this.firehoseQueue = new FirehoseQueue();
     this.queue.addQueue(this.firehoseQueue);
+
+    if (this.schedulerFactory) {
+      const scheduler = this.schedulerFactory(this.queue);
+      this.queue.addQueue(scheduler.queue);
+      this.enqueuers.add(scheduler.enqueuer);
+    }
 
     this.queue.listen();
   }
