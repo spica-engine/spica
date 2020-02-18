@@ -27,6 +27,7 @@ ts_library(
         "//packages/database",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/realtime",
+        "//stacks/api/bucket/hook",
         "//stacks/api/passport",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
@@ -211,6 +212,23 @@ jasmine_node_test(
     ],
 )
 
+ts_library(
+    name = "hook_test_lib",
+    testonly = True,
+    srcs = ["hook/hook.spec.ts"],
+    deps = [
+        "@npm//@types/jasmine",    
+    ],
+)
+
+jasmine_node_test(
+    name = "hook-test",
+    deps = [
+        ":hook_test_lib",
+    ],
+)
+
+
 docs(
     name = "docs",
     srcs = glob(["**/*.ts"]),
@@ -224,3 +242,4 @@ docs(
         "//stacks/api/passport",
     ],
 )
+

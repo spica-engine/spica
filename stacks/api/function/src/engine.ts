@@ -27,6 +27,7 @@ export class FunctionEngine {
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) private schema: SchemaWithName
   ) {
+    console.log("SCHEAMAAAA=>",schema)
     if (schema) {
       this.schemas.set(this.schema.name, this.schema.schema);
     }
