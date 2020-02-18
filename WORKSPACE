@@ -130,7 +130,12 @@ k8s_repositories()
 
 k8s_defaults(
     name = "k8s_deploy",
-    cluster = "minikube",
+    cluster = "_".join([
+        "gke",
+        "spica-239113",
+        "us-central1-a",
+        "godfather",  # Change to "ssl-cluster", to deploy prod.
+    ]),
     image_chroot = "index.docker.io",
     kind = "deployment",
 )
