@@ -24,11 +24,11 @@ ts_library(
 pkg_npm(
     name = "runtime",
     srcs = [
-        "@npm//:function_runtime_node_dependencies"
+        "@npm//:function_runtime_node_dependencies",
     ],
     deps = [
         ":entrypoint",
-    ]
+    ],
 )
 
 ts_library(

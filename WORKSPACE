@@ -21,8 +21,6 @@ node_repositories()
 
 yarn_install(
     name = "npm",
-    package_json = "//:package.json",
-    yarn_lock = "//:yarn.lock",
     manual_build_file_contents = """
 filegroup(
     name = "function_runtime_node_dependencies",
@@ -51,7 +49,9 @@ filegroup(
         "//window-size:window-size__files",
     ]
 )
-    """
+    """,
+    package_json = "//:package.json",
+    yarn_lock = "//:yarn.lock",
 )
 
 # Install all Bazel dependencies needed for npm packages
