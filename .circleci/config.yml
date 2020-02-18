@@ -1,6 +1,5 @@
-var_1: &cache_key infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
-
 version: 2.1
+
 commands:
   setup_circleci_bazel_config:
     description: Copy RC file that contains common options for CI
@@ -18,15 +17,23 @@ commands:
     steps:
       - restore_cache:
           keys:
-            - *cache_key
-            # fallback to using the latest cache if no exact match is found
+            - infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
             - infra
   checkout_code:
     description: Checkout repository and rebase on top of the target branch.
     steps:
-      - checkout:
-          post: git pull --ff-only origin "refs/pull/${CI_PULL_REQUEST//*pull\//}/merge"
-
+      - checkout
+      - run:
+          name: "Rebase the branch on top of the target branch."
+          command: |
+            # We do this because we want our tests to be prospective. Basically, we test whether will these test pass if we merge it onto target branch.
+            # NOTE: Branches that have conflicts with the target branch will fail directly.
+            # See: https://ideas.circleci.com/ideas/CCI-I-926
+            if [ ! -z $CI_PULL_REQUEST ]; then
+                URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${CI_PULL_REQUEST//*pull\//}"
+                export CIRCLE_TARGET_BRANCH=$(curl -s "$URL" | jq -e '.base.ref' | tr -d '"')
+                git merge --ff-only "origin/$CIRCLE_TARGET_BRANCH"
+            fi
 executors:
   default-executor:
     working_directory: ~/spica
@@ -37,9 +44,11 @@ executors:
     docker:
       - image: circleci/node:11
       - image: circleci/mongo:4.2.1
+
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
   gcp-cli: circleci/gcp-cli@1.8.3
+
 jobs:
   setup:
     executor: default-executor
@@ -67,8 +76,8 @@ jobs:
       - custom_attach_workspace
       - setup_circleci_bazel_config
       - run:
-          name: "Running tests (Exclusive)"
-          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test --test_strategy=exclusive 
+          name: "Running tests"
+          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
 
   test_spica:
     executor: default-executor

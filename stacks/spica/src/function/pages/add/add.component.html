@@ -51,7 +51,9 @@
               maxlength="250"
             ></textarea>
             <mat-hint>Simply describe what this function does.</mat-hint>
-            <mat-error *ngIf="descriptionModel?.errors?.required">Name is required.</mat-error>
+            <mat-error *ngIf="descriptionModel?.errors?.required"
+              >Description is required.</mat-error
+            >
             <mat-error *ngIf="descriptionModel?.errors?.minLength">
               Description must be greater than {{ descriptionModel.errors.min.min }} characters.
             </mat-error>
@@ -107,17 +109,34 @@
           </function-editor>
         </mat-list-item>
         <mat-divider></mat-divider>
-        <h4 mat-subheader><mat-icon>swap_horiz</mat-icon> Triggers</h4>
+        <h4 mat-subheader>
+          <mat-icon>swap_horiz</mat-icon> Triggers<button mat-icon-button (click)="addTrigger()">
+            <mat-icon>add</mat-icon>
+          </button>
+          <mat-error *ngIf="isHandlerDuplicated">
+            Duplicated handler detected. Each handlers must be unique.
+          </mat-error>
+        </h4>
+
         <mat-list-item
           class="triggers"
           *ngFor="let trigger of function.triggers; let i = index"
           [ngModelGroup]="i"
         >
           <mat-form-field>
-            <mat-label>Handler</mat-label>
-            <mat-select [disabled]="true" [value]="trigger.handler">
-              <mat-option [value]="trigger.handler">{{ trigger.handler }}</mat-option>
-            </mat-select>
+            <input
+              matInput
+              required
+              minlength="1"
+              placeholder="Handler"
+              [(ngModel)]="trigger.handler"
+              name="handler"
+              #handlerModel="ngModel"
+              (ngModelChange)="checkHandlers()"
+            />
+            <mat-error *ngIf="handlerModel.errors?.required">
+              This field is required.
+            </mat-error>
           </mat-form-field>
 
           <ng-container *ngIf="information | async; let information">
@@ -168,18 +187,36 @@
               }}</mat-slide-toggle>
             </ng-container>
           </ng-container>
+          <button
+            mat-icon-button
+            color="warn"
+            [disabled]="function.triggers.length == 1"
+            class="delete"
+            (click)="deleteTrigger(i)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
         </mat-list-item>
 
-        <ng-container *ngIf="function?._id" class="dependencies">
+        <ng-container *ngIf="function?._id" class="dependencies" ngModelGroup="dependencies">
           <mat-divider></mat-divider>
-          <h4 mat-subheader><mat-icon>layers</mat-icon> Dependencies</h4>
+          <h4 mat-subheader>
+            <mat-icon>layers</mat-icon> Dependencies
+            <mat-progress-spinner
+              *ngIf="dependencyInstallPending"
+              matSuffix
+              diameter="25"
+              mode="indeterminate"
+            >
+            </mat-progress-spinner>
+          </h4>
           <mat-list-item
             class="dependency"
-            *ngFor="let data of dependencies | async | keyvalue; let index = index"
+            *ngFor="let dependency of dependencies | async; let index = index"
           >
-            <span class="name">{{ data.key }}</span>
-            <span class="version">{{ data.value }}</span>
-            <button mat-icon-button class="delete" (click)="deleteDependency(data.key)">
+            <span class="name">{{ dependency.name }}</span>
+            <span class="version">{{ dependency.version }}</span>
+            <button mat-icon-button (click)="deleteDependency(dependency.name)">
               <mat-icon>delete</mat-icon>
             </button>
           </mat-list-item>
@@ -189,30 +226,24 @@
               <input
                 matInput
                 placeholder="Dependency Name"
-                (keyup.enter)="addDependency(dependencyModel.value); dependencyModel.reset()"
+                (keyup.enter)="addDependency(dependencyModel.value)"
+                name="dependencyName"
+                required
                 #dependencyModel="ngModel"
                 ngModel
-                name="dependencyName"
                 [ngModelOptions]="{standalone: true}"
-                required
+                [disabled]="dependencyInstallPending"
               />
 
-              <mat-error *ngIf="dependencyModel?.errors?.required"
-                >This field is required.</mat-error
-              >
-              <mat-progress-spinner
-                *ngIf="dependencyInstallPending"
-                matSuffix
-                diameter="25"
-                mode="indeterminate"
-              >
-              </mat-progress-spinner>
+              <mat-error *ngIf="dependencyModel?.errors?.required">
+                This field is required.
+              </mat-error>
             </mat-form-field>
 
             <button
-              mat-icon-button
+              mat-button
               (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
-              [disabled]="dependencyModel.invalid"
+              [disabled]="dependencyModel.invalid || dependencyInstallPending"
             >
               <mat-icon>add</mat-icon> Add
             </button>
@@ -252,7 +283,12 @@
     </form>
   </mat-card-content>
   <mat-card-actions>
-    <button mat-button [disabled]="form.invalid" canInteract="function:update" (click)="save()">
+    <button
+      mat-button
+      [disabled]="form.invalid || isHandlerDuplicated"
+      canInteract="function:update"
+      (click)="save()"
+    >
       <mat-icon>sync</mat-icon> Save
     </button>
   </mat-card-actions>

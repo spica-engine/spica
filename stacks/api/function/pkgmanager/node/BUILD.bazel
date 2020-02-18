@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+
+ts_library(
+    name = "node",
+    srcs = [
+        "index.ts",
+        "npm.ts",
+    ],
+    module_name = "@spica-server/function/pkgmanager/node",
+    deps = [
+        "//stacks/api/function/pkgmanager",
+        "@npm//@types/node",
+    ],
+)

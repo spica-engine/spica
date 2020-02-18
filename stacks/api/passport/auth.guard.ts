@@ -46,6 +46,9 @@ function createAuthGuard(type?: string): Type<CanActivate> {
         this.handleRequest(err, user, info, context)
       );
       request[options.property || defaultOptions.property] = user;
+
+      request.headers["strategy-type"] = strategyType;
+
       return true;
     }
 

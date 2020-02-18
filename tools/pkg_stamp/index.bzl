@@ -10,7 +10,7 @@ def _pkg_stamp(ctx):
     args.add(ctx.version_file.path)
 
     ctx.actions.run(
-        inputs = ctx.files.srcs,
+        inputs = ctx.files.srcs + [ctx.version_file],
         outputs = [package_dir],
         executable = ctx.executable._packager,
         arguments = [args],
