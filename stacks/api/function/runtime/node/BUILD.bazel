@@ -24,12 +24,11 @@ ts_library(
 pkg_npm(
     name = "runtime",
     srcs = [
-        "@npm//grpc",
-        "@npm//node-pre-gyp",
+        "@npm//:function_runtime_node_dependencies"
     ],
     deps = [
         ":entrypoint",
-    ],
+    ]
 )
 
 ts_library(

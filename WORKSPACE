@@ -23,6 +23,35 @@ yarn_install(
     name = "npm",
     package_json = "//:package.json",
     yarn_lock = "//:yarn.lock",
+    manual_build_file_contents = """
+filegroup(
+    name = "function_runtime_node_dependencies",
+    srcs = [
+        "//grpc:grpc__contents",
+        "//grpc:grpc__nested_node_modules",
+        # Rest are the dependencies of grpc flattened by package manager.
+        "//@types/bytebuffer:bytebuffer__files",
+        "//@types/long:long__files",
+        "//@types/node:node__files",
+        "//lodash.camelcase:lodash.camelcase__files",
+        "//lodash.clone:lodash.clone__files",
+        "//nan:nan__files",
+        "//ascli:ascli__files",
+        "//colour:colour__files",
+        "//optjs:optjs__files",
+        "//bytebuffer:bytebuffer__files",
+        "//yargs:yargs__files",
+        "//string-width:string-width__files",
+        "//code-point-at:code-point-at__files",
+        "//number-is-nan:number-is-nan__files",
+        "//strip-ansi:strip-ansi__files",
+        "//ansi-regex:ansi-regex__files",
+        "//wrap-ansi:wrap-ansi__files",
+        "//decamelize:decamelize__files",
+        "//window-size:window-size__files",
+    ]
+)
+    """
 )
 
 # Install all Bazel dependencies needed for npm packages
