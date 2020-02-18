@@ -1,2 +1,2 @@
 export * from "./function.module";
-export * from "./schema/schema"
+export * from "./schema/schema";

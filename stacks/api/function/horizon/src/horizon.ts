@@ -47,14 +47,6 @@ export class Horizon implements OnModuleInit {
 
     this.firehoseQueue = new FirehoseQueue();
     this.queue.addQueue(this.firehoseQueue);
-
-    if (this.schedulerFactory) {
-      const scheduler = this.schedulerFactory(this.queue);
-      this.queue.addQueue(scheduler.queue);
-      this.enqueuers.add(scheduler.enqueuer);
-    }
-
-    this.queue.listen();
   }
 
   onModuleInit() {
@@ -67,6 +59,14 @@ export class Horizon implements OnModuleInit {
     this.enqueuers.add(new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database));
 
     this.enqueuers.add(new ScheduleEnqueuer(this.queue));
+
+    if (this.schedulerFactory) {
+      const scheduler = this.schedulerFactory(this.queue);
+      this.queue.addQueue(scheduler.queue);
+      this.enqueuers.add(scheduler.enqueuer);
+    }
+
+    this.queue.listen();
   }
 
   private enqueue(event: Event.Event) {
