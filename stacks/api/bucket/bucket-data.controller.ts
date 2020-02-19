@@ -16,9 +16,9 @@ import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
-import {BucketDocument} from "./bucket";
+import {BucketDocument} from "@spica-server/bucket/services/bucket";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {BucketService} from "./bucket.service";
+import {BucketService} from "./services/bucket.service";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
