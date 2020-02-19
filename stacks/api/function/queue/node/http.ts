@@ -101,7 +101,7 @@ export class Response {
     private _end: (e: Http.End) => void
   ) {}
 
-  send(body: Buffer | Array<any> | object | string) {
+  send(body: Buffer | Array<any> | object | string | boolean | number) {
     let type: string;
     let chunk: Buffer;
     if (Buffer.isBuffer(body)) {
@@ -112,7 +112,7 @@ export class Response {
       chunk = Buffer.from(JSON.stringify(body));
     } else {
       type = "text/html";
-      chunk = Buffer.from(body);
+      chunk = Buffer.from(String(body));
     }
     this.writeHead(this.statusCode || 200, "OK", {
       "Content-type": type,
