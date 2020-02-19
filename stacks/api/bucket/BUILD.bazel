@@ -16,10 +16,7 @@ ts_library(
         "cache.ts",
         "index.ts",
         "scheduler.ts",
-    ] + glob(
-        ["hook/*.ts"],
-        exclude = ["hook/*.spec.ts"],
-    ),
+    ],
     data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
     deps = [
@@ -27,6 +24,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/bucket/history",
+        "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/realtime",
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
@@ -201,16 +199,20 @@ docs(
 )
 
 ts_library(
-    name = "hook_test_lib",
+    name = "bucket_module_test",
     testonly = True,
-    srcs = ["hook/hook.spec.ts"],
+    srcs = ["bucket.module.spec.ts"],
     deps = [
         ":bucket",
         "//packages/core/schema",
         "//packages/database",
         "//packages/database/testing",
+        "//stacks/api/bucket/history",
         "//stacks/api/bucket/services",
+        "//stacks/api/passport",
+        "//stacks/api/passport/testing",
         "//stacks/api/preference",
+        "//stacks/api/bucket/hooks",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
@@ -218,8 +220,8 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "hook-test",
+    name = "bucket_test",
     deps = [
-        ":hook_test_lib",
+        ":bucket_module_test",
     ],
 )

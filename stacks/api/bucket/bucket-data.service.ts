@@ -8,7 +8,7 @@ import {
   FilterQuery,
   ObjectId
 } from "@spica-server/database";
-import {BucketDocument} from "@spica-server/bucket/services/bucket";
+import {BucketDocument} from "@spica-server/bucket/services";
 
 @Injectable()
 export class BucketDataService {

@@ -2,7 +2,7 @@ import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {BucketDocument, Bucket} from "@spica-server/bucket/services/bucket";
-import {BucketService} from "@spica-server/bucket/services/bucket.service";
+import {BucketService} from "@spica-server/bucket/services";
 
 @Injectable()
 export class BucketSchemaResolver {

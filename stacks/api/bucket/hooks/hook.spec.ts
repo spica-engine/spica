@@ -1,5 +1,5 @@
 import {TestingModule, Test} from "@nestjs/testing";
-import {hookModuleProviders, SCHEMA} from "@spica-server/bucket/hook/hook.module";
+import {hookModuleProviders, SCHEMA} from "@spica-server/bucket/hooks/hook.module";
 import {ServicesModule} from "@spica-server/bucket/services/bucket.service.module";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PreferenceModule} from "@spica-server/preference";

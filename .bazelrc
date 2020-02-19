@@ -37,6 +37,7 @@ build --define=PORT=4300
 build --define=PERSISTENT_PATH=/tmp #Very persistent!
 build --define=SECRET=$2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
 build --define=DEFAULT_PASSWORD=spica
+build --define=ENABLE_BUCKET_HOOKS=true
 
 build:release --workspace_status_command="./scripts/current_version.sh"
 

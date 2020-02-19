@@ -19,7 +19,7 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {Bucket, BucketDocument, ImportFile} from "@spica-server/bucket/services/bucket";
+import {Bucket, BucketDocument, ImportFile} from "@spica-server/bucket/services";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketService} from "./services/bucket.service";
 

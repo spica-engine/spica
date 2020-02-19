@@ -3,7 +3,7 @@ import {DatabaseTestingModule, DatabaseService, ObjectId} from "@spica-server/da
 import {PreferenceModule, Preference} from "@spica-server/preference";
 import {SchemaModule} from "@spica-server/core/schema";
 import {BucketSchemaResolver} from "./bucket.schema.resolver";
-import {BucketService} from "./services/bucket.service";
+import {BucketService} from "@spica-server/bucket/services";
 
 describe("bucket service", () => {
   let module: TestingModule;

@@ -9,18 +9,17 @@ import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {CUSTOM_TYPES} from "./bucket.schema.types";
-import {BucketService} from "./services/bucket.service";
+import {ServicesModule, BucketService} from "@spica-server/bucket/services";
 import {BucketCache, provideBucketCache} from "./cache";
 import {DocumentScheduler} from "./scheduler";
-import {HookModule} from "@spica-server/bucket/hook";
-import {ServicesModule} from "@spica-server/bucket/services/bucket.service.module";
+import {HookModule} from "@spica-server/bucket/hooks";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 
 @Module({})
 export class BucketModule {
-  static create(ENABLE_HOOKS: string): DynamicModule {
+  static forRoot(options: BucketOptions): DynamicModule {
     const imports = [
       PreferenceModule,
       HistoryModule,
@@ -30,7 +29,7 @@ export class BucketModule {
         schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
       }),
       ServicesModule,
-      ...(ENABLE_HOOKS === "true" ? [HookModule] : [])
+      ...(options.hooks ? [HookModule] : [])
     ];
 
     return {
@@ -67,4 +66,8 @@ export class BucketModule {
       }
     });
   }
+}
+
+export interface BucketOptions {
+  hooks: boolean;
 }

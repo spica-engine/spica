@@ -4,19 +4,18 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "services",
+    name = "hooks",
     srcs = [
-        "bucket.service.module.ts",
-        "bucket.service.ts",
-        "bucket.ts",
+        "hook.module.ts",
         "index.ts",
     ],
-    module_name = "@spica-server/bucket/services",
+    module_name = "@spica-server/bucket/hooks",
     deps = [
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/preference",
+        "//stacks/api/bucket/services",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//@types/node",
@@ -24,30 +23,25 @@ ts_library(
 )
 
 ts_library(
-    name = "bucket_test_lib",
+    name = "hook_test_lib",
     testonly = True,
-    srcs = [
-        "bucket.service.spec.ts",
-    ],
+    srcs = ["hook.spec.ts"],
     deps = [
-        ":services",
-        "//packages/core",
+        ":hooks",
         "//packages/core/schema",
-        "//packages/core/testing",
+        "//packages/database",
         "//packages/database/testing",
+        "//stacks/api/bucket/services",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
-        "@npm//@types/bson",
         "@npm//@types/jasmine",
-        "@npm//@types/node",
-        "@npm//bson",
     ],
 )
 
 jasmine_node_test(
-    name = "bucket-test",
+    name = "hook_test",
     deps = [
-        ":bucket_test_lib",
+        ":hook_test_lib",
     ],
 )

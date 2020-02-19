@@ -1,8 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {MongoClient, ObjectId} from "@spica-server/database";
 import * as cron from "cron";
-import {BucketDocument} from "@spica-server/bucket/services/bucket";
-import {BucketService} from "@spica-server/bucket/services/bucket.service";
+import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BucketDataService} from "./bucket-data.service";
 
 @Injectable()
