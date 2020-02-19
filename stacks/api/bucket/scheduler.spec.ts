@@ -13,7 +13,10 @@ describe("scheduler", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), BucketModule.create(process.env.ENABLE_BUCKET_HOOKS)]
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        BucketModule.create(process.env.ENABLE_BUCKET_HOOKS)
+      ]
     })
       .overrideProvider(BucketDataService)
       .useValue(jasmine.createSpyObj("Bucket Data Service", ["replaceOne"]))

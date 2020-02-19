@@ -30,7 +30,7 @@ export class BucketModule {
         schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
       }),
       ServicesModule,
-      ...(( ENABLE_HOOKS === "true") ? [HookModule]: [])
+      ...(ENABLE_HOOKS === "true" ? [HookModule] : [])
     ];
 
     return {
