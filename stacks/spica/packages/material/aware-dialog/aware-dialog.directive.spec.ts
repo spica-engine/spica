@@ -1,11 +1,11 @@
 import {Component} from "@angular/core";
-import {ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks} from "@angular/core/testing";
+import {ComponentFixture, fakeAsync, flush, TestBed, tick} from "@angular/core/testing";
+import {MatDialog} from "@angular/material/dialog";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {MatAwareDialogComponent} from "./aware-dialog.component";
 import {MatAwareDialogDirective} from "./aware-dialog.directive";
 import {MatAwareDialogModule} from "./aware-dialog.module";
-import {MatDialog} from "@angular/material/dialog";
-import {MatAwareDialogComponent} from "./aware-dialog.component";
 
 @Component({
   template: `
@@ -63,6 +63,7 @@ describe("Aware Dialog Directive", () => {
     tick(1000);
     expect(fixture.componentInstance.cancel).toHaveBeenCalledTimes(1);
   }));
+
   it("should call confirm if clicked confirm button when answer is correct", fakeAsync(() => {
     fixture.debugElement.query(By.css("button")).nativeElement.click();
     tick();
@@ -73,7 +74,7 @@ describe("Aware Dialog Directive", () => {
       "mat-dialog-container > mat-aware-dialog > mat-dialog-actions > button:last-of-type"
     ) as HTMLButtonElement;
     button.click();
-    tick(1000);
+    flush();
     expect(fixture.componentInstance.confirm).toHaveBeenCalledTimes(1);
   }));
 });
