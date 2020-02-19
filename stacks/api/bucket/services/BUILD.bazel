@@ -5,16 +5,20 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "services",
-    srcs = ["bucket.service.ts", "bucket.service.module.ts", "bucket.ts"],
-    module_name= "@spica-server/bucket/services",
+    srcs = [
+        "bucket.service.module.ts",
+        "bucket.service.ts",
+        "bucket.ts",
+    ],
+    module_name = "@spica-server/bucket/services",
     deps = [
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
-        "@npm//@types/node",
         "@npm//@types/json-schema",
+        "@npm//@types/node",
     ],
 )
 

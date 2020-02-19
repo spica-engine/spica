@@ -16,7 +16,10 @@ ts_library(
         "cache.ts",
         "index.ts",
         "scheduler.ts",
-    ] + glob(["hook/*.ts"], exclude=["hook/*.spec.ts"]) ,
+    ] + glob(
+        ["hook/*.ts"],
+        exclude = ["hook/*.spec.ts"],
+    ),
     data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
     deps = [
@@ -25,9 +28,9 @@ ts_library(
         "//packages/database",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/realtime",
+        "//stacks/api/bucket/services",
         "//stacks/api/passport",
         "//stacks/api/preference",
-	"//stacks/api/bucket/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/archiver",
@@ -102,7 +105,6 @@ jasmine_node_test(
     ],
 )
 
-
 ts_library(
     name = "bucket-acceptance_test_lib",
     testonly = True,
@@ -116,9 +118,9 @@ ts_library(
         "//packages/core/testing",
         "//packages/database",
         "//packages/database/testing",
+        "//stacks/api/bucket/services",
         "//stacks/api/passport/testing",
         "//stacks/api/preference",
-	"//stacks/api/bucket/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/bson",
@@ -146,8 +148,8 @@ ts_library(
         "//packages/core/schema",
         "//packages/core/testing",
         "//packages/database/testing",
-        "//stacks/api/preference",
         "//stacks/api/bucket/services",
+        "//stacks/api/preference",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
@@ -201,17 +203,17 @@ docs(
 ts_library(
     name = "hook_test_lib",
     testonly = True,
-    srcs = [ "hook/hook.spec.ts" ],
+    srcs = ["hook/hook.spec.ts"],
     deps = [
-	":bucket",
-        "//packages/database",
+        ":bucket",
         "//packages/core/schema",
+        "//packages/database",
         "//packages/database/testing",
+        "//stacks/api/bucket/services",
         "//stacks/api/preference",
-	"//stacks/api/bucket/services",
-        "@npm//@types/jasmine",
+        "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
-	"@npm//@nestjs/common",
+        "@npm//@types/jasmine",
     ],
 )
 
