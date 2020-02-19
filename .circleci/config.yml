@@ -77,7 +77,7 @@ jobs:
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: ./node_modules/.bin/bazel query 'tests(//...)' --output label | xargs ./node_modules/.bin/bazel test
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test
 
   test_spica:
     executor: default-executor

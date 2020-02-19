@@ -9,11 +9,11 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 # Setup nodejs workspace
 http_archive(
     name = "build_bazel_rules_nodejs",
-    sha256 = "c612d6b76eaa17540e8b8c806e02701ed38891460f9ba3303f4424615437887a",
-    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/0.42.1/rules_nodejs-0.42.1.tar.gz"],
+    sha256 = "b6670f9f43faa66e3009488bbd909bc7bc46a5a9661a33f6bc578068d1837f37",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/1.3.0/rules_nodejs-1.3.0.tar.gz"],
 )
 
-load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "node_repositories", "yarn_install")
+load("@build_bazel_rules_nodejs//:index.bzl", "check_bazel_version", "node_repositories", "yarn_install")
 
 check_bazel_version("0.27.0")
 
@@ -21,8 +21,36 @@ node_repositories()
 
 yarn_install(
     name = "npm",
+    manual_build_file_contents = """
+filegroup(
+    name = "function_runtime_node_dependencies",
+    srcs = [
+        "//grpc:grpc__contents",
+        "//grpc:grpc__nested_node_modules",
+        # Rest are the dependencies of grpc flattened by package manager.
+        "//@types/bytebuffer:bytebuffer__files",
+        "//@types/long:long__files",
+        "//@types/node:node__files",
+        "//lodash.camelcase:lodash.camelcase__files",
+        "//lodash.clone:lodash.clone__files",
+        "//nan:nan__files",
+        "//ascli:ascli__files",
+        "//colour:colour__files",
+        "//optjs:optjs__files",
+        "//bytebuffer:bytebuffer__files",
+        "//yargs:yargs__files",
+        "//string-width:string-width__files",
+        "//code-point-at:code-point-at__files",
+        "//number-is-nan:number-is-nan__files",
+        "//strip-ansi:strip-ansi__files",
+        "//ansi-regex:ansi-regex__files",
+        "//wrap-ansi:wrap-ansi__files",
+        "//decamelize:decamelize__files",
+        "//window-size:window-size__files",
+    ]
+)
+    """,
     package_json = "//:package.json",
-    symlink_node_modules = False,
     yarn_lock = "//:yarn.lock",
 )
 
@@ -37,11 +65,11 @@ load("@npm_bazel_typescript//:index.bzl", "ts_setup_workspace")
 ts_setup_workspace()
 
 # Setup docker workspace
-http_archive(
+git_repository(
     name = "io_bazel_rules_docker",
-    sha256 = "87fc6a2b128147a0a3039a2fd0b53cc1f2ed5adb8716f50756544a572999ae9a",
-    strip_prefix = "rules_docker-0.8.1",
-    urls = ["https://github.com/bazelbuild/rules_docker/archive/v0.8.1.tar.gz"],
+    commit = "363e12da417e6fa9dd447af5411b14489ea37ac4",
+    remote = "https://github.com/bazelbuild/rules_docker.git",
+    shallow_since = "1581544764 -0500",
 )
 
 # Load container repositories
@@ -89,9 +117,9 @@ dockerfile_image(
 # Setup kubernetes workspace
 git_repository(
     name = "io_bazel_rules_k8s",
-    commit = "cddc0353968df2500f1ab8969a53283e52425a6e",
+    commit = "26b1b471b4c2af39c4e2fedb2b25a3940b531a99",
     remote = "https://github.com/bazelbuild/rules_k8s.git",
-    shallow_since = "1560978409 -0700",
+    shallow_since = "1581367747 -0500",
 )
 
 load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_defaults", "k8s_repositories")
@@ -112,6 +140,7 @@ k8s_defaults(
     kind = "deployment",
 )
 
+# Setup proto workspace
 http_archive(
     name = "rules_proto",
     sha256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208",

@@ -1,8 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load("@npm_bazel_typescript//:index.bzl", "ts_config")
-load("@build_bazel_rules_nodejs//:defs.bzl", "npm_package")
+load("@npm_bazel_typescript//:index.bzl", "ts_config", "ts_library")
+load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_config(
@@ -33,7 +32,7 @@ ts_library(
     ],
 )
 
-npm_package(
+pkg_npm(
     name = "package",
     srcs = ["package.json"],
     tags = ["release-with-spica"],
