@@ -42,6 +42,7 @@ nodejs_binary(
         "PORT",
         "SECRET",
         "DEFAULT_PASSWORD",
+	"ENABLE_BUCKET_HOOKS"
     ],
     data = [":api"],
     entry_point = "//stacks/api:main.ts",

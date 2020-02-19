@@ -20,7 +20,7 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 
 @Module({})
 export class BucketModule {
-  static create(ENABLE_HOOKS: boolean): DynamicModule {
+  static create(ENABLE_HOOKS: string): DynamicModule {
     const imports = [
       PreferenceModule,
       HistoryModule,
@@ -30,7 +30,7 @@ export class BucketModule {
         schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
       }),
       ServicesModule,
-      ...(ENABLE_HOOKS ? [HookModule] : [])
+      ...(( ENABLE_HOOKS === "true") ? [HookModule]: [])
     ];
 
     return {
