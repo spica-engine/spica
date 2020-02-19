@@ -105,7 +105,7 @@ jobs:
           name: "Deploying artifacts"
           command: |
             (cd stacks/spica && yarn ng build --prod --progress=false)
-            yarn bazel run deploy.replace --config=release -- --force
+            yarn bazel run deploy.replace --config=release -- -- --force
 
 workflows:
   version: 2
