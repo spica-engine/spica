@@ -19,6 +19,15 @@ commands:
           keys:
             - infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
             - infra
+  custom_save_cache:
+    description: Save cache
+    steps:
+      - save_cache:
+          key: infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
+          paths:
+            - "node_modules"
+            - "stacks/spica/node_modules"
+            - "~/bazel_repository_cache"
   checkout_code:
     description: Checkout repository and rebase on top of the target branch.
     steps:
