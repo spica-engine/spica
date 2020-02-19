@@ -1,6 +1,6 @@
 import {Module, Global} from "@nestjs/common";
 import {BucketService} from "@spica-server/bucket/services/bucket.service";
-import {BucketServiceModule} from "@spica-server/bucket/services/bucket.service.module";
+import {ServicesModule} from "@spica-server/bucket/services/bucket.service.module";
 
 const provideScheduler = (queueu: any) => {
   return {
@@ -32,7 +32,7 @@ export const hookModuleProviders = [
 
 @Global()
 @Module({
-  imports: [BucketServiceModule],
+  imports: [ServicesModule],
   providers: hookModuleProviders,
   exports: [SCHEDULER, SCHEMA]
 })

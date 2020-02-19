@@ -1,6 +1,6 @@
 import {TestingModule, Test} from "@nestjs/testing";
 import {hookModuleProviders, SCHEMA} from "@spica-server/bucket/hook/hook.module";
-import {BucketServiceModule} from "@spica-server/bucket/services/bucket.service.module";
+import {ServicesModule} from "@spica-server/bucket/services/bucket.service.module";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {SchemaModule} from "@spica-server/core/schema";
@@ -15,7 +15,7 @@ describe("hook module", () => {
 
   it("should provide service SCHEMA", async () => {
     module = await Test.createTestingModule({
-      imports: [BucketServiceModule, DatabaseTestingModule.create(), PreferenceModule],
+      imports: [ServicesModule, DatabaseTestingModule.create(), PreferenceModule],
       providers: hookModuleProviders
     }).compile();
 

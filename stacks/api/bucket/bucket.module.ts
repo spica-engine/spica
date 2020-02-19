@@ -13,7 +13,7 @@ import {BucketService} from "./services/bucket.service";
 import {BucketCache, provideBucketCache} from "./cache";
 import {DocumentScheduler} from "./scheduler";
 import {HookModule} from "@spica-server/bucket/hook";
-import {BucketServiceModule} from "@spica-server/bucket/services/bucket.service.module";
+import {ServicesModule} from "@spica-server/bucket/services/bucket.service.module";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
@@ -29,7 +29,7 @@ export class BucketModule {
         keywords: [CUSTOM_TYPES],
         schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
       }),
-      BucketServiceModule,
+      ServicesModule,
       ...(ENABLE_HOOKS ? [HookModule]: [])
     ];
 
@@ -51,7 +51,7 @@ export class BucketModule {
           inject: [Validator, BucketService]
         }
       ],
-      exports: [BucketDataService, BucketServiceModule]
+      exports: [BucketDataService, ServicesModule]
     };
   }
 

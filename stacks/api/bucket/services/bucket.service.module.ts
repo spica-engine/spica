@@ -7,4 +7,4 @@ import {SchemaModule} from "@spica-server/core/schema";
   providers: [BucketService],
   exports: [BucketService]
 })
-export class BucketServiceModule {}
+export class ServicesModule {}
