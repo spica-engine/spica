@@ -67,6 +67,7 @@ jobs:
       - run:
           name: "Installing dependencies"
           command: yarn install --frozen-lockfile --non-interactive
+      - custom_save_cache
       - persist_to_workspace:
           root: ~/
           paths:
