@@ -71,12 +71,14 @@ describe("Aware Dialog Directive", () => {
     const input = document.body.querySelector("input");
     input.value = "111";
     input.dispatchEvent(new Event("input"));
+    fixture.detectChanges();
     const button = document.body.querySelector(
       "mat-dialog-container > mat-aware-dialog > mat-dialog-actions > button:last-of-type"
     ) as HTMLButtonElement;
     button.click();
     flush();
     flushMicrotasks();
+    fixture.detectChanges();
     expect(fixture.componentInstance.confirm).toHaveBeenCalledTimes(1);
   }));
 });
