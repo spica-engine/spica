@@ -1,6 +1,6 @@
 import {Module, Global} from "@nestjs/common";
 import {BucketService} from "@spica-server/bucket/services";
-import {ServicesModule} from "@spica-server/bucket/services/bucket.service.module";
+import {ServicesModule} from "@spica-server/bucket/services";
 
 const provideScheduler = (queueu: any) => {
   return {

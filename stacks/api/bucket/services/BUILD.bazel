@@ -6,7 +6,7 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 ts_library(
     name = "services",
     srcs = [
-        "bucket.service.module.ts",
+        "services.module.ts",
         "bucket.service.ts",
         "bucket.ts",
         "index.ts",
