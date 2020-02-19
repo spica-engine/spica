@@ -21,7 +21,7 @@ import {DashboardModule} from "@spica-server/dashboard/dashboard.module";
       defaults: [CREATED_AT, UPDATED_AT]
     }),
     PreferenceModule,
-    BucketModule,
+    BucketModule.create(false),
     DashboardModule,
     StorageModule.forRoot({
       path: process.env.PERSISTENT_PATH

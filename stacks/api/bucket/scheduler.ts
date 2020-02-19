@@ -1,9 +1,9 @@
 import {Injectable} from "@nestjs/common";
 import {MongoClient, ObjectId} from "@spica-server/database";
 import * as cron from "cron";
-import {BucketDocument} from "./bucket";
+import {BucketDocument} from "@spica-server/bucket/services/bucket";
+import {BucketService} from "@spica-server/bucket/services/bucket.service";
 import {BucketDataService} from "./bucket-data.service";
-import {BucketService} from "./bucket.service";
 
 @Injectable()
 export class DocumentScheduler {

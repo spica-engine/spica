@@ -1,5 +1,6 @@
 import {Module, Global} from "@nestjs/common";
-import {BucketService} from "../bucket.service";
+import {BucketService} from "@spica-server/bucket/services/bucket.service";
+import {BucketServiceModule} from "@spica-server/bucket/services/bucket.service.module";
 
 const provideScheduler = (queueu: any) => {
   return {
@@ -8,34 +9,31 @@ const provideScheduler = (queueu: any) => {
   };
 };
 
-const provideSchema = {
-  name: "bucket",
-  schema: this.createSchema()
-};
-
 async function createSchema(service: BucketService) {
-  const bucket = await service.buckets;
-  return {bucket};
+    return {};
 }
 
-const SCHEMA = "SCHEMA";
-const SCHEDULER = "HORIZON_SCHEDULER";
+export const SCHEMA = "SCHEMA";
+export const SCHEDULER = "HORIZON_SCHEDULER";
+
+export const hookModuleProviders = [
+  {
+    provide: SCHEDULER,
+    useFactory: provideScheduler
+  },
+  {
+    provide: SCHEMA,
+    useFactory: (service: BucketService) => {
+      return createSchema(service);
+    },
+    inject: [BucketService]
+  }
+];
 
 @Global()
 @Module({
-  providers: [
-    {
-      provide: SCHEDULER,
-      useValue: provideScheduler
-    },
-    {
-      provide: SCHEMA,
-      useFactory: service => {
-        return createSchema(service);
-      },
-      inject: [BucketService]
-    }
-  ],
+  imports: [BucketServiceModule],
+  providers: hookModuleProviders,
   exports: [SCHEDULER, SCHEMA]
 })
 export class HookModule {}

@@ -19,9 +19,9 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {Bucket, BucketDocument, ImportFile} from "./bucket";
+import {Bucket, BucketDocument, ImportFile} from "@spica-server/bucket/services/bucket";
 import {BucketDataService} from "./bucket-data.service";
-import {BucketService} from "./bucket.service";
+import {BucketService} from "./services/bucket.service";
 
 @Controller("bucket")
 export class BucketController {
