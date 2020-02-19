@@ -1,5 +1,5 @@
 import {Component} from "@angular/core";
-import {ComponentFixture, fakeAsync, flush, TestBed, tick} from "@angular/core/testing";
+import {ComponentFixture, fakeAsync, flush, TestBed, tick, flushMicrotasks} from "@angular/core/testing";
 import {MatDialog} from "@angular/material/dialog";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -64,7 +64,7 @@ describe("Aware Dialog Directive", () => {
     expect(fixture.componentInstance.cancel).toHaveBeenCalledTimes(1);
   }));
 
-  xit("should call confirm if clicked confirm button when answer is correct", fakeAsync(async () => {
+  it("should call confirm if clicked confirm button when answer is correct", fakeAsync(async () => {
     
     fixture.debugElement.query(By.css("button")).nativeElement.click();
     tick();
@@ -76,7 +76,7 @@ describe("Aware Dialog Directive", () => {
     ) as HTMLButtonElement;
     button.click();
     flush();
-    await fixture.whenStable();
+    flushMicrotasks();
     expect(fixture.componentInstance.confirm).toHaveBeenCalledTimes(1);
   }));
 });
