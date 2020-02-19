@@ -10,7 +10,7 @@ const provideScheduler = (queueu: any) => {
 };
 
 async function createSchema(service: BucketService) {
-    return {};
+  return {};
 }
 
 export const SCHEMA = "SCHEMA";
