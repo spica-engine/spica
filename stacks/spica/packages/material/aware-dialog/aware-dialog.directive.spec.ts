@@ -64,7 +64,8 @@ describe("Aware Dialog Directive", () => {
     expect(fixture.componentInstance.cancel).toHaveBeenCalledTimes(1);
   }));
 
-  it("should call confirm if clicked confirm button when answer is correct", fakeAsync(() => {
+  it("should call confirm if clicked confirm button when answer is correct", fakeAsync(async () => {
+    
     fixture.debugElement.query(By.css("button")).nativeElement.click();
     tick();
     const input = document.body.querySelector("input");
@@ -75,6 +76,7 @@ describe("Aware Dialog Directive", () => {
     ) as HTMLButtonElement;
     button.click();
     flush();
+    await fixture.whenStable();
     expect(fixture.componentInstance.confirm).toHaveBeenCalledTimes(1);
   }));
 });
