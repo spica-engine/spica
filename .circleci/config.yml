@@ -19,6 +19,15 @@ commands:
           keys:
             - infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
             - infra
+  custom_save_cache:
+    description: Save cache
+    steps:
+      - save_cache:
+          key: infra-{{ checksum "yarn.lock" }}-{{ checksum "WORKSPACE" }}
+          paths:
+            - "node_modules"
+            - "stacks/spica/node_modules"
+            - "~/bazel_repository_cache"
   checkout_code:
     description: Checkout repository and rebase on top of the target branch.
     steps:
@@ -58,6 +67,7 @@ jobs:
       - run:
           name: "Installing dependencies"
           command: yarn install --frozen-lockfile --non-interactive
+      - custom_save_cache
       - persist_to_workspace:
           root: ~/
           paths:
@@ -105,7 +115,7 @@ jobs:
           name: "Deploying artifacts"
           command: |
             (cd stacks/spica && yarn ng build --prod --progress=false)
-            yarn bazel run deploy.replace --config=release -- --force
+            yarn bazel run deploy.replace --config=release -- -- --force
 
 workflows:
   version: 2
