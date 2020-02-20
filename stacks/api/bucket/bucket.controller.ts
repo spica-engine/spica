@@ -21,7 +21,7 @@ import * as mime from "mime-types";
 import * as request from "request";
 import {Bucket, BucketDocument, ImportFile} from "@spica-server/bucket/services";
 import {BucketDataService} from "./bucket-data.service";
-import {BucketService} from "./services/bucket.service";
+import {BucketService} from "@spica-server/bucket/services";
 
 @Controller("bucket")
 export class BucketController {
