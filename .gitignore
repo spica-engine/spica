@@ -41,3 +41,7 @@ yarn-error.log
 
 # Bazel
 /bazel-*
+
+# Vim
+*.swp
+*.swo

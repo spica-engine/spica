@@ -1,4 +1,4 @@
-import {Module} from "@nestjs/common";
+import {Module, DynamicModule} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
@@ -9,43 +9,52 @@ import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {CUSTOM_TYPES} from "./bucket.schema.types";
-import {BucketService} from "./bucket.service";
+import {ServicesModule, BucketService} from "@spica-server/bucket/services";
 import {BucketCache, provideBucketCache} from "./cache";
 import {DocumentScheduler} from "./scheduler";
+import {HookModule} from "@spica-server/bucket/hooks";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 
-@Module({
-  controllers: [BucketController, BucketDataController],
-  imports: [
-    PreferenceModule,
-    HistoryModule,
-    RealtimeModule,
-    SchemaModule.forChild({
-      keywords: [CUSTOM_TYPES],
-      schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
-    })
-  ],
-  providers: [
-    BucketService,
-    BucketDataService,
-    DocumentScheduler,
-    {
-      provide: BucketCache,
-      useFactory: provideBucketCache,
-      inject: [DatabaseService, Validator]
-    },
-    {
-      provide: BucketSchemaResolver,
-      useFactory: provideBucketSchemaResolver,
-      inject: [Validator, BucketService]
-    }
-  ],
-  exports: [BucketDataService, BucketService]
-})
+@Module({})
 export class BucketModule {
-  constructor(preference: PreferenceService, documentScheduler: DocumentScheduler) {
+  static forRoot(options: BucketOptions): DynamicModule {
+    const imports = [
+      PreferenceModule,
+      HistoryModule,
+      RealtimeModule,
+      SchemaModule.forChild({
+        keywords: [CUSTOM_TYPES],
+        schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
+      }),
+      ServicesModule,
+      ...(options.hooks ? [HookModule] : [])
+    ];
+
+    return {
+      module: BucketModule,
+      controllers: [BucketController, BucketDataController],
+      imports: imports,
+      providers: [
+        BucketDataService,
+        DocumentScheduler,
+        {
+          provide: BucketCache,
+          useFactory: provideBucketCache,
+          inject: [DatabaseService, Validator]
+        },
+        {
+          provide: BucketSchemaResolver,
+          useFactory: provideBucketSchemaResolver,
+          inject: [Validator, BucketService]
+        }
+      ],
+      exports: [BucketDataService, ServicesModule]
+    };
+  }
+
+  constructor(preference: PreferenceService) {
     preference.default({
       scope: "bucket",
       language: {
@@ -57,4 +66,8 @@ export class BucketModule {
       }
     });
   }
+}
+
+export interface BucketOptions {
+  hooks: boolean;
 }

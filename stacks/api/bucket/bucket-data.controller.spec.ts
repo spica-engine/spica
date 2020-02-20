@@ -56,7 +56,7 @@ describe("Bucket-Data acceptance", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
-        BucketModule
+        BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS})
       ]
     }).compile();
     app = module.createNestApplication();
