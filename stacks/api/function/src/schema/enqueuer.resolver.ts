@@ -37,7 +37,7 @@ export function generate({body}: {body: Function}) {
         properties: {
           triggers: {
             type: "object",
-            required: ["default"],
+            minProperties: 1,
             properties: Object.keys(body.triggers).reduce((props, key) => {
               props[key] = {
                 type: "object",

@@ -32,7 +32,6 @@ export interface Function {
 }
 
 export interface Triggers {
-  default: Trigger;
   [key: string]: Trigger;
 }
 

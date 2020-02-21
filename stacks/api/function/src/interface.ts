@@ -17,14 +17,13 @@ export interface Function {
 }
 
 export interface Triggers {
-  default: Trigger;
   [key: string]: Trigger;
 }
 
 export interface Trigger {
   type: string;
   active?: boolean;
-  options: any;
+  options: unknown;
 }
 
 export interface Environment {
