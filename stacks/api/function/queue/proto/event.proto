@@ -1,29 +1,30 @@
 syntax = "proto3";
 
-message Event {
-   enum Type {
-      HTTP = 0;
-      DATABASE = 1;
-      SCHEDULE = 3;
-      FIREHOSE = 4;
-   }
+package Event;
 
-   message Target {
-      string cwd = 1;
-      string handler = 2;
-   }
-   
+message Target {
+   string cwd = 1;
+   string handler = 2;
+}
+
+enum Type {
+   HTTP = 0;
+   DATABASE = 1;
+   SCHEDULE = 3;
+   FIREHOSE = 4;
+   SYSTEM = 5;
+}
+
+message Event {
    string id = 1;
    Type type = 2;
    Target target = 3;
-
-   message Pop {
-     string id = 1;
-   }
 }
 
+message Pop {
+   string id = 1;
+}
 
-
-service EventQueue {
-   rpc pop(Event.Pop) returns (Event);
+service Queue {
+   rpc pop(Pop) returns (Event);
 }

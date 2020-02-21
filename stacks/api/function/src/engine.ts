@@ -16,6 +16,7 @@ export class FunctionEngine {
     ["http", require("./schema/http.json")],
     ["schedule", require("./schema/schedule.json")],
     ["firehose", require("./schema/firehose.json")],
+    ["system", require("./schema/system.json")],
     ["database", () => getDatabaseSchema(this.db)]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
