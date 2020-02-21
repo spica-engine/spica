@@ -1,4 +1,4 @@
-import {Injectable, OnModuleInit, Inject, Optional} from "@nestjs/common";
+import {Inject, Injectable, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {
@@ -6,7 +6,8 @@ import {
   Enqueuer,
   FirehoseEnqueuer,
   HttpEnqueuer,
-  ScheduleEnqueuer
+  ScheduleEnqueuer,
+  SystemEnqueuer
 } from "@spica-server/function/enqueuer";
 import {PackageManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
@@ -66,7 +67,9 @@ export class Horizon implements OnModuleInit {
 
     this.enqueuers.add(new ScheduleEnqueuer(this.queue));
 
-    if (this.schedulerFactory) {
+    this.enqueuers.add(new SystemEnqueuer(this.queue));
+
+    if (typeof this.schedulerFactory == "function") {
       const scheduler = this.schedulerFactory(this.queue);
       this.queue.addQueue(scheduler.queue);
       this.enqueuers.add(scheduler.enqueuer);

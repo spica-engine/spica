@@ -5,7 +5,11 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "enqueuer_test_lib",
-    srcs = glob(["*.spec.ts"]),
+    # TODO: once we take care of flaky tests, we should reenable database tests
+    srcs = glob(
+        include = ["*.spec.ts"],
+        exclude = ["database.spec.ts"],
+    ),
     deps = [
         "//packages/core/testing",
         "//packages/database/testing",

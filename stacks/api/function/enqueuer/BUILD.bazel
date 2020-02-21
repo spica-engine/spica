@@ -20,5 +20,7 @@ ts_library(
         # Firehose
         "@npm//ws",
         "@npm//@types/ws",
+        # System
+        "@npm//rxjs",
     ],
 )

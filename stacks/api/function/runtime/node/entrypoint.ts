@@ -23,8 +23,9 @@ if (!process.env.EVENT_ID) {
 
 (async () => {
   const queue = new EventQueue();
-  const pop = new Event.Pop();
-  pop.id = process.env.EVENT_ID;
+  const pop = new Event.Pop({
+    id: process.env.EVENT_ID
+  });
   const event = await queue.pop(pop).catch(e => {
     console.log(e);
     return undefined;
@@ -97,8 +98,7 @@ if (!process.env.EVENT_ID) {
 
       break;
     case Event.Type.SCHEDULE:
-      // TODO
-      break;
+    case Event.Type.SYSTEM:
     case -1:
       // NO OP
       break;
