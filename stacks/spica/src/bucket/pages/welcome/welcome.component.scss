@@ -10,6 +10,9 @@
     justify-content: center;
     mat-toolbar-row {
       height: auto;
+      button:not(:first-of-type) {
+        margin-left: 10px;
+      }
     }
     h4 {
       font-size: 12px;
