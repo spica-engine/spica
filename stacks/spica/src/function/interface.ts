@@ -22,7 +22,6 @@ export interface NormalizedFunction extends FunctionDescription {
 
 export interface Function extends FunctionDescription {
   triggers: {
-    default: TriggerDescription;
     [key: string]: TriggerDescription;
   };
   env: {
