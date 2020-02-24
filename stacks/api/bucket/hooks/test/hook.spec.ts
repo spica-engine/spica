@@ -1,16 +1,19 @@
 import {TestingModule, Test} from "@nestjs/testing";
-import {hookModuleProviders, SCHEMA} from "@spica-server/bucket/hooks/hook.module";
+import {hookModuleProviders, SCHEMA} from "@spica-server/bucket/hooks/src/hook.module";
+import {BucketEnqueuer} from "@spica-server/bucket/hooks/src/enqueuer";
 import {ServicesModule, Bucket} from "@spica-server/bucket/services";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceModule} from "@spica-server/preference";
 import {BucketService} from "@spica-server/bucket/services/bucket.service";
+import {Event} from "@spica-server/function/queue/proto";
+import {EventQueue} from "@spica-server/function/queue";
 
 class MockBucketService extends BucketService {
   find(filter?: any): Promise<Bucket[]> {
     return new Promise(resolve =>
       resolve([
         {primary: "primary_1", _id: new ObjectId("5e4e8320a28c2f494c588aea")},
-        {primary: "primary2", _id: new ObjectId("5e4e8320a28c2f494c588aeb")}
+        {primary: "primary_2", _id: new ObjectId("5e4e8320a28c2f494c588aeb")}
       ])
     );
   }
@@ -47,11 +50,84 @@ describe("hook module", () => {
             title: "Operation type",
             description: "Event Type",
             type: "string",
-            enum: ["INSERT"]
+            enum: ["INSERT", "UPDATE", "GET", "INDEX"]
           }
         },
         additionalProperties: false
       });
+    });
+  });
+
+  describe("enqueuer", () => {
+    let bucketEnqueuer: BucketEnqueuer;
+    let noopTarget: Event.Target;
+    let noopTarget2: Event.Target;
+    let eventQueue: jasmine.SpyObj<EventQueue>;
+    beforeEach(() => {
+      eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
+
+      bucketEnqueuer = new BucketEnqueuer(eventQueue);
+
+      noopTarget = new Event.Target();
+      noopTarget.cwd = "/tmp/fn1";
+      noopTarget.handler = "default";
+
+      noopTarget2 = new Event.Target();
+      noopTarget2.cwd = "/tmp/fn2";
+      noopTarget2.handler = "test_handler";
+    });
+
+    afterEach(() => {
+      eventQueue.enqueue.calls.reset();
+    });
+
+    function addMockActions() {
+      bucketEnqueuer["actions"] = [
+        {options: {collection: "test_collection", type: "INSERT"}, target: noopTarget},
+        {options: {collection: "test_collection", type: "INSERT"}, target: noopTarget2},
+        {options: {collection: "test_collection", type: "GET"}, target: noopTarget}
+      ];
+    }
+
+    it("should add action to actions", () => {
+      bucketEnqueuer.subscribe(noopTarget, {
+        collection: "test_collection",
+        type: "INSERT"
+      });
+
+      expect(bucketEnqueuer["actions"]).toEqual([
+        {
+          target: noopTarget,
+          options: {
+            collection: "test_collection",
+            type: "INSERT"
+          }
+        }
+      ]);
+    });
+
+    it("should start given actions to run", () => {
+      addMockActions();
+
+      bucketEnqueuer.startToRun({collection: "test_collection", type: "INSERT"});
+
+      expect(eventQueue.enqueue).toHaveBeenCalledTimes(2);
+      expect(eventQueue.enqueue).toHaveBeenCalledWith(
+        new Event.Event({type: -1, target: noopTarget})
+      );
+      expect(eventQueue.enqueue).toHaveBeenCalledWith(
+        new Event.Event({type: -1, target: noopTarget2})
+      );
+    });
+
+    it("should unsubscribe from action", () => {
+      addMockActions();
+
+      bucketEnqueuer.unsubscribe(noopTarget);
+
+      expect(bucketEnqueuer["actions"]).toEqual([
+        {options: {collection: "test_collection", type: "INSERT"}, target: noopTarget2}
+      ]);
     });
   });
 });

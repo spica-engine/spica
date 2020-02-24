@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {Subject} from "rxjs";
-import {BucketEnqueuerOptions} from "./hook.module";
+import {BucketEnqueuerOptions} from "./interface";
 
 @Injectable()
 export class Scheduler {
