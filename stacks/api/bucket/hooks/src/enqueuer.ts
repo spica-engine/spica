@@ -1,9 +1,16 @@
 import {Description, Enqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import {BucketEnqueuerOptions, BucketAction} from "./interface";
+import * as action from "../proto/action";
+import {ActionDispatcher, actionKey} from "./dispatcher";
+import {ActionQueue} from "./queue";
 
-export class BucketEnqueuer extends Enqueuer<BucketEnqueuerOptions> {
+interface ActionOptions {
+  bucket: string;
+  type: "INSERT" | "UPDATE" | "GET" | "INDEX";
+}
+
+export class ActionEnqueuer extends Enqueuer<ActionOptions> {
   description: Description = {
     icon: "view_agenda",
     name: "bucket",
@@ -11,38 +18,45 @@ export class BucketEnqueuer extends Enqueuer<BucketEnqueuerOptions> {
     description: "Catch up events before happen in bucket-data"
   };
 
-  private actions: BucketAction[] = [];
+  private targets = new Map<Event.Target, ActionOptions>();
 
-  constructor(private queue: EventQueue) {
+  constructor(
+    private queue: EventQueue,
+    private actionQueue: ActionQueue,
+    private dispatcher: ActionDispatcher
+  ) {
     super();
   }
 
-  startToRun(options: BucketEnqueuerOptions) {
-    this.actions.forEach(action => {
-      if (action.options.collection == options.collection && action.options.type == options.type) {
-        this.queue.enqueue(
-          new Event.Event({
-            //use -1 until create type
-            type: -1,
-            target: action.target
-          })
-        );
-      }
+  subscribe(target: Event.Target, options: ActionOptions) {
+    this.targets.set(target, options);
+    console.log("dsadas", actionKey(options.bucket, options.type));
+    this.dispatcher.on(actionKey(options.bucket, options.type), (callback, req) => {
+      console.log(req);
+      const event = new Event.Event({
+        target,
+        type: Event.Type.BUCKET
+      });
+      this.queue.enqueue(event);
+      this.actionQueue.enqueue(
+        event.id,
+        new action.Action({
+          bucket: "dwqwqd",
+          document: "dwqdwq",
+          type: action.Action.Type.INDEX
+        }),
+        callback
+      );
     });
   }
 
-  subscribe(target: Event.Target, options: BucketEnqueuerOptions) {
-    this.actions.push({target: target, options: options});
-  }
   unsubscribe(target: Event.Target) {
-    for (const action of this.actions) {
+    for (const [actionTarget] of this.targets) {
       if (
-        (!target.handler && action.target.cwd == target.cwd) ||
-        (target.handler &&
-          action.target.cwd == target.cwd &&
-          action.target.handler == target.handler)
+        (!target.handler && actionTarget.cwd == target.cwd) ||
+        (target.handler && actionTarget.cwd == target.cwd && actionTarget.handler == target.handler)
       ) {
-        this.actions.splice(this.actions.indexOf(action), 1);
+        this.targets.delete(actionTarget);
       }
     }
   }

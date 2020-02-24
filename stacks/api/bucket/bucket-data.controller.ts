@@ -9,8 +9,12 @@ import {
   Param,
   Post,
   Query,
-  UseGuards
+  UseGuards,
+  MethodNotAllowedException,
+  ForbiddenException,
+  Req
 } from "@nestjs/common";
+import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
@@ -18,14 +22,13 @@ import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/databa
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {Scheduler} from "./hooks/scheduler";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    private scheduler: Scheduler
+    private dispatcher: ActionDispatcher
   ) {}
 
   private async getLanguage(language: string) {
@@ -275,14 +278,18 @@ export class BucketDataController {
 
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
-  replaceOne(
+  async replaceOne(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Req() req,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (strategyType == "APIKEY") {
-      this.scheduler.schedule({collection: bucketId.toHexString(), type: "INSERT"});
-      return;
+      const result = await this.dispatcher.dispatch(bucketId.toHexString(), "INSERT", req);
+      console.log(result);
+      if (!result) {
+        throw new ForbiddenException("you cant motherfucker");
+      }
     }
 
     return this.bds.replaceOne(bucketId, body).then(data => data.ops[0]._id || data.upsertedId._id);

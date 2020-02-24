@@ -1,5 +1,4 @@
-export {HookModule} from "./hook.module";
-export {Scheduler} from "./scheduler";
-export {BucketEnqueuer} from "./enqueuer";
-export {HookQueue} from "./queue";
-export * from "./interface";
+export {ActionDispatcher} from "./dispatcher";
+export {ActionEnqueuer} from "./enqueuer";
+export {HookModule, hookModuleProviders} from "./module";
+export {ActionQueue} from "./queue";

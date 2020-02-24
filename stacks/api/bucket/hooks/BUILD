@@ -4,28 +4,26 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 
 ts_library(
     name = "hooks",
-    srcs = [
-        "src/hook.module.ts",
-        "src/interface.ts",
-        "src/enqueuer.ts",
-        "src/queue.ts",
-        "src/scheduler.ts",
-        "src/index.ts",
-        "index.ts"
-    ],
+    srcs = glob([
+        "src/*.ts",
+    ]) + ["index.ts"],
     module_name = "@spica-server/bucket/hooks",
     deps = [
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/services",
+        "//stacks/api/function",
+        "//stacks/api/function/enqueuer",
+        "//stacks/api/function/horizon",
+        "//stacks/api/function/queue",
+        "//stacks/api/function/queue/proto",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//@types/node",
+        "@npm//grpc",
         "@npm//rxjs",
-        "//stacks/api/function/queue",
-        "//stacks/api/function/queue/proto",
-        "//stacks/api/function/enqueuer"
     ],
 )

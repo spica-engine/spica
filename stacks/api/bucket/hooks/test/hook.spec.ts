@@ -1,12 +1,12 @@
-import {TestingModule, Test} from "@nestjs/testing";
-import {hookModuleProviders, SCHEMA} from "@spica-server/bucket/hooks/src/hook.module";
-import {BucketEnqueuer} from "@spica-server/bucket/hooks/src/enqueuer";
-import {ServicesModule, Bucket} from "@spica-server/bucket/services";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PreferenceModule} from "@spica-server/preference";
+import {Test, TestingModule} from "@nestjs/testing";
+import {ActionEnqueuer, hookModuleProviders} from "@spica-server/bucket/hooks";
+import {Bucket, ServicesModule} from "@spica-server/bucket/services";
 import {BucketService} from "@spica-server/bucket/services/bucket.service";
-import {Event} from "@spica-server/function/queue/proto";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {SCHEMA} from "@spica-server/function";
 import {EventQueue} from "@spica-server/function/queue";
+import {Event} from "@spica-server/function/queue/proto";
+import {PreferenceModule} from "@spica-server/preference";
 
 class MockBucketService extends BucketService {
   find(filter?: any): Promise<Bucket[]> {
@@ -59,14 +59,13 @@ describe("hook module", () => {
   });
 
   describe("enqueuer", () => {
-    let bucketEnqueuer: BucketEnqueuer;
+    let actionEnqueuer: ActionEnqueuer;
     let noopTarget: Event.Target;
     let noopTarget2: Event.Target;
     let eventQueue: jasmine.SpyObj<EventQueue>;
     beforeEach(() => {
       eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-
-      bucketEnqueuer = new BucketEnqueuer(eventQueue);
+      actionEnqueuer = new ActionEnqueuer(eventQueue, null, null);
 
       noopTarget = new Event.Target();
       noopTarget.cwd = "/tmp/fn1";
@@ -82,7 +81,7 @@ describe("hook module", () => {
     });
 
     function addMockActions() {
-      bucketEnqueuer["actions"] = [
+      actionEnqueuer["actions"] = [
         {options: {collection: "test_collection", type: "INSERT"}, target: noopTarget},
         {options: {collection: "test_collection", type: "INSERT"}, target: noopTarget2},
         {options: {collection: "test_collection", type: "GET"}, target: noopTarget}
@@ -90,12 +89,12 @@ describe("hook module", () => {
     }
 
     it("should add action to actions", () => {
-      bucketEnqueuer.subscribe(noopTarget, {
+      actionEnqueuer.subscribe(noopTarget, {
         collection: "test_collection",
         type: "INSERT"
       });
 
-      expect(bucketEnqueuer["actions"]).toEqual([
+      expect(actionEnqueuer["actions"]).toEqual([
         {
           target: noopTarget,
           options: {
@@ -109,7 +108,7 @@ describe("hook module", () => {
     it("should start given actions to run", () => {
       addMockActions();
 
-      bucketEnqueuer.startToRun({collection: "test_collection", type: "INSERT"});
+      actionEnqueuer.startToRun({collection: "test_collection", type: "INSERT"});
 
       expect(eventQueue.enqueue).toHaveBeenCalledTimes(2);
       expect(eventQueue.enqueue).toHaveBeenCalledWith(
@@ -123,9 +122,9 @@ describe("hook module", () => {
     it("should unsubscribe from action", () => {
       addMockActions();
 
-      bucketEnqueuer.unsubscribe(noopTarget);
+      actionEnqueuer.unsubscribe(noopTarget);
 
-      expect(bucketEnqueuer["actions"]).toEqual([
+      expect(actionEnqueuer["actions"]).toEqual([
         {options: {collection: "test_collection", type: "INSERT"}, target: noopTarget2}
       ]);
     });

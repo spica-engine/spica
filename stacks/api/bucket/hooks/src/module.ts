@@ -1,19 +1,21 @@
 import {Global, Module} from "@nestjs/common";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
+import {SCHEMA} from "@spica-server/function";
+import {SCHEDULER} from "@spica-server/function/horizon";
 import {EventQueue} from "@spica-server/function/queue";
 import {JSONSchema7} from "json-schema";
-import {Scheduler} from "./scheduler";
-import {BucketEnqueuer} from "./enqueuer";
-import {BucketEnqueuerOptions} from "./interface";
+import {ActionDispatcher} from "./dispatcher";
+import {ActionEnqueuer} from "./enqueuer";
+import {ActionQueue} from "./queue";
 
 function createSchema(service: BucketService) {
   return service.find({}).then(buckets => {
     const scheme: JSONSchema7 = {
       $id: "http://spica.internal/function/enqueuer/bucket",
       type: "object",
-      required: ["collection", "type"],
+      required: ["bucket", "type"],
       properties: {
-        collection: {
+        bucket: {
           title: "Bucket ID",
           type: "string",
           enum: buckets.map(c => c._id.toHexString()).sort((a, b) => a.localeCompare(b))
@@ -31,27 +33,22 @@ function createSchema(service: BucketService) {
   });
 }
 
-export const SCHEMA = "SCHEMA";
-export const SCHEDULER = "HORIZON_SCHEDULER";
-
 export const hookModuleProviders = [
+  ActionDispatcher,
   {
     provide: SCHEDULER,
-    useFactory: (scheduler: Scheduler) => {
+    useFactory: (dispatcher: ActionDispatcher) => {
       return (queue: EventQueue) => {
-        const enqueuer = new BucketEnqueuer(queue);
-        scheduler.stream.subscribe((options: BucketEnqueuerOptions) => {
-          enqueuer.startToRun(options);
-        });
+        const actionQueue = new ActionQueue();
+        const actionEnqueuer = new ActionEnqueuer(queue, actionQueue, dispatcher);
         return {
-          enqueuer,
-          queue: null
+          enqueuer: actionEnqueuer,
+          queue: actionQueue
         };
       };
     },
-    inject: [Scheduler]
+    inject: [ActionDispatcher]
   },
-  Scheduler,
   {
     provide: SCHEMA,
     useFactory: (service: BucketService) => {
@@ -65,6 +62,6 @@ export const hookModuleProviders = [
 @Module({
   imports: [ServicesModule],
   providers: hookModuleProviders,
-  exports: [SCHEDULER, SCHEMA, Scheduler]
+  exports: [SCHEDULER, SCHEMA, ActionDispatcher]
 })
 export class HookModule {}

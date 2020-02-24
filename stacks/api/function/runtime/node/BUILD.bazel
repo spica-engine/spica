@@ -35,6 +35,8 @@ ts_library(
     name = "entrypoint_lib",
     srcs = ["entrypoint.ts"],
     deps = [
+        "//stacks/api/bucket/hooks/proto",
+        "//stacks/api/bucket/hooks/proto/node",
         "//stacks/api/function/queue/node",
         "//stacks/api/function/queue/proto",
         "@npm//@types/node",
