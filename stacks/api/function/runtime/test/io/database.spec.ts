@@ -34,7 +34,7 @@ describe("IO Database", () => {
       ).toEqual([
         {
           cn: "function_logs",
-          capped: true
+          capped: false
         }
       ]);
       done();
@@ -44,14 +44,16 @@ describe("IO Database", () => {
   it("should write to collection", done => {
     const stream = dbOutput.create({eventId: "event", functionId: "1"});
     stream.write(Buffer.from("this is my message"), async err => {
-      expect(err).toBeUndefined();
-      expect(await db.collection("function_logs").findOne({})).toEqual({
-        _id: "__skip",
-        content: "this is my message",
-        event_id: "event",
-        function: "1"
+      setImmediate(async () => {
+        expect(err).toBeUndefined();
+        expect(await db.collection("function_logs").findOne({})).toEqual({
+          _id: "__skip",
+          content: "this is my message",
+          event_id: "event",
+          function: "1"
+        });
+        done();
       });
-      done();
     });
   });
 });

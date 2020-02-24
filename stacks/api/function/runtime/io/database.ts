@@ -5,15 +5,13 @@ import {StdOut, StdOutOptions} from "./stdout";
 export class DatabaseOutput extends StdOut {
   constructor(private db: DatabaseService) {
     super();
-    this.db
-      .createCollection("function_logs", {capped: true, size: 419430400 /* 400Mi */})
-      .catch(e => {
-        if (e.codeName == "NamespaceExists") {
-          // Do nothing
-        } else {
-          return Promise.reject(e);
-        }
-      });
+    this.db.createCollection("function_logs").catch(e => {
+      if (e.codeName == "NamespaceExists") {
+        // Do nothing
+      } else {
+        return Promise.reject(e);
+      }
+    });
   }
 
   create(options: StdOutOptions): Writable {
