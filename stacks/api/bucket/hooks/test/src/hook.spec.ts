@@ -19,7 +19,7 @@ class MockBucketService extends BucketService {
   }
 }
 
-describe("hook module", () => {
+describe("bucket hooks", () => {
   describe("schema", () => {
     let module: TestingModule;
     beforeAll(async () => {
@@ -39,9 +39,9 @@ describe("hook module", () => {
       expect(schema).toEqual({
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
-        required: ["collection", "type"],
+        required: ["bucket", "type"],
         properties: {
-          collection: {
+          bucket: {
             title: "Bucket ID",
             type: "string",
             enum: ["5e4e8320a28c2f494c588aea", "5e4e8320a28c2f494c588aeb"]
@@ -63,6 +63,7 @@ describe("hook module", () => {
     let noopTarget: Event.Target;
     let noopTarget2: Event.Target;
     let eventQueue: jasmine.SpyObj<EventQueue>;
+
     beforeEach(() => {
       eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
       actionEnqueuer = new ActionEnqueuer(eventQueue, null, null);
@@ -90,7 +91,7 @@ describe("hook module", () => {
 
     it("should add action to actions", () => {
       actionEnqueuer.subscribe(noopTarget, {
-        collection: "test_collection",
+        bucket: "test_collection",
         type: "INSERT"
       });
 
@@ -108,7 +109,7 @@ describe("hook module", () => {
     it("should start given actions to run", () => {
       addMockActions();
 
-      actionEnqueuer.startToRun({collection: "test_collection", type: "INSERT"});
+      //actionEnqueuer.startToRun({collection: "test_collection", type: "INSERT"});
 
       expect(eventQueue.enqueue).toHaveBeenCalledTimes(2);
       expect(eventQueue.enqueue).toHaveBeenCalledWith(

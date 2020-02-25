@@ -1,20 +1,20 @@
 import {Description, Enqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import * as action from "../proto/action";
+import {Action} from "../proto";
 import {ActionDispatcher, actionKey} from "./dispatcher";
 import {ActionQueue} from "./queue";
 
 interface ActionOptions {
   bucket: string;
-  type: "INSERT" | "UPDATE" | "GET" | "INDEX";
+  type: string;
 }
 
 export class ActionEnqueuer extends Enqueuer<ActionOptions> {
   description: Description = {
     icon: "view_agenda",
     name: "bucket",
-    title: "Before",
+    title: "Bucket",
     description: "Catch up events before happen in bucket-data"
   };
 
@@ -28,11 +28,22 @@ export class ActionEnqueuer extends Enqueuer<ActionOptions> {
     super();
   }
 
+  mapHeaders(data: Object) {
+    let headers: Action.Header[] = [];
+    Object.keys(data).forEach(key => {
+      headers.push(
+        new Action.Header({
+          key: key,
+          value: data[key]
+        })
+      );
+    });
+    return headers;
+  }
+
   subscribe(target: Event.Target, options: ActionOptions) {
     this.targets.set(target, options);
-    console.log("dsadas", actionKey(options.bucket, options.type));
-    this.dispatcher.on(actionKey(options.bucket, options.type), (callback, req) => {
-      console.log(req);
+    this.dispatcher.on(actionKey(options.bucket, options.type), (callback, headers) => {
       const event = new Event.Event({
         target,
         type: Event.Type.BUCKET
@@ -40,10 +51,10 @@ export class ActionEnqueuer extends Enqueuer<ActionOptions> {
       this.queue.enqueue(event);
       this.actionQueue.enqueue(
         event.id,
-        new action.Action({
-          bucket: "dwqwqd",
-          document: "dwqdwq",
-          type: action.Action.Type.INDEX
+        new Action.Action({
+          headers: this.mapHeaders(headers),
+          bucket: options.bucket,
+          type: Action.Action.Type[options.type]
         }),
         callback
       );

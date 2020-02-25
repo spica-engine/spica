@@ -1,4 +1,5 @@
 import {Action} from "@spica-server/bucket/hooks/proto";
+import {ActionParameters} from "@spica-server/bucket/hooks/proto/node";
 import {ActionQueue} from "@spica-server/bucket/hooks/proto/node/queue";
 import {
   Change,
@@ -107,11 +108,12 @@ if (!process.env.EVENT_ID) {
       break;
     case Event.Type.BUCKET:
       const actionQueue = new ActionQueue();
-      callArguments[0] = await actionQueue.pop(
+      const actionParams = await actionQueue.pop(
         new Action.Action.Pop({
           id: event.id
         })
       );
+      callArguments[0] = new ActionParameters(actionParams);
       callback = async result => {
         result = await result;
         await actionQueue.result(

@@ -7,11 +7,11 @@ export function actionKey(bucket: string, type: string) {
 
 @Injectable()
 export class ActionDispatcher extends EventEmitter {
-  dispatch(bucket: string, type: string, req): Promise<boolean | unknown[]> {
+  dispatch(bucket: string, type: string, headers: Object): Promise<boolean | unknown[]> {
     return new Promise<boolean | unknown[]>((resolve, reject) => {
       const ak = actionKey(bucket, type);
       if (this.listeners(ak).length) {
-        this.emit(ak, resolve, req);
+        this.emit(ak, resolve, headers, bucket);
       } else {
         resolve();
       }

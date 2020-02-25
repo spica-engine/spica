@@ -24,7 +24,7 @@ function createSchema(service: BucketService) {
           title: "Operation type",
           description: "Event Type",
           type: "string",
-          enum: ["INSERT", "UPDATE", "GET", "INDEX"]
+          enum: ["INSERT", "INDEX", "GET", "UPDATE"]
         }
       },
       additionalProperties: false

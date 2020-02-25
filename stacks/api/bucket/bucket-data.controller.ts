@@ -10,9 +10,7 @@ import {
   Post,
   Query,
   UseGuards,
-  MethodNotAllowedException,
-  ForbiddenException,
-  Req
+  ForbiddenException
 } from "@nestjs/common";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -281,14 +279,13 @@ export class BucketDataController {
   async replaceOne(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Req() req,
+    @Headers() headers: object,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (strategyType == "APIKEY") {
-      const result = await this.dispatcher.dispatch(bucketId.toHexString(), "INSERT", req);
-      console.log(result);
+      const result = await this.dispatcher.dispatch(bucketId.toHexString(), "INSERT", headers);
       if (!result) {
-        throw new ForbiddenException("you cant motherfucker");
+        throw new ForbiddenException("Forbidden action.");
       }
     }
 

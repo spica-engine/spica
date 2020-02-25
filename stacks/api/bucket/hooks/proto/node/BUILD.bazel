@@ -7,6 +7,7 @@ ts_library(
     srcs = [
         "index.ts",
         "queue.ts",
+        "action.ts"
     ],
     module_name = "@spica-server/bucket/hooks/proto/node",
     deps = [
