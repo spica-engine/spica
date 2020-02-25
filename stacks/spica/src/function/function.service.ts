@@ -37,7 +37,7 @@ export class FunctionService {
     return this.http.get<any>(`api:/function/${id}/index`);
   }
 
-  updateIndex(fnId: string, index: string): Observable<any> {
+  updateIndex(fnId: string, index: string): Observable<void> {
     return this.http.post<any>(`api:/function/${fnId}/index`, {index});
   }
 
