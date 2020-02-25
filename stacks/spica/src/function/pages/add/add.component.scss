@@ -124,5 +124,14 @@
         }
       }
     }
+
+    mat-card-actions {
+      button {
+        float: right;
+        mat-progress-spinner {
+          display: inline-block;
+        }
+      }
+    }
   }
 }

@@ -3,7 +3,17 @@ import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/co
 import {ActivatedRoute, Router} from "@angular/router";
 import {Scheme, SchemeObserver} from "@spica-server/core";
 import {Observable, Subscription} from "rxjs";
-import {delay, filter, switchMap, take, takeUntil, tap} from "rxjs/operators";
+import {
+  delay,
+  filter,
+  flatMap,
+  map,
+  startWith,
+  switchMap,
+  take,
+  takeUntil,
+  tap
+} from "rxjs/operators";
 import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
 import {
@@ -33,13 +43,13 @@ export class AddComponent implements OnInit, OnDestroy {
   isHandlerDuplicated = false;
 
   private mediaMatchObserver: Subscription;
-
-  editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
-  index: string;
-  lastSaved: Date;
-  isSaving: boolean = false;
-
   private dispose = new EventEmitter();
+  editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
+
+  index: string;
+  $indexSave: Observable<Date | "inprogress">;
+
+  $save: Promise<void>;
 
   $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
 
@@ -81,6 +91,12 @@ export class AddComponent implements OnInit, OnDestroy {
       .subscribe(response => (this.index = response.index));
   }
 
+  ngOnDestroy() {
+    this.dispose.emit();
+    this.ls.close();
+    this.mediaMatchObserver.unsubscribe();
+  }
+
   run(handler: string) {
     // this.$run = this.http
     //   .request(
@@ -114,21 +130,17 @@ export class AddComponent implements OnInit, OnDestroy {
     this.function.env.push({value: undefined, name: undefined});
   }
 
-  removeVariable(index) {
+  removeVariable(index: number) {
     this.function.env.splice(index, 1);
   }
 
   updateIndex() {
     if (this.function._id) {
-      this.isSaving = true;
-      this.functionService
-        .updateIndex(this.function._id, this.index)
-        .pipe(delay(300))
-        .toPromise()
-        .then(() => {
-          this.lastSaved = new Date();
-          this.isSaving = false;
-        });
+      this.$indexSave = this.functionService.updateIndex(this.function._id, this.index).pipe(
+        startWith("inprogress"),
+        map(() => new Date()),
+        delay(300)
+      );
     }
   }
 
@@ -139,20 +151,23 @@ export class AddComponent implements OnInit, OnDestroy {
   save() {
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
-    (this.function._id ? this.functionService.updateOne(fn) : this.functionService.insertOne(fn))
-      .pipe(switchMap(fn => this.functionService.updateIndex(fn._id, this.index)))
-      .toPromise()
-      .then(() => this.router.navigate(["function"]));
+    const save = this.function._id
+      ? this.functionService.updateOne(fn)
+      : this.functionService.insertOne(fn);
+
+    this.$save = save
+      .pipe(
+        flatMap(fn => this.functionService.updateIndex(fn._id, this.index)),
+        tap(() => {
+          this.$save = undefined;
+          this.router.navigate(["function"]);
+        })
+      )
+      .toPromise();
   }
 
   changeScheme(isDark: boolean) {
     this.editorOptions = {...this.editorOptions, theme: isDark ? "vs-dark" : "vs-light"};
-  }
-
-  ngOnDestroy() {
-    this.dispose.emit();
-    this.ls.close();
-    this.mediaMatchObserver.unsubscribe();
   }
 
   getDependencies() {
