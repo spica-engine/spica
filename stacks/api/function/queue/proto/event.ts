@@ -183,7 +183,8 @@ export namespace Event {
     DATABASE = 1,
     SCHEDULE = 3,
     FIREHOSE = 4,
-    SYSTEM = 5
+    SYSTEM = 5,
+    BUCKET = 6
   }
   export var Queue = {
     pop: {

@@ -1,3 +1,6 @@
+import {Action} from "@spica-server/bucket/hooks/proto";
+import {ActionParameters} from "@spica-server/bucket/hooks/proto/node";
+import {ActionQueue} from "@spica-server/bucket/hooks/proto/node/queue";
 import {
   Change,
   DatabaseQueue,
@@ -36,6 +39,7 @@ if (!process.env.EVENT_ID) {
   }
 
   const callArguments = [];
+  let callback = (r: unknown) => {};
 
   switch (event.type) {
     case Event.Type.HTTP:
@@ -102,6 +106,24 @@ if (!process.env.EVENT_ID) {
     case -1:
       // NO OP
       break;
+    case Event.Type.BUCKET:
+      const actionQueue = new ActionQueue();
+      const actionParams = await actionQueue.pop(
+        new Action.Action.Pop({
+          id: event.id
+        })
+      );
+      callArguments[0] = new ActionParameters(actionParams);
+      callback = async result => {
+        result = await result;
+        await actionQueue.result(
+          new Action.Result({
+            id: event.id,
+            result: JSON.stringify(result)
+          })
+        );
+      };
+      break;
     default:
       exitAbnormally(`Invalid event type received. (${event.type})`);
       break;
@@ -110,7 +132,7 @@ if (!process.env.EVENT_ID) {
   const fn = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
 
   // Call the function
-  fn[event.target.handler](...callArguments);
+  callback(fn[event.target.handler](...callArguments));
 })();
 
 function exitAbnormally(reason: string) {

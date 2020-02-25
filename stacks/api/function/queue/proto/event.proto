@@ -13,6 +13,7 @@ enum Type {
    SCHEDULE = 3;
    FIREHOSE = 4;
    SYSTEM = 5;
+   BUCKET = 6;
 }
 
 message Event {
