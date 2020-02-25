@@ -85,12 +85,12 @@
         </ng-container>
 
         <mat-list-item class="editor">
-          <div class="last-saved">
-            <mat-hint *ngIf="lastSaved">
+          <div class="last-saved" *ngIf="$indexSave | async; let lastSaved">
+            <mat-hint *ngIf="lastSaved != 'inprogress'">
               Last saved: {{ lastSaved | date: "mediumTime" }}
             </mat-hint>
             <mat-progress-spinner
-              [style.opacity]="isSaving ? 1 : 0"
+              [style.opacity]="lastSaved == 'inprogress' ? 1 : 0"
               color="primary"
               mode="indeterminate"
               [diameter]="18"
@@ -285,11 +285,18 @@
   <mat-card-actions>
     <button
       mat-button
-      [disabled]="form.invalid || isHandlerDuplicated"
+      [disabled]="form.invalid || isHandlerDuplicated || $save"
       canInteract="function:update"
       (click)="save()"
     >
-      <mat-icon>sync</mat-icon> Save
+      <mat-icon *ngIf="!$save">sync</mat-icon>
+      <mat-progress-spinner
+        *ngIf="$save"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      Save
     </button>
   </mat-card-actions>
 </mat-card>
