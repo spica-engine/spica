@@ -283,7 +283,11 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (strategyType == "APIKEY") {
-      const result = await this.dispatcher.dispatch(bucketId.toHexString(), "INSERT", headers);
+      //true will be UPDATE trigger
+      const result = body._id
+        ? true
+        : await this.dispatcher.dispatch({bucket: bucketId.toHexString(), type: "INSERT"}, headers);
+
       if (!result) {
         throw new ForbiddenException("Forbidden action.");
       }

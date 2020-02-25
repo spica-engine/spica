@@ -6,13 +6,16 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 ts_library(
     name = "hook_test_lib",
     testonly = True,
-    srcs = ["hook.spec.ts"],
+    srcs = ["src/dispatcher.spec.ts","src/enqueuer.spec.ts","src/module.spec.ts","proto/node/action.spec.ts"],
     deps = [
         "//packages/core/schema",
         "//packages/database",
         "//packages/database/testing",
         "//stacks/api/bucket/hooks",
+        "//stacks/api/bucket/hooks/proto",
+        "//stacks/api/bucket/hooks/proto/node",
         "//stacks/api/bucket/services",
+        "//stacks/api/function",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/preference",

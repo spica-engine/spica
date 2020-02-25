@@ -1,5 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {EventEmitter} from "events";
+import {ActionOptions} from "./enqueuer";
 
 export function actionKey(bucket: string, type: string) {
   return `${bucket}_${type}`;
@@ -7,13 +8,17 @@ export function actionKey(bucket: string, type: string) {
 
 @Injectable()
 export class ActionDispatcher extends EventEmitter {
-  dispatch(bucket: string, type: string, headers: Object): Promise<boolean | unknown[]> {
+  dispatch(
+    options: ActionOptions,
+    headers: Object,
+    document?: string
+  ): Promise<boolean | unknown[]> {
     return new Promise<boolean | unknown[]>((resolve, reject) => {
-      const ak = actionKey(bucket, type);
+      const ak = actionKey(options.bucket, options.type);
       if (this.listeners(ak).length) {
-        this.emit(ak, resolve, headers, bucket);
+        this.emit(ak, resolve, headers, document);
       } else {
-        resolve();
+        resolve(false);
       }
     });
   }

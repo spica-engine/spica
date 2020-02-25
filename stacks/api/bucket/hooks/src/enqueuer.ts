@@ -5,7 +5,7 @@ import {Action} from "../proto";
 import {ActionDispatcher, actionKey} from "./dispatcher";
 import {ActionQueue} from "./queue";
 
-interface ActionOptions {
+export interface ActionOptions {
   bucket: string;
   type: string;
 }
@@ -43,7 +43,7 @@ export class ActionEnqueuer extends Enqueuer<ActionOptions> {
 
   subscribe(target: Event.Target, options: ActionOptions) {
     this.targets.set(target, options);
-    this.dispatcher.on(actionKey(options.bucket, options.type), (callback, headers) => {
+    this.dispatcher.on(actionKey(options.bucket, options.type), (callback, headers, document) => {
       const event = new Event.Event({
         target,
         type: Event.Type.BUCKET
@@ -54,7 +54,8 @@ export class ActionEnqueuer extends Enqueuer<ActionOptions> {
         new Action.Action({
           headers: this.mapHeaders(headers),
           bucket: options.bucket,
-          type: Action.Action.Type[options.type]
+          type: Action.Action.Type[options.type],
+          document: document
         }),
         callback
       );
