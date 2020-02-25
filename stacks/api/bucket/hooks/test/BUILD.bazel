@@ -6,7 +6,12 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 ts_library(
     name = "hook_test_lib",
     testonly = True,
-    srcs = ["src/dispatcher.spec.ts","src/enqueuer.spec.ts","src/module.spec.ts","proto/node/action.spec.ts"],
+    srcs = [
+        "proto/node/action.spec.ts",
+        "src/dispatcher.spec.ts",
+        "src/enqueuer.spec.ts",
+        "src/module.spec.ts",
+    ],
     deps = [
         "//packages/core/schema",
         "//packages/database",

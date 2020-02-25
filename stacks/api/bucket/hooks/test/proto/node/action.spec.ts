@@ -16,7 +16,7 @@ describe("ActionParameters", () => {
   });
   it("should create ActionParameters", () => {
     const actionParameters = new ActionParameters(rawAction);
-    
+
     expect(actionParameters.bucket).toEqual("test_bucket");
     expect(actionParameters.document).toEqual("document_id");
     expect(actionParameters.headers).toEqual({

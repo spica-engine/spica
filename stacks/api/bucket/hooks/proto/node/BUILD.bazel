@@ -5,9 +5,9 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 ts_library(
     name = "node",
     srcs = [
+        "action.ts",
         "index.ts",
         "queue.ts",
-        "action.ts"
     ],
     module_name = "@spica-server/bucket/hooks/proto/node",
     deps = [
