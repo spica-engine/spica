@@ -50,6 +50,6 @@ describe("Dispatcher", () => {
           strategy: "APIKEY"
         }
       )
-      .then(result => expect(result).toBe(false));
+      .then(result => expect(result).toBe(true));
   });
 });
