@@ -9,7 +9,7 @@ message Action {
    Type type = 1;
    repeated Header headers = 2;
    string bucket = 3;
-   
+   string document = 4;
    message Pop {
       string id = 1;
    }

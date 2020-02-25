@@ -1,6 +1,6 @@
 import {EventQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import {ActionEnqueuer, ActionDispatcher} from "@spica-server/bucket/hooks";
+import {ActionEnqueuer, ActionDispatcher, mapHeaders} from "@spica-server/bucket/hooks";
 import {Action} from "../../proto";
 
 describe("enqueuer", () => {
@@ -12,7 +12,7 @@ describe("enqueuer", () => {
 
   beforeEach(() => {
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    dispatch = jasmine.createSpyObj("dispatch", ["on"]);
+    dispatch = jasmine.createSpyObj("dispatch", ["on", "off"]);
 
     actionEnqueuer = new ActionEnqueuer(eventQueue, null, dispatch);
 
@@ -30,7 +30,7 @@ describe("enqueuer", () => {
   });
 
   it("should map headers", () => {
-    const headers: Action.Header[] = actionEnqueuer.mapHeaders({
+    const headers: Action.Header[] = mapHeaders({
       authorization: "APIKEY 12345",
       strategy: "APIKEY"
     });
@@ -45,7 +45,7 @@ describe("enqueuer", () => {
       type: "INSERT"
     });
 
-    expect(actionEnqueuer["targets"].get(noopTarget)).toEqual({
+    expect(actionEnqueuer["targets"].get(noopTarget).options).toEqual({
       bucket: "test_collection",
       type: "INSERT"
     });
@@ -56,15 +56,19 @@ describe("enqueuer", () => {
   });
 
   it("should unsubscribe from action", () => {
-    actionEnqueuer["targets"].set(noopTarget, {bucket: "test_collection", type: "INSERT"});
-    actionEnqueuer["targets"].set(noopTarget2, {bucket: "test_collection", type: "GET"});
+    actionEnqueuer.subscribe(noopTarget, {bucket: "test_collection", type: "INSERT"});
+    actionEnqueuer.subscribe(noopTarget2, {bucket: "test_collection", type: "GET"});
 
     actionEnqueuer.unsubscribe(noopTarget);
 
     expect(actionEnqueuer["targets"].get(noopTarget)).toEqual(undefined);
-    expect(actionEnqueuer["targets"].get(noopTarget2)).toEqual({
+    expect(actionEnqueuer["targets"].get(noopTarget2).options).toEqual({
       bucket: "test_collection",
       type: "GET"
     });
+
+    expect(dispatch.off).toHaveBeenCalledTimes(1);
+
+    expect(dispatch.off.calls.first().args[0]).toEqual("test_collection_INSERT");
   });
 });

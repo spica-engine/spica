@@ -41,7 +41,7 @@ describe("hook module", () => {
         required: ["bucket", "type"],
         properties: {
           bucket: {
-            title: "Bucket ID",
+            title: "Bucket",
             type: "string",
             enum: ["5e4e8320a28c2f494c588aea", "5e4e8320a28c2f494c588aeb"]
           },

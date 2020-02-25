@@ -29,7 +29,7 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
     if (!this.callbacks.has(call.request.id)) {
       return callback(new Error(`Queue has no callback with id ${call.request.id}`), null);
     }
-    this.queue.delete(call.request.id);
+    this.callbacks.delete(call.request.id);
     _callback(JSON.parse(call.request.result));
     callback(null, new Action.Result.Response());
   }

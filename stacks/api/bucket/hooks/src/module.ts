@@ -16,7 +16,7 @@ function createSchema(service: BucketService) {
       required: ["bucket", "type"],
       properties: {
         bucket: {
-          title: "Bucket ID",
+          title: "Bucket",
           type: "string",
           enum: buckets.map(c => c._id.toHexString()).sort((a, b) => a.localeCompare(b))
         },
