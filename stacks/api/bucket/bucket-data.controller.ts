@@ -129,7 +129,7 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object
   ) {
-    const aggregation: any[] = [
+    let aggregation: any[] = [
       {
         $match: {
           _schedule: {
@@ -189,9 +189,7 @@ export class BucketDataController {
         headers
       );
       if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
-        hookAggregation.forEach(item => {
-          aggregation.push(item);
-        });
+        aggregation = aggregation.concat(hookAggregation);
       }
     }
 
