@@ -14,11 +14,8 @@ export class FunctionService extends BaseCollection<Function>("function") {
       const emitHandlers = (fn: Function, kind: ChangeKind) => {
         for (const handler in fn.triggers) {
           const trigger = fn.triggers[handler];
-          if (!trigger.active) {
-            continue;
-          }
           observer.next({
-            kind,
+            kind: trigger.active ? kind : ChangeKind.Removed,
             options: trigger.options,
             type: trigger.type,
             target: {
