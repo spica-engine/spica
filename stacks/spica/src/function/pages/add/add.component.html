@@ -182,8 +182,8 @@
                 [required]="options.required?.indexOf(propertyKv.key) > -1"
               >
               </span>
-              <mat-slide-toggle name="status" [(ngModel)]="trigger.status">
-                {{ trigger.status ? "Active" : "Deactive" }}
+              <mat-slide-toggle name="status" [(ngModel)]="trigger.active">
+                {{ trigger.active ? "Active" : "Deactive" }}
               </mat-slide-toggle>
             </ng-container>
           </ng-container>
