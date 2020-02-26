@@ -183,7 +183,7 @@ export class BucketDataController {
       aggregation.push({$match: filter});
     }
 
-    if (strategyType == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const hookAggregation = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INDEX"},
         headers
