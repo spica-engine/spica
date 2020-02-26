@@ -10,7 +10,8 @@ import {
   Post,
   Query,
   UseGuards,
-  ForbiddenException
+  ForbiddenException,
+  Optional
 } from "@nestjs/common";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -26,7 +27,7 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    private dispatcher: ActionDispatcher
+    @Optional() private dispatcher: ActionDispatcher
   ) {}
 
   private async getLanguage(language: string) {
@@ -295,7 +296,7 @@ export class BucketDataController {
     @Headers() headers: object,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (strategyType == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const result = body._id
         ? await this.dispatcher.dispatch(
             {bucket: bucketId.toHexString(), type: "UPDATE"},
