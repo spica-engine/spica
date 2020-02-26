@@ -283,9 +283,12 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (strategyType == "APIKEY") {
-      //true will be UPDATE trigger
       const result = body._id
-        ? true
+        ? await this.dispatcher.dispatch(
+            {bucket: bucketId.toHexString(), type: "UPDATE"},
+            headers,
+            body._id.toHexString()
+          )
         : await this.dispatcher.dispatch({bucket: bucketId.toHexString(), type: "INSERT"}, headers);
 
       if (!result) {

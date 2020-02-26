@@ -18,7 +18,7 @@ export class ActionDispatcher extends EventEmitter {
       if (this.listeners(ak).length) {
         this.emit(ak, resolve, headers, document);
       } else {
-        resolve(false);
+        resolve(true);
       }
     });
   }
