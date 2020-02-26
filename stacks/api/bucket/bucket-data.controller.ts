@@ -119,6 +119,7 @@ export class BucketDataController {
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers("accept-language") acceptedLanguage: string,
+    @Headers() headers: object,
     @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule: boolean = false,
@@ -128,7 +129,7 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object
   ) {
-    const aggregation: any[] = [
+    let aggregation: any[] = [
       {
         $match: {
           _schedule: {
@@ -180,6 +181,16 @@ export class BucketDataController {
       });
 
       aggregation.push({$match: filter});
+    }
+
+    if (this.dispatcher && strategyType == "APIKEY") {
+      const hookAggregation = await this.dispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "INDEX"},
+        headers
+      );
+      if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
+        aggregation = aggregation.concat(hookAggregation);
+      }
     }
 
     if (paginate && !skip && !limit) {

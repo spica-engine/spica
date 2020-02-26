@@ -108,11 +108,12 @@ describe("Function Add", () => {
     fixture.componentInstance.deleteTrigger(2);
 
     expect(func.triggers).toEqual([
-      {handler: "handler1", options: {}, type: undefined},
+      {handler: "handler1", options: {}, type: undefined, active: true},
       {
         handler: "handler2",
         options: {},
-        type: undefined
+        type: undefined,
+        active: true
       }
     ]);
 
