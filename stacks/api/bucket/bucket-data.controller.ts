@@ -283,7 +283,7 @@ export class BucketDataController {
     @Headers() headers: object,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if ( !!this.dispatcher && strategyType == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const result = body._id
         ? await this.dispatcher.dispatch(
             {bucket: bucketId.toHexString(), type: "UPDATE"},
