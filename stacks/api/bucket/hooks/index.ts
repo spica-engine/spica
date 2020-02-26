@@ -1,1 +1,1 @@
-export {HookModule} from "./hook.module";
+export * from "./src/index";

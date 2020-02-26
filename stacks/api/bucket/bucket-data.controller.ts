@@ -9,19 +9,26 @@ import {
   Param,
   Post,
   Query,
-  UseGuards
+  UseGuards,
+  ForbiddenException,
+  Optional
 } from "@nestjs/common";
+import {ActionDispatcher} from "@spica-server/bucket/hooks";
+import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
-import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
-  constructor(private bs: BucketService, private bds: BucketDataService) {}
+  constructor(
+    private bs: BucketService,
+    private bds: BucketDataService,
+    @Optional() private dispatcher: ActionDispatcher
+  ) {}
 
   private async getLanguage(language: string) {
     const bucketSettings = await this.bs.getPreferences();
@@ -107,6 +114,7 @@ export class BucketDataController {
   }
 
   @Get()
+  @UseGuards(AuthGuard())
   async find(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -269,11 +277,26 @@ export class BucketDataController {
 
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
-  replaceOne(
+  async replaceOne(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Headers() headers: object,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
+    if (this.dispatcher && strategyType == "APIKEY") {
+      const result = body._id
+        ? await this.dispatcher.dispatch(
+            {bucket: bucketId.toHexString(), type: "UPDATE"},
+            headers,
+            body._id.toHexString()
+          )
+        : await this.dispatcher.dispatch({bucket: bucketId.toHexString(), type: "INSERT"}, headers);
+
+      if (!result) {
+        throw new ForbiddenException("Forbidden action.");
+      }
+    }
+
     return this.bds.replaceOne(bucketId, body).then(data => data.ops[0]._id || data.upsertedId._id);
   }
 
