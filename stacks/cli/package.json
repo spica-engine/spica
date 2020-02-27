@@ -9,7 +9,7 @@
     "spica": "bin/spica"
   },
   "dependencies": {
-    "@ionic/cli-framework": "^2.1.6",
+    "@ionic/cli-framework": "^4.1.0",
     "ora": "^3.4.0",
     "dockerode": "^2.5.8",
     "get-port": "^5.0.0",
