@@ -242,15 +242,17 @@ export class BucketDataController {
   }
 
   @Get(":documentId")
+  @UseGuards(AuthGuard())
   async findOne(
     @Headers("strategy-type") strategyType: string,
     @Headers("accept-language") acceptedLanguage: string,
+    @Headers() headers: object,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
     @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false
   ) {
-    const aggregation = [];
+    let aggregation = [];
 
     aggregation.push({
       $match: {
@@ -275,6 +277,17 @@ export class BucketDataController {
             ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
           );
         }
+      }
+    }
+
+    if (this.dispatcher && strategyType == "APIKEY") {
+      const hookAggregation = await this.dispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "GET"},
+        headers,
+        documentId.toHexString()
+      );
+      if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
+        aggregation = aggregation.concat(hookAggregation);
       }
     }
 
