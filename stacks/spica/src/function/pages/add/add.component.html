@@ -110,7 +110,11 @@
         </mat-list-item>
         <mat-divider></mat-divider>
         <h4 mat-subheader>
-          <mat-icon>swap_horiz</mat-icon> Triggers<button mat-icon-button (click)="addTrigger()">
+          <mat-icon>swap_horiz</mat-icon> Triggers<button
+            type="button"
+            mat-icon-button
+            (click)="addTrigger()"
+          >
             <mat-icon>add</mat-icon>
           </button>
           <mat-error *ngIf="isHandlerDuplicated">

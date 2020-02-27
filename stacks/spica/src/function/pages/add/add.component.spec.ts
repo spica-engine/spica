@@ -2,7 +2,7 @@ import {TestBed, ComponentFixture} from "@angular/core/testing";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {MatIconModule} from "@angular/material/icon";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, NgForm} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatListModule} from "@angular/material/list";
 import {MatExpansionModule} from "@angular/material/expansion";
@@ -20,6 +20,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {FUNCTION_OPTIONS, emptyTrigger} from "../../interface";
 import {SchemeObserver} from "../../../../packages/core/layout/scheme.observer";
+import {By} from "@angular/platform-browser";
 
 describe("Function Add", () => {
   let fixture: ComponentFixture<AddComponent>;
@@ -118,4 +119,16 @@ describe("Function Add", () => {
 
     expect(fixture.componentInstance.isHandlerDuplicated).toBe(false);
   });
+
+  //  it("enter should not add trigger", () => {
+  //    console.log(fixture.debugElement);
+  //    const form = fixture.debugElement.query(By.directive(NgForm)).nativeElement;
+  //    console.log(form);
+  //    const kEventDown = new KeyboardEvent("keydown", {key: "enter"});
+  //    form.dispatchEvent(kEventDown);
+  //
+  //    fixture.detectChanges();
+  //
+  //    expect(fixture.componentInstance.function.triggers.length).toEqual(0);
+  //  });
 });
