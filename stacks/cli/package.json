@@ -1,5 +1,5 @@
 {
-  "name": "@spicaengine/cli",
+  "name": "@spica/cli",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
   "description": "CLI Framework for Spica",

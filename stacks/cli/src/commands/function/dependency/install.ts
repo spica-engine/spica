@@ -15,11 +15,16 @@ import {Logger} from "../../../logger";
 
 export class InstallCommand extends Command {
   logger?: Logger = new Logger(process.stdout, process.stderr);
+  authentication = authentication;
+  request = request;
+
+  token;
+  server;
 
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
     return {
       name: "install",
-      summary: "Install summary.",
+      summary: "Install npm-package to function.",
       inputs: [
         {
           name: "package-name",
@@ -30,67 +35,74 @@ export class InstallCommand extends Command {
       options: [
         {
           name: "all",
-          summary: "Install specified npm-package to each functions.",
+          summary: "Install specified npm-package to each function.",
           type: Boolean
         }
       ]
     };
   }
 
+  showLoginError() {
+    this.logger.error("You need to login before start this action. To login: ");
+    this.logger.info("spica login <username> <password>");
+  }
+
+  async validate(argv: CommandLineInputs) {
+    try {
+      const loginData = await this.authentication.getLoginData();
+      this.token = loginData.token;
+      this.server = loginData.server;
+    } catch (error) {
+      this.showLoginError();
+    }
+  }
+
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
     const [packageName] = inputs;
     const {all: isAll} = options;
 
-    let token;
-    let server;
-
-    try {
-      const loginData = await authentication.getLoginData();
-      token = loginData.token;
-      server = loginData.server;
-    } catch (error) {
-      this.logger.error("You need to login before start this action. To login: ");
-      this.logger.info("spica login <username> <password>");
-      return;
-    }
+    if (!this.token || !this.server) return;
 
     if (isAll) {
-      let functions = (await request
-        .getRequest(`${server}/function`, {
-          Authorization: token
+      let functions = (await this.request
+        .getRequest(`${this.server}/function`, {
+          Authorization: this.token
         })
         .catch(error => {
           this.logger.error(error.message);
-          return [];
         })) as Array<Function>;
+
+      if (!functions) return;
 
       if (!functions.length) {
         this.logger.error("Couldn't find any function.");
         return;
       }
 
-      functions.forEach(func => {
-        request
-          .postRequest(
-            `${server}/function/${func._id}/dependencies`,
-            {
-              name: packageName
-            },
-            {Authorization: token}
-          )
-          .then(() =>
-            this.logger.success(
-              `Successfully installed dependency '${packageName}' to the function named '${func.name}'.`
+      await Promise.all(
+        functions.map(func => {
+          this.request
+            .postRequest(
+              `${this.server}/function/${func._id}/dependencies`,
+              {
+                name: packageName
+              },
+              {Authorization: this.token}
             )
-          )
-          .catch(err =>
-            this.logger.error(
-              `Failed to install dependency '${packageName}' to the function named '${func.name}' cause of ${err.message}`
+            .then(() =>
+              this.logger.success(
+                `Successfully installed dependency '${packageName}' to the function named '${func.name}'.`
+              )
             )
-          );
-      });
+            .catch(err => {
+              this.logger.error(
+                `Failed to install dependency '${packageName}' to the function named '${func.name}' cause of ${err.message}`
+              );
+            });
+        })
+      );
     } else {
-      this.logger.info("Please use --all.");
+      this.logger.info("Please use --all until this feature improved");
     }
   }
 }

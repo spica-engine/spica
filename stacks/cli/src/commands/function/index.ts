@@ -5,8 +5,7 @@ export class FunctionNamespace extends Namespace {
   async getMetadata(): Promise<NamespaceMetadata> {
     return {
       name: "function",
-      summary: "function summary",
-      description: "function description"
+      summary: "All commands about the function module."
     };
   }
 
