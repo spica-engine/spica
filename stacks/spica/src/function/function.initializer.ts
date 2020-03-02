@@ -12,6 +12,15 @@ export class FunctionInitializer {
   ) {
     functionService.getFunctions().subscribe(funcs => {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Function));
+      this.routeService.dispatch(
+        new Upsert({
+          category: RouteCategory.Function,
+          id: `see_all`,
+          icon: "format_list_numbered",
+          path: `/function`,
+          display: "List Functions"
+        })
+      );
       funcs.forEach(func => {
         this.routeService.dispatch(
           new Upsert({
