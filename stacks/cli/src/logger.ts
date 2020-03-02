@@ -3,6 +3,15 @@ import * as columnify from "columnify";
 import * as ora from "ora";
 import * as util from "util";
 
+let logger: Logger;
+
+export function getLogger() {
+  if (!logger) {
+    logger = new Logger(process.stdout, process.stderr);
+  }
+  return logger;
+}
+
 export class Logger extends console.Console {
   spin(options?: ora.Options): ora.Ora;
   spin<T = any>(options?: ora.Options & {op: Promise<T>}): Promise<T>;
