@@ -1,5 +1,5 @@
 import {CommonModule} from "@angular/common";
-import {ModuleWithProviders, NgModule} from "@angular/core";
+import {ModuleWithProviders, NgModule, Injectable} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -38,6 +38,10 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {SubscriptionModule} from "./subscription.module";
+import {FunctionService} from "./function.service";
+import {FunctionInitializer} from "./function.initializer";
+import {RouteService, LAYOUT_INITIALIZER} from "@spica-server/core";
+import {PassportService} from "src/passport";
 
 @NgModule({
   declarations: [
@@ -86,6 +90,26 @@ import {SubscriptionModule} from "./subscription.module";
 })
 export class FunctionModule {
   public static forRoot(options: FunctionOptions): ModuleWithProviders {
-    return {ngModule: FunctionModule, providers: [{provide: FUNCTION_OPTIONS, useValue: options}]};
+    return {
+      ngModule: FunctionModule,
+      providers: [
+        {provide: FUNCTION_OPTIONS, useValue: options},
+        {
+          provide: FunctionInitializer,
+          useClass: FunctionInitializer,
+          deps: [FunctionService, RouteService, PassportService]
+        },
+        {
+          provide: LAYOUT_INITIALIZER,
+          useFactory: provideFunctionLoader,
+          multi: true,
+          deps: [FunctionInitializer]
+        }
+      ]
+    };
   }
+}
+
+export function provideFunctionLoader(l: FunctionInitializer) {
+  return l.appInitializer.bind(l);
 }
