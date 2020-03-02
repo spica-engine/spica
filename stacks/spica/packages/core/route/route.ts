@@ -6,7 +6,7 @@ export enum RouteCategory {
   Content = "Content",
   Developer = "Developer",
   System = "System",
-  Function = "Function"
+  Functions = "Functions"
 }
 
 export interface Route {
