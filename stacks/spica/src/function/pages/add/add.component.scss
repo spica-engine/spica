@@ -125,12 +125,20 @@
       }
     }
 
+    // mat-card-actions {
+    //   button {
+    //     float: right;
+    //     mat-progress-spinner {
+    //       display: inline-block;
+    //     }
+    //   }
+    // }
     mat-card-actions {
-      button {
-        float: right;
-        mat-progress-spinner {
-          display: inline-block;
-        }
+      div.saveButton {
+        padding: 0 10px 10px 0;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
       }
     }
   }

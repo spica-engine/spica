@@ -25,6 +25,12 @@ import {
   normalizeFunction
 } from "../../interface";
 
+export enum SaveStatus {
+  Save = "Save",
+  Saving = "Saving..",
+  Saved = "Saved!"
+}
+
 @Component({
   selector: "functions-add",
   templateUrl: "./add.component.html",
@@ -50,6 +56,8 @@ export class AddComponent implements OnInit, OnDestroy {
   $indexSave: Observable<Date | "inprogress">;
 
   $save: Promise<void>;
+
+  saveStatus: SaveStatus = SaveStatus.Save;
 
   $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
 
@@ -81,6 +89,7 @@ export class AddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
+          this.saveStatus = SaveStatus.Save;
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.getDependencies();
@@ -148,22 +157,53 @@ export class AddComponent implements OnInit, OnDestroy {
     this.function.env = this.function.env.filter(variable => variable.name && variable.value);
   }
 
-  save() {
+  async save() {
+    this.saveStatus = SaveStatus.Saving;
+
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
-    const save = this.function._id
-      ? this.functionService.updateOne(fn)
-      : this.functionService.insertOne(fn);
 
-    this.$save = save
-      .pipe(
-        flatMap(fn => this.functionService.updateIndex(fn._id, this.index)),
-        tap(() => {
-          this.$save = undefined;
-          this.router.navigate(["function"]);
-        })
-      )
-      .toPromise();
+    const responseFunction = await (this.function._id
+      ? this.functionService.updateOne(fn)
+      : this.functionService.insertOne(fn)
+    )
+      .toPromise()
+      .catch(() => {
+        this.saveStatus = SaveStatus.Save;
+        return undefined;
+      });
+    if (!responseFunction) return;
+
+    this.functionService
+      .updateIndex(responseFunction._id, this.index)
+      .toPromise()
+      .then(() => {
+        //check if page navigated to another function before progress complete
+        if (this.function._id == responseFunction._id) this.saveStatus = SaveStatus.Saved;
+      })
+      .catch(() => {
+        if (this.function._id == responseFunction._id) this.saveStatus = SaveStatus.Save;
+      })
+      .finally(() => {
+        setTimeout(() => {
+          this.saveStatus = SaveStatus.Save;
+        }, 700);
+      });
+
+    // const save = this.function._id
+    //   ? this.functionService.updateOne(fn)
+    //   : this.functionService.insertOne(fn);
+
+    // this.$save = save
+    //   .pipe(
+    //     flatMap(fn => this.functionService.updateIndex(fn._id, this.index)),
+    //     tap(() => {
+    //       this.$save = undefined;
+
+    //       //this.router.navigate(["function"]);
+    //     })
+    //   )
+    //   .toPromise();
   }
 
   changeScheme(isDark: boolean) {

@@ -287,20 +287,30 @@
     </form>
   </mat-card-content>
   <mat-card-actions>
-    <button
-      mat-button
-      [disabled]="form.invalid || isHandlerDuplicated || $save"
-      canInteract="function:update"
-      (click)="save()"
-    >
-      <mat-icon *ngIf="!$save">sync</mat-icon>
+    <div class="saveButton">
+      <mat-icon *ngIf="saveStatus == 'Saved!'">done</mat-icon>
+      <mat-progress-spinner
+        *ngIf="saveStatus == 'Saving..'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      <button
+        mat-button
+        [disabled]="form.invalid || isHandlerDuplicated || saveStatus != 'Save'"
+        canInteract="function:update"
+        (click)="save()"
+      >
+        <!-- <mat-icon *ngIf="!$save">sync</mat-icon>
       <mat-progress-spinner
         *ngIf="$save"
         [diameter]="18"
         color="primary"
         mode="indeterminate"
-      ></mat-progress-spinner>
-      Save
-    </button>
+      ></mat-progress-spinner> -->
+        <mat-icon *ngIf="saveStatus == 'Save'">sync</mat-icon>
+        {{ saveStatus }}
+      </button>
+    </div>
   </mat-card-actions>
 </mat-card>
