@@ -11,10 +11,10 @@ import {
 import * as authentication from "../../../authentication";
 import * as request from "../../../request";
 import {Function} from "../../../interface";
-import {Logger} from "../../../logger";
+import {Logger, getLogger} from "../../../logger";
 
 export class InstallCommand extends Command {
-  logger?: Logger = new Logger(process.stdout, process.stderr);
+  logger: Logger = getLogger();
   authentication = authentication;
   request = request;
 

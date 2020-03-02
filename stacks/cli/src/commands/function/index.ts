@@ -10,6 +10,6 @@ export class FunctionNamespace extends Namespace {
   }
 
   async getNamespaces(): Promise<NamespaceMap> {
-    return new NamespaceMap([["dependency", async () => new DependencyNamespace(this)]]);
+    return new NamespaceMap([["dependency", async () => new DependencyNamespace()]]);
   }
 }

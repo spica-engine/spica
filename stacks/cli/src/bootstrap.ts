@@ -38,7 +38,7 @@ class RootNamespace extends SpicaNamespace {
   }
 
   async getNamespaces(): Promise<NamespaceMap> {
-    return new NamespaceMap([["function", async () => new FunctionNamespace(this)]]);
+    return new NamespaceMap([["function", async () => new FunctionNamespace()]]);
   }
 }
 
