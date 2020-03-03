@@ -1,18 +1,23 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
+import {SavingState} from "@spica-client/material/save/save.directive";
 import {Scheme, SchemeObserver} from "@spica-server/core";
-import {Observable, Subscription} from "rxjs";
+import {merge, Observable, of, Subject, Subscription} from "rxjs";
 import {
+  catchError,
   delay,
+  endWith,
   filter,
   flatMap,
+  ignoreElements,
   map,
   startWith,
   switchMap,
   take,
   takeUntil,
-  tap
+  tap,
+  finalize
 } from "rxjs/operators";
 import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
@@ -55,9 +60,7 @@ export class AddComponent implements OnInit, OnDestroy {
   index: string;
   $indexSave: Observable<Date | "inprogress">;
 
-  $save: Promise<void>;
-
-  saveStatus: SaveStatus = SaveStatus.Save;
+  $save: Observable<SavingState>;
 
   $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
 
@@ -89,7 +92,6 @@ export class AddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
-          this.saveStatus = SaveStatus.Save;
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.getDependencies();
@@ -158,52 +160,26 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   async save() {
-    this.saveStatus = SaveStatus.Saving;
-
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
 
-    const responseFunction = await (this.function._id
-      ? this.functionService.updateOne(fn)
-      : this.functionService.insertOne(fn)
-    )
-      .toPromise()
-      .catch(() => {
-        this.saveStatus = SaveStatus.Save;
-        return undefined;
-      });
-    if (!responseFunction) return;
+    const isInsert = !this.function._id;
 
-    this.functionService
-      .updateIndex(responseFunction._id, this.index)
-      .toPromise()
-      .then(() => {
-        //check if page navigated to another function before progress complete
-        if (this.function._id == responseFunction._id) this.saveStatus = SaveStatus.Saved;
-      })
-      .catch(() => {
-        if (this.function._id == responseFunction._id) this.saveStatus = SaveStatus.Save;
-      })
-      .finally(() => {
-        setTimeout(() => {
-          this.saveStatus = SaveStatus.Save;
-        }, 700);
-      });
+    const save = isInsert ? this.functionService.insertOne(fn) : this.functionService.updateOne(fn);
 
-    // const save = this.function._id
-    //   ? this.functionService.updateOne(fn)
-    //   : this.functionService.insertOne(fn);
-
-    // this.$save = save
-    //   .pipe(
-    //     flatMap(fn => this.functionService.updateIndex(fn._id, this.index)),
-    //     tap(() => {
-    //       this.$save = undefined;
-
-    //       //this.router.navigate(["function"]);
-    //     })
-    //   )
-    //   .toPromise();
+    this.$save = merge(
+      of(SavingState.Saving),
+      save.pipe(
+        flatMap(fn =>
+          this.functionService.updateIndex(fn._id, this.index).pipe(
+            tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
+            ignoreElements()
+          )
+        ),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
   }
 
   changeScheme(isDark: boolean) {

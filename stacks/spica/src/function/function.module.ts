@@ -42,6 +42,7 @@ import {FunctionService} from "./function.service";
 import {FunctionInitializer} from "./function.initializer";
 import {RouteService, LAYOUT_INITIALIZER} from "@spica-server/core";
 import {PassportService} from "src/passport";
+import {MatSaveModule} from "@spica-client/material";
 
 @NgModule({
   declarations: [
@@ -85,7 +86,8 @@ import {PassportService} from "src/passport";
     MatTabsModule,
     StoreModule.forFeature("function", fromFunction.reducer),
     PassportModule.forChild(),
-    SubscriptionModule
+    SubscriptionModule,
+    MatSaveModule
   ]
 })
 export class FunctionModule {

@@ -287,30 +287,25 @@
     </form>
   </mat-card-content>
   <mat-card-actions>
-    <div class="saveButton">
-      <mat-icon *ngIf="saveStatus == 'Saved!'">done</mat-icon>
-      <mat-progress-spinner
-        *ngIf="saveStatus == 'Saving..'"
-        [diameter]="18"
-        color="primary"
-        mode="indeterminate"
-      ></mat-progress-spinner>
-      <button
-        mat-button
-        [disabled]="form.invalid || isHandlerDuplicated || saveStatus != 'Save'"
-        canInteract="function:update"
-        (click)="save()"
-      >
-        <!-- <mat-icon *ngIf="!$save">sync</mat-icon>
-      <mat-progress-spinner
-        *ngIf="$save"
-        [diameter]="18"
-        color="primary"
-        mode="indeterminate"
-      ></mat-progress-spinner> -->
-        <mat-icon *ngIf="saveStatus == 'Save'">sync</mat-icon>
-        {{ saveStatus }}
-      </button>
-    </div>
+    <button
+      mat-button
+      *matSave="$save | async; let state"
+      [disabled]="form.invalid || isHandlerDuplicated || !!state"
+      canInteract="function:update"
+      (click)="save()"
+    >
+      <div class="saveButton" [ngSwitch]="state">
+        <mat-icon *ngSwitchDefault>sync</mat-icon>
+        <mat-progress-spinner
+          *ngSwitchCase="'Saving'"
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        ></mat-progress-spinner>
+        <mat-icon *ngSwitchCase="'Saved'">done</mat-icon>
+        <mat-icon *ngSwitchCase="'Failed'">clear</mat-icon>
+        <div>{{ state || "Save" }}</div>
+      </div>
+    </button>
   </mat-card-actions>
 </mat-card>
