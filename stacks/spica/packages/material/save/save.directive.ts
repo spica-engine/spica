@@ -44,5 +44,4 @@ export class MatSaveDirective {
 export class MatSaveContext<T = unknown> {
   public $implicit: T;
   public state: T;
-  public icon: string;
 }

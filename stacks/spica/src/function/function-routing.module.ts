@@ -39,14 +39,6 @@ const routes: Routes = [
 
 const route: Route[] = [
   {
-    id: "function",
-    category: RouteCategory.Developer,
-    icon: "memory",
-    path: "/function",
-    display: "Function",
-    data: {action: "function:index"}
-  },
-  {
     id: "subscription",
     category: RouteCategory.Developer,
     icon: "http",

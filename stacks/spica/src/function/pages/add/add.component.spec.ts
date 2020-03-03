@@ -20,7 +20,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {FUNCTION_OPTIONS, emptyTrigger} from "../../interface";
 import {SchemeObserver} from "../../../../packages/core/layout/scheme.observer";
-import {By} from "@angular/platform-browser";
+import {MatSaveModule} from "@spica/client/packages/material/index";
 
 describe("Function Add", () => {
   let fixture: ComponentFixture<AddComponent>;
@@ -38,7 +38,8 @@ describe("Function Add", () => {
         MatSlideToggleModule,
         MatCardModule,
         RouterTestingModule,
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        MatSaveModule
       ],
       providers: [
         {
