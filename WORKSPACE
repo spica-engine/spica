@@ -21,6 +21,7 @@ node_repositories()
 
 yarn_install(
     name = "npm",
+    always_hide_bazel_files = True,
     manual_build_file_contents = """
 filegroup(
     name = "function_runtime_node_dependencies",
