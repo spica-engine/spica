@@ -1,4 +1,4 @@
-import {namespace} from "./validators";
+import {namespace} from "@spica/cli/src/validators";
 
 describe("cli validators", () => {
   describe("namespace", () => {

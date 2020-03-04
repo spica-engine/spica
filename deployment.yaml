@@ -118,6 +118,8 @@ spec:
               value: "https://master.spicaengine.com/api"
             - name: PERSISTENT_PATH
               value: /data
+            - name: ENABLE_BUCKET_HOOKS
+              value: "true"
           volumeMounts:
             - name: master-data
               mountPath: /data

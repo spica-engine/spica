@@ -17,7 +17,7 @@ ts_library(
         exclude = ["src/**/*.spec.ts"],
     ),
     data = ["bin/spica"],
-    module_name = "@spicaengine/cli",
+    module_name = "@spica/cli",
     tsconfig = ":tsconfig",
     deps = [
         "@npm//@ionic/cli-framework",
@@ -29,6 +29,8 @@ ts_library(
         "@npm//get-port",
         "@npm//open",
         "@npm//ora",
+        "@npm//request",
+        "@npm//request-promise-native",
     ],
 )
 
@@ -39,22 +41,4 @@ pkg_npm(
     deps = [
         ":cli",
     ],
-)
-
-ts_library(
-    name = "test_lib",
-    testonly = True,
-    srcs = glob(["**/*.spec.ts"]),
-    tsconfig = "//:tsconfig.json",
-    deps = [
-        ":cli",
-        "@npm//@types/jasmine",
-        "@npm//@types/json-schema",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "test",
-    srcs = [":test_lib"],
 )
