@@ -3,7 +3,7 @@ import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/co
 import {ActivatedRoute, Router} from "@angular/router";
 import {SavingState} from "@spica-client/material/save/save.directive";
 import {Scheme, SchemeObserver} from "@spica-server/core";
-import {merge, Observable, of, Subject, Subscription} from "rxjs";
+import {merge, Observable, of, Subscription} from "rxjs";
 import {
   catchError,
   delay,
@@ -16,8 +16,7 @@ import {
   switchMap,
   take,
   takeUntil,
-  tap,
-  finalize
+  tap
 } from "rxjs/operators";
 import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
@@ -92,6 +91,7 @@ export class AddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
+          this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.getDependencies();
@@ -159,7 +159,7 @@ export class AddComponent implements OnInit, OnDestroy {
     this.function.env = this.function.env.filter(variable => variable.name && variable.value);
   }
 
-  async save() {
+  save() {
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
 
