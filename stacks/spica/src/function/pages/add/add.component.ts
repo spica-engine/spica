@@ -29,12 +29,6 @@ import {
   normalizeFunction
 } from "../../interface";
 
-export enum SaveStatus {
-  Save = "Save",
-  Saving = "Saving..",
-  Saved = "Saved!"
-}
-
 @Component({
   selector: "functions-add",
   templateUrl: "./add.component.html",
