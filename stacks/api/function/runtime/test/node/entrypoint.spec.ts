@@ -98,6 +98,50 @@ describe("Entrypoint", () => {
     ]);
   });
 
+  it("should be able access to prebuilt env variables", async () => {
+    process.env.DATABASE_URI = "mongodb://test";
+    process.env.DATABASE_NAME = "testingdb";
+    process.env.REPLICA_SET = "repl";
+
+    await initializeFn(`export default function() {
+      const {
+        ENTRYPOINT,
+        RUNTIME,
+        __INTERNAL__SPICA__MONGOURL__: url,
+        __INTERNAL__SPICA__MONGODBNAME__: dbName,
+        __INTERNAL__SPICA__MONGOREPL__: repl
+      } = process.env;
+      console.log(process.env);
+      if (
+        ENTRYPOINT == "index.js" &&
+        RUNTIME == "node" &&
+        url == "mongodb://test" &&
+        dbName == "testingdb" &&
+        repl == "repl"
+      ) {
+        process.exit(4);
+      }
+    }`);
+
+    const event = new Event.Event();
+    event.target = new Event.Target();
+    event.type = -1 /* NO-OP */;
+    event.target.cwd = compilation.cwd;
+    event.target.handler = "default";
+
+    queue.enqueue(event);
+
+    const exitCode = await runtime
+      .execute({
+        cwd: compilation.cwd,
+        eventId: event.id,
+        stdout: "inherit"
+      })
+      .catch(e => e);
+
+    expect(exitCode).toBe(4);
+  });
+
   describe("http", () => {
     let httpQueue: HttpQueue;
 
@@ -306,7 +350,7 @@ describe("Entrypoint", () => {
     });
   });
 
-  describe("Firehose", () => {
+  describe("firehose", () => {
     let firehoseQueue: FirehoseQueue;
 
     beforeEach(() => {
