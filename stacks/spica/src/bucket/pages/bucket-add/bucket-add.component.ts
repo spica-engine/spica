@@ -159,13 +159,21 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   saveBucket(): void {
     this.savingBucketState = true;
-    this.bs
-      .replaceOne(this.bucket)
-      .toPromise()
-      .then(data => {
-        this.savingBucketState = false;
-        this.router.navigate(["buckets/" + data._id]);
-      });
+
+    if (this.bucket._id) {
+      this.bs
+        .updateOne(this.bucket)
+        .toPromise()
+        .then(() => (this.savingBucketState = false));
+    } else {
+      this.bs
+        .insertOne(this.bucket)
+        .toPromise()
+        .then(data => {
+          this.savingBucketState = false;
+          this.router.navigate(["buckets", data]);
+        });
+    }
   }
 
   ngOnDestroy() {
