@@ -102,9 +102,17 @@ export function denormalizeFunction(fn: NormalizedFunction): Function {
 }
 
 export interface LogFilter {
-  begin: string;
-  end: string;
-  order?: string;
+  functions: string[];
+  begin?: Date;
+  end?: Date;
+}
+
+export interface Log {
+  _id: string;
+  function: string;
+  event_id: string;
+  content: string;
+  created_at: string;
 }
 
 export interface Subscription {

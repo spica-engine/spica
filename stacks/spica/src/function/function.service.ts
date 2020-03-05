@@ -4,7 +4,7 @@ import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
 import {map, tap} from "rxjs/operators";
 import {DeleteFunction, LoadFunctions, UpsertFunction} from "./actions/function.actions";
-import {Function, Information, LogFilter} from "./interface";
+import {Function, Information, Log, LogFilter} from "./interface";
 import * as fromFunction from "./reducers/function.reducer";
 
 @Injectable({providedIn: "root"})
@@ -25,8 +25,19 @@ export class FunctionService {
     return this.store.pipe(select(fromFunction.selectEntities)).pipe(map(entities => entities[id]));
   }
 
-  getLogs(id: string, filter: LogFilter): Observable<any[]> {
-    return this.http.get<any[]>(`api:/function/${id}/logs`, {params: filter as any});
+  getLogs(filter: LogFilter): Observable<Log[]> {
+    const serializedFilter: {[P in keyof LogFilter]?: string | string[]} = {
+      functions: filter.functions
+    };
+
+    if (filter.begin instanceof Date) {
+      serializedFilter.begin = filter.begin.toISOString();
+    }
+
+    if (filter.end instanceof Date) {
+      serializedFilter.end = filter.end.toISOString();
+    }
+    return this.http.get<any[]>(`api:/function/logs`, {params: serializedFilter});
   }
 
   clearLogs(id: string) {
