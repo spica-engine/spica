@@ -11,10 +11,10 @@ export class FunctionInitializer {
     private passport: PassportService
   ) {
     functionService.getFunctions().subscribe(funcs => {
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Functions));
+      this.routeService.dispatch(new RemoveCategory(RouteCategory.Function));
       this.routeService.dispatch(
         new Upsert({
-          category: RouteCategory.Functions,
+          category: RouteCategory.Function,
           id: `list_all`,
           icon: "format_list_numbered",
           path: `/function`,
@@ -24,7 +24,7 @@ export class FunctionInitializer {
       funcs.forEach(func => {
         this.routeService.dispatch(
           new Upsert({
-            category: RouteCategory.Functions,
+            category: RouteCategory.Function,
             id: `${func._id}`,
             icon: "memory",
             path: `/function/${func._id}`,
@@ -41,8 +41,7 @@ export class FunctionInitializer {
     ) {
       this.functionService.loadFunctions().toPromise();
     } else {
-      // Clean up the content category if the user has no permission to see.
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Functions));
+      this.routeService.dispatch(new RemoveCategory(RouteCategory.Function));
     }
   }
 }

@@ -2,9 +2,9 @@ import {Directive, Input, TemplateRef, ViewContainerRef} from "@angular/core";
 
 export enum SavingState {
   Pristine = "",
-  Saving = "Saving",
-  Saved = "Saved",
-  Failed = "Failed"
+  Saving = "saving",
+  Saved = "saved",
+  Failed = "failed"
 }
 
 @Directive({

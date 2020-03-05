@@ -41,7 +41,7 @@ describe("SaveDirective", () => {
     fixture.componentInstance.$save = of(SavingState.Saving);
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.css("button")).nativeElement.textContent).toEqual(
-      "Saving"
+      "saving"
     );
   });
 
@@ -49,7 +49,7 @@ describe("SaveDirective", () => {
     fixture.componentInstance.$save = of(SavingState.Saving);
     fixture.componentInstance.$save = of(SavingState.Saved);
     fixture.detectChanges();
-    expect(fixture.debugElement.query(By.css("button")).nativeElement.textContent).toEqual("Saved");
+    expect(fixture.debugElement.query(By.css("button")).nativeElement.textContent).toEqual("saved");
     expect(fixture.componentInstance.directive["_timeout"]).toBeDefined();
     tick(1000);
     fixture.detectChanges();
@@ -64,7 +64,7 @@ describe("SaveDirective", () => {
     tick(1500);
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.css("button")).nativeElement.textContent).toEqual(
-      "Saving"
+      "saving"
     );
   }));
 });

@@ -128,10 +128,8 @@
     mat-card-actions {
       button {
         float: right;
-        .saveButton {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
+        mat-progress-spinner {
+          display: inline-block;
         }
       }
     }

@@ -293,19 +293,18 @@
       [disabled]="form.invalid || isHandlerDuplicated || !!state"
       canInteract="function:update"
       (click)="save()"
+      [ngSwitch]="state"
     >
-      <div class="saveButton" [ngSwitch]="state">
-        <mat-icon *ngSwitchDefault>sync</mat-icon>
-        <mat-progress-spinner
-          *ngSwitchCase="'Saving'"
-          [diameter]="18"
-          color="primary"
-          mode="indeterminate"
-        ></mat-progress-spinner>
-        <mat-icon *ngSwitchCase="'Saved'">done</mat-icon>
-        <mat-icon *ngSwitchCase="'Failed'">clear</mat-icon>
-        <div>{{ state || "Save" }}</div>
-      </div>
+      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-progress-spinner
+        *ngSwitchCase="'saving'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ state || "save" | titlecase }}</span>
     </button>
   </mat-card-actions>
 </mat-card>
