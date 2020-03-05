@@ -10,9 +10,9 @@ describe("engine", () => {
   let subscribeSpy: jasmine.Spy;
   let unsubscribeSpy: jasmine.Spy;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [HorizonModule, DatabaseTestingModule.create()]
+      imports: [HorizonModule, DatabaseTestingModule.replicaSet()]
     }).compile();
 
     let horizon = module.get(Horizon);
@@ -28,7 +28,7 @@ describe("engine", () => {
 
     subscribeSpy = spyOn<any>(engine, "subscribe").and.returnValue(null);
     unsubscribeSpy = spyOn<any>(engine, "unsubscribe").and.returnValue(null);
-  });
+  }, 120000);
 
   afterEach(() => {
     subscribeSpy.calls.reset();
