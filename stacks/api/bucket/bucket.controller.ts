@@ -56,19 +56,18 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    bucket._id = new ObjectId(bucket._id);
-    return this.bs.replaceOne(bucket).then(() => bucket);
+    if (bucket._id) delete bucket._id;
+    return this.bs.insertOne(bucket).then(result => result.insertedId);
   }
 
-  @Put()
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
-  updateMany(@Body(Schema.validate("http://spica.internal/buckets/schema")) buckets: Bucket[]) {
-    return Promise.all(
-      buckets.map(bucket => {
-        bucket._id = new ObjectId(bucket._id);
-        return this.bs.updateOne(bucket);
-      })
-    );
+  update(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
+  ) {
+    if (bucket._id) delete bucket._id;
+    return this.bs.updateOne(id, bucket);
   }
 
   @Get(":id")

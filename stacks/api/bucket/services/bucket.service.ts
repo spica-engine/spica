@@ -8,7 +8,8 @@ import {
   InsertOneWriteOpResult,
   InsertWriteOpResult,
   ReplaceWriteOpResult,
-  WriteOpResult
+  UpdateWriteOpResult,
+  ObjectId
 } from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference";
 import * as fs from "fs";
@@ -52,8 +53,8 @@ export class BucketService {
   replaceOne(bucket: Bucket): Promise<ReplaceWriteOpResult> {
     return this.buckets.replaceOne({_id: bucket._id}, bucket, {upsert: true});
   }
-  updateOne(bucket: Bucket): Promise<WriteOpResult> {
-    return this.buckets.update({_id: bucket._id}, bucket, {upsert: true});
+  updateOne(id: ObjectId, bucket: Bucket): Promise<UpdateWriteOpResult> {
+    return this.buckets.updateOne({_id: id}, {$set: bucket});
   }
 
   deleteOne(filter: FilterQuery<Bucket>): Promise<DeleteWriteOpResultObject> {

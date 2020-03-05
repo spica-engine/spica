@@ -92,6 +92,11 @@ export class BucketDataService {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
     return collection.updateMany(filter, update);
   }
+
+  updateOne(bucketId: ObjectId, documentId: ObjectId, update: any) {
+    const collection = this.db.collection(getBucketDataCollection(bucketId));
+    return collection.updateOne({_id: documentId}, {$set: update});
+  }
 }
 
 export function getBucketDataCollection(bucketId: string | ObjectId): string {
