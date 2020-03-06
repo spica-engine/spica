@@ -1,4 +1,4 @@
-import {PipeTransform, HttpException} from "@nestjs/common";
+import {HttpException, PipeTransform} from "@nestjs/common";
 
 /**
  * An pipe converts string to number
@@ -42,3 +42,15 @@ export const DATE: PipeTransform<string, Date> = {
     return new Date(value);
   }
 };
+
+export function ARRAY<T>(coerce: (v: string) => T): PipeTransform<string | string[], T[]> {
+  return {
+    transform: value => {
+      if (!Array.isArray(value)) {
+        value = [value];
+      }
+
+      return value.map(coerce);
+    }
+  };
+}
