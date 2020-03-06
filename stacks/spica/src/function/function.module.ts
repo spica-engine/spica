@@ -33,7 +33,6 @@ import {FunctionOptions, FUNCTION_OPTIONS} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
-import {TabsComponent} from "./pages/tabs/tabs.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
@@ -50,7 +49,6 @@ import {MatSaveModule} from "@spica-client/material";
     IndexComponent,
     LogViewComponent,
     WelcomeComponent,
-    TabsComponent,
     EditorComponent,
     LanguageDirective,
     EnqueuerPipe

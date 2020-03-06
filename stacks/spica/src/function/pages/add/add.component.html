@@ -1,21 +1,15 @@
-<mat-toolbar *ngIf="!function._id" class="toolbar" color="primary">
+<mat-toolbar class="toolbar" color="primary">
   <h4 class="mat-h4">
     <mat-icon>memory</mat-icon>
-    <span>New Function</span>
+    <span *ngIf="function._id; else newFunction">
+      {{ function.name }}
+    </span>
+    <ng-template #newFunction><span>New Function</span></ng-template>
   </h4>
   <span class="space-between"></span>
 </mat-toolbar>
 
-<ng-template #toolbar>
-  <mat-toolbar color="primary">
-    <h4 class="mat-h4">
-      <mat-icon>memory</mat-icon>
-      <span>{{ function.name }}</span>
-    </h4>
-  </mat-toolbar>
-</ng-template>
-
-<mat-card [class.toolbar-card]="!function._id" class="mat-elevation-z25">
+<mat-card class="mat-elevation-z25">
   <mat-card-content>
     <form #form="ngForm">
       <mat-list>
