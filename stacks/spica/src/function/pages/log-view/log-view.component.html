@@ -1,73 +1,77 @@
-<ng-template #toolbar>
-  <mat-toolbar color="primary">
-    <h4 class="mat-h4">
-      <mat-icon>memory</mat-icon>
-      <span>{{ (function | async)?.name }}</span>
-    </h4>
-    <span class="space-between"></span>
+<mat-toolbar color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>bug_report</mat-icon>
+    <span>Logs</span>
+  </h4>
+  <span class="space-between"></span>
 
-    <!-- Use material date range picker once there is public one: https://github.com/angular/components/issues/4763 -->
-    <button mat-icon-button (click)="picker.open()">
-      <mat-icon>date_range</mat-icon>
-      <input
-        style="visibility:hidden"
-        placeholder="Choose a date"
-        [satDatepicker]="picker"
-        [value]="date"
-        [min]="minDate"
-        [max]="maxDate"
-        [(ngModel)]="dateRange"
-        (ngModelChange)="this.refresh.next()"
-      />
-      <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
-    </button>
+  <button mat-icon-button (click)="filter$.next(filter$.value)">
+    <mat-icon>refresh</mat-icon>
+  </button>
 
-    <button mat-icon-button (click)="refresh.next()">
-      <mat-icon>refresh</mat-icon>
-    </button>
+  <button mat-icon-button (click)="clearLogs()">
+    <mat-icon>clear_all</mat-icon>
+  </button>
+</mat-toolbar>
 
-    <button mat-icon-button (click)="clearLogs()">
-      <mat-icon>clear_all</mat-icon>
-    </button>
-  </mat-toolbar>
-</ng-template>
 <mat-card class="mat-elevation-z25">
-  <table mat-table matSort [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z0">
-    <ng-container matColumnDef="execution">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Event Id</th>
-      <td mat-cell *matCellDef="let log">{{ log.event_id }}</td>
-    </ng-container>
-
+  <!-- Use material date range picker once there is public one: https://github.com/angular/components/issues/4763 -->
+  <mat-form-field>
+    <input
+      matInput
+      placeholder="Select a date range"
+      [satDatepicker]="picker"
+      [max]="maxDate"
+      [ngModel]="filter$ | async"
+      (ngModelChange)="
+        filter$.value.begin = $event.begin;
+        filter$.value.end = $event.end;
+        filter$.next(filter$.value)
+      "
+    />
+    <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
+    <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select
+      multiple
+      [(ngModel)]="filter$.value.functions"
+      (ngModelChange)="filter$.next(filter$.value)"
+    >
+      <mat-option *ngFor="let function of functions$ | async" [value]="function._id">
+        {{ function.name }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-table multiTemplateDataRows [dataSource]="logs$">
     <ng-container matColumnDef="timestamp">
-      <th mat-header-cell *matHeaderCellDef mat-sort-header>Time</th>
-      <td mat-cell *matCellDef="let log">{{ log.created_at | date: "medium" }}</td>
+      <mat-header-cell mat-header-cell *matHeaderCellDef>TIMESTAMP</mat-header-cell>
+      <mat-cell *matCellDef="let log">{{
+        log.created_at | date: "yyyy-MM-dd HH:MM:ss.ms"
+      }}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="message">
-      <th mat-header-cell *matHeaderCellDef>Message</th>
-      <td mat-cell *matCellDef="let log">
+    <ng-container matColumnDef="function">
+      <mat-header-cell mat-header-cell *matHeaderCellDef>FUNCTION</mat-header-cell>
+      <mat-cell *matCellDef="let log">{{ log.function }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="content">
+      <mat-header-cell mat-header-cell *matHeaderCellDef>CONTENT</mat-header-cell>
+      <mat-cell mat-cell *matCellDef="let log">{{ log.content }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="detail">
+      <mat-cell *matCellDef="let log" [@detail]="log == expandedLog ? 'expanded' : 'collapsed'">
         {{ log.content }}
-      </td>
+      </mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="expandedDetail">
-      <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
-        <div
-          class="element-detail"
-          [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'"
-        >
-          <pre> {{ element.content }} </pre>
-        </div>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr
-      mat-row
-      class="log-row"
-      *matRowDef="let element; columns: displayedColumns"
-      (click)="expandedElement = expandedElement === element ? null : element"
-    ></tr>
-    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
-  </table>
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+    <mat-row
+      *matRowDef="let log; columns: displayedColumns"
+      (click)="expandedLog = expandedLog == log ? null : log"
+    ></mat-row>
+    <mat-row mat-row *matRowDef="let row; columns: ['detail']"></mat-row>
+  </mat-table>
 </mat-card>

@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as path from "path";
 import {Transform} from "stream";
 import * as ts from "typescript";
+import symlinkdir = require("symlink-dir");
 
 class FilterExperimentalWarnings extends Transform {
   _transform(rawChunk: Buffer, encoding: string, cb: Function) {
@@ -31,6 +32,18 @@ export class Node extends Runtime {
 
   async compile(compilation: Compilation): Promise<void> {
     await super.prepare(compilation);
+
+    await symlinkdir(
+      path.join(compilation.cwd, "node_modules", "@spica-devkit", "database"),
+      path.join(compilation.cwd, "node_modules", "@internal", "database")
+    ).catch(e => {
+      console.log(e);
+      if (e.code == "EEXIST" || e.code == "ENOENT") {
+        // Do nothing.
+        return;
+      }
+      return Promise.reject(e);
+    });
 
     await fs.promises
       .symlink(
@@ -90,7 +103,10 @@ export class Node extends Runtime {
             PATH: process.env.PATH,
             EVENT_ID: execution.eventId,
             ENTRYPOINT: "index.js",
-            RUNTIME: "node"
+            RUNTIME: "node",
+            __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
+            __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
+            __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
           },
           cwd: path.join(execution.cwd, ".build")
         }

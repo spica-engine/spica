@@ -7,6 +7,7 @@ import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {FunctionService} from "./function.service";
 import {FUNCTION_OPTIONS} from "./interface";
+import {LogController} from "./log.controller";
 import {LogService} from "./log.service";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 
@@ -22,7 +23,7 @@ export class FunctionModule {
         }),
         HorizonModule
       ],
-      controllers: [FunctionController],
+      controllers: [LogController, FunctionController],
       providers: [
         FunctionEngine,
         FunctionService,
