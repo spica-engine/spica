@@ -23,10 +23,14 @@ export const JSONP: PipeTransform<string, object> = {
   }
 };
 
-export function DEFAULT<T = any>(def: T): PipeTransform<any, T> {
+export function DEFAULT<T = unknown>(defaultValue: T | (() => T)): PipeTransform<any, T> {
   return {
     transform: value => {
-      return typeof value == "undefined" ? def : value;
+      return typeof value == "undefined"
+        ? typeof defaultValue == "function"
+          ? (defaultValue as Function)()
+          : defaultValue
+        : value;
     }
   };
 }
