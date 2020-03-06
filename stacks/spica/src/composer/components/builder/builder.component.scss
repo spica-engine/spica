@@ -66,11 +66,11 @@ $border-color: #e9eced;
       }
     }
 
-    /deep/ .input-placer-input {
+    ::ng-deep .input-placer-input {
       width: 100%;
     }
 
-    /deep/ mat-accordion {
+    ::ng-deep mat-accordion {
       mat-expansion-panel {
         mat-expansion-panel-header {
           mat-panel-title > span {
