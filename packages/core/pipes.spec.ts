@@ -1,4 +1,4 @@
-import {BOOLEAN, DATE, DEFAULT, JSONP, NUMBER} from "./pipes";
+import {BOOLEAN, DATE, DEFAULT, JSONP, NUMBER, ARRAY} from "./pipes";
 import {HttpException} from "@nestjs/common";
 
 describe("core pipes", () => {
@@ -50,5 +50,25 @@ describe("core pipes", () => {
   it("DATE pipe should parse and return date from string", () => {
     const date = new Date();
     expect(DATE.transform(date.toISOString(), undefined).getTime()).toBe(date.getTime());
+  });
+
+  it("ARRAY should convert non-array value to array", () => {
+    const data = "test";
+    expect(ARRAY(String).transform(data, undefined)).toEqual(["test"]);
+  });
+
+  it("ARRAY should keep the array value as is", () => {
+    const data = ["test", "test1"];
+    expect(ARRAY(String).transform(data, undefined)).toEqual(["test", "test1"]);
+  });
+
+  it("ARRAY should coerce the array items", () => {
+    const data = ["1", "2"];
+    expect(ARRAY(Number).transform(data, undefined)).toEqual([1, 2]);
+  });
+
+  it("ARRAY should convert non-array value to array and coerce", () => {
+    const data = "1";
+    expect(ARRAY(Number).transform(data, undefined)).toEqual([1]);
   });
 });
