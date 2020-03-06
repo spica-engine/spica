@@ -4,7 +4,7 @@
     <span>Functions</span>
   </h4>
   <span class="space-between"></span>
-  <button mat-icon-button (click)="refresh()">
+  <button mat-icon-button (click)="refresh$.emit()">
     <mat-icon>refresh</mat-icon>
   </button>
   <button canInteract="function:create" mat-icon-button routerLink="add">
@@ -74,7 +74,12 @@
           >
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-icon-button [routerLink]="function._id + '/logs'" matTooltip="Logs">
+          <button
+            mat-icon-button
+            [routerLink]="['logs']"
+            [queryParams]="{function: function._id}"
+            matTooltip="Logs"
+          >
             <mat-icon>bug_report</mat-icon>
           </button>
           <button

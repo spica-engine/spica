@@ -29,6 +29,7 @@
           *ngFor="let route of routes$ | async"
           [routerLink]="route.path"
           routerLinkActive="active"
+          [queryParams]="route.queryParams"
         >
           <mat-icon>{{ route.icon }}</mat-icon>
           {{ route.display }}

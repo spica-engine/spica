@@ -3,7 +3,7 @@ import {FormsModule, NgModel} from "@angular/forms";
 import {MatOptionModule, MatSelectModule} from "@angular/material";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {EMPTY_INPUT_SCHEMA, INPUT_SCHEMA} from "@spica-server/common";
+import {EMPTY_INPUT_SCHEMA, INPUT_SCHEMA} from "@spica-client/common";
 import {of} from "rxjs";
 import {BucketService} from "src/bucket/services/bucket.service";
 import {RelationSchemaComponent} from "./relation-schema.component";

@@ -5,7 +5,8 @@ export enum RouteCategory {
   Primary = "Primary",
   Content = "Content",
   Developer = "Developer",
-  System = "System"
+  System = "System",
+  Function = "Function"
 }
 
 export interface Route {
@@ -15,6 +16,7 @@ export interface Route {
   path: string;
   category: RouteCategory;
   data?: {[key: string]: any};
+  queryParams?: {[key: string]: any};
 }
 
 export interface RouteFilter {
