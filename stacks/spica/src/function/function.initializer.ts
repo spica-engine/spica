@@ -1,7 +1,7 @@
-import {FunctionService} from "./function.service";
 import {Injectable} from "@angular/core";
-import {RouteService, RemoveCategory, RouteCategory, Upsert} from "@spica-server/core/route";
-import {PassportService} from "src/passport";
+import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core/route";
+import {PassportService} from "@spica-client/passport";
+import {FunctionService} from "./function.service";
 
 @Injectable()
 export class FunctionInitializer {

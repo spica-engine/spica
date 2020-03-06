@@ -1,10 +1,9 @@
 <mat-toolbar class="toolbar" color="primary">
   <h4 class="mat-h4">
     <mat-icon>memory</mat-icon>
-    <span *ngIf="function._id; else newFunction">
-      {{ function.name }}
+    <span>
+      {{ function._id ? function.name : "New Function" }}
     </span>
-    <ng-template #newFunction><span>New Function</span></ng-template>
   </h4>
   <span class="space-between"></span>
 </mat-toolbar>
@@ -180,16 +179,16 @@
                 [required]="options.required?.indexOf(propertyKv.key) > -1"
               >
               </span>
-              <mat-slide-toggle name="status" [(ngModel)]="trigger.active">
+              <mat-label>
                 {{ trigger.active ? "Active" : "Deactive" }}
-              </mat-slide-toggle>
+              </mat-label>
+              <mat-slide-toggle name="status" [(ngModel)]="trigger.active"> </mat-slide-toggle>
             </ng-container>
           </ng-container>
           <button
             mat-icon-button
             color="warn"
             [disabled]="function.triggers.length == 1"
-            class="delete"
             (click)="deleteTrigger(i)"
           >
             <mat-icon>delete</mat-icon>
@@ -298,7 +297,7 @@
       ></mat-progress-spinner>
       <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
       <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-      <span>{{ state || "save" | titlecase }}</span>
+      <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
 </mat-card>

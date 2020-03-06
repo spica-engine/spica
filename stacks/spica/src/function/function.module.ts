@@ -39,8 +39,8 @@ import * as fromFunction from "./reducers/function.reducer";
 import {SubscriptionModule} from "./subscription.module";
 import {FunctionService} from "./function.service";
 import {FunctionInitializer} from "./function.initializer";
-import {RouteService, LAYOUT_INITIALIZER} from "@spica-server/core";
-import {PassportService} from "src/passport";
+import {RouteService, LAYOUT_INITIALIZER} from "@spica-client/core";
+import {PassportService} from "@spica-client/passport";
 import {MatSaveModule} from "@spica-client/material";
 
 @NgModule({

@@ -2,7 +2,7 @@ import {TestBed, ComponentFixture} from "@angular/core/testing";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {MatIconModule} from "@angular/material/icon";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {FormsModule, NgForm} from "@angular/forms";
+import {FormsModule} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatListModule} from "@angular/material/list";
 import {MatExpansionModule} from "@angular/material/expansion";
@@ -20,7 +20,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {FUNCTION_OPTIONS, emptyTrigger} from "../../interface";
 import {SchemeObserver} from "../../../../packages/core/layout/scheme.observer";
-import {MatSaveModule} from "@spica/client/packages/material/index";
+import {MatSaveModule} from "@spica/client/packages/material";
 
 describe("Function Add", () => {
   let fixture: ComponentFixture<AddComponent>;

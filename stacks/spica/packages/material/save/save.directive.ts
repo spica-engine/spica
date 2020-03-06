@@ -1,11 +1,5 @@
 import {Directive, Input, TemplateRef, ViewContainerRef} from "@angular/core";
-
-export enum SavingState {
-  Pristine = "",
-  Saving = "saving",
-  Saved = "saved",
-  Failed = "failed"
-}
+import {SavingState} from "./interface";
 
 @Directive({
   selector: "[matSave]",

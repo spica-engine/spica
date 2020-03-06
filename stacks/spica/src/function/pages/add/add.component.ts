@@ -1,8 +1,8 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {SavingState} from "@spica-client/material/save/save.directive";
-import {Scheme, SchemeObserver} from "@spica-server/core";
+import {Scheme, SchemeObserver} from "@spica-client/core";
+import {SavingState} from "@spica-client/material";
 import {merge, Observable, of, Subscription} from "rxjs";
 import {
   catchError,
