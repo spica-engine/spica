@@ -17,8 +17,7 @@
       "type": "string"
     },
     "preflight": {
-      "title": "Preflight",
-      "description": "Whether preflight requests should be handled.",
+      "title": "Preflight (CORS)",
       "type": "boolean",
       "default": true
     }

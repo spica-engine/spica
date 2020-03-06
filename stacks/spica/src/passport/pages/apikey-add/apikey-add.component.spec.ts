@@ -16,7 +16,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {of} from "rxjs";
 import {RouterTestingModule} from "@angular/router/testing";
-import {IndexResult} from "@spica-server/core";
+import {IndexResult} from "@spica-client/core";
 import {ApiKey} from "../../interfaces/apikey";
 import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
 import {PolicyService} from "../../services/policy.service";

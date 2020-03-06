@@ -1,10 +1,10 @@
 import {TestBed, ComponentFixture, tick, fakeAsync, async} from "@angular/core/testing";
 import {RelationComponent} from "./relation.component";
 import {MatIconModule, MatTableModule, MatPaginatorModule, MatMenuModule} from "@angular/material";
-import {INPUT_SCHEMA, EMPTY_INPUT_SCHEMA} from "@spica-server/common";
+import {INPUT_SCHEMA, EMPTY_INPUT_SCHEMA} from "@spica-client/common";
 import {BucketDataService} from "src/bucket/services/bucket-data.service";
 import {of} from "rxjs";
-import {PreferencesService} from "@spica-server/core";
+import {PreferencesService} from "@spica-client/core";
 import {BucketService} from "src/bucket";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {emptyBucket} from "src/bucket/interfaces/bucket";

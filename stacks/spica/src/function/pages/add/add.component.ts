@@ -1,12 +1,16 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Scheme, SchemeObserver} from "@spica-server/core";
-import {Observable, Subscription} from "rxjs";
+import {Scheme, SchemeObserver} from "@spica-client/core";
+import {SavingState} from "@spica-client/material";
+import {merge, Observable, of, Subscription} from "rxjs";
 import {
+  catchError,
   delay,
+  endWith,
   filter,
   flatMap,
+  ignoreElements,
   map,
   startWith,
   switchMap,
@@ -49,7 +53,7 @@ export class AddComponent implements OnInit, OnDestroy {
   index: string;
   $indexSave: Observable<Date | "inprogress">;
 
-  $save: Promise<void>;
+  $save: Observable<SavingState>;
 
   $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
 
@@ -81,6 +85,7 @@ export class AddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
+          this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.getDependencies();
@@ -151,19 +156,24 @@ export class AddComponent implements OnInit, OnDestroy {
   save() {
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
-    const save = this.function._id
-      ? this.functionService.updateOne(fn)
-      : this.functionService.insertOne(fn);
 
-    this.$save = save
-      .pipe(
-        flatMap(fn => this.functionService.updateIndex(fn._id, this.index)),
-        tap(() => {
-          this.$save = undefined;
-          this.router.navigate(["function"]);
-        })
+    const isInsert = !this.function._id;
+
+    const save = isInsert ? this.functionService.insertOne(fn) : this.functionService.updateOne(fn);
+
+    this.$save = merge(
+      of(SavingState.Saving),
+      save.pipe(
+        flatMap(fn =>
+          this.functionService.updateIndex(fn._id, this.index).pipe(
+            tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
+            ignoreElements()
+          )
+        ),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
       )
-      .toPromise();
+    );
   }
 
   changeScheme(isDark: boolean) {

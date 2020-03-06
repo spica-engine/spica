@@ -23,7 +23,7 @@ import {
 import {FormsModule, NgModel, NgForm} from "@angular/forms";
 import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
-import {InputModule} from "@spica-server/common";
+import {InputModule} from "@spica-client/common";
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
 import {of} from "rxjs";

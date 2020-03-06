@@ -5,7 +5,6 @@ import {IdentityGuard, PolicyGuard} from "../passport";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
-import {TabsComponent} from "./pages/tabs/tabs.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {FunctionIndexGuard} from "./resolvers/function.guard";
 
@@ -27,25 +26,14 @@ const routes: Routes = [
       {
         canActivate: [FunctionIndexGuard],
         path: ":id",
-        component: TabsComponent,
-        children: [
-          {pathMatch: "full", path: "", redirectTo: "code"},
-          {path: "code", component: AddComponent}
-        ]
+        component: AddComponent,
+        data: {action: "update"}
       }
     ]
   }
 ];
 
 const route: Route[] = [
-  {
-    id: "function",
-    category: RouteCategory.Developer,
-    icon: "memory",
-    path: "/function",
-    display: "Function",
-    data: {action: "function:index"}
-  },
   {
     id: "subscription",
     category: RouteCategory.Developer,

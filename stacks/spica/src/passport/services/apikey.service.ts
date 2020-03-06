@@ -1,6 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {IndexResult} from "@spica-server/core";
+import {IndexResult} from "@spica-client/core";
 import {Observable, of} from "rxjs";
 import {ApiKey} from "../interfaces/apikey";
 

@@ -33,11 +33,15 @@ import {FunctionOptions, FUNCTION_OPTIONS} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
-import {TabsComponent} from "./pages/tabs/tabs.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {SubscriptionModule} from "./subscription.module";
+import {FunctionService} from "./function.service";
+import {FunctionInitializer} from "./function.initializer";
+import {RouteService, LAYOUT_INITIALIZER} from "@spica-client/core";
+import {PassportService} from "@spica-client/passport";
+import {MatSaveModule} from "@spica-client/material";
 
 @NgModule({
   declarations: [
@@ -45,7 +49,6 @@ import {SubscriptionModule} from "./subscription.module";
     IndexComponent,
     LogViewComponent,
     WelcomeComponent,
-    TabsComponent,
     EditorComponent,
     LanguageDirective,
     EnqueuerPipe
@@ -81,11 +84,32 @@ import {SubscriptionModule} from "./subscription.module";
     MatTabsModule,
     StoreModule.forFeature("function", fromFunction.reducer),
     PassportModule.forChild(),
-    SubscriptionModule
+    SubscriptionModule,
+    MatSaveModule
   ]
 })
 export class FunctionModule {
   public static forRoot(options: FunctionOptions): ModuleWithProviders {
-    return {ngModule: FunctionModule, providers: [{provide: FUNCTION_OPTIONS, useValue: options}]};
+    return {
+      ngModule: FunctionModule,
+      providers: [
+        {provide: FUNCTION_OPTIONS, useValue: options},
+        {
+          provide: FunctionInitializer,
+          useClass: FunctionInitializer,
+          deps: [FunctionService, RouteService, PassportService]
+        },
+        {
+          provide: LAYOUT_INITIALIZER,
+          useFactory: provideFunctionLoader,
+          multi: true,
+          deps: [FunctionInitializer]
+        }
+      ]
+    };
   }
+}
+
+export function provideFunctionLoader(l: FunctionInitializer) {
+  return l.appInitializer.bind(l);
 }
