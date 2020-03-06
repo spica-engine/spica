@@ -4,30 +4,21 @@ import {
   Controller,
   Delete,
   Get,
-  // Header,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
   Patch,
   Post,
-  Query,
-  // Res,
   UseGuards
 } from "@nestjs/common";
-import {DATE, DEFAULT} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
-// import * as npa from "npm-package-arg";
-// import * as semver from "semver";
-// import * as stream from "stream";
 import {FunctionEngine} from "./engine";
-// import {LoggerHost} from "./engine/logger";
 import {FunctionService} from "./function.service";
 import {Function} from "./interface";
-import {LogService} from "./log.service";
 import {generate} from "./schema/enqueuer.resolver";
 
 @Controller("function")
@@ -35,8 +26,7 @@ export class FunctionController {
   constructor(
     private fs: FunctionService,
     private engine: FunctionEngine,
-    private horizon: Horizon,
-    private logService: LogService
+    private horizon: Horizon
   ) {}
 
   @Get("information")
@@ -129,43 +119,6 @@ export class FunctionController {
   //   logStream.pipe(res);
   //   return this.engine.run(fn, {id: fn._id, handler: target}, logStream);
   // }
-
-  @Get(":id/logs")
-  @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
-  logs(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Query("begin", DEFAULT(new Date().setUTCHours(0, 0, 0, 0)), DATE) begin: Date,
-    @Query("end", DEFAULT(new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date
-  ) {
-    return this.logService
-      .aggregate([
-        {
-          $match: {
-            function: id.toHexString(),
-            _id: {
-              $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-              $lt: ObjectId.createFromTime(end.getTime() / 1000)
-            }
-          }
-        },
-        {
-          $sort: {_id: -1}
-        },
-        {
-          $set: {created_at: {$toDate: "$_id"}}
-        }
-      ])
-      .toArray();
-  }
-
-  @Delete(":id/logs")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  clearLogs(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.logService.deleteMany({
-      function: id.toHexString()
-    });
-  }
 
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))

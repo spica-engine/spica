@@ -16,6 +16,7 @@ export interface Route {
   path: string;
   category: RouteCategory;
   data?: {[key: string]: any};
+  queryParams?: {[key: string]: any};
 }
 
 export interface RouteFilter {

@@ -1,0 +1,32 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_config", "ts_library")
+load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    deps = ["//:tsconfig.json"],
+)
+
+ts_library(
+    name = "database",
+    srcs = glob(["src/*.ts"]) + ["index.ts"],
+    module_name = "@spica-devkit/database",
+    tsconfig = ":tsconfig",
+    deps = [
+        "@npm//@types/mongodb",
+        "@npm//@types/node",
+        "@npm//mongodb",
+    ],
+)
+
+pkg_npm(
+    name = "package",
+    srcs = ["package.json"],
+    tags = ["release-with-spica"],
+    deps = [
+        ":database",
+    ],
+)

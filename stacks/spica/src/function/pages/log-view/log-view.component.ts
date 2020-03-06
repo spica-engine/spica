@@ -1,79 +1,71 @@
 import {animate, state, style, transition, trigger} from "@angular/animations";
-import {Component, OnInit, ViewChild} from "@angular/core";
-import {MatSort} from "@angular/material/sort";
+import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute} from "@angular/router";
-import {merge, Observable, of, Subject} from "rxjs";
-import {map, switchMap, tap} from "rxjs/operators";
+import {BehaviorSubject, combineLatest, forkJoin, Observable} from "rxjs";
+import {switchMap, tap} from "rxjs/operators";
+import {Function, Log, LogFilter} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
-import {Function} from "../../interface";
 
 @Component({
   selector: "log-view",
   templateUrl: "./log-view.component.html",
   styleUrls: ["./log-view.component.scss"],
   animations: [
-    trigger("detailExpand", [
-      state("collapsed", style({height: "0px", minHeight: "0", display: "none"})),
-      state("expanded", style({height: "*"})),
+    trigger("detail", [
+      state("collapsed", style({height: "0px", padding: "0px", minHeight: "0px"})),
+      state("expanded", style({height: "*", paddingTop: "10px", paddingBottom: "10px"})),
       transition("expanded <=> collapsed", animate("225ms cubic-bezier(0.4, 0.0, 0.2, 1)"))
     ])
   ]
 })
 export class LogViewComponent implements OnInit {
-  @ViewChild(MatSort, {static: true}) sort: MatSort;
-  @ViewChild("toolbar", {static: true}) toolbar;
+  displayedColumns: string[] = ["timestamp", "content"];
 
-  public expandedElement: null;
+  expandedLog: Log;
 
-  public dateRange: {begin: string; end: string};
-  public refresh: Subject<void> = new Subject<void>();
+  logs$: Observable<Log[]>;
 
-  public displayedColumns: string[] = ["execution", "timestamp", "message"];
-  public dataSource: Observable<object>;
+  functions$: Observable<Function[]>;
 
-  public maxDate = new Date();
-  public minDate = new Date(
-    this.maxDate.getFullYear(),
-    this.maxDate.getMonth(),
-    this.maxDate.getDate() - 10
-  );
+  maxDate = new Date();
 
-  public function: Observable<Function>;
+  selectedFunctions: string[];
+
+  filter$ = new BehaviorSubject<LogFilter>({
+    functions: []
+  });
 
   constructor(private route: ActivatedRoute, private fs: FunctionService) {}
 
   ngOnInit() {
-    this.dataSource = merge(of(null), this.refresh, this.sort.sortChange).pipe(
-      switchMap(() => this.route.params),
-      tap(params => (this.function = this.fs.getFunction(params.id))),
-      switchMap(params => this.fs.getLogs(params.id, this.dateRange)),
-      map(logs => {
-        return !this.sort.active
-          ? logs
-          : logs.sort((a, b) => {
-              const isAsc = this.sort.direction === "asc";
-              switch (this.sort.active) {
-                case "l-abel":
-                  return isAsc
-                    ? String(a.label).localeCompare(String(b.label))
-                    : String(b.label).localeCompare(String(a.label));
-                case "timestamp":
-                  return isAsc
-                    ? String(a.timestamp).localeCompare(String(b.timestamp))
-                    : String(b.timestamp).localeCompare(String(a.timestamp));
-                default:
-                  return 0;
-              }
-            });
-      })
+    this.functions$ = this.fs.getFunctions();
+    this.logs$ = combineLatest(
+      this.filter$,
+      this.route.queryParamMap.pipe(
+        tap(params => (this.filter$.value.functions = params.getAll("function")))
+      )
+    ).pipe(
+      tap(([filter]) => {
+        if (filter.functions.length > 1 && this.displayedColumns.indexOf("function") == -1) {
+          this.displayedColumns.splice(1, 0, "function");
+        } else {
+          const functionColumnIndex = this.displayedColumns.indexOf("function");
+          if (functionColumnIndex != -1) {
+            this.displayedColumns.splice(functionColumnIndex, 1);
+          }
+        }
+      }),
+      switchMap(([filter]) => this.fs.getLogs(filter))
     );
   }
 
   clearLogs() {
-    this.function
+    const visibleFunctionsIds = this.filter$.value.functions;
+    forkJoin(...visibleFunctionsIds.map(id => this.fs.clearLogs(id)))
       .pipe(
-        switchMap(fn => this.fs.clearLogs(fn._id)),
-        tap(() => this.refresh.next())
+        tap({
+          complete: () => this.filter$.next(this.filter$.value)
+        })
       )
       .toPromise();
   }

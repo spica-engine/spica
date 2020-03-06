@@ -15,10 +15,20 @@ export class FunctionInitializer {
       this.routeService.dispatch(
         new Upsert({
           category: RouteCategory.Function,
-          id: `list_all`,
+          id: `list_all_functions`,
           icon: "format_list_numbered",
           path: `/function`,
-          display: "List All"
+          display: "List all functions"
+        })
+      );
+      this.routeService.dispatch(
+        new Upsert({
+          category: RouteCategory.Function,
+          id: `list_all_logs`,
+          icon: "format_list_numbered",
+          path: "/function/logs",
+          display: "List all logs",
+          queryParams: {function: funcs.map(func => func._id)}
         })
       );
       funcs.forEach(func => {

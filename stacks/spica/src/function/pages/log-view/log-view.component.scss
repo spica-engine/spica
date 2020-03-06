@@ -1,67 +1,70 @@
 :host {
   mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h4 > * {
+      vertical-align: middle;
+    }
     .space-between {
       flex: 1 1 auto;
     }
   }
-  mat-card {
-    overflow: hidden;
-    margin: 5%;
-  }
 
-  table {
-    width: 100%;
-    tr.log-row {
-      th.mat-header-cell {
-        padding: 0 20px;
-        div {
-          justify-content: center;
-        }
-        &:first-of-type {
-          min-width: 130px;
-        }
-        &:nth-of-type(2) {
-          min-width: 60px;
-        }
-        &:nth-of-type(3) {
-          min-width: 185px;
+  mat-card {
+    width: calc(100% - 60px);
+    margin: 30px;
+    margin-top: -160px;
+
+    mat-form-field:not(:first-of-type) {
+      margin-left: 10px;
+      margin-top: 10px;
+    }
+
+    mat-table {
+      max-width: 100%;
+      mat-header-row mat-header-cell {
+        flex: unset;
+        &.mat-column-function {
+          padding-right: 10px;
           text-align: center;
-          justify-content: center;
         }
-        &:last-of-type {
-          width: 100%;
-          div {
-            justify-content: end;
+        &.mat-column-timestamp {
+          min-width: 200px;
+        }
+      }
+      mat-row:nth-child(even) {
+        cursor: pointer;
+        mat-cell {
+          white-space: nowrap;
+          flex: unset;
+          &.mat-column-function {
+            padding-right: 10px;
+            text-align: center;
+          }
+          &.mat-column-timestamp {
+            min-width: 200px;
+          }
+          &.mat-column-content {
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
           }
         }
       }
 
-      td.mat-cell {
-        border-bottom-width: 0;
-        cursor: pointer;
-        &:not(:last-of-type) {
-          text-align: center;
-        }
-        &:first-of-type {
-          text-align: left;
-          font-weight: bold;
-        }
-        &:last-of-type {
-          max-width: 330px;
-          text-overflow: ellipsis;
+      mat-row:nth-child(odd) {
+        min-height: 0;
+        mat-cell {
           overflow: hidden;
-          white-space: nowrap;
-        }
-      }
-    }
-
-    tr.detail-row {
-      height: 0;
-      .element-detail {
-        overflow: hidden;
-        display: flex;
-        span {
-          padding: 24px 0;
+          white-space: pre-wrap;
+          line-height: 20px;
+          opacity: 0.8;
+          div {
+            padding-top: 10px;
+            padding-bottom: 10px;
+          }
         }
       }
     }

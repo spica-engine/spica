@@ -23,14 +23,14 @@ const routes: Routes = [
         data: {action: "index"}
       },
       {path: "add", component: AddComponent, data: {action: "update"}},
+      {canActivate: [FunctionIndexGuard], path: "logs", component: LogViewComponent},
       {
         canActivate: [FunctionIndexGuard],
         path: ":id",
         component: TabsComponent,
         children: [
           {pathMatch: "full", path: "", redirectTo: "code"},
-          {path: "code", component: AddComponent},
-          {path: "logs", component: LogViewComponent}
+          {path: "code", component: AddComponent}
         ]
       }
     ]
