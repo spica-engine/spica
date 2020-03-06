@@ -47,6 +47,16 @@ describe("core pipes", () => {
     expect(DEFAULT(1).transform(null, undefined)).toBe(null);
   });
 
+  it("DEFAULT pipe should take and return default value only value is undefined", () => {
+    let i = 1;
+
+    const def = DEFAULT(() => ++i);
+
+    expect(def.transform(undefined, undefined)).toBe(2);
+    expect(def.transform(10, undefined)).toBe(10);
+    expect(def.transform(undefined, undefined)).toBe(3);
+  });
+
   it("DATE pipe should parse and return date from string", () => {
     const date = new Date();
     expect(DATE.transform(date.toISOString(), undefined).getTime()).toBe(date.getTime());
