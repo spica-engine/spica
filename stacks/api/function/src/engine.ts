@@ -9,6 +9,7 @@ import * as path from "path";
 import {ChangeKind, FunctionService, TargetChange} from "./function.service";
 import {Function, FUNCTION_OPTIONS, Options} from "./interface";
 import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
+import {bufferTime} from "rxjs/operators";
 
 @Injectable()
 export class FunctionEngine {
@@ -31,13 +32,24 @@ export class FunctionEngine {
     if (schema) {
       this.schemas.set(this.schema.name, this.schema.schema);
     }
-    this.fs.targets().subscribe(change => {
+    this.fs
+      .targets()
+      .pipe(bufferTime(50))
+      .subscribe(changes => {
+        this.categorizeChanges(changes);
+      });
+  }
+
+  categorizeChanges(changes: TargetChange[]) {
+    changes.forEach((change, index) => {
       switch (change.kind) {
         case ChangeKind.Added:
           this.subscribe(change);
           break;
         case ChangeKind.Updated:
-          this.unsubscribe(path.join(this.options.root, change.target.id));
+          if (changes.findIndex(c => c.target.id == change.target.id) == index) {
+            this.unsubscribe(path.join(this.options.root, change.target.id));
+          }
           this.subscribe(change);
           break;
         case ChangeKind.Removed:
