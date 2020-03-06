@@ -1,10 +1,10 @@
 import {Component, ViewChild} from "@angular/core";
-import {ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
-
-import {MatSaveDirective, MatSaveModule} from "../";
-import {of} from "rxjs";
-import {SavingState} from "./save.directive";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {By} from "@angular/platform-browser";
+import {of} from "rxjs";
+import {MatSaveDirective} from "./save.directive";
+import {MatSaveModule} from "./save.module";
+import {SavingState} from "./interface";
 
 @Component({
   template: `

@@ -10,7 +10,7 @@ import {
 } from "@angular/material";
 import {FormsModule, NgModel} from "@angular/forms";
 import {PickerDirective} from "src/storage/components/picker/picker.directive";
-import {INPUT_SCHEMA} from "@spica-server/common";
+import {INPUT_SCHEMA} from "@spica-client/common";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 
