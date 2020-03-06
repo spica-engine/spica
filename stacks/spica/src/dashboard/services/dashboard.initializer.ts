@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {RouteCategory, RouteService, Upsert} from "@spica-client/core";
-import {CherryPickAndRemove} from "@spica-server/core/route/route.reducer";
+import {CherryPickAndRemove} from "@spica-client/core/route";
 import {PassportService} from "../../passport";
 import {DashboardService} from "./dashboard.service";
 

@@ -26,12 +26,10 @@
 
   mat-card {
     margin: 5%;
-    &.toolbar-card {
-      margin: 30px;
-      margin-top: -110px;
-      // For proper border radius
-      overflow: hidden;
-    }
+    margin: 30px;
+    margin-top: -110px;
+    // For proper border radius
+    overflow: hidden;
     mat-card-header {
       mat-card-title > * {
         vertical-align: middle;
@@ -120,6 +118,9 @@
                 }
               }
             }
+          }
+          button {
+            margin-left: 30px;
           }
         }
       }

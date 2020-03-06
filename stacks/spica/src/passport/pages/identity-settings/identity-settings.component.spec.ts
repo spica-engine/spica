@@ -15,7 +15,7 @@ import {
 } from "@angular/material";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
 import {FormsModule, NgModel} from "@angular/forms";
-import {InputModule} from "@spica-server/common";
+import {InputModule} from "@spica-client/common";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatSelectModule} from "@angular/material/select";
 import {MatListModule} from "@angular/material/list";

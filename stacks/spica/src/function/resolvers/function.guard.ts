@@ -25,7 +25,7 @@ export class FunctionIndexGuard implements CanActivate {
               .pipe(switchMap(() => this.store.pipe(select(fromFunction.selectEmpty))))
       ),
       take(1),
-      map(empty => (empty ? this.router.createUrlTree([state.url, "welcome"]) : true))
+      map(empty => (empty ? this.router.createUrlTree(["function", "welcome"]) : true))
     );
   }
 }

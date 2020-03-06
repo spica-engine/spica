@@ -1,21 +1,14 @@
-<mat-toolbar *ngIf="!function._id" class="toolbar" color="primary">
+<mat-toolbar class="toolbar" color="primary">
   <h4 class="mat-h4">
     <mat-icon>memory</mat-icon>
-    <span>New Function</span>
+    <span>
+      {{ function._id ? function.name : "New Function" }}
+    </span>
   </h4>
   <span class="space-between"></span>
 </mat-toolbar>
 
-<ng-template #toolbar>
-  <mat-toolbar color="primary">
-    <h4 class="mat-h4">
-      <mat-icon>memory</mat-icon>
-      <span>{{ function.name }}</span>
-    </h4>
-  </mat-toolbar>
-</ng-template>
-
-<mat-card [class.toolbar-card]="!function._id" class="mat-elevation-z25">
+<mat-card class="mat-elevation-z25">
   <mat-card-content>
     <form #form="ngForm">
       <mat-list>
@@ -186,16 +179,16 @@
                 [required]="options.required?.indexOf(propertyKv.key) > -1"
               >
               </span>
-              <mat-slide-toggle name="status" [(ngModel)]="trigger.active">
+              <mat-label>
                 {{ trigger.active ? "Active" : "Deactive" }}
-              </mat-slide-toggle>
+              </mat-label>
+              <mat-slide-toggle name="status" [(ngModel)]="trigger.active"> </mat-slide-toggle>
             </ng-container>
           </ng-container>
           <button
             mat-icon-button
             color="warn"
             [disabled]="function.triggers.length == 1"
-            class="delete"
             (click)="deleteTrigger(i)"
           >
             <mat-icon>delete</mat-icon>
@@ -289,18 +282,22 @@
   <mat-card-actions>
     <button
       mat-button
-      [disabled]="form.invalid || isHandlerDuplicated || $save"
+      *matSave="$save | async; let state"
+      [disabled]="form.invalid || isHandlerDuplicated || !!state"
       canInteract="function:update"
       (click)="save()"
+      [ngSwitch]="state"
     >
-      <mat-icon *ngIf="!$save">sync</mat-icon>
+      <mat-icon *ngSwitchDefault>sync</mat-icon>
       <mat-progress-spinner
-        *ngIf="$save"
+        *ngSwitchCase="'saving'"
         [diameter]="18"
         color="primary"
         mode="indeterminate"
       ></mat-progress-spinner>
-      Save
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
 </mat-card>

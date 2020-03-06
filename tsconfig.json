@@ -16,10 +16,6 @@
       "@spica-server/*": [
         "./packages/*",
         "./stacks/api/*"
-      ],
-      "@spica-client/*": [
-        "./packages/*",
-        "./stacks/spica/src/*"
       ]
     }
   },

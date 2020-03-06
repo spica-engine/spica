@@ -6,7 +6,13 @@
     "target": "es2015",
     "module": "esnext",
     "baseUrl": "./",
-    "lib": ["es2018", "dom"]
+    "lib": ["es2018", "dom"],
+    "paths": {
+      "@spica-client/*": [
+        "./packages/*",
+        "./src/*", 
+      ]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["test.ts", "**/*.spec.ts"]

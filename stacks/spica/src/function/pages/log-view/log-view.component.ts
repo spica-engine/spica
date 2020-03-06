@@ -42,7 +42,7 @@ export class LogViewComponent implements OnInit {
     this.logs$ = combineLatest(
       this.filter$,
       this.route.queryParamMap.pipe(
-        tap(params => (this.filter$.value.functions = [params.get("function")]))
+        tap(params => (this.filter$.value.functions = params.getAll("function")))
       )
     ).pipe(
       tap(([filter]) => {
