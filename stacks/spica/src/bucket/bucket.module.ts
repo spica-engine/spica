@@ -33,7 +33,7 @@ import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {StoreModule} from "@ngrx/store";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
-import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
@@ -118,6 +118,7 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
     StorageModule.forChild(),
     PreferencesModule.forChild(),
     MatClipboardModule,
+    MatSaveModule,
     PassportModule.forChild(),
     SpicaCommon
   ],

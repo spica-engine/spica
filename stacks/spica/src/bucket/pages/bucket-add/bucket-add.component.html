@@ -382,18 +382,27 @@
       mat-button
       canInteract="bucket:update"
       form="describeForm"
+      *matSave="$save | async; let state"
       [disabled]="
         describeForm.invalid ||
         (bucket.properties | keyvalue)?.length < 1 ||
         !isThereVisible ||
-        bucket.primary == undefined
+        bucket.primary == undefined ||
+        !!state
       "
       (click)="saveBucket()"
+      [ngSwitch]="state"
     >
-      <mat-progress-spinner *ngIf="savingBucketState" diameter="20" mode="indeterminate">
-      </mat-progress-spinner>
-      <mat-icon *ngIf="!savingBucketState">add</mat-icon>
-      <span>Save</span>
+      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-progress-spinner
+        *ngSwitchCase="'saving'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
 </mat-card>

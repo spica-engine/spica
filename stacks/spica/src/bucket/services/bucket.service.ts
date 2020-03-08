@@ -46,16 +46,16 @@ export class BucketService {
       .pipe(tap(() => this.store.dispatch(new fromBucket.Remove(id))));
   }
 
-  insertOne(bucket: Bucket): Observable<string> {
+  insertOne(bucket: Bucket): Observable<Bucket> {
     return this.http
-      .post<string>(`api:/bucket`, bucket)
-      .pipe(tap(id => this.store.dispatch(new fromBucket.Upsert({...bucket, _id: id}))));
+      .post<Bucket>(`api:/bucket`, bucket)
+      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Upsert(bucket))));
   }
 
-  updateOne(bucket: Bucket): Observable<string> {
+  replaceOne(bucket: Bucket): Observable<Bucket> {
     return this.http
-      .put<string>(`api:/bucket/${bucket._id}`, bucket)
-      .pipe(tap(() => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
+      .put<Bucket>(`api:/bucket/${bucket._id}`, bucket)
+      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
   }
 
   updateMany(buckets: Bucket[]): Observable<Bucket[]> {

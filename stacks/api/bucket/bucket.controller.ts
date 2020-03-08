@@ -57,7 +57,7 @@ export class BucketController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     if (bucket._id) delete bucket._id;
-    return this.bs.insertOne(bucket).then(result => result.insertedId);
+    return this.bs.insertOne(bucket).then(result => result.ops[0]);
   }
 
   @Put(":id")
@@ -67,7 +67,7 @@ export class BucketController {
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
     if (bucket._id) delete bucket._id;
-    return this.bs.updateOne(id, bucket);
+    return this.bs.replaceOne(id, bucket).then(result => result.value);
   }
 
   @Get(":id")
