@@ -18,7 +18,7 @@ import {Horizon} from "@spica-server/function/horizon";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
-import {Function} from "./interface";
+import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
 
 @Controller("function")
@@ -73,9 +73,42 @@ export class FunctionController {
     }
   }
 
+  private async hasDuplicatedBucketHandlers(fn: Function): Promise<boolean> {
+    const functions = (await this.fs.find({_id: {$ne: fn._id}})).concat(fn);
+    const triggers = functions.reduce((acc, fn) => {
+      for (const handler in fn.triggers) {
+        if (fn.triggers.hasOwnProperty(handler)) {
+          const trigger = fn.triggers[handler];
+          acc.push(trigger);
+        }
+      }
+      return acc;
+    }, new Array<Trigger>());
+
+    return triggers
+      .filter(trigger => trigger.type == "bucket")
+      .some((trigger, index) => {
+        const foundIndex = triggers.findIndex(
+          t =>
+            t.options["bucket"] == trigger.options["bucket"] &&
+            t.options["type"] == trigger.options["type"]
+        );
+        return foundIndex != index;
+      });
+  }
+
   @Patch(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
-  updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body(Schema.validate(generate)) fn: Function) {
+  async updateOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate(generate)) fn: Function
+  ) {
+    const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
+    if (hasDuplicatedHandlers) {
+      throw new BadRequestException(
+        "Multiple handlers on same bucket and event type are not supported."
+      );
+    }
     delete fn._id;
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
@@ -83,6 +116,12 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
+    const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
+    if (hasDuplicatedHandlers) {
+      throw new BadRequestException(
+        "Multiple handlers on same bucket and event type are not supported."
+      );
+    }
     fn._id = new ObjectId();
     await this.fs.insertOne(fn);
     return fn;
