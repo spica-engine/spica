@@ -1,4 +1,4 @@
-import {raw} from "body-parser";
+import {raw, json} from "body-parser";
 import * as BSON from "bson";
 
 export namespace Middlewares {
@@ -12,6 +12,11 @@ export namespace Middlewares {
       }
       next(error);
     });
+  }
+
+  export function MergePatchJsonParser(req, res, next) {
+    const parser = json({type: "application/merge-patch+json"});
+    return parser(req, res, next);
   }
 
   export function Preflight(req, res, next) {

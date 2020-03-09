@@ -3,8 +3,8 @@ import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {fileToBuffer, PreferencesService} from "@spica-client/core";
 import * as BSON from "bson";
-import {from, Observable} from "rxjs";
-import {filter, flatMap, map, tap} from "rxjs/operators";
+import {from, Observable, pipe} from "rxjs";
+import {filter, flatMap, map, tap, debounceTime} from "rxjs/operators";
 import {Storage} from "../../storage/interfaces/storage";
 import {Bucket, BucketTemplate} from "../interfaces/bucket";
 import {BucketSettings} from "../interfaces/bucket-settings";
@@ -13,11 +13,16 @@ import * as fromBucket from "../state/bucket.reducer";
 
 @Injectable()
 export class BucketService {
+  patchHttpOptions: object;
   constructor(
     private http: HttpClient,
     private store: Store<fromBucket.State>,
     private preference: PreferencesService
-  ) {}
+  ) {
+    this.patchHttpOptions = {
+      headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
+    };
+  }
 
   getPreferences() {
     return this.preference.get<BucketSettings>("bucket");
@@ -58,8 +63,20 @@ export class BucketService {
       .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
   }
 
-  updateMany(buckets: Bucket[]): Observable<Bucket[]> {
-    return this.http.put<Bucket[]>(`api:/bucket`, buckets);
+  patchBucket(id: string, changes: object): Observable<Bucket> {
+    return this.http
+      .patch<Bucket>(`api:/bucket/${id}`, changes, this.patchHttpOptions)
+      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
+  }
+
+  patchIndexes(buckets: Bucket[]): Promise<void> {
+    return Promise.all(
+      buckets.map((bucket, index) =>
+        this.http
+          .patch<Bucket>(`api:/bucket/${bucket._id}`, {order: index}, this.patchHttpOptions)
+          .toPromise()
+      )
+    ).then(buckets => this.store.dispatch(new fromBucket.Retrieve(buckets)));
   }
 
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {

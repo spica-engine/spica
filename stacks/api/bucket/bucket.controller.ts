@@ -1,17 +1,21 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Post,
-  Res,
   Put,
+  Res,
   UseGuards
 } from "@nestjs/common";
+import {Bucket, BucketDocument, BucketService, ImportFile} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
@@ -19,9 +23,7 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {Bucket, BucketDocument, ImportFile} from "@spica-server/bucket/services";
 import {BucketDataService} from "./bucket-data.service";
-import {BucketService} from "@spica-server/bucket/services";
 
 @Controller("bucket")
 export class BucketController {
@@ -68,6 +70,20 @@ export class BucketController {
   ) {
     if (bucket._id) delete bucket._id;
     return this.bs.replaceOne(id, bucket).then(result => result.value);
+  }
+
+  @Patch(":id")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  updateOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Headers("content-type") contentType: string,
+    @Body() changes: object
+  ) {
+    if (contentType != "application/merge-patch+json") {
+      throw new BadRequestException(`Content type '${contentType}' is not supported.`);
+    }
+    console.log(changes , contentType)
+    return this.bs.updateOne(id, changes).then(result => result.value);
   }
 
   @Get(":id")

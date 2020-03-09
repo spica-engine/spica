@@ -7,8 +7,6 @@ import {
   FilterQuery,
   InsertOneWriteOpResult,
   InsertWriteOpResult,
-  ReplaceWriteOpResult,
-  UpdateWriteOpResult,
   ObjectId,
   FindAndModifyWriteOpResultObject
 } from "@spica-server/database";
@@ -53,6 +51,10 @@ export class BucketService {
 
   replaceOne(id: ObjectId, bucket: Bucket): Promise<FindAndModifyWriteOpResultObject> {
     return this.buckets.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+  }
+
+  updateOne(id: ObjectId, changes: object): Promise<FindAndModifyWriteOpResultObject> {
+    return this.buckets.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
   }
 
   deleteOne(filter: FilterQuery<Bucket>): Promise<DeleteWriteOpResultObject> {

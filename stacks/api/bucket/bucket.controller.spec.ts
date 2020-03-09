@@ -258,18 +258,34 @@ describe("Bucket acceptance", () => {
       expect(buckets[0]).toEqual(updatedBucket);
     });
 
-    xit("should update bucket indexes", async () => {
+    fit("should update bucket indexes", async () => {
       //add buckets
-      let firstBucket = await req.post("/bucket", {...bucket, title: "First Bucket"});
-      let secondBucket = await req.post("/bucket", {...bucket, title: "Second Bucket"});
-      let thirdBucket = await req.post("/bucket", {...bucket, title: "Third Bucket"});
+      const firstBucket = (await req.post("/bucket", {...bucket, title: "First Bucket"})).body;
+      const secondBucket = (await req.post("/bucket", {...bucket, title: "Second Bucket"})).body;
+      const thirdBucket = (await req.post("/bucket", {...bucket, title: "Third Bucket"})).body;
 
       //update their indexes
-      await req.put("/bucket", [
-        {...firstBucket, order: 3},
-        {...secondBucket, order: 1},
-        {...thirdBucket, order: 2}
-      ]);
+      await req.patch(
+        `/bucket/${firstBucket._id}`,
+        {order: 3},
+        {
+          "content-type": "application/merge-patch+json"
+        }
+      );
+      await req.patch(
+        `/bucket/${secondBucket._id}`,
+        {order: 1},
+        {
+          "content-type": "application/merge-patch+json"
+        }
+      );
+      await req.patch(
+        `/bucket/${thirdBucket._id}`,
+        {order: 2},
+        {
+          "content-type": "application/merge-patch+json"
+        }
+      );
 
       const buckets = (await req.get("/bucket", {})).body;
 
