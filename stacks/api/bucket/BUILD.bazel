@@ -125,6 +125,7 @@ ts_library(
         "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
+        "@npm//@nestjs/platform-socket.io"
     ],
 )
 

@@ -62,7 +62,7 @@ export class BucketController {
 
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
-  update(
+  replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
