@@ -51,7 +51,7 @@
   .mat-card-header {
     width: 100%;
   }
-  /deep/.mat-card-header-text {
+  ::ng-deep .mat-card-header-text {
     width: 100%;
   }
   .mat-header-cell {
@@ -63,11 +63,11 @@
   button[mat-button] {
     float: right;
   }
-  /deep/[centerHeader] {
+  ::ng-deep[centerHeader] {
     display: grid;
     text-align: center;
   }
-  /deep/[item] {
+  ::ng-deep[item] {
     display: block;
     text-align: center;
   }

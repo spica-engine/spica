@@ -5,7 +5,7 @@
     margin-top: 20px;
     flex-wrap: wrap;
     .field-container {
-      /deep/.input-placer-input {
+      ::ng-deep .input-placer-input {
         .mat-form-field {
           .mat-form-field-wrapper {
             .mat-form-field-subscript-wrapper {

@@ -20,8 +20,8 @@ export class LogController {
   @Get("logs")
   @UseGuards(AuthGuard())
   logs(
-    @Query("begin", DEFAULT(new Date().setUTCHours(0, 0, 0, 0)), DATE) begin: Date,
-    @Query("end", DEFAULT(new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
+    @Query("begin", DEFAULT(() => new Date().setUTCHours(0, 0, 0, 0)), DATE) begin: Date,
+    @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
     @Query("functions", ARRAY(String)) functions: string[]
   ) {
     return this.logService
