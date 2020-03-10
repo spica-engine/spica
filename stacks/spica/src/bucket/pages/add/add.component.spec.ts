@@ -19,6 +19,8 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {InputModule} from "@spica-client/common";
+import {MatSaveModule} from "@spica-client/material/";
+
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {of, Subject} from "rxjs";
 import {PropertyLanguageComponent} from "../../components/language/language.component";
@@ -30,7 +32,6 @@ import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
 import {RequiredTranslate} from "../../validators";
 import {AddComponent} from "./add.component";
-import {delay} from "rxjs/operators";
 
 describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;
@@ -82,7 +83,8 @@ describe("AddComponent", () => {
         InputModule.withPlacers([]),
         FormsModule,
         RouterTestingModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        MatSaveModule
       ],
       providers: [
         {
@@ -187,38 +189,21 @@ describe("AddComponent", () => {
       ).toBe(true);
     }));
 
-    it("should show add button", fakeAsync(() => {
+    it("should show save button", fakeAsync(() => {
       tick(1);
       fixture.detectChanges();
       expect(
         fixture.debugElement.query(
           By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
         ).nativeElement.textContent
-      ).toBe("Add");
+      ).toBe("Save");
 
       expect(
         fixture.debugElement.query(
           By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
         ).nativeElement.textContent
-      ).toBe("add");
+      ).toBe("sync");
     }));
-
-    it("should show update button", () => {
-      fixture.componentInstance.data._id = "1";
-      fixture.detectChanges();
-
-      expect(
-        fixture.debugElement.query(
-          By.css("mat-card > mat-card-actions > button:last-of-type > span > span")
-        ).nativeElement.textContent
-      ).toBe("Update");
-
-      expect(
-        fixture.debugElement.query(
-          By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
-        ).nativeElement.textContent
-      ).toBe("double_arrow");
-    });
   });
 
   describe("history", () => {
