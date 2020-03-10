@@ -82,7 +82,6 @@ export class BucketController {
     if (contentType != "application/merge-patch+json") {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
-    console.log(changes , contentType)
     return this.bs.updateOne(id, changes).then(result => result.value);
   }
 

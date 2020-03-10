@@ -6,6 +6,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {BucketModule} from ".";
+import {Middlewares} from "@spica-server/core";
 
 export const CREATED_AT: Default = {
   keyword: ":created_at",
@@ -81,6 +82,7 @@ describe("Bucket acceptance", () => {
     }).compile();
     app = module.createNestApplication();
     req = module.get(Request);
+    app.use(Middlewares.MergePatchJsonParser);
     await app.listen(req.socket);
   }, 120000);
 
@@ -258,7 +260,7 @@ describe("Bucket acceptance", () => {
       expect(buckets[0]).toEqual(updatedBucket);
     });
 
-    fit("should update bucket indexes", async () => {
+    it("should update bucket indexes", async () => {
       //add buckets
       const firstBucket = (await req.post("/bucket", {...bucket, title: "First Bucket"})).body;
       const secondBucket = (await req.post("/bucket", {...bucket, title: "Second Bucket"})).body;
