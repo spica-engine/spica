@@ -67,11 +67,10 @@ describe("Bucket-Data acceptance", () => {
 
   describe("get requests", () => {
     describe("skip and limit", () => {
-      let myBucketId = new ObjectId();
+      let myBucketId: ObjectId;
       beforeAll(async () => {
         //create bucket
         const myBucket = {
-          _id: myBucketId,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -92,7 +91,7 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
-        await req.post("/bucket", myBucket);
+        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
 
         //insert some data
         const bucketdata = [
@@ -191,11 +190,10 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("sorts", () => {
-      let myBucketId = new ObjectId();
+      let myBucketId: ObjectId;
       beforeAll(async () => {
         //create bucket
         const myBucket = {
-          _id: myBucketId,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -216,7 +214,7 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
-        await req.post("/bucket", myBucket);
+        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
 
         //insert some data
         const bucketdata = [
@@ -296,11 +294,10 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("pagination", () => {
-      let myBucketId = new ObjectId();
+      let myBucketId: ObjectId;
       beforeAll(async () => {
         //create bucket
         const myBucket = {
-          _id: myBucketId,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -321,7 +318,7 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
-        await req.post("/bucket", myBucket);
+        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
 
         //insert some data
         const bucketdata = [
@@ -432,11 +429,10 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("filter", () => {
-      const myBucketId = new ObjectId();
+      let myBucketId: ObjectId;
       beforeAll(async () => {
         //create bucket
         const myBucket = {
-          _id: myBucketId,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -457,7 +453,7 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
-        await req.post("/bucket", myBucket);
+        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
 
         //insert some data
         const bucketdata = [
@@ -530,11 +526,10 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("localize", () => {
-      let myBucketId = new ObjectId();
+      let myBucketId: ObjectId;
 
       beforeAll(async () => {
         const myBucket = {
-          _id: myBucketId,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -555,7 +550,7 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
-        await req.post("/bucket", myBucket);
+        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
 
         //insert some data
         const myTranslatableData = [
@@ -721,17 +716,53 @@ describe("Bucket-Data acceptance", () => {
     });
 
     describe("relation", () => {
-      const staticsBucketId = new ObjectId();
-      const usersBucketId = new ObjectId();
-      const achievementsBucketId = new ObjectId();
+      let staticsBucketId: ObjectId;
+      let usersBucketId: ObjectId;
+      let achievementsBucketId: ObjectId;
 
-      const userId = new ObjectId();
-      const achievementId = new ObjectId();
+      let userId: ObjectId;
+      let achievementId: ObjectId;
 
       beforeAll(async () => {
         //create buckets
+
+        const achievementsBucket = {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            achievement_name: {
+              type: "string",
+              title: "achievement",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            }
+          }
+        };
+        achievementsBucketId = new ObjectId(
+          (await req.post("/bucket", achievementsBucket)).body._id
+        );
+
+        const usersBucket = {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            username: {
+              type: "string",
+              title: "username",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            }
+          }
+        };
+        usersBucketId = new ObjectId((await req.post("/bucket", usersBucket)).body._id);
+
         const staticsBucket = {
-          _id: staticsBucketId,
           title: "New Bucket",
           description: "Describe your new bucket",
           icon: "view_stream",
@@ -754,63 +785,22 @@ describe("Bucket-Data acceptance", () => {
             }
           }
         };
+        staticsBucketId = new ObjectId((await req.post("/bucket", staticsBucket)).body._id);
 
-        const achievementsBucket = {
-          _id: achievementsBucketId,
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            achievement_name: {
-              type: "string",
-              title: "achievement",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            }
-          }
-        };
-
-        const usersBucket = {
-          _id: usersBucketId,
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            username: {
-              type: "string",
-              title: "username",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            }
-          }
-        };
-
-        await req.post("/bucket", staticsBucket);
-        await req.post("/bucket", achievementsBucket);
-        await req.post("/bucket", usersBucket);
-
-        const userData = {
-          _id: userId,
-          username: "user66"
-        };
-
-        const achievementData = {
-          _id: achievementId,
-          achievement_name: "do something until something happens"
-        };
-
-        const staticsData = {
+        userId = new ObjectId(
+          (await req.post(`/bucket/${usersBucketId}/data`, {
+            username: "user66"
+          })).body._id
+        );
+        achievementId = new ObjectId(
+          (await req.post(`/bucket/${achievementsBucketId}/data`, {
+            achievement_name: "do something until something happens"
+          })).body._id
+        );
+        await req.post(`/bucket/${staticsBucketId}/data`, {
           user: userId,
           achievement: achievementId
-        };
-
-        await req.post(`/bucket/${usersBucketId}/data`, userData);
-        await req.post(`/bucket/${achievementsBucketId}/data`, achievementData);
-        await req.post(`/bucket/${staticsBucketId}/data`, staticsData);
+        });
       });
 
       afterAll(async () => {
@@ -838,7 +828,6 @@ describe("Bucket-Data acceptance", () => {
 
       it("should get statics with username and achievement name", async () => {
         const response = await req.get(`/bucket/${staticsBucketId}/data`, {relation: true});
-
         expect(response.body[0].user.username).toBe("user66");
         expect(response.body[0].achievement.achievement_name).toBe(
           "do something until something happens"
@@ -855,10 +844,9 @@ describe("Bucket-Data acceptance", () => {
   });
 
   describe("post requests", () => {
-    const myBucketId = new ObjectId();
+    let myBucketId: ObjectId;
     beforeAll(async () => {
       const myBucket = {
-        _id: myBucketId,
         title: "New Bucket",
         description: "Describe your new bucket",
         icon: "view_stream",
@@ -879,7 +867,7 @@ describe("Bucket-Data acceptance", () => {
           }
         }
       };
-      await req.post("/bucket", myBucket);
+      myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
     });
 
     afterEach(async () => {
@@ -898,55 +886,50 @@ describe("Bucket-Data acceptance", () => {
         .catch();
     });
 
-    it("should add data to bucket and return added bucket-data id", async () => {
-      const myBucketData = {
-        _id: new ObjectId(),
+    it("should add document to bucket and return inserted document", async () => {
+      const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
         title: "first title",
         description: "first description"
-      };
+      })).body;
 
-      expect((await req.post(`/bucket/${myBucketId}/data`, myBucketData)).body).toBe(
-        myBucketData._id.toHexString()
-      );
+      const bucketDocument = (await req.get(
+        `/bucket/${myBucketId}/data/${insertedDocument._id}`,
+        {}
+      )).body;
 
-      const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
+      expect(bucketDocument).toEqual(insertedDocument);
 
-      expect(bucketData.length).toBe(1);
-      expect(bucketData[0].title).toBe("first title");
-      expect(bucketData[0].description).toBe("first description");
+      delete insertedDocument._id;
+      expect(insertedDocument).toEqual({title: "first title", description: "first description"});
     });
 
-    it("should update data if it exists", async () => {
-      const myBucketData = {
-        _id: new ObjectId(),
+    it("should update document", async () => {
+      const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
         title: "first title",
         description: "first description"
-      };
-      await req.post(`/bucket/${myBucketId}/data`, myBucketData);
+      })).body;
 
-      const updatedData = {
-        _id: myBucketData._id,
-        title: "updated title",
-        description: "updated description"
-      };
-      expect((await req.post(`/bucket/${myBucketId}/data`, updatedData)).body).toBe(
-        myBucketData._id.toHexString()
-      );
+      const updatedDocument = (await req.put(`/bucket/${myBucketId}/data/${insertedDocument._id}`, {
+        ...insertedDocument,
+        title: "updated title"
+      })).body;
 
-      const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
+      const bucketDocument = (await req.get(
+        `/bucket/${myBucketId}/data/${updatedDocument._id}`,
+        {}
+      )).body;
 
-      expect(bucketData.length).toBe(1);
-      expect(bucketData[0].title).toBe("updated title");
-      expect(bucketData[0].description).toBe("updated description");
+      expect(bucketDocument).toEqual(updatedDocument);
+
+      delete updatedDocument._id;
+      expect(updatedDocument).toEqual({title: "updated title", description: "first description"});
     });
 
     it("should return error if title isnt valid for bucket", async () => {
-      const invalidData = {
-        _id: new ObjectId(),
+      const response = await req.post(`/bucket/${myBucketId}/data`, {
         title: true,
-        description: "valid description"
-      };
-      const response = await req.post(`/bucket/${myBucketId}/data`, invalidData);
+        description: "description"
+      });
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.error, response.body.message]).toEqual([
         ".title should be string",
@@ -955,12 +938,10 @@ describe("Bucket-Data acceptance", () => {
     });
 
     it("should return error if description isnt valid for bucket", async () => {
-      const invalidData = {
-        _id: new ObjectId(),
+      const response = await req.post(`/bucket/${myBucketId}/data`, {
         title: "title",
         description: [1, 2, 3]
-      };
-      const response = await req.post(`/bucket/${myBucketId}/data`, invalidData);
+      });
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.error, response.body.message]).toEqual([
         ".description should be string",
@@ -970,12 +951,11 @@ describe("Bucket-Data acceptance", () => {
   });
 
   describe("delete requests", () => {
-    const myBucketId = new ObjectId();
+    let myBucketId: ObjectId;
     let myBucketData;
 
     beforeAll(async () => {
       const myBucket = {
-        _id: myBucketId,
         title: "New Bucket",
         description: "Describe your new bucket",
         icon: "view_stream",
@@ -996,13 +976,13 @@ describe("Bucket-Data acceptance", () => {
           }
         }
       };
-      await req.post("/bucket", myBucket);
+      myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
     });
 
     beforeEach(async () => {
       myBucketData = [
-        {_id: new ObjectId(), title: "first title", description: "first description"},
-        {_id: new ObjectId(), title: "last title", description: "last description"}
+        {title: "first title", description: "first description"},
+        {title: "last title", description: "last description"}
       ];
       //clear bucket-data
       await app
@@ -1012,8 +992,12 @@ describe("Bucket-Data acceptance", () => {
         .catch();
 
       //add data
-      await req.post(`/bucket/${myBucketId}/data`, myBucketData[0]);
-      await req.post(`/bucket/${myBucketId}/data`, myBucketData[1]);
+      myBucketData[0]._id = new ObjectId(
+        (await req.post(`/bucket/${myBucketId}/data`, myBucketData[0])).body._id
+      );
+      myBucketData[1]._id = new ObjectId(
+        (await req.post(`/bucket/${myBucketId}/data`, myBucketData[1])).body._id
+      );
     });
 
     afterAll(async () => {

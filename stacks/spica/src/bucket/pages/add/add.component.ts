@@ -2,14 +2,15 @@ import {animate, style, transition, trigger} from "@angular/animations";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable} from "rxjs";
-import {delay, flatMap, map, share, tap} from "rxjs/operators";
+import {Observable, of, merge} from "rxjs";
+import {delay, flatMap, map, share, tap, ignoreElements, endWith, catchError} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketHistory} from "../../interfaces/bucket-history";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
+import {SavingState} from "@spica-client/material";
 
 @Component({
   selector: "bucket-add",
@@ -29,6 +30,8 @@ export class AddComponent implements OnInit {
   minScheduleDate: Date = new Date();
   bucket$: Observable<Bucket>;
   histories$: Observable<Array<BucketHistory>>;
+
+  $save: Observable<SavingState>;
 
   savingBucketState: Boolean = false;
 
@@ -52,6 +55,7 @@ export class AddComponent implements OnInit {
   ngOnInit(): void {
     this.bucket$ = this.route.params.pipe(
       tap(params => {
+        this.$save = of(SavingState.Pristine);
         this.bucketId = params.id;
         if (params.rid) {
           this.histories$ = this.bhs.historyList(params.id, params.rid);
@@ -110,23 +114,52 @@ export class AddComponent implements OnInit {
   }
 
   saveBucketRow() {
-    this.savingBucketState = true;
     if (!(this.data._schedule instanceof Date)) {
       delete this.data._schedule;
     }
 
-    this.bds
-      .replaceOne(this.bucketId, this.data)
-      .toPromise()
-      .then(data => {
-        this.savingBucketState = false;
-        if (!this.data._id) {
-          this.router.navigate(["bucket", this.bucketId]);
-        }
-        this.histories$ = this.bhs.historyList(this.bucketId, data);
-      })
-      .catch(() => {
-        this.savingBucketState = false;
-      });
+    const isInsert = !this.data._id;
+
+    const save = isInsert
+      ? this.bds.insertOne(this.bucketId, this.data)
+      : this.bds.replaceOne(this.bucketId, this.data);
+
+    this.$save = merge(
+      of(SavingState.Saving),
+      save.pipe(
+        tap(bucketDocument => {
+          this.histories$ = this.bhs.historyList(this.bucketId, bucketDocument._id);
+          if (isInsert) return this.router.navigate([`bucket/${this.bucketId}`]);
+        }),
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
+    // (
+    //   isInsert
+    //     ? this.bds.insertOne(this.bucketId, this.data)
+    //     : this.bds.replaceOne(this.bucketId, this.data)
+    // )
+    //   .toPromise()
+    //   .then(bucketDocument => {
+    //     this.histories$ = this.bhs.historyList(this.bucketId, bucketDocument._id);
+    //     if (isInsert) this.router.navigate(["bucket", this.bucketId]);
+    //     this.savingBucketState = false;
+    //   });
+
+    // this.bds
+    //   .replaceOne(this.bucketId, this.data)
+    //   .toPromise()
+    //   .then(data => {
+    //     this.savingBucketState = false;
+    //     if (!this.data._id) {
+    //       this.router.navigate(["bucket", this.bucketId]);
+    //     }
+    //     this.histories$ = this.bhs.historyList(this.bucketId, data);
+    //   })
+    //   .catch(() => {
+    //     this.savingBucketState = false;
+    //   });
   }
 }

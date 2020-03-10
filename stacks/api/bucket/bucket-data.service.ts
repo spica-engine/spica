@@ -2,11 +2,11 @@ import {Injectable} from "@nestjs/common";
 import {
   DatabaseService,
   InsertOneWriteOpResult,
-  ReplaceWriteOpResult,
   InsertWriteOpResult,
   DeleteWriteOpResultObject,
   FilterQuery,
-  ObjectId
+  ObjectId,
+  FindAndModifyWriteOpResultObject
 } from "@spica-server/database";
 import {BucketDocument} from "@spica-server/bucket/services";
 
@@ -42,29 +42,13 @@ export class BucketDataService {
     return collection.insertOne(data);
   }
 
-  replaceOne<D extends BucketDocument>(
-    bucketId: string | ObjectId,
-    data: D
-  ): Promise<ReplaceWriteOpResult>;
-  replaceOne<D extends BucketDocument>(
-    bucketId: string | ObjectId,
-    data: D,
-    filter: FilterQuery<D>
-  ): Promise<ReplaceWriteOpResult>;
   replaceOne(
-    bucketId: string,
-    data: BucketDocument,
-    filter?: FilterQuery<BucketDocument>
-  ): Promise<ReplaceWriteOpResult> {
+    bucketId: ObjectId,
+    documentId: ObjectId,
+    document: BucketDocument
+  ): Promise<FindAndModifyWriteOpResultObject> {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
-    if (!filter && data._id) {
-      filter = {_id: data._id};
-    } else if (!filter && !data._id) {
-      filter = {_id: new ObjectId()};
-    }
-    return collection.replaceOne(filter, data, {
-      upsert: true
-    });
+    return collection.findOneAndReplace({_id: documentId}, document, {returnOriginal: false});
   }
 
   deleteOne(

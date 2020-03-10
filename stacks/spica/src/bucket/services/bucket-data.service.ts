@@ -77,7 +77,11 @@ export class BucketDataService {
     return this.http.request("delete", `api:/bucket/${bucketId}/data`, {body: idArray});
   }
 
-  replaceOne(bucketId: string, data: any): Observable<any> {
+  insertOne(bucketId: string, data: any): Observable<any> {
     return this.http.post(`api:/bucket/${bucketId}/data`, data);
+  }
+
+  replaceOne(bucketId: string, data: any): Observable<any> {
+    return this.http.put(`api:/bucket/${bucketId}/data/${data._id}`, data);
   }
 }

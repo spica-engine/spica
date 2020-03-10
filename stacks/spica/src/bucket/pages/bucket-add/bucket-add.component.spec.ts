@@ -475,7 +475,6 @@ describe("Bucket Add Component", () => {
     });
 
     it("should save bucket", async () => {
-      expect(fixture.componentInstance.savingBucketState).toBe(false);
       await fixture.whenStable();
       const form = fixture.debugElement.query(By.css("form")).injector.get(NgForm);
       form.setValue({
@@ -492,7 +491,6 @@ describe("Bucket Add Component", () => {
         description: "new description",
         readOnly: false
       } as Bucket);
-      expect(fixture.componentInstance.savingBucketState).toBe(false);
       expect(fixture.componentInstance["router"].navigate).toHaveBeenCalledTimes(1);
       expect(fixture.componentInstance["router"].navigate).toHaveBeenCalledWith(["buckets/123"]);
     });

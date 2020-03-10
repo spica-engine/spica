@@ -37,12 +37,12 @@ describe("bucket service", () => {
   });
 
   it("should update an entry", async () => {
-    const insertOp = await bs.insertOne({primary: "title"});
+    const insertedDocument = (await bs.insertOne({primary: "title"})).ops[0];
     await expectAsync(
-      bs.replaceOne({_id: insertOp.insertedId, primary: "description"})
+      bs.replaceOne(insertedDocument._id, {...insertedDocument, primary: "description"})
     ).toBeResolved();
     return expectAsync(
-      bs.findOne({_id: insertOp.insertedId}).then(r => {
+      bs.findOne({_id: insertedDocument._id}).then(r => {
         expect(r).not.toBe(undefined);
         expect(r.primary).toBe("description");
         return r;

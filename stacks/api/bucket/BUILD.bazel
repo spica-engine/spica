@@ -94,6 +94,7 @@ ts_library(
         "@npm//@types/jasmine",
         "@npm//@types/node",
         "@npm//bson",
+        "@npm//@nestjs/platform-socket.io"
     ],
 )
 
@@ -176,6 +177,7 @@ ts_library(
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",
+        "//stacks/api/bucket/services"
     ],
 )
 

@@ -319,7 +319,7 @@ export class BucketDataController {
     }
 
     if (body._id) delete body._id;
-    return this.bds.insertOne(bucketId, body).then(data => data.insertedId);
+    return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
   @Put(":documentId")
@@ -343,7 +343,7 @@ export class BucketDataController {
     }
 
     if (body._id) delete body._id;
-    return this.bds.updateOne(bucketId, documentId, body);
+    return this.bds.replaceOne(bucketId, documentId, body).then(result => result.value);
   }
 
   @Delete(":documentId")
