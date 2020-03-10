@@ -136,30 +136,5 @@ export class AddComponent implements OnInit {
         catchError(() => of(SavingState.Failed))
       )
     );
-    // (
-    //   isInsert
-    //     ? this.bds.insertOne(this.bucketId, this.data)
-    //     : this.bds.replaceOne(this.bucketId, this.data)
-    // )
-    //   .toPromise()
-    //   .then(bucketDocument => {
-    //     this.histories$ = this.bhs.historyList(this.bucketId, bucketDocument._id);
-    //     if (isInsert) this.router.navigate(["bucket", this.bucketId]);
-    //     this.savingBucketState = false;
-    //   });
-
-    // this.bds
-    //   .replaceOne(this.bucketId, this.data)
-    //   .toPromise()
-    //   .then(data => {
-    //     this.savingBucketState = false;
-    //     if (!this.data._id) {
-    //       this.router.navigate(["bucket", this.bucketId]);
-    //     }
-    //     this.histories$ = this.bhs.historyList(this.bucketId, data);
-    //   })
-    //   .catch(() => {
-    //     this.savingBucketState = false;
-    //   });
   }
 }
