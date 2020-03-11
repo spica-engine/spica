@@ -103,6 +103,7 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate(generate)) fn: Function
   ) {
+    fn._id = id;
     const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
     if (hasDuplicatedHandlers) {
       throw new BadRequestException(
