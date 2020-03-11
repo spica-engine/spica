@@ -39,7 +39,7 @@ describe("bucket service", () => {
   it("should update an entry", async () => {
     const insertedDocument = (await bs.insertOne({primary: "title"})).ops[0];
     await expectAsync(
-      bs.replaceOne(insertedDocument._id, {...insertedDocument, primary: "description"})
+      bs.replaceOne({_id: insertedDocument._id}, {...insertedDocument, primary: "description"})
     ).toBeResolved();
     return expectAsync(
       bs.findOne({_id: insertedDocument._id}).then(r => {

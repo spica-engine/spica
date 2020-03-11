@@ -6,7 +6,8 @@ import {
   DeleteWriteOpResultObject,
   FilterQuery,
   ObjectId,
-  FindAndModifyWriteOpResultObject
+  FindAndModifyWriteOpResultObject,
+  FindOneAndReplaceOption
 } from "@spica-server/database";
 import {BucketDocument} from "@spica-server/bucket/services";
 
@@ -44,11 +45,12 @@ export class BucketDataService {
 
   replaceOne(
     bucketId: ObjectId,
-    documentId: ObjectId,
-    document: BucketDocument
+    filter: FilterQuery<BucketDocument>,
+    document: BucketDocument,
+    options: FindOneAndReplaceOption = {returnOriginal: false}
   ): Promise<FindAndModifyWriteOpResultObject> {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
-    return collection.findOneAndReplace({_id: documentId}, document, {returnOriginal: false});
+    return collection.findOneAndReplace(filter, document, options);
   }
 
   deleteOne(

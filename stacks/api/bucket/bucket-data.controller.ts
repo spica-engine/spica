@@ -343,7 +343,7 @@ export class BucketDataController {
     }
 
     if (body._id) delete body._id;
-    return this.bds.replaceOne(bucketId, documentId, body).then(result => result.value);
+    return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
   @Delete(":documentId")

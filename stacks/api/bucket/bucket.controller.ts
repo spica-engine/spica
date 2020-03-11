@@ -69,7 +69,7 @@ export class BucketController {
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
     if (bucket._id) delete bucket._id;
-    return this.bs.replaceOne(id, bucket).then(result => result.value);
+    return this.bs.replaceOne({_id: id}, bucket).then(result => result.value);
   }
 
   @Patch(":id")
@@ -82,7 +82,7 @@ export class BucketController {
     if (contentType != "application/merge-patch+json") {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
-    return this.bs.updateOne(id, changes).then(result => result.value);
+    return this.bs.updateOne({_id: id}, changes).then(result => result.value);
   }
 
   @Get(":id")
