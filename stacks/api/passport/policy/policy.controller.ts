@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Post, UseGuards, Query} from "@nestjs/common";
+import {Body, Controller, Delete, Get, Param, Post, UseGuards, Query, Put} from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {AuthGuard} from "../auth.guard";
@@ -30,19 +30,19 @@ export class PolicyController {
     return this.policy.findOne(id);
   }
 
-  @Post("create")
+  @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
   insertOne(@Body() body: Policy) {
     return this.policy.insertOne(body);
   }
 
-  @Post(":id")
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
-  updateOne(
+  replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
-    return this.policy.updateOne(id, body);
+    return this.policy.replaceOne({_id: id}, body);
   }
 
   @Delete(":id")

@@ -43,7 +43,7 @@ describe("ApiKeyIndexComponent", () => {
 
     fixture = TestBed.createComponent(ApiKeyIndexComponent);
     component = fixture.componentInstance;
-    await component["apiKeyService"].insert({
+    await component["apiKeyService"].insertOne({
       key: "testkey",
       name: "testname",
       active: true,

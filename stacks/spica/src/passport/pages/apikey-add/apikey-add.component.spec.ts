@@ -95,7 +95,7 @@ describe("ApiKeyAddComponent", () => {
 
   it("should set apiKey which return from service when this page navigated from edit button", async () => {
     const _id = await component["apiKeyService"]
-      .insert({
+      .insertOne({
         name: "test name",
         active: true,
         key: "test key",
@@ -121,7 +121,7 @@ describe("ApiKeyAddComponent", () => {
 
   it("should update apikey and navite to index page", async () => {
     const insertedId = await component["apiKeyService"]
-      .insert({
+      .insertOne({
         key: "key",
         name: "name",
         description: "description",
@@ -191,7 +191,7 @@ describe("ApiKeyAddComponent", () => {
   describe("attach/detach", () => {
     beforeEach(async () => {
       const _id = await component["apiKeyService"]
-        .insert({
+        .insertOne({
           name: "test name",
           active: true,
           key: "test key",

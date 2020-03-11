@@ -73,23 +73,20 @@ export class ApiKeyController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
-    delete apiKey._id;
+    if (apiKey._id) delete apiKey._id;
     apiKey.key = uniqid();
     return this.aks.insertOne(apiKey);
   }
 
-  @Post(":id")
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
-  updateOne(
+  replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
   ) {
-    delete apiKey._id;
-    return this.aks.findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false}).then(r => {
-      if (!r) {
-        throw new NotFoundException();
-      }
-      return r;
+    if (apiKey._id) delete apiKey._id;
+    return this.aks.findOneAndReplace({_id: id}, apiKey, {returnOriginal: false}).then(result => {
+      if (!result) throw new NotFoundException();
     });
   }
 
@@ -118,7 +115,11 @@ export class ApiKeyController {
     });
 
     delete apiKey._id;
-    return this.aks.findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false});
+    return this.aks.findOneAndUpdate(
+      {_id: id},
+      {$set: {policies: apiKey.policies}},
+      {returnOriginal: false}
+    );
   }
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
@@ -134,6 +135,10 @@ export class ApiKeyController {
     );
 
     delete apiKey._id;
-    return this.aks.findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false});
+    return this.aks.findOneAndUpdate(
+      {_id: id},
+      {$set: {policies: apiKey.policies}},
+      {returnOriginal: false}
+    );
   }
 }

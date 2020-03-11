@@ -92,13 +92,13 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       this.identityService
         .insertOne(this.identity)
         .toPromise()
-        .then(
-          identity => {
-            this.identity = identity;
-            this.router.navigate(["passport", "identities", identity._id, "edit"]);
-          },
-          error => (this.error = error)
-        );
+        .then(identity => {
+          delete identity.password;
+          this.error = undefined;
+          this.identity = identity;
+          this.router.navigate(["passport", "identities", identity._id, "edit"]);
+        })
+        .catch(err => (this.error = err.error.message));
     }
   }
 
