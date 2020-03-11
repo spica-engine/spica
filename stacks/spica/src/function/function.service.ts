@@ -3,7 +3,12 @@ import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
 import {map, tap} from "rxjs/operators";
-import {DeleteFunction, LoadFunctions, UpsertFunction} from "./actions/function.actions";
+import {
+  DeleteFunction,
+  LoadFunctions,
+  UpsertFunction,
+  UpdateFunction
+} from "./actions/function.actions";
 import {Function, Information, Log, LogFilter} from "./interface";
 import * as fromFunction from "./reducers/function.reducer";
 
@@ -66,10 +71,12 @@ export class FunctionService {
       .pipe(tap(fn => this.store.dispatch(new UpsertFunction({function: fn}))));
   }
 
-  updateOne(fn: Function): Observable<Function> {
+  replaceOne(fn: Function): Observable<Function> {
     return this.http
-      .patch<Function>(`api:/function/${fn._id}`, fn)
-      .pipe(tap(fn => this.store.dispatch(new UpsertFunction({function: fn}))));
+      .put<Function>(`api:/function/${fn._id}`, fn)
+      .pipe(
+        tap(fn => this.store.dispatch(new UpdateFunction({function: {id: fn._id, changes: fn}})))
+      );
   }
 
   delete(id: string): Observable<any> {

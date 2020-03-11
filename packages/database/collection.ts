@@ -29,8 +29,8 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
     }
 
     // Insert
-    insertOne(doc: T): Promise<ObjectId> {
-      return this._coll.insertOne(doc).then(t => t.insertedId);
+    insertOne(doc: T): Promise<T> {
+      return this._coll.insertOne(doc).then(t => t.ops[0]);
     }
 
     insertMany(docs: Array<T>): Promise<ObjectId[]> {

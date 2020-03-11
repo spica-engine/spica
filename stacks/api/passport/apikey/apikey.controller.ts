@@ -75,10 +75,7 @@ export class ApiKeyController {
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
     delete apiKey._id;
     apiKey.key = uniqid();
-    return this.aks.insertOne(apiKey).then(r => {
-      apiKey._id = r;
-      return apiKey;
-    });
+    return this.aks.insertOne(apiKey);
   }
 
   @Post(":id")

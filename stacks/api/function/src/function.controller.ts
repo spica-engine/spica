@@ -8,9 +8,9 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
-  Patch,
   Post,
-  UseGuards
+  UseGuards,
+  Put
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -73,19 +73,17 @@ export class FunctionController {
     }
   }
 
-  @Patch(":id")
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
-  updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body(Schema.validate(generate)) fn: Function) {
-    delete fn._id;
-    return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
+  replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body(Schema.validate(generate)) fn: Function) {
+    if (fn._id) delete fn._id;
+    return this.fs.findOneAndReplace({_id: id}, fn, {returnOriginal: false});
   }
 
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    fn._id = new ObjectId();
-    await this.fs.insertOne(fn);
-    return fn;
+    return this.fs.insertOne(fn);
   }
 
   @Post(":id/index")

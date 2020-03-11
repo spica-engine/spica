@@ -159,7 +159,9 @@ export class AddComponent implements OnInit, OnDestroy {
 
     const isInsert = !this.function._id;
 
-    const save = isInsert ? this.functionService.insertOne(fn) : this.functionService.updateOne(fn);
+    const save = isInsert
+      ? this.functionService.insertOne(fn)
+      : this.functionService.replaceOne(fn);
 
     this.$save = merge(
       of(SavingState.Saving),
