@@ -1,5 +1,5 @@
 import {FunctionEngine} from "@spica-server/function/src/engine";
-import {FunctionService, TargetChange, ChangeKind} from "../function.service";
+import {FunctionService, TargetChange, ChangeKind} from "../src/function.service";
 import {DatabaseService} from "@spica-server/database";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
