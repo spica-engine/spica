@@ -1,20 +1,23 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:index.bzl", "ts_config", "ts_library")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "test_lib",
     testonly = True,
-    srcs = glob(["**/*.spec.ts"]),
+    srcs = [
+        "engine.spec.ts",
+        "function.controller.spec.ts",
+    ],
     deps = [
         "//packages/database",
         "//packages/database/testing",
         "//stacks/api/function",
         "//stacks/api/function/horizon",
+        "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//rxjs",
     ],
 )
 

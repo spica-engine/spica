@@ -113,6 +113,9 @@
           <mat-error *ngIf="isHandlerDuplicated">
             Duplicated handler detected. Each handlers must be unique.
           </mat-error>
+          <mat-error *ngIf="serverError">
+            {{ serverError }}
+          </mat-error>
         </h4>
 
         <mat-list-item

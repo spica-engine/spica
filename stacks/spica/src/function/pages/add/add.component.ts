@@ -1,4 +1,4 @@
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Scheme, SchemeObserver} from "@spica-client/core";
@@ -45,6 +45,7 @@ export class AddComponent implements OnInit, OnDestroy {
   dependencyInstallPending = false;
 
   isHandlerDuplicated = false;
+  serverError: string;
 
   private mediaMatchObserver: Subscription;
   private dispose = new EventEmitter();
@@ -154,6 +155,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   save() {
+    this.serverError = undefined;
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
 
@@ -171,7 +173,10 @@ export class AddComponent implements OnInit, OnDestroy {
           )
         ),
         endWith(SavingState.Saved),
-        catchError(() => of(SavingState.Failed))
+        catchError((err: HttpErrorResponse) => {
+          this.serverError = err.error.message;
+          return of(SavingState.Failed);
+        })
       )
     );
   }
