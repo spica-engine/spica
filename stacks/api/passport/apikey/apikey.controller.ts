@@ -73,7 +73,6 @@ export class ApiKeyController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
-    if (apiKey._id) delete apiKey._id;
     apiKey.key = uniqid();
     return this.aks.insertOne(apiKey);
   }
@@ -84,7 +83,6 @@ export class ApiKeyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
   ) {
-    if (apiKey._id) delete apiKey._id;
     return this.aks.findOneAndReplace({_id: id}, apiKey, {returnOriginal: false}).then(result => {
       if (!result) throw new NotFoundException();
     });

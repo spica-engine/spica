@@ -317,8 +317,7 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-
-    if (body._id) delete body._id;
+    delete body._id;
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 

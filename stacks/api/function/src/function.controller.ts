@@ -76,7 +76,6 @@ export class FunctionController {
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body(Schema.validate(generate)) fn: Function) {
-    if (fn._id) delete fn._id;
     return this.fs.findOneAndReplace({_id: id}, fn, {returnOriginal: false});
   }
 
