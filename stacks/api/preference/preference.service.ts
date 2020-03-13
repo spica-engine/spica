@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService} from "@spica-server/database";
+import {Collection, DatabaseService, FilterQuery} from "@spica-server/database";
 import {Preference} from "./interface";
 import {Observable} from "rxjs";
 
@@ -46,11 +46,17 @@ export class PreferenceService {
       .then(preference => preference || (this._defaults.get(scope) as T));
   }
 
-  update<T extends Preference>(preference: T) {
-    delete preference._id;
-    return this._collection.findOneAndReplace({scope: preference.scope}, preference, {
-      upsert: true
-    });
+  replaceOne<T extends Preference>(
+    filter: FilterQuery<Preference>,
+    preference: T
+  ): Promise<Preference> {
+    return this._collection
+      .findOneAndReplace(filter, preference)
+      .then(preference => preference.value);
+  }
+
+  insertOne<T extends Preference>(preference: T): Promise<Preference> {
+    return this._collection.insertOne(preference).then(result => result.ops[0]);
   }
 
   default<T extends Preference>(preference: T) {

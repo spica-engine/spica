@@ -33,9 +33,17 @@ describe("PreferenceService", () => {
     expect(req.request.method).toBe("GET");
   });
   it("should be post request", () => {
-    service.update(preferences).subscribe();
+    service.insertOne(preferences).subscribe();
     const req = httpTestingController.expectOne("api:/preference");
     expect(req.request.method).toBe("POST");
+
+    expect(req.request.body).toEqual(preferences);
+  });
+
+  it("should be put request", () => {
+    service.replaceOne(preferences).subscribe();
+    const req = httpTestingController.expectOne(`api:/preference/${preferences._id}`);
+    expect(req.request.method).toBe("PUT");
 
     expect(req.request.body).toEqual(preferences);
   });

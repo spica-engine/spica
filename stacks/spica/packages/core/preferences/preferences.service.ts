@@ -13,7 +13,11 @@ export class PreferencesService {
       .pipe(map(resp => (!resp && ddefault ? ddefault : resp)));
   }
 
-  update(setting: PreferencesMeta): Observable<void> {
+  replaceOne(setting: PreferencesMeta): Observable<void> {
+    return this.http.put<void>(`api:/preference/${setting._id}`, setting);
+  }
+
+  insertOne(setting: PreferencesMeta): Observable<void> {
     return this.http.post<void>("api:/preference", setting);
   }
 }
