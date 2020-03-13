@@ -16,6 +16,10 @@ import * as fromFunction from "./reducers/function.reducer";
 export class FunctionService {
   constructor(private http: HttpClient, private store: Store<fromFunction.State>) {}
 
+  private resetTimezoneOffset(date: Date) {
+    return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
+  }
+
   loadFunctions() {
     return this.http
       .get<Function[]>(`api:/function/`)
@@ -36,11 +40,11 @@ export class FunctionService {
     };
 
     if (filter.begin instanceof Date) {
-      serializedFilter.begin = filter.begin.toISOString();
+      serializedFilter.begin = this.resetTimezoneOffset(filter.begin).toISOString();
     }
 
     if (filter.end instanceof Date) {
-      serializedFilter.end = filter.end.toISOString();
+      serializedFilter.end = this.resetTimezoneOffset(filter.end).toISOString();
     }
     return this.http.get<any[]>(`api:/function/logs`, {params: serializedFilter});
   }
