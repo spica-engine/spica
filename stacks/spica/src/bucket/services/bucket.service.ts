@@ -13,16 +13,11 @@ import * as fromBucket from "../state/bucket.reducer";
 
 @Injectable()
 export class BucketService {
-  patchHttpOptions: object;
   constructor(
     private http: HttpClient,
     private store: Store<fromBucket.State>,
     private preference: PreferencesService
-  ) {
-    this.patchHttpOptions = {
-      headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
-    };
-  }
+  ) {}
 
   getPreferences() {
     return this.preference.get<BucketSettings>("bucket");
@@ -64,11 +59,15 @@ export class BucketService {
   }
 
   patchBucket(id: string, changes: object): Observable<number> {
-    return this.http.patch<number>(`api:/bucket/${id}`, changes, this.patchHttpOptions).pipe(
-      tap(modifiedCount => {
-        if (modifiedCount == 1) this.store.dispatch(new fromBucket.Update(id, changes));
+    return this.http
+      .patch<number>(`api:/bucket/${id}`, changes, {
+        headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
       })
-    );
+      .pipe(
+        tap(modifiedCount => {
+          if (modifiedCount == 1) this.store.dispatch(new fromBucket.Update(id, changes));
+        })
+      );
   }
 
   patchIndexes(buckets: Bucket[]): Promise<number[]> {
