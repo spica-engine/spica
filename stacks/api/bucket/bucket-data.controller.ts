@@ -317,7 +317,6 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-    delete body._id;
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
@@ -340,8 +339,6 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-
-    if (body._id) delete body._id;
     return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 

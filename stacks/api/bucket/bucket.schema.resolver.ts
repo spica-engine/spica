@@ -36,7 +36,6 @@ export class BucketSchemaResolver {
               return accumulator;
             },
             {
-              _id: {type: "string", options: {position: undefined}, format: "objectid"},
               _schedule: {type: "string", format: "date-time"}
             }
           ) as any;
