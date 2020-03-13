@@ -22,32 +22,3 @@ ts_library(
         "@npm//@types/node",
     ],
 )
-
-ts_library(
-    name = "bucket_test_lib",
-    testonly = True,
-    srcs = [
-        "bucket.service.spec.ts",
-    ],
-    deps = [
-        ":services",
-        "//packages/core",
-        "//packages/core/schema",
-        "//packages/core/testing",
-        "//packages/database/testing",
-        "//stacks/api/preference",
-        "@npm//@nestjs/common",
-        "@npm//@nestjs/testing",
-        "@npm//@types/bson",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-        "@npm//bson",
-    ],
-)
-
-jasmine_node_test(
-    name = "bucket-test",
-    deps = [
-        ":bucket_test_lib",
-    ],
-)

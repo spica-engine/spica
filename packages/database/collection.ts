@@ -42,8 +42,8 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
       return this._coll.findOne(filter, options);
     }
 
-    find(filter?: FilterQuery<T>): Promise<T[]> {
-      return this._coll.find(filter).toArray();
+    find(filter?: FilterQuery<T>, options?: FindOneOptions): Promise<T[]> {
+      return this._coll.find(filter, options).toArray();
     }
 
     // Delete

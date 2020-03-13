@@ -46,7 +46,7 @@ export class BucketController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
   index() {
-    return this.bs.find();
+    return this.bs.find({}, {sort: {order: 1}});
   }
 
   @Get("predefs")
@@ -58,7 +58,7 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    return this.bs.insertOne(bucket).then(result => result.ops[0]);
+    return this.bs.insertOne(bucket);
   }
 
   @Put(":id")
@@ -67,8 +67,7 @@ export class BucketController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    if (bucket._id) delete bucket._id;
-    return this.bs.replaceOne({_id: id}, bucket).then(result => result.value);
+    return this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
   }
 
   @Patch(":id")
@@ -81,7 +80,7 @@ export class BucketController {
     if (contentType != "application/merge-patch+json") {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
-    return this.bs.updateOne({_id: id}, changes).then(result => result.value);
+    return this.bs.updateOne({_id: id}, {$set: changes});
   }
 
   @Get(":id")
@@ -94,7 +93,7 @@ export class BucketController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.bs.findOne({_id: id}).then(bucket => this.bs.deleteOne(bucket));
+    return this.bs.deleteOne({_id: id});
   }
 
   @Post("import/:id")

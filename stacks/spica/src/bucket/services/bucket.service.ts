@@ -63,20 +63,18 @@ export class BucketService {
       .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
   }
 
-  patchBucket(id: string, changes: object): Observable<Bucket> {
-    return this.http
-      .patch<Bucket>(`api:/bucket/${id}`, changes, this.patchHttpOptions)
-      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
+  patchBucket(id: string, changes: object): Observable<number> {
+    return this.http.patch<number>(`api:/bucket/${id}`, changes, this.patchHttpOptions).pipe(
+      tap(modifiedCount => {
+        if (modifiedCount == 1) this.store.dispatch(new fromBucket.Update(id, changes));
+      })
+    );
   }
 
-  patchIndexes(buckets: Bucket[]): Promise<void> {
+  patchIndexes(buckets: Bucket[]): Promise<number[]> {
     return Promise.all(
-      buckets.map((bucket, index) =>
-        this.http
-          .patch<Bucket>(`api:/bucket/${bucket._id}`, {order: index}, this.patchHttpOptions)
-          .toPromise()
-      )
-    ).then(buckets => this.store.dispatch(new fromBucket.Retrieve(buckets)));
+      buckets.map((bucket, index) => this.patchBucket(bucket._id, {order: index}).toPromise())
+    );
   }
 
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {
