@@ -39,7 +39,6 @@ export class DocumentScheduler {
 
     const publish = () => {
       delete data._schedule;
-      data._id;
       this.bds.replaceOne(bucket, document, data);
     };
 

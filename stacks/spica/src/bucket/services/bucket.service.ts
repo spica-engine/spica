@@ -58,19 +58,17 @@ export class BucketService {
       .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
   }
 
-  patchBucket(id: string, changes: object): Observable<number> {
+  patchBucket(id: string, changes: object): Observable<Bucket> {
     return this.http
-      .patch<number>(`api:/bucket/${id}`, changes, {
+      .patch<Bucket>(`api:/bucket/${id}`, changes, {
         headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
       })
       .pipe(
-        tap(modifiedCount => {
-          if (modifiedCount == 1) this.store.dispatch(new fromBucket.Update(id, changes));
-        })
+        tap(updatedDocument => this.store.dispatch(new fromBucket.Update(id, updatedDocument)))
       );
   }
 
-  patchIndexes(buckets: Bucket[]): Promise<number[]> {
+  patchIndexes(buckets: Bucket[]): Promise<Bucket[]> {
     return Promise.all(
       buckets.map((bucket, index) => this.patchBucket(bucket._id, {order: index}).toPromise())
     );

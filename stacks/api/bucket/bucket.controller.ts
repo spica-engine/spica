@@ -80,7 +80,7 @@ export class BucketController {
     if (contentType != "application/merge-patch+json") {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
-    return this.bs.updateOne({_id: id}, {$set: changes});
+    return this.bs.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
   }
 
   @Get(":id")
