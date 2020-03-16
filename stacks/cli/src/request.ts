@@ -1,32 +1,34 @@
-import * as request from "request-promise-native";
+import * as req from "request-promise-native";
 
-export function getRequest(url: string, headers?: object): Promise<any> {
-  const requestOptions = {
-    method: "GET",
-    uri: url,
-    json: true,
-    headers: headers
-  };
-  return request(requestOptions);
-}
+export namespace request {
+  export function get<T>(url: string, headers?: object): Promise<T> {
+    const requestOptions = {
+      method: "GET",
+      uri: url,
+      json: true,
+      headers: headers
+    };
+    return Promise.resolve(req(requestOptions));
+  }
 
-export async function postRequest(url: string, body?: object, headers?: object): Promise<any> {
-  const requestOptions = {
-    method: "POST",
-    uri: url,
-    json: true,
-    body: body,
-    headers: headers
-  };
-  return request(requestOptions);
-}
+  export async function post<T>(url: string, body?: object, headers?: object): Promise<T> {
+    const requestOptions = {
+      method: "POST",
+      uri: url,
+      json: true,
+      body: body,
+      headers: headers
+    };
+    return Promise.resolve(req(requestOptions));
+  }
 
-export async function deleteRequest(url: string, headers?: object): Promise<any> {
-  const requestOptions = {
-    method: "DELETE",
-    uri: url,
-    json: true,
-    headers: headers
-  };
-  return request(requestOptions);
+  export async function del<T>(url: string, headers?: object): Promise<T> {
+    const requestOptions = {
+      method: "DELETE",
+      uri: url,
+      json: true,
+      headers: headers
+    };
+    return Promise.resolve(req(requestOptions));
+  }
 }

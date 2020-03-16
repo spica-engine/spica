@@ -1,9 +1,9 @@
-import {Asset, Function, MetaData} from "./interface";
+import {Asset, Function, Metadata} from "./interface";
 
 export function createFunctionAsset(spec: Function): Asset {
   let asset: Asset = {
     kind: "Function",
-    metadata: {name: spec._id} as MetaData,
+    metadata: {name: spec._id} as Metadata,
     spec: spec
   };
   delete asset.spec._id;

@@ -31,6 +31,7 @@ ts_library(
         "@npm//ora",
         "@npm//request",
         "@npm//request-promise-native",
+        "@npm//yaml",
     ],
 )
 
