@@ -1,5 +1,8 @@
 import {Component, OnInit} from "@angular/core";
-import {Actions, Activity} from "../../interface";
+import {Activity, getAvailableFilters, ActivityFilter} from "@spica-client/activity/interface";
+import {ActivityService} from "@spica-client/activity/services/activity.service";
+import {Observable, merge, Subject, BehaviorSubject, combineLatest} from "rxjs";
+import {switchMap, map} from "rxjs/operators";
 
 @Component({
   selector: "app-index",
@@ -7,30 +10,45 @@ import {Actions, Activity} from "../../interface";
   styleUrls: ["./index.component.scss"]
 })
 export class IndexComponent implements OnInit {
-  activities$: Activity[];
+  activities$: Observable<Activity[]>;
+
+  availableFilters = getAvailableFilters();
+
+  selectedFilters: ActivityFilter = {
+    actions: [],
+    modules: [],
+    date: {
+      begin: undefined,
+      end: undefined
+    }
+  };
+
+  appliedFilters$ = new BehaviorSubject(this.selectedFilters);
+
+  maxDate = new Date();
 
   displayedColumns: string[] = ["user", "action", "module", "documentId", "date"];
 
-  constructor() {}
+  constructor(private activityService: ActivityService) {}
 
   ngOnInit() {
-    this.activities$ = [
-      {
-        _id: "1",
-        action: Actions.INSERT,
-        module: "bucket/some_bucket_id",
-        srcId: "some_data_id",
-        user: "tuna",
-        date: new Date(2020, 3, 15, 12)
-      },
-      {
-        _id: "2",
-        action: Actions.DELETE,
-        module: "Passport",
-        srcId: "some_data_id2",
-        user: "ahmet",
-        date: new Date(2020, 3, 15, 13)
+    this.activities$ = this.appliedFilters$.pipe(
+      switchMap(filter => this.activityService.get(filter))
+    );
+  }
+
+  clearFilters() {
+    this.selectedFilters = {
+      actions: [],
+      modules: [],
+      date: {
+        begin: undefined,
+        end: undefined
       }
-    ];
+    };
+  }
+
+  applyFilters() {
+    this.appliedFilters$.next(this.selectedFilters);
   }
 }

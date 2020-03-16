@@ -6,32 +6,43 @@
 </mat-toolbar>
 
 <mat-card class="mat-elevation-z25">
+  <span>Filters: </span>
   <mat-form-field>
-    <mat-select>
-      <mat-option *ngFor="let activity of activities$" [value]="activity.user">
-        {{ activity.user }}
+    <mat-label>Select action type</mat-label>
+    <mat-select [(ngModel)]="selectedFilters.actions" multiple>
+      <mat-option *ngFor="let action of availableFilters.actions" [value]="action">
+        {{ action }}
       </mat-option>
     </mat-select>
   </mat-form-field>
   <mat-form-field>
-    <mat-select>
-      <mat-option *ngFor="let activity of activities$" [value]="activity.action">
-        {{ activity.action }}
+    <mat-label>Select module</mat-label>
+    <mat-select [(ngModel)]="selectedFilters.modules" multiple>
+      <mat-option *ngFor="let module of availableFilters.modules" [value]="module">
+        {{ module }}
       </mat-option>
     </mat-select>
   </mat-form-field>
   <mat-form-field>
-    <mat-select>
-      <mat-option *ngFor="let activity of activities$" [value]="activity.module">
-        {{ activity.module }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <mat-form-field>
-    <input matInput placeholder="Select a date range" [satDatepicker]="picker" [max]="maxDate" />
+    <input
+      matInput
+      [ngModel]="selectedFilters.date"
+      (ngModelChange)="
+        selectedFilters.date.begin = $event.begin; selectedFilters.date.end = $event.end
+      "
+      placeholder="Select a date range"
+      [satDatepicker]="picker"
+      [max]="maxDate"
+    />
     <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
     <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
   </mat-form-field>
+  <button mat-button (click)="applyFilters()">
+    Apply
+  </button>
+  <button mat-button (click)="clearFilters()">
+    Clear
+  </button>
   <mat-card-content>
     <table mat-table [dataSource]="activities$" class="mat-elevation-z8">
       <ng-container matColumnDef="user">
@@ -46,17 +57,21 @@
 
       <ng-container matColumnDef="module">
         <th mat-header-cell *matHeaderCellDef>Module</th>
-        <td mat-cell *matCellDef="let activity">{{ activity.module }}</td>
+        <td mat-cell *matCellDef="let activity">
+          {{ activity.module }}
+        </td>
       </ng-container>
 
       <ng-container matColumnDef="documentId">
         <th mat-header-cell *matHeaderCellDef>Document Id</th>
-        <td mat-cell *matCellDef="let activity">{{ activity.srcId }}</td>
+        <td mat-cell *matCellDef="let activity">{{ activity.documentId }}</td>
       </ng-container>
 
       <ng-container matColumnDef="date">
         <th mat-header-cell *matHeaderCellDef>Date</th>
-        <td mat-cell *matCellDef="let activity">{{ activity.date }}</td>
+        <td mat-cell *matCellDef="let activity">
+          {{ activity.date | date: "MM/dd/yyyy H:mm:ss" }}
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

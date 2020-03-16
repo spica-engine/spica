@@ -5,14 +5,15 @@
     align-items: flex-start;
     h4 > * {
       vertical-align: middle;
+      margin-left: 5px;
     }
   }
   .mat-card {
-    margin-top: -50px;
-    width: 100%;
+    margin: -50px auto;
+    width: 95%;
+
     .mat-form-field {
       margin: 5px 10px;
-      align-content: center;
     }
     .mat-table {
       width: 100%;
