@@ -6,15 +6,15 @@ import {
   NotFoundException,
   Param,
   Post,
+  Put,
   Query,
-  UseGuards,
-  Put
+  UseGuards
 } from "@nestjs/common";
-import {AuthGuard} from "../auth.guard";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import * as uniqid from "uniqid";
+import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "../policy/action.guard";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
@@ -83,9 +83,14 @@ export class ApiKeyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey
   ) {
-    return this.aks.findOneAndReplace({_id: id}, apiKey, {returnOriginal: false}).then(result => {
-      if (!result) throw new NotFoundException();
-    });
+    delete apiKey.key;
+    // We can't perform a replace operation on this endpoint because the "key" key is not present on this endpoint.
+    return this.aks
+      .findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false})
+      .then(result => {
+        if (!result) throw new NotFoundException();
+        return result;
+      });
   }
 
   @Delete(":id")
@@ -95,7 +100,6 @@ export class ApiKeyController {
       if (!r) {
         throw new NotFoundException();
       }
-      return r;
     });
   }
 

@@ -87,7 +87,15 @@ jobs:
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky
+  test_api_flaky:
+    executor: api-executor
+    steps:
+      - custom_attach_workspace
+      - setup_circleci_bazel_config
+      - run:
+          name: "Running tests"
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5
 
   test_spica:
     executor: default-executor
@@ -128,13 +136,16 @@ workflows:
       - test_api:
           requires:
             - setup
+      - test_api_flaky:
+          requires:
+            - setup
       - test_spica:
           requires:
             - setup
       - deploy:
           requires:
             - setup
-            # - test_api
+            - test_api
             - test_spica
           filters:
             branches:

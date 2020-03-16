@@ -17,8 +17,8 @@ export class PreferenceController {
     return this.preference.insertOne(body);
   }
 
-  @Put(":id")
-  replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Preference) {
+  @Put(":scope")
+  replaceOne(@Param("scope", OBJECT_ID) id: ObjectId, @Body() body: Preference) {
     delete body._id;
     return this.preference.replaceOne({_id: id}, body);
   }

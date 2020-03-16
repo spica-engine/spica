@@ -23,7 +23,7 @@ describe("scheduler", () => {
     bds = module.get(BucketDataService);
     scheduler = module.get(DocumentScheduler);
     clock = jasmine.clock();
-  });
+  }, 600000);
 
   afterAll(async () => await module.close());
 
