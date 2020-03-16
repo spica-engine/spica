@@ -82,7 +82,7 @@ describe("FunctionController", () => {
   it("should fail if the updated function has bucket triggers with same configuration", async () => {
     const fn = await controller.insertOne({triggers: {}});
     const result = await controller
-      .updateOne(fn._id as ObjectId, {
+      .replaceOne(fn._id as ObjectId, {
         triggers: {
           default: {
             type: "bucket",
@@ -121,7 +121,7 @@ describe("FunctionController", () => {
     });
 
     await expectAsync(
-      controller.updateOne(fn._id as ObjectId, {
+      controller.replaceOne(fn._id as ObjectId, {
         triggers: {
           default: {
             type: "bucket",

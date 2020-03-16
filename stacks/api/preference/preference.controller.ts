@@ -1,6 +1,7 @@
-import {Controller, Get, Param, Body, Post, Put} from "@nestjs/common";
+import {Body, Controller, Get, Param, Post, Put} from "@nestjs/common";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {Preference} from "./interface";
 import {PreferenceService} from "./preference.service";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
 
 @Controller("preference")
 export class PreferenceController {
@@ -12,12 +13,12 @@ export class PreferenceController {
   }
 
   @Post()
-  insertOne(@Body() body: any) {
+  insertOne(@Body() body: Preference) {
     return this.preference.insertOne(body);
   }
 
   @Put(":id")
-  replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: any) {
+  replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() body: Preference) {
     delete body._id;
     return this.preference.replaceOne({_id: id}, body);
   }

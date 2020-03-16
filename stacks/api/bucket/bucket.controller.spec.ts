@@ -338,16 +338,6 @@ describe("Bucket acceptance", () => {
       }
     };
 
-    it("should show error about id type", async () => {
-      const invalidBucket = {...bucket, _id: "invalid id type"};
-      const response = await req.post("/bucket", invalidBucket);
-      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect([response.body.error, response.body.message]).toEqual([
-        "._id should match format 'objectid'",
-        "validation failed"
-      ]);
-    });
-
     describe("title", () => {
       it("should show error about minLength ", async () => {
         const invalidBucket = {...validBucket, title: "asd"};

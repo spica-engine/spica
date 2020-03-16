@@ -86,7 +86,6 @@ describe("bucket service", () => {
       $id: bucket._id,
       additionalProperties: false,
       properties: {
-        _id: {type: "string", options: {position: undefined}, format: "objectid"},
         _schedule: {type: "string", format: "date-time"},
         title: {
           type: "string",

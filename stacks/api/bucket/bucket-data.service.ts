@@ -1,15 +1,16 @@
 import {Injectable} from "@nestjs/common";
+import {BucketDocument} from "@spica-server/bucket/services";
 import {
   DatabaseService,
-  InsertOneWriteOpResult,
-  InsertWriteOpResult,
   DeleteWriteOpResultObject,
   FilterQuery,
-  ObjectId,
   FindAndModifyWriteOpResultObject,
-  FindOneAndReplaceOption
+  FindOneAndReplaceOption,
+  InsertOneWriteOpResult,
+  InsertWriteOpResult,
+  ObjectId,
+  UpdateQuery
 } from "@spica-server/database";
-import {BucketDocument} from "@spica-server/bucket/services";
 
 @Injectable()
 export class BucketDataService {
@@ -79,9 +80,9 @@ export class BucketDataService {
     return collection.updateMany(filter, update);
   }
 
-  updateOne(bucketId: ObjectId, documentId: ObjectId, update: any) {
+  updateOne<T = unknown>(bucketId: ObjectId, filter: FilterQuery<T>, update: UpdateQuery<T>) {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
-    return collection.updateOne({_id: documentId}, {$set: update});
+    return collection.updateOne(filter, update);
   }
 }
 

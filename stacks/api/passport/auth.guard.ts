@@ -22,10 +22,12 @@ const NO_STRATEGY_ERROR = `In order to use "defaultStrategy", please, ensure to 
 function createAuthGuard(type?: string): Type<CanActivate> {
   class MixinAuthGuard<TUser = any> implements CanActivate {
     constructor(@Optional() protected readonly options?: AuthModuleOptions) {
-      if (Array.isArray(this.options.defaultStrategy)) {
-        throw "Default strategy can not be array.";
-      } else {
-        type = type || this.options.defaultStrategy;
+      if (options) {
+        if (Array.isArray(this.options.defaultStrategy)) {
+          throw "Default strategy can not be array.";
+        } else {
+          type = type || this.options.defaultStrategy;
+        }
       }
     }
 

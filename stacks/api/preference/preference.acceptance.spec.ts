@@ -1,25 +1,20 @@
-import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, DatabaseService, ObjectId} from "@spica-server/database/testing";
-import {Preference} from "./interface";
-import {Observable} from "rxjs";
-import {PreferenceModule} from "./preference.module";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {INestApplication} from "@nestjs/common";
-import {Middlewares} from "@spica-server/core";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
+import {Test, TestingModule} from "@nestjs/testing";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {PreferenceModule} from "./preference.module";
 
 describe("Preference Service", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
+  let db: DatabaseService;
 
-  async function addpref(pref: any) {
-    await app
+  function addpref(pref: any) {
+    return app
       .get(DatabaseService)
       .collection("preferences")
-      .insertOne(pref)
-      .catch();
+      .insertOne(pref);
   }
 
   beforeAll(async () => {
@@ -28,22 +23,14 @@ describe("Preference Service", () => {
       providers: []
     }).compile();
     app = module.createNestApplication();
-    app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
+    db = module.get(DatabaseService);
     await app.listen(req.socket);
   }, 120000);
 
-  afterEach(async () => {
-    await app
-      .get(DatabaseService)
-      .collection("preferences")
-      .deleteMany({})
-      .catch();
-  });
+  afterEach(async () => await db.collection("preferences").drop());
 
-  afterAll(async () => {
-    await app.close();
-  });
+  afterAll(async () => await app.close());
 
   it("should get preference", async () => {
     await req.post("/preference", {scope: "bucket", property: "bucket props"});

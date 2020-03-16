@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
+import {BucketService} from "@spica-server/bucket/services";
 import {MongoClient, ObjectId} from "@spica-server/database";
 import * as cron from "cron";
-import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BucketDataService} from "./bucket-data.service";
 
 @Injectable()
@@ -15,33 +15,29 @@ export class DocumentScheduler {
       }
     });
 
-    const watcher = database.watch([
-      {
-        $match: {
-          "ns.coll": {
-            $regex: /^bucket_/
-          },
-          "fullDocument._schedule": {$type: "string"}
-        }
-      }
-    ]);
-    watcher.on("change", change => {
-      this.schedule(
-        new ObjectId(change.ns.coll.replace(/^bucket_/, "")),
-        new ObjectId(change.documentKey._id),
-        new Date(change.fullDocument._schedule),
-        change.fullDocument
-      );
-    });
+    // const watcher = database.watch([
+    //   {
+    //     $match: {
+    //       "ns.coll": {
+    //         $regex: /^bucket_/
+    //       },
+    //       "fullDocument._schedule": {$type: "string"}
+    //     }
+    //   }
+    // ]);
+    // watcher.on("change", change => {
+    //   this.schedule(
+    //     new ObjectId(change.ns.coll.replace(/^bucket_/, "")),
+    //     new ObjectId(change.documentKey._id),
+    //     new Date(change.fullDocument._schedule),
+    //     change.fullDocument
+    //   );
+    // });
   }
-  schedule(bucket: ObjectId, document: ObjectId, time: Date, data: BucketDocument) {
+  schedule(bucket: ObjectId, document: ObjectId, time: Date) {
     const key = `${bucket}_${document}`;
 
-    const publish = () => {
-      delete data._schedule;
-      delete data._id;
-      this.bds.replaceOne(bucket, {_id: document}, data);
-    };
+    const publish = () => this.bds.updateOne(bucket, {_id: document}, {$unset: {_schedule: ""}});
 
     if (time.getTime() <= Date.now() + 1) {
       return publish();
