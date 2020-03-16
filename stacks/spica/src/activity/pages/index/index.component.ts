@@ -15,6 +15,7 @@ export class IndexComponent implements OnInit {
   availableFilters = getAvailableFilters();
 
   selectedFilters: ActivityFilter = {
+    identifier: undefined,
     actions: [],
     modules: [],
     date: {
@@ -27,7 +28,7 @@ export class IndexComponent implements OnInit {
 
   maxDate = new Date();
 
-  displayedColumns: string[] = ["user", "action", "module", "documentId", "date"];
+  displayedColumns: string[] = ["identifier", "action", "module", "documentId", "date"];
 
   constructor(private activityService: ActivityService) {}
 
@@ -39,6 +40,7 @@ export class IndexComponent implements OnInit {
 
   clearFilters() {
     this.selectedFilters = {
+      identifier: undefined,
       actions: [],
       modules: [],
       date: {
@@ -46,6 +48,7 @@ export class IndexComponent implements OnInit {
         end: undefined
       }
     };
+    this.appliedFilters$.next(this.selectedFilters);
   }
 
   applyFilters() {

@@ -1,6 +1,6 @@
 export interface Activity {
   _id?: string;
-  user: string;
+  identifier: string;
   module: string;
   action: Actions;
   documentId: string;
@@ -14,6 +14,7 @@ export enum Actions {
 }
 
 export interface ActivityFilter {
+  identifier: string;
   modules: string[];
   actions: string[];
   date: {
@@ -24,6 +25,7 @@ export interface ActivityFilter {
 
 export function getAvailableFilters() {
   return {
+    identifier: undefined,
     actions: [Actions.INSERT, Actions.UPDATE, Actions.DELETE],
     modules: [
       "Bucket",
