@@ -73,7 +73,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
             await server.waitUntilRunning();
             const connectionString = await server.getConnectionString();
             // Issue: https://github.com/nodkz/mongodb-memory-server/issues/166
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
             return MongoClient.connect(
               `${connectionString}?replicaSet=${server.opts.replSet.name}`,
               {

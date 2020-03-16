@@ -4,7 +4,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PreferenceModule} from "./preference.module";
 
-describe("Preference Service", () => {
+describe("PreferenceController", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
@@ -33,8 +33,8 @@ describe("Preference Service", () => {
   afterAll(async () => await app.close());
 
   it("should get preference", async () => {
-    await req.post("/preference", {scope: "bucket", property: "bucket props"});
-    await req.post("/preference", {scope: "function", property: "function props"});
+    await req.put("/preference/bucket", {scope: "bucket", property: "bucket props"});
+    await req.put("/preference/function", {scope: "function", property: "function props"});
 
     const bucketPref = (await req.get("/preference/bucket", {})).body;
     expect(bucketPref.scope).toBe("bucket");
@@ -45,15 +45,10 @@ describe("Preference Service", () => {
     expect(functionPref.property).toBe("function props");
   });
 
-  it("should add preference", async () => {
-    const response = await req.post("/preference", {scope: "bucket", property: "bucket props"});
-    expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
-  });
-
   it("should update preference", async () => {
     await addpref({scope: "bucket", property: "bucket props"});
 
-    await req.post("/preference", {scope: "bucket", property: "new bucket props"});
+    await req.put("/preference/bucket", {scope: "bucket", property: "new bucket props"});
 
     const myUpdatedPref = (await req.get("/preference/bucket", {})).body;
     expect(myUpdatedPref.scope).toBe("bucket");

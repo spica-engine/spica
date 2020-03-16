@@ -1,5 +1,10 @@
 import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, FilterQuery} from "@spica-server/database";
+import {
+  Collection,
+  DatabaseService,
+  FilterQuery,
+  FindOneAndReplaceOption
+} from "@spica-server/database";
 import {Preference} from "./interface";
 import {Observable} from "rxjs";
 
@@ -48,10 +53,11 @@ export class PreferenceService {
 
   replaceOne<T extends Preference>(
     filter: FilterQuery<Preference>,
-    preference: T
+    preference: T,
+    options?: FindOneAndReplaceOption
   ): Promise<Preference> {
     return this._collection
-      .findOneAndReplace(filter, preference)
+      .findOneAndReplace(filter, preference, options)
       .then(preference => preference.value);
   }
 

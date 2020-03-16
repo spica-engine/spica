@@ -51,8 +51,8 @@ jasmine_node_test(
     name = "test-watcher",
     srcs = [":test_lib-watcher"],
     tags = [
-        "flaky"
-    ] 
+        "flaky",
+    ],
 )
 
 ts_library(

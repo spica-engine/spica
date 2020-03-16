@@ -12,6 +12,7 @@ describe("Preference Service", () => {
       .collection("preferences")
       .insertMany(prefs);
   }
+
   let module: TestingModule;
   let preferenceService: PreferenceService;
   beforeAll(async () => {

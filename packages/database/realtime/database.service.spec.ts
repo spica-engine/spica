@@ -6,7 +6,7 @@ import {RealtimeDatabaseService} from "./database.service";
 import {SequenceKind} from "./levenshtein";
 import {ChunkKind} from "./stream";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 8000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 const LATENCY = 70;
 
