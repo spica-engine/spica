@@ -67,10 +67,11 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const deletedCount = await this.fs.deleteOne({_id: id});
-    if (deletedCount == 0) {
+    const fn = await this.fs.findOneAndDelete({_id: id}, {});
+    if (!fn) {
       throw new NotFoundException("Couldn't find the function.");
     }
+    await this.engine.deleteFunction(fn);
   }
 
   private async hasDuplicatedBucketHandlers(fn: Function): Promise<boolean> {
@@ -123,7 +124,9 @@ export class FunctionController {
         "Multiple handlers on same bucket and event type are not supported."
       );
     }
-    return this.fs.insertOne(fn);
+    fn = await this.fs.insertOne(fn);
+    await this.engine.createFunction(fn);
+    return fn;
   }
 
   @Post(":id/index")

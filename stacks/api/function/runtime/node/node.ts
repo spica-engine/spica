@@ -4,7 +4,6 @@ import * as fs from "fs";
 import * as path from "path";
 import {Transform} from "stream";
 import * as ts from "typescript";
-import symlinkdir = require("symlink-dir");
 
 class FilterExperimentalWarnings extends Transform {
   _transform(rawChunk: Buffer, encoding: string, cb: Function) {
@@ -33,17 +32,27 @@ export class Node extends Runtime {
   async compile(compilation: Compilation): Promise<void> {
     await super.prepare(compilation);
 
-    await symlinkdir(
-      path.join(compilation.cwd, "node_modules", "@spica-devkit", "database"),
-      path.join(compilation.cwd, "node_modules", "@internal", "database")
-    ).catch(e => {
-      console.log(e);
-      if (e.code == "EEXIST" || e.code == "ENOENT") {
-        // Do nothing.
-        return;
-      }
-      return Promise.reject(e);
-    });
+    const hasSpicaDevkitDatabasePackage = await fs.promises
+      .access(path.join(compilation.cwd, "node_modules", "@spica-devkit"), fs.constants.F_OK)
+      .then(() => true)
+      .catch(() => false);
+
+    if (hasSpicaDevkitDatabasePackage) {
+      await fs.promises
+        .symlink(
+          path.join(compilation.cwd, "node_modules", "@spica-devkit"),
+          path.join(compilation.cwd, "node_modules", "@internal"),
+          "dir"
+        )
+        .catch(e => {
+          console.log(e);
+          if (e.code == "EEXIST") {
+            // Do nothing.
+            return;
+          }
+          return Promise.reject(e);
+        });
+    }
 
     await fs.promises
       .symlink(
