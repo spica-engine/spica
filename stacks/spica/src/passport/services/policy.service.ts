@@ -33,7 +33,7 @@ export class PolicyService {
   }
 
   createPolicy(policy: Policy): Observable<Policy> {
-    return this.http.post<Policy>(`api:/passport/policy/create`, policy);
+    return this.http.post<Policy>(`api:/passport/policy`, policy);
   }
 
   deletePolicy(policyId: string): Observable<Policy> {
@@ -45,6 +45,6 @@ export class PolicyService {
       ...policy,
       _id: undefined
     };
-    return this.http.post<Policy>(`api:/passport/policy/${policy._id}`, policyRequest);
+    return this.http.put<Policy>(`api:/passport/policy/${policy._id}`, policyRequest);
   }
 }

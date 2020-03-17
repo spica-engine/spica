@@ -21,12 +21,12 @@ export class ApiKeyService {
     return this.http.get<ApiKey>(`api:/passport/apikey/${id}`);
   }
 
-  insert(apiKey: ApiKey): Observable<ApiKey> {
+  insertOne(apiKey: ApiKey): Observable<ApiKey> {
     return this.http.post<ApiKey>(`api:/passport/apikey`, apiKey);
   }
 
-  update(apiKey: ApiKey): Observable<ApiKey> {
-    return this.http.post<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
+  replaceOne(apiKey: ApiKey): Observable<ApiKey> {
+    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKey._id}`, apiKey);
   }
 
   delete(id: string): Observable<void> {
@@ -64,13 +64,14 @@ export class MockApiKeyService extends ApiKeyService {
   get(id: string) {
     return of(this.apiKeys.find(apiKey => apiKey._id == id));
   }
-  update(apiKey: ApiKey) {
+
+  replaceOne(apiKey: ApiKey) {
     this.apiKeys = this.apiKeys.map(val => {
       if (val._id == apiKey._id) return apiKey;
     });
     return of(apiKey);
   }
-  insert(apiKey: ApiKey) {
+  insertOne(apiKey: ApiKey) {
     const insertedApiKey = {
       ...apiKey,
       _id: this.apiKeys.length.toString()

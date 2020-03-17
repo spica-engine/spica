@@ -27,6 +27,10 @@ export class Request {
     return this.request<T>({method: "PUT", path, body, headers});
   }
 
+  patch<T>(path: string, body?: object, headers?: object) {
+    return this.request<T>({method: "PATCH", path, body, headers});
+  }
+
   request<T>(options: RequestOptions): Promise<Response<T>> {
     const req: any = {
       headers: options.headers,

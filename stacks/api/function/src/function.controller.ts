@@ -8,9 +8,9 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
-  Patch,
   Post,
-  UseGuards
+  UseGuards,
+  Put
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -97,9 +97,9 @@ export class FunctionController {
       });
   }
 
-  @Patch(":id")
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
-  async updateOne(
+  async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate(generate)) fn: Function
   ) {
@@ -123,9 +123,7 @@ export class FunctionController {
         "Multiple handlers on same bucket and event type are not supported."
       );
     }
-    fn._id = new ObjectId();
-    await this.fs.insertOne(fn);
-    return fn;
+    return this.fs.insertOne(fn);
   }
 
   @Post(":id/index")

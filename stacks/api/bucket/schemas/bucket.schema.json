@@ -7,13 +7,6 @@
   "$comment": "This schema still in draft state. Probably there is a lot optimization that we can make on this schema.",
   "required": ["title", "description", "properties"],
   "properties": {
-    "_id": {
-      "type": "string",
-      "title": "The _id Schema",
-      "description": "If you pass an existing bucket id your schema will be replaced with it.",
-      "examples": ["5cdd1222af4b96e97b3d7e91"],
-      "format": "objectid"
-    },
     "title": {
       "type": "string",
       "title": "Title of the bucket",

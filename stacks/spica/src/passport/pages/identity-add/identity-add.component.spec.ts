@@ -313,7 +313,11 @@ describe("Identity Add Component", () => {
 
       expect(insertSpy).toHaveBeenCalledTimes(1);
       expect(insertSpy).toHaveBeenCalledWith(identity);
-      expect(fixture.componentInstance.identity).toEqual({...identity, _id: "1"});
+      delete identity.password;
+      expect(fixture.componentInstance.identity).toEqual({
+        ...identity,
+        _id: "1"
+      });
 
       expect(router.navigate).toHaveBeenCalledTimes(1);
       expect(router.navigate).toHaveBeenCalledWith(["passport", "identities", "1", "edit"]);
@@ -365,7 +369,7 @@ describe("Identity Add Component", () => {
     it("should show error about inserting new credential", fakeAsync(() => {
       fixture.componentInstance.identity._id = undefined;
       const insertOneSpy = spyOn(identityService, "insertOne").and.returnValue(
-        throwError("Error from service.")
+        throwError({error: {message: "Error from service."}})
       );
 
       fixture.componentInstance.upsertIdentity();

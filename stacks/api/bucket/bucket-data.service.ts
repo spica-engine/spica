@@ -1,14 +1,16 @@
 import {Injectable} from "@nestjs/common";
+import {BucketDocument} from "@spica-server/bucket/services";
 import {
   DatabaseService,
-  InsertOneWriteOpResult,
-  ReplaceWriteOpResult,
-  InsertWriteOpResult,
   DeleteWriteOpResultObject,
   FilterQuery,
-  ObjectId
+  FindAndModifyWriteOpResultObject,
+  FindOneAndReplaceOption,
+  InsertOneWriteOpResult,
+  InsertWriteOpResult,
+  ObjectId,
+  UpdateQuery
 } from "@spica-server/database";
-import {BucketDocument} from "@spica-server/bucket/services";
 
 @Injectable()
 export class BucketDataService {
@@ -42,29 +44,14 @@ export class BucketDataService {
     return collection.insertOne(data);
   }
 
-  replaceOne<D extends BucketDocument>(
-    bucketId: string | ObjectId,
-    data: D
-  ): Promise<ReplaceWriteOpResult>;
-  replaceOne<D extends BucketDocument>(
-    bucketId: string | ObjectId,
-    data: D,
-    filter: FilterQuery<D>
-  ): Promise<ReplaceWriteOpResult>;
   replaceOne(
-    bucketId: string,
-    data: BucketDocument,
-    filter?: FilterQuery<BucketDocument>
-  ): Promise<ReplaceWriteOpResult> {
+    bucketId: ObjectId,
+    filter: FilterQuery<BucketDocument>,
+    document: BucketDocument,
+    options: FindOneAndReplaceOption = {returnOriginal: false}
+  ): Promise<FindAndModifyWriteOpResultObject> {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
-    if (!filter && data._id) {
-      filter = {_id: data._id};
-    } else if (!filter && !data._id) {
-      filter = {_id: new ObjectId()};
-    }
-    return collection.replaceOne(filter, data, {
-      upsert: true
-    });
+    return collection.findOneAndReplace(filter, document, options);
   }
 
   deleteOne(
@@ -91,6 +78,11 @@ export class BucketDataService {
   updateMany(bucketId: ObjectId, filter: FilterQuery<any>, update: any) {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
     return collection.updateMany(filter, update);
+  }
+
+  updateOne<T = unknown>(bucketId: ObjectId, filter: FilterQuery<T>, update: UpdateQuery<T>) {
+    const collection = this.db.collection(getBucketDataCollection(bucketId));
+    return collection.updateOne(filter, update);
   }
 }
 

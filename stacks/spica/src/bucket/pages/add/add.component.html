@@ -127,14 +127,22 @@
     </button>
     <button
       canInteract="bucket:data:update"
-      [disabled]="savingBucketState || form.invalid || scheduleForm?.invalid || bucket.readOnly"
+      *matSave="$save | async; let state"
+      [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly || !!state"
       mat-button
       (click)="saveBucketRow()"
+      [ngSwitch]="state"
     >
-      <mat-progress-spinner *ngIf="savingBucketState" diameter="20" mode="indeterminate">
-      </mat-progress-spinner>
-      <mat-icon *ngIf="!savingBucketState">{{ data?._id ? "double_arrow" : "add" }}</mat-icon>
-      <span>{{ data?._id ? "Update" : "Add" }}</span>
+      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-progress-spinner
+        *ngSwitchCase="'saving'"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+      <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
 </mat-card>

@@ -66,6 +66,9 @@ ts_library(
 
 jasmine_node_test(
     name = "test-preference-acceptance",
+    tags = [
+        "flaky",
+    ],
     deps = [
         ":test_lib_preference-acceptance",
     ],

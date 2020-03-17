@@ -163,11 +163,15 @@ describe("ApiKey", () => {
         description: "test"
       });
 
-      const {body: updatedBody} = await req.post(`/passport/apikey/${body._id}`, {
+      console.log(body);
+
+      const {body: updatedBody} = await req.put(`/passport/apikey/${body._id}`, {
         name: "test1",
         description: "test1",
         active: false
       });
+
+      console.log(updatedBody);
 
       expect(updatedBody._id).not.toBeFalsy();
       expect(updatedBody.name).toBe("test1");

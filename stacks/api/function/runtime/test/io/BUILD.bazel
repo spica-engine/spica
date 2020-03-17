@@ -19,4 +19,7 @@ ts_library(
 jasmine_node_test(
     name = "io_test",
     srcs = [":io_test_lib"],
+    tags = [
+        "flaky",
+    ],
 )

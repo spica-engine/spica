@@ -89,6 +89,7 @@ ts_library(
         "//stacks/api/passport/testing",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
+        "@npm//@nestjs/platform-socket.io",
         "@npm//@nestjs/testing",
         "@npm//@types/bson",
         "@npm//@types/jasmine",
@@ -121,6 +122,7 @@ ts_library(
         "//stacks/api/passport/testing",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
+        "@npm//@nestjs/platform-socket.io",
         "@npm//@nestjs/testing",
         "@npm//@types/bson",
         "@npm//@types/jasmine",
@@ -172,6 +174,7 @@ ts_library(
     deps = [
         ":bucket",
         "//packages/database/testing",
+        "//stacks/api/bucket/services",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",

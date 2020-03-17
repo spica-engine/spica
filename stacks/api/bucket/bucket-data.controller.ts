@@ -11,7 +11,8 @@ import {
   Query,
   UseGuards,
   ForbiddenException,
-  Optional
+  Optional,
+  Put
 } from "@nestjs/common";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -308,20 +309,37 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (this.dispatcher && strategyType == "APIKEY") {
-      const result = body._id
-        ? await this.dispatcher.dispatch(
-            {bucket: bucketId.toHexString(), type: "UPDATE"},
-            headers,
-            body._id.toHexString()
-          )
-        : await this.dispatcher.dispatch({bucket: bucketId.toHexString(), type: "INSERT"}, headers);
-
+      const result = await this.dispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "INSERT"},
+        headers
+      );
       if (!result) {
         throw new ForbiddenException("Forbidden action.");
       }
     }
+    return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
+  }
 
-    return this.bds.replaceOne(bucketId, body).then(data => data.ops[0]._id || data.upsertedId._id);
+  @Put(":documentId")
+  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  async update(
+    @Headers("strategy-type") strategyType: string,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Headers() headers: object,
+    @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
+  ) {
+    if (this.dispatcher && strategyType == "APIKEY") {
+      const result = await this.dispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "UPDATE"},
+        headers,
+        documentId.toHexString()
+      );
+      if (!result) {
+        throw new ForbiddenException("Forbidden action.");
+      }
+    }
+    return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
   @Delete(":documentId")

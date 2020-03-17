@@ -15,6 +15,7 @@ export class PassportService {
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {
     this.identityCollection = database.collection("identity");
+    this.identityCollection.createIndex({identifier: 1}, {unique: true});
     if (options.defaultPassword) {
       this.default({
         identifier: "spica",

@@ -1,4 +1,5 @@
-import {Controller, Get, Param, Body, Post} from "@nestjs/common";
+import {Body, Controller, Get, Param, Put} from "@nestjs/common";
+import {Preference} from "./interface";
 import {PreferenceService} from "./preference.service";
 
 @Controller("preference")
@@ -10,8 +11,10 @@ export class PreferenceController {
     return this.preference.get(scope);
   }
 
-  @Post()
-  update(@Body() body: any) {
-    return this.preference.update(body);
+  @Put(":scope")
+  replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
+    delete preference._id;
+    preference.scope = scope;
+    return this.preference.replaceOne({scope}, preference, {upsert: true, returnOriginal: false});
   }
 }

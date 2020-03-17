@@ -74,7 +74,7 @@ export class IdentityController {
     delete identity.password;
     return identity;
   }
-  @Post("create")
+  @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   insertOne(
     @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
@@ -87,7 +87,7 @@ export class IdentityController {
       throw new InternalServerErrorException();
     });
   }
-  @Post(":id")
+  @Put(":id")
   // TODO(thesayyn): Check if user updates its own identity.
   @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
   updateOne(
