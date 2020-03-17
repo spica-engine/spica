@@ -1,22 +1,20 @@
 import {
   Command,
+  CommandLineInputs,
+  CommandLineOptions,
   CommandMetadata,
   CommandMetadataInput,
   CommandMetadataOption,
-  CommandLineInputs,
-  CommandLineOptions,
   validators
 } from "@ionic/cli-framework";
-
 import * as authentication from "../../../authentication";
-import * as request from "../../../request";
 import {Function} from "../../../interface";
-import {Logger, getLogger} from "../../../logger";
+import {getLogger, Logger} from "../../../logger";
+import {request} from "../../../request";
 
 export class InstallCommand extends Command {
   logger: Logger = getLogger();
   authentication = authentication;
-  request = request;
 
   token;
   server;
@@ -49,7 +47,7 @@ export class InstallCommand extends Command {
 
   async validate(argv: CommandLineInputs) {
     try {
-      const loginData = await this.authentication.getLoginData();
+      const loginData = await this.authentication.context.data();
       this.token = loginData.token;
       this.server = loginData.server;
     } catch (error) {
@@ -64,8 +62,8 @@ export class InstallCommand extends Command {
     if (!this.token || !this.server) return;
 
     if (isAll) {
-      let functions = (await this.request
-        .getRequest(`${this.server}/function`, {
+      let functions = (await request
+        .get(`${this.server}/function`, {
           Authorization: this.token
         })
         .catch(error => {
@@ -81,8 +79,8 @@ export class InstallCommand extends Command {
 
       await Promise.all(
         functions.map(func => {
-          this.request
-            .postRequest(
+          request
+            .post(
               `${this.server}/function/${func._id}/dependencies`,
               {
                 name: packageName
