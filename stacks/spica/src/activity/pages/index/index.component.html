@@ -52,8 +52,9 @@
       <mat-list>
         <mat-list-item *cdkVirtualFor="let item of dataSource">
           <span class="info"
-            >Identifier {{ item.identifier }} made {{ item.action }} action on the
-            {{ item.module }} module and document with {{ item.documentId }}.</span
+            >Identifier {{ item.identifier | uppercase }} made {{ item.action | uppercase }} action
+            on the {{ item.module | uppercase }} module, document id with
+            {{ item.documentId }}.</span
           >
           <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <ng-container *ngIf="!item">

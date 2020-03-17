@@ -52,7 +52,7 @@ export class ActivityService {
 
     if (filter.identifier) {
       filteredActivities = this.activities.filter(activity =>
-        activity.identifier.toLowerCase().includes(filter.identifier.toLowerCase())
+        activity.identifier.toLowerCase().startsWith(filter.identifier.toLowerCase())
       );
     }
 

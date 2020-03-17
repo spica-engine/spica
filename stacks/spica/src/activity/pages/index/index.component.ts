@@ -22,7 +22,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   private pageIndex = 0;
 
-  private defaultLimit = 50;
+  private defaultLimit = 20;
 
   connect(collectionViewer: CollectionViewer): Observable<(Activity | undefined)[]> {
     this.subscription.add(
