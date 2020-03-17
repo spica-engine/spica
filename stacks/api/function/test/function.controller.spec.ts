@@ -1,6 +1,7 @@
 import {BadRequestException} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {FunctionEngine} from "@spica-server/function/src/engine";
 import {FunctionController} from "@spica-server/function/src/function.controller";
 import {FunctionService} from "@spica-server/function/src/function.service";
 
@@ -8,13 +9,15 @@ describe("FunctionController", () => {
   let controller: FunctionController;
   let module: TestingModule;
   let functionService: FunctionService;
+  let functionEngine: jasmine.SpyObj<FunctionEngine>;
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
       providers: [FunctionService]
     }).compile();
     functionService = module.get(FunctionService);
-    controller = new FunctionController(functionService, undefined, undefined);
+    functionEngine = jasmine.createSpyObj<FunctionEngine>("engine", ["createFunction"]);
+    controller = new FunctionController(functionService, functionEngine, undefined);
   });
 
   afterEach(async () => await functionService.deleteMany({}));
