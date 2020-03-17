@@ -72,9 +72,8 @@ export class DatabaseTestingModule implements OnModuleDestroy {
           useFactory: async (server: MongoMemoryReplSet) => {
             await server.waitUntilRunning();
             const connectionString = await server.getConnectionString();
-            // Issue: https://github.com/nodkz/mongodb-memory-server/issues/166
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            return MongoClient.connect(
+
+            const client = await MongoClient.connect(
               `${connectionString}?replicaSet=${server.opts.replSet.name}`,
               {
                 useNewUrlParser: true,
@@ -82,6 +81,28 @@ export class DatabaseTestingModule implements OnModuleDestroy {
                 poolSize: 200
               }
             );
+
+            const checkStatus = async () => {
+              const status = await client
+                .db()
+                .admin()
+                .replSetGetStatus();
+
+              const hasUnreadyMembers = status.members.some(member => member.state == 5);
+              return hasUnreadyMembers
+                ? Promise.reject("Some of the members didn't become ready within 10s")
+                : Promise.resolve();
+            };
+
+            const wait = (till: number = 2) =>
+              new Promise(resolve => setTimeout(resolve, till * 1000));
+
+            await checkStatus()
+              .catch(() => wait().then(() => checkStatus()))
+              .catch(() => wait(3).then(() => checkStatus()))
+              .catch(() => wait(5).then(() => checkStatus()));
+
+            return client;
           },
           inject: [MongoMemoryReplSet]
         },
