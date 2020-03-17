@@ -14,7 +14,7 @@ export class PreferencesService {
   }
 
   replaceOne(setting: PreferencesMeta): Observable<void> {
-    return this.http.put<void>(`api:/preference/${setting._id}`, setting);
+    return this.http.put<void>(`api:/preference/${setting.scope}`, setting);
   }
 
   insertOne(setting: PreferencesMeta): Observable<void> {
