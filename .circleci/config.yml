@@ -87,7 +87,7 @@ jobs:
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky --test_strategy=exclusive
   test_api_flaky:
     executor: api-executor
     steps:
