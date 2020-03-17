@@ -15,24 +15,23 @@ export class DocumentScheduler {
       }
     });
 
-    // const watcher = database.watch([
-    //   {
-    //     $match: {
-    //       "ns.coll": {
-    //         $regex: /^bucket_/
-    //       },
-    //       "fullDocument._schedule": {$type: "string"}
-    //     }
-    //   }
-    // ]);
-    // watcher.on("change", change => {
-    //   this.schedule(
-    //     new ObjectId(change.ns.coll.replace(/^bucket_/, "")),
-    //     new ObjectId(change.documentKey._id),
-    //     new Date(change.fullDocument._schedule),
-    //     change.fullDocument
-    //   );
-    // });
+    const watcher = database.watch([
+      {
+        $match: {
+          "ns.coll": {
+            $regex: /^bucket_/
+          },
+          "fullDocument._schedule": {$type: "string"}
+        }
+      }
+    ]);
+    watcher.on("change", change => {
+      this.schedule(
+        new ObjectId(change.ns.coll.replace(/^bucket_/, "")),
+        new ObjectId(change.documentKey._id),
+        new Date(change.fullDocument._schedule)
+      );
+    });
   }
   schedule(bucket: ObjectId, document: ObjectId, time: Date) {
     const key = `${bucket}_${document}`;
