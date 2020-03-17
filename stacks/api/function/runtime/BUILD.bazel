@@ -11,6 +11,5 @@ ts_library(
     module_name = "@spica-server/function/runtime",
     deps = [
         "@npm//@types/node",
-        "@npm//symlink-dir",
     ],
 )
