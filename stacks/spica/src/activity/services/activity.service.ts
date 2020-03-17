@@ -10,7 +10,7 @@ export class ActivityService {
   createRandomActivities() {
     let availables = getAvailableFilters();
     let randomActivities: Activity[] = [];
-    for (let index = 0; index < 30; index++) {
+    for (let index = 0; index < 200; index++) {
       randomActivities.push({
         action: Actions[Object.keys(Actions)[Math.floor(Math.random() * Math.floor(3))]],
         date: new Date(
@@ -43,12 +43,12 @@ export class ActivityService {
         begin: undefined,
         end: undefined
       },
-      modules: []
+      modules: [],
+      limit: undefined,
+      skip: undefined
     }
   ): Observable<Activity[]> {
-    let filteredActivities = JSON.parse(JSON.stringify(this.activities));
-
-    console.log(filter);
+    let filteredActivities: Activity[] = JSON.parse(JSON.stringify(this.activities));
 
     if (filter.identifier) {
       filteredActivities = this.activities.filter(activity =>
@@ -56,23 +56,32 @@ export class ActivityService {
       );
     }
 
-    if (filter.date.begin && filter.date.end) {
+    if (filter.date && filter.date.begin && filter.date.end) {
       filteredActivities = this.activities.filter(
         activity => activity.date >= filter.date.begin && activity.date <= filter.date.end
       );
     }
 
-    if (filter.actions.length >= 1) {
+    if (filter.actions && filter.actions.length >= 1) {
       filteredActivities = filteredActivities.filter(activity =>
         filter.actions.includes(activity.action)
       );
     }
 
-    if (filter.modules.length >= 1) {
+    if (filter.modules && filter.modules.length >= 1) {
       filteredActivities = filteredActivities.filter(activity =>
         filter.modules.includes(activity.module)
       );
     }
-    return of(filteredActivities as Activity[]);
+
+    if (filter.skip) {
+      filteredActivities = filteredActivities.filter((activity, index) => index >= filter.skip);
+    }
+
+    if (filter.limit) {
+      filteredActivities = filteredActivities.filter((activity, index) => index < filter.limit);
+    }
+
+    return of(filteredActivities);
   }
 }

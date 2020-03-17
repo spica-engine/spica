@@ -15,8 +15,21 @@
     .mat-form-field {
       margin: 5px 10px;
     }
-    .mat-table {
+    .example-viewport {
+      height: 600px;
       width: 100%;
+    }
+
+    .mat-list-item {
+      height: 75px;
+      width: 100%;
+      span.info {
+        width: 70%;
+      }
+      span.date {
+        width: 30%;
+        text-align: end;
+      }
     }
   }
 }

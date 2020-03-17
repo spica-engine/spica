@@ -12,6 +12,8 @@ import {
   MatInputModule,
   MatButtonModule
 } from "@angular/material";
+import {ScrollingModule} from "@angular/cdk/scrolling";
+import {MatListModule} from "@angular/material/list";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {FormsModule} from "@angular/forms";
 import {ActivityService} from "./services/activity.service";
@@ -31,7 +33,9 @@ import {ActivityService} from "./services/activity.service";
     SatDatepickerModule,
     SatNativeDateModule,
     FormsModule,
-    MatButtonModule
+    MatButtonModule,
+    ScrollingModule,
+    MatListModule
   ],
   providers: [ActivityService]
 })

@@ -48,7 +48,22 @@
     Clear
   </button>
   <mat-card-content>
-    <table mat-table [dataSource]="activities$" class="mat-elevation-z8">
+    <cdk-virtual-scroll-viewport itemSize="75" class="example-viewport">
+      <mat-list>
+        <mat-list-item *cdkVirtualFor="let item of dataSource">
+          <span class="info"
+            >Identifier {{ item.identifier }} made {{ item.action }} action on the
+            {{ item.module }} module and document with {{ item.documentId }}.</span
+          >
+          <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
+          <ng-container *ngIf="!item">
+            Loading..
+          </ng-container>
+          <mat-divider></mat-divider>
+        </mat-list-item>
+      </mat-list>
+    </cdk-virtual-scroll-viewport>
+    <!-- <table mat-table [dataSource]="activities$" class="mat-elevation-z8">
       <ng-container matColumnDef="identifier">
         <th mat-header-cell *matHeaderCellDef>Identifier</th>
         <td mat-cell *matCellDef="let activity">{{ activity.identifier }}</td>
@@ -80,6 +95,6 @@
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
+    </table> -->
   </mat-card-content>
 </mat-card>

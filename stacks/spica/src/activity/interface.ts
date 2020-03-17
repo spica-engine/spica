@@ -14,13 +14,15 @@ export enum Actions {
 }
 
 export interface ActivityFilter {
-  identifier: string;
-  modules: string[];
-  actions: string[];
-  date: {
+  identifier?: string;
+  modules?: string[];
+  actions?: string[];
+  date?: {
     begin: Date;
     end: Date;
   };
+  limit?: number;
+  skip?: number;
 }
 
 export function getAvailableFilters() {
