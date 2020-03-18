@@ -11,6 +11,7 @@ describe("install", () => {
   let get: jasmine.Spy<typeof request.get>;
   let post: jasmine.Spy<typeof request.stream.post>;
   let hasAuthorization: jasmine.Spy<typeof context.hasAuthorization>;
+  let authorizationHeaders: jasmine.Spy<typeof context.authorizationHeaders>;
   let url: jasmine.Spy<typeof context.url>;
   let command: InstallCommand;
   let logger: jasmine.SpyObj<Logger>;
@@ -38,6 +39,10 @@ describe("install", () => {
     ]);
 
     hasAuthorization = spyOn(context, "hasAuthorization").and.returnValue(Promise.resolve(true));
+
+    authorizationHeaders = spyOn(context, "authorizationHeaders").and.returnValue(
+      Promise.resolve({} as any)
+    );
 
     url = spyOn(context, "url").and.callFake(url => Promise.resolve(url));
 

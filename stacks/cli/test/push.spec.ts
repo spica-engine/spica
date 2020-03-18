@@ -15,6 +15,7 @@ describe("push", () => {
   let del: jasmine.Spy<typeof request.del>;
   let get: jasmine.Spy<typeof request.get>;
   let hasAuthorization: jasmine.Spy<typeof context.hasAuthorization>;
+  let authorizationHeaders: jasmine.Spy<typeof context.authorizationHeaders>;
   let url: jasmine.Spy<typeof context.url>;
   let command: PushCommand;
   let logger: jasmine.SpyObj<Logger>;
@@ -73,6 +74,10 @@ describe("push", () => {
     ]);
 
     hasAuthorization = spyOn(context, "hasAuthorization").and.returnValue(Promise.resolve(true));
+
+    authorizationHeaders = spyOn(context, "authorizationHeaders").and.returnValue(
+      Promise.resolve({} as any)
+    );
 
     url = spyOn(context, "url").and.callFake(url => Promise.resolve(url));
 
