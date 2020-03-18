@@ -12,7 +12,8 @@ import {
   UseGuards,
   ForbiddenException,
   Optional,
-  Put
+  Put,
+  UseInterceptors
 } from "@nestjs/common";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -22,7 +23,9 @@ import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/databa
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
+import {BucketActivityLogger} from "./activity.logger";
 
+@UseInterceptors(new BucketActivityLogger())
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
   constructor(

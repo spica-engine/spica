@@ -13,7 +13,8 @@ import {
   Post,
   Put,
   Res,
-  UseGuards
+  UseGuards,
+  UseInterceptors
 } from "@nestjs/common";
 import {Bucket, BucketDocument, BucketService, ImportFile} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
@@ -24,7 +25,9 @@ import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
 import {BucketDataService} from "./bucket-data.service";
+import {BucketActivityLogger} from "./activity.logger";
 
+@UseInterceptors(new BucketActivityLogger())
 @Controller("bucket")
 export class BucketController {
   constructor(private bs: BucketService, private bds: BucketDataService) {}
