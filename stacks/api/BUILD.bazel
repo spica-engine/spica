@@ -17,7 +17,6 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/bucket",
-        "//stacks/api/composer",
         "//stacks/api/dashboard",
         "//stacks/api/function",
         "//stacks/api/passport",
