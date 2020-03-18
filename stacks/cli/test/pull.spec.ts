@@ -91,7 +91,7 @@ describe("pull", () => {
 
   it("should fail if there is no authorization", async () => {
     hasAuthorization.and.returnValue(Promise.resolve(false));
-    const result = await command.run(["test"], {package: "package.yaml"}).catch(e => e);
+    const result = await command.run(["test"], {package: "package.yaml"});
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledTimes(1);
     expect(result).not.toBeTruthy();

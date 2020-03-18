@@ -4,18 +4,25 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
   Post,
-  UseGuards,
-  Put
+  Put,
+  Query,
+  Res,
+  UseGuards
 } from "@nestjs/common";
+import {BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import * as os from "os";
+import {of} from "rxjs";
+import {catchError, ignoreElements, map, finalize} from "rxjs/operators";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
@@ -173,15 +180,48 @@ export class FunctionController {
 
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  async addDependency(@Param("id", OBJECT_ID) id: ObjectId, @Body("name") name: string) {
+  @Header("X-Content-Type-Options", "nosniff")
+  async addDependency(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Query("progress", BOOLEAN) progress: boolean,
+    @Body("name") name: string,
+    @Res() res
+  ) {
+    if (!name) {
+      throw new BadRequestException("Dependency name is required.");
+    }
     const fn = await this.fs.findOne({_id: id});
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
 
-    return this.engine.addPackage(fn, name).catch(error => {
-      throw new BadRequestException(error.message);
-    });
+    if (!progress) {
+      return this.engine
+        .addPackage(fn, name)
+        .toPromise()
+        .then(() => {})
+        .catch(error => {
+          throw new BadRequestException(error);
+        });
+    } else {
+      return this.engine.addPackage(fn, name).pipe(
+        map(progress => {
+          return {
+            progress,
+            state: "installing"
+          };
+        }),
+        catchError(error =>
+          of({
+            state: "failed",
+            message: error
+          })
+        ),
+        map(response => res.write(`${JSON.stringify(response)}${os.EOL}`)),
+        finalize(() => res.end()),
+        ignoreElements()
+      );
+    }
   }
 
   @Delete(":id/dependencies/:name")
