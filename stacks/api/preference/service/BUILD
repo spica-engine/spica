@@ -4,15 +4,14 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "preference",
+    name = "service",
     srcs = glob(
         include = ["**/*.ts"],
         exclude = ["**/*.spec.ts"],
     ),
-    module_name = "@spica-server/preference",
+    module_name = "@spica-server/preference/service",
     deps = [
         "//packages/database",
-        "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/mongodb",
@@ -21,16 +20,16 @@ ts_library(
 )
 
 ts_library(
-    name = "test_lib_preference-acceptance",
+    name = "test_lib_preference-service",
     testonly = True,
     srcs = [
-        "preference.acceptance.spec.ts",
+        "preference.service.spec.ts",
     ],
     deps = [
-        ":preference",
         "//packages/core",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
@@ -40,11 +39,8 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "test-preference-acceptance",
-    tags = [
-        "flaky",
-    ],
+    name = "test-preference-service",
     deps = [
-        ":test_lib_preference-acceptance",
+        ":test_lib_preference-service",
     ],
 )

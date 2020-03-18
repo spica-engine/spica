@@ -10,7 +10,7 @@ ts_library(
     ],
     module_name = "@spica-server/preference/testing",
     deps = [
-        "//stacks/api/preference",
+        "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@types/jasmine",
         "@npm//rxjs",

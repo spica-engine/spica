@@ -16,7 +16,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/preference",
+        "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//@types/node",

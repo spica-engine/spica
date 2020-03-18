@@ -1,6 +1,5 @@
 import {Body, Controller, Get, Param, Put} from "@nestjs/common";
-import {Preference} from "./interface";
-import {PreferenceService} from "./preference.service";
+import {Preference, PreferenceService} from "./service";
 
 @Controller("preference")
 export class PreferenceController {

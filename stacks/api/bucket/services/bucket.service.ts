@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {Default, Validator} from "@spica-server/core/schema";
 import {Collection, DatabaseService, BaseCollection} from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference";
+import {PreferenceService} from "@spica-server/preference/service";
 import * as fs from "fs";
 import {Bucket, BucketPreferences} from "./bucket";
 
