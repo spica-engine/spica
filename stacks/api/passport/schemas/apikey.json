@@ -13,7 +13,11 @@
     "active": {
       "type": "boolean",
       "default": true
+    },
+    "policies": {
+      "type": "array",
+      "default": []
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

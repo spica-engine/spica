@@ -8,6 +8,8 @@ import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
 import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
 import {DashboardModule} from "@spica-server/dashboard/dashboard.module";
+import {ActivityLogger} from "@spica-server/activity";
+import {APP_INTERCEPTOR} from "@nestjs/core";
 
 @Module({
   imports: [
@@ -35,6 +37,12 @@ import {DashboardModule} from "@spica-server/dashboard/dashboard.module";
     FunctionModule.forRoot({
       path: process.env.PERSISTENT_PATH
     })
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ActivityLogger
+    }
   ]
 })
 export class AppModule {}
