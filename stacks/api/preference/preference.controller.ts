@@ -1,5 +1,6 @@
-import {Body, Controller, Get, Param, Put} from "@nestjs/common";
+import {Body, Controller, Get, Param, Put, UseGuards} from "@nestjs/common";
 import {Preference, PreferenceService} from "./service";
+import {AuthGuard} from "@spica-server/passport";
 
 @Controller("preference")
 export class PreferenceController {
@@ -11,6 +12,7 @@ export class PreferenceController {
   }
 
   @Put(":scope")
+  @UseGuards(AuthGuard())
   replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
     delete preference._id;
     preference.scope = scope;
