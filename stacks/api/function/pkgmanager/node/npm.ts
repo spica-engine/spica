@@ -40,7 +40,6 @@ export class Npm extends PackageManager {
 
         stderr += chunk;
       });
-      proc.on("time", () => console.log("DSADASDASDSAD"));
       proc.on("message", console.log);
       proc.on("close", code => {
         if (code == 0) {
