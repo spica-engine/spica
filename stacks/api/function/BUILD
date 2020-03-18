@@ -26,6 +26,7 @@ ts_library(
         "@npm//@types/json-schema",
         "@npm//@types/mongodb",
         "@npm//@types/node",
+        "@npm//rimraf",
         "@npm//rxjs",
         "@npm//typescript",
     ],

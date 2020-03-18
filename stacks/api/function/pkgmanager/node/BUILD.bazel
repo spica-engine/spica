@@ -12,5 +12,6 @@ ts_library(
     deps = [
         "//stacks/api/function/pkgmanager",
         "@npm//@types/node",
+        "@npm//rxjs",
     ],
 )

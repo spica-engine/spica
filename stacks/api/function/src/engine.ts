@@ -7,6 +7,7 @@ import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
 import * as rimraf from "rimraf";
+import {Observable} from "rxjs";
 import {bufferTime} from "rxjs/operators";
 import * as util from "util";
 import {ChangeKind, FunctionService, TargetChange} from "./function.service";
@@ -70,7 +71,7 @@ export class FunctionEngine {
     return this.getDefaultPackageManager().ls(functionRoot);
   }
 
-  addPackage(fn: Function, qualifiedName: string): Promise<void> {
+  addPackage(fn: Function, qualifiedName: string): Observable<number> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
     return this.getDefaultPackageManager().install(functionRoot, qualifiedName);
   }

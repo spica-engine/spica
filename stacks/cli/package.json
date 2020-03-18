@@ -15,9 +15,11 @@
     "get-port": "^5.0.0",
     "chalk": "^2.4.2",
     "open": "^6.4.0",
-    "columnify": "^1.5.4"
+    "columnify": "^1.5.4",
+    "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "@types/dockerode": "^2.5.4"
+    "@types/dockerode": "^2.5.4",
+    "@types/node-fetch": "^2.5.5"
   }
 }
