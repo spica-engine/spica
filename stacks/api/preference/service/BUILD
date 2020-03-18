@@ -26,10 +26,10 @@ ts_library(
         "preference.service.spec.ts",
     ],
     deps = [
-        "//stacks/api/preference/service",
         "//packages/core",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
