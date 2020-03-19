@@ -1,12 +1,13 @@
-import {Module} from "@nestjs/common";
+import {Module, Global} from "@nestjs/common";
 import {ActivityController} from "./activity.controller";
 import {ActivityService} from "./activity.service";
 import {DatabaseModule} from "@spica-server/database";
-import {ActivityInterceptor} from "./activity.logger";
 
+@Global()
 @Module({
   imports: [DatabaseModule],
   controllers: [ActivityController],
-  providers: [ActivityService, ActivityInterceptor]
+  providers: [ActivityService],
+  exports: [ActivityService]
 })
 export class ActivityModule {}

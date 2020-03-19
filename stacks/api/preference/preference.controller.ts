@@ -1,6 +1,7 @@
-import {Body, Controller, Get, Param, Put} from "@nestjs/common";
+import {Body, Controller, Get, Param, Put, UseInterceptors} from "@nestjs/common";
 import {Preference} from "./interface";
 import {PreferenceService} from "./preference.service";
+import {ActivityInterceptor, createActivity} from "@spica-server/activity";
 
 @Controller("preference")
 export class PreferenceController {
@@ -11,6 +12,7 @@ export class PreferenceController {
     return this.preference.get(scope);
   }
 
+  @UseInterceptors(ActivityInterceptor(createActivity, "PREFERENCE"))
   @Put(":scope")
   replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
     delete preference._id;

@@ -22,7 +22,7 @@ import {ActivityModule} from "./activity/activity.module";
       defaults: [CREATED_AT, UPDATED_AT]
     }),
     PreferenceModule,
-    ActivityModule,
+    ...(!!process.env.ENABLE_ACTIVITY_STREAM ? [ActivityModule] : []),
     BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS}),
     DashboardModule,
     StorageModule.forRoot({

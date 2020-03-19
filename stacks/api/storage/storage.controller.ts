@@ -9,7 +9,8 @@ import {
   Query,
   Res,
   UseGuards,
-  Put
+  Put,
+  UseInterceptors
 } from "@nestjs/common";
 import {BOOLEAN, NUMBER, JSONP, DEFAULT} from "@spica-server/core";
 import {OBJECT_ID} from "@spica-server/database";
@@ -17,6 +18,7 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Binary, ObjectId} from "bson";
 
 import {Storage, StorageObject} from "./storage.service";
+import {ActivityInterceptor, createActivity} from "@spica-server/activity";
 
 @Controller("storage")
 export class StorageController {
@@ -54,9 +56,10 @@ export class StorageController {
     }
   }
 
-  @Put()
+  @UseInterceptors(ActivityInterceptor(createActivity, "STORAGE"))
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
-  async updateOne(@Body() object: StorageObject) {
+  async updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
     if (!object.content.data) {
       throw new BadRequestException("No content specified.");
     }
@@ -64,8 +67,10 @@ export class StorageController {
     object.content.data = ((object.content.data as any) as Binary).buffer;
     object.content.size = object.content.data.byteLength;
 
-    return await this.storage.updateOne(object);
+    return await this.storage.updateOne({_id: id}, object);
   }
+
+  @UseInterceptors(ActivityInterceptor(createActivity, "STORAGE"))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
   async insertMany(@Body() object: StorageObject[]) {
@@ -91,6 +96,7 @@ export class StorageController {
     return await this.storage.insertMany(insertData);
   }
 
+  @UseInterceptors(ActivityInterceptor(createActivity, "STORAGE"))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

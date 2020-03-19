@@ -15,6 +15,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/activity",
         "//stacks/api/function/enqueuer",
         "//stacks/api/function/horizon",
         "//stacks/api/function/pkgmanager",

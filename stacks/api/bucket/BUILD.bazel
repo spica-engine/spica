@@ -7,6 +7,7 @@ load("//tools/dgeni:index.bzl", "docs")
 ts_library(
     name = "bucket",
     srcs = [
+        "activity.logger.ts",
         "bucket.controller.ts",
         "bucket.module.ts",
         "bucket.schema.resolver.ts",
@@ -16,7 +17,6 @@ ts_library(
         "cache.ts",
         "index.ts",
         "scheduler.ts",
-        "activity.logger.ts"
     ],
     data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
@@ -24,6 +24,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/activity",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",
@@ -31,7 +32,6 @@ ts_library(
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
         "//stacks/api/preference",
-        "//stacks/api/activity",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/archiver",
@@ -41,7 +41,7 @@ ts_library(
         "@npm//archiver",
         "@npm//cron",
         "@npm//locale",
-        "@npm//rxjs"
+        "@npm//rxjs",
     ],
 )
 

@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, ObjectId} from "@spica-server/database";
+import {Collection, DatabaseService, ObjectId, FilterQuery} from "@spica-server/database";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -59,15 +59,13 @@ export class Storage {
     return this._collection.deleteOne({_id: id}).then(() => undefined);
   }
 
-  updateOne(object: StorageObject): Promise<StorageObject> {
+  updateOne(filter: FilterQuery<StorageObject>, object: StorageObject): Promise<StorageObject> {
     if (object.content.data) {
       fs.writeFileSync(this.buildPath(object), object.content.data);
     }
     delete object.content.data;
-    object._id = new ObjectId(object._id);
-    return this._collection
-      .updateOne({_id: object._id}, {$set: object}, {upsert: true})
-      .then(() => object);
+    delete object._id;
+    return this._collection.updateOne(filter, {$set: object}, {upsert: true}).then(() => object);
   }
 
   insertMany(object: StorageObject[]): Promise<StorageObject[]> {

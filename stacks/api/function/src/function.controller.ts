@@ -10,7 +10,8 @@ import {
   Param,
   Post,
   UseGuards,
-  Put
+  Put,
+  UseInterceptors
 } from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -20,6 +21,7 @@ import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
+import {ActivityInterceptor, createActivity} from "@spica-server/activity";
 
 @Controller("function")
 export class FunctionController {
@@ -63,6 +65,7 @@ export class FunctionController {
     return this.fs.findOne({_id: id});
   }
 
+  @UseInterceptors(ActivityInterceptor(createActivity, "FUNCTION"))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -98,6 +101,7 @@ export class FunctionController {
       });
   }
 
+  @UseInterceptors(ActivityInterceptor(createActivity, "FUNCTION"))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
@@ -115,6 +119,7 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
+  @UseInterceptors(ActivityInterceptor(createActivity, "FUNCTION"))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {

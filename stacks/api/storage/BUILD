@@ -14,6 +14,7 @@ ts_library(
     deps = [
         "//packages/core",
         "//packages/database",
+        "//stacks/api/activity",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",

@@ -1,39 +1,34 @@
-import {Activity, Action} from "@spica-server/activity";
+import {Action, Activity} from "@spica-server/activity";
 
-export function createBucketDataActivity(req, res): Activity {
+export function createBucketDataActivity(preActivity: Activity, req: any, res: any): Activity {
   const action = Object.values(Action)[Object.keys(Action).findIndex(val => val === req.method)];
-  let activity = {
-    action: action,
-    module: `BUCKET_${req.params.bucketId}`,
-    identifier: req.user ? (req.user.identifier ? req.user.identifier : undefined) : undefined,
-    documentId: undefined,
-    date: new Date()
+  let activity: Activity = {
+    ...preActivity,
+    resource: ["BUCKET", req.params.bucketId.toString()],
+    verb: action
   };
   if (action == Action.POST) {
-    activity.documentId = res._id ? res._id : undefined;
+    activity.resource.push(res._id ? res._id : undefined);
   } else {
-    activity.documentId = req.params
-      ? req.params.documentId
-        ? req.params.documentId
-        : undefined
-      : undefined;
+    activity.resource.push(
+      req.params ? (req.params.documentId ? req.params.documentId : undefined) : undefined
+    );
   }
   return activity;
 }
 
-export function createBucketActivity(req, res): Activity {
+export function createBucketActivity(preActivity: Activity, req: any, res: any): Activity {
   const action = Object.values(Action)[Object.keys(Action).findIndex(val => val === req.method)];
-  let activity = {
-    action: action,
-    module: "BUCKET",
-    identifier: req.user ? (req.user.identifier ? req.user.identifier : undefined) : undefined,
-    documentId: undefined,
-    date: new Date()
+  let activity: Activity = {
+    ...preActivity,
+    resource: ["BUCKET"],
+    verb: action
   };
+  console.log(req.params);
   if (action == Action.POST) {
-    activity.documentId = res._id ? res._id : undefined;
+    activity.resource.push(res._id ? res._id : undefined);
   } else {
-    activity.documentId = req.params ? (req.params.id ? req.params.id : undefined) : undefined;
+    activity.resource.push(req.params ? (req.params.id ? req.params.id : undefined) : undefined);
   }
   return activity;
 }

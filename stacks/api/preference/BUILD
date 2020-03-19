@@ -12,6 +12,7 @@ ts_library(
     module_name = "@spica-server/preference",
     deps = [
         "//packages/database",
+        "//stacks/api/activity",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/mongodb",

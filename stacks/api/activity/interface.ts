@@ -1,9 +1,11 @@
 export interface Activity {
-  module: string;
-  action: Action;
+  resource: string[];
+  verb: Action;
   identifier: string;
-  documentId: string;
-  date: Date;
+}
+
+export interface Predict {
+  (module: string, activity: Activity, req: object, data: object): Activity;
 }
 
 export enum Action {
