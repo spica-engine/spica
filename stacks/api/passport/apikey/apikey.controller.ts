@@ -8,7 +8,8 @@ import {
   Post,
   Put,
   Query,
-  UseGuards
+  UseGuards,
+  UseInterceptors
 } from "@nestjs/common";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
@@ -70,6 +71,7 @@ export class ApiKeyController {
     });
   }
 
+  //@UseInterceptors(new ActivityLogger(createApiKeyActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
@@ -77,6 +79,7 @@ export class ApiKeyController {
     return this.aks.insertOne(apiKey);
   }
 
+  //@UseInterceptors(new ActivityLogger(createApiKeyActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
   replaceOne(
@@ -93,6 +96,7 @@ export class ApiKeyController {
       });
   }
 
+  //@UseInterceptors(new ActivityLogger(createApiKeyActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

@@ -8,7 +8,7 @@ import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
 import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
 import {DashboardModule} from "@spica-server/dashboard/dashboard.module";
-
+import {ActivityModule} from "./activity/activity.module";
 
 @Module({
   imports: [
@@ -22,6 +22,7 @@ import {DashboardModule} from "@spica-server/dashboard/dashboard.module";
       defaults: [CREATED_AT, UPDATED_AT]
     }),
     PreferenceModule,
+    ActivityModule,
     BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS}),
     DashboardModule,
     StorageModule.forRoot({

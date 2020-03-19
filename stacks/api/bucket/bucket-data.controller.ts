@@ -23,9 +23,7 @@ import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/databa
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {BucketActivityLogger} from "./activity.logger";
 
-@UseInterceptors(new BucketActivityLogger())
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
   constructor(
@@ -303,6 +301,7 @@ export class BucketDataController {
     return document;
   }
 
+  //@UseInterceptors(new ActivityLogger(createBucketDataActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async replaceOne(
@@ -323,6 +322,7 @@ export class BucketDataController {
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
+  //@UseInterceptors(new ActivityLogger(createBucketDataActivity))
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async update(
@@ -345,6 +345,7 @@ export class BucketDataController {
     return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
+  //@UseInterceptors(new ActivityLogger(createBucketDataActivity))
   @Delete(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteOne(

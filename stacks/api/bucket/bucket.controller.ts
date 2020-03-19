@@ -25,9 +25,9 @@ import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
 import {BucketDataService} from "./bucket-data.service";
-import {BucketActivityLogger} from "./activity.logger";
+import {createBucketActivity} from "./activity.logger";
+import { ActivityInterceptor } from "@spica-server/activity/activity.logger";
 
-@UseInterceptors(new BucketActivityLogger())
 @Controller("bucket")
 export class BucketController {
   constructor(private bs: BucketService, private bds: BucketDataService) {}
@@ -58,12 +58,14 @@ export class BucketController {
     return this.bs.getPredefinedDefaults();
   }
 
+  @UseInterceptors(new ActivityInterceptor(createBucketActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     return this.bs.insertOne(bucket);
   }
 
+  @UseInterceptors(new ActivityInterceptor(createBucketActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   replaceOne(
@@ -92,6 +94,7 @@ export class BucketController {
     return this.bs.findOne({_id: id});
   }
 
+  @UseInterceptors(new ActivityInterceptor(createBucketActivity))
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
