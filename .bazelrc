@@ -47,3 +47,7 @@ build --host_force_python=PY2
 run --host_force_python=PY2
 
 common --experimental_allow_incremental_repository_updates
+
+
+# Disable Test Caching
+test --nocache_test_results

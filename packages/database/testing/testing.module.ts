@@ -1,12 +1,16 @@
-import {DynamicModule, Global, Module, OnModuleDestroy} from "@nestjs/common";
-import {ModuleRef} from "@nestjs/core";
+import {DynamicModule, Global, Module, OnModuleDestroy, Optional} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import * as fs from "fs";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server-core";
+
 @Global()
 @Module({})
 export class DatabaseTestingModule implements OnModuleDestroy {
-  constructor(private moduleRef: ModuleRef) {}
+  constructor(
+    @Optional() private replicaSet: MongoMemoryReplSet,
+    @Optional() private server: MongoMemoryServer
+  ) {}
+
   static create(): DynamicModule {
     return {
       module: DatabaseTestingModule,
@@ -26,10 +30,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
         {
           provide: MongoClient,
           useFactory: async (server: MongoMemoryServer) =>
-            MongoClient.connect(await server.getConnectionString(), {
-              // @ts-ignore
-              useUnifiedTopology: true
-            }),
+            MongoClient.connect(await server.getConnectionString(), {}),
           inject: [MongoMemoryServer]
         },
         {
@@ -48,61 +49,54 @@ export class DatabaseTestingModule implements OnModuleDestroy {
       providers: [
         {
           provide: MongoMemoryReplSet,
-          useFactory: async () =>
-            new MongoMemoryReplSet({
+          useFactory: async () => {
+            const replSet = new MongoMemoryReplSet({
               binary: {
                 // @ts-ignore
                 systemBinary: fs.existsSync("/usr/bin/mongod")
                   ? "/usr/bin/mongod"
                   : "/usr/local/bin/mongod"
               },
-              replSet: {
-                count: 3,
-                dbName: undefined
-              },
-              instanceOpts: [
-                {storageEngine: "wiredTiger"},
-                {storageEngine: "wiredTiger"},
-                {storageEngine: "wiredTiger"}
-              ]
-            })
+              replSet: {count: 1},
+              instanceOpts: [{storageEngine: "wiredTiger"}]
+            });
+
+            return replSet;
+          }
         },
         {
           provide: MongoClient,
           useFactory: async (server: MongoMemoryReplSet) => {
             await server.waitUntilRunning();
-            const connectionString = await server.getConnectionString();
+            const connection = await MongoClient.connect(await server.getConnectionString(), {
+              replicaSet: server.opts.replSet.name,
+              poolSize: Number.MAX_SAFE_INTEGER
+            });
 
-            const client = await MongoClient.connect(
-              `${connectionString}?replicaSet=${server.opts.replSet.name}`,
-              {
-                useNewUrlParser: true,
-                replicaSet: server.opts.replSet.name,
-                poolSize: 200
-              }
+            const retry = <T>(fn: () => Promise<T>, ms) =>
+              new Promise<T>(resolve => {
+                fn()
+                  .then(resolve)
+                  .catch(() => {
+                    setTimeout(() => retry(fn, ms).then(resolve), ms);
+                  });
+              });
+
+            await retry(
+              () =>
+                connection
+                  .db()
+                  .admin()
+                  .replSetGetStatus()
+                  .then(status => {
+                    const hasPrimary = (status.members as Array<any>).some(
+                      member => member.state == "1" /* PRIMARY */
+                    );
+                    return hasPrimary ? Promise.resolve() : Promise.reject();
+                  }),
+              1000
             );
-
-            const checkStatus = async () => {
-              const status = await client
-                .db()
-                .admin()
-                .replSetGetStatus();
-
-              const hasUnreadyMembers = status.members.some(member => member.state == 5);
-              return hasUnreadyMembers
-                ? Promise.reject("Some of the members didn't become ready within 10s")
-                : Promise.resolve();
-            };
-
-            const wait = (till: number = 2) =>
-              new Promise(resolve => setTimeout(resolve, till * 1000));
-
-            await checkStatus()
-              .catch(() => wait().then(() => checkStatus()))
-              .catch(() => wait(3).then(() => checkStatus()))
-              .catch(() => wait(5).then(() => checkStatus()));
-
-            return client;
+            return connection;
           },
           inject: [MongoMemoryReplSet]
         },
@@ -110,7 +104,6 @@ export class DatabaseTestingModule implements OnModuleDestroy {
           provide: DatabaseService,
           useFactory: async (client: MongoClient, server: MongoMemoryReplSet) =>
             client.db(await server.getDbName()),
-
           inject: [MongoClient, MongoMemoryReplSet]
         }
       ],
@@ -118,28 +111,13 @@ export class DatabaseTestingModule implements OnModuleDestroy {
     };
   }
 
-  static async setDelayedReplica(dbService: DatabaseService) {
-    //get current configure and reconfigure it
-    let config = (await dbService.executeDbAdminCommand({replSetGetConfig: 1})).config;
-    config.version = config.version + 1;
-    config.members[2] = {
-      ...config.members[2],
-      hidden: true,
-      priority: 0,
-      slaveDelay: 5,
-      tags: {slaveDelay: "true"}
-    };
-    await dbService.executeDbAdminCommand({replSetReconfig: config});
-    //wait until replicaSet reconfigured
-    await new Promise(resolve => setTimeout(resolve, 10000));
-  }
+  async onModuleDestroy() {
+    if (this.server) {
+      await this.server.stop().catch(console.log);
+    }
 
-  onModuleDestroy() {
-    try {
-      this.moduleRef.get(MongoMemoryServer).stop();
-    } catch {}
-    try {
-      this.moduleRef.get(MongoMemoryReplSet).stop();
-    } catch {}
+    if (this.replicaSet) {
+      setTimeout(() => this.replicaSet.stop().catch(console.log), 1000);
+    }
   }
 }

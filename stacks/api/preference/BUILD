@@ -32,6 +32,7 @@ ts_library(
         "//packages/core",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//stacks/api/passport/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
