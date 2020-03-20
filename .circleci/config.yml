@@ -51,9 +51,9 @@ executors:
   api-executor:
     working_directory: ~/spica
     docker:
-      - image: circleci/node:11
       - image: circleci/mongo:4.2.3
-        command: [which, mongod]
+        entrypoint: []
+      - image: circleci/node:11
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
