@@ -49,8 +49,8 @@ commands:
       - run:
           name: "Install mongodb"
           command: |
-            apt-get update
-            apt-get install mongodb -y
+            sudo apt-get update
+            sudo apt-get install mongodb -y
 executors:
   default-executor:
     working_directory: ~/spica
