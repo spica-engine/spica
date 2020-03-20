@@ -25,3 +25,7 @@ build --verbose_failures=true
 
 # Be more noisy when running under ci
 test --test_output=errors
+
+
+# Cache tests under CI
+test --cache_test_results

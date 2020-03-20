@@ -65,8 +65,7 @@ export class Request {
           console.error(e);
         }
       }
-
-      console.log(response);
+      
       if (this.reject) {
         return Promise.reject(response);
       }
