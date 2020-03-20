@@ -53,6 +53,7 @@ executors:
     docker:
       - image: circleci/node:11
       - image: circleci/mongo:4.2.3
+        command: [which, mongod]
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
