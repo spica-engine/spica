@@ -12,10 +12,9 @@ export interface Resource {
 
 export interface ControllerDetails {
   moduleName: string;
-  documentIdKey:string,
-  moduleIdKey?:string
+  documentIdKey: string;
+  moduleIdKey?: string;
 }
-
 
 export interface Predict {
   (module: string, activity: Activity, req: object, data: object): Activity;
