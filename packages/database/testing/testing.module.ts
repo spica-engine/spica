@@ -2,6 +2,9 @@ import {DynamicModule, Global, Module, OnModuleDestroy, Optional} from "@nestjs/
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import * as fs from "fs";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server-core";
+import * as which from "which";
+
+const MONGOD_PATH: string = which.sync("mongod");
 
 @Global()
 @Module({})
@@ -21,9 +24,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
             new MongoMemoryServer({
               binary: {
                 // @ts-ignore
-                systemBinary: fs.existsSync("/usr/bin/mongod")
-                  ? "/usr/bin/mongod"
-                  : "/usr/local/bin/mongod"
+                systemBinary: MONGOD_PATH
               }
             })
         },
@@ -53,9 +54,7 @@ export class DatabaseTestingModule implements OnModuleDestroy {
             const replSet = new MongoMemoryReplSet({
               binary: {
                 // @ts-ignore
-                systemBinary: fs.existsSync("/usr/bin/mongod")
-                  ? "/usr/bin/mongod"
-                  : "/usr/local/bin/mongod"
+                systemBinary: MONGOD_PATH
               },
               replSet: {count: 1},
               instanceOpts: [{storageEngine: "wiredTiger"}]

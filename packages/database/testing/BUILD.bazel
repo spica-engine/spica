@@ -17,5 +17,6 @@ ts_library(
         "@npm//@types/node",
         "@npm//mongodb",
         "@npm//mongodb-memory-server-core",
+        "@npm//which"
     ],
 )
