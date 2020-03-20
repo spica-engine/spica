@@ -72,7 +72,7 @@ export class ApiKeyController {
     });
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "APIKEY"))
+  
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
@@ -80,7 +80,7 @@ export class ApiKeyController {
     return this.aks.insertOne(apiKey);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "APIKEY"))
+  
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
   replaceOne(
@@ -97,7 +97,7 @@ export class ApiKeyController {
       });
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "APIKEY"))
+  
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

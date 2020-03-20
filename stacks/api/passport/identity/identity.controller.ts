@@ -77,7 +77,7 @@ export class IdentityController {
     return identity;
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "IDENTITY"))
+  
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   insertOne(
@@ -92,7 +92,7 @@ export class IdentityController {
     });
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "IDENTITY"))
+  
   @Put(":id")
   // TODO(thesayyn): Check if user updates its own identity.
   @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
@@ -104,7 +104,7 @@ export class IdentityController {
     return this.identity.updateOne(id, identity);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "IDENTITY"))
+  
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

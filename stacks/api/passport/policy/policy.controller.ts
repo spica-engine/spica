@@ -42,14 +42,14 @@ export class PolicyController {
     return this.policy.findOne(id);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "POLICY"))
+  
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
   insertOne(@Body() body: Policy) {
     return this.policy.insertOne(body);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "POLICY"))
+  
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
   replaceOne(
@@ -59,7 +59,7 @@ export class PolicyController {
     return this.policy.replaceOne({_id: id}, body);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "POLICY"))
+  
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

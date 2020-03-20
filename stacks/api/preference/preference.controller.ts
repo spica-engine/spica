@@ -12,7 +12,9 @@ export class PreferenceController {
     return this.preference.get(scope);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "PREFERENCE"))
+  @UseInterceptors(
+    ActivityInterceptor({moduleName: "Preference", documentIdKey: "scope"})
+  )
   @Put(":scope")
   replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
     delete preference._id;

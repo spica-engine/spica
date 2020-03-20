@@ -302,7 +302,6 @@ export class BucketDataController {
     return document;
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "BUCKET-DATA"))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async replaceOne(
@@ -323,7 +322,6 @@ export class BucketDataController {
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "BUCKET-DATA"))
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async update(
@@ -346,7 +344,6 @@ export class BucketDataController {
     return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
-  @UseInterceptors(ActivityInterceptor(createActivity, "BUCKET-DATA"))
   @Delete(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteOne(
@@ -356,6 +353,13 @@ export class BucketDataController {
     return this.bds.deleteOne(bucketId, {_id: documentId});
   }
 
+  @UseInterceptors(
+    ActivityInterceptor({
+      moduleName: "BUCKET-DATA",
+      moduleIdKey: "bucketId",
+      documentIdKey: "documentId"
+    })
+  )
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {

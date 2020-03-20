@@ -7,7 +7,6 @@ load("//tools/dgeni:index.bzl", "docs")
 ts_library(
     name = "bucket",
     srcs = [
-        "activity.logger.ts",
         "bucket.controller.ts",
         "bucket.module.ts",
         "bucket.schema.resolver.ts",
