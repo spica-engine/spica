@@ -21,7 +21,7 @@ import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
       defaults: [CREATED_AT, UPDATED_AT]
     }),
     PreferenceModule,
-    BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS}),
+    BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS, history: true, realtime: true}),
     DashboardModule,
     StorageModule.forRoot({
       path: process.env.PERSISTENT_PATH

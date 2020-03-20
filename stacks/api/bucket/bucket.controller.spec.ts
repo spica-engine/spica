@@ -1,12 +1,12 @@
 import {INestApplication} from "@nestjs/common";
-import {SchemaModule, Default, Format} from "@spica-server/core/schema";
-import {ObjectId, DatabaseService} from "@spica-server/database";
 import {Test, TestingModule} from "@nestjs/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {BucketModule} from ".";
 import {Middlewares} from "@spica-server/core";
+import {Default, Format, SchemaModule} from "@spica-server/core/schema";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseService, ObjectId} from "@spica-server/database";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {BucketModule} from ".";
 
 export const CREATED_AT: Default = {
   keyword: ":created_at",
@@ -77,7 +77,7 @@ describe("Bucket acceptance", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
-        BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS})
+        BucketModule.forRoot({hooks: false, history: false, realtime: false})
       ]
     }).compile();
     app = module.createNestApplication();

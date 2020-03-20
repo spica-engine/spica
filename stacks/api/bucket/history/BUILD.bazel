@@ -34,7 +34,7 @@ docs(
 )
 
 ts_library(
-    name = "test_lib-watcher",
+    name = "watcher_test_lib",
     testonly = True,
     srcs = [
         "watcher.spec.ts",
@@ -48,15 +48,15 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "test-watcher",
-    srcs = [":test_lib-watcher"],
+    name = "watcher_test",
+    srcs = [":watcher_test_lib"],
     tags = [
         "flaky",
     ],
 )
 
 ts_library(
-    name = "test_lib-history-acceptance",
+    name = "history_test_lib",
     testonly = True,
     srcs = [
         "history.controller.spec.ts",
@@ -74,8 +74,8 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "test-history-acceptance",
-    srcs = [":test_lib-history-acceptance"],
+    name = "history_test",
+    srcs = [":history_test_lib"],
     tags = [
         "flaky",
     ],

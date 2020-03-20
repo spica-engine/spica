@@ -1,6 +1,8 @@
-import {Module, DynamicModule} from "@nestjs/common";
+import {DynamicModule, Module, Type} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
+import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
+import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
 import {PreferenceModule} from "@spica-server/preference";
@@ -10,10 +12,8 @@ import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {CUSTOM_TYPES} from "./bucket.schema.types";
-import {ServicesModule, BucketService} from "@spica-server/bucket/services";
 import {BucketCache, provideBucketCache} from "./cache";
 import {DocumentScheduler} from "./scheduler";
-import {HookModule} from "@spica-server/bucket/hooks";
 const BucketSchema = require("./schemas/bucket.schema.json");
 const BucketsSchema = require("./schemas/buckets.schema.json");
 const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
@@ -21,17 +21,27 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
-    const imports = [
+    const imports: (Type<any> | DynamicModule)[] = [
       PreferenceModule,
-      HistoryModule,
       RealtimeModule,
       SchemaModule.forChild({
         keywords: [CUSTOM_TYPES],
         schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
       }),
-      ServicesModule,
-      ...(options.hooks ? [HookModule] : [])
+      ServicesModule
     ];
+
+    if (options.hooks) {
+      imports.push(HookModule);
+    }
+
+    if (options.history) {
+      imports.push(HistoryModule);
+    }
+
+    if (options.realtime) {
+      imports.push(RealtimeModule);
+    }
 
     return {
       module: BucketModule,
@@ -71,4 +81,6 @@ export class BucketModule {
 
 export interface BucketOptions {
   hooks: boolean;
+  history: boolean;
+  realtime: boolean;
 }

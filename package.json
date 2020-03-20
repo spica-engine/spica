@@ -87,6 +87,7 @@
     "rimraf": "^3.0.2"
   },
   "devDependencies": {
+    "which": "^2.0.2",
     "@bazel/bazelisk": "^1.3.0",
     "@bazel/buildifier": "^0.29.0",
     "@bazel/hide-bazel-files": "^1.4.0",
