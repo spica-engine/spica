@@ -3,6 +3,8 @@ import * as request from "request-promise-native";
 
 @Injectable()
 export class Request {
+  reject: boolean = false;
+
   get socket() {
     return `/tmp/${process.env.BAZEL_TARGET.replace(/\/|:/g, "_")}.sock`;
   }
@@ -64,6 +66,10 @@ export class Request {
         }
       }
 
+      console.log(response);
+      if (this.reject) {
+        return Promise.reject(response);
+      }
       return response;
     });
   }

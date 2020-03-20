@@ -46,6 +46,7 @@ describe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
+  let db: DatabaseService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -60,9 +61,11 @@ describe("BucketDataController", () => {
         BucketModule.forRoot({hooks: false, history: false, realtime: false})
       ]
     }).compile();
+    db = module.get(DatabaseService);
     app = module.createNestApplication();
     app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
+    req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
 
     jasmine.addCustomEqualityTester((actual, expected) => {
@@ -70,7 +73,7 @@ describe("BucketDataController", () => {
         return true;
       }
     });
-  }, 120000);
+  });
 
   describe("index", () => {
     let bucket = {
@@ -349,191 +352,164 @@ describe("BucketDataController", () => {
     });
 
     describe("localize", () => {
-      let myBucketId: ObjectId;
-
-      beforeAll(async () => {
-        const myBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", translate: true, visible: true}
-            },
-            description: {
-              type: "textarea",
-              title: "description",
-              description: "Description of the row",
-              options: {position: "right"}
+      let bucket: Bucket;
+      let rows: BucketDocument[];
+      beforeEach(async () => {
+        bucket = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", translate: true, visible: true}
+              },
+              description: {
+                type: "textarea",
+                title: "description",
+                description: "Description of the row",
+                options: {position: "right"}
+              }
             }
-          }
-        };
-        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
+          })
+          .then(r => r.body);
 
-        //insert some data
-        const myTranslatableData = [
-          {
+        rows = [
+          await req.post(`/bucket/${bucket._id}/data`, {
             title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
             description: "description"
-          },
-          {
+          }),
+          await req.post(`/bucket/${bucket._id}/data`, {
             title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
             description: "description"
-          },
-          {
+          }),
+          await req.post(`/bucket/${bucket._id}/data`, {
             title: {en_US: "only english words"},
             description: "description"
-          }
-        ];
-
-        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[0]);
-        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[1]);
-        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[2]);
+          })
+        ].map(r => r.body);
       });
 
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: myBucketId})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${myBucketId}`)
-          .deleteMany({})
-          .catch();
-      });
+      afterEach(async () => await req.delete(`/bucket/${bucket._id}`));
 
       describe("find requests", () => {
         it("should return english titles", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
-            {},
-            {"accept-language": "en_US"}
-          );
-
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            "english words",
-            "new english words",
-            "only english words"
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+            "accept-language": "en_US"
+          });
+          expect(documents).toEqual([
+            {_id: "__skip__", title: "english words", description: "description"},
+            {_id: "__skip__", title: "new english words", description: "description"},
+            {_id: "__skip__", title: "only english words", description: "description"}
           ]);
         });
 
-        it("should return turkish titles", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
-            {},
-            {"accept-language": "tr_TR"}
-          );
+        it("should return turkish titles and fallback to default language", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+            "accept-language": "tr_TR"
+          });
 
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            "türkçe kelimeler",
-            "yeni türkçe kelimeler",
-            "only english words"
+          expect(documents).toEqual([
+            {_id: "__skip__", title: "türkçe kelimeler", description: "description"},
+            {_id: "__skip__", title: "yeni türkçe kelimeler", description: "description"},
+            {_id: "__skip__", title: "only english words", description: "description"}
           ]);
         });
 
-        it("should return titles with available languages when localize parameter is false", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
+        it("should return documents as is when localize parameter is false", async () => {
+          const {body: documents} = await req.get(
+            `/bucket/${bucket._id}/data`,
             {localize: "false"},
             {"accept-language": "tr_TR"}
           );
 
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            {en_US: "english words", tr_TR: "türkçe kelimeler"},
-            {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
-            {en_US: "only english words"}
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
+              description: "description"
+            },
+            {
+              _id: "__skip__",
+              title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
+              description: "description"
+            },
+            {
+              _id: "__skip__",
+              title: {en_US: "only english words"},
+              description: "description"
+            }
           ]);
         });
 
-        it("should return english titles when request's 'accepted-language' isn't available for titles", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
-            {},
-            {"accept-language": "fr_FR"}
-          );
-
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            "english words",
-            "new english words",
-            "only english words"
+        it("should return fallback language's titles when the titles are not available in requested language", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+            "accept-language": "fr_FR"
+          });
+          expect(documents).toEqual([
+            {_id: "__skip__", title: "english words", description: "description"},
+            {_id: "__skip__", title: "new english words", description: "description"},
+            {_id: "__skip__", title: "only english words", description: "description"}
           ]);
         });
       });
 
       describe("findOne requests", () => {
-        let allData;
-        beforeAll(async () => {
-          allData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
-        });
-
-        it("should return 'english words' title ", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[0]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {},
+        it("should return English title ", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[0]._id}`,
+            undefined,
             {"accept-language": "en_US"}
           );
-          expect(selectedDataResponse.body.title).toBe("english words");
-        });
-
-        it("should return 'yeni türkçe kelimeler' title ", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[1]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {},
-            {"accept-language": "tr_TR"}
-          );
-          expect(selectedDataResponse.body.title).toBe("yeni türkçe kelimeler");
-        });
-
-        it("should return data with avaliable languages when localize is false", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[0]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {localize: "false"},
-            {"accept-language": "tr_TR"}
-          );
-          expect(selectedDataResponse.body.title).toEqual({
-            en_US: "english words",
-            tr_TR: "türkçe kelimeler"
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: "english words",
+            description: "description"
           });
         });
 
-        it("should return 'only english words' title when request's 'accepted-language' isn't available for title", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[2]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {},
+        it("should return Turkish title ", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[0]._id}`,
+            undefined,
             {"accept-language": "tr_TR"}
           );
-          expect(selectedDataResponse.body.title).toBe("only english words");
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: "türkçe kelimeler",
+            description: "description"
+          });
+        });
+
+        it("should return document as is when localize parameter is false", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[0]._id}`,
+            {localize: "false"},
+            {"accept-language": "tr_TR"}
+          );
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
+            description: "description"
+          });
+        });
+
+        it("should return fallback language's titles when the titles are not available in requested language", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[2]._id}`,
+            undefined,
+            {"accept-language": "tr_TR"}
+          );
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: "only english words",
+            description: "description"
+          });
         });
       });
     });
@@ -766,15 +742,20 @@ describe("BucketDataController", () => {
     });
 
     it("should return error if title isnt valid for bucket", async () => {
-      const response = await req.post(`/bucket/${myBucketId}/data`, {
-        title: true,
-        description: "description"
+      const response = await req
+        .post(`/bucket/${myBucketId}/data`, {
+          title: true,
+          description: "description"
+        })
+        .then(() => null)
+        .catch(e => e);
+      expect(response.statusCode).toBe(400);
+      expect(response.statusText).toBe("Bad Request");
+      expect(response.body).toEqual({
+        statusCode: 400,
+        error: ".title should be string",
+        message: "validation failed"
       });
-      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect([response.body.error, response.body.message]).toEqual([
-        ".title should be string",
-        "validation failed"
-      ]);
     });
 
     // Flaky: This test fails with a clean run. Probably schema invalidator has a race condition with this it block.
