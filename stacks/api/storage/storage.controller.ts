@@ -56,6 +56,7 @@ export class StorageController {
     }
   }
 
+  @UseInterceptors(ActivityInterceptor({moduleName: "STORAGE", documentIdKey: "id"}))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
   async updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
@@ -95,6 +96,7 @@ export class StorageController {
     return await this.storage.insertMany(insertData);
   }
 
+  @UseInterceptors(ActivityInterceptor({moduleName: "STORAGE", documentIdKey: "id"}))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

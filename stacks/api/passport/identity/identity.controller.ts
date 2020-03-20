@@ -21,7 +21,7 @@ import {NUMBER} from "@spica-server/core";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {createActivity, ActivityInterceptor} from "@spica-server/activity";
+import {ActivityInterceptor} from "@spica-server/activity";
 @Controller("passport/identity")
 export class IdentityController {
   constructor(
@@ -77,7 +77,7 @@ export class IdentityController {
     return identity;
   }
 
-  
+  @UseInterceptors(ActivityInterceptor({moduleName: "IDENTITY", documentIdKey: "_id"}))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   insertOne(
@@ -92,7 +92,7 @@ export class IdentityController {
     });
   }
 
-  
+  @UseInterceptors(ActivityInterceptor({moduleName: "IDENTITY", documentIdKey: "id"}))
   @Put(":id")
   // TODO(thesayyn): Check if user updates its own identity.
   @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
@@ -104,7 +104,7 @@ export class IdentityController {
     return this.identity.updateOne(id, identity);
   }
 
-  
+  @UseInterceptors(ActivityInterceptor({moduleName: "IDENTITY", documentIdKey: "id"}))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

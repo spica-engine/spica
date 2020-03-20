@@ -21,7 +21,7 @@ import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
-import {ActivityInterceptor, createActivity} from "@spica-server/activity";
+import {ActivityInterceptor} from "@spica-server/activity";
 
 @Controller("function")
 export class FunctionController {
@@ -65,7 +65,7 @@ export class FunctionController {
     return this.fs.findOne({_id: id});
   }
 
-  
+  @UseInterceptors(ActivityInterceptor({moduleName: "FUNCTION", documentIdKey: "id"}))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -101,7 +101,7 @@ export class FunctionController {
       });
   }
 
-  
+  @UseInterceptors(ActivityInterceptor({moduleName: "FUNCTION", documentIdKey: "id"}))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
@@ -119,7 +119,7 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
-  
+  @UseInterceptors(ActivityInterceptor({moduleName: "FUNCTION", documentIdKey: "_id"}))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
