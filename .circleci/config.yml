@@ -43,6 +43,14 @@ commands:
                 export CIRCLE_TARGET_BRANCH=$(curl -s "$URL" | jq -e '.base.ref' | tr -d '"')
                 git merge --ff-only "origin/$CIRCLE_TARGET_BRANCH"
             fi
+  install_mongodb:
+    description: Install mongodb
+    steps:
+      - run:
+          name: "Install mongodb"
+          command: |
+            apt-get update
+            apt-get install mongodb -y
 executors:
   default-executor:
     working_directory: ~/spica
@@ -51,9 +59,8 @@ executors:
   api-executor:
     working_directory: ~/spica
     docker:
-      - image: circleci/mongo:4.2.3
-        entrypoint: []
       - image: circleci/node:11
+   
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
@@ -85,6 +92,7 @@ jobs:
     executor: api-executor
     steps:
       - custom_attach_workspace
+      - install_mongodb
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
@@ -93,6 +101,7 @@ jobs:
     executor: api-executor
     steps:
       - custom_attach_workspace
+      - install_mongodb
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
