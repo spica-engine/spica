@@ -20,40 +20,17 @@ describe("IO Database", () => {
     });
   });
 
-  it("should create writable stream and a capped collection", done => {
-    const stream = dbOutput.create({eventId: "test", functionId: "fn1"});
-    setTimeout(async () => {
-      expect(stream.writable).toBe(true);
-      expect(
-        await Promise.all(
-          (await db.collections()).map(async c => ({
-            cn: c.collectionName,
-            capped: await c.isCapped()
-          }))
-        )
-      ).toEqual([
-        {
-          cn: "function_logs",
-          capped: false
-        }
-      ]);
-      done();
-    }, 500);
-  });
-
   it("should write to collection", done => {
     const stream = dbOutput.create({eventId: "event", functionId: "1"});
     stream.write(Buffer.from("this is my message"), async err => {
-      setImmediate(async () => {
-        expect(err).toBeUndefined();
-        expect(await db.collection("function_logs").findOne({})).toEqual({
-          _id: "__skip",
-          content: "this is my message",
-          event_id: "event",
-          function: "1"
-        });
-        done();
+      expect(err).toBeUndefined();
+      expect(await db.collection("function_logs").findOne({})).toEqual({
+        _id: "__skip",
+        content: "this is my message",
+        event_id: "event",
+        function: "1"
       });
+      done();
     });
   });
 });

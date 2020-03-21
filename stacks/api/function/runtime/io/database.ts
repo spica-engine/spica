@@ -1,5 +1,5 @@
-import {DatabaseService, Collection} from "@spica-server/database";
-import {PassThrough, Writable} from "stream";
+import {Collection, DatabaseService} from "@spica-server/database";
+import {PassThrough, Transform, Writable} from "stream";
 import {StdOut, StdOutOptions} from "./stdout";
 
 export class DatabaseOutput extends StdOut {
@@ -7,24 +7,23 @@ export class DatabaseOutput extends StdOut {
   constructor(private db: DatabaseService) {
     super();
     this.collection = this.db.collection("function_logs");
-    this.db.createCollection("function_logs").catch(e => {
-      if (e.codeName == "NamespaceExists") {
-        // Do nothing
-      } else {
-        return Promise.reject(e);
-      }
-    });
   }
 
   create(options: StdOutOptions): Writable {
-    return new PassThrough().on("data", data => {
-      this.collection.insertOne({
-        function: options.functionId,
-        event_id: options.eventId,
-        content: Buffer.from(data)
-          .toString()
-          .trim()
-      });
+    const transform = new Transform({
+      transform: (data, _, callback) => {
+        this.collection
+          .insertOne({
+            function: options.functionId,
+            event_id: options.eventId,
+            content: Buffer.from(data)
+              .toString()
+              .trim()
+          })
+          .then(() => callback(undefined, data))
+          .catch(error => callback(error));
+      }
     });
+    return new PassThrough().pipe(transform);
   }
 }
