@@ -16,8 +16,8 @@ export class Logger extends console.Console {
   spin(options?: ora.Options): ora.Ora;
   spin<T = any>(options?: ora.Options & {op: Promise<T>}): Promise<T>;
   spin<T = any>(options?: ora.Options & {op: (spinner: ora.Ora) => Promise<T>}): Promise<T>;
-  spin(options?: ora.Options & {op?: Promise<any> | ((spinner: ora.Ora) => Promise<any>)}) {
-    const spinner = ora(options);
+  spin(options?: ora.Options & {op?: Promise<unknown> | ((spinner: ora.Ora) => Promise<unknown>)}) {
+    const spinner = ora({...options, color: options.color || "yellow"});
     if (typeof options.op == "function") {
       options.op = options.op(spinner);
     }

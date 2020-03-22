@@ -1,13 +1,13 @@
 import {INestApplication} from "@nestjs/common";
-import {Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
+import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica-server/core";
+import {Default, Format, SchemaModule} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
-import {BucketModule} from "./bucket.module";
-import {SchemaModule} from "@spica-server/core/schema";
-import {Default, Format} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {BucketModule} from "./bucket.module";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -42,10 +42,12 @@ export const OBJECT_ID: Format = {
   }
 };
 
-describe("Bucket-Data acceptance", () => {
+describe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
-  let module;
+  let module: TestingModule;
+  let db: DatabaseService;
+
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -56,789 +58,603 @@ describe("Bucket-Data acceptance", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
-        BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS})
+        BucketModule.forRoot({hooks: false, history: false, realtime: false})
       ]
     }).compile();
+    db = module.get(DatabaseService);
     app = module.createNestApplication();
     app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
+    req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
-  }, 120000);
 
-  describe("get requests", () => {
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "__skip__" && typeof actual == typeof expected) {
+        return true;
+      }
+    });
+  });
+
+  describe("index", () => {
+    let bucket = {
+      _id: "",
+      title: "Persons",
+      description: "Person bucket",
+      icon: "view_stream",
+      primary: "title",
+      properties: {
+        name: {
+          type: "string",
+          title: "Name of the person",
+          options: {position: "left"},
+          maxLength: 20,
+          minLength: 3
+        },
+        age: {
+          type: "number",
+          title: "Age of the person",
+          options: {position: "right"}
+        }
+      }
+    };
+
+    let rows = [];
+
+    beforeAll(async () => {
+      bucket = await req.post("/bucket", bucket).then(response => response.body);
+      rows = [
+        await req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
+        await req.post(`/bucket/${bucket._id}/data`, {name: "Michael", age: 22}),
+        await req.post(`/bucket/${bucket._id}/data`, {name: "Kevin", age: 25}),
+        await req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
+        await req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
+      ].map(r => r.body);
+    });
+
+    it("should have created the bucket and the rows", () => {
+      expect(bucket._id).toBeTruthy();
+      expect(rows).toEqual([
+        {_id: "__skip__", name: "Jim", age: 20},
+        {_id: "__skip__", name: "Michael", age: 22},
+        {_id: "__skip__", name: "Kevin", age: 25},
+        {_id: "__skip__", name: "Dwight", age: 38},
+        {_id: "__skip__", name: "Toby", age: 30}
+      ]);
+    });
+
     describe("skip and limit", () => {
-      let myBucketId: ObjectId;
-      beforeAll(async () => {
-        //create bucket
-        const myBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            },
-            description: {
-              type: "textarea",
-              title: "description",
-              description: "Description of the row",
-              options: {position: "right"}
-            }
-          }
-        };
-        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
-
-        //insert some data
-        const bucketdata = [
-          {title: "here is the title", description: "here is the description"},
-          {title: "here is the another title", description: "here is the another description"},
-          {title: "more title", description: "more description"},
-          {title: "one more title", description: "one more description"},
-          {title: "here is the last title", description: "here is the last description"}
-        ];
-
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[3]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[4]);
-      });
-
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: myBucketId})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${myBucketId}`)
-          .deleteMany({})
-          .catch();
-      });
-
       it("should work without query", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {});
-        expect(response.body.length).toEqual(5);
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {});
+        expect(documents.length).toEqual(5);
 
-        expect(response.body.map(element => element.title)).toEqual([
-          "here is the title",
-          "here is the another title",
-          "more title",
-          "one more title",
-          "here is the last title"
-        ]);
-        expect(response.body.map(element => element.description)).toEqual([
-          "here is the description",
-          "here is the another description",
-          "more description",
-          "one more description",
-          "here is the last description"
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
         ]);
       });
 
       it("should work with limit query", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {limit: "3"});
-        expect(response.body.length).toEqual(3);
-        expect(response.body.map(element => element.title)).toEqual([
-          "here is the title",
-          "here is the another title",
-          "more title"
-        ]);
-        expect(response.body.map(element => element.description)).toEqual([
-          "here is the description",
-          "here is the another description",
-          "more description"
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {limit: "3"});
+        expect(documents.length).toEqual(3);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Kevin", age: 25}
         ]);
       });
 
       it("should work with skip query", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {skip: "2"});
-        expect(response.body.length).toEqual(3);
-        expect(response.body.map(element => element.title)).toEqual([
-          "more title",
-          "one more title",
-          "here is the last title"
-        ]);
-        expect(response.body.map(element => element.description)).toEqual([
-          "more description",
-          "one more description",
-          "here is the last description"
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {skip: "2"});
+        expect(documents.length).toEqual(3);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
         ]);
       });
 
       it("should work with skip and limit query", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           limit: "2",
           skip: "1"
         });
-        expect(response.body.length).toEqual(2);
-        expect(response.body.map(element => element.title)).toEqual([
-          "here is the another title",
-          "more title"
-        ]);
-        expect(response.body.map(element => element.description)).toEqual([
-          "here is the another description",
-          "more description"
+        expect(documents.length).toEqual(2);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Kevin", age: 25}
         ]);
       });
     });
 
-    describe("sorts", () => {
-      let myBucketId: ObjectId;
-      beforeAll(async () => {
-        //create bucket
-        const myBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            },
-            age: {
-              type: "number",
-              title: "description",
-              description: "Description of the row",
-              options: {position: "right"}
-            }
-          }
-        };
-        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
-
-        //insert some data
-        const bucketdata = [
-          {title: "title starts with a", age: 15},
-          {title: "title starts with b", age: 10},
-          {title: "title starts with c", age: 5}
-        ];
-
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
-      });
-
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: myBucketId})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${myBucketId}`)
-          .deleteMany({})
-          .catch();
-      });
-
-      it("ascend by title", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
-          sort: JSON.stringify({title: 1})
+    describe("sort", () => {
+      it("ascend by name", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          sort: JSON.stringify({name: 1})
         });
 
-        const objects = response.body;
-        expect(objects.length).toBe(3);
+        expect(documents.length).toBe(5);
 
-        expect(objects.map(element => element.title)).toEqual([
-          "title starts with a",
-          "title starts with b",
-          "title starts with c"
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Toby", age: 30}
         ]);
       });
-      it("descend by title", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
-          sort: JSON.stringify({title: -1})
+
+      it("descend by name", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          sort: JSON.stringify({name: -1})
         });
 
-        const objects = response.body;
-        expect(objects.length).toBe(3);
+        expect(documents.length).toBe(5);
 
-        expect(objects.map(element => element.title)).toEqual([
-          "title starts with c",
-          "title starts with b",
-          "title starts with a"
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Toby", age: 30},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Dwight", age: 38}
         ]);
       });
 
       it("ascend by age", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           sort: JSON.stringify({age: 1})
         });
 
-        const objects = response.body;
-        expect(objects.length).toBe(3);
-
-        expect(objects.map(element => element.age)).toEqual([5, 10, 15]);
+        expect(documents.length).toBe(5);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Toby", age: 30},
+          {_id: "__skip__", name: "Dwight", age: 38}
+        ]);
       });
 
       it("descend by age", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           sort: JSON.stringify({age: -1})
         });
 
-        const objects = response.body;
-        expect(objects.length).toBe(3);
-
-        expect(objects.map(element => element.age)).toEqual([15, 10, 5]);
+        expect(documents.length).toBe(5);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30},
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Jim", age: 20}
+        ]);
       });
     });
 
     describe("pagination", () => {
-      let myBucketId: ObjectId;
-      beforeAll(async () => {
-        //create bucket
-        const myBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            },
-            description: {
-              type: "textarea",
-              title: "description",
-              description: "Description of the row",
-              options: {position: "right"}
-            }
-          }
-        };
-        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
+      it("should paginate the results", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {paginate: "true"});
+        expect(response.meta.total).toBe(5);
+        expect(response.data.length).toBe(5);
 
-        //insert some data
-        const bucketdata = [
-          {title: "here is the title", description: "here is the description"},
-          {title: "here is the another title", description: "here is the another description"},
-          {title: "more title", description: "more description"},
-          {title: "one more title", description: "one more description"},
-          {title: "here is the last title", description: "here is the last description"}
-        ];
-
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[3]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[4]);
-      });
-
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: myBucketId})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${myBucketId}`)
-          .deleteMany({})
-          .catch();
-      });
-
-      it("single paginate param", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {paginate: "true"});
-        expect(response.body.meta.total).toBe(5);
-        expect(response.body.data.length).toBe(5);
-
-        expect(response.body.data.map(element => element.title)).toEqual([
-          "here is the title",
-          "here is the another title",
-          "more title",
-          "one more title",
-          "here is the last title"
-        ]);
-        expect(response.body.data.map(element => element.description)).toEqual([
-          "here is the description",
-          "here is the another description",
-          "more description",
-          "one more description",
-          "here is the last description"
+        expect(response.data).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
         ]);
       });
 
-      it("paginate with limit", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+      it("should paginate the results along with the limit", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
           limit: "2",
           paginate: "true"
         });
-        expect(response.body.meta.total).toBe(5);
-        expect(response.body.data.length).toBe(2);
-
-        expect(response.body.data.map(element => element.title)).toEqual([
-          "here is the title",
-          "here is the another title"
-        ]);
-        expect(response.body.data.map(element => element.description)).toEqual([
-          "here is the description",
-          "here is the another description"
+        expect(response.meta.total).toBe(5);
+        expect(response.data.length).toBe(2);
+        expect(response.data).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22}
         ]);
       });
 
-      it("paginate with skip", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+      it("should paginate the results along with the skip", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
           skip: "3",
           paginate: "true"
         });
-        expect(response.body.meta.total).toBe(5);
-        expect(response.body.data.length).toBe(2);
+        expect(response.meta.total).toBe(5);
+        expect(response.data.length).toBe(2);
 
-        expect(response.body.data.map(element => element.title)).toEqual([
-          "one more title",
-          "here is the last title"
-        ]);
-        expect(response.body.data.map(element => element.description)).toEqual([
-          "one more description",
-          "here is the last description"
+        expect(response.data).toEqual([
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
         ]);
       });
 
-      it("paginate with limit and skip", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+      it("should paginate the results along with the skip and limit", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
           limit: "3",
           skip: "2",
           paginate: "true"
         });
-        expect(response.body.meta.total).toBe(5);
-        expect(response.body.data.length).toBe(3);
+        expect(response.meta.total).toBe(5);
+        expect(response.data.length).toBe(3);
 
-        expect(response.body.data.map(element => element.title)).toEqual([
-          "more title",
-          "one more title",
-          "here is the last title"
-        ]);
-        expect(response.body.data.map(element => element.description)).toEqual([
-          "more description",
-          "one more description",
-          "here is the last description"
+        expect(response.data).toEqual([
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
         ]);
       });
     });
 
     describe("filter", () => {
-      let myBucketId: ObjectId;
-      beforeAll(async () => {
-        //create bucket
-        const myBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            name: {
-              type: "string",
-              title: "name",
-              description: "Name of the row",
-              options: {position: "left", visible: true}
-            },
-            age: {
-              type: "number",
-              title: "age",
-              description: "Age of row",
-              options: {position: "right"}
-            }
-          }
-        };
-        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
-
-        //insert some data
-        const bucketdata = [
-          {name: "James", age: 23},
-          {name: "John", age: 36},
-          {name: "Smith", age: 44}
-        ];
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[0]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[1]);
-        await req.post(`/bucket/${myBucketId}/data`, bucketdata[2]);
-      });
-
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: myBucketId})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${myBucketId}`)
-          .deleteMany({})
-          .catch();
-      });
-
-      it("should filter data which name contains 'J'", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
-          filter: JSON.stringify({name: {$regex: "J"}})
+      it("should return the persons who has 'i' in their names", async () => {
+        const {body: response} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: JSON.stringify({name: {$regex: "i"}})
         });
 
-        expect(response.body.length).toBe(2);
-        expect(response.body.map(element => element.name)).toEqual(["James", "John"]);
+        expect(response.length).toBe(4);
+        expect(response).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22},
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38}
+        ]);
       });
 
-      it("should filter data which has name Smith", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
-          filter: JSON.stringify({name: "Smith"})
+      it("should return the persons whose name is Jim", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: JSON.stringify({name: "Jim"})
         });
 
-        expect(response.body.length).toBe(1);
-        expect(response.body[0].name).toBe("Smith");
+        expect(documents.length).toBe(1);
+        expect(documents).toEqual([{_id: "__skip__", name: "Jim", age: 20}]);
       });
 
-      it("should filter data which has age 36", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
-          filter: JSON.stringify({age: 36})
+      it("should return the persons whose age is 38", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: JSON.stringify({age: 38})
         });
 
-        expect(response.body.length).toBe(1);
-        expect(response.body[0].name).toBe("John");
+        expect(documents.length).toBe(1);
+        expect(documents).toEqual([{_id: "__skip__", name: "Dwight", age: 38}]);
       });
 
-      it("should filter data which has age grater than or equal 36", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
-          filter: JSON.stringify({age: {$gte: 36}})
+      it("should return the persons who is older than 22", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: JSON.stringify({age: {$gt: 22}})
         });
 
-        expect(response.body.length).toBe(2);
-        expect(response.body.map(element => element.name)).toEqual(["John", "Smith"]);
+        expect(documents.length).toBe(3);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
+        ]);
       });
 
-      it("should filter data which has age less than 25", async () => {
-        const response = await req.get(`/bucket/${myBucketId}/data`, {
+      it("should return the persons who is younger than 25", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           filter: JSON.stringify({age: {$lt: 25}})
         });
 
-        expect(response.body.length).toBe(1);
-        expect(response.body[0].name).toBe("James");
+        expect(documents.length).toBe(2);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22}
+        ]);
       });
     });
 
     describe("localize", () => {
-      let myBucketId: ObjectId;
-
-      beforeAll(async () => {
-        const myBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", translate: true, visible: true}
-            },
-            description: {
-              type: "textarea",
-              title: "description",
-              description: "Description of the row",
-              options: {position: "right"}
+      let bucket: Bucket;
+      let rows: BucketDocument[];
+      beforeEach(async () => {
+        bucket = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", translate: true, visible: true}
+              },
+              description: {
+                type: "textarea",
+                title: "description",
+                description: "Description of the row",
+                options: {position: "right"}
+              }
             }
-          }
-        };
-        myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
+          })
+          .then(r => r.body);
 
-        //insert some data
-        const myTranslatableData = [
-          {
+        rows = [
+          await req.post(`/bucket/${bucket._id}/data`, {
             title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
             description: "description"
-          },
-          {
+          }),
+          await req.post(`/bucket/${bucket._id}/data`, {
             title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
             description: "description"
-          },
-          {
+          }),
+          await req.post(`/bucket/${bucket._id}/data`, {
             title: {en_US: "only english words"},
             description: "description"
-          }
-        ];
-
-        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[0]);
-        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[1]);
-        await req.post(`/bucket/${myBucketId}/data`, myTranslatableData[2]);
+          })
+        ].map(r => r.body);
       });
 
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteOne({_id: myBucketId})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${myBucketId}`)
-          .deleteMany({})
-          .catch();
-      });
+      afterEach(async () => await req.delete(`/bucket/${bucket._id}`));
 
       describe("find requests", () => {
         it("should return english titles", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
-            {},
-            {"accept-language": "en_US"}
-          );
-
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            "english words",
-            "new english words",
-            "only english words"
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+            "accept-language": "en_US"
+          });
+          expect(documents).toEqual([
+            {_id: "__skip__", title: "english words", description: "description"},
+            {_id: "__skip__", title: "new english words", description: "description"},
+            {_id: "__skip__", title: "only english words", description: "description"}
           ]);
         });
 
-        it("should return turkish titles", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
-            {},
-            {"accept-language": "tr_TR"}
-          );
+        it("should return turkish titles and fallback to default language", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+            "accept-language": "tr_TR"
+          });
 
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            "türkçe kelimeler",
-            "yeni türkçe kelimeler",
-            "only english words"
+          expect(documents).toEqual([
+            {_id: "__skip__", title: "türkçe kelimeler", description: "description"},
+            {_id: "__skip__", title: "yeni türkçe kelimeler", description: "description"},
+            {_id: "__skip__", title: "only english words", description: "description"}
           ]);
         });
 
-        it("should return titles with available languages when localize parameter is false", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
+        it("should return documents as is when localize parameter is false", async () => {
+          const {body: documents} = await req.get(
+            `/bucket/${bucket._id}/data`,
             {localize: "false"},
             {"accept-language": "tr_TR"}
           );
 
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            {en_US: "english words", tr_TR: "türkçe kelimeler"},
-            {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
-            {en_US: "only english words"}
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
+              description: "description"
+            },
+            {
+              _id: "__skip__",
+              title: {en_US: "new english words", tr_TR: "yeni türkçe kelimeler"},
+              description: "description"
+            },
+            {
+              _id: "__skip__",
+              title: {en_US: "only english words"},
+              description: "description"
+            }
           ]);
         });
 
-        it("should return english titles when request's 'accepted-language' isn't available for titles", async () => {
-          const response = await req.get(
-            `/bucket/${myBucketId}/data`,
-            {},
-            {"accept-language": "fr_FR"}
-          );
-
-          expect(response.body.length).toBe(3);
-
-          expect(response.body.map(element => element.title)).toEqual([
-            "english words",
-            "new english words",
-            "only english words"
+        it("should return fallback language's titles when the titles are not available in requested language", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, undefined, {
+            "accept-language": "fr_FR"
+          });
+          expect(documents).toEqual([
+            {_id: "__skip__", title: "english words", description: "description"},
+            {_id: "__skip__", title: "new english words", description: "description"},
+            {_id: "__skip__", title: "only english words", description: "description"}
           ]);
         });
       });
 
       describe("findOne requests", () => {
-        let allData;
-        beforeAll(async () => {
-          allData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
-        });
-
-        it("should return 'english words' title ", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[0]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {},
+        it("should return English title ", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[0]._id}`,
+            undefined,
             {"accept-language": "en_US"}
           );
-          expect(selectedDataResponse.body.title).toBe("english words");
-        });
-
-        it("should return 'yeni türkçe kelimeler' title ", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[1]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {},
-            {"accept-language": "tr_TR"}
-          );
-          expect(selectedDataResponse.body.title).toBe("yeni türkçe kelimeler");
-        });
-
-        it("should return data with avaliable languages when localize is false", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[0]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {localize: "false"},
-            {"accept-language": "tr_TR"}
-          );
-          expect(selectedDataResponse.body.title).toEqual({
-            en_US: "english words",
-            tr_TR: "türkçe kelimeler"
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: "english words",
+            description: "description"
           });
         });
 
-        it("should return 'only english words' title when request's 'accepted-language' isn't available for title", async () => {
-          //select one of them randomly
-          const selectedDataId = allData[2]._id;
-
-          //get selected data
-          const selectedDataResponse = await req.get(
-            `/bucket/${myBucketId}/data/${selectedDataId}`,
-            {},
+        it("should return Turkish title ", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[0]._id}`,
+            undefined,
             {"accept-language": "tr_TR"}
           );
-          expect(selectedDataResponse.body.title).toBe("only english words");
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: "türkçe kelimeler",
+            description: "description"
+          });
+        });
+
+        it("should return document as is when localize parameter is false", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[0]._id}`,
+            {localize: "false"},
+            {"accept-language": "tr_TR"}
+          );
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: {en_US: "english words", tr_TR: "türkçe kelimeler"},
+            description: "description"
+          });
+        });
+
+        it("should return fallback language's titles when the titles are not available in requested language", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${bucket._id}/data/${rows[2]._id}`,
+            undefined,
+            {"accept-language": "tr_TR"}
+          );
+          expect(document).toEqual({
+            _id: "__skip__",
+            title: "only english words",
+            description: "description"
+          });
         });
       });
     });
 
     describe("relation", () => {
-      let staticsBucketId: ObjectId;
-      let usersBucketId: ObjectId;
-      let achievementsBucketId: ObjectId;
+      let statisticsBucket: Bucket;
+      let usersBucket: Bucket;
+      let achievementsBucket: Bucket;
 
-      let userId: ObjectId;
-      let achievementId: ObjectId;
+      let user: BucketDocument;
+      let achievement: BucketDocument;
 
-      beforeAll(async () => {
-        //create buckets
-
-        const achievementsBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            achievement_name: {
-              type: "string",
-              title: "achievement",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
+      beforeEach(async () => {
+        achievementsBucket = await req
+          .post("/bucket", {
+            title: "Achievement",
+            description: "Achievement",
+            properties: {
+              name: {
+                type: "string",
+                title: "achievement",
+                description: "Title of the row",
+                options: {position: "left"}
+              }
             }
-          }
-        };
-        achievementsBucketId = new ObjectId(
-          (await req.post("/bucket", achievementsBucket)).body._id
-        );
+          })
+          .then(r => r.body);
 
-        const usersBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            username: {
-              type: "string",
-              title: "username",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
+        usersBucket = await req
+          .post("/bucket", {
+            title: "User",
+            description: "Users",
+            properties: {
+              name: {
+                type: "string",
+                title: "username",
+                description: "Title of the row",
+                options: {position: "left"}
+              }
             }
-          }
-        };
-        usersBucketId = new ObjectId((await req.post("/bucket", usersBucket)).body._id);
+          })
+          .then(r => r.body);
 
-        const staticsBucket = {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            achievement: {
-              type: "relation",
-              title: "achievement",
-              description: "Title of the row",
-              options: {position: "left", visible: true},
-              bucketId: achievementsBucketId
-            },
-            user: {
-              type: "relation",
-              title: "user",
-              description: "Description of the row",
-              options: {position: "right"},
-              bucketId: usersBucketId
+        statisticsBucket = await req
+          .post("/bucket", {
+            title: "Statistics",
+            description: "Statistics",
+            properties: {
+              achievement: {
+                type: "relation",
+                options: {position: "left", visible: true},
+                bucketId: achievementsBucket._id
+              },
+              user: {
+                type: "relation",
+                options: {position: "right"},
+                bucketId: usersBucket._id
+              }
             }
-          }
-        };
-        staticsBucketId = new ObjectId((await req.post("/bucket", staticsBucket)).body._id);
+          })
+          .then(r => r.body);
 
-        userId = new ObjectId(
-          (await req.post(`/bucket/${usersBucketId}/data`, {
-            username: "user66"
-          })).body._id
-        );
-        achievementId = new ObjectId(
-          (await req.post(`/bucket/${achievementsBucketId}/data`, {
-            achievement_name: "do something until something happens"
-          })).body._id
-        );
-        await req.post(`/bucket/${staticsBucketId}/data`, {
-          user: userId,
-          achievement: achievementId
+        user = await req
+          .post(`/bucket/${usersBucket._id}/data`, {
+            name: "user66"
+          })
+          .then(r => r.body);
+        achievement = await req
+          .post(`/bucket/${achievementsBucket._id}/data`, {
+            name: "do something until something else happens"
+          })
+          .then(r => r.body);
+
+        await req.post(`/bucket/${statisticsBucket._id}/data`, {
+          user: user._id,
+          achievement: achievement._id
         });
       });
 
-      afterAll(async () => {
-        await app
-          .get(DatabaseService)
-          .collection("buckets")
-          .deleteMany({})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${staticsBucketId}`)
-          .deleteMany({})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${usersBucketId}`)
-          .deleteMany({})
-          .catch();
-        await app
-          .get(DatabaseService)
-          .collection(`bucket_${achievementsBucketId}`)
-          .deleteMany({})
-          .catch();
+      afterEach(async () => {
+        const db = app.get(DatabaseService);
+
+        await db.collection("buckets").deleteMany({
+          _id: {$in: [statisticsBucket._id, usersBucket._id, achievementsBucket._id]}
+        });
+        // TODO: This should be handled by bucket controller
+        await db.collection(`bucket_${statisticsBucket._id}`).drop();
+        await db.collection(`bucket_${usersBucket._id}`).drop();
+        await db.collection(`bucket_${achievementsBucket._id}`).drop();
       });
 
       it("should get statics with username and achievement name", async () => {
-        const response = await req.get(`/bucket/${staticsBucketId}/data`, {relation: true});
-        expect(response.body[0].user.username).toBe("user66");
-        expect(response.body[0].achievement.achievement_name).toBe(
-          "do something until something happens"
-        );
+        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          relation: true
+        });
+        expect(documents).toEqual([
+          {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user66"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
+          }
+        ]);
       });
 
       it("should get statics with only id", async () => {
-        const response = await req.get(`/bucket/${staticsBucketId}/data`, {relation: false});
+        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          relation: false
+        });
 
-        expect(response.body[0].user).toEqual(userId.toHexString());
-        expect(response.body[0].achievement).toEqual(achievementId.toHexString());
+        expect(documents).toEqual([
+          {
+            _id: "__skip__",
+            user: user._id,
+            achievement: achievement._id
+          }
+        ]);
+      });
+
+      it("should return the documents including those which does not have the relation field filled", async () => {
+        const {body: newRow} = await req.post(`/bucket/${statisticsBucket._id}/data`, {});
+        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          relation: true
+        });
+        expect(documents).toEqual([
+          {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user66"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
+          },
+          {
+            _id: newRow._id
+          }
+        ]);
       });
     });
   });
@@ -926,15 +742,20 @@ describe("Bucket-Data acceptance", () => {
     });
 
     it("should return error if title isnt valid for bucket", async () => {
-      const response = await req.post(`/bucket/${myBucketId}/data`, {
-        title: true,
-        description: "description"
+      const response = await req
+        .post(`/bucket/${myBucketId}/data`, {
+          title: true,
+          description: "description"
+        })
+        .then(() => null)
+        .catch(e => e);
+      expect(response.statusCode).toBe(400);
+      expect(response.statusText).toBe("Bad Request");
+      expect(response.body).toEqual({
+        statusCode: 400,
+        error: ".title should be string",
+        message: "validation failed"
       });
-      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect([response.body.error, response.body.message]).toEqual([
-        ".title should be string",
-        "validation failed"
-      ]);
     });
 
     // Flaky: This test fails with a clean run. Probably schema invalidator has a race condition with this it block.

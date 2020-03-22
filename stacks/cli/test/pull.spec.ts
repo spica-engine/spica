@@ -14,6 +14,7 @@ describe("pull", () => {
   let fakeResponses: Map<string, unknown>;
   let get: jasmine.Spy<typeof request.get>;
   let hasAuthorization: jasmine.Spy<typeof context.hasAuthorization>;
+  let authorizationHeaders: jasmine.Spy<typeof context.authorizationHeaders>;
   let url: jasmine.Spy<typeof context.url>;
   let command: PullCommand;
   let logger: jasmine.SpyObj<Logger>;
@@ -60,6 +61,10 @@ describe("pull", () => {
 
     hasAuthorization = spyOn(context, "hasAuthorization").and.returnValue(Promise.resolve(true));
 
+    authorizationHeaders = spyOn(context, "authorizationHeaders").and.returnValue(
+      Promise.resolve({} as any)
+    );
+
     url = spyOn(context, "url").and.callFake(url => Promise.resolve(url));
 
     get = spyOn(request, "get").and.callFake(<T>(url) =>
@@ -91,7 +96,7 @@ describe("pull", () => {
 
   it("should fail if there is no authorization", async () => {
     hasAuthorization.and.returnValue(Promise.resolve(false));
-    const result = await command.run(["test"], {package: "package.yaml"}).catch(e => e);
+    const result = await command.run(["test"], {package: "package.yaml"});
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledTimes(1);
     expect(result).not.toBeTruthy();

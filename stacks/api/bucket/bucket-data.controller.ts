@@ -112,7 +112,7 @@ export class BucketDataController {
           as: property
         }
       },
-      {$unwind: `$${property}`}
+      {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
     ];
   }
 

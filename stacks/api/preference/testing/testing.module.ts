@@ -1,5 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {PreferenceService} from "@spica-server/preference";
+import {PreferenceService} from "@spica-server/preference/service";
 import {empty} from "rxjs";
 
 @Global()

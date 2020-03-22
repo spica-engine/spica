@@ -14,7 +14,7 @@ describe("scheduler", () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
-        BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS})
+        BucketModule.forRoot({hooks: false, realtime: false, history: false})
       ]
     })
       .overrideProvider(BucketDataService)

@@ -26,8 +26,14 @@ export namespace context {
       .catch(() => false);
   }
 
-  export async function data(): Promise<LoginData> {
-    const rcFile = JSON.parse((await fs.promises.readFile(utilities.getRcPath())).toString());
+  async function data(): Promise<LoginData> {
+    const rcContent = await fs.promises.readFile(utilities.getRcPath()).catch(e => {
+      if (e.code == "ENOENT") {
+        return Promise.resolve("{}");
+      }
+      return Promise.reject(e);
+    });
+    const rcFile = JSON.parse(rcContent.toString());
     const loginData: LoginData = {
       token: rcFile.token,
       server: rcFile.server

@@ -17,7 +17,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity",
-        "//stacks/api/preference",
+        "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/jwt",
