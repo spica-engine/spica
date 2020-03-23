@@ -1,2 +1,3 @@
-export {ActivityInterceptor, createActivity} from "./activity.logger";
+export {ActivityInterceptor} from "./activity.interceptor";
 export * from "./interface";
+export * from "./activity.resources"

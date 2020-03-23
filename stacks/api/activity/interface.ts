@@ -5,19 +5,13 @@ export interface Activity {
 }
 
 export interface Resource {
-  moduleName: string;
-  moduleId?: string;
+  name: string;
   documentId: string[];
-}
-
-export interface ControllerDetails {
-  moduleName: string;
-  documentIdKey: string;
-  moduleIdKey?: string;
+  subResource?: Resource;
 }
 
 export interface Predict {
-  (module: string, activity: Activity, req: object, data: object): Activity;
+  (action: Action, req: object, data: object): Resource;
 }
 
 export enum Action {

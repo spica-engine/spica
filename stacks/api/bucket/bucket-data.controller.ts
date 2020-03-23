@@ -23,7 +23,7 @@ import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/databa
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {ActivityInterceptor} from "@spica-server/activity";
+import {ActivityInterceptor, createBucketDataResource} from "@spica-server/activity";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -302,13 +302,7 @@ export class BucketDataController {
     return document;
   }
 
-  @UseInterceptors(
-    ActivityInterceptor({
-      moduleName: "BUCKET-DATA",
-      moduleIdKey: "bucketId",
-      documentIdKey: "_id"
-    })
-  )
+  @UseInterceptors(ActivityInterceptor(createBucketDataResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async replaceOne(
@@ -329,13 +323,7 @@ export class BucketDataController {
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
-  @UseInterceptors(
-    ActivityInterceptor({
-      moduleName: "BUCKET-DATA",
-      moduleIdKey: "bucketId",
-      documentIdKey: "documentId"
-    })
-  )
+  @UseInterceptors(ActivityInterceptor(createBucketDataResource))
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async update(
@@ -358,13 +346,7 @@ export class BucketDataController {
     return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
-  @UseInterceptors(
-    ActivityInterceptor({
-      moduleName: "BUCKET-DATA",
-      moduleIdKey: "bucketId",
-      documentIdKey: "documentId"
-    })
-  )
+  @UseInterceptors(ActivityInterceptor(createBucketDataResource))
   @Delete(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteOne(
@@ -374,13 +356,7 @@ export class BucketDataController {
     return this.bds.deleteOne(bucketId, {_id: documentId});
   }
 
-  @UseInterceptors(
-    ActivityInterceptor({
-      moduleName: "BUCKET-DATA",
-      moduleIdKey: "bucketId",
-      documentIdKey: ""
-    })
-  )
+  @UseInterceptors(ActivityInterceptor(createBucketDataResource))
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {

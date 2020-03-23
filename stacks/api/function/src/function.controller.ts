@@ -28,7 +28,7 @@ import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
-import {ActivityInterceptor} from "@spica-server/activity";
+import {ActivityInterceptor, createFunctionResource} from "@spica-server/activity";
 
 @Controller("function")
 export class FunctionController {
@@ -72,7 +72,7 @@ export class FunctionController {
     return this.fs.findOne({_id: id});
   }
 
-  @UseInterceptors(ActivityInterceptor({moduleName: "FUNCTION", documentIdKey: "id"}))
+  @UseInterceptors(ActivityInterceptor(createFunctionResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -108,7 +108,7 @@ export class FunctionController {
       });
   }
 
-  @UseInterceptors(ActivityInterceptor({moduleName: "FUNCTION", documentIdKey: "id"}))
+  @UseInterceptors(ActivityInterceptor(createFunctionResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
@@ -126,7 +126,7 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
-  @UseInterceptors(ActivityInterceptor({moduleName: "FUNCTION", documentIdKey: "_id"}))
+  @UseInterceptors(ActivityInterceptor(createFunctionResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
@@ -229,6 +229,7 @@ export class FunctionController {
     }
   }
 
+  @UseInterceptors(ActivityInterceptor(createFunctionResource))
   @Delete(":id/dependencies/:name")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -32,17 +32,17 @@ export class ActivityController {
       filter["action"] = action;
     }
 
-    if (resource) {
-      if (resource.moduleName) {
-        filter["resource.moduleName"] = resource.moduleName;
-      }
-      if (resource.moduleId) {
-        filter["resource.moduleId"] = resource.moduleId;
-      }
-      if (resource.documentId) {
-        filter["resource.documentId"] = resource.documentId;
-      }
-    }
+    // if (resource) {
+    //   if (resource.moduleName) {
+    //     filter["resource.moduleName"] = resource.moduleName;
+    //   }
+    //   if (resource.moduleId) {
+    //     filter["resource.moduleId"] = resource.moduleId;
+    //   }
+    //   if (resource.documentId) {
+    //     filter["resource.documentId"] = resource.documentId;
+    //   }
+    // }
 
     console.log(filter)
 

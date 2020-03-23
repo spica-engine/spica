@@ -19,7 +19,11 @@ import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "../policy/action.guard";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
-import {ActivityInterceptor} from "@spica-server/activity";
+import {
+  ActivityInterceptor,
+  createApikeyResource,
+  createApikeyPolicyResource
+} from "@spica-server/activity";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
@@ -72,7 +76,7 @@ export class ApiKeyController {
     });
   }
 
-  @UseInterceptors(ActivityInterceptor({moduleName: "APIKEY", documentIdKey: "_id"}))
+  @UseInterceptors(ActivityInterceptor(createApikeyResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
@@ -80,7 +84,7 @@ export class ApiKeyController {
     return this.aks.insertOne(apiKey);
   }
 
-  @UseInterceptors(ActivityInterceptor({moduleName: "APIKEY", documentIdKey: "id"}))
+  @UseInterceptors(ActivityInterceptor(createApikeyResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
   replaceOne(
@@ -97,7 +101,7 @@ export class ApiKeyController {
       });
   }
 
-  @UseInterceptors(ActivityInterceptor({moduleName: "APIKEY", documentIdKey: "id"}))
+  @UseInterceptors(ActivityInterceptor(createApikeyResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -108,6 +112,7 @@ export class ApiKeyController {
     });
   }
 
+  @UseInterceptors(ActivityInterceptor(createApikeyPolicyResource))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async attachPolicy(
@@ -128,6 +133,8 @@ export class ApiKeyController {
       {returnOriginal: false}
     );
   }
+
+  @UseInterceptors(ActivityInterceptor(createApikeyPolicyResource))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async detachPolicy(
