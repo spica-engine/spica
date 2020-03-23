@@ -28,13 +28,21 @@ describe("Http", () => {
     it("should set body as UInt8Array", () => {
       const req = new Http.Request();
       req.body = new Uint8Array([0x2, 0x3]);
-      const param = new Http.Param();
-      param.key = "test";
-      param.value = "test";
-      req.params = [param];
       const request = new Request(req);
-      expect(Array.from(request.body)).toEqual([0x2, 0x3]);
-      expect(request.params.get("test")).toBe("test");
+      expect(Array.from(request.body as Uint8Array)).toEqual([0x2, 0x3]);
+    });
+
+    it("should set body as object if the content type is application/json", () => {
+      const contentTypeHeader = new Http.Header();
+      contentTypeHeader.key = "content-type";
+      contentTypeHeader.value = "application/json";
+
+      const req = new Http.Request();
+      req.body = new Uint8Array(Buffer.from(JSON.stringify({test: 1})));
+      req.headers = [contentTypeHeader];
+
+      const request = new Request(req);
+      expect(request.body).toEqual({test: 1});
     });
 
     it("should set statusCode, statusMessage, url, method and path", () => {
@@ -72,6 +80,16 @@ describe("Http", () => {
       const [write] = writeSpy.calls.mostRecent().args as [Http.Write];
       expect(write.data instanceof Uint8Array).toBe(true);
       expect(write.encoding).toBe(undefined);
+    });
+
+    describe("status", () => {
+      it("should assign to statusCode and statusMessage optionally", () => {
+        response.status(201, "Created").send({});
+        expect(writeHeadSpy).toHaveBeenCalledTimes(1);
+        const [write] = writeHeadSpy.calls.mostRecent().args as [Http.WriteHead];
+        expect(write.statusCode).toBe(201);
+        expect(write.statusMessage).toBe("Created");
+      });
     });
 
     describe("writeHead", () => {
