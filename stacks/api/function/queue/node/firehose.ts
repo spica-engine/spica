@@ -61,7 +61,7 @@ export function createMessage(name: string, data: unknown): Firehose.Message {
   const message = new Firehose.Message({
     name
   });
-  if (data) {
+  if (data != undefined || data != null) {
     message.data = JSON.stringify(data);
   }
   return message;

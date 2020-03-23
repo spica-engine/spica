@@ -85,6 +85,18 @@ describe("http enqueuer", () => {
     httpEnqueuer.unsubscribe(noopTarget);
   });
 
+  it("should handle preflight requests on route", async () => {
+    httpQueue.enqueue.and.callFake((_, __, res) => {
+      res.writeHead(200, undefined, {"Content-type": "application/json"});
+      res.end(JSON.stringify({}));
+    });
+    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test1", preflight: true});
+    const response = await req.post("/fn-execute/test1");
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    expect(response.body).toEqual({});
+    httpEnqueuer.unsubscribe(noopTarget);
+  });
+
   it("should handle preflight and route conflicts gracefully", async () => {
     const spy = httpQueue.enqueue.and.callFake((id, req, res) => {
       res.writeHead(200, undefined, {"Content-type": "application/json"});

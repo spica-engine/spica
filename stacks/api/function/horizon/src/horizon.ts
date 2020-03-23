@@ -57,11 +57,13 @@ export class Horizon implements OnModuleInit {
   }
 
   onModuleInit() {
-    const httpServer = this.http.httpAdapter.getInstance();
+    this.enqueuers.add(
+      new HttpEnqueuer(this.queue, this.httpQueue, this.http.httpAdapter.getInstance())
+    );
 
-    this.enqueuers.add(new HttpEnqueuer(this.queue, this.httpQueue, httpServer));
-
-    this.enqueuers.add(new FirehoseEnqueuer(this.queue, this.firehoseQueue, httpServer));
+    this.enqueuers.add(
+      new FirehoseEnqueuer(this.queue, this.firehoseQueue, this.http.httpAdapter.getHttpServer())
+    );
 
     this.enqueuers.add(new DatabaseEnqueuer(this.queue, this.databaseQueue, this.database));
 

@@ -53,7 +53,9 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
         remoteAddress: req.connection.remoteAddress
       });
 
-      this.invoke(ws, clDescription, "connection");
+      this.invoke(ws, clDescription, "connection", {
+        url: req.url
+      });
 
       const messageHandler = (raw: string) => {
         ws["alive"] = true;
@@ -110,6 +112,9 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
           client: cl,
           message: new Firehose.Message({
             name
+          }),
+          pool: new Firehose.PoolDescription({
+            size: this.wss.clients.size
           })
         });
 
