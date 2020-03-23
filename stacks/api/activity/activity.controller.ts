@@ -2,7 +2,7 @@ import {Controller, Get, Query} from "@nestjs/common";
 import {ActivityService} from "./activity.service";
 import {Activity, Resource} from ".";
 import {JSONP, DATE} from "@spica-server/core";
-import {ObjectID} from "mongodb";
+import {ObjectId} from "@spica-server/database";
 
 @Controller("activity")
 export class ActivityController {
@@ -23,8 +23,8 @@ export class ActivityController {
 
     if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
       filter["_id"] = {
-        $gte: ObjectID.createFromTime(begin.getTime() / 1000),
-        $lt: ObjectID.createFromTime(end.getTime() / 1000)
+        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
+        $lt: ObjectId.createFromTime(end.getTime() / 1000)
       };
     }
 
@@ -32,19 +32,18 @@ export class ActivityController {
       filter["action"] = action;
     }
 
-    // if (resource) {
-    //   if (resource.moduleName) {
-    //     filter["resource.moduleName"] = resource.moduleName;
-    //   }
-    //   if (resource.moduleId) {
-    //     filter["resource.moduleId"] = resource.moduleId;
-    //   }
-    //   if (resource.documentId) {
-    //     filter["resource.documentId"] = resource.documentId;
-    //   }
-    // }
+    if (resource) {
+      if (resource.name) {
+        filter["resource.name"] = resource.name;
+      }
+      if (resource.documentId) {
+        filter["resource.documentId"] = {
+          $in: Array.isArray(resource.documentId) ? resource.documentId : [resource.documentId]
+        };
+      }
+    }
 
-    console.log(filter)
+    //console.log(filter);
 
     return this.activityService.find(filter);
   }

@@ -10,10 +10,9 @@ ts_library(
     ),
     module_name = "@spica-server/activity",
     deps = [
-        "//packages/database",
         "//packages/core",
+        "//packages/database",
         "@npm//@nestjs/common",
         "@npm//rxjs",
-        "@npm//@types/mongodb",
     ],
 )

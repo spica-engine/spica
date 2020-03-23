@@ -18,7 +18,8 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Binary, ObjectId} from "bson";
 
 import {Storage, StorageObject} from "./storage.service";
-import {ActivityInterceptor, createStorageResource} from "@spica-server/activity";
+import {ActivityInterceptor} from "@spica-server/activity";
+import {createStorageResource} from "./activity.resource";
 
 @Controller("storage")
 export class StorageController {

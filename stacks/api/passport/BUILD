@@ -41,7 +41,10 @@ ts_library(
 ts_library(
     name = "passport_test_lib",
     testonly = True,
-    srcs = glob(["**/*.spec.ts"]),
+    srcs = glob(
+        include = ["**/*.spec.ts"],
+        exclude = ["**/activity.resource.spec.ts"],
+    ),
     deps = [
         ":passport",
         "//packages/core/testing",
@@ -58,6 +61,26 @@ jasmine_node_test(
     name = "passport_test",
     deps = [
         ":passport_test_lib",
+    ],
+)
+
+ts_library(
+    name = "activity_test_lib",
+    testonly = True,
+    srcs = glob([
+        "**/activity.resource.spec.ts",
+    ]),
+    deps = [
+        "//stacks/api/activity",
+        "//stacks/api/passport",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "activity_test",
+    deps = [
+        "activity_test_lib",
     ],
 )
 

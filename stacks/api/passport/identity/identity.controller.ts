@@ -21,11 +21,10 @@ import {NUMBER} from "@spica-server/core";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {
-  ActivityInterceptor,
-  createIdentityResource,
-  createIdentityPolicyResource
-} from "@spica-server/activity";
+import {ActivityInterceptor} from "@spica-server/activity";
+
+import {createIdentityResource, createIdentityPolicyResource} from "./activity.resource";
+
 @Controller("passport/identity")
 export class IdentityController {
   constructor(

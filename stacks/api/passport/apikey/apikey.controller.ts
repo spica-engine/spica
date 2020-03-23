@@ -19,11 +19,8 @@ import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "../policy/action.guard";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
-import {
-  ActivityInterceptor,
-  createApikeyResource,
-  createApikeyPolicyResource
-} from "@spica-server/activity";
+import {ActivityInterceptor} from "@spica-server/activity";
+import {createApikeyResource, createApikeyPolicyResource} from "./activity.resource";
 
 @Controller("passport/apikey")
 export class ApiKeyController {

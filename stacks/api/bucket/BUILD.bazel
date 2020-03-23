@@ -7,6 +7,7 @@ load("//tools/dgeni:index.bzl", "docs")
 ts_library(
     name = "bucket",
     srcs = [
+        "activity.resource.ts",
         "bucket.controller.ts",
         "bucket.module.ts",
         "bucket.schema.resolver.ts",
@@ -213,10 +214,23 @@ ts_library(
     ],
 )
 
-jasmine_node_test(
-    name = "bucket_test",
+ts_library(
+    name = "activity_test_lib",
+    testonly = True,
+    srcs = [
+        "activity.resource.spec.ts",
+    ],
     deps = [
-        ":bucket_module_test",
+        "//stacks/api/activity",
+        "//stacks/api/bucket",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "activity_test",
+    deps = [
+        "activity_test_lib",
     ],
 )
 

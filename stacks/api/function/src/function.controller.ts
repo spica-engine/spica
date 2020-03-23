@@ -28,7 +28,8 @@ import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
-import {ActivityInterceptor, createFunctionResource} from "@spica-server/activity";
+import {ActivityInterceptor} from "@spica-server/activity";
+import {createFunctionResource} from "./activity.resource";
 
 @Controller("function")
 export class FunctionController {
@@ -229,7 +230,6 @@ export class FunctionController {
     }
   }
 
-  @UseInterceptors(ActivityInterceptor(createFunctionResource))
   @Delete(":id/dependencies/:name")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
