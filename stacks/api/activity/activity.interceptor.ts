@@ -26,7 +26,7 @@ export function ActivityInterceptor(predict: Predict): Type<any> {
             const identifier = getUser(req.user);
             const resource = predict(action, req, res);
             const activity = {identifier, action, resource};
-            this.service.insertOne(activity).then(res => console.log(JSON.stringify(res, null, 4)));
+            this.service.insertOne(activity);
           } catch (error) {
             console.log(error);
           }

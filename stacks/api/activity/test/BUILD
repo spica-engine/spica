@@ -18,8 +18,48 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "activity_controller_test",
+    name = "activity_controller_acceptance",
     deps = [
         ":activity_controller_testlib",
+    ],
+)
+
+
+ts_library(
+    name = "activity_interceptor_unit_testlib",
+    testonly = True,
+    srcs = ["activity.interceptor.spec.ts"],
+    deps = [
+        "//stacks/api/activity",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "activity_interceptor_unit",
+    deps = [
+        ":activity_interceptor_unit_testlib",
+    ],
+)
+
+ts_library(
+    name = "activity_interceptor_integration_testlib",
+    testonly = True,
+    srcs = ["activity.interceptor.integration.spec.ts"],
+    deps = [
+        "//stacks/api/activity",
+        "@npm//@types/jasmine",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "//packages/core/testing",
+        "//packages/database/testing"
+
+    ],
+)
+
+jasmine_node_test(
+    name = "activity_interceptor_integration",
+    deps = [
+        ":activity_interceptor_integration_testlib",
     ],
 )

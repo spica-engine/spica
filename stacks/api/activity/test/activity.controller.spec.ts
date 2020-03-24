@@ -146,4 +146,27 @@ describe("Activity Acceptance", () => {
       }
     ]);
   });
+
+  it("should delete activity", async () => {
+    const insertedIds = await service.insertMany([
+      {
+        action: Action.PUT,
+        identifier: "spica",
+        resource: {name: "test_module", documentId: ["test_id"]}
+      },
+      {
+        action: Action.POST,
+        identifier: "spica",
+        resource: {name: "test_module2", documentId: ["test_id2", "test_id5"]}
+      }
+    ]);
+
+    const res = await request.delete(`/activity/${insertedIds[1]}`);
+    expect(res.statusCode).toEqual(204);
+    expect(res.body).toEqual(undefined);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
 });

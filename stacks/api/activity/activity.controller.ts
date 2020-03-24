@@ -1,8 +1,8 @@
-import {Controller, Get, Query} from "@nestjs/common";
+import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param} from "@nestjs/common";
 import {ActivityService} from "./activity.service";
 import {Activity, Resource} from ".";
 import {JSONP, DATE} from "@spica-server/core";
-import {ObjectId} from "@spica-server/database";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
 
 @Controller("activity")
 export class ActivityController {
@@ -42,9 +42,12 @@ export class ActivityController {
         };
       }
     }
-
-    //console.log(filter);
-
     return this.activityService.find(filter);
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  delete(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.activityService.deleteOne({_id: id});
   }
 }

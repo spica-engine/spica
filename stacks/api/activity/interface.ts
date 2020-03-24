@@ -11,7 +11,7 @@ export interface Resource {
 }
 
 export interface Predict {
-  (action: Action, req: object, data: object): Resource;
+  (action: Action, req: any, data: any): Resource;
 }
 
 export enum Action {
