@@ -1,10 +1,8 @@
 import {Test} from "@nestjs/testing";
-import {ActivityService} from "../activity.service";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {ActivityService, ActivityModule, Action} from "@spica-server/activity/src";
+import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {INestApplication} from "@nestjs/common";
-import {ActivityModule} from "../activity.module";
-import {Action} from "..";
 
 describe("Activity Acceptance", () => {
   let request: Request;
@@ -23,6 +21,15 @@ describe("Activity Acceptance", () => {
 
     service = app.get(ActivityService);
 
+    //insert identities
+    await module
+      .get(DatabaseService)
+      .collection("identity")
+      .insertMany([
+        {_id: "test_user_id", identifier: "test_user"},
+        {_id: "test_user_id2", identifier: "test_user2"}
+      ]);
+
     jasmine.addCustomEqualityTester((actual, expected) => {
       if (expected == "object_id" && typeof actual == typeof expected) {
         return true;
@@ -38,12 +45,12 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "spica",
+        identifier: "test_user_id",
         resource: {name: "test_module", documentId: ["test_id"]}
       },
       {
         action: Action.POST,
-        identifier: "spica",
+        identifier: "test_user_id2",
         resource: {name: "test_module2", documentId: ["test_id2"]}
       }
     ]);
@@ -53,13 +60,13 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "spica",
+        identifier: "test_user",
         resource: {name: "test_module", documentId: ["test_id"]}
       },
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "spica",
+        identifier: "test_user2",
         resource: {name: "test_module2", documentId: ["test_id2"]}
       }
     ]);
@@ -69,22 +76,22 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "spica",
+        identifier: "test_user_id",
         resource: {name: "test_module", documentId: ["test_id"]}
       },
       {
         action: Action.POST,
-        identifier: "other_identifier",
+        identifier: "test_user_id2",
         resource: {name: "test_module2", documentId: ["test_id2"]}
       }
     ]);
 
-    const {body: activites} = await request.get("/activity", {identifier: "spica"});
+    const {body: activites} = await request.get("/activity", {identifier: "test_user"});
     expect(activites).toEqual([
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "spica",
+        identifier: "test_user",
         resource: {name: "test_module", documentId: ["test_id"]}
       }
     ]);
@@ -94,12 +101,12 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "spica",
+        identifier: "test_user_id",
         resource: {name: "test_module", documentId: ["test_id"]}
       },
       {
         action: Action.POST,
-        identifier: "spica",
+        identifier: "test_user_id2",
         resource: {name: "test_module2", documentId: ["test_id2"]}
       }
     ]);
@@ -109,7 +116,7 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "spica",
+        identifier: "test_user2",
         resource: {name: "test_module2", documentId: ["test_id2"]}
       }
     ]);
@@ -119,17 +126,17 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "spica",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        identifier: "test_user_id",
+        resource: {name: "test_module", documentId: ["test_id3"]}
       },
       {
         action: Action.POST,
-        identifier: "spica",
-        resource: {name: "test_module2", documentId: ["test_id2", "test_id5"]}
+        identifier: "test_user_id",
+        resource: {name: "test_module2", documentId: ["test_id3"]}
       },
       {
         action: Action.PUT,
-        identifier: "spica",
+        identifier: "test_user_id",
         resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]}
       }
     ]);
@@ -140,8 +147,14 @@ describe("Activity Acceptance", () => {
     expect(activites).toEqual([
       {
         _id: "object_id",
+        action: Action.POST,
+        identifier: "test_user",
+        resource: {name: "test_module2", documentId: ["test_id3"]}
+      },
+      {
+        _id: "object_id",
         action: Action.PUT,
-        identifier: "spica",
+        identifier: "test_user",
         resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]}
       }
     ]);

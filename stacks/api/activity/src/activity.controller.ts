@@ -1,6 +1,6 @@
 import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param} from "@nestjs/common";
+import {Activity, Resource, ActivityQuery, Action} from "./";
 import {ActivityService} from "./activity.service";
-import {Activity, Resource} from ".";
 import {JSONP, DATE, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID, FilterQuery} from "@spica-server/database";
 
@@ -9,8 +9,8 @@ export class ActivityController {
   constructor(private activityService: ActivityService) {}
   @Get()
   find(
-    @Query("identifier") identifier = "",
-    @Query("action") action: string,
+    @Query("identifier") identifier,
+    @Query("action", NUMBER) action: number = -1,
     @Query("resource", JSONP) resource: Resource,
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
@@ -34,11 +34,9 @@ export class ActivityController {
       }
     ];
 
-    let filter: FilterQuery<Activity> = {
-      identifier: {
-        $regex: `^${identifier}`
-      }
-    };
+    let filter: FilterQuery<ActivityQuery> = {};
+
+    if (identifier) filter.identifier = identifier;
 
     if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
       filter._id = {
@@ -47,9 +45,8 @@ export class ActivityController {
       };
     }
 
-    if (action) {
-      filter.action = action;
-    }
+    console.log(Action[action]);
+    if (Action[action]) filter.action = action;
 
     if (resource) {
       if (resource.name) {
@@ -62,15 +59,11 @@ export class ActivityController {
       }
     }
 
-    aggregation.push({$match: filter});
+    if (filter) aggregation.push({$match: filter});
 
-    if (skip) {
-      aggregation.push({$skip: skip});
-    }
+    if (skip) aggregation.push({$skip: skip});
 
-    if (limit) {
-      aggregation.push({$limit: limit});
-    }
+    if (limit) aggregation.push({$limit: limit});
 
     return this.activityService.aggregate(aggregation).toArray();
   }

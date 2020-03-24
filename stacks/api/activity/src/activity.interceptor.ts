@@ -9,7 +9,7 @@ import {
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
-import {Action, Predict} from "./interface";
+import {Action, Predict, Activity} from "./interface";
 
 export function activity(predict: Predict): Type<any> {
   class MixinActivityInterceptor implements NestInterceptor {
@@ -24,8 +24,9 @@ export function activity(predict: Predict): Type<any> {
             const req = context.getArgByIndex(0);
             const action = getAction(req.method);
             const identifier = getUser(req.user);
+            if (!identifier) return;
             const resource = predict(action, req, res);
-            const activity = {identifier, action, resource};
+            const activity: Activity = {identifier, action, resource};
             this.service.insertOne(activity);
           } catch (error) {
             console.log(error);
@@ -38,8 +39,7 @@ export function activity(predict: Predict): Type<any> {
 }
 
 export function getAction(action: string): Action {
-  const key = Object.keys(Action).findIndex(val => val === action);
-  return Object.values(Action)[key];
+  return Action[action];
 }
 
 export function getUser(user: any): string {
