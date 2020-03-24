@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/activity";
+import {Action} from "@spica-server/activity/src";
 import {createPolicyResource} from "./activity.resource";
 
 describe("Activity Resource", () => {

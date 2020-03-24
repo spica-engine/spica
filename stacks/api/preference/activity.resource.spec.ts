@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/activity";
+import {Action} from "@spica-server/activity/src";
 import {createPreferenceResource} from "./activity.resource";
 
 describe("Activity Resource", () => {

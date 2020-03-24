@@ -1,5 +1,5 @@
 import {Controller, Post, UseInterceptors, INestApplication} from "@nestjs/common";
-import {Predict, Resource, ActivityInterceptor, Activity} from "..";
+import {Predict, Resource, Activity, Activity} from "..";
 import {Test} from "@nestjs/testing";
 import {ActivityService} from "../activity.service";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
@@ -13,7 +13,7 @@ const mockPredict: Predict = (action, req, res): Resource => {
 export class mockController {
   constructor() {}
 
-  @UseInterceptors(ActivityInterceptor(mockPredict))
+  @UseInterceptors(activity(mockPredict))
   @Post()
   insert() {
     return "test";

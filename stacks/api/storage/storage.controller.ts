@@ -18,7 +18,7 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Binary, ObjectId} from "bson";
 
 import {Storage, StorageObject} from "./storage.service";
-import {ActivityInterceptor} from "@spica-server/activity";
+import {activity} from "@spica-server/activity/src";
 import {createStorageResource} from "./activity.resource";
 
 @Controller("storage")
@@ -57,7 +57,7 @@ export class StorageController {
     }
   }
 
-  @UseInterceptors(ActivityInterceptor(createStorageResource))
+  @UseInterceptors(activity(createStorageResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
   async updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
@@ -71,7 +71,7 @@ export class StorageController {
     return await this.storage.updateOne({_id: id}, object);
   }
 
-  @UseInterceptors(ActivityInterceptor(createStorageResource))
+  @UseInterceptors(activity(createStorageResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
   async insertMany(@Body() object: StorageObject[]) {
@@ -97,7 +97,7 @@ export class StorageController {
     return await this.storage.insertMany(insertData);
   }
 
-  @UseInterceptors(ActivityInterceptor(createStorageResource))
+  @UseInterceptors(activity(createStorageResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

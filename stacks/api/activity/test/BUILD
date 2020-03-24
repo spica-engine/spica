@@ -4,7 +4,7 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "activity_controller_testlib",
+    name = "controller_testlib",
     testonly = True,
     srcs = ["activity.controller.spec.ts"],
     deps = [
@@ -18,14 +18,14 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "activity_controller_acceptance",
+    name = "controller_acceptance",
     deps = [
-        ":activity_controller_testlib",
+        ":controller_testlib",
     ],
 )
 
 ts_library(
-    name = "activity_interceptor_unit_testlib",
+    name = "interceptor_unit_testlib",
     testonly = True,
     srcs = ["activity.interceptor.spec.ts"],
     deps = [
@@ -35,14 +35,14 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "activity_interceptor_unit",
+    name = "interceptor_unit",
     deps = [
-        ":activity_interceptor_unit_testlib",
+        ":interceptor_unit_testlib",
     ],
 )
 
 ts_library(
-    name = "activity_interceptor_integration_testlib",
+    name = "interceptor_integration_testlib",
     testonly = True,
     srcs = ["activity.interceptor.integration.spec.ts"],
     deps = [
@@ -56,8 +56,8 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "activity_interceptor_integration",
+    name = "interceptor_integration",
     deps = [
-        ":activity_interceptor_integration_testlib",
+        ":interceptor_integration_testlib",
     ],
 )

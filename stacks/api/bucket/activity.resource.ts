@@ -1,4 +1,4 @@
-import {Resource, Action} from "@spica-server/activity";
+import {Resource, Action} from "@spica-server/activity/src";
 
 export function createBucketResource(action: Action, req: any, res: any): Resource {
   let name = "BUCKET";

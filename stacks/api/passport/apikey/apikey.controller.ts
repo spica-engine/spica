@@ -19,7 +19,7 @@ import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "../policy/action.guard";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
-import {ActivityInterceptor} from "@spica-server/activity";
+import {activity} from "@spica-server/activity/src";
 import {createApikeyResource, createApikeyPolicyResource} from "./activity.resource";
 
 @Controller("passport/apikey")
@@ -73,7 +73,7 @@ export class ApiKeyController {
     });
   }
 
-  @UseInterceptors(ActivityInterceptor(createApikeyResource))
+  @UseInterceptors(activity(createApikeyResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
@@ -81,7 +81,7 @@ export class ApiKeyController {
     return this.aks.insertOne(apiKey);
   }
 
-  @UseInterceptors(ActivityInterceptor(createApikeyResource))
+  @UseInterceptors(activity(createApikeyResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
   replaceOne(
@@ -98,7 +98,7 @@ export class ApiKeyController {
       });
   }
 
-  @UseInterceptors(ActivityInterceptor(createApikeyResource))
+  @UseInterceptors(activity(createApikeyResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -109,7 +109,7 @@ export class ApiKeyController {
     });
   }
 
-  @UseInterceptors(ActivityInterceptor(createApikeyPolicyResource))
+  @UseInterceptors(activity(createApikeyPolicyResource))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async attachPolicy(
@@ -131,7 +131,7 @@ export class ApiKeyController {
     );
   }
 
-  @UseInterceptors(ActivityInterceptor(createApikeyPolicyResource))
+  @UseInterceptors(activity(createApikeyPolicyResource))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async detachPolicy(

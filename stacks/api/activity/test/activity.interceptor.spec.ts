@@ -1,4 +1,4 @@
-import {getAction, getUser, ActivityInterceptor} from "../activity.interceptor";
+import {getAction, getUser, Activity} from "../activity.interceptor";
 
 describe("Interceptor Unit Test", () => {
   it("should get action from method", () => {

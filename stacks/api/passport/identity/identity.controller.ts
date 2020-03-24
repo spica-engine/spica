@@ -21,7 +21,7 @@ import {NUMBER} from "@spica-server/core";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {ActivityInterceptor} from "@spica-server/activity";
+import {activity} from "@spica-server/activity/src";
 
 import {createIdentityResource, createIdentityPolicyResource} from "./activity.resource";
 
@@ -80,7 +80,7 @@ export class IdentityController {
     return identity;
   }
 
-  @UseInterceptors(ActivityInterceptor(createIdentityResource))
+  @UseInterceptors(activity(createIdentityResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   insertOne(
@@ -95,7 +95,7 @@ export class IdentityController {
     });
   }
 
-  @UseInterceptors(ActivityInterceptor(createIdentityResource))
+  @UseInterceptors(activity(createIdentityResource))
   @Put(":id")
   // TODO(thesayyn): Check if user updates its own identity.
   @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
@@ -107,7 +107,7 @@ export class IdentityController {
     return this.identity.updateOne(id, identity);
   }
 
-  @UseInterceptors(ActivityInterceptor(createIdentityResource))
+  @UseInterceptors(activity(createIdentityResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -116,7 +116,7 @@ export class IdentityController {
 
   // TODO(thesayyn): Strictly check policies before attaching them
 
-  @UseInterceptors(ActivityInterceptor(createIdentityPolicyResource))
+  @UseInterceptors(activity(createIdentityPolicyResource))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async attachPolicy(
@@ -135,7 +135,7 @@ export class IdentityController {
     return identity;
   }
 
-  @UseInterceptors(ActivityInterceptor(createIdentityPolicyResource))
+  @UseInterceptors(activity(createIdentityPolicyResource))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async detachPolicy(

@@ -11,7 +11,7 @@ import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
 import {Action, Predict} from "./interface";
 
-export function ActivityInterceptor(predict: Predict): Type<any> {
+export function activity(predict: Predict): Type<any> {
   class MixinActivityInterceptor implements NestInterceptor {
     constructor(@Optional() private service: ActivityService) {}
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -38,9 +38,10 @@ export function ActivityInterceptor(predict: Predict): Type<any> {
 }
 
 export function getAction(action: string): Action {
-  return Object.values(Action)[Object.keys(Action).findIndex(val => val === action)];
+  const key = Object.keys(Action).findIndex(val => val === action);
+  return Object.values(Action)[key];
 }
 
 export function getUser(user: any): string {
-  return user ? user.identifier : undefined;
+  return user ? user._id : undefined;
 }

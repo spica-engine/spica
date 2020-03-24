@@ -1,5 +1,5 @@
-import {Action} from "@spica-server/activity";
-import {createFunctionResource} from "../src/activity.resource";
+import {Action} from "@spica-server/activity/src";
+import {createFunctionResource} from "@spica-server/function/src/activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {

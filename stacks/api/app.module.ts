@@ -8,7 +8,7 @@ import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
 import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
-import {ActivityModule} from "./activity/activity.module";
+import {ActivityModule} from "@spica-server/activity/src";
 
 @Module({
   imports: [

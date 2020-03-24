@@ -1,4 +1,4 @@
-import {ActivityInterceptor} from "@spica-server/activity";
+import {activity} from "@spica-server/activity/src";
 import {createPreferenceResource} from "./activity.resource";
 import {Body, Controller, Get, Param, Put, UseGuards, UseInterceptors} from "@nestjs/common";
 import {Preference, PreferenceService} from "./service";
@@ -13,7 +13,7 @@ export class PreferenceController {
     return this.preference.get(scope);
   }
 
-  @UseInterceptors(ActivityInterceptor(createPreferenceResource))
+  @UseInterceptors(activity(createPreferenceResource))
   @Put(":scope")
   @UseGuards(AuthGuard())
   replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {

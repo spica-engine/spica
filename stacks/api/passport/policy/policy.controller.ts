@@ -17,7 +17,7 @@ import {ActionGuard} from "./action.guard";
 import {Policy} from "./interface";
 import {PolicyService} from "./policy.service";
 import {NUMBER} from "@spica-server/core";
-import {ActivityInterceptor} from "@spica-server/activity";
+import {activity} from "@spica-server/activity/src";
 import {createPolicyResource} from "./activity.resource";
 
 @Controller("passport/policy")
@@ -43,14 +43,14 @@ export class PolicyController {
     return this.policy.findOne(id);
   }
 
-  @UseInterceptors(ActivityInterceptor(createPolicyResource))
+  @UseInterceptors(activity(createPolicyResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
   insertOne(@Body() body: Policy) {
     return this.policy.insertOne(body);
   }
 
-  @UseInterceptors(ActivityInterceptor(createPolicyResource))
+  @UseInterceptors(activity(createPolicyResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
   replaceOne(
@@ -60,7 +60,7 @@ export class PolicyController {
     return this.policy.replaceOne({_id: id}, body);
   }
 
-  @UseInterceptors(ActivityInterceptor(createPolicyResource))
+  @UseInterceptors(activity(createPolicyResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
