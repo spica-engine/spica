@@ -21,7 +21,7 @@ import {ApiKey} from "./interface";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
-  constructor(private aks: ApiKeyService) {}
+  constructor(private apiKeyService: ApiKeyService) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:index"))
@@ -53,7 +53,7 @@ export class ApiKeyController {
         }
       }
     ];
-    return this.aks
+    return this.apiKeyService
       .aggregate(pipeline)
       .toArray()
       .then(r => r[0]);
@@ -62,7 +62,7 @@ export class ApiKeyController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.aks.findOne({_id: id}).then(r => {
+    return this.apiKeyService.findOne({_id: id}).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -74,7 +74,7 @@ export class ApiKeyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
     apiKey.key = uniqid();
-    return this.aks.insertOne(apiKey);
+    return this.apiKeyService.insertOne(apiKey);
   }
 
   @Put(":id")
@@ -85,7 +85,7 @@ export class ApiKeyController {
   ) {
     delete apiKey.key;
     // We can't perform a replace operation on this endpoint because the "key" key is not present on this endpoint.
-    return this.aks
+    return this.apiKeyService
       .findOneAndUpdate({_id: id}, {$set: apiKey}, {returnOriginal: false})
       .then(result => {
         if (!result) throw new NotFoundException();
@@ -96,7 +96,7 @@ export class ApiKeyController {
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.aks.deleteOne({_id: id}).then(r => {
+    return this.apiKeyService.deleteOne({_id: id}).then(r => {
       if (!r) {
         throw new NotFoundException();
       }
@@ -109,7 +109,7 @@ export class ApiKeyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
   ) {
-    const apiKey = await this.aks.findOne({_id: id});
+    const apiKey = await this.apiKeyService.findOne({_id: id});
     if (!apiKey) throw new NotFoundException();
 
     apiKey.policies = new Array(...apiKey.policies, ...policies).filter((policy, index, array) => {
@@ -117,7 +117,7 @@ export class ApiKeyController {
     });
 
     delete apiKey._id;
-    return this.aks.findOneAndUpdate(
+    return this.apiKeyService.findOneAndUpdate(
       {_id: id},
       {$set: {policies: apiKey.policies}},
       {returnOriginal: false}
@@ -129,7 +129,7 @@ export class ApiKeyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
   ) {
-    const apiKey = await this.aks.findOne({_id: id});
+    const apiKey = await this.apiKeyService.findOne({_id: id});
     if (!apiKey) throw new NotFoundException();
 
     apiKey.policies = new Array(...apiKey.policies).filter(
@@ -137,7 +137,7 @@ export class ApiKeyController {
     );
 
     delete apiKey._id;
-    return this.aks.findOneAndUpdate(
+    return this.apiKeyService.findOneAndUpdate(
       {_id: id},
       {$set: {policies: apiKey.policies}},
       {returnOriginal: false}
