@@ -24,7 +24,6 @@ jasmine_node_test(
     ],
 )
 
-
 ts_library(
     name = "activity_interceptor_unit_testlib",
     testonly = True,
@@ -47,13 +46,12 @@ ts_library(
     testonly = True,
     srcs = ["activity.interceptor.integration.spec.ts"],
     deps = [
+        "//packages/core/testing",
+        "//packages/database/testing",
         "//stacks/api/activity",
-        "@npm//@types/jasmine",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
-        "//packages/core/testing",
-        "//packages/database/testing"
-
+        "@npm//@types/jasmine",
     ],
 )
 
