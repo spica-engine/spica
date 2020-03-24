@@ -1,8 +1,9 @@
 import {Injectable} from "@nestjs/common";
+import {BucketDocument} from "@spica-server/bucket/services";
 import {MongoClient, ObjectId} from "@spica-server/database";
 import {ChangeKind, diff} from "./differ";
 import {HistoryService} from "./history.service";
-import {BucketDocument, History} from "./interfaces";
+import {History} from "./interfaces";
 import {schemaDiff} from "./schema";
 
 @Injectable()
