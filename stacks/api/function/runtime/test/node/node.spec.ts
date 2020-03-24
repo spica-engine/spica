@@ -51,7 +51,7 @@ describe("Node", () => {
 
       await node.compile(compilation);
       const stat = await fs.promises.lstat(
-        path.join(compilation.cwd, ".build", "node_modules", "@internal")
+        path.join(compilation.cwd, ".build", "node_modules", "@internal", "database")
       );
       expect(stat.isSymbolicLink()).toBe(true);
     });
