@@ -38,15 +38,16 @@ export class Node extends Runtime {
       .catch(() => false);
 
     if (hasSpicaDevkitDatabasePackage) {
+      const targetPath = path.join(compilation.cwd, "node_modules", "@internal");
+      await fs.promises.mkdir(targetPath, {recursive: true});
       await fs.promises
         .symlink(
-          path.join(compilation.cwd, "node_modules", "@spica-devkit"),
-          path.join(compilation.cwd, "node_modules", "@internal"),
+          path.join(compilation.cwd, "node_modules", "@spica-devkit", "database"),
+          path.join(targetPath, "database"),
           "dir"
         )
         .catch(e => {
-          console.log(e);
-          if (e.code == "EEXIST") {
+          if (e.code == "EEXIST" || e.code == "ENOENT") {
             // Do nothing.
             return;
           }
