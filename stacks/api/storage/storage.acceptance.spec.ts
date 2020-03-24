@@ -201,7 +201,7 @@ describe("Storage acceptance test", () => {
       let selectedData = (await req.get("/storage", {})).body.data[5];
       selectedData.content.data = new BSON.Binary(Buffer.from("new data"));
 
-      await req.put("/storage", BSON.serialize(selectedData), {
+      await req.put(`/storage/${selectedData._id}`, BSON.serialize(selectedData), {
         "Content-Type": "application/bson"
       });
       expect((await req.get(`/storage/${selectedData._id}`, {withMeta: "false"})).body).toEqual(
@@ -212,7 +212,7 @@ describe("Storage acceptance test", () => {
     it("should throw error if updated data is empty", async () => {
       let selectedData = (await req.get("/storage", {})).body.data[3];
       selectedData.content.data = null;
-      const response = await req.put("/storage", BSON.serialize(selectedData), {
+      const response = await req.put(`/storage/${selectedData._id}`, BSON.serialize(selectedData), {
         "Content-Type": "application/bson"
       });
 

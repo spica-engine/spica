@@ -214,6 +214,13 @@ ts_library(
     ],
 )
 
+jasmine_node_test(
+    name = "bucket_test",
+    deps = [
+        ":bucket_module_test",
+    ],
+)
+
 ts_library(
     name = "activity_test_lib",
     testonly = True,

@@ -61,7 +61,7 @@ export class Storage {
 
   updateOne(filter: FilterQuery<StorageObject>, object: StorageObject): Promise<StorageObject> {
     if (object.content.data) {
-      fs.writeFileSync(this.buildPath(object), object.content.data);
+      fs.writeFileSync(this.buildPath({...object, _id: filter._id}), object.content.data);
     }
     delete object.content.data;
     delete object._id;
