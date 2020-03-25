@@ -1,5 +1,5 @@
 import {Controller, Post, UseInterceptors, INestApplication} from "@nestjs/common";
-import {Predict, Resource, activity,getUser, ActivityService, Activity} from "@spica-server/activity/src";
+import {Predict, Resource, ActivityService, activity} from "@spica-server/activity/src";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
@@ -72,8 +72,7 @@ describe("Interceptor Integration", () => {
       await app.listen(request.socket);
     });
 
-    //import mock getUser method
-    xit("should insert insert activity", async () => {
+    it("should not insert an activity if user isn't exist", async () => {
       insertSpy = spyOn(service, "insertOne");
 
       const res = await request.post("/test");
@@ -82,12 +81,7 @@ describe("Interceptor Integration", () => {
       expect(res.statusText).toEqual("Created");
       expect(res.body).toEqual("test");
 
-      expect(insertSpy).toHaveBeenCalledTimes(1);
-      expect(insertSpy).toHaveBeenCalledWith({
-        action: 0,
-        identifier: undefined,
-        resource: {name: "test_module", documentId: ["test_id"]}
-      } as Activity);
+      expect(insertSpy).toHaveBeenCalledTimes(0);
     });
 
     afterAll(async () => {

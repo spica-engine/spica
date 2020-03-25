@@ -45,7 +45,6 @@ export class ActivityController {
       };
     }
 
-    console.log(Action[action]);
     if (Action[action]) filter.action = action;
 
     if (resource) {
