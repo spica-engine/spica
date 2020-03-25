@@ -43,6 +43,16 @@ commands:
                 export CIRCLE_TARGET_BRANCH=$(curl -s "$URL" | jq -e '.base.ref' | tr -d '"')
                 git merge --ff-only "origin/$CIRCLE_TARGET_BRANCH"
             fi
+  install_mongodb:
+    description: Install mongodb
+    steps:
+      - run:
+          name: "Install mongodb"
+          command: |
+            wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add -
+            echo "deb http://repo.mongodb.org/apt/debian stretch/mongodb-org/4.2 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list
+            sudo apt-get update
+            sudo apt-get install mongodb-org-server -y
 executors:
   default-executor:
     working_directory: ~/spica
@@ -52,7 +62,7 @@ executors:
     working_directory: ~/spica
     docker:
       - image: circleci/node:11
-      - image: circleci/mongo:4.2.1
+   
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
@@ -84,10 +94,20 @@ jobs:
     executor: api-executor
     steps:
       - custom_attach_workspace
+      - install_mongodb
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky
+  test_api_flaky:
+    executor: api-executor
+    steps:
+      - custom_attach_workspace
+      - install_mongodb
+      - setup_circleci_bazel_config
+      - run:
+          name: "Running tests"
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5
 
   test_spica:
     executor: default-executor
@@ -126,6 +146,9 @@ workflows:
           requires:
             - setup
       - test_api:
+          requires:
+            - setup
+      - test_api_flaky:
           requires:
             - setup
       - test_spica:

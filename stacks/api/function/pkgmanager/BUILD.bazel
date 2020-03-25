@@ -11,5 +11,6 @@ ts_library(
     module_name = "@spica-server/function/pkgmanager",
     deps = [
         "@npm//@types/node",
+        "@npm//rxjs",
     ],
 )

@@ -3,47 +3,73 @@ import {BucketDataService, BucketModule} from "@spica-server/bucket";
 import {DocumentScheduler} from "@spica-server/bucket/scheduler";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
-
 describe("scheduler", () => {
-  let bds: BucketDataService;
+  let bds: jasmine.SpyObj<BucketDataService>;
   let scheduler: DocumentScheduler;
   const bucketId = new ObjectId();
   let module: TestingModule;
+  let clock: jasmine.Clock;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
-        BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS})
+        BucketModule.forRoot({hooks: false, realtime: false, history: false})
       ]
     })
       .overrideProvider(BucketDataService)
-      .useValue(jasmine.createSpyObj("Bucket Data Service", ["replaceOne"]))
+      .useValue(jasmine.createSpyObj("Bucket Data Service", ["updateOne"]))
       .compile();
     bds = module.get(BucketDataService);
     scheduler = module.get(DocumentScheduler);
-  }, 120000);
+    clock = jasmine.clock();
+  }, 600000);
 
-  it("should publish immediately if the date is past", done => {
+  afterAll(async () => await module.close());
+
+  beforeEach(() => {
+    clock.install();
+    bds.updateOne.calls.reset();
+    clock.mockDate(new Date());
+  });
+
+  afterEach(() => {
+    clock.uninstall();
+  });
+
+  it("should publish immediately if the date is past", () => {
     const documentId = new ObjectId();
     const date = new Date();
     date.setSeconds(date.getSeconds() + 1);
 
-    scheduler.schedule(bucketId, documentId, date, {_id: documentId, test: 123});
-    const replaceOne = bds.replaceOne as jasmine.Spy;
-    setTimeout(() => {
-      const [scheduledBucketId, scheduledDocument] = replaceOne.calls.mostRecent().args;
-      expect(replaceOne).toHaveBeenCalledTimes(1);
-      expect(scheduledBucketId).toBe(bucketId);
-      expect(scheduledDocument).not.toBeFalsy();
-      expect(scheduledDocument._id).toBe(documentId);
-      expect(scheduledDocument.test).toBe(123);
-      done();
-    }, 1000);
+    scheduler.schedule(bucketId, documentId, date);
+
+    clock.tick(1500);
+
+    expect(bds.updateOne).toHaveBeenCalledTimes(1);
+    const [scheduledBucketId, filter, update] = bds.updateOne.calls.mostRecent().args;
+    expect(bds.updateOne).toHaveBeenCalledTimes(1);
+    expect(scheduledBucketId).toBe(bucketId);
+    expect(filter).toEqual({_id: documentId});
+    expect(update).toEqual({$unset: {_schedule: ""}});
   });
 
-  afterAll(async () => {
-    await module.close();
+  it("should publish after 15seconds", () => {
+    const documentId = new ObjectId();
+    const date = new Date();
+
+    date.setSeconds(date.getSeconds() + 15);
+
+    scheduler.schedule(bucketId, documentId, date);
+    expect(bds.updateOne).not.toHaveBeenCalled();
+
+    clock.tick(15000);
+
+    expect(bds.updateOne).toHaveBeenCalledTimes(1);
+    const [scheduledBucketId, filter, update] = bds.updateOne.calls.mostRecent().args;
+    expect(bds.updateOne).toHaveBeenCalledTimes(1);
+    expect(scheduledBucketId).toBe(bucketId);
+    expect(filter).toEqual({_id: documentId});
+    expect(update).toEqual({$unset: {_schedule: ""}});
   });
 });

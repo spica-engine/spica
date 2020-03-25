@@ -1,6 +1,6 @@
 import {BreakpointObserver} from "@angular/cdk/layout";
 import {Component, OnDestroy, ViewChild} from "@angular/core";
-import {Subject} from "rxjs";
+import {Subject, merge, interval} from "rxjs";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketService} from "../../services/bucket.service";
 import {ViewportRuler} from "@angular/cdk/overlay";
@@ -56,7 +56,7 @@ export class BucketIndexComponent implements OnDestroy {
     });
   }
 
-  dropListDropped() {
+  async dropListDropped() {
     if (!this.target) return;
 
     let phElement = this.placeholder.element.nativeElement;
@@ -73,10 +73,7 @@ export class BucketIndexComponent implements OnDestroy {
 
     if (this.sourceIndex != this.targetIndex) {
       moveItemInArray(this.buckets, this.sourceIndex, this.targetIndex);
-      this.bs
-        .updateMany(this.buckets.map((bucket, index) => ({...bucket, order: index})))
-        .toPromise()
-        .then(() => this.bs.retrieve().toPromise());
+      this.bs.patchIndexes(this.buckets);
     }
   }
 

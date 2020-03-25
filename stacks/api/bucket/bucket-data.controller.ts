@@ -11,7 +11,9 @@ import {
   Query,
   UseGuards,
   ForbiddenException,
-  Optional
+  Optional,
+  Put,
+  UseInterceptors
 } from "@nestjs/common";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -21,6 +23,8 @@ import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/databa
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
+import {activity} from "@spica-server/activity/src";
+import {createBucketDataResource} from "./activity.resource";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -109,7 +113,7 @@ export class BucketDataController {
           as: property
         }
       },
-      {$unwind: `$${property}`}
+      {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
     ];
   }
 
@@ -299,6 +303,7 @@ export class BucketDataController {
     return document;
   }
 
+  @UseInterceptors(activity(createBucketDataResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async replaceOne(
@@ -308,22 +313,41 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (this.dispatcher && strategyType == "APIKEY") {
-      const result = body._id
-        ? await this.dispatcher.dispatch(
-            {bucket: bucketId.toHexString(), type: "UPDATE"},
-            headers,
-            body._id.toHexString()
-          )
-        : await this.dispatcher.dispatch({bucket: bucketId.toHexString(), type: "INSERT"}, headers);
-
+      const result = await this.dispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "INSERT"},
+        headers
+      );
       if (!result) {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-
-    return this.bds.replaceOne(bucketId, body).then(data => data.ops[0]._id || data.upsertedId._id);
+    return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
+  @UseInterceptors(activity(createBucketDataResource))
+  @Put(":documentId")
+  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  async update(
+    @Headers("strategy-type") strategyType: string,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Headers() headers: object,
+    @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
+  ) {
+    if (this.dispatcher && strategyType == "APIKEY") {
+      const result = await this.dispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "UPDATE"},
+        headers,
+        documentId.toHexString()
+      );
+      if (!result) {
+        throw new ForbiddenException("Forbidden action.");
+      }
+    }
+    return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
+  }
+
+  @UseInterceptors(activity(createBucketDataResource))
   @Delete(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteOne(
@@ -333,6 +357,7 @@ export class BucketDataController {
     return this.bds.deleteOne(bucketId, {_id: documentId});
   }
 
+  @UseInterceptors(activity(createBucketDataResource))
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {

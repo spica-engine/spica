@@ -26,6 +26,6 @@ build --verbose_failures=true
 # Be more noisy when running under ci
 test --test_output=errors
 
-# Our integration tests are a bit flaky
-# Let's give all failing tests a second try to mostly paper over flakiness
-test --flaky_test_attempts=2
+
+# Cache tests under CI
+test --cache_test_results

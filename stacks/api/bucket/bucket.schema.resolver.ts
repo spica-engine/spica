@@ -1,50 +1,30 @@
 import {Injectable} from "@nestjs/common";
+import {BucketService, compile} from "@spica-server/bucket/services";
+import {Bucket} from "@spica-server/bucket/services/bucket";
 import {Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
-import {BucketDocument, Bucket} from "@spica-server/bucket/services/bucket";
-import {BucketService} from "@spica-server/bucket/services";
 
 @Injectable()
 export class BucketSchemaResolver {
   constructor(private bucketService: BucketService) {}
 
   resolve(uri: string): Promise<Bucket | object> | undefined {
-    try {
+    if (ObjectId.isValid(uri)) {
       return this.bucketService.findOne({_id: new ObjectId(uri)}).then(async schema => {
         const prefs = await this.bucketService.getPreferences();
         if (schema) {
-          schema["$schema"] = "http://spica.internal/bucket/schema";
-          // @ts-ignore
-          schema["_id"] = schema["$id"] = String(schema._id);
-          // TODO(thesayyn): Accomplish the same behavior with custom keywords
-          schema["properties"] = Object.keys(schema["properties"]).reduce(
-            (accumulator, key) => {
-              const property = schema.properties[key];
-              if (property.options.translate) {
-                accumulator[key] = {
-                  type: "object",
-                  required: [prefs.language.default],
-                  properties: Object.keys(prefs.language.available).reduce((props, key) => {
-                    props[key] = property;
-                    return props;
-                  }, {}),
-                  additionalProperties: false
-                };
-              } else {
-                accumulator[key] = schema.properties[key];
-              }
-              return accumulator;
-            },
-            {
-              _id: {type: "string", options: {position: undefined}, format: "objectid"},
-              _schedule: {type: "string", format: "date-time"}
-            }
-          ) as any;
-          schema["additionalProperties"] = false;
+          const jsonSchema = compile(schema, prefs);
+          jsonSchema.$id = uri;
+          jsonSchema.$schema = "http://spica.internal/bucket/schema";
+          jsonSchema.additionalProperties = false;
+          jsonSchema.properties._schedule = {
+            type: "string",
+            format: "date-time"
+          };
         }
         return schema || {type: true};
       });
-    } catch {}
+    }
   }
 }
 

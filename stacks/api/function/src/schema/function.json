@@ -5,10 +5,6 @@
   "additionalProperties": false,
   "required": ["description", "name", "triggers"],
   "properties": {
-    "_id": {
-      "type": "string",
-      "format": "objectid"
-    },
     "name": {
       "type": "string"
     },

@@ -3,7 +3,9 @@ import {
   Collection,
   DatabaseService,
   ObjectId,
-  InsertOneWriteOpResult
+  InsertOneWriteOpResult,
+  FilterQuery,
+  FindOneAndReplaceOption
 } from "@spica-server/database";
 import {Policy, Service} from "./interface";
 
@@ -54,13 +56,15 @@ export class PolicyService {
   }
 
   insertOne(policy: Policy): Promise<InsertOneWriteOpResult> {
-    return this._policyCollection.insertOne(policy);
+    return this._policyCollection.insertOne(policy).then(r => r.ops[0]);
   }
 
-  updateOne(id: ObjectId, policy: Policy): Promise<boolean> {
-    return this._policyCollection
-      .updateOne({_id: new ObjectId(id)}, {$set: policy})
-      .then(r => r.result.ok == 1);
+  replaceOne(
+    filter: FilterQuery<Policy>,
+    policy: Policy,
+    options: FindOneAndReplaceOption = {returnOriginal: false}
+  ): Promise<Policy> {
+    return this._policyCollection.findOneAndReplace(filter, policy, options).then(r => r.value);
   }
 
   deleteOne(id: ObjectId) {

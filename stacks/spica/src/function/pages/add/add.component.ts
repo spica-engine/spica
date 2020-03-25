@@ -86,6 +86,7 @@ export class AddComponent implements OnInit, OnDestroy {
         filter(params => params.id),
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
+          this.dependencyInstallPending = false;
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
@@ -161,7 +162,9 @@ export class AddComponent implements OnInit, OnDestroy {
 
     const isInsert = !this.function._id;
 
-    const save = isInsert ? this.functionService.insertOne(fn) : this.functionService.updateOne(fn);
+    const save = isInsert
+      ? this.functionService.insertOne(fn)
+      : this.functionService.replaceOne(fn);
 
     this.$save = merge(
       of(SavingState.Saving),

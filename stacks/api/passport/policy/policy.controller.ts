@@ -1,4 +1,15 @@
-import {Body, Controller, Delete, Get, Param, Post, UseGuards, Query} from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+  Query,
+  Put,
+  UseInterceptors
+} from "@nestjs/common";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {AuthGuard} from "../auth.guard";
@@ -6,6 +17,8 @@ import {ActionGuard} from "./action.guard";
 import {Policy} from "./interface";
 import {PolicyService} from "./policy.service";
 import {NUMBER} from "@spica-server/core";
+import {activity} from "@spica-server/activity/src";
+import {createPolicyResource} from "./activity.resource";
 
 @Controller("passport/policy")
 export class PolicyController {
@@ -30,21 +43,24 @@ export class PolicyController {
     return this.policy.findOne(id);
   }
 
-  @Post("create")
+  @UseInterceptors(activity(createPolicyResource))
+  @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
   insertOne(@Body() body: Policy) {
     return this.policy.insertOne(body);
   }
 
-  @Post(":id")
+  @UseInterceptors(activity(createPolicyResource))
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
-  updateOne(
+  replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
-    return this.policy.updateOne(id, body);
+    return this.policy.replaceOne({_id: id}, body);
   }
 
+  @UseInterceptors(activity(createPolicyResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

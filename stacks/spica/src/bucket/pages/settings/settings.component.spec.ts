@@ -35,7 +35,7 @@ describe("SettingsComponent", () => {
           }
         })
       ),
-      update: jasmine.createSpy("update")
+      insertOne: jasmine.createSpy("insertOne")
     };
     TestBed.configureTestingModule({
       imports: [
@@ -133,8 +133,8 @@ describe("SettingsComponent", () => {
   it("should update settings", () => {
     fixture.componentInstance.addLanguage("af");
     fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
-    expect(preferenceService.update).toHaveBeenCalledTimes(1);
-    expect(preferenceService.update).toHaveBeenCalledWith({
+    expect(preferenceService.insertOne).toHaveBeenCalledTimes(1);
+    expect(preferenceService.insertOne).toHaveBeenCalledWith({
       language: {
         available: {
           tr_TR: "Turkish",

@@ -73,7 +73,8 @@ describe("Identity Setting Component", () => {
           }
         })
       ),
-      update: null
+      replaceOne: null,
+      insertOne: null
     };
     TestBed.configureTestingModule({
       imports: [
@@ -231,8 +232,6 @@ describe("Identity Setting Component", () => {
         .nativeElement.click();
       fixture.detectChanges();
 
-      console.log(fixture.componentInstance.preferences.identity.attributes.properties);
-
       expect(fixture.componentInstance.preferences.identity.attributes.properties).toEqual({
         prop1: {
           default: "something default",
@@ -247,9 +246,9 @@ describe("Identity Setting Component", () => {
     });
 
     it("should save identity", fakeAsync(() => {
-      const updateSpy = spyOn(
+      const replaceOneSpy = spyOn(
         fixture.componentInstance["preferencesService"],
-        "update"
+        "replaceOne"
       ).and.returnValue(of(null));
       const navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
 
@@ -257,7 +256,7 @@ describe("Identity Setting Component", () => {
       tick();
       fixture.detectChanges();
 
-      expect(updateSpy).toHaveBeenCalledTimes(1);
+      expect(replaceOneSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith(["/passport/identity"]);
     }));

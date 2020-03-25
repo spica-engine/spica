@@ -2,15 +2,15 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {
   DatabaseTestingModule,
   InsertOneWriteOpResult,
-  InsertWriteOpResult
+  InsertWriteOpResult,
+  ObjectId
 } from "@spica-server/database/testing";
 import {BucketDataService} from "@spica-server/bucket";
 
 describe("bucket data service", () => {
   let module: TestingModule;
   let bds: BucketDataService;
-  const bucketId = "superealbucketid";
-
+  const bucketId = new ObjectId();
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
@@ -91,37 +91,13 @@ describe("bucket data service", () => {
     return expectAsync(bds.find(bucketId)).toBeResolvedTo([]);
   });
 
-  it("should add new entries if no match", async () => {
-    await expectAsync(bds.replaceOne(bucketId, {platform: "ios"})).toBeResolved();
-    await expectAsync(bds.replaceOne(bucketId, {platform: "android"})).toBeResolved();
-    return expectAsync(
-      bds.find(bucketId).then(rows => {
-        expect(rows).not.toEqual([]);
-        expect(rows.length).toBe(2);
-      })
-    ).toBeResolved();
-  });
-
   it("should update the entry with data._id", async () => {
-    const insertOp = await bds.insertOne(bucketId, {platform: "android"});
+    const insertedDocument = (await bds.insertOne(bucketId, {platform: "android"})).ops[0];
     await expectAsync(
-      bds.replaceOne(bucketId, {_id: insertOp.insertedId, platform: "ios"})
+      bds.replaceOne(bucketId, {_id: insertedDocument._id}, {...insertedDocument, platform: "ios"})
     ).toBeResolved();
     return expectAsync(
-      bds.findOne(bucketId, {_id: insertOp.insertedId}).then(r => {
-        expect(r).not.toBe(undefined);
-        expect(r.platform).toBe("ios");
-      })
-    ).toBeResolved();
-  });
-
-  it("should update the entry with filter", async () => {
-    const insertOp = await bds.insertOne(bucketId, {platform: "android"});
-    await expectAsync(
-      bds.replaceOne(bucketId, {platform: "ios"}, {_id: insertOp.insertedId})
-    ).toBeResolved();
-    return expectAsync(
-      bds.findOne(bucketId, {_id: insertOp.insertedId}).then(r => {
+      bds.findOne(bucketId, {_id: insertedDocument._id}).then(r => {
         expect(r).not.toBe(undefined);
         expect(r.platform).toBe("ios");
       })

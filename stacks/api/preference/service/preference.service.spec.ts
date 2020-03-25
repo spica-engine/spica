@@ -12,6 +12,7 @@ describe("Preference Service", () => {
       .collection("preferences")
       .insertMany(prefs);
   }
+
   let module: TestingModule;
   let preferenceService: PreferenceService;
   beforeAll(async () => {
@@ -56,26 +57,31 @@ describe("Preference Service", () => {
     expect(functionPref.property).toBe("default function property");
   });
 
-  it("should update bucket preferences", async () => {
-    await preferenceService.update({
-      scope: "bucket",
-      property: "new property for bucket"
-    });
+  it("should update preference", async () => {
+    const insertedPref = await preferenceService.insertOne({scope: "test"});
+    await preferenceService.replaceOne(
+      {_id: insertedPref._id},
+      {
+        scope: "test",
+        property: "new property for test"
+      }
+    );
 
-    const bucketPref = await preferenceService.get("bucket");
+    const pref = await preferenceService.get("test");
 
-    expect(bucketPref.scope).toBe("bucket");
-    expect(bucketPref.property).toBe("new property for bucket");
+    expect(pref.scope).toBe("test");
+    expect(pref.property).toBe("new property for test");
   });
 
-  it("should add new preference if it doesnt exist", async () => {
-    await preferenceService.update({
+  it("should add new preference", async () => {
+    await preferenceService.insertOne({
       scope: "function",
       property: "function property"
     });
 
     const functionPref = await preferenceService.get("function");
 
+    expect(functionPref._id).toBeDefined();
     expect(functionPref.scope).toBe("function");
     expect(functionPref.property).toBe("function property");
   });

@@ -22,7 +22,7 @@ export class IdentityService {
   }
 
   insertOne(identity: Identity): Observable<Identity> {
-    return this.http.post<Identity>(`api:/passport/identity/create`, identity);
+    return this.http.post<Identity>(`api:/passport/identity`, identity);
   }
 
   updateOne(identity: Identity): Observable<void> {
@@ -30,7 +30,7 @@ export class IdentityService {
       ...identity,
       _id: undefined
     };
-    return this.http.post<void>(`api:/passport/identity/${identity._id}`, identityRequest);
+    return this.http.put<void>(`api:/passport/identity/${identity._id}`, identityRequest);
   }
 
   deleteOne(id: string): Observable<void> {

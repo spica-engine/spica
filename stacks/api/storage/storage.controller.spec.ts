@@ -127,8 +127,8 @@ describe("Storage Controller", () => {
   });
 
   it("should update storage object", async () => {
+    const dataId = new ObjectId("56cb91bdc3464f14678934cb");
     const updatedData = {
-      _id: new ObjectId("56cb91bdc3464f14678934cb"),
       content: {
         data: Buffer.from("new data"),
         type: "newtype",
@@ -140,16 +140,18 @@ describe("Storage Controller", () => {
     );
 
     return await expectAsync(
-      storageController.updateOne(updatedData).then(() => {
+      storageController.updateOne(dataId, updatedData).then(() => {
         expect(updateSpy).toHaveBeenCalledTimes(1);
-        expect(updateSpy).toHaveBeenCalledWith({
-          _id: new ObjectId("56cb91bdc3464f14678934cb"),
-          content: {
-            data: ((Buffer.from("new data") as any) as Binary).buffer,
-            type: "newtype",
-            size: ((Buffer.from("new data") as any) as Binary).buffer.byteLength
+        expect(updateSpy).toHaveBeenCalledWith(
+          {_id: new ObjectId("56cb91bdc3464f14678934cb")},
+          {
+            content: {
+              data: ((Buffer.from("new data") as any) as Binary).buffer,
+              type: "newtype",
+              size: ((Buffer.from("new data") as any) as Binary).buffer.byteLength
+            }
           }
-        });
+        );
         return;
       })
     ).toBeResolved();

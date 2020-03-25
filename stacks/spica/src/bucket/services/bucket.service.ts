@@ -3,8 +3,8 @@ import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {fileToBuffer, PreferencesService} from "@spica-client/core";
 import * as BSON from "bson";
-import {from, Observable} from "rxjs";
-import {filter, flatMap, map, tap} from "rxjs/operators";
+import {from, Observable, pipe} from "rxjs";
+import {filter, flatMap, map, tap, debounceTime} from "rxjs/operators";
 import {Storage} from "../../storage/interfaces/storage";
 import {Bucket, BucketTemplate} from "../interfaces/bucket";
 import {BucketSettings} from "../interfaces/bucket-settings";
@@ -46,14 +46,32 @@ export class BucketService {
       .pipe(tap(() => this.store.dispatch(new fromBucket.Remove(id))));
   }
 
-  replaceOne(bucket: Bucket): Observable<Bucket> {
+  insertOne(bucket: Bucket): Observable<Bucket> {
     return this.http
       .post<Bucket>(`api:/bucket`, bucket)
-      .pipe(tap(b => this.store.dispatch(new fromBucket.Upsert(b))));
+      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Upsert(bucket))));
   }
 
-  updateMany(buckets: Bucket[]): Observable<Bucket[]> {
-    return this.http.put<Bucket[]>(`api:/bucket`, buckets);
+  replaceOne(bucket: Bucket): Observable<Bucket> {
+    return this.http
+      .put<Bucket>(`api:/bucket/${bucket._id}`, bucket)
+      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
+  }
+
+  patchBucket(id: string, changes: object): Observable<Bucket> {
+    return this.http
+      .patch<Bucket>(`api:/bucket/${id}`, changes, {
+        headers: new HttpHeaders().set("Content-Type", "application/merge-patch+json")
+      })
+      .pipe(
+        tap(updatedDocument => this.store.dispatch(new fromBucket.Update(id, updatedDocument)))
+      );
+  }
+
+  patchIndexes(buckets: Bucket[]): Promise<Bucket[]> {
+    return Promise.all(
+      buckets.map((bucket, index) => this.patchBucket(bucket._id, {order: index}).toPromise())
+    );
   }
 
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {

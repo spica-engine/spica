@@ -1,14 +1,15 @@
-import {TestingModule, Test} from "@nestjs/testing";
-import {DatabaseTestingModule, DatabaseService, ObjectId} from "@spica-server/database/testing";
-import {PreferenceModule, Preference} from "@spica-server/preference";
-import {SchemaModule} from "@spica-server/core/schema";
-import {BucketSchemaResolver} from "./bucket.schema.resolver";
+import {Test, TestingModule} from "@nestjs/testing";
 import {BucketService} from "@spica-server/bucket/services";
+import {SchemaModule} from "@spica-server/core/schema";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PreferenceModule} from "@spica-server/preference";
+import {BucketSchemaResolver} from "./bucket.schema.resolver";
 
-describe("bucket service", () => {
+describe("Bucket Schema Resolver", () => {
   let module: TestingModule;
   let schemaResolver: BucketSchemaResolver;
   let bs: BucketService;
+
   const bucket = {
     _id: new ObjectId(),
     title: "New Bucket",
@@ -50,7 +51,7 @@ describe("bucket service", () => {
 
   beforeAll(async () => {
     const mockBucketService = {
-      findOne: jasmine.createSpy("findOne").and.returnValue(Promise.resolve(bucket)),
+      findOne: jasmine.createSpy("findOne").and.returnValue(Promise.resolve({...bucket})),
       getPreferences: jasmine
         .createSpy("getPreferences")
         .and.returnValue(Promise.resolve(preference))
@@ -69,36 +70,28 @@ describe("bucket service", () => {
     schemaResolver = new BucketSchemaResolver(bs);
   });
 
-  afterAll(async () => {
-    await module.close();
-  });
+  afterAll(async () => await module.close());
 
-  it("should resolve bucket", async () => {
-    const response = await schemaResolver.resolve(bucket._id.toHexString());
-    expect(response).toEqual({
+  it("should return the compiled bucket schema", async () => {
+    const jsonSchema = await schemaResolver.resolve(bucket._id.toHexString());
+    expect(jsonSchema).toEqual({
+      $schema: "http://spica.internal/bucket/schema",
+      $id: String(bucket._id),
       title: "New Bucket",
       description: "Describe your new bucket",
-      icon: "view_stream",
-      primary: "title",
       readOnly: false,
-      $schema: "http://spica.internal/bucket/schema",
-      _id: bucket._id,
-      $id: bucket._id,
       additionalProperties: false,
       properties: {
-        _id: {type: "string", options: {position: undefined}, format: "objectid"},
         _schedule: {type: "string", format: "date-time"},
         title: {
           type: "string",
           title: "title",
-          description: "Title of the row",
-          options: {position: "left", visible: true}
+          description: "Title of the row"
         },
         description: {
-          type: "textarea",
+          type: "string",
           title: "description",
-          description: "Description of the row",
-          options: {position: "right"}
+          description: "Description of the row"
         },
         text: {
           additionalProperties: false,
@@ -108,18 +101,22 @@ describe("bucket service", () => {
             tr_TR: {
               type: "string",
               title: "translatable text",
-              description: "Text of the row",
-              options: {position: "left", visible: true, translate: true}
+              description: "Text of the row"
             },
             en_US: {
               type: "string",
               title: "translatable text",
-              description: "Text of the row",
-              options: {position: "left", visible: true, translate: true}
+              description: "Text of the row"
             }
           }
         }
       }
     } as any);
+    // IMPORTANT: Do not remove "as any" otherwise the compiler will hang forever.
+  });
+
+  it("should not return anything if invalid objectid is passed", async () => {
+    const jsonSchema = await schemaResolver.resolve("absolutely_not_an_objectid");
+    expect(jsonSchema).not.toBeTruthy();
   });
 });

@@ -1,53 +1,46 @@
-import {Test, TestingModule} from "@nestjs/testing";
-import {DatabaseTestingModule, DatabaseService, ObjectId} from "@spica-server/database/testing";
-import {Preference} from "./interface";
-import {Observable} from "rxjs";
-import {PreferenceModule} from "./preference.module";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {INestApplication} from "@nestjs/common";
-import {Middlewares} from "@spica-server/core";
+import {Test, TestingModule} from "@nestjs/testing";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceModule} from "./preference.module";
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
-
-describe("Preference Service", () => {
+describe("PreferenceController", () => {
   let module: TestingModule;
   let app: INestApplication;
   let req: Request;
+  let db: DatabaseService;
 
-  async function addpref(pref: any) {
-    await app
+  function addpref(pref: any) {
+    return app
       .get(DatabaseService)
       .collection("preferences")
-      .insertOne(pref)
-      .catch();
+      .insertOne(pref);
   }
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet(), PreferenceModule, CoreTestingModule],
+      imports: [
+        DatabaseTestingModule.replicaSet(),
+        PassportTestingModule.initialize(),
+        PreferenceModule,
+        CoreTestingModule
+      ],
       providers: []
     }).compile();
     app = module.createNestApplication();
-    app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
+    db = module.get(DatabaseService);
     await app.listen(req.socket);
   }, 120000);
 
-  afterEach(async () => {
-    await app
-      .get(DatabaseService)
-      .collection("preferences")
-      .deleteMany({})
-      .catch();
-  });
+  afterEach(async () => await db.collection("preferences").drop());
 
-  afterAll(async () => {
-    await app.close();
-  });
+  afterAll(async () => await app.close());
 
   it("should get preference", async () => {
-    await req.post("/preference", {scope: "bucket", property: "bucket props"});
-    await req.post("/preference", {scope: "function", property: "function props"});
+    await req.put("/preference/bucket", {scope: "bucket", property: "bucket props"});
+    await req.put("/preference/function", {scope: "function", property: "function props"});
 
     const bucketPref = (await req.get("/preference/bucket", {})).body;
     expect(bucketPref.scope).toBe("bucket");
@@ -58,15 +51,10 @@ describe("Preference Service", () => {
     expect(functionPref.property).toBe("function props");
   });
 
-  it("should add preference", async () => {
-    const response = await req.post("/preference", {scope: "bucket", property: "bucket props"});
-    expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
-  });
-
   it("should update preference", async () => {
     await addpref({scope: "bucket", property: "bucket props"});
 
-    await req.post("/preference", {scope: "bucket", property: "new bucket props"});
+    await req.put("/preference/bucket", {scope: "bucket", property: "new bucket props"});
 
     const myUpdatedPref = (await req.get("/preference/bucket", {})).body;
     expect(myUpdatedPref.scope).toBe("bucket");

@@ -1,5 +1,8 @@
-import {Controller, Get, Param, Body, Post} from "@nestjs/common";
-import {PreferenceService} from "./preference.service";
+import {activity} from "@spica-server/activity/src";
+import {createPreferenceResource} from "./activity.resource";
+import {Body, Controller, Get, Param, Put, UseGuards, UseInterceptors} from "@nestjs/common";
+import {Preference, PreferenceService} from "./service";
+import {AuthGuard} from "@spica-server/passport";
 
 @Controller("preference")
 export class PreferenceController {
@@ -10,8 +13,12 @@ export class PreferenceController {
     return this.preference.get(scope);
   }
 
-  @Post()
-  update(@Body() body: any) {
-    return this.preference.update(body);
+  @UseInterceptors(activity(createPreferenceResource))
+  @Put(":scope")
+  @UseGuards(AuthGuard())
+  replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
+    delete preference._id;
+    preference.scope = scope;
+    return this.preference.replaceOne({scope}, preference, {upsert: true, returnOriginal: false});
   }
 }

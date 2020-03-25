@@ -174,7 +174,6 @@
               *ngIf="(information.enqueuers | enqueuer: trigger.type)?.options; let options"
             >
               <span
-                class="margin"
                 *ngFor="let propertyKv of options.properties | keyvalue"
                 [inputPlacer]="propertyKv.value"
                 [(ngModel)]="trigger.options[propertyKv.key]"
@@ -188,8 +187,10 @@
               <mat-slide-toggle name="status" [(ngModel)]="trigger.active"> </mat-slide-toggle>
             </ng-container>
           </ng-container>
+
           <button
             mat-icon-button
+            type="button"
             color="warn"
             [disabled]="function.triggers.length == 1"
             (click)="deleteTrigger(i)"
@@ -198,7 +199,7 @@
           </button>
         </mat-list-item>
 
-        <ng-container *ngIf="function?._id" class="dependencies" ngModelGroup="dependencies">
+        <ng-container *ngIf="function?._id" ngModelGroup="dependencies">
           <mat-divider></mat-divider>
           <h4 mat-subheader>
             <mat-icon>layers</mat-icon> Dependencies
@@ -214,14 +215,36 @@
             class="dependency"
             *ngFor="let dependency of dependencies | async; let index = index"
           >
+            <svg viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M4,10V14H6V11H7V14H8V10H4M9,10V15H11V14H13V10H9M12,11V13H11V11H12M14,10V14H16V11H17V14H18V11H19V14H20V10H14M3,9H21V15H12V16H8V15H3V9Z"
+              />
+            </svg>
             <span class="name">{{ dependency.name }}</span>
+            <span class="seperator">@</span>
             <span class="version">{{ dependency.version }}</span>
-            <button mat-icon-button (click)="deleteDependency(dependency.name)">
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Remove this package"
+              (click)="deleteDependency(dependency.name)"
+              [disabled]="dependencyInstallPending"
+            >
               <mat-icon>delete</mat-icon>
+            </button>
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Update to latest version"
+              (click)="addDependency(dependency.name + '@latest')"
+              [disabled]="dependencyInstallPending"
+            >
+              <mat-icon>refresh</mat-icon>
             </button>
           </mat-list-item>
 
-          <mat-list-item>
+          <mat-list-item class="add-dependency">
             <mat-form-field>
               <input
                 matInput
@@ -242,6 +265,7 @@
 
             <button
               mat-button
+              type="button"
               (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
               [disabled]="dependencyModel.invalid || dependencyInstallPending"
             >
@@ -253,29 +277,19 @@
         <mat-divider></mat-divider>
         <h4 mat-subheader>
           <mat-icon>wrap_text</mat-icon> Environment Variables
-          <button mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
+          <button type="button" mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
             <mat-icon>add</mat-icon>
           </button>
         </h4>
 
-        <mat-list-item environment *ngFor="let env of function.env; let index = index">
-          <mat-form-field class="trigger">
-            <input
-              matInput
-              [ngModelOptions]="{standalone: true}"
-              placeholder="Name"
-              [(ngModel)]="env.name"
-            />
+        <mat-list-item *ngFor="let env of function.env; let index = index">
+          <mat-form-field>
+            <input matInput placeholder="Name" [(ngModel)]="env.name" />
           </mat-form-field>
-          <mat-form-field class="trigger">
-            <input
-              matInput
-              [ngModelOptions]="{standalone: true}"
-              placeholder="Value"
-              [(ngModel)]="env.value"
-            />
+          <mat-form-field>
+            <input matInput placeholder="Value" [(ngModel)]="env.value" />
           </mat-form-field>
-          <button mat-icon-button color="warn" (click)="removeVariable(index)">
+          <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
             <mat-icon>remove</mat-icon>
           </button>
         </mat-list-item>

@@ -41,7 +41,10 @@ export interface State extends EntityState<Bucket> {
   loaded: boolean;
 }
 
-export const adapter = createEntityAdapter<Bucket>({selectId: bucket => bucket._id});
+export const adapter = createEntityAdapter<Bucket>({
+  selectId: bucket => bucket._id,
+  sortComparer: (a, b) => a.order - b.order
+});
 
 export const initialState: State = adapter.getInitialState({loaded: false});
 

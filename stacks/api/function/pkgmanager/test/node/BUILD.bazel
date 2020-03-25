@@ -1,0 +1,26 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "specs",
+    testonly = True,
+    srcs = [
+        "npm.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/function/pkgmanager/node",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//rxjs",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":specs"],
+    tags = [
+        "integration",
+    ],
+)

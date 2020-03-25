@@ -11,7 +11,8 @@ import {
   Put,
   Query,
   UseGuards,
-  Req
+  Req,
+  UseInterceptors
 } from "@nestjs/common";
 import {PassportService} from "../passport.service";
 import {Identity} from "./interface";
@@ -20,6 +21,10 @@ import {NUMBER} from "@spica-server/core";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
+import {activity} from "@spica-server/activity/src";
+
+import {createIdentityResource, createIdentityPolicyResource} from "./activity.resource";
+
 @Controller("passport/identity")
 export class IdentityController {
   constructor(
@@ -74,7 +79,9 @@ export class IdentityController {
     delete identity.password;
     return identity;
   }
-  @Post("create")
+
+  @UseInterceptors(activity(createIdentityResource))
+  @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   insertOne(
     @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
@@ -87,7 +94,9 @@ export class IdentityController {
       throw new InternalServerErrorException();
     });
   }
-  @Post(":id")
+
+  @UseInterceptors(activity(createIdentityResource))
+  @Put(":id")
   // TODO(thesayyn): Check if user updates its own identity.
   @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
   updateOne(
@@ -97,12 +106,17 @@ export class IdentityController {
   ) {
     return this.identity.updateOne(id, identity);
   }
+
+  @UseInterceptors(activity(createIdentityResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.identity.deleteOne({_id: id});
   }
+
   // TODO(thesayyn): Strictly check policies before attaching them
+
+  @UseInterceptors(activity(createIdentityPolicyResource))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async attachPolicy(
@@ -120,6 +134,8 @@ export class IdentityController {
     await this.identity.updateOne(id, identity);
     return identity;
   }
+
+  @UseInterceptors(activity(createIdentityPolicyResource))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async detachPolicy(

@@ -4,22 +4,32 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
-  Patch,
   Post,
-  UseGuards
+  Put,
+  Query,
+  Res,
+  UseGuards,
+  UseInterceptors
 } from "@nestjs/common";
+import {BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import * as os from "os";
+import {of} from "rxjs";
+import {catchError, ignoreElements, map, finalize} from "rxjs/operators";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
+import {activity} from "@spica-server/activity/src";
+import {createFunctionResource} from "./activity.resource";
 
 @Controller("function")
 export class FunctionController {
@@ -63,14 +73,16 @@ export class FunctionController {
     return this.fs.findOne({_id: id});
   }
 
+  @UseInterceptors(activity(createFunctionResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const deletedCount = await this.fs.deleteOne({_id: id});
-    if (deletedCount == 0) {
+    const fn = await this.fs.findOneAndDelete({_id: id}, {});
+    if (!fn) {
       throw new NotFoundException("Couldn't find the function.");
     }
+    await this.engine.deleteFunction(fn);
   }
 
   private async hasDuplicatedBucketHandlers(fn: Function): Promise<boolean> {
@@ -97,9 +109,10 @@ export class FunctionController {
       });
   }
 
-  @Patch(":id")
+  @UseInterceptors(activity(createFunctionResource))
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
-  async updateOne(
+  async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate(generate)) fn: Function
   ) {
@@ -114,6 +127,7 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
+  @UseInterceptors(activity(createFunctionResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
@@ -123,8 +137,8 @@ export class FunctionController {
         "Multiple handlers on same bucket and event type are not supported."
       );
     }
-    fn._id = new ObjectId();
-    await this.fs.insertOne(fn);
+    fn = await this.fs.insertOne(fn);
+    await this.engine.createFunction(fn);
     return fn;
   }
 
@@ -172,15 +186,42 @@ export class FunctionController {
 
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  async addDependency(@Param("id", OBJECT_ID) id: ObjectId, @Body("name") name: string) {
+  @Header("X-Content-Type-Options", "nosniff")
+  async addDependency(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Query("progress", BOOLEAN) progress: boolean,
+    @Body("name") name: string,
+    @Res() res
+  ) {
+    if (!name) {
+      throw new BadRequestException("Dependency name is required.");
+    }
     const fn = await this.fs.findOne({_id: id});
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
 
-    return this.engine.addPackage(fn, name).catch(error => {
-      throw new BadRequestException(error.message);
-    });
+    if (!progress) {
+      return this.engine.addPackage(fn, name).pipe(finalize(() => res.end()));
+    } else {
+      return this.engine.addPackage(fn, name).pipe(
+        map(progress => {
+          return {
+            progress,
+            state: "installing"
+          };
+        }),
+        catchError(error =>
+          of({
+            state: "failed",
+            message: error
+          })
+        ),
+        map(response => res.write(`${JSON.stringify(response)}${os.EOL}`)),
+        finalize(() => res.end()),
+        ignoreElements()
+      );
+    }
   }
 
   @Delete(":id/dependencies/:name")

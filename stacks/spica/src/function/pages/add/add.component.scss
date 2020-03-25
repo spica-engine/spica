@@ -49,9 +49,34 @@
           .mat-list-item-content {
             display: contents;
           }
-          mat-form-field.trigger,
-          span.margin {
-            margin: 10px 10px 0 0;
+
+          &.triggers {
+            mat-form-field.trigger,
+            span {
+              margin: 10px 10px 0 0;
+            }
+          }
+
+          &.dependency {
+            .mat-list-item-content {
+              display: flex;
+            }
+            svg {
+              height: 44px;
+              width: 44px;
+            }
+            span.seperator {
+              font-weight: bold;
+              padding: 0 1px;
+            }
+
+            button:first-of-type {
+              margin-left: 5px;
+            }
+          }
+
+          &.add-dependency {
+            margin-top: 25px;
           }
         }
         .editor {

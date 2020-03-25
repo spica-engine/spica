@@ -24,6 +24,8 @@ import {FormsModule, NgModel, NgForm} from "@angular/forms";
 import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
 import {InputModule} from "@spica-client/common";
+import {MatSaveModule} from "@spica-client/material";
+
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
 import {of} from "rxjs";
@@ -90,7 +92,8 @@ describe("Bucket Add Component", () => {
         MatPaginatorModule,
         MatToolbarModule,
         NoopAnimationsModule,
-        InputModule.withPlacers([])
+        InputModule.withPlacers([]),
+        MatSaveModule
       ],
       providers: [
         {
@@ -475,7 +478,6 @@ describe("Bucket Add Component", () => {
     });
 
     it("should save bucket", async () => {
-      expect(fixture.componentInstance.savingBucketState).toBe(false);
       await fixture.whenStable();
       const form = fixture.debugElement.query(By.css("form")).injector.get(NgForm);
       form.setValue({
@@ -492,9 +494,6 @@ describe("Bucket Add Component", () => {
         description: "new description",
         readOnly: false
       } as Bucket);
-      expect(fixture.componentInstance.savingBucketState).toBe(false);
-      expect(fixture.componentInstance["router"].navigate).toHaveBeenCalledTimes(1);
-      expect(fixture.componentInstance["router"].navigate).toHaveBeenCalledWith(["buckets/123"]);
     });
   });
 

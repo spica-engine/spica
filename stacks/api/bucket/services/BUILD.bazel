@@ -9,6 +9,7 @@ ts_library(
         "bucket.service.ts",
         "bucket.ts",
         "index.ts",
+        "schema.ts",
         "services.module.ts",
     ],
     module_name = "@spica-server/bucket/services",
@@ -16,38 +17,9 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/preference",
+        "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//@types/node",
-    ],
-)
-
-ts_library(
-    name = "bucket_test_lib",
-    testonly = True,
-    srcs = [
-        "bucket.service.spec.ts",
-    ],
-    deps = [
-        ":services",
-        "//packages/core",
-        "//packages/core/schema",
-        "//packages/core/testing",
-        "//packages/database/testing",
-        "//stacks/api/preference",
-        "@npm//@nestjs/common",
-        "@npm//@nestjs/testing",
-        "@npm//@types/bson",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-        "@npm//bson",
-    ],
-)
-
-jasmine_node_test(
-    name = "bucket-test",
-    deps = [
-        ":bucket_test_lib",
     ],
 )

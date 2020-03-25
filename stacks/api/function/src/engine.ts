@@ -6,10 +6,13 @@ import {Event} from "@spica-server/function/queue/proto";
 import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
+import * as rimraf from "rimraf";
+import {Observable} from "rxjs";
+import {bufferTime} from "rxjs/operators";
+import * as util from "util";
 import {ChangeKind, FunctionService, TargetChange} from "./function.service";
 import {Function, FUNCTION_OPTIONS, Options} from "./interface";
 import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
-import {bufferTime} from "rxjs/operators";
 
 @Injectable()
 export class FunctionEngine {
@@ -68,7 +71,7 @@ export class FunctionEngine {
     return this.getDefaultPackageManager().ls(functionRoot);
   }
 
-  addPackage(fn: Function, qualifiedName: string): Promise<void> {
+  addPackage(fn: Function, qualifiedName: string): Observable<number> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
     return this.getDefaultPackageManager().install(functionRoot, qualifiedName);
   }
@@ -78,10 +81,9 @@ export class FunctionEngine {
     return this.getDefaultPackageManager().uninstall(functionRoot, name);
   }
 
-  async update(fn: Function, index: string): Promise<void> {
+  async createFunction(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
     await fs.promises.mkdir(functionRoot, {recursive: true});
-    await fs.promises.writeFile(path.join(functionRoot, "index.ts"), index);
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
       name: fn.name,
@@ -93,10 +95,20 @@ export class FunctionEngine {
       license: "UNLICENSED"
     };
 
-    await fs.promises.writeFile(
+    return fs.promises.writeFile(
       path.join(functionRoot, "package.json"),
       JSON.stringify(packageJson, null, 2)
     );
+  }
+
+  deleteFunction(fn: Function) {
+    const functionRoot = path.join(this.options.root, fn._id.toString());
+    return util.promisify(rimraf)(functionRoot);
+  }
+
+  async update(fn: Function, index: string): Promise<void> {
+    const functionRoot = path.join(this.options.root, fn._id.toString());
+    await fs.promises.writeFile(path.join(functionRoot, "index.ts"), index);
     return this.horizon.runtime.compile({
       cwd: functionRoot,
       entrypoint: "index.ts"

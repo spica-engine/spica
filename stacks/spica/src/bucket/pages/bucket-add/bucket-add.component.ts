@@ -5,9 +5,19 @@ import {MatCheckboxChange} from "@angular/material";
 import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";
-import {ICONS} from "@spica-client/material";
-import {Subject} from "rxjs";
-import {filter, flatMap, map, switchMap, takeUntil, tap} from "rxjs/operators";
+import {ICONS, SavingState} from "@spica-client/material";
+import {Subject, Observable, merge, of} from "rxjs";
+import {
+  filter,
+  flatMap,
+  map,
+  switchMap,
+  takeUntil,
+  tap,
+  ignoreElements,
+  endWith,
+  catchError
+} from "rxjs/operators";
 import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
@@ -38,7 +48,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   bucket: Bucket;
 
-  savingBucketState: boolean = false;
+  $save: Observable<SavingState>;
 
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
@@ -73,6 +83,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
           )
         ),
         tap(params => {
+          this.$save = of(SavingState.Pristine);
           if (!params.id) {
             this.bucket = emptyBucket();
             this.updatePositionProperties();
@@ -158,14 +169,19 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   saveBucket(): void {
-    this.savingBucketState = true;
-    this.bs
-      .replaceOne(this.bucket)
-      .toPromise()
-      .then(data => {
-        this.savingBucketState = false;
-        this.router.navigate(["buckets/" + data._id]);
-      });
+    const isInsert = !this.bucket._id;
+
+    const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
+
+    this.$save = merge(
+      of(SavingState.Saving),
+      save.pipe(
+        tap(bucket => isInsert && this.router.navigate([`buckets/${bucket._id}`])),
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
   }
 
   ngOnDestroy() {

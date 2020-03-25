@@ -51,11 +51,11 @@ export interface Dependency {
 
 export interface Asset {
   kind: string;
-  metadata: MetaData;
+  metadata: Metadata;
   spec: any;
 }
 
-export interface MetaData {
+export interface Metadata {
   name: string; //id
 }
 

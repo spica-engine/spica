@@ -3,6 +3,8 @@ import * as request from "request-promise-native";
 
 @Injectable()
 export class Request {
+  reject: boolean = false;
+
   get socket() {
     return `/tmp/${process.env.BAZEL_TARGET.replace(/\/|:/g, "_")}.sock`;
   }
@@ -25,6 +27,10 @@ export class Request {
 
   put<T>(path: string, body?: object, headers?: object) {
     return this.request<T>({method: "PUT", path, body, headers});
+  }
+
+  patch<T>(path: string, body?: object, headers?: object) {
+    return this.request<T>({method: "PATCH", path, body, headers});
   }
 
   request<T>(options: RequestOptions): Promise<Response<T>> {
@@ -60,6 +66,9 @@ export class Request {
         }
       }
 
+      if (this.reject) {
+        return Promise.reject(response);
+      }
       return response;
     });
   }

@@ -1,108 +1,98 @@
 import {
   Command,
+  CommandLineInputs,
+  CommandLineOptions,
   CommandMetadata,
   CommandMetadataInput,
   CommandMetadataOption,
-  CommandLineInputs,
-  CommandLineOptions,
   validators
 } from "@ionic/cli-framework";
-
-import * as authentication from "../../../authentication";
-import * as request from "../../../request";
-import {Function} from "../../../interface";
-import {Logger, getLogger} from "../../../logger";
+import {context} from "@spica/cli/src/authentication";
+import {noAuthorizationError} from "@spica/cli/src/errors";
+import {Function} from "@spica/cli/src/interface";
+import {getLogger, Logger} from "@spica/cli/src/logger";
+import {request} from "@spica/cli/src/request";
 
 export class InstallCommand extends Command {
   logger: Logger = getLogger();
-  authentication = authentication;
-  request = request;
-
-  token;
-  server;
 
   async getMetadata(): Promise<CommandMetadata<CommandMetadataInput, CommandMetadataOption>> {
     return {
       name: "install",
-      summary: "Install npm-package to function.",
+      summary: "Install a package to function.",
       inputs: [
         {
-          name: "package-name",
-          summary: "The name of npm-package that will be installed.",
+          name: "name",
+          summary: "The name of package that will be installed.",
           validators: [validators.required]
         }
       ],
       options: [
         {
           name: "all",
-          summary: "Install specified npm-package to each function.",
+          summary: "Install the package to all functions.",
           type: Boolean
         }
       ]
     };
   }
 
-  showLoginError() {
-    this.logger.error("You need to login before start this action. To login: ");
-    this.logger.info("spica login <username> <password>");
-  }
-
-  async validate(argv: CommandLineInputs) {
-    try {
-      const loginData = await this.authentication.getLoginData();
-      this.token = loginData.token;
-      this.server = loginData.server;
-    } catch (error) {
-      this.showLoginError();
-    }
-  }
-
   async run(inputs: CommandLineInputs, options: CommandLineOptions): Promise<void> {
+    const hasAuthorization = await context.hasAuthorization();
+    if (!hasAuthorization) {
+      return noAuthorizationError(this.logger);
+    }
+
     const [packageName] = inputs;
-    const {all: isAll} = options;
 
-    if (!this.token || !this.server) return;
-
-    if (isAll) {
-      let functions = (await this.request
-        .getRequest(`${this.server}/function`, {
-          Authorization: this.token
-        })
-        .catch(error => {
-          this.logger.error(error.message);
-        })) as Array<Function>;
-
-      if (!functions) return;
+    if (options.all) {
+      const functionUrl = await context.url("/function");
+      const authorizationHeaders = await context.authorizationHeaders();
+      let functions = await this.logger.spin({
+        text: "Indexing functions",
+        op: request.get<Function[]>(functionUrl, authorizationHeaders)
+      });
 
       if (!functions.length) {
-        this.logger.error("Couldn't find any function.");
-        return;
+        return this.logger.info("There are no functions to install the package.");
       }
 
-      await Promise.all(
-        functions.map(func => {
-          this.request
-            .postRequest(
-              `${this.server}/function/${func._id}/dependencies`,
-              {
+      await this.logger.spin({
+        text: `Installing the package '${packageName}' to functions (0/${functions.length})`,
+        op: async spinner => {
+          for (const [i, func] of functions.entries()) {
+            const functionDependencyUrl = await context.url(
+              `/function/${func._id}/dependencies?progress=true`
+            );
+            const installProgress = await request.stream.post({
+              url: functionDependencyUrl,
+              body: {
                 name: packageName
               },
-              {Authorization: this.token}
-            )
-            .then(() =>
-              this.logger.success(
-                `Successfully installed dependency '${packageName}' to the function named '${func.name}'.`
-              )
-            )
-            .catch(err => {
-              this.logger.error(
-                `Failed to install dependency '${packageName}' to the function named '${func.name}' cause of ${err.message}`
-              );
+              headers: authorizationHeaders
             });
-        })
-      );
+
+            await new Promise((resolve, reject) => {
+              installProgress.on("data", chunk => {
+                chunk = JSON.parse(chunk.toString());
+
+                if (chunk.state == "installing") {
+                  spinner.text = `Installing the package '${packageName}' to functions (${i}/${functions.length}) (${chunk.progress}%)`;
+                } else {
+                  reject(new Error(chunk.message));
+                }
+              });
+              installProgress.on("end", resolve);
+              installProgress.on("error", reject);
+            });
+            spinner.text = `Installing the package '${packageName}' to functions (${i + 1}/${
+              functions.length
+            })`;
+          }
+        }
+      });
     } else {
-      this.logger.info("Please use --all until this feature improved");
+      this.logger.warn("Option --all should be present as true otherwise it won't work.");
     }
   }
 }

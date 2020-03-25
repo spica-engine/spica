@@ -28,8 +28,7 @@ export class SettingsComponent implements OnInit {
   }
 
   updateSettings(): void {
-    this.pref
-      .update(this.settings)
+    (this.settings._id ? this.pref.replaceOne(this.settings) : this.pref.insertOne(this.settings))
       .toPromise()
       .then(() => this.router.navigate(["buckets"]));
   }

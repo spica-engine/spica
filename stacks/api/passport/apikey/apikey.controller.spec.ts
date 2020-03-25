@@ -163,7 +163,7 @@ describe("ApiKey", () => {
         description: "test"
       });
 
-      const {body: updatedBody} = await req.post(`/passport/apikey/${body._id}`, {
+      const {body: updatedBody} = await req.put(`/passport/apikey/${body._id}`, {
         name: "test1",
         description: "test1",
         active: false
@@ -228,8 +228,7 @@ describe("ApiKey", () => {
   describe("attach/detach", () => {
     it("should attach policy to apikey", async () => {
       const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test",
-        policies: ["test policy"]
+        name: "test"
       })).body;
 
       const response = await req.put(`/passport/apikey/${insertedApiKey._id}/attach-policy`, [
@@ -248,13 +247,16 @@ describe("ApiKey", () => {
 
     it("should detach policy from apikey", async () => {
       const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test",
-        policies: ["test policy", "another policy"]
+        name: "test"
       })).body;
 
-      const response = await req.put(`/passport/apikey/${insertedApiKey._id}/detach-policy`, [
+      await req.put(`/passport/apikey/${insertedApiKey._id}/attach-policy`, [
         "test policy",
-        "nonexist policy"
+        "another policy"
+      ]);
+
+      const response = await req.put(`/passport/apikey/${insertedApiKey._id}/detach-policy`, [
+        "test policy"
       ]);
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
@@ -268,8 +270,7 @@ describe("ApiKey", () => {
 
     it("should throw error if policies which will be attached are duplicated", async () => {
       const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test",
-        policies: ["test policy"]
+        name: "test"
       })).body;
 
       const responseBody = (await req.put(`/passport/apikey/${insertedApiKey._id}/attach-policy`, [
@@ -287,8 +288,7 @@ describe("ApiKey", () => {
 
     it("should throw error if policies which will be detached are duplicated", async () => {
       const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test",
-        policies: ["test policy"]
+        name: "test"
       })).body;
 
       const responseBody = (await req.put(`/passport/apikey/${insertedApiKey._id}/detach-policy`, [
@@ -306,8 +306,7 @@ describe("ApiKey", () => {
 
     it("should throw error if apikey id on attach request is nonexist", async () => {
       await req.post("/passport/apikey", {
-        name: "test",
-        policies: ["test policy"]
+        name: "test"
       });
 
       const responseBody = (await req.put(`/passport/apikey/${new ObjectId()}/attach-policy`, [

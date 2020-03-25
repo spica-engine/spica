@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
+import {BucketService} from "@spica-server/bucket/services";
 import {MongoClient, ObjectId} from "@spica-server/database";
 import * as cron from "cron";
-import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BucketDataService} from "./bucket-data.service";
 
 @Injectable()
@@ -29,18 +29,14 @@ export class DocumentScheduler {
       this.schedule(
         new ObjectId(change.ns.coll.replace(/^bucket_/, "")),
         new ObjectId(change.documentKey._id),
-        new Date(change.fullDocument._schedule),
-        change.fullDocument
+        new Date(change.fullDocument._schedule)
       );
     });
   }
-  schedule(bucket: ObjectId, document: ObjectId, time: Date, data: BucketDocument) {
+  schedule(bucket: ObjectId, document: ObjectId, time: Date) {
     const key = `${bucket}_${document}`;
 
-    const publish = () => {
-      delete data._schedule;
-      this.bds.replaceOne(bucket, data);
-    };
+    const publish = () => this.bds.updateOne(bucket, {_id: document}, {$unset: {_schedule: ""}});
 
     if (time.getTime() <= Date.now() + 1) {
       return publish();

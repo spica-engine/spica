@@ -1,29 +1,89 @@
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import * as child_process from "child_process";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
+import {Observable} from "rxjs";
 
 export class Npm extends PackageManager {
-  install(cwd: string, qualifiedName: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const proc = child_process.spawn("npm", ["install", qualifiedName], {cwd});
+  install(cwd: string, qualifiedName: string): Observable<number> {
+    return new Observable(observer => {
+      const proc = child_process.spawn(
+        "npm",
+        [
+          "install",
+          qualifiedName,
+          "--no-audit",
+          "--loglevel",
+          "timing",
+          "--cache",
+          path.join(os.tmpdir(), fs.mkdtempSync("_npm_cache_"))
+        ],
+        {cwd}
+      );
+      let stderr: string = "",
+        stdout: string = "";
+      let progress = 0;
+      const progressAmountOfAStep = 100 / 17;
+      proc.stdout.on("data", chunk => {
+        chunk = chunk.toString();
+        stdout += chunk;
+      });
+      proc.stderr.on("data", chunk => {
+        chunk = chunk.toString();
+
+        if (chunk.indexOf("timing") != -1) {
+          progress += 1;
+        }
+
+        observer.next(Math.min(Math.round(progressAmountOfAStep * progress), 100));
+
+        stderr += chunk;
+      });
+      proc.on("message", console.log);
       proc.on("close", code => {
         if (code == 0) {
-          return resolve();
+          return observer.complete();
         }
-        reject(`npm install has failed. code: ${code}`);
+        observer.error(`npm install has failed. code: ${code}\n${stderr}`);
       });
+
+      return () => {
+        if (!proc.killed) {
+          proc.kill("sigkill");
+        }
+      };
     });
   }
 
   uninstall(cwd: string, name: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const proc = child_process.spawn("npm", ["uninstall", name], {cwd});
+      const proc = child_process.spawn(
+        "npm",
+        [
+          "uninstall",
+          name,
+          "--no-audit",
+          "--cache",
+          path.join(os.tmpdir(), fs.mkdtempSync("_npm_cache_"))
+        ],
+        {cwd}
+      );
+      let stderr: string = "",
+        stdout: string = "";
+      proc.stdout.on("data", chunk => {
+        chunk = chunk.toString();
+        stdout += chunk;
+      });
+      proc.stderr.on("data", chunk => {
+        chunk = chunk.toString();
+        stderr += chunk;
+      });
       proc.on("close", code => {
         if (code == 0) {
           return resolve();
         }
-        reject(`Uninstall failed. Code: ${code}`);
+        reject(`npm uninstall has failed. code: ${code}\n${stderr}`);
       });
     });
   }

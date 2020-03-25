@@ -1,17 +1,22 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Post,
-  Res,
   Put,
-  UseGuards
+  Res,
+  UseGuards,
+  UseInterceptors
 } from "@nestjs/common";
+import {Bucket, BucketDocument, BucketService, ImportFile} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
@@ -19,9 +24,9 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {Bucket, BucketDocument, ImportFile} from "@spica-server/bucket/services";
 import {BucketDataService} from "./bucket-data.service";
-import {BucketService} from "@spica-server/bucket/services";
+import {activity} from "@spica-server/activity/src";
+import {createBucketResource} from "./activity.resource";
 
 @Controller("bucket")
 export class BucketController {
@@ -44,7 +49,7 @@ export class BucketController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
   index() {
-    return this.bs.find();
+    return this.bs.find({}, {sort: {order: 1}});
   }
 
   @Get("predefs")
@@ -53,22 +58,34 @@ export class BucketController {
     return this.bs.getPredefinedDefaults();
   }
 
+  @UseInterceptors(activity(createBucketResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    bucket._id = new ObjectId(bucket._id);
-    return this.bs.replaceOne(bucket).then(() => bucket);
+    return this.bs.insertOne(bucket);
   }
 
-  @Put()
+  @UseInterceptors(activity(createBucketResource))
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
-  updateMany(@Body(Schema.validate("http://spica.internal/buckets/schema")) buckets: Bucket[]) {
-    return Promise.all(
-      buckets.map(bucket => {
-        bucket._id = new ObjectId(bucket._id);
-        return this.bs.updateOne(bucket);
-      })
-    );
+  replaceOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
+  ) {
+    return this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+  }
+
+  @Patch(":id")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  updateOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Headers("content-type") contentType: string,
+    @Body() changes: object
+  ) {
+    if (contentType != "application/merge-patch+json") {
+      throw new BadRequestException(`Content type '${contentType}' is not supported.`);
+    }
+    return this.bs.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
   }
 
   @Get(":id")
@@ -77,11 +94,12 @@ export class BucketController {
     return this.bs.findOne({_id: id});
   }
 
+  @UseInterceptors(activity(createBucketResource))
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.bs.findOne({_id: id}).then(bucket => this.bs.deleteOne(bucket));
+    return this.bs.deleteOne({_id: id});
   }
 
   @Post("import/:id")
