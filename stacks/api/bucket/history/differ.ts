@@ -1,7 +1,7 @@
+import {BucketDocument} from "@spica-server/bucket/services";
 import * as deepDiff from "deep-diff";
 import * as diffMatchPatch from "diff-match-patch";
 import {JSONSchema7} from "json-schema";
-import {BucketDocument} from "./interfaces";
 import {Path} from "./path";
 
 export function diff(prev: BucketDocument, current: BucketDocument): Change[] {

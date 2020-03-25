@@ -1,13 +1,13 @@
 import {Module} from "@nestjs/common";
 import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core/schema";
+import {CREATED_AT, DATE_TIME, OBJECT_ID, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
-import {CREATED_AT, OBJECT_ID, UPDATED_AT} from "./defaults";
 import {ActivityModule} from "@spica-server/activity/src";
 
 @Module({
@@ -18,7 +18,7 @@ import {ActivityModule} from "@spica-server/activity/src";
       poolSize: Number(process.env.POOL_SIZE || 50)
     }),
     SchemaModule.forRoot({
-      formats: [OBJECT_ID],
+      formats: [OBJECT_ID, DATE_TIME],
       defaults: [CREATED_AT, UPDATED_AT]
     }),
     PreferenceModule,

@@ -1,9 +1,11 @@
 import {INestApplication} from "@nestjs/common";
-import {Request, CoreTestingModule} from "@spica-server/core/testing";
-import {TestingModule, Test} from "@nestjs/testing";
+import {Test, TestingModule} from "@nestjs/testing";
+import {HistoryModule} from "@spica-server/bucket/history";
+import {ServicesModule} from "@spica-server/bucket/services";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {DatabaseTestingModule, DatabaseService, ObjectId} from "@spica-server/database/testing";
-import {HistoryModule} from "./history.module";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 describe("History Acceptance", () => {
   let app: INestApplication;
@@ -27,6 +29,8 @@ describe("History Acceptance", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
+        ServicesModule,
         HistoryModule
       ]
     }).compile();

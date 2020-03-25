@@ -9,7 +9,6 @@ ts_library(
     name = "api",
     srcs = [
         "app.module.ts",
-        "defaults.ts",
         "main.ts",
     ],
     deps = [

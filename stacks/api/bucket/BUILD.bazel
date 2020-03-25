@@ -11,7 +11,6 @@ ts_library(
         "bucket.controller.ts",
         "bucket.module.ts",
         "bucket.schema.resolver.ts",
-        "bucket.schema.types.ts",
         "bucket-data.controller.ts",
         "bucket-data.service.ts",
         "cache.ts",

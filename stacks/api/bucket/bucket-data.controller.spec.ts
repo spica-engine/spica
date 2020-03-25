@@ -1,46 +1,16 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
+import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica-server/core";
-import {Default, Format, SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core/schema";
+import {CREATED_AT, DATE_TIME, OBJECT_ID, UPDATED_AT} from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {ObjectId} from "@spica-server/database";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {BucketModule} from "./bucket.module";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
-
-export const CREATED_AT: Default = {
-  keyword: ":created_at",
-  type: "date",
-  create: data => {
-    return data || new Date().toISOString();
-  }
-};
-
-export const UPDATED_AT: Default = {
-  keyword: ":updated_at",
-  type: "date",
-  create: () => {
-    return new Date().toISOString();
-  }
-};
-
-export const OBJECT_ID: Format = {
-  name: "objectid",
-  type: "string",
-  coerce: bucketId => {
-    return new ObjectId(bucketId);
-  },
-  validate: bucketId => {
-    try {
-      return !!bucketId && !!new ObjectId(bucketId);
-    } catch {
-      return false;
-    }
-  }
-};
 
 describe("BucketDataController", () => {
   let app: INestApplication;
@@ -52,7 +22,7 @@ describe("BucketDataController", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID],
+          formats: [OBJECT_ID, DATE_TIME],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
@@ -74,6 +44,8 @@ describe("BucketDataController", () => {
       }
     });
   });
+
+  afterAll(async () => await app.close());
 
   describe("index", () => {
     let bucket = {
@@ -879,9 +851,5 @@ describe("BucketDataController", () => {
 
       expect(bucketData).toEqual([]);
     });
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 });
