@@ -74,7 +74,6 @@ describe("Bucket Schema Resolver", () => {
 
   it("should return the compiled bucket schema", async () => {
     const jsonSchema = await schemaResolver.resolve(bucket._id.toHexString());
-    console.log(jsonSchema);
     expect(jsonSchema).toEqual({
       $schema: "http://spica.internal/bucket/schema",
       $id: String(bucket._id),
