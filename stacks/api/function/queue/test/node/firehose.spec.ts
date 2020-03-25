@@ -21,6 +21,16 @@ describe("Firehose", () => {
       expect(data.name).toBe(rawData.name);
       expect(data.data).not.toBeTruthy();
     });
+
+    it("should map data even if it is falsy", () => {
+      const rawData = new Firehose.Message({
+        name: "test1",
+        data: "0"
+      });
+      const data = new Message(rawData);
+      expect(data.name).toBe(rawData.name);
+      expect(data.data).toBe(0);
+    });
   });
 
   describe("FirehoseSocket", () => {
@@ -43,6 +53,16 @@ describe("Firehose", () => {
       const [lastCallArgument] = sendSpy.calls.argsFor(0);
       expect(lastCallArgument.name).toBe("test");
       expect(lastCallArgument.data).toBe("{}");
+    });
+
+    it("should serialize the data even if it is falsy and forward", () => {
+      const sendSpy = jasmine.createSpy("send");
+      const socket = new FirehoseSocket(new Firehose.ClientDescription(), undefined, sendSpy);
+      socket.send("test", 0);
+      expect(sendSpy).toHaveBeenCalledTimes(1);
+      const [lastCallArgument] = sendSpy.calls.argsFor(0);
+      expect(lastCallArgument.name).toBe("test");
+      expect(lastCallArgument.data).toBe("0");
     });
 
     it("should call close", () => {
@@ -71,6 +91,16 @@ describe("Firehose", () => {
       const [lastCallArgument] = sendSpy.calls.argsFor(0);
       expect(lastCallArgument.name).toBe("test");
       expect(lastCallArgument.data).toBe("{}");
+    });
+
+    it("should send message with falsy data", () => {
+      const sendSpy = jasmine.createSpy("send");
+      const pool = new FirehosePool(new Firehose.PoolDescription(), sendSpy);
+      pool.send("test", 0);
+      expect(sendSpy).toHaveBeenCalledTimes(1);
+      const [lastCallArgument] = sendSpy.calls.argsFor(0);
+      expect(lastCallArgument.name).toBe("test");
+      expect(lastCallArgument.data).toBe("0");
     });
   });
 });

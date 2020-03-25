@@ -1,13 +1,13 @@
 import {Controller, Get, Param, UseGuards} from "@nestjs/common";
+import {BucketService, compile} from "@spica-server/bucket/services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {AuthGuard} from "../../passport/auth.guard";
+import {AuthGuard} from "@spica-server/passport";
 import {applyPatch} from "./differ";
 import {HistoryService} from "./history.service";
-import {compile} from "./schema";
 
 @Controller("bucket/:bucketId/history/:documentId")
 export class HistoryController {
-  constructor(private historyService: HistoryService) {}
+  constructor(private historyService: HistoryService, private bucketService: BucketService) {}
 
   @Get()
   @UseGuards(AuthGuard())
@@ -26,10 +26,13 @@ export class HistoryController {
     @Param("historyId", OBJECT_ID) historyId: ObjectId
   ) {
     const document = await this.historyService.getDocument(bucketId, documentId);
-    const schema = await this.historyService.getSchema(bucketId);
-    const history = await this.historyService.findBetweenNow(bucketId, documentId, historyId);
-    const compiledSchema = compile(schema);
-    history.forEach(history => applyPatch(history.changes, document, compiledSchema));
+    const schema = await this.bucketService.findOne({_id: bucketId});
+    const histories = await this.historyService.findBetweenNow(bucketId, documentId, historyId);
+    const preferences = await this.bucketService.getPreferences();
+    const compiledSchema = compile(schema, preferences);
+    for (const history of histories) {
+      applyPatch(history.changes, document, compiledSchema);
+    }
     return document;
   }
 }

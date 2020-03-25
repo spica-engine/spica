@@ -13,7 +13,8 @@ import {
   Put,
   Query,
   Res,
-  UseGuards
+  UseGuards,
+  UseInterceptors
 } from "@nestjs/common";
 import {BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
@@ -27,6 +28,8 @@ import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
+import {activity} from "@spica-server/activity/src";
+import {createFunctionResource} from "./activity.resource";
 
 @Controller("function")
 export class FunctionController {
@@ -70,6 +73,7 @@ export class FunctionController {
     return this.fs.findOne({_id: id});
   }
 
+  @UseInterceptors(activity(createFunctionResource))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -105,6 +109,7 @@ export class FunctionController {
       });
   }
 
+  @UseInterceptors(activity(createFunctionResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
@@ -122,6 +127,7 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
+  @UseInterceptors(activity(createFunctionResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
@@ -196,13 +202,7 @@ export class FunctionController {
     }
 
     if (!progress) {
-      return this.engine
-        .addPackage(fn, name)
-        .toPromise()
-        .then(() => {})
-        .catch(error => {
-          throw new BadRequestException(error);
-        });
+      return this.engine.addPackage(fn, name).pipe(finalize(() => res.end()));
     } else {
       return this.engine.addPackage(fn, name).pipe(
         map(progress => {

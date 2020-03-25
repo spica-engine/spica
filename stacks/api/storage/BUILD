@@ -14,6 +14,7 @@ ts_library(
     deps = [
         "//packages/core",
         "//packages/database",
+        "//stacks/api/activity",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
@@ -65,5 +66,25 @@ docs(
     ],
     deps = [
         "//packages/database",
+    ],
+)
+
+ts_library(
+    name = "activity_test_lib",
+    testonly = True,
+    srcs = [
+        "activity.resource.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/activity",
+        "//stacks/api/storage",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "activity_test",
+    deps = [
+        "activity_test_lib",
     ],
 )

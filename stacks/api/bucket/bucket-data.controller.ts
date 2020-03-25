@@ -12,7 +12,8 @@ import {
   UseGuards,
   ForbiddenException,
   Optional,
-  Put
+  Put,
+  UseInterceptors
 } from "@nestjs/common";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -22,6 +23,8 @@ import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/databa
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
+import {activity} from "@spica-server/activity/src";
+import {createBucketDataResource} from "./activity.resource";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -110,7 +113,7 @@ export class BucketDataController {
           as: property
         }
       },
-      {$unwind: `$${property}`}
+      {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
     ];
   }
 
@@ -300,6 +303,7 @@ export class BucketDataController {
     return document;
   }
 
+  @UseInterceptors(activity(createBucketDataResource))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async replaceOne(
@@ -320,6 +324,7 @@ export class BucketDataController {
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
+  @UseInterceptors(activity(createBucketDataResource))
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
   async update(
@@ -342,6 +347,7 @@ export class BucketDataController {
     return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
+  @UseInterceptors(activity(createBucketDataResource))
   @Delete(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteOne(
@@ -351,6 +357,7 @@ export class BucketDataController {
     return this.bds.deleteOne(bucketId, {_id: documentId});
   }
 
+  @UseInterceptors(activity(createBucketDataResource))
   @Delete()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {

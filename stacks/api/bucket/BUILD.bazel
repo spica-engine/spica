@@ -7,10 +7,10 @@ load("//tools/dgeni:index.bzl", "docs")
 ts_library(
     name = "bucket",
     srcs = [
+        "activity.resource.ts",
         "bucket.controller.ts",
         "bucket.module.ts",
         "bucket.schema.resolver.ts",
-        "bucket.schema.types.ts",
         "bucket-data.controller.ts",
         "bucket-data.service.ts",
         "cache.ts",
@@ -23,6 +23,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/activity",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",
@@ -40,11 +41,12 @@ ts_library(
         "@npm//archiver",
         "@npm//cron",
         "@npm//locale",
+        "@npm//rxjs",
     ],
 )
 
 ts_library(
-    name = "bucket-data_test_lib",
+    name = "bucket_data_test_lib",
     testonly = True,
     srcs = [
         "bucket-data.service.spec.ts",
@@ -68,14 +70,14 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "bucket-data-test",
+    name = "bucket_data_test",
     deps = [
-        ":bucket-data_test_lib",
+        ":bucket_data_test_lib",
     ],
 )
 
 ts_library(
-    name = "bucket-data-acceptance_test_lib",
+    name = "bucket_data_acceptance_test_lib",
     testonly = True,
     srcs = [
         "bucket-data.controller.spec.ts",
@@ -87,6 +89,7 @@ ts_library(
         "//packages/core/testing",
         "//packages/database",
         "//packages/database/testing",
+        "//stacks/api/bucket/services",
         "//stacks/api/passport/testing",
         "//stacks/api/preference",
         "@npm//@nestjs/common",
@@ -100,14 +103,14 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "bucket-data-acceptance-test",
+    name = "bucket_data_acceptance_test",
     deps = [
-        ":bucket-data-acceptance_test_lib",
+        ":bucket_data_acceptance_test_lib",
     ],
 )
 
 ts_library(
-    name = "bucket-acceptance_test_lib",
+    name = "bucket_acceptance_test_lib",
     testonly = True,
     srcs = [
         "bucket.controller.spec.ts",
@@ -132,14 +135,14 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "bucket-acceptance-test",
+    name = "bucket_acceptance_test",
     deps = [
-        ":bucket-acceptance_test_lib",
+        ":bucket_acceptance_test_lib",
     ],
 )
 
 ts_library(
-    name = "bucket-schema-resolver_test_lib",
+    name = "bucket_schema_resolver_test_lib",
     testonly = True,
     srcs = [
         "bucket.schema.resolver.spec.ts",
@@ -160,9 +163,9 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "bucket-schema-resolver-test",
+    name = "bucket_schema_resolver_test",
     deps = [
-        ":bucket-schema-resolver_test_lib",
+        ":bucket_schema_resolver_test_lib",
     ],
 )
 
@@ -183,23 +186,9 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "scheduler-test",
+    name = "scheduler_test",
     deps = [
         ":scheduler_test_lib",
-    ],
-)
-
-docs(
-    name = "docs",
-    srcs = glob(["**/*.ts"]),
-    tags = ["bucket-docs"],
-    exports = [
-        "BucketController",
-        "BucketDataController",
-    ],
-    deps = [
-        "//packages/database",
-        "//stacks/api/passport",
     ],
 )
 
@@ -228,5 +217,39 @@ jasmine_node_test(
     name = "bucket_test",
     deps = [
         ":bucket_module_test",
+    ],
+)
+
+ts_library(
+    name = "activity_test_lib",
+    testonly = True,
+    srcs = [
+        "activity.resource.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/activity",
+        "//stacks/api/bucket",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "activity_test",
+    deps = [
+        "activity_test_lib",
+    ],
+)
+
+docs(
+    name = "docs",
+    srcs = glob(["**/*.ts"]),
+    tags = ["bucket-docs"],
+    exports = [
+        "BucketController",
+        "BucketDataController",
+    ],
+    deps = [
+        "//packages/database",
+        "//stacks/api/passport",
     ],
 )

@@ -67,6 +67,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       Object.defineProperty(fn, "target", {writable: false, value: target});
 
       this.router.options(path, fn);
+      this.router[method](path, fn);
     }
 
     const fn = (req: express.Request, res: express.Response) => {

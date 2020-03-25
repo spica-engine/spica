@@ -43,7 +43,7 @@ export class StorageService {
           _id: id,
           content: {data: new BSON.Binary(content), type: file.type}
         });
-        const request = new HttpRequest("PUT", "api:/storage", data.buffer, {
+        const request = new HttpRequest("PUT", `api:/storage/${id}`, data.buffer, {
           reportProgress: true,
           headers: new HttpHeaders({"Content-Type": "application/bson"})
         });

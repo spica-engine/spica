@@ -29,7 +29,8 @@ test --incompatible_strict_action_env
 
 # These variables must be set in production deployments
 # In order to make things work as expected.
-build --define=DATABASE_URI=mongodb://localhost:27017,localhost:27018,localhost:27019
+build:slavedelay --define=DATABASE_URI=mongodb://localhost:27017,localhost:27018,localhost:27019
+build --define=DATABASE_URI=mongodb://localhost:27017
 build --define=REPLICA_SET=infra
 build --define=DATABASE_NAME=spica
 build --define=PUBLIC_HOST=http://localhost:4300
@@ -38,6 +39,8 @@ build --define=PERSISTENT_PATH=/tmp #Very persistent!
 build --define=SECRET=2b10shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
 build --define=DEFAULT_PASSWORD=spica
 build --define=ENABLE_BUCKET_HOOKS=true
+build --define=ENABLE_ACTIVITY_STREAM=true
+
 
 build:release --workspace_status_command="./scripts/current_version.sh"
 
@@ -47,3 +50,7 @@ build --host_force_python=PY2
 run --host_force_python=PY2
 
 common --experimental_allow_incremental_repository_updates
+
+
+# Disable Test Caching
+test --nocache_test_results

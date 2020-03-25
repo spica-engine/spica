@@ -55,6 +55,34 @@ describe("FirehoseEnqueuer", () => {
     expect(connection.client.remoteAddress).toBe(undefined);
   });
 
+  it("should send pool description", async () => {
+    firehoseEnqueuer.subscribe(noopTarget, {event: "**"});
+
+    const ws = wsc.get("/firehose");
+
+    await ws.connect;
+
+    const connection = firehoseQueue.enqueue.calls.mostRecent().args[1];
+
+    expect(connection instanceof Firehose.Message.Incoming).toBe(true);
+    expect(connection.pool instanceof Firehose.PoolDescription).toBe(true);
+    expect(connection.pool.size).toBe(1);
+  });
+
+  it("should send request url when connecting", async () => {
+    firehoseEnqueuer.subscribe(noopTarget, {event: "**"});
+
+    const ws = wsc.get("/firehose?token=idk");
+
+    await ws.connect;
+
+    const connection = firehoseQueue.enqueue.calls.mostRecent().args[1];
+
+    expect(connection instanceof Firehose.Message.Incoming).toBe(true);
+    expect(connection.message instanceof Firehose.Message).toBe(true);
+    expect(connection.message.data).toEqual('{"url":"/firehose?token=idk"}');
+  });
+
   it("should enqueue `**` event when client has connected and disconnected", async () => {
     firehoseEnqueuer.subscribe(noopTarget, {event: "**"});
 

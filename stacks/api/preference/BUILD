@@ -12,6 +12,7 @@ ts_library(
     module_name = "@spica-server/preference",
     deps = [
         "//packages/database",
+        "//stacks/api/activity",
         "//stacks/api/passport",
         "//stacks/api/preference/service",
         "@npm//@nestjs/common",
@@ -32,6 +33,7 @@ ts_library(
         "//packages/core",
         "//packages/core/testing",
         "//packages/database/testing",
+        "//stacks/api/passport/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
@@ -47,5 +49,25 @@ jasmine_node_test(
     ],
     deps = [
         ":test_lib_preference-acceptance",
+    ],
+)
+
+ts_library(
+    name = "activity_test_lib",
+    testonly = True,
+    srcs = [
+        "activity.resource.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/activity",
+        "//stacks/api/preference",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "activity_test",
+    deps = [
+        "activity_test_lib",
     ],
 )
