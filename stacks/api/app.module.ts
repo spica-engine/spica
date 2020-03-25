@@ -8,6 +8,7 @@ import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
+import {ActivityModule} from "@spica-server/activity/src";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import {StorageModule} from "@spica-server/storage";
       defaults: [CREATED_AT, UPDATED_AT]
     }),
     PreferenceModule,
+    ...(!!process.env.ENABLE_ACTIVITY_STREAM ? [ActivityModule] : []),
     BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS, history: true, realtime: true}),
     DashboardModule,
     StorageModule.forRoot({

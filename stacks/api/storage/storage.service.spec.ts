@@ -66,7 +66,6 @@ describe("storage service", () => {
     await expectAsync(storageService.insertMany([storageObject])).toBeResolved();
 
     const updatedData = {
-      _id: new ObjectId("56cb91bdc3464f14678934ca"),
       name: "new name",
       url: "new_url",
       content: {
@@ -75,12 +74,12 @@ describe("storage service", () => {
         size: 10
       }
     };
-    await expectAsync(storageService.updateOne(updatedData)).toBeResolved();
+    await expectAsync(storageService.updateOne({_id: storageObjectId}, updatedData)).toBeResolved();
 
     return await expectAsync(
-      storageService.get(updatedData._id as ObjectId).then(result => {
+      storageService.get(storageObjectId).then(result => {
         expect(result).toEqual({
-          _id: new ObjectId("56cb91bdc3464f14678934ca"),
+          _id: storageObjectId,
           name: "new name",
           url: "new_url",
           content: {

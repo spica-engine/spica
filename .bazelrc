@@ -39,6 +39,8 @@ build --define=PERSISTENT_PATH=/tmp #Very persistent!
 build --define=SECRET=2b10shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
 build --define=DEFAULT_PASSWORD=spica
 build --define=ENABLE_BUCKET_HOOKS=true
+build --define=ENABLE_ACTIVITY_STREAM=true
+
 
 build:release --workspace_status_command="./scripts/current_version.sh"
 
