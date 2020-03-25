@@ -9,13 +9,13 @@ ts_library(
     name = "api",
     srcs = [
         "app.module.ts",
-        "defaults.ts",
         "main.ts",
     ],
     deps = [
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
+        "//stacks/api/activity",
         "//stacks/api/bucket",
         "//stacks/api/dashboard",
         "//stacks/api/function",
@@ -42,6 +42,7 @@ nodejs_binary(
         "SECRET",
         "DEFAULT_PASSWORD",
         "ENABLE_BUCKET_HOOKS",
+        "ENABLE_ACTIVITY_STREAM",
     ],
     data = [":api"],
     entry_point = "//stacks/api:main.ts",

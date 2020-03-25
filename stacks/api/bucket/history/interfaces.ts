@@ -9,8 +9,3 @@ export interface History {
   changes?: Change[];
   date?: any;
 }
-
-export interface BucketDocument {
-  _id?: ObjectId;
-  [key: string]: any | undefined;
-}
