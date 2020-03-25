@@ -1,87 +1,103 @@
-import {Activity, Actions, ActivityFilter, getAvailableFilters} from "../interface";
-import {of, Observable} from "rxjs";
 import {Injectable} from "@angular/core";
-import {ObjectId} from "bson";
+import {ActivityFilter, Activity} from "../interface";
+import {HttpClient} from "@angular/common/http";
+
+@Injectable()
+export class mockActivityService {
+  // activities: Activity[] = [];
+  // createRandomActivities() {
+  //   let availables = getAvailableFilters();
+  //   let randomActivities: Activity[] = [];
+  //   for (let index = 0; index < 200; index++) {
+  //     randomActivities.push({
+  //       _id: ObjectId.createFromTime(new Date().getTime()).toHexString(),
+  //       action:
+  //         availables.actions[Math.floor(Math.random() * Math.floor(availables.actions.length))],
+  //       resource: {
+  //         name:
+  //           availables.modules[Math.floor(Math.random() * Math.floor(availables.modules.length))],
+  //         documentId: [new ObjectId().toHexString()]
+  //       },
+  //       identifier: this.createIdentifier()
+  //     });
+  //   }
+  //   return randomActivities;
+  // }
+  // createIdentifier() {
+  //   const identifiers = ["Tuna", "Ahmet", "Mehmet", "Ayşe", "Hasan", "Veli", "Necmi"];
+  //   return identifiers[Math.floor(Math.random() * Math.floor(identifiers.length))];
+  // }
+  // constructor() {
+  //   this.activities = this.createRandomActivities();
+  // }
+  // get(
+  //   filter: ActivityFilter = {
+  //     identifier: undefined,
+  //     actions: [],
+  //     date: {
+  //       begin: undefined,
+  //       end: undefined
+  //     },
+  //     modules: [],
+  //     limit: undefined,
+  //     skip: undefined
+  //   }
+  // ): Observable<Activity[]> {
+  //   let filteredActivities: Activity[] = JSON.parse(JSON.stringify(this.activities));
+  //   if (filter.identifier) {
+  //     filteredActivities = this.activities.filter(activity =>
+  //       activity.identifier.toLowerCase().startsWith(filter.identifier.toLowerCase())
+  //     );
+  //   }
+  //   if (filter.date && filter.date.begin && filter.date.end) {
+  //     filteredActivities = this.activities.filter(
+  //       activity => activity._id >= filter.date.begin && activity.date <= filter.date.end
+  //     );
+  //   }
+  //   if (filter.actions && filter.actions.length >= 1) {
+  //     filteredActivities = filteredActivities.filter(activity =>
+  //       filter.actions.includes(activity.action)
+  //     );
+  //   }
+  //   if (filter.modules && filter.modules.length >= 1) {
+  //     filteredActivities = filteredActivities.filter(activity =>
+  //       filter.modules.includes(activity.module)
+  //     );
+  //   }
+  //   if (filter.skip) {
+  //     filteredActivities = filteredActivities.filter((activity, index) => index >= filter.skip);
+  //   }
+  //   if (filter.limit) {
+  //     filteredActivities = filteredActivities.filter((activity, index) => index < filter.limit);
+  //   }
+  //   return of(filteredActivities);
+  // }
+}
 
 @Injectable()
 export class ActivityService {
-  activities: Activity[] = [];
-
-  createRandomActivities() {
-    let availables = getAvailableFilters();
-    let randomActivities: Activity[] = [];
-    for (let index = 0; index < 200; index++) {
-      randomActivities.push({
-        action: Actions[Object.keys(Actions)[Math.floor(Math.random() * Math.floor(3))]],
-        date: new Date(
-          new Date(2020, 2, 1).getTime() +
-            Math.random() * (new Date().getTime() - new Date(2020, 2, 0).getTime())
-        ),
-        documentId: new ObjectId().toHexString(),
-        identifier: this.createIdentifier(),
-        module:
-          availables.modules[Math.floor(Math.random() * Math.floor(availables.modules.length))]
-      });
-    }
-    return randomActivities;
-  }
-
-  createIdentifier() {
-    const identifiers = ["Tuna", "Ahmet", "Mehmet", "Ayşe", "Hasan", "Veli", "Necmi"];
-    return identifiers[Math.floor(Math.random() * Math.floor(identifiers.length))];
-  }
-
-  constructor() {
-    this.activities = this.createRandomActivities();
-  }
-
-  get(
-    filter: ActivityFilter = {
-      identifier: undefined,
-      actions: [],
-      date: {
-        begin: undefined,
-        end: undefined
-      },
-      modules: [],
-      limit: undefined,
-      skip: undefined
-    }
-  ): Observable<Activity[]> {
-    let filteredActivities: Activity[] = JSON.parse(JSON.stringify(this.activities));
-
-    if (filter.identifier) {
-      filteredActivities = this.activities.filter(activity =>
-        activity.identifier.toLowerCase().startsWith(filter.identifier.toLowerCase())
-      );
+  constructor(private http: HttpClient) {}
+  get(filter: ActivityFilter) {
+    let params = {...filter};
+    Object.keys(params).forEach(key => params[key] == null && delete params[key]);
+    switch (params.action) {
+      case "INSERT":
+        params.action = "1";
+        break;
+      case "UPDATE":
+        params.action = "2";
+        break;
+      case "DELETE":
+        params.action = "3";
+        break;
+      default:
+        break;
     }
 
-    if (filter.date && filter.date.begin && filter.date.end) {
-      filteredActivities = this.activities.filter(
-        activity => activity.date >= filter.date.begin && activity.date <= filter.date.end
-      );
+    if (params.module) {
+      params["resource.name"] = params.module
     }
 
-    if (filter.actions && filter.actions.length >= 1) {
-      filteredActivities = filteredActivities.filter(activity =>
-        filter.actions.includes(activity.action)
-      );
-    }
-
-    if (filter.modules && filter.modules.length >= 1) {
-      filteredActivities = filteredActivities.filter(activity =>
-        filter.modules.includes(activity.module)
-      );
-    }
-
-    if (filter.skip) {
-      filteredActivities = filteredActivities.filter((activity, index) => index >= filter.skip);
-    }
-
-    if (filter.limit) {
-      filteredActivities = filteredActivities.filter((activity, index) => index < filter.limit);
-    }
-
-    return of(filteredActivities);
+    return this.http.get<Activity[]>("api:/activity", {params: params as any});
   }
 }

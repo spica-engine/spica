@@ -13,7 +13,7 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select action type</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.actions" multiple>
+    <mat-select [(ngModel)]="selectedFilters.action">
       <mat-option *ngFor="let action of availableFilters.actions" [value]="action">
         {{ action }}
       </mat-option>
@@ -21,7 +21,7 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select module</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.modules" multiple>
+    <mat-select [(ngModel)]="selectedFilters.module">
       <mat-option *ngFor="let module of availableFilters.modules" [value]="module">
         {{ module }}
       </mat-option>
@@ -32,7 +32,7 @@
       matInput
       [ngModel]="selectedFilters.date"
       (ngModelChange)="
-        selectedFilters.date.begin = $event.begin; selectedFilters.date.end = $event.end
+        selectedFilters.begin = $event.begin; selectedFilters.end = $event.end
       "
       placeholder="Select a date range"
       [satDatepicker]="picker"
@@ -51,11 +51,19 @@
     <cdk-virtual-scroll-viewport itemSize="75" class="example-viewport">
       <mat-list>
         <mat-list-item *cdkVirtualFor="let item of dataSource">
-          <span class="info"
-            >Identifier {{ item.identifier | uppercase }} made {{ item.action | uppercase }} action
-            on the {{ item.module | uppercase }} module, document id with
-            {{ item.documentId }}.</span
-          >
+          <span class="info">
+            <span *ngIf="item.resource.subResource; else elseBlock">
+              identifier {{ item.identifier }} {{ availableFilters.actions[item.action - 1] }}
+              {{
+                item.resource.subResource.name + ":" + item.resource.subResource.documentId
+              }}
+              to/from {{ item.resource.name + "_" + item.resource.documentId }}.
+            </span>
+            <ng-template #elseBlock>
+              identifier {{ item.identifier }} {{ availableFilters.actions[item.action - 1 ] }}
+              document {{ item.resource.documentId }} to/from {{ item.resource.name }} module.
+            </ng-template>
+          </span>
           <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <ng-container *ngIf="!item">
             Loading..
@@ -64,38 +72,5 @@
         </mat-list-item>
       </mat-list>
     </cdk-virtual-scroll-viewport>
-    <!-- <table mat-table [dataSource]="activities$" class="mat-elevation-z8">
-      <ng-container matColumnDef="identifier">
-        <th mat-header-cell *matHeaderCellDef>Identifier</th>
-        <td mat-cell *matCellDef="let activity">{{ activity.identifier }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="action">
-        <th mat-header-cell *matHeaderCellDef>Action</th>
-        <td mat-cell *matCellDef="let activity">{{ activity.action }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="module">
-        <th mat-header-cell *matHeaderCellDef>Module</th>
-        <td mat-cell *matCellDef="let activity">
-          {{ activity.module }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="documentId">
-        <th mat-header-cell *matHeaderCellDef>Document Id</th>
-        <td mat-cell *matCellDef="let activity">{{ activity.documentId }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Date</th>
-        <td mat-cell *matCellDef="let activity">
-          {{ activity.date | date: "MM/dd/yyyy HH:mm:ss" }}
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table> -->
   </mat-card-content>
 </mat-card>

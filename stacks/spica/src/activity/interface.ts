@@ -1,26 +1,24 @@
 export interface Activity {
   _id?: string;
   identifier: string;
-  module: string;
-  action: Actions;
-  documentId: string;
-  date: Date;
+  resource: Resource;
+  action: string;
 }
 
-export enum Actions {
-  INSERT = "Insert",
-  UPDATE = "Update",
-  DELETE = "Delete"
+export interface Resource {
+  name: string;
+  documentId: string[];
+  subResource?: Resource;
 }
 
 export interface ActivityFilter {
+  _id?: string;
   identifier?: string;
-  modules?: string[];
-  actions?: string[];
-  date?: {
-    begin: Date;
-    end: Date;
-  };
+  module?: string;
+  documentId?: string;
+  action?: string;
+  begin?: Date;
+  end?: Date;
   limit?: number;
   skip?: number;
 }
@@ -28,10 +26,9 @@ export interface ActivityFilter {
 export function getAvailableFilters() {
   return {
     identifier: undefined,
-    actions: [Actions.INSERT, Actions.UPDATE, Actions.DELETE],
+    actions: ["INSERT", "UPDATE", "DELETE"],
     modules: [
       "Bucket",
-      "Bucket-Data",
       "Bucket-Settings",
       "Identity",
       "Policy",

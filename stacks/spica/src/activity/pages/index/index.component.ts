@@ -1,7 +1,7 @@
 import {Component, OnInit} from "@angular/core";
 import {Activity, getAvailableFilters, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
-import {Observable, BehaviorSubject, Subscription, concat} from "rxjs";
+import {Observable, BehaviorSubject, Subscription} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
 import {switchMap, tap, map} from "rxjs/operators";
 
@@ -59,12 +59,10 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   selectedFilters: ActivityFilter = {
     identifier: undefined,
-    actions: [],
-    modules: [],
-    date: {
-      begin: undefined,
-      end: undefined
-    },
+    action: undefined,
+    module: undefined,
+    begin: undefined,
+    end: undefined,
     limit: this.defaultLimit,
     skip: undefined
   };
@@ -107,12 +105,11 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   clearFilters() {
     this.selectedFilters = {
       identifier: undefined,
-      actions: [],
-      modules: [],
-      date: {
-        begin: undefined,
-        end: undefined
-      },
+      action: undefined,
+      module: undefined,
+      documentId: undefined,
+      begin: undefined,
+      end: undefined,
       limit: this.defaultLimit,
       skip: undefined
     };
