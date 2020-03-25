@@ -23,8 +23,8 @@ export class Npm extends PackageManager {
       );
       let stderr: string = "",
         stdout: string = "";
-      let progress = 0;
-      const progressAmountOfAStep = 100 / 17;
+      let progress = 1;
+      const progressAmountOfAStep = 100 / 18;
       proc.stdout.on("data", chunk => {
         chunk = chunk.toString();
         stdout += chunk;
@@ -40,7 +40,6 @@ export class Npm extends PackageManager {
 
         stderr += chunk;
       });
-      proc.on("message", console.log);
       proc.on("close", code => {
         if (code == 0) {
           return observer.complete();

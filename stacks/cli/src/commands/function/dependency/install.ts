@@ -74,7 +74,16 @@ export class InstallCommand extends Command {
 
             await new Promise((resolve, reject) => {
               installProgress.on("data", chunk => {
-                chunk = JSON.parse(chunk.toString());
+                try {
+                  // TODO: Investigate why we receive undefined:2 sometimes
+                  // I guess it has something to do with the NGINX on the production server
+                  chunk = JSON.parse(chunk.toString());
+                } catch (e) {
+                  if (e instanceof SyntaxError) {
+                    return;
+                  }
+                  throw e;
+                }
 
                 if (chunk.state == "installing") {
                   spinner.text = `Installing the package '${packageName}' to functions (${i}/${functions.length}) (${chunk.progress}%)`;

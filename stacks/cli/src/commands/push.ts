@@ -106,7 +106,7 @@ export class PushCommand extends Command {
             }
           }
 
-          spinner.text = `Pushing functions to upstream. (${pushed++}/${upstreamFunctions.length})`;
+          spinner.text = `Pushing functions to upstream. (${pushed++}/${assets.length})`;
         }
       }
     });
