@@ -78,6 +78,7 @@ export class ApiKeyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:insert"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
     apiKey.key = uniqid();
+    apiKey.policies = [];
     return this.apiKeyService.insertOne(apiKey);
   }
 
