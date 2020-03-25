@@ -9,8 +9,8 @@ ts_library(
         "bucket.service.ts",
         "bucket.ts",
         "index.ts",
+        "schema.ts",
         "services.module.ts",
-        "schema.ts"
     ],
     module_name = "@spica-server/bucket/services",
     deps = [
