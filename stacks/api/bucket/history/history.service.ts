@@ -1,25 +1,22 @@
 import {Injectable} from "@nestjs/common";
+import {BucketDocument} from "@spica-server/bucket/services";
 import {
   Collection,
   DatabaseService,
   DeleteWriteOpResultObject,
   FilterQuery,
+  InsertOneWriteOpResult,
   ObjectId,
-  ReadPreference,
-  InsertOneWriteOpResult
+  ReadPreference
 } from "@spica-server/database";
 import {ChangePaths} from "./differ";
-import {BucketDocument, History} from "./interfaces";
+import {History} from "./interfaces";
 
 @Injectable()
 export class HistoryService {
   readonly collection: Collection<History>;
   constructor(private db: DatabaseService) {
     this.collection = this.db.collection<History>("history");
-  }
-
-  getSchema(bucketId: ObjectId) {
-    return this.db.collection<any>("buckets").findOne({_id: bucketId});
   }
 
   getPreviousSchema(bucketId: ObjectId) {

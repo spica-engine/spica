@@ -11,7 +11,6 @@ import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
-import {CUSTOM_TYPES} from "./bucket.schema.types";
 import {BucketCache, provideBucketCache} from "./cache";
 import {DocumentScheduler} from "./scheduler";
 const BucketSchema = require("./schemas/bucket.schema.json");
@@ -25,7 +24,6 @@ export class BucketModule {
       PreferenceModule,
       RealtimeModule,
       SchemaModule.forChild({
-        keywords: [CUSTOM_TYPES],
         schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
       }),
       ServicesModule
