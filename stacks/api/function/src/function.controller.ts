@@ -196,13 +196,7 @@ export class FunctionController {
     }
 
     if (!progress) {
-      return this.engine
-        .addPackage(fn, name)
-        .toPromise()
-        .then(() => {})
-        .catch(error => {
-          throw new BadRequestException(error);
-        });
+      return this.engine.addPackage(fn, name).pipe(finalize(() => res.end()));
     } else {
       return this.engine.addPackage(fn, name).pipe(
         map(progress => {
