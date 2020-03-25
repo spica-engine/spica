@@ -20,3 +20,11 @@ ts_library(
         "@npm//@types/jasmine",
     ],
 )
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+    tags = [
+        "flaky",
+    ],
+)
