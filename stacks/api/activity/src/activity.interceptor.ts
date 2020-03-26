@@ -1,38 +1,47 @@
 import {
+  CallHandler,
+  ExecutionContext,
+  mixin,
   NestInterceptor,
   Optional,
-  ExecutionContext,
-  CallHandler,
-  mixin,
   Type
 } from "@nestjs/common";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
-import {Action, Predict, Activity} from "./interface";
+import {Action, Activity, Predict} from "./interface";
+
+export abstract class ActivityInterceptor implements NestInterceptor {
+  constructor(private service: ActivityService, private predict: Predict) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    if (!this.service) {
+      console.log(
+        `In order to use "Activity", please, ensure to import ActivityModule in each place where activity() is being used. Otherwise, activity won't work correctly.`
+      );
+      return next.handle();
+    }
+    return next.handle().pipe(
+      tap(res => {
+        const req = context.switchToHttp().getRequest();
+        const identifier = getUser(req.user);
+        if (!identifier) {
+          console.log(`Identifier was not sent.`);
+          return;
+        }
+        const action = getAction(req.method);
+        const resource = this.predict(action, req, res);
+        const activity: Activity = {identifier, action, resource};
+        this.service.insertOne(activity);
+      })
+    );
+  }
+}
 
 export function activity(predict: Predict): Type<any> {
-  class MixinActivityInterceptor implements NestInterceptor {
-    constructor(@Optional() private service: ActivityService) {}
-    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-      if (!this.service) {
-        return next.handle();
-      }
-      return next.handle().pipe(
-        tap(res => {
-          try {
-            const req = context.getArgByIndex(0);
-            const action = getAction(req.method);
-            const identifier = getUser(req.user);
-            if (!identifier) return;
-            const resource = predict(action, req, res);
-            const activity: Activity = {identifier, action, resource};
-            this.service.insertOne(activity);
-          } catch (error) {
-            console.log(error);
-          }
-        })
-      );
+  class MixinActivityInterceptor extends ActivityInterceptor {
+    constructor(@Optional() service: ActivityService) {
+      super(service, predict);
     }
   }
   return mixin(MixinActivityInterceptor);
