@@ -1,4 +1,10 @@
-import {Compilation, Description, Execution, Runtime} from "@spica-server/function/runtime";
+import {
+  Compilation,
+  Description,
+  Diagnostic,
+  Execution,
+  Runtime
+} from "@spica-server/function/runtime";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
@@ -78,7 +84,9 @@ export class Node extends Runtime {
       outDir: path.resolve(compilation.cwd, ".build"),
       sourceMap: true,
       allowJs: true,
-      skipDefaultLibCheck: true
+      skipDefaultLibCheck: true,
+      alwaysStrict: true,
+      preserveSymlinks: true
     };
 
     const program = ts.createProgram({
@@ -86,10 +94,33 @@ export class Node extends Runtime {
       options
     });
 
-    const result = program.emit();
+    program.emit();
 
-    if (result.emitSkipped) {
-      return Promise.reject("Compilation skipped.");
+    const semanticDiagnostics = program.getSemanticDiagnostics();
+
+    if (semanticDiagnostics.length) {
+      return Promise.reject(
+        semanticDiagnostics.map(diagnostic => {
+          const start = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
+          const end = ts.getLineAndCharacterOfPosition(
+            diagnostic.file,
+            diagnostic.start + diagnostic.length
+          );
+          return <Diagnostic>{
+            code: diagnostic.code,
+            category: diagnostic.category,
+            text: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
+            start: {
+              line: start.line + 1,
+              column: start.character + 1
+            },
+            end: {
+              line: end.line + 1,
+              column: end.character + 1
+            }
+          };
+        })
+      );
     }
   }
 

@@ -66,6 +66,60 @@ describe("Entrypoint", () => {
     ).toBe(126);
   });
 
+  it("should should exit abnormally if it can not find the exported handler", async () => {
+    await initializeFn(`export const exists = ''`);
+
+    const event = new Event.Event({
+      type: -1,
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "shouldhaveexisted"
+      })
+    });
+    queue.enqueue(event);
+
+    const stream = new PassThrough();
+    const writeSpy = spyOn(stream, "write").and.callThrough();
+
+    await expectAsync(
+      runtime.execute({
+        cwd: compilation.cwd,
+        eventId: event.id,
+        stdout: stream
+      })
+    ).toBeRejectedWith(126);
+    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+      "This function does not export any symbol named 'shouldhaveexisted'.\n"
+    ]);
+  });
+
+  it("should should exit abnormally if the exported symbol is not a function", async () => {
+    await initializeFn(`export const notafunction = ''`);
+
+    const event = new Event.Event({
+      type: -1,
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "notafunction"
+      })
+    });
+    queue.enqueue(event);
+
+    const stream = new PassThrough();
+    const writeSpy = spyOn(stream, "write").and.callThrough();
+
+    await expectAsync(
+      runtime.execute({
+        cwd: compilation.cwd,
+        eventId: event.id,
+        stdout: stream
+      })
+    ).toBeRejectedWith(126);
+    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+      "This function does export a symbol named 'notafunction' yet it is not a function.\n"
+    ]);
+  });
+
   it("should redirect output to stream", async () => {
     await initializeFn(`export default function() {
       console.log('this should appear in the logs');
@@ -103,7 +157,9 @@ describe("Entrypoint", () => {
     process.env.DATABASE_NAME = "testingdb";
     process.env.REPLICA_SET = "repl";
 
-    await initializeFn(`export default function() {
+    await initializeFn(`
+    declare var process;
+    export default function() {
       const {
         ENTRYPOINT,
         RUNTIME,
@@ -111,7 +167,6 @@ describe("Entrypoint", () => {
         __INTERNAL__SPICA__MONGODBNAME__: dbName,
         __INTERNAL__SPICA__MONGOREPL__: repl
       } = process.env;
-      console.log(process.env);
       if (
         ENTRYPOINT == "index.js" &&
         RUNTIME == "node" &&
@@ -181,7 +236,9 @@ describe("Entrypoint", () => {
     });
 
     it("should pass request to fn", async () => {
-      await initializeFn(`export default function(req) {
+      await initializeFn(`
+      declare var process;
+      export default function(req) {
         if ( req.headers.get('content-type') == 'application/json' ) {
           process.exit(4);
         }
@@ -214,7 +271,9 @@ describe("Entrypoint", () => {
     });
 
     it("should pass response to fn", async () => {
-      await initializeFn(`export default function(req, res) {
+      await initializeFn(`
+      declare var process;
+      export default function(req, res) {
         if ( res ) {
           process.exit(4);
         }
@@ -316,8 +375,9 @@ describe("Entrypoint", () => {
     });
 
     it("should pass change to fn", async () => {
-      await initializeFn(`export default function(change) {
-        console.log(change, change.kind);
+      await initializeFn(`
+      declare var process;
+      export default function(change) {
         if ( change.kind == 'insert' && change.collection == 'test') {
           process.exit(4);
         }
@@ -361,8 +421,9 @@ describe("Entrypoint", () => {
     });
 
     it("pop from the queue", async () => {
-      await initializeFn(`export default function({socket, pool}, message) {
-        console.log(arguments);
+      await initializeFn(`
+      declare var process;
+      export default function({socket, pool}, message) {
         if ( 
           socket.remoteAddress == "[::1]" && 
           socket.id == "1" &&

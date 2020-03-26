@@ -1,9 +1,9 @@
-import {FunctionEngine} from "@spica-server/function/src/engine";
-import {FunctionService, TargetChange, ChangeKind} from "../src/function.service";
-import {DatabaseService} from "@spica-server/database";
 import {Test} from "@nestjs/testing";
+import {DatabaseService} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {HorizonModule, Horizon} from "@spica-server/function/horizon";
+import {Horizon, HorizonModule} from "@spica-server/function/horizon";
+import {FunctionEngine} from "@spica-server/function/src/engine";
+import {ChangeKind, FunctionService, TargetChange} from "../src/function.service";
 
 describe("engine", () => {
   let engine: FunctionEngine;
@@ -44,7 +44,7 @@ describe("engine", () => {
       }
     };
 
-    engine.categorizeChanges([changes]);
+    engine["categorizeChanges"]([changes]);
 
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
     expect(subscribeSpy).toHaveBeenCalledWith(changes);
@@ -61,7 +61,7 @@ describe("engine", () => {
       }
     };
 
-    engine.categorizeChanges([changes]);
+    engine["categorizeChanges"]([changes]);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith("test_root/test_id");
@@ -87,7 +87,7 @@ describe("engine", () => {
       }
     ];
 
-    engine.categorizeChanges(changes);
+    engine["categorizeChanges"](changes);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith("test_root/test_id");

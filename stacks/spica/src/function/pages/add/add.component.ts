@@ -3,7 +3,7 @@ import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/co
 import {ActivatedRoute, Router} from "@angular/router";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {SavingState} from "@spica-client/material";
-import {merge, Observable, of, Subscription} from "rxjs";
+import {merge, Observable, of, Subject, Subscription} from "rxjs";
 import {
   catchError,
   delay,
@@ -55,6 +55,8 @@ export class AddComponent implements OnInit, OnDestroy {
   $indexSave: Observable<Date | "inprogress">;
 
   $save: Observable<SavingState>;
+
+  $markers = new Subject<monaco.editor.IMarkerData[]>();
 
   $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
 
@@ -145,8 +147,27 @@ export class AddComponent implements OnInit, OnDestroy {
     if (this.function._id) {
       this.$indexSave = this.functionService.updateIndex(this.function._id, this.index).pipe(
         startWith("inprogress"),
-        map(() => new Date()),
-        delay(300)
+        delay(300),
+        catchError(error => {
+          if (error.status == 422) {
+            this.$markers.next(
+              error.error.map(diagnostic => ({
+                message: diagnostic.text,
+                code: `SP-${diagnostic.code}`,
+                startLineNumber: diagnostic.start.line,
+                startColumn: diagnostic.start.column,
+                endLineNumber: diagnostic.end.line,
+                endColumn: diagnostic.end.column,
+                severity: monaco.MarkerSeverity.Error
+              }))
+            );
+          }
+          return of(error);
+        }),
+        map(() => {
+          this.$markers.next([]);
+          return new Date();
+        })
       );
     }
   }

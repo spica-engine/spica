@@ -55,5 +55,30 @@ describe("Node", () => {
       );
       expect(stat.isSymbolicLink()).toBe(true);
     });
+
+    it("should report diagnostics", async () => {
+      compilation.cwd = FunctionTestBed.initialize(`
+import {database} from '@spica-server/database';
+export default function() {
+  const a;
+}
+`);
+      await expectAsync(node.compile(compilation)).toBeRejectedWith([
+        {
+          code: 2307,
+          category: 1,
+          text: "Cannot find module '@spica-server/database'.",
+          start: {line: 2, column: 24},
+          end: {line: 2, column: 48}
+        },
+        {
+          code: 1155,
+          category: 1,
+          text: "'const' declarations must be initialized.",
+          start: {line: 4, column: 9},
+          end: {line: 4, column: 10}
+        }
+      ]);
+    });
   });
 });
