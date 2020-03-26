@@ -78,7 +78,8 @@ export class mockActivityService {
 export class ActivityService {
   constructor(private http: HttpClient) {}
   get(filter: ActivityFilter) {
-    let params = {...filter};
+    let params = JSON.parse(JSON.stringify(filter));
+    //clear undefined keys
     Object.keys(params).forEach(key => params[key] == null && delete params[key]);
     switch (params.action) {
       case "INSERT":
@@ -94,9 +95,26 @@ export class ActivityService {
         break;
     }
 
-    if (params.module) {
-      params["resource.name"] = params.module
+    if (params.resource) {
+      if (params.resource.name) {
+        params["resource.name"] = params.resource.name;
+      }
+      if (params.resource.documentId) params["resource.documentId"] = params.resource.documentId;
+      //add sub resources before delete it
+      delete params.resource;
     }
+
+    if (params.date) {
+      if (params.date.begin) {
+        params["begin"] = params.date.begin;
+      }
+      if (params.date.end) {
+        params["end"] = params.date.end;
+      }
+      delete params.date;
+    }
+
+    console.log(params);
 
     return this.http.get<Activity[]>("api:/activity", {params: params as any});
   }

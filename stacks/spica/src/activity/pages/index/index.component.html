@@ -21,7 +21,7 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select module</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.module">
+    <mat-select [(ngModel)]="selectedFilters.resource.name" (selectionChange)="showDocuments($event.value)" >
       <mat-option *ngFor="let module of availableFilters.modules" [value]="module">
         {{ module }}
       </mat-option>
@@ -32,7 +32,7 @@
       matInput
       [ngModel]="selectedFilters.date"
       (ngModelChange)="
-        selectedFilters.begin = $event.begin; selectedFilters.end = $event.end
+        selectedFilters.date.begin = $event.begin; selectedFilters.date.end = $event.end
       "
       placeholder="Select a date range"
       [satDatepicker]="picker"
@@ -54,20 +54,16 @@
           <span class="info">
             <span *ngIf="item.resource.subResource; else elseBlock">
               identifier {{ item.identifier }} {{ availableFilters.actions[item.action - 1] }}
-              {{
-                item.resource.subResource.name + ":" + item.resource.subResource.documentId
-              }}
+              {{ item.resource.subResource.name + ":" + item.resource.subResource.documentId }}
               to/from {{ item.resource.name + "_" + item.resource.documentId }}.
             </span>
             <ng-template #elseBlock>
-              identifier {{ item.identifier }} {{ availableFilters.actions[item.action - 1 ] }}
-              document {{ item.resource.documentId }} to/from {{ item.resource.name }} module.
+              identifier {{ item.identifier }}
+              {{ availableFilters.actions[item.action - 1] }} document
+              {{ item.resource.documentId }} to/from {{ item.resource.name }} module.
             </ng-template>
           </span>
-          <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
-          <ng-container *ngIf="!item">
-            Loading..
-          </ng-container>
+          <span class="date">{{ item._id | toDate | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <mat-divider></mat-divider>
         </mat-list-item>
       </mat-list>

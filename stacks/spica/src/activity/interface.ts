@@ -14,20 +14,21 @@ export interface Resource {
 export interface ActivityFilter {
   _id?: string;
   identifier?: string;
-  module?: string;
-  documentId?: string;
   action?: string;
-  begin?: Date;
-  end?: Date;
+  resource?: Resource;
+  date?: {
+    begin?: Date;
+    end?: Date;
+  };
   limit?: number;
   skip?: number;
 }
 
 export function getAvailableFilters() {
   return {
-    identifier: undefined,
     actions: ["INSERT", "UPDATE", "DELETE"],
     modules: [
+      "Bucket-Data",
       "Bucket",
       "Bucket-Settings",
       "Identity",

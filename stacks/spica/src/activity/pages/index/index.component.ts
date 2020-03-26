@@ -60,9 +60,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   selectedFilters: ActivityFilter = {
     identifier: undefined,
     action: undefined,
-    module: undefined,
-    begin: undefined,
-    end: undefined,
+    resource: {
+      name: undefined,
+      documentId: undefined
+    },
+    date: {
+      begin: undefined,
+      end: undefined
+    },
     limit: this.defaultLimit,
     skip: undefined
   };
@@ -106,10 +111,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     this.selectedFilters = {
       identifier: undefined,
       action: undefined,
-      module: undefined,
-      documentId: undefined,
-      begin: undefined,
-      end: undefined,
+      resource: {
+        name: undefined,
+        documentId: undefined
+      },
+      date: {
+        begin: undefined,
+        end: undefined
+      },
       limit: this.defaultLimit,
       skip: undefined
     };
@@ -123,6 +132,10 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     this.pageIndex = 0;
     this.selectedFilters = {...this.selectedFilters, limit: this.defaultLimit, skip: undefined};
     this.appliedFilters$.next(this.selectedFilters);
+  }
+
+  showDocuments(moduleName: string) {
+    console.log(moduleName);
   }
 
   ngOnDestroy() {
