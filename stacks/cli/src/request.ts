@@ -29,12 +29,14 @@ export namespace request {
       method: "GET",
       headers: headers
     };
-    return fetch(url, options).then(r => {
-      if (r.status != 201) {
-        return r.json();
-      }
-      return r;
-    });
+    return fetch(url, options).then(r =>
+      r.json().catch(e => {
+        if (e.type == "invalid-json") {
+          return Promise.resolve(r);
+        }
+        return Promise.reject(e);
+      })
+    );
   }
 
   export async function post<T>(url: string, body?: object, headers?: HeaderInit): Promise<T> {
@@ -45,12 +47,14 @@ export namespace request {
       body: JSON.stringify(body),
       headers: headers
     };
-    return fetch(url, options).then(r => {
-      if (r.status != 201) {
-        return r.json();
-      }
-      return r;
-    });
+    return fetch(url, options).then(r =>
+      r.json().catch(e => {
+        if (e.type == "invalid-json") {
+          return Promise.resolve(r);
+        }
+        return Promise.reject(e);
+      })
+    );
   }
 
   export async function del<T>(url: string, headers?: HeaderInit): Promise<T> {
@@ -60,11 +64,13 @@ export namespace request {
       method: "DELETE",
       headers: headers
     };
-    return fetch(url, options).then(r => {
-      if (r.status != 201 && r.status != 204) {
-        return r.json();
-      }
-      return r;
-    });
+    return fetch(url, options).then(r =>
+      r.json().catch(e => {
+        if (e.type == "invalid-json") {
+          return Promise.resolve(r);
+        }
+        return Promise.reject(e);
+      })
+    );
   }
 }

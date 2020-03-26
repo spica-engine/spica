@@ -16,7 +16,8 @@
     "chalk": "^2.4.2",
     "open": "^6.4.0",
     "columnify": "^1.5.4",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "yaml": "^1.8.3"
   },
   "devDependencies": {
     "@types/dockerode": "^2.5.4",
