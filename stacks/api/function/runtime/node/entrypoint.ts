@@ -132,7 +132,17 @@ if (!process.env.EVENT_ID) {
   const fn = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
 
   // Call the function
-  callback(fn[event.target.handler](...callArguments));
+  if (!(event.target.handler in fn)) {
+    callback(undefined);
+    exitAbnormally(`This function does not export any symbol named '${event.target.handler}'.`);
+  } else if (typeof fn[event.target.handler] != "function") {
+    callback(undefined);
+    exitAbnormally(
+      `This function does export a symbol named '${event.target.handler}' yet it is not a function.`
+    );
+  } else {
+    callback(fn[event.target.handler](...callArguments));
+  }
 })();
 
 function exitAbnormally(reason: string) {

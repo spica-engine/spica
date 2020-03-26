@@ -98,6 +98,7 @@
             [(ngModel)]="index"
             name="code"
             [options]="editorOptions"
+            [marker]="$markers | async"
           >
           </function-editor>
         </mat-list-item>

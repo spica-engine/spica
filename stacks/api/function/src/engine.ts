@@ -43,7 +43,7 @@ export class FunctionEngine {
       });
   }
 
-  categorizeChanges(changes: TargetChange[]) {
+  private categorizeChanges(changes: TargetChange[]) {
     changes.forEach((change, index) => {
       switch (change.kind) {
         case ChangeKind.Added:
@@ -106,13 +106,17 @@ export class FunctionEngine {
     return util.promisify(rimraf)(functionRoot);
   }
 
-  async update(fn: Function, index: string): Promise<void> {
+  compile(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    await fs.promises.writeFile(path.join(functionRoot, "index.ts"), index);
     return this.horizon.runtime.compile({
       cwd: functionRoot,
       entrypoint: "index.ts"
     });
+  }
+
+  update(fn: Function, index: string): Promise<void> {
+    const functionRoot = path.join(this.options.root, fn._id.toString());
+    return fs.promises.writeFile(path.join(functionRoot, "index.ts"), index);
   }
 
   read(fn: Function): Promise<string> {
