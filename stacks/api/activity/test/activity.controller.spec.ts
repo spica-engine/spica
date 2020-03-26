@@ -122,6 +122,112 @@ describe("Activity Acceptance", () => {
     ]);
   });
 
+  it("should filter activities by multiple actions", async () => {
+    await service.insertMany([
+      {
+        action: Action.DELETE,
+        identifier: "test_user_id",
+        resource: {name: "test_module", documentId: ["test_id"]}
+      },
+      {
+        action: Action.POST,
+        identifier: "test_user_id2",
+        resource: {name: "test_module2", documentId: ["test_id2"]}
+      },
+      {
+        action: Action.PUT,
+        identifier: "test_user_id2",
+        resource: {name: "test_module2", documentId: ["test_id2"]}
+      }
+    ]);
+
+    const {body: activites} = await request.get("/activity", {
+      action: [Action.POST, Action.DELETE]
+    });
+    expect(activites).toEqual([
+      {
+        _id: "object_id",
+        action: Action.DELETE,
+        identifier: "test_user",
+        resource: {name: "test_module", documentId: ["test_id"]}
+      },
+      {
+        _id: "object_id",
+        action: Action.POST,
+        identifier: "test_user2",
+        resource: {name: "test_module2", documentId: ["test_id2"]}
+      }
+    ]);
+  });
+
+  it("should filter activities my multiple sub-resource documentIDs", async () => {
+    await service.insertMany([
+      {
+        action: Action.DELETE,
+        identifier: "test_user_id",
+        resource: {
+          name: "test_module",
+          documentId: ["test_id3"],
+          subResource: {name: "test_submodule_name", documentId: ["test_sub_id1", "test_sub_id2"]}
+        }
+      },
+      {
+        action: Action.POST,
+        identifier: "test_user_id",
+        resource: {
+          name: "test_module",
+          documentId: ["test_id3"],
+          subResource: {
+            name: "test_submodule_name",
+            documentId: ["test_sub_id1", "test_sub_id3"]
+          }
+        }
+      },
+      {
+        action: Action.PUT,
+        identifier: "test_user_id",
+        resource: {
+          name: "test_module",
+          documentId: ["test_id3"],
+          subResource: {name: "test_submodule_name", documentId: ["test_sub_id5"]}
+        }
+      }
+    ]);
+
+    const {body: activites} = await request.get("/activity", {
+      resource: {
+        name: "test_module",
+        documentId: ["test_id3"],
+        subResource: {name: "test_submodule_name", documentId: ["test_sub_id1", "test_sub_id2"]}
+      }
+    });
+    expect(activites).toEqual([
+      {
+        _id: "object_id",
+        action: Action.DELETE,
+        identifier: "test_user",
+        resource: {
+          name: "test_module",
+          documentId: ["test_id3"],
+          subResource: {name: "test_submodule_name", documentId: ["test_sub_id1", "test_sub_id2"]}
+        }
+      },
+      {
+        _id: "object_id",
+        action: Action.POST,
+        identifier: "test_user",
+        resource: {
+          name: "test_module",
+          documentId: ["test_id3"],
+          subResource: {
+            name: "test_submodule_name",
+            documentId: ["test_sub_id1", "test_sub_id3"]
+          }
+        }
+      }
+    ]);
+  });
+
   it("should filter activities by module name and document ID", async () => {
     await service.insertMany([
       {
@@ -156,6 +262,39 @@ describe("Activity Acceptance", () => {
         action: Action.PUT,
         identifier: "test_user",
         resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]}
+      }
+    ]);
+  });
+
+  it("should skip and limit", async () => {
+    await service.insertMany([
+      {
+        action: Action.DELETE,
+        identifier: "test_user_id",
+        resource: {name: "test_module", documentId: ["test_id3"]}
+      },
+      {
+        action: Action.POST,
+        identifier: "test_user_id",
+        resource: {name: "test_module2", documentId: ["test_id3"]}
+      },
+      {
+        action: Action.PUT,
+        identifier: "test_user_id",
+        resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]}
+      }
+    ]);
+
+    const {body: activites} = await request.get("/activity", {
+      skip: 1,
+      limit: 1
+    });
+    expect(activites).toEqual([
+      {
+        _id: "object_id",
+        action: Action.POST,
+        identifier: "test_user",
+        resource: {name: "test_module2", documentId: ["test_id3"]}
       }
     ]);
   });

@@ -10,7 +10,7 @@ export class ActivityController {
   @Get()
   find(
     @Query("identifier") identifier,
-    @Query("action", NUMBER) action: number = -1,
+    @Query("action", JSONP) action: number | number[],
     @Query("resource", JSONP) resource: Resource,
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
@@ -45,7 +45,15 @@ export class ActivityController {
       };
     }
 
-    if (Action[action]) filter.action = action;
+    if (action) {
+      if (Array.isArray(action) && action.length > 0) {
+        filter["$or"] = action.map(val => {
+          return {action: Number(val)};
+        });
+      } else if (!Array.isArray(action)) {
+        filter["$or"] = [{action: Number(action)}];
+      }
+    }
 
     if (resource) {
       if (resource.name) {
@@ -55,6 +63,18 @@ export class ActivityController {
         filter["resource.documentId"] = {
           $in: Array.isArray(resource.documentId) ? resource.documentId : [resource.documentId]
         };
+      }
+      if (resource.subResource) {
+        if (resource.subResource.name) {
+          filter["resource.subResource.name"] = resource.subResource.name;
+        }
+        if (resource.subResource.documentId) {
+          filter["resource.subResource.documentId"] = {
+            $in: Array.isArray(resource.subResource.documentId)
+              ? resource.subResource.documentId
+              : [resource.subResource.documentId]
+          };
+        }
       }
     }
 
