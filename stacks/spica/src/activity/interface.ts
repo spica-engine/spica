@@ -23,20 +23,3 @@ export interface ActivityFilter {
   limit?: number;
   skip?: number;
 }
-
-export function getAvailableFilters() {
-  return {
-    actions: ["INSERT", "UPDATE", "DELETE"],
-    modules: [
-      "Bucket-Data",
-      "Bucket",
-      "Bucket-Settings",
-      "Identity",
-      "Policy",
-      "Apikey",
-      "Passport-Settings",
-      "Storage",
-      "Function"
-    ]
-  };
-}

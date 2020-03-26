@@ -1,5 +1,5 @@
 import {Component, OnInit} from "@angular/core";
-import {Activity, getAvailableFilters, ActivityFilter} from "@spica-client/activity/interface";
+import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
 import {Observable, BehaviorSubject, Subscription} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
@@ -11,6 +11,20 @@ import {switchMap, tap, map} from "rxjs/operators";
   styleUrls: ["./index.component.scss"]
 })
 export class IndexComponent extends DataSource<Activity> implements OnInit {
+  actions = ["INSERT", "UPDATE", "DELETE"];
+  modules = [
+    "Bucket-Data",
+    "Bucket",
+    "Bucket-Settings",
+    "Identity",
+    "Policy",
+    "Apikey",
+    "Passport-Settings",
+    "Storage",
+    "Function"
+  ];
+  documentIds: [];
+
   private cachedActivities = Array.from<Activity>({length: 0});
 
   private subscription = new Subscription();
@@ -54,8 +68,6 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     return Math.floor(i / this.pageSize);
   }
   activities$: Observable<Activity[]>;
-
-  availableFilters = getAvailableFilters();
 
   selectedFilters: ActivityFilter = {
     identifier: undefined,
@@ -135,7 +147,10 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   }
 
   showDocuments(moduleName: string) {
-    console.log(moduleName);
+    this.activityService
+      .getDocuments(moduleName)
+      .toPromise()
+      .then(documentIds => this.documentIds = documentIds);
   }
 
   ngOnDestroy() {

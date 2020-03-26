@@ -1,6 +1,7 @@
 import {Injectable} from "@angular/core";
 import {ActivityFilter, Activity} from "../interface";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpParams} from "@angular/common/http";
+import {map} from "rxjs/operators";
 
 @Injectable()
 export class mockActivityService {
@@ -78,44 +79,79 @@ export class mockActivityService {
 export class ActivityService {
   constructor(private http: HttpClient) {}
   get(filter: ActivityFilter) {
-    let params = JSON.parse(JSON.stringify(filter));
+    let params = new HttpParams();
+
     //clear undefined keys
-    Object.keys(params).forEach(key => params[key] == null && delete params[key]);
-    switch (params.action) {
+    switch (filter.action) {
       case "INSERT":
-        params.action = "1";
+        params.set("action", "1");
         break;
       case "UPDATE":
-        params.action = "2";
+        params.set("action", "2");
         break;
       case "DELETE":
-        params.action = "3";
+        params.set("action", "3");
         break;
       default:
         break;
     }
 
-    if (params.resource) {
-      if (params.resource.name) {
-        params["resource.name"] = params.resource.name;
+    if (filter.date) {
+      if (filter.date.begin) {
+        params.set("begin", filter.date.begin.toString());
       }
-      if (params.resource.documentId) params["resource.documentId"] = params.resource.documentId;
-      //add sub resources before delete it
-      delete params.resource;
+      if (filter.date.end) {
+        params.set("end", filter.date.end.toString());
+      }
     }
 
-    if (params.date) {
-      if (params.date.begin) {
-        params["begin"] = params.date.begin;
-      }
-      if (params.date.end) {
-        params["end"] = params.date.end;
-      }
-      delete params.date;
+    //find how to send json params on http request
+
+    if (filter.resource) {
+      params.set("resource", JSON.stringify(filter.resource));
     }
 
     console.log(params);
 
-    return this.http.get<Activity[]>("api:/activity", {params: params as any});
+    return this.http.get<Activity[]>("api:/activity", {params});
+  }
+
+  getDocuments(moduleName: string, documentId?: string) {
+    moduleName = moduleName.toLowerCase();
+    let path = "api:/";
+    switch (moduleName) {
+      case "apikey":
+        path = `${path}passport/${moduleName}`;
+        break;
+      case "policy":
+        path = `${path}passport/${moduleName}`;
+        break;
+      case "identity":
+        path = `${path}passport/${moduleName}`;
+        break;
+      case "passport-settings":
+        path = `${path}preference/passport`;
+        break;
+      case "bucket-settings":
+        path = `${path}preference/bucket`;
+        break;
+      case "bucket-data":
+        path = `${path}bucket/${documentId}/data`;
+        break;
+      default:
+        path = `${path}${moduleName}`;
+        break;
+    }
+    return this.http.get(path).pipe(
+      map(response => {
+        //cause of compiler error such as data is not key
+        let _response: any = response;
+        return Array.isArray(response)
+          ? response.map(item => item._id)
+          : _response.data
+          ? _response.data.map(item => item._id)
+          : [];
+      })
+    );
   }
 }

@@ -14,16 +14,27 @@
   <mat-form-field>
     <mat-label>Select action type</mat-label>
     <mat-select [(ngModel)]="selectedFilters.action">
-      <mat-option *ngFor="let action of availableFilters.actions" [value]="action">
+      <mat-option *ngFor="let action of actions" [value]="action">
         {{ action }}
       </mat-option>
     </mat-select>
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select module</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.resource.name" (selectionChange)="showDocuments($event.value)" >
-      <mat-option *ngFor="let module of availableFilters.modules" [value]="module">
-        {{ module }}
+    <mat-select
+      [(ngModel)]="selectedFilters.resource.name"
+      (selectionChange)="showDocuments($event.value)"
+    >
+      <mat-option *ngFor="let module of modules" [value]="module">
+        {{ module | titlecase }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="documentIds && documentIds.length">
+    <mat-label>Select documentId</mat-label>
+    <mat-select [(ngModel)]="selectedFilters.resource.documentId">
+      <mat-option *ngFor="let documentId of documentIds" [value]="documentId">
+        {{ documentId }}
       </mat-option>
     </mat-select>
   </mat-form-field>
@@ -53,13 +64,12 @@
         <mat-list-item *cdkVirtualFor="let item of dataSource">
           <span class="info">
             <span *ngIf="item.resource.subResource; else elseBlock">
-              identifier {{ item.identifier }} {{ availableFilters.actions[item.action - 1] }}
+              identifier {{ item.identifier }} {{ actions[item.action - 1] }}
               {{ item.resource.subResource.name + ":" + item.resource.subResource.documentId }}
               to/from {{ item.resource.name + "_" + item.resource.documentId }}.
             </span>
             <ng-template #elseBlock>
-              identifier {{ item.identifier }}
-              {{ availableFilters.actions[item.action - 1] }} document
+              identifier {{ item.identifier }} {{ actions[item.action - 1] }} document
               {{ item.resource.documentId }} to/from {{ item.resource.name }} module.
             </ng-template>
           </span>
