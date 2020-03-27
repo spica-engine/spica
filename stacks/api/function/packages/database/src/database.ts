@@ -1,11 +1,12 @@
 import * as mongodb from "mongodb";
 import * as util from "util";
+import {checkDocument} from "./check";
 
 let connection: mongodb.MongoClient;
 
 function checkEnvironment() {
   if (!process.env.RUNTIME) {
-    console.warn(
+    process.emitWarning(
       `Seems like you are not under spica/functions environment.` +
         `This module is only designed to work with spica/functions.`
     );
@@ -57,6 +58,72 @@ export async function database(): Promise<mongodb.Db> {
       coll.watch,
       `It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing.`
     );
+    const findOne = coll.findOne;
+    coll.findOne = (filter, ...args) => {
+      checkDocument(filter);
+      return findOne.bind(coll)(filter, ...args);
+    };
+    const find = coll.find;
+    coll.find = (filter, ...args) => {
+      checkDocument(filter);
+      return find.bind(coll)(filter, ...args);
+    };
+    const findOneAndUpdate = coll.findOneAndUpdate;
+    coll.findOneAndUpdate = (filter, update, ...args) => {
+      checkDocument(filter);
+      checkDocument(update);
+      return findOneAndUpdate.bind(coll)(filter, update, ...args);
+    };
+
+    const findOneAndReplace = coll.findOneAndReplace;
+    coll.findOneAndReplace = (filter, update, ...args) => {
+      checkDocument(filter);
+      checkDocument(update);
+      return findOneAndReplace.bind(coll)(filter, update, ...args);
+    };
+
+    const findOneAndDelete = coll.findOneAndDelete;
+    coll.findOneAndDelete = (filter, ...args) => {
+      checkDocument(filter);
+      return findOneAndDelete.bind(coll)(filter, ...args);
+    };
+
+    const insertOne = coll.insertOne;
+    coll.insertOne = (doc, ...args) => {
+      checkDocument(doc);
+      return insertOne.bind(coll)(doc, ...args);
+    };
+    const insertMany = coll.insertMany;
+    coll.insertMany = (docs, ...args) => {
+      checkDocument(docs);
+      return insertMany.bind(coll)(docs, ...args);
+    };
+    const updateOne = coll.updateOne;
+    coll.updateOne = (filter, update, ...args) => {
+      checkDocument(filter);
+      checkDocument(update);
+      return updateOne.bind(coll)(filter, update, ...args);
+    };
+
+    const updateMany = coll.updateMany;
+    coll.updateMany = (filter, update, ...args) => {
+      checkDocument(filter);
+      checkDocument(update);
+      return updateMany.bind(coll)(filter, update, ...args);
+    };
+
+    const deleteOne = coll.deleteOne;
+    coll.deleteOne = (filter, ...args) => {
+      checkDocument(filter);
+      return deleteOne.bind(coll)(filter, ...args);
+    };
+
+    const deleteMany = coll.deleteMany;
+    coll.deleteMany = (filter, ...args) => {
+      checkDocument(filter);
+      return deleteMany.bind(coll)(filter, ...args);
+    };
+
     return coll;
   };
 
