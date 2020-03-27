@@ -69,18 +69,6 @@ export class ActivityController {
           $in: Array.isArray(resource.documentId) ? resource.documentId : [resource.documentId]
         };
       }
-      // if (resource.subResource) {
-      //   if (resource.subResource.name) {
-      //     filter["resource.subResource.name"] = resource.subResource.name;
-      //   }
-      //   if (resource.subResource.documentId) {
-      //     filter["resource.subResource.documentId"] = {
-      //       $in: Array.isArray(resource.subResource.documentId)
-      //         ? resource.subResource.documentId
-      //         : [resource.subResource.documentId]
-      //     };
-      //   }
-      // }
     }
 
     if (filter) aggregation.push({$match: filter});

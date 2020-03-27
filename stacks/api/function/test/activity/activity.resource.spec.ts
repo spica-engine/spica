@@ -10,7 +10,7 @@ describe("Activity Resource", () => {
 
     const resource = createFunctionResource(action, {}, res);
     expect(resource).toEqual({
-      name: "FUNCTION",
+      name: "Function",
       documentId: ["function_id"]
     });
   });
@@ -25,7 +25,7 @@ describe("Activity Resource", () => {
 
     const resource = createFunctionResource(action, req, {});
     expect(resource).toEqual({
-      name: "FUNCTION",
+      name: "Function",
       documentId: ["function_id"]
     });
   });
@@ -40,7 +40,7 @@ describe("Activity Resource", () => {
 
     const resource = createFunctionResource(action, req, {});
     expect(resource).toEqual({
-      name: "FUNCTION",
+      name: "Function",
       documentId: ["function_id"]
     });
   });

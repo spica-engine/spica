@@ -1,5 +1,5 @@
 import {Action} from "@spica-server/activity/src";
-import {createApikeyResource, createApikeyPolicyResource} from "./activity.resource";
+import {createApikeyResource} from "./activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
@@ -10,7 +10,7 @@ describe("Activity Resource", () => {
 
     const resource = createApikeyResource(action, {}, res);
     expect(resource).toEqual({
-      name: "APIKEY",
+      name: "Apikey",
       documentId: ["apikey_id"]
     });
   });
@@ -25,7 +25,7 @@ describe("Activity Resource", () => {
 
     const resource = createApikeyResource(action, req, {});
     expect(resource).toEqual({
-      name: "APIKEY",
+      name: "Apikey",
       documentId: ["apikey_id"]
     });
   });
@@ -40,7 +40,7 @@ describe("Activity Resource", () => {
 
     const resource = createApikeyResource(action, req, {});
     expect(resource).toEqual({
-      name: "APIKEY",
+      name: "Apikey",
       documentId: ["apikey_id"]
     });
   });
@@ -54,14 +54,10 @@ describe("Activity Resource", () => {
     };
     const action = Action.PUT;
 
-    const resource = createApikeyPolicyResource(action, req, {});
+    const resource = createApikeyResource(action, req, {});
     expect(resource).toEqual({
-      name: "APIKEY",
+      name: "Apikey",
       documentId: ["apikey_id"],
-      subResource: {
-        name: "POLICY",
-        documentId: ["policy1", "policy2"]
-      }
     });
   });
 });

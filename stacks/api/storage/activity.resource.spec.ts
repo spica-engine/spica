@@ -8,7 +8,7 @@ describe("Activity Resource", () => {
 
     const resource = createStorageResource(action, {}, res);
     expect(resource).toEqual({
-      name: "STORAGE",
+      name: "Storage",
       documentId: ["storage_object1", "storage_object2"]
     });
   });
@@ -23,7 +23,7 @@ describe("Activity Resource", () => {
 
     const resource = createStorageResource(action, req, {});
     expect(resource).toEqual({
-      name: "STORAGE",
+      name: "Storage",
       documentId: ["storage_object"]
     });
   });
@@ -38,7 +38,7 @@ describe("Activity Resource", () => {
 
     const resource = createStorageResource(action, req, {});
     expect(resource).toEqual({
-      name: "STORAGE",
+      name: "Storage",
       documentId: ["storage_object"]
     });
   });
