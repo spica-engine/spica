@@ -5,7 +5,10 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "test_lib",
-    srcs = glob(["*.spec.ts"]),
+    srcs = glob(
+        include = ["*.spec.ts"],
+        exclude = ["*.e2e.spec.ts"],
+    ),
     deps = [
         "//stacks/api/function/packages/database",
         "@npm//@types/jasmine",
@@ -18,7 +21,27 @@ ts_library(
 jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
+)
+
+ts_library(
+    name = "e2e_test_lib",
+    srcs = glob(["database.e2e.spec.ts"]),
+    deps = [
+        "//packages/database/testing",
+        "//stacks/api/function/packages/database",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/mongodb",
+        "@npm//@types/node",
+        "@npm//mongodb",
+    ],
+)
+
+jasmine_node_test(
+    name = "e2e_test",
+    srcs = [":e2e_test_lib"],
     tags = [
-        "flaky",
+        "e2e",
+        "integration",
     ],
 )
