@@ -98,4 +98,10 @@ export class ActivityService {
       })
     );
   }
+
+  async deleteActivities(activities: Activity[]) {
+    return Promise.all(
+      activities.map(activity => this.http.delete(`api:/activity/${activity._id}`).toPromise())
+    );
+  }
 }

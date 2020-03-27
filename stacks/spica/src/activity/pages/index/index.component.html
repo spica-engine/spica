@@ -3,6 +3,13 @@
     <mat-icon>account_box</mat-icon>
     <span>User Activities</span>
   </h4>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="appliedFilters$.next(selectedFilters)">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button mat-icon-button (click)="clearActivities()">
+    <mat-icon>clear_all</mat-icon>
+  </button>
 </mat-toolbar>
 
 <mat-card class="mat-elevation-z25">

@@ -6,7 +6,7 @@ import {DataSource, CollectionViewer} from "@angular/cdk/collections";
 import {switchMap, tap, map} from "rxjs/operators";
 
 @Component({
-  selector: "app-index",
+  selector: "activity-index",
   templateUrl: "./index.component.html",
   styleUrls: ["./index.component.scss"]
 })
@@ -37,7 +37,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   actions = ["Insert", "Update", "Delete"];
   documentIds: [];
 
-  private cachedActivities = Array.from<Activity>({length: 0});
+  private cachedActivities = new Array<Activity>();
 
   private subscription = new Subscription();
 
@@ -177,7 +177,18 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
       .then(documentIds => (this.documentIds = documentIds));
   }
 
+  clearActivities() {
+    this.activityService
+      .deleteActivities(this.cachedActivities)
+      .then(() => {
+        this.cachedActivities = [];
+        this.dataStream.next(this.cachedActivities);
+      })
+      .catch(res => console.log(res));
+  }
+
   ngOnDestroy() {
+    this.dataStream.unsubscribe();
     this.appliedFilters$.unsubscribe();
   }
 }
