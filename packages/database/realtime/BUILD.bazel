@@ -47,6 +47,7 @@ jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
     tags = [
+        "e2e",
         "flaky",
     ],
 )

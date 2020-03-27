@@ -6,6 +6,7 @@ import {
   Get,
   Header,
   HttpCode,
+  HttpException,
   HttpStatus,
   NotFoundException,
   Param,
@@ -16,20 +17,20 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
+import {activity} from "@spica-server/activity";
 import {BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as os from "os";
-import {of} from "rxjs";
-import {catchError, ignoreElements, map, finalize} from "rxjs/operators";
+import {of, OperatorFunction} from "rxjs";
+import {catchError, finalize, last, map, switchMap, tap} from "rxjs/operators";
+import {createFunctionResource} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {generate} from "./schema/enqueuer.resolver";
-import {activity} from "@spica-server/activity/src";
-import {createFunctionResource} from "./activity.resource";
 
 @Controller("function")
 export class FunctionController {
@@ -150,7 +151,10 @@ export class FunctionController {
     if (!fn) {
       throw new NotFoundException("Cannot find function.");
     }
-    return this.engine.update(fn, index);
+    await this.engine.update(fn, index);
+    return this.engine
+      .compile(fn)
+      .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
   }
 
   @Get(":id/index")
@@ -201,10 +205,10 @@ export class FunctionController {
       throw new NotFoundException("Could not find the function.");
     }
 
-    if (!progress) {
-      return this.engine.addPackage(fn, name).pipe(finalize(() => res.end()));
-    } else {
-      return this.engine.addPackage(fn, name).pipe(
+    const operators: OperatorFunction<unknown, unknown>[] = [];
+
+    if (progress) {
+      operators.push(
         map(progress => {
           return {
             progress,
@@ -217,11 +221,16 @@ export class FunctionController {
             message: error
           })
         ),
-        map(response => res.write(`${JSON.stringify(response)}${os.EOL}`)),
-        finalize(() => res.end()),
-        ignoreElements()
+        tap(response => res.write(`${JSON.stringify(response)}${os.EOL}`))
       );
     }
+    operators.push(
+      last(),
+      switchMap(() => this.engine.compile(fn).catch(() => {})),
+      finalize(() => res.end())
+    );
+
+    return (this.engine.addPackage(fn, name) as any).pipe(...operators);
   }
 
   @Delete(":id/dependencies/:name")

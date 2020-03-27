@@ -4,10 +4,10 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 
 ts_library(
     name = "activity",
-    srcs = glob(
-        include = ["**/*.ts"],
-        exclude = ["**/*.spec.ts"],
-    ),
+    srcs = glob([
+        "src/*.ts",
+        "index.ts",
+    ]),
     module_name = "@spica-server/activity",
     deps = [
         "//packages/core",

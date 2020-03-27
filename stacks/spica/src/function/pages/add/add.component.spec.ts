@@ -1,26 +1,32 @@
-import {TestBed, ComponentFixture} from "@angular/core/testing";
-import {AddComponent} from "../../../function/pages/add/add.component";
-import {MatIconModule} from "@angular/material/icon";
-import {MatToolbarModule} from "@angular/material/toolbar";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
+import {Directive, Input} from "@angular/core";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatListModule} from "@angular/material/list";
+import {MatCardModule} from "@angular/material/card";
 import {MatExpansionModule} from "@angular/material/expansion";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatIconModule} from "@angular/material/icon";
+import {MatListModule} from "@angular/material/list";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {EditorComponent} from "../../components/editor/editor.component";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
-import {MatCardModule} from "@angular/material/card";
-import {InputPlacerComponent} from "../../../../packages/common/input/input.placer";
-import {FunctionService} from "../../function.service";
-import {EnqueuerPipe} from "../../pipes/enqueuer";
-import {of} from "rxjs";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
-import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {FUNCTION_OPTIONS, emptyTrigger} from "../../interface";
-import {SchemeObserver} from "../../../../packages/core/layout/scheme.observer";
 import {MatSaveModule} from "@spica/client/packages/material";
+import {of} from "rxjs";
+import {InputPlacerComponent} from "../../../../packages/common/input/input.placer";
+import {SchemeObserver} from "../../../../packages/core/layout/scheme.observer";
+import {AddComponent} from "../../../function/pages/add/add.component";
+import {EditorComponent} from "../../components/editor/editor.component";
+import {FunctionService} from "../../function.service";
+import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
+import {EnqueuerPipe} from "../../pipes/enqueuer";
+
+@Directive({selector: "function-editor[language]"})
+class MockLanguageDirective {
+  @Input() marker: any;
+}
 
 describe("Function Add", () => {
   let fixture: ComponentFixture<AddComponent>;
@@ -71,7 +77,13 @@ describe("Function Add", () => {
           }
         }
       ],
-      declarations: [AddComponent, EditorComponent, InputPlacerComponent, EnqueuerPipe]
+      declarations: [
+        AddComponent,
+        EditorComponent,
+        InputPlacerComponent,
+        EnqueuerPipe,
+        MockLanguageDirective
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(AddComponent);
   });

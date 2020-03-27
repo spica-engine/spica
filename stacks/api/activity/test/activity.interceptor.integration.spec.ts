@@ -1,91 +1,101 @@
-import {Controller, Post, UseInterceptors, INestApplication} from "@nestjs/common";
-import {Predict, Resource, ActivityService, activity} from "@spica-server/activity/src";
+import {Controller, INestApplication, Post, Req, UseInterceptors} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
+import {activity, ActivityService, Predict, Resource} from "@spica-server/activity";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
-const mockPredict: Predict = (action, req, res): Resource => {
+const TestPredict: Predict = (): Resource => {
   return {documentId: ["test_id"], name: "test_module"};
 };
 
 @Controller("test")
-export class mockController {
+export class TestController {
   constructor() {}
 
-  @UseInterceptors(activity(mockPredict))
+  @UseInterceptors(activity(TestPredict))
   @Post()
   insert() {
     return "test";
   }
+
+  @UseInterceptors(activity(TestPredict))
+  @Post("withuser")
+  insertWithUser(@Req() req) {
+    req.user = {
+      _id: "test"
+    };
+    return "test";
+  }
 }
 
-describe("Interceptor Integration", () => {
-  describe("Disabled activity stream", () => {
-    let request: Request;
-    let app: INestApplication;
+describe("Interceptor with a proper activity handler", () => {
+  let request: Request;
+  let app: INestApplication;
+  let service: ActivityService;
+  let insertSpy: jasmine.Spy;
 
-    beforeAll(async () => {
-      const module = await Test.createTestingModule({
-        imports: [CoreTestingModule],
-        controllers: [mockController]
-      }).compile();
+  beforeAll(async () => {
+    const module = await Test.createTestingModule({
+      imports: [DatabaseTestingModule.create(), CoreTestingModule],
+      controllers: [TestController],
+      providers: [ActivityService]
+    }).compile();
 
-      request = module.get(Request);
-
-      app = module.createNestApplication();
-
-      await app.listen(request.socket);
-    });
-
-    it("should run even if there is no activity service provider ", async () => {
-      const res = await request.post("/test");
-
-      expect(res.statusCode).toEqual(201);
-      expect(res.statusText).toEqual("Created");
-      expect(res.body).toEqual("test");
-    });
-
-    afterAll(async () => {
-      await app.close();
-    });
+    service = module.get(ActivityService);
+    request = module.get(Request);
+    app = module.createNestApplication();
+    await app.listen(request.socket);
+    insertSpy = spyOn(service, "insertOne");
   });
 
-  describe("Enabled activity stream", () => {
-    let request: Request;
-    let app: INestApplication;
-    let service: ActivityService;
-    let insertSpy: jasmine.Spy;
+  beforeEach(() => {
+    insertSpy.calls.reset();
+  });
 
-    beforeAll(async () => {
-      const module = await Test.createTestingModule({
-        imports: [DatabaseTestingModule.create(), CoreTestingModule],
-        controllers: [mockController],
-        providers: [ActivityService]
-      }).compile();
+  afterAll(async () => await app.close());
 
-      service = module.get(ActivityService);
+  it("should not insert an activity if the user does not exist", async () => {
+    const res = await request.post("/test");
 
-      request = module.get(Request);
+    expect(res.statusCode).toEqual(201);
+    expect(res.statusText).toEqual("Created");
+    expect(res.body).toEqual("test");
+    expect(insertSpy).not.toHaveBeenCalled();
+  });
 
-      app = module.createNestApplication();
-
-      await app.listen(request.socket);
+  it("should insert an activity", async () => {
+    await request.post("/test/withuser");
+    expect(insertSpy).toHaveBeenCalledWith({
+      identifier: "test",
+      action: 1,
+      resource: {documentId: ["test_id"], name: "test_module"}
     });
+  });
+});
 
-    it("should not insert an activity if user isn't exist", async () => {
-      insertSpy = spyOn(service, "insertOne");
+describe("Interceptor without a proper activity handler", () => {
+  let request: Request;
+  let app: INestApplication;
 
-      const res = await request.post("/test");
+  beforeAll(async () => {
+    const module = await Test.createTestingModule({
+      imports: [CoreTestingModule],
+      controllers: [TestController]
+    }).compile();
 
-      expect(res.statusCode).toEqual(201);
-      expect(res.statusText).toEqual("Created");
-      expect(res.body).toEqual("test");
+    request = module.get(Request);
 
-      expect(insertSpy).toHaveBeenCalledTimes(0);
-    });
+    app = module.createNestApplication();
 
-    afterAll(async () => {
-      await app.close();
-    });
+    await app.listen(request.socket);
+  });
+
+  afterAll(async () => await app.close());
+
+  it("should not disrupt the controller", async () => {
+    const res = await request.post("/test");
+    expect(res.statusCode).toEqual(201);
+    expect(res.statusText).toEqual("Created");
+    expect(res.body).toEqual("test");
   });
 });

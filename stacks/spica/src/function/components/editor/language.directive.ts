@@ -1,14 +1,25 @@
-import {Directive, EventEmitter, NgZone, OnDestroy, Output} from "@angular/core";
+import {Directive, EventEmitter, Input, NgZone, OnDestroy, Output} from "@angular/core";
 import {LanguageService} from "./language.service";
 
 @Directive({selector: "function-editor[language]", host: {"(init)": "onEditorInit($event)"}})
 export class LanguageDirective implements OnDestroy {
   @Output() run = new EventEmitter();
   private disposables: Array<monaco.IDisposable> = [];
+  private _editorRef: monaco.editor.IStandaloneCodeEditor;
 
   constructor(private ls: LanguageService, private zone: NgZone) {}
 
+  @Input("marker")
+  set setMarkers(markers: monaco.editor.IMarkerData[]) {
+    if (this._editorRef) {
+      monaco.editor.setModelMarkers(this._editorRef.getModel(), "typescript", markers);
+    } else {
+      console.warn("Couldn't set the markers cause the editor was unready.");
+    }
+  }
+
   onEditorInit(editorRef: monaco.editor.IStandaloneCodeEditor) {
+    this._editorRef = editorRef;
     if (monaco.languages.getLanguages().findIndex(l => l.id == "typescript") == -1) {
       monaco.languages.register({
         id: "typescript",
