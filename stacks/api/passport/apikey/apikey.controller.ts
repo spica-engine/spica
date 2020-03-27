@@ -19,7 +19,7 @@ import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "../policy/action.guard";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
-import {activity} from "@spica-server/activity/src";
+import {activity} from "@spica-server/activity";
 import {createApikeyResource, createApikeyPolicyResource} from "./activity.resource";
 
 @Controller("passport/apikey")

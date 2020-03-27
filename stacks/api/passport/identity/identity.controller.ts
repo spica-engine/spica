@@ -21,7 +21,7 @@ import {NUMBER} from "@spica-server/core";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {activity} from "@spica-server/activity/src";
+import {activity} from "@spica-server/activity";
 
 import {createIdentityResource, createIdentityPolicyResource} from "./activity.resource";
 
