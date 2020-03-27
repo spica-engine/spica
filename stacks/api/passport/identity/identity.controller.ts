@@ -23,7 +23,7 @@ import {ActionGuard, PolicyService} from "../policy";
 import {OBJECT_ID, ObjectId} from "@spica-server/database";
 import {activity} from "@spica-server/activity/src";
 
-import {createIdentityResource, createIdentityPolicyResource} from "./activity.resource";
+import {createIdentityResource} from "./activity.resource";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -116,7 +116,7 @@ export class IdentityController {
 
   // TODO(thesayyn): Strictly check policies before attaching them
 
-  @UseInterceptors(activity(createIdentityPolicyResource))
+  @UseInterceptors(activity(createIdentityResource))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async attachPolicy(
@@ -135,7 +135,7 @@ export class IdentityController {
     return identity;
   }
 
-  @UseInterceptors(activity(createIdentityPolicyResource))
+  @UseInterceptors(activity(createIdentityResource))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async detachPolicy(

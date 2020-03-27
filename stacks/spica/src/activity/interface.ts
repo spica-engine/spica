@@ -8,13 +8,12 @@ export interface Activity {
 export interface Resource {
   name: string;
   documentId: string[];
-  subResource?: Resource;
 }
 
 export interface ActivityFilter {
   _id?: string;
   identifier?: string;
-  action?: string;
+  action?: string[];
   resource?: Resource;
   date?: {
     begin?: Date;

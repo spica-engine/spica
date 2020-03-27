@@ -20,7 +20,7 @@ import {ActionGuard} from "../policy/action.guard";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
 import {activity} from "@spica-server/activity/src";
-import {createApikeyResource, createApikeyPolicyResource} from "./activity.resource";
+import {createApikeyResource} from "./activity.resource";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
@@ -110,7 +110,7 @@ export class ApiKeyController {
     });
   }
 
-  @UseInterceptors(activity(createApikeyPolicyResource))
+  @UseInterceptors(activity(createApikeyResource))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async attachPolicy(
@@ -132,7 +132,7 @@ export class ApiKeyController {
     );
   }
 
-  @UseInterceptors(activity(createApikeyPolicyResource))
+  @UseInterceptors(activity(createApikeyResource))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async detachPolicy(

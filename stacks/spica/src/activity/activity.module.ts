@@ -17,13 +17,11 @@ import {MatListModule} from "@angular/material/list";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {FormsModule} from "@angular/forms";
 import {ActivityService} from "./services/activity.service";
-import {ToDatePipeModule} from "@spica-client/common";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 @NgModule({
   declarations: [IndexComponent],
   imports: [
-    ToDatePipeModule,
     CommonModule,
     ActivityRoutingModule,
     MatIconModule,

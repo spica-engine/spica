@@ -11,18 +11,30 @@ import {switchMap, tap, map} from "rxjs/operators";
   styleUrls: ["./index.component.scss"]
 })
 export class IndexComponent extends DataSource<Activity> implements OnInit {
-  actions = ["INSERT", "UPDATE", "DELETE"];
-  modules = [
-    "Bucket-Data",
-    "Bucket",
-    "Bucket-Settings",
-    "Identity",
-    "Policy",
-    "Apikey",
-    "Passport-Settings",
-    "Storage",
-    "Function"
+  moduleGroups = [
+    {
+      name: "Bucket-Data",
+      modules: []
+    },
+    {
+      name: "Bucket",
+      modules: ["Bucket", "Bucket-Settings"]
+    },
+    {
+      name: "Passport",
+      modules: ["Identity", "Identity-Settings", "Policy", "Apikey"]
+    },
+    {
+      name: "Storage",
+      modules: ["Storage"]
+    },
+    {
+      name: "Function",
+      modules: ["Function"]
+    }
   ];
+
+  actions = ["Insert", "Update", "Delete"];
   documentIds: [];
 
   private cachedActivities = Array.from<Activity>({length: 0});
@@ -94,6 +106,16 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     super();
     this.dataSource = this;
 
+    //push buckets
+    this.activityService
+      .getDocuments("bucket")
+      .toPromise()
+      .then(buckets => {
+        buckets.forEach(id => {
+          this.moduleGroups[0].modules.push(`Bucket_${id}`);
+        });
+      });
+
     this.appliedFilters$
       .pipe(
         switchMap(filter => {
@@ -134,6 +156,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
       limit: this.defaultLimit,
       skip: undefined
     };
+    this.documentIds = undefined;
     this.lastPage = 0;
     this.pageIndex = 0;
     this.appliedFilters$.next(this.selectedFilters);
@@ -147,10 +170,11 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   }
 
   showDocuments(moduleName: string) {
+    this.documentIds = undefined;
     this.activityService
       .getDocuments(moduleName)
       .toPromise()
-      .then(documentIds => this.documentIds = documentIds);
+      .then(documentIds => (this.documentIds = documentIds));
   }
 
   ngOnDestroy() {

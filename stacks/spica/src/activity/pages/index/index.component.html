@@ -13,7 +13,7 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select action type</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.action">
+    <mat-select [(ngModel)]="selectedFilters.action" multiple>
       <mat-option *ngFor="let action of actions" [value]="action">
         {{ action }}
       </mat-option>
@@ -25,14 +25,16 @@
       [(ngModel)]="selectedFilters.resource.name"
       (selectionChange)="showDocuments($event.value)"
     >
-      <mat-option *ngFor="let module of modules" [value]="module">
-        {{ module | titlecase }}
-      </mat-option>
+      <mat-optgroup *ngFor="let group of moduleGroups" [label]="group.name">
+        <mat-option *ngFor="let module of group.modules" [value]="module">
+          {{ module }}
+        </mat-option>
+      </mat-optgroup>
     </mat-select>
   </mat-form-field>
   <mat-form-field *ngIf="documentIds && documentIds.length">
-    <mat-label>Select documentId</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.resource.documentId">
+    <mat-label>Select document id</mat-label>
+    <mat-select [(ngModel)]="selectedFilters.resource.documentId" multiple>
       <mat-option *ngFor="let documentId of documentIds" [value]="documentId">
         {{ documentId }}
       </mat-option>
@@ -63,17 +65,10 @@
       <mat-list>
         <mat-list-item *cdkVirtualFor="let item of dataSource">
           <span class="info">
-            <span *ngIf="item.resource.subResource; else elseBlock">
-              identifier {{ item.identifier }} {{ actions[item.action - 1] }}
-              {{ item.resource.subResource.name + ":" + item.resource.subResource.documentId }}
-              to/from {{ item.resource.name + "_" + item.resource.documentId }}.
-            </span>
-            <ng-template #elseBlock>
-              identifier {{ item.identifier }} {{ actions[item.action - 1] }} document
-              {{ item.resource.documentId }} to/from {{ item.resource.name }} module.
-            </ng-template>
+            identifier {{ item.identifier }} {{ actions[item.action - 1] }} document
+            {{ item.resource.documentId }} on {{ item.resource.name }} module.
           </span>
-          <span class="date">{{ item._id | toDate | date: "MM/dd/yyyy HH:mm:ss" }}</span>
+          <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <mat-divider></mat-divider>
         </mat-list-item>
       </mat-list>

@@ -1,7 +1,7 @@
 import {Resource, Action} from "@spica-server/activity/src";
 
 export function createFunctionResource(action: Action, req: any, res: any): Resource {
-  let name = "FUNCTION";
+  let name = "Function";
 
   let documentId: string[] = [];
   switch (action) {

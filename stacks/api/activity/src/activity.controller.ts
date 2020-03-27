@@ -1,4 +1,4 @@
-import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param} from "@nestjs/common";
+import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param, Req} from "@nestjs/common";
 import {Activity, Resource, ActivityQuery, Action} from "./";
 import {ActivityService} from "./activity.service";
 import {JSONP, DATE, NUMBER} from "@spica-server/core";
@@ -30,6 +30,11 @@ export class ActivityController {
       {
         $set: {
           identifier: "$identifier.identifier"
+        }
+      },
+      {
+        $addFields: {
+          date: {$toDate: "$_id"}
         }
       }
     ];
@@ -64,18 +69,18 @@ export class ActivityController {
           $in: Array.isArray(resource.documentId) ? resource.documentId : [resource.documentId]
         };
       }
-      if (resource.subResource) {
-        if (resource.subResource.name) {
-          filter["resource.subResource.name"] = resource.subResource.name;
-        }
-        if (resource.subResource.documentId) {
-          filter["resource.subResource.documentId"] = {
-            $in: Array.isArray(resource.subResource.documentId)
-              ? resource.subResource.documentId
-              : [resource.subResource.documentId]
-          };
-        }
-      }
+      // if (resource.subResource) {
+      //   if (resource.subResource.name) {
+      //     filter["resource.subResource.name"] = resource.subResource.name;
+      //   }
+      //   if (resource.subResource.documentId) {
+      //     filter["resource.subResource.documentId"] = {
+      //       $in: Array.isArray(resource.subResource.documentId)
+      //         ? resource.subResource.documentId
+      //         : [resource.subResource.documentId]
+      //     };
+      //   }
+      // }
     }
 
     if (filter) aggregation.push({$match: filter});

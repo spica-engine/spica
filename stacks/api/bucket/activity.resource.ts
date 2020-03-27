@@ -1,7 +1,7 @@
 import {Resource, Action} from "@spica-server/activity/src";
 
 export function createBucketResource(action: Action, req: any, res: any): Resource {
-  let name = "BUCKET";
+  let name = "Bucket";
 
   let documentId: string[] = [];
   switch (action) {
@@ -20,30 +20,24 @@ export function createBucketResource(action: Action, req: any, res: any): Resour
 }
 
 export function createBucketDataResource(action: Action, req: any, res: any): Resource {
-  let name = "BUCKET";
-  let documentId = [req.params.bucketId];
+  let name = `Bucket_${req.params.bucketId}`;
+  let documentId: string[] = [];
 
-  let subDocumentId: string[] = [];
   switch (action) {
     case Action.POST:
-      subDocumentId.push(res._id.toString());
+      documentId.push(res._id.toString());
       break;
     case Action.PUT:
-      subDocumentId.push(req.params.documentId);
+      documentId.push(req.params.documentId);
       break;
     case Action.DELETE:
       if (req.params.documentId) {
-        subDocumentId.push(req.params.documentId);
+        documentId.push(req.params.documentId);
       } else {
-        subDocumentId = req.body;
+        documentId = req.body;
       }
       break;
   }
 
-  let subResource: Resource = {
-    name: "BUCKET-DATA",
-    documentId: subDocumentId
-  };
-
-  return {name, documentId, subResource};
+  return {name, documentId};
 }

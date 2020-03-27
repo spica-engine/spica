@@ -16,7 +16,6 @@ export interface ActivityQuery {
 export interface Resource {
   name: string;
   documentId: string[];
-  subResource?: Resource;
 }
 
 export interface Predict {
