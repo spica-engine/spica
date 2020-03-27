@@ -97,7 +97,7 @@ describe("realtime database", () => {
         });
     });
 
-    it("should return added document", done => {
+    it("should return added document", async done => {
       realtime
         .find("test1")
         .pipe(
@@ -109,8 +109,8 @@ describe("realtime database", () => {
           expect(data.document.test).toBe(1);
           done();
         });
-
-      setTimeout(() => database.collection("test1").insertOne({test: 1}), LATENCY);
+      await wait();
+      await database.collection("test1").insertOne({test: 1});
     });
 
     it("should return initial and added document in order", async done => {
@@ -132,7 +132,8 @@ describe("realtime database", () => {
           expect(secondInsert.document.test).toBe(3);
           done();
         });
-      setTimeout(() => coll.insertMany([{test: 2}, {test: 3}]), LATENCY);
+      await wait();
+      await coll.insertMany([{test: 2}, {test: 3}]);
     });
 
     it("should return deleted document", async done => {
@@ -149,7 +150,8 @@ describe("realtime database", () => {
           expect(inserted.insertedIds[1].equals(deleted.document._id)).toBeTruthy();
           done();
         });
-      setTimeout(() => coll.deleteOne({test: 3}), LATENCY);
+      await wait();
+      await coll.deleteOne({test: 3});
     });
 
     it("should return edited document", async done => {
@@ -276,7 +278,8 @@ describe("realtime database", () => {
           expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
           done();
         });
-      setTimeout(() => coll.updateOne({_id: id}, {$set: {status: false}}), LATENCY);
+      await wait();
+      await coll.updateOne({_id: id}, {$set: {status: false}});
     });
 
     it("should expunge replaced document if it does not match the filter conditions anymore", async done => {
@@ -350,7 +353,7 @@ describe("realtime database", () => {
         .find("test12", {limit: 2})
         .pipe(
           tap(() => (totalEmit += 1)),
-          bufferCount(9),
+          bufferCount(7),
           takeUntil(timer(500))
         )
         .subscribe({
@@ -362,7 +365,7 @@ describe("realtime database", () => {
               {kind: ChunkKind.Replace, document: {_id: insertedIds[1], test: 3}},
               {kind: ChunkKind.Update, document: {_id: insertedIds[1], test: 10}},
               {kind: ChunkKind.Delete, document: {_id: insertedIds[1]}},
-              {kind: ChunkKind.Initial, document: {_id: insertedIds[3], test: 18}}
+              {kind: ChunkKind.Initial, document: {_id: insertedIds[3], test: -1}}
             ]);
           },
           complete: () => {
@@ -373,12 +376,15 @@ describe("realtime database", () => {
 
       setTimeout(async () => {
         await coll.findOneAndReplace({_id: insertedIds[1]}, {test: 3});
-        await coll.findOneAndUpdate({_id: insertedIds[1]}, {$set: {test: 10}}).then(() => wait());
+        await wait();
+        await coll.findOneAndUpdate({_id: insertedIds[1]}, {$set: {test: 10}});
+        await wait();
         await coll.deleteOne({_id: insertedIds[1]});
-        await coll.insertMany([{q: "do we rock?"}, {a: true}]).then(r => r.insertedIds[0]);
-        // These operations should not affect anything in our cursor
-        await coll.insertMany([{test: 12}, {test: 19.5}]);
         await coll.deleteOne({_id: insertedIds[2]});
+        // These operations should not affect anything in our cursor
+        // They here to ensure correctness of our cursor despite the concurrent changes
+        await coll.insertMany([{q: "do we rock?"}, {a: true}]);
+        await coll.insertMany([{test: 12}, {test: 19.5}]);
       }, LATENCY);
     });
 
@@ -490,11 +496,9 @@ describe("realtime database", () => {
           ]);
           done();
         });
-      await wait(LATENCY);
-      await Promise.all([
-        coll.updateOne({_id: insertedIds[2]}, {$set: {test: 1}}),
-        coll.updateOne({_id: insertedIds[0]}, {$set: {test: 3}})
-      ]);
+      await wait();
+      await coll.updateOne({_id: insertedIds[2]}, {$set: {test: 1}});
+      await coll.updateOne({_id: insertedIds[0]}, {$set: {test: 3}});
     });
 
     it("should order descending by _id property and limit to 2", async done => {
