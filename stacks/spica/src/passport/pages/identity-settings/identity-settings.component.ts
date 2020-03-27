@@ -79,10 +79,8 @@ export class IdentitySettingsComponent implements OnInit {
   }
 
   saveSettings() {
-    (this.preferences._id
-      ? this.preferencesService.replaceOne(this.preferences)
-      : this.preferencesService.insertOne(this.preferences)
-    )
+    this.preferencesService
+      .replaceOne(this.preferences)
       .toPromise()
       .then(() => this.router.navigate(["/passport/identity"]));
   }
