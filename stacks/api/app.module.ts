@@ -8,7 +8,7 @@ import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
-import {ActivityModule} from "@spica-server/activity/src";
+import {ActivityModule} from "@spica-server/activity";
 
 @Module({
   imports: [

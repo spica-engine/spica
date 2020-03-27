@@ -23,7 +23,7 @@ import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/databa
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {activity} from "@spica-server/activity/src";
+import {activity} from "@spica-server/activity";
 import {createBucketDataResource} from "./activity.resource";
 
 @Controller("bucket/:bucketId/data")

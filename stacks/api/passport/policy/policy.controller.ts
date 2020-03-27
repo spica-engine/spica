@@ -17,7 +17,7 @@ import {ActionGuard} from "./action.guard";
 import {Policy} from "./interface";
 import {PolicyService} from "./policy.service";
 import {NUMBER} from "@spica-server/core";
-import {activity} from "@spica-server/activity/src";
+import {activity} from "@spica-server/activity";
 import {createPolicyResource} from "./activity.resource";
 
 @Controller("passport/policy")
