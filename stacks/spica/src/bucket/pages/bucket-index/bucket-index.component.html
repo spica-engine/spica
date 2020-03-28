@@ -4,7 +4,7 @@
     <span>Buckets</span>
   </h4>
   <span class="space-between"></span>
-  <button canInteract="bucket:update" mat-icon-button routerLink="add">
+  <button canInteract="bucket:create" mat-icon-button routerLink="add">
     <mat-icon>add</mat-icon>
   </button>
   <button mat-icon-button routerLink="settings">
@@ -52,7 +52,7 @@
           <mat-icon>edit</mat-icon>
         </button>
         <button
-          canInteract="bucket:update"
+          canInteract="bucket:delete"
           mat-icon-button
           color="warn"
           [matAwareDialog]="{

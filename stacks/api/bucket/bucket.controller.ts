@@ -60,7 +60,7 @@ export class BucketController {
 
   @UseInterceptors(activity(createBucketResource))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     return this.bs.insertOne(bucket);
   }

@@ -380,7 +380,7 @@
   <mat-card-actions>
     <button
       mat-button
-      canInteract="bucket:update"
+      [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
       form="describeForm"
       *matSave="$save | async; let state"
       [disabled]="

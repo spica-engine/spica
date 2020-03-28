@@ -73,7 +73,7 @@ const routes: Routes = [
         path: "add",
         component: BucketAddComponent,
         data: {
-          action: "update"
+          action: "create"
         }
       },
       {
