@@ -302,7 +302,7 @@
       mat-button
       *matSave="$save | async; let state"
       [disabled]="form.invalid || isHandlerDuplicated || !!state"
-      canInteract="function:update"
+      [canInteract]="function._id ? 'function:update' : 'function:create'"
       (click)="save()"
       [ngSwitch]="state"
     >

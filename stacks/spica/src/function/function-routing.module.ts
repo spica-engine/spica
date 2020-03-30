@@ -21,7 +21,7 @@ const routes: Routes = [
         component: IndexComponent,
         data: {action: "index"}
       },
-      {path: "add", component: AddComponent, data: {action: "update"}},
+      {path: "add", component: AddComponent, data: {action: "create"}},
       {canActivate: [FunctionIndexGuard], path: "logs", component: LogViewComponent},
       {
         canActivate: [FunctionIndexGuard],
