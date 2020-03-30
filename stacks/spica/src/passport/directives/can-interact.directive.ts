@@ -14,8 +14,8 @@ export class CanInteractDirective implements OnInit {
 
   ngOnChanges(changes: SimpleChanges) {
     if (
-      changes.action.previousValue &&
-      changes.action.currentValue &&
+      changes.action.previousValue != undefined &&
+      changes.action.currentValue != undefined &&
       changes.action.previousValue != changes.action.currentValue
     )
       this.setVisible(changes.action.currentValue);
