@@ -15,6 +15,7 @@ import {MatAwareDialogModule} from "@spica-client/material";
 import {SubscriptionAddComponent} from "./pages/subscription-add/subscription-add.component";
 import {SubscriptionIndexComponent} from "./pages/subscription-index/subscription-index.component";
 import {SubscriptionRoutingModule} from "./subscription-routing.module";
+import { PassportModule } from "@spica-client/passport";
 @NgModule({
   imports: [
     CommonModule,
@@ -30,6 +31,7 @@ import {SubscriptionRoutingModule} from "./subscription-routing.module";
     MatListModule,
     MatSelectModule,
     MatInputModule,
+    PassportModule.forChild(),
     SubscriptionRoutingModule
   ],
   declarations: [SubscriptionAddComponent, SubscriptionIndexComponent]
