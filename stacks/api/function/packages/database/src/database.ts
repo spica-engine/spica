@@ -25,7 +25,7 @@ function checkEnvironment() {
 }
 
 async function connect(): Promise<mongodb.MongoClient> {
-  if (!connection) {
+  if (!connected()) {
     connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
       replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
       appname: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`,
@@ -128,4 +128,14 @@ export async function database(): Promise<mongodb.Db> {
   };
 
   return db;
+}
+
+export async function close(force?: boolean): Promise<void> {
+  if (connection) {
+    return connection.close(force);
+  }
+}
+
+export function connected() {
+  return connection && connection.isConnected();
 }
