@@ -59,7 +59,7 @@ const routes: Routes = [
         data: {service: "passport:apikey"},
         children: [
           {path: "", component: ApiKeyIndexComponent, data: {action: "index"}},
-          {path: "add", component: ApiKeyAddComponent, data: {action: "insert"}},
+          {path: "add", component: ApiKeyAddComponent, data: {action: "create"}},
           {path: ":id/edit", component: ApiKeyAddComponent, data: {action: "show"}}
         ]
       }

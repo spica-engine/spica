@@ -83,7 +83,7 @@
 
       <button
         [disabled]="apiKeyForm.invalid"
-        canInteract="passport:apikey:update"
+        [canInteract]="apiKey._id ? 'passport:apikey:update' : 'passport:apikey:create'"
         mat-button
         color="primary"
         type="submit"
