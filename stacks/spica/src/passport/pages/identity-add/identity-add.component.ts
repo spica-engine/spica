@@ -96,7 +96,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
           delete identity.password;
           this.error = undefined;
           this.identity = identity;
-          this.router.navigate(["passport", "identities", identity._id, "edit"]);
+          this.router.navigate(["passport", "identity", identity._id, "edit"]);
         })
         .catch(err => (this.error = err.error.message));
     }

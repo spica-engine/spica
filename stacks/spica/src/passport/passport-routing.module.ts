@@ -28,7 +28,7 @@ const routes: Routes = [
         data: {service: "passport:identity"},
         children: [
           {path: "", component: IdentityIndexComponent, data: {action: "index"}},
-          {path: "add", component: IdentityAddComponent, data: {action: "update"}},
+          {path: "add", component: IdentityAddComponent, data: {action: "create"}},
           {path: ":id/edit", component: IdentityAddComponent, data: {action: "show"}}
         ]
       },
