@@ -38,7 +38,7 @@ const routes: Routes = [
         data: {service: "passport:policy"},
         children: [
           {path: "", component: PolicyIndexComponent, data: {action: "index"}},
-          {path: "add", component: PolicyAddComponent, data: {action: "update"}},
+          {path: "add", component: PolicyAddComponent, data: {action: "create"}},
           {path: ":id/edit", component: PolicyAddComponent, data: {action: "show"}}
         ]
       },
