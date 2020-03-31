@@ -39,7 +39,7 @@ describe("CanInteract", () => {
 
     fixture.detectChanges();
 
-    //wait until initial value set from passport service
+    //wait until setting initial value from passport service
     await fixture.whenStable();
     fixture.detectChanges();
 
