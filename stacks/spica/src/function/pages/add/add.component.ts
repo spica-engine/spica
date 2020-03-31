@@ -3,7 +3,7 @@ import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/co
 import {ActivatedRoute, Router} from "@angular/router";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 import {SavingState} from "@spica-client/material";
-import {merge, Observable, of, Subject, Subscription} from "rxjs";
+import {merge, Observable, of, Subject, Subscription, throwError} from "rxjs";
 import {
   catchError,
   delay,
@@ -11,7 +11,6 @@ import {
   filter,
   flatMap,
   ignoreElements,
-  map,
   startWith,
   switchMap,
   take,
@@ -145,15 +144,17 @@ export class AddComponent implements OnInit, OnDestroy {
 
   updateIndex() {
     if (this.function._id) {
+      this.$markers.next([]);
       this.$indexSave = this.functionService.updateIndex(this.function._id, this.index).pipe(
         startWith("inprogress"),
+        endWith(new Date()),
         delay(300),
         catchError(error => {
           if (error.status == 422) {
             this.$markers.next(
               error.error.map(diagnostic => ({
                 message: diagnostic.text,
-                code: `SP-${diagnostic.code}`,
+                code: `TS-${diagnostic.code}`,
                 startLineNumber: diagnostic.start.line,
                 startColumn: diagnostic.start.column,
                 endLineNumber: diagnostic.end.line,
@@ -161,14 +162,11 @@ export class AddComponent implements OnInit, OnDestroy {
                 severity: monaco.MarkerSeverity.Error
               }))
             );
+            return of(new Date());
           }
-          return of(error);
-        }),
-        map(() => {
-          this.$markers.next([]);
-          return new Date();
+          return throwError(error);
         })
-      );
+      ) as Observable<Date | "inprogress">;
     }
   }
 
@@ -192,6 +190,12 @@ export class AddComponent implements OnInit, OnDestroy {
       save.pipe(
         flatMap(fn =>
           this.functionService.updateIndex(fn._id, this.index).pipe(
+            catchError(error => {
+              if (error.status == 422) {
+                return of(error);
+              }
+              return throwError(error);
+            }),
             tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
             ignoreElements()
           )

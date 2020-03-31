@@ -15,7 +15,7 @@ import {
 import {FormsModule, NgModel} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
-import { CanInteractDirectiveTest } from "@spica-client/passport";
+import {CanInteractDirectiveTest} from "@spica-client/passport";
 
 describe("Policy Add Component", () => {
   let fixture: ComponentFixture<PolicyAddComponent>;
@@ -110,7 +110,7 @@ describe("Policy Add Component", () => {
           }
         }
       ],
-      declarations: [PolicyAddComponent,CanInteractDirectiveTest]
+      declarations: [PolicyAddComponent, CanInteractDirectiveTest]
     });
     TestBed.overrideProvider(PolicyService, {useValue: policyService});
 

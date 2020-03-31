@@ -18,7 +18,7 @@ import {PreferencesService} from "../../../../packages/core/preferences/preferen
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {IdentityAddComponent} from "./identity-add.component";
-import { CanInteractDirectiveTest } from "@spica-client/passport";
+import {CanInteractDirectiveTest} from "@spica-client/passport";
 
 describe("Identity Add Component", () => {
   let fixture: ComponentFixture<IdentityAddComponent>;
@@ -148,7 +148,7 @@ describe("Identity Add Component", () => {
         },
         {provide: Router, useValue: router}
       ],
-      declarations: [IdentityAddComponent,CanInteractDirectiveTest]
+      declarations: [IdentityAddComponent, CanInteractDirectiveTest]
     });
     TestBed.overrideProvider(PolicyService, {useValue: policyService});
     TestBed.overrideProvider(IdentityService, {useValue: identityService});

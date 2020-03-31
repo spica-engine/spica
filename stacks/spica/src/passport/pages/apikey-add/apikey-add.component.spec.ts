@@ -82,7 +82,6 @@ describe("ApiKeyAddComponent", () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     await fixture.whenStable();
-    
   }));
 
   it("should set apiKey as emptyApiKey when this page navigated from add button", () => {
