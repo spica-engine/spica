@@ -68,7 +68,7 @@
     Clear
   </button>
   <mat-card-content>
-    <cdk-virtual-scroll-viewport itemSize="75" class="example-viewport">
+    <cdk-virtual-scroll-viewport  itemSize="75" class="example-viewport">
       <mat-list>
         <mat-list-item *cdkVirtualFor="let item of dataSource">
           <span class="info">
@@ -79,6 +79,8 @@
           <mat-divider></mat-divider>
         </mat-list-item>
       </mat-list>
+      <mat-progress-spinner *ngIf="isPending" [diameter]="35" color="primary" mode="indeterminate">
+      </mat-progress-spinner>
     </cdk-virtual-scroll-viewport>
   </mat-card-content>
 </mat-card>

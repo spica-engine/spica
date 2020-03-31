@@ -15,6 +15,14 @@
     margin: -50px auto;
     width: 95%;
 
+    .mat-card-content {
+      .cdk-virtual-scroll-viewport {
+        .mat-progress-spinner {
+          margin: auto;
+        }
+      }
+    }
+
     .mat-form-field {
       margin: 5px 10px;
     }

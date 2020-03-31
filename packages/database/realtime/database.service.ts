@@ -197,7 +197,7 @@ export class RealtimeDatabaseService {
         this.database
           .collection(name)
           .find(options.filter)
-          .skip((options.skip && options.skip + ids.size) || ids.size)
+          .skip(options.skip ? options.skip + ids.size : ids.size)
           .limit(options.limit - ids.size)
           .on("data", data => {
             observer.next({kind: ChunkKind.Initial, document: data});

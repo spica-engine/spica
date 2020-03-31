@@ -1,9 +1,9 @@
 import {Component, OnInit} from "@angular/core";
 import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
-import {Observable, BehaviorSubject, Subscription} from "rxjs";
+import {Observable, BehaviorSubject, Subscription, pipe} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
-import {switchMap, tap, map} from "rxjs/operators";
+import {tap, map, mergeMap} from "rxjs/operators";
 
 @Component({
   selector: "activity-index",
@@ -37,13 +37,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   actions = ["Insert", "Update", "Delete"];
   documentIds: [];
 
+  isPending = false;
+
   private cachedActivities = new Array<Activity>();
 
   private subscription = new Subscription();
 
   private dataStream = new BehaviorSubject<(Activity | undefined)[]>(this.cachedActivities);
 
-  private pageSize = 2.5;
   private lastPage = 0;
 
   private pageIndex = 0;
@@ -53,9 +54,11 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   connect(collectionViewer: CollectionViewer): Observable<(Activity | undefined)[]> {
     this.subscription.add(
       collectionViewer.viewChange.subscribe(range => {
-        const currentPage = this._getPageForIndex(range.end);
-        if (currentPage > this.lastPage) {
-          this.lastPage = currentPage;
+        if (!this.lastPage) {
+          this.lastPage = range.end / 2;
+        }
+        if (range.start > this.lastPage) {
+          this.lastPage = this.lastPage * 2;
           this._fetchNextPage();
         }
       })
@@ -76,9 +79,6 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     });
   }
 
-  private _getPageForIndex(i: number): number {
-    return Math.floor(i / this.pageSize);
-  }
   activities$: Observable<Activity[]>;
 
   selectedFilters: ActivityFilter = {
@@ -118,19 +118,24 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
     this.appliedFilters$
       .pipe(
-        switchMap(filter => {
+        mergeMap(filter => {
+          this.isPending = true;
           if (filter.skip) {
-            return this.activityService.get(filter).pipe(
-              map(activities => {
-                return this.cachedActivities.concat(activities);
-              })
-            );
+            return this.activityService
+              .get(filter)
+              .pipe(
+                map(activities => {
+                  return this.cachedActivities.concat(activities);
+                })
+              )
+              .toPromise();
           } else {
-            return this.activityService.get(filter);
+            return this.activityService.get(filter).toPromise();
           }
         }),
         tap(activities => {
           {
+            this.isPending = false;
             this.cachedActivities = activities;
             this.dataStream.next(this.cachedActivities);
           }
@@ -190,5 +195,9 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   ngOnDestroy() {
     this.dataStream.unsubscribe();
     this.appliedFilters$.unsubscribe();
+  }
+
+  onIndexChange(event: any) {
+    console.log(event);
   }
 }

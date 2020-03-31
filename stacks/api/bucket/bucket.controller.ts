@@ -25,7 +25,7 @@ import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
 import {BucketDataService} from "./bucket-data.service";
-import {activity} from "@spica-server/activity/src";
+import {activity} from "@spica-server/activity";
 import {createBucketResource} from "./activity.resource";
 
 @Controller("bucket")
