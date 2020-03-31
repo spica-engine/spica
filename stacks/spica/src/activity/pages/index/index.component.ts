@@ -3,7 +3,7 @@ import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
 import {Observable, BehaviorSubject, Subscription, pipe} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
-import {tap, map, mergeMap} from "rxjs/operators";
+import {map, mergeMap} from "rxjs/operators";
 
 @Component({
   selector: "activity-index",
@@ -47,6 +47,8 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   private lastPage = 0;
 
+  private pageSize = 0;
+
   private pageIndex = 0;
 
   private defaultLimit = 20;
@@ -54,12 +56,17 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   connect(collectionViewer: CollectionViewer): Observable<(Activity | undefined)[]> {
     this.subscription.add(
       collectionViewer.viewChange.subscribe(range => {
-        if (!this.lastPage) {
-          this.lastPage = range.end / 2;
+        //it means first time scrollView loaded or it needs to refresh
+        if (!this.pageSize) {
+          this.pageIndex = 0;
+          this.pageSize = range.end;
+          this.lastPage = range.end;
         }
-        if (range.start > this.lastPage) {
-          this.lastPage = this.lastPage * 2;
-          this._fetchNextPage();
+
+        //when reach the bottom of the page
+        if (range.end >= this.lastPage) {
+          this.lastPage = range.end + this.pageSize;
+          this.fetchNextPage();
         }
       })
     );
@@ -70,7 +77,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     this.subscription.unsubscribe();
   }
 
-  private _fetchNextPage(): void {
+  private fetchNextPage(): void {
     this.pageIndex++;
     this.appliedFilters$.next({
       ...this.selectedFilters,
@@ -123,25 +130,24 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
           if (filter.skip) {
             return this.activityService
               .get(filter)
-              .pipe(
-                map(activities => {
-                  return this.cachedActivities.concat(activities);
-                })
-              )
+              .pipe(map(activities => this.cachedActivities.concat(activities)))
               .toPromise();
           } else {
             return this.activityService.get(filter).toPromise();
           }
-        }),
-        tap(activities => {
-          {
-            this.isPending = false;
-            this.cachedActivities = activities;
-            this.dataStream.next(this.cachedActivities);
-          }
         })
       )
-      .subscribe();
+      .subscribe(
+        activities => {
+          this.isPending = false;
+          this.cachedActivities = activities;
+          this.dataStream.next(this.cachedActivities);
+        },
+        error => {
+          console.log(error);
+          this.isPending = false;
+        }
+      );
   }
 
   ngOnInit() {}
@@ -161,15 +167,16 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
       limit: this.defaultLimit,
       skip: undefined
     };
+ƒ
     this.documentIds = undefined;
-    this.lastPage = 0;
-    this.pageIndex = 0;
+    this.pageSize = 0;
+
     this.appliedFilters$.next(this.selectedFilters);
   }
 
   applyFilters() {
-    this.lastPage = 0;
-    this.pageIndex = 0;
+    this.pageSize = 0;
+
     this.selectedFilters = {...this.selectedFilters, limit: this.defaultLimit, skip: undefined};
     this.appliedFilters$.next(this.selectedFilters);
   }
@@ -189,15 +196,11 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
         this.cachedActivities = [];
         this.dataStream.next(this.cachedActivities);
       })
-      .catch(res => console.log(res));
+      .catch(error => console.log(error));
   }
 
   ngOnDestroy() {
     this.dataStream.unsubscribe();
     this.appliedFilters$.unsubscribe();
-  }
-
-  onIndexChange(event: any) {
-    console.log(event);
   }
 }

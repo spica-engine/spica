@@ -17,8 +17,13 @@
 
     .mat-card-content {
       .cdk-virtual-scroll-viewport {
+        .mat-list {
+          .emptyList {
+            text-align: center;
+          }
+        }
         .mat-progress-spinner {
-          margin: auto;
+          margin: 15px auto;
         }
       }
     }

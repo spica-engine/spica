@@ -4,7 +4,7 @@
     <span>User Activities</span>
   </h4>
   <span class="space-between"></span>
-  <button mat-icon-button (click)="appliedFilters$.next(selectedFilters)">
+  <button mat-icon-button (click)="applyFilters()">
     <mat-icon>refresh</mat-icon>
   </button>
   <button mat-icon-button (click)="clearActivities()">
@@ -68,11 +68,14 @@
     Clear
   </button>
   <mat-card-content>
-    <cdk-virtual-scroll-viewport  itemSize="75" class="example-viewport">
+    <cdk-virtual-scroll-viewport itemSize="75" class="example-viewport">
       <mat-list>
+        <div class="emptyList" *ngIf="!cachedActivities.length && !isPending">
+          Couldn't find any activity to show.
+        </div>
         <mat-list-item *cdkVirtualFor="let item of dataSource">
           <span class="info">
-            identifier {{ item.identifier }} {{ actions[item.action - 1] }} document
+            Identifier {{ item.identifier }} {{ actions[item.action - 1] }} document
             {{ item.resource.documentId }} on {{ item.resource.name }} module.
           </span>
           <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
