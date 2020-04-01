@@ -261,6 +261,40 @@ describe("Activity Acceptance", () => {
     const res = await request.delete(`/activity/${insertedIds[1]}`);
     expect(res.statusCode).toEqual(204);
     expect(res.body).toEqual(undefined);
+
+    const activities = await service.find({});
+
+    expect(activities).toEqual([
+      {
+        _id: insertedIds[0],
+        action: Action.PUT,
+        identifier: "spica",
+        resource: {name: "test_module", documentId: ["test_id"]}
+      }
+    ]);
+  });
+
+  it("should delete multiple activities", async () => {
+    const insertedIds = await service.insertMany([
+      {
+        action: Action.PUT,
+        identifier: "spica",
+        resource: {name: "test_module", documentId: ["test_id"]}
+      },
+      {
+        action: Action.POST,
+        identifier: "spica",
+        resource: {name: "test_module2", documentId: ["test_id2", "test_id5"]}
+      }
+    ]);
+
+    const res = await request.delete("/activity", insertedIds);
+    expect(res.statusCode).toEqual(204);
+    expect(res.body).toEqual(undefined);
+
+    const activities = await service.find({});
+
+    expect(activities).toEqual([]);
   });
 
   afterAll(async () => {

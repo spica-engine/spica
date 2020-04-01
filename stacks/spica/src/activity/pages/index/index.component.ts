@@ -194,9 +194,9 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   clearActivities() {
     this.activityService
       .deleteActivities(this.cachedActivities)
+      .toPromise()
       .then(() => {
-        this.cachedActivities = [];
-        this.dataStream.next(this.cachedActivities);
+        this.appliedFilters$.next(this.selectedFilters);
       })
       .catch(error => console.log(error));
   }

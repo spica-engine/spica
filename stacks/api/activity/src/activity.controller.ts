@@ -1,5 +1,5 @@
-import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param, Req} from "@nestjs/common";
-import {Activity, Resource, ActivityQuery, Action} from "./";
+import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param, Body} from "@nestjs/common";
+import {Activity, Resource} from "./";
 import {ActivityService} from "./activity.service";
 import {JSONP, DATE, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID, FilterQuery} from "@spica-server/database";
@@ -39,7 +39,7 @@ export class ActivityController {
       }
     ];
 
-    let filter: FilterQuery<ActivityQuery> = {};
+    let filter: FilterQuery<Activity> = {};
 
     if (identifier) filter.identifier = identifier;
 
@@ -84,5 +84,11 @@ export class ActivityController {
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.activityService.deleteOne({_id: id});
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteMany(@Body() ids: ObjectId[]) {
+    return this.activityService.deleteMany({_id: {$in: ids.map(id => new ObjectId(id))}});
   }
 }
