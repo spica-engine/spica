@@ -33,9 +33,7 @@ export class CanInteractDirective implements OnInit {
 
 //This directive for test cases. Use it for modules which uses the actual directive on test files.
 @Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest implements OnInit {
+export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
-
-  ngOnInit() {}
 }
