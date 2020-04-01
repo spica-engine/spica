@@ -35,7 +35,10 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   ];
 
   actions = ["Insert", "Update", "Delete"];
+
   documentIds: [];
+
+  maxDate = new Date();
 
   isPending = false;
 
@@ -56,7 +59,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
   connect(collectionViewer: CollectionViewer): Observable<(Activity | undefined)[]> {
     this.subscription.add(
       collectionViewer.viewChange.subscribe(range => {
-        //it means first time scrollView loaded or it needs to refresh
+        //it means first time scrollView loaded
         if (!this.pageSize) {
           this.pageIndex = 0;
           this.pageSize = range.end;
@@ -86,8 +89,6 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     });
   }
 
-  activities$: Observable<Activity[]>;
-
   selectedFilters: ActivityFilter = {
     identifier: undefined,
     action: undefined,
@@ -107,7 +108,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   appliedFilters$ = new BehaviorSubject<ActivityFilter>(this.selectedFilters);
 
-  maxDate = new Date();
+  activities$: Observable<Activity[]>;
 
   constructor(private activityService: ActivityService) {
     super();
@@ -167,7 +168,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
       limit: this.defaultLimit,
       skip: undefined
     };
-ƒ
+
     this.documentIds = undefined;
     this.pageSize = 0;
 
@@ -186,7 +187,8 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     this.activityService
       .getDocuments(moduleName)
       .toPromise()
-      .then(documentIds => (this.documentIds = documentIds));
+      .then(documentIds => (this.documentIds = documentIds))
+      .catch(error => console.log(error));
   }
 
   clearActivities() {
@@ -197,6 +199,13 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
         this.dataStream.next(this.cachedActivities);
       })
       .catch(error => console.log(error));
+  }
+
+  setDate(begin: Date, end: Date) {
+    this.selectedFilters.date = {
+      begin: new Date(begin.setHours(0, 0, 0, 0)),
+      end: new Date(end.setHours(23, 59, 59, 999))
+    };
   }
 
   ngOnDestroy() {

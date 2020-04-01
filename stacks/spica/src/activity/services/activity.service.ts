@@ -1,11 +1,15 @@
 import {Injectable} from "@angular/core";
 import {ActivityFilter, Activity} from "../interface";
-import {HttpClient, HttpParams} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {map} from "rxjs/operators";
 
 @Injectable()
 export class ActivityService {
   constructor(private http: HttpClient) {}
+
+  private resetTimezoneOffset(date: Date) {
+    return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
+  }
 
   get(filter: ActivityFilter) {
     let params: any = {};
@@ -33,10 +37,10 @@ export class ActivityService {
 
     if (filter.date) {
       if (filter.date.begin) {
-        params.begin = filter.date.begin;
+        params.begin = this.resetTimezoneOffset(new Date(filter.date.begin)).toISOString();
       }
       if (filter.date.end) {
-        params.end = filter.date.end;
+        params.end = this.resetTimezoneOffset(new Date(filter.date.end)).toISOString();
       }
     }
 

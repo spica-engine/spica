@@ -51,9 +51,7 @@
     <input
       matInput
       [ngModel]="selectedFilters.date"
-      (ngModelChange)="
-        selectedFilters.date.begin = $event.begin; selectedFilters.date.end = $event.end
-      "
+      (ngModelChange)="setDate($event.begin, $event.end)"
       placeholder="Select a date range"
       [satDatepicker]="picker"
       [max]="maxDate"
@@ -75,7 +73,7 @@
         </div>
         <mat-list-item *cdkVirtualFor="let item of dataSource">
           <span class="info">
-            Identifier {{ item.identifier }} {{ actions[item.action - 1] }} document
+            Identifier {{ item.identifier | titlecase }} {{ actions[item.action - 1] }} document
             {{ item.resource.documentId }} on {{ item.resource.name }} module.
           </span>
           <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
