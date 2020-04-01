@@ -62,7 +62,6 @@ executors:
     working_directory: ~/spica
     docker:
       - image: circleci/node:11
-   
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
@@ -136,15 +135,33 @@ jobs:
           command: |
             (cd stacks/spica && yarn ng build --prod --progress=false)
             yarn bazel run deploy.replace -- --config=release -- --force
+  release:
+    executor: default-executor
+    steps:
+      - setup_remote_docker
+      - custom_attach_workspace
+      - setup_circleci_bazel_config
+      - run:
+          name: "Authenticate with the registries"
+          command: |
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
+          name: "Publishing artifacts (latest)"
+          command: ./scripts/publish.sh next
 
 workflows:
   version: 2
-  main:
+  default:
     jobs:
       - setup
       - lint:
           requires:
             - setup
+          filters:
+            # Do not run on release branches
+            branches:
+              ignore: /^\d\.\d\.x$/
       - test_api:
           requires:
             - setup
@@ -156,9 +173,18 @@ workflows:
             - setup
       - deploy:
           requires:
-            - setup
-            # - test_api
+            - test_api_flaky
+            - test_api
             - test_spica
           filters:
             branches:
               only: master
+      - release:
+          requires:
+            - test_api_flaky
+            - test_api
+            - test_spica
+          filters:
+            branches:
+              # Run only on branches whose name match 0.0.x pattern
+              only: /^\d\.\d\.x$/

@@ -31,7 +31,7 @@ container_image(
 )
 
 container_push(
-    name = "initcontainer_push",
+    name = "push",
     format = "Docker",
     image = ":initcontainer",
     registry = "index.docker.io",
