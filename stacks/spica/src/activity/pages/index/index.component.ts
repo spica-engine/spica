@@ -1,4 +1,4 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, OnDestroy} from "@angular/core";
 import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
 import {Observable, BehaviorSubject, Subscription, pipe} from "rxjs";
@@ -10,7 +10,7 @@ import {map, mergeMap} from "rxjs/operators";
   templateUrl: "./index.component.html",
   styleUrls: ["./index.component.scss"]
 })
-export class IndexComponent extends DataSource<Activity> implements OnInit {
+export class IndexComponent extends DataSource<Activity> implements OnInit, OnDestroy {
   moduleGroups = [
     {
       name: "Bucket-Data",
@@ -36,17 +36,17 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   actions = ["Insert", "Update", "Delete"];
 
-  documentIds: [];
+  documentIds: string[] = [];
 
   maxDate = new Date();
 
   isPending = false;
 
-  private cachedActivities = new Array<Activity>();
+  private activities: Activity[] = [];
 
   private subscription = new Subscription();
 
-  private dataStream = new BehaviorSubject<(Activity | undefined)[]>(this.cachedActivities);
+  private dataStream = new BehaviorSubject<(Activity)[]>(this.activities);
 
   private lastPage = 0;
 
@@ -56,17 +56,15 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   private defaultLimit = 20;
 
-  connect(collectionViewer: CollectionViewer): Observable<(Activity | undefined)[]> {
+  connect(collectionViewer: CollectionViewer): Observable<(Activity)[]> {
     this.subscription.add(
       collectionViewer.viewChange.subscribe(range => {
-        //it means first time scrollView loaded
         if (!this.pageSize) {
           this.pageIndex = 0;
-          this.pageSize = range.end;
-          this.lastPage = range.end;
+          this.pageSize = this.lastPage = range.end;
+          return;
         }
 
-        //when reach the bottom of the page
         if (range.end >= this.lastPage) {
           this.lastPage = range.end + this.pageSize;
           this.fetchNextPage();
@@ -80,16 +78,16 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     this.subscription.unsubscribe();
   }
 
-  private fetchNextPage(): void {
+  fetchNextPage(): void {
     this.pageIndex++;
-    this.appliedFilters$.next({
-      ...this.selectedFilters,
+    this.filters$.next({
+      ...this.filters,
       limit: this.defaultLimit,
       skip: this.defaultLimit * this.pageIndex
     });
   }
 
-  selectedFilters: ActivityFilter = {
+  filters: ActivityFilter = {
     identifier: undefined,
     action: undefined,
     resource: {
@@ -106,15 +104,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   dataSource: IndexComponent;
 
-  appliedFilters$ = new BehaviorSubject<ActivityFilter>(this.selectedFilters);
-
-  activities$: Observable<Activity[]>;
+  filters$ = new BehaviorSubject<ActivityFilter>(this.filters);
 
   constructor(private activityService: ActivityService) {
     super();
     this.dataSource = this;
+  }
 
-    //push buckets
+  ngOnInit() {
     this.activityService
       .getDocuments("bucket")
       .toPromise()
@@ -124,14 +121,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
         });
       });
 
-    this.appliedFilters$
+    this.filters$
       .pipe(
         mergeMap(filter => {
           this.isPending = true;
           if (filter.skip) {
             return this.activityService
               .get(filter)
-              .pipe(map(activities => this.cachedActivities.concat(activities)))
+              .pipe(map(activities => this.activities.concat(activities)))
               .toPromise();
           } else {
             return this.activityService.get(filter).toPromise();
@@ -141,20 +138,17 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
       .subscribe(
         activities => {
           this.isPending = false;
-          this.cachedActivities = activities;
-          this.dataStream.next(this.cachedActivities);
+          this.activities = activities;
+          this.dataStream.next(this.activities);
         },
         error => {
-          console.log(error);
           this.isPending = false;
         }
       );
   }
 
-  ngOnInit() {}
-
   clearFilters() {
-    this.selectedFilters = {
+    this.filters = {
       identifier: undefined,
       action: undefined,
       resource: {
@@ -172,14 +166,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     this.documentIds = undefined;
     this.pageSize = 0;
 
-    this.appliedFilters$.next(this.selectedFilters);
+    this.filters$.next(this.filters);
   }
 
   applyFilters() {
     this.pageSize = 0;
 
-    this.selectedFilters = {...this.selectedFilters, limit: this.defaultLimit, skip: undefined};
-    this.appliedFilters$.next(this.selectedFilters);
+    this.filters = {...this.filters, limit: this.defaultLimit, skip: undefined};
+    this.filters$.next(this.filters);
   }
 
   showDocuments(moduleName: string) {
@@ -187,22 +181,20 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
     this.activityService
       .getDocuments(moduleName)
       .toPromise()
-      .then(documentIds => (this.documentIds = documentIds))
-      .catch(error => console.log(error));
+      .then(documentIds => (this.documentIds = documentIds));
   }
 
   clearActivities() {
     this.activityService
-      .deleteActivities(this.cachedActivities)
+      .deleteActivities(this.activities)
       .toPromise()
       .then(() => {
-        this.appliedFilters$.next(this.selectedFilters);
-      })
-      .catch(error => console.log(error));
+        this.filters$.next(this.filters);
+      });
   }
 
   setDate(begin: Date, end: Date) {
-    this.selectedFilters.date = {
+    this.filters.date = {
       begin: new Date(begin.setHours(0, 0, 0, 0)),
       end: new Date(end.setHours(23, 59, 59, 999))
     };
@@ -210,6 +202,6 @@ export class IndexComponent extends DataSource<Activity> implements OnInit {
 
   ngOnDestroy() {
     this.dataStream.unsubscribe();
-    this.appliedFilters$.unsubscribe();
+    this.filters$.unsubscribe();
   }
 }

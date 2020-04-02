@@ -19,7 +19,8 @@
       .cdk-virtual-scroll-viewport {
         .mat-list {
           .emptyList {
-            text-align: center;
+            display: flex;
+            justify-content: center;
           }
         }
         .mat-progress-spinner {

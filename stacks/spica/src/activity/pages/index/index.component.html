@@ -16,11 +16,11 @@
   <span>Filters: </span>
   <mat-form-field>
     <mat-label>Identifier</mat-label>
-    <input matInput [(ngModel)]="selectedFilters.identifier" />
+    <input matInput [(ngModel)]="filters.identifier" />
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select action type</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.action" multiple>
+    <mat-select [(ngModel)]="filters.action" multiple>
       <mat-option *ngFor="let action of actions" [value]="action">
         {{ action }}
       </mat-option>
@@ -28,10 +28,7 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select module</mat-label>
-    <mat-select
-      [(ngModel)]="selectedFilters.resource.name"
-      (selectionChange)="showDocuments($event.value)"
-    >
+    <mat-select [(ngModel)]="filters.resource.name" (selectionChange)="showDocuments($event.value)">
       <mat-optgroup *ngFor="let group of moduleGroups" [label]="group.name">
         <mat-option *ngFor="let module of group.modules" [value]="module">
           {{ module }}
@@ -41,7 +38,7 @@
   </mat-form-field>
   <mat-form-field *ngIf="documentIds && documentIds.length">
     <mat-label>Select document id</mat-label>
-    <mat-select [(ngModel)]="selectedFilters.resource.documentId" multiple>
+    <mat-select [(ngModel)]="filters.resource.documentId" multiple>
       <mat-option *ngFor="let documentId of documentIds" [value]="documentId">
         {{ documentId }}
       </mat-option>
@@ -50,7 +47,7 @@
   <mat-form-field>
     <input
       matInput
-      [ngModel]="selectedFilters.date"
+      [ngModel]="filters.date"
       (ngModelChange)="setDate($event.begin, $event.end)"
       placeholder="Select a date range"
       [satDatepicker]="picker"
@@ -68,15 +65,16 @@
   <mat-card-content>
     <cdk-virtual-scroll-viewport itemSize="75" class="example-viewport">
       <mat-list>
-        <div class="emptyList" *ngIf="!cachedActivities.length && !isPending">
-          Couldn't find any activity to show.
-        </div>
-        <mat-list-item *cdkVirtualFor="let item of dataSource">
+        <span class="emptyList" *ngIf="!activities.length && !isPending"
+          >Couldn't find any activity to show.</span
+        >
+        <mat-list-item *cdkVirtualFor="let activity of dataSource">
           <span class="info">
-            Identifier {{ item.identifier | titlecase }} {{ actions[item.action - 1] }} document
-            {{ item.resource.documentId }} on {{ item.resource.name }} module.
+            Identifier {{ activity.identifier | titlecase }}
+            {{ actions[activity.action - 1] }} document {{ activity.resource.documentId }} on
+            {{ activity.resource.name }} module.
           </span>
-          <span class="date">{{ item.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
+          <span class="date">{{ activity.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <mat-divider></mat-divider>
         </mat-list-item>
       </mat-list>

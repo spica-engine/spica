@@ -57,7 +57,7 @@ describe("Activity Resource", () => {
     const resource = createApikeyResource(action, req, {});
     expect(resource).toEqual({
       name: "Apikey",
-      documentId: ["apikey_id"],
+      documentId: ["apikey_id"]
     });
   });
 });
