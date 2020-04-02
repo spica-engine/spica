@@ -20,6 +20,7 @@ import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material/";
+import {CanInteractDirectiveTest} from "@spica-client/passport";
 
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {of, Subject} from "rxjs";
@@ -104,7 +105,12 @@ describe("AddComponent", () => {
           useValue: activatedRoute
         }
       ],
-      declarations: [AddComponent, RequiredTranslate, PropertyLanguageComponent]
+      declarations: [
+        AddComponent,
+        RequiredTranslate,
+        PropertyLanguageComponent,
+        CanInteractDirectiveTest
+      ]
     }).compileComponents();
     fixture = TestBed.createComponent(AddComponent);
     fixture.detectChanges();

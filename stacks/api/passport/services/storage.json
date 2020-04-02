@@ -8,6 +8,7 @@
 		"storage:index",
 		"storage:show",
 		"storage:update",
-		"storage:delete"
+		"storage:delete",
+		"storage:create"
 	]
 }

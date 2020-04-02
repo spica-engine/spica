@@ -25,6 +25,7 @@ import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
+import {CanInteractDirectiveTest} from "@spica-client/passport";
 
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
@@ -123,7 +124,7 @@ describe("Bucket Add Component", () => {
           }
         }
       ],
-      declarations: [BucketAddComponent, PropertyKvPipe]
+      declarations: [BucketAddComponent, PropertyKvPipe, CanInteractDirectiveTest]
     }).compileComponents();
 
     fixture = TestBed.createComponent(BucketAddComponent);

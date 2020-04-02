@@ -22,6 +22,7 @@ import {EditorComponent} from "../../components/editor/editor.component";
 import {FunctionService} from "../../function.service";
 import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
+import {CanInteractDirectiveTest} from "@spica-client/passport";
 
 @Directive({selector: "function-editor[language]"})
 class MockLanguageDirective {
@@ -82,7 +83,8 @@ describe("Function Add", () => {
         EditorComponent,
         InputPlacerComponent,
         EnqueuerPipe,
-        MockLanguageDirective
+        MockLanguageDirective,
+        CanInteractDirectiveTest
       ]
     }).compileComponents();
     fixture = TestBed.createComponent(AddComponent);

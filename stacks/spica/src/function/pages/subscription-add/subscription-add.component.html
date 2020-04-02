@@ -62,7 +62,12 @@
     </form>
   </mat-card-content>
   <mat-card-actions>
-    <button canInteract="subscription:update" mat-button [disabled]="form.invalid" (click)="add()">
+    <button
+      [canInteract]="subscription._id ? 'subscription:update' : 'subscription:create'"
+      mat-button
+      [disabled]="form.invalid"
+      (click)="add()"
+    >
       <mat-icon>sync</mat-icon> Save
     </button>
   </mat-card-actions>

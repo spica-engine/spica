@@ -45,7 +45,7 @@ export class PolicyController {
 
   @UseInterceptors(activity(createPolicyResource))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:policy:create"))
   insertOne(@Body() body: Policy) {
     return this.policy.insertOne(body);
   }
