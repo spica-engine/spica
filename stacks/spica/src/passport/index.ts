@@ -4,4 +4,3 @@ export {IdentityService} from "./services/identity.service";
 export {IdentityGuard} from "./services/identity.guard";
 export {PassportService, IdentifyParams} from "./services/passport.service";
 export {PassportModule} from "./passport.module";
-export {CanInteractDirectiveTest} from "./directives/can-interact.directive";
