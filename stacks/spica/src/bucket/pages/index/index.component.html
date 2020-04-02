@@ -125,7 +125,7 @@
   <button
     *ngIf="!readOnly"
     mat-icon-button
-    canInteract="bucket:data:update"
+    canInteract="bucket:data:create"
     matTooltip="Add new"
     routerLink="add"
   >
@@ -175,7 +175,7 @@
             <button
               mat-icon-button
               [disabled]="readOnly"
-              canInteract="bucket:data:update"
+              canInteract="bucket:data:delete"
               color="warn"
               [matAwareDialog]="{
                 title: 'Attention',

@@ -2,7 +2,7 @@
   <mat-toolbar color="primary">
     <h4 class="mat-h4">
       <mat-icon>layers</mat-icon>
-      <span>{{ policy.name || "Add Policy" }}</span>
+      <span>{{ policy._id ? policy.name : "Add Policy" }}</span>
     </h4>
     <span class="space-between"></span>
   </mat-toolbar>
@@ -94,7 +94,13 @@
         </mat-expansion-panel>
       </mat-accordion>
     </div>
-    <button mat-button color="primary" type="submit" (click)="submitForm()">
+    <button
+      mat-button
+      color="primary"
+      type="submit"
+      [canInteract]="policy._id ? 'passport:policy:update' : 'passport:policy:create'"
+      (click)="submitForm()"
+    >
       Save Policy
     </button>
   </mat-card-content>

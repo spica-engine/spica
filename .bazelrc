@@ -42,7 +42,7 @@ build --define=ENABLE_BUCKET_HOOKS=true
 build --define=ENABLE_ACTIVITY_STREAM=true
 
 
-build:release --workspace_status_command="./scripts/current_version.sh"
+build:release --stamp --workspace_status_command="./scripts/current_version.sh"
 
 
 # Use phyton 2 instead of 3

@@ -305,7 +305,7 @@ export class BucketDataController {
 
   @UseInterceptors(activity(createBucketDataResource))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:create"]))
   async replaceOne(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -326,7 +326,7 @@ export class BucketDataController {
 
   @UseInterceptors(activity(createBucketDataResource))
   @Put(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:update"]))
   async update(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,

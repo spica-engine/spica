@@ -73,7 +73,7 @@ export class StorageController {
 
   @UseInterceptors(activity(createStorageResource))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("storage:update"))
+  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async insertMany(@Body() object: StorageObject[]) {
     const insertData = [];
 

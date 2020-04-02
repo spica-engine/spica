@@ -6,7 +6,7 @@
 	"actions": [
 		"passport:apikey:index",
 		"passport:apikey:show",
-		"passport:apikey:insert",
+		"passport:apikey:create",
 		"passport:apikey:update",
 		"passport:apikey:delete",
 		"passport:apikey:policy"

@@ -29,6 +29,7 @@
 
   <button
     mat-icon-button
+    canInteract="storage:create"
     [disabled]="progress"
     (click)="!progress ? fileSelector?.click() : undefined"
   >
@@ -70,6 +71,7 @@
           <mat-icon>more_vert</mat-icon>
           <mat-menu class="actions-menu" #menu="matMenu" yPosition="above">
             <button
+              canInteract="storage:update"
               *ngIf="storage.content?.type?.startsWith('image/')"
               mat-menu-item
               [routerLink]="storage._id"
@@ -78,6 +80,7 @@
               Edit
             </button>
             <button
+              canInteract="storage:delete"
               mat-menu-item
               color="warn"
               [matAwareDialog]="{

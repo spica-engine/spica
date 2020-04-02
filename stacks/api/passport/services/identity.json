@@ -8,6 +8,7 @@
 		"passport:identity:show",
 		"passport:identity:update",
 		"passport:identity:delete",
-		"passport:identity:policy"
+		"passport:identity:policy",
+		"passport:identity:create"
 	]
 }
