@@ -12,9 +12,9 @@ import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {InputModule} from "@spica-client/common";
 import {MatAwareDialogModule} from "@spica-client/material";
-import {SubscriptionAddComponent} from "./pages/subscription-add/subscription-add.component";
-import {SubscriptionIndexComponent} from "./pages/subscription-index/subscription-index.component";
-import {SubscriptionRoutingModule} from "./subscription-routing.module";
+import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
+import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
+import {WebhookRoutingModule} from "./webhook-routing.module";
 import {PassportModule} from "@spica-client/passport";
 @NgModule({
   imports: [
@@ -32,8 +32,8 @@ import {PassportModule} from "@spica-client/passport";
     MatSelectModule,
     MatInputModule,
     PassportModule.forChild(),
-    SubscriptionRoutingModule
+    WebhookRoutingModule
   ],
-  declarations: [SubscriptionAddComponent, SubscriptionIndexComponent]
+  declarations: [WebhookAddComponent, WebhookIndexComponent]
 })
-export class SubscriptionModule {}
+export class WebhookModule {}

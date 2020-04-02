@@ -1,7 +1,7 @@
 <mat-toolbar color="primary">
   <h4 class="mat-h4">
     <mat-icon>http</mat-icon>
-    <span>{{ subscription._id || "New Subscription" }}</span>
+    <span>{{ webhook._id || "New Webhook" }}</span>
   </h4>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25">
@@ -16,12 +16,12 @@
               name="url"
               placeholder="Url"
               #urlModel="ngModel"
-              [(ngModel)]="subscription.url"
+              [(ngModel)]="webhook.url"
               required
               pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?|^((http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
             />
             <mat-hint>
-              When this subscription triggered, Spica will send a POST request to the URL above.
+              When this webhook triggered, Spica will send a POST request to the URL above.
             </mat-hint>
             <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
             <mat-error *ngIf="urlModel.errors?.required">Url is required.</mat-error>
@@ -35,7 +35,7 @@
             <mat-label>Type</mat-label>
             <mat-select
               name="type"
-              [(ngModel)]="subscription.trigger.type"
+              [(ngModel)]="webhook.trigger.type"
               #typeModel="ngModel"
               required
             >
@@ -52,9 +52,9 @@
 
           <span
             class="trigger-property"
-            *ngFor="let propertyPair of triggers[subscription.trigger.type]?.properties | keyvalue"
+            *ngFor="let propertyPair of triggers[webhook.trigger.type]?.properties | keyvalue"
             [inputPlacer]="propertyPair.value"
-            [(ngModel)]="subscription.trigger.options[propertyPair.key]"
+            [(ngModel)]="webhook.trigger.options[propertyPair.key]"
             [name]="propertyPair.key"
           ></span>
         </mat-list-item>
@@ -63,7 +63,7 @@
   </mat-card-content>
   <mat-card-actions>
     <button
-      [canInteract]="subscription._id ? 'subscription:update' : 'subscription:create'"
+      [canInteract]="webhook._id ? 'webhook:update' : 'webhook:create'"
       mat-button
       [disabled]="form.invalid"
       (click)="add()"

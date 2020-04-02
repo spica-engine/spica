@@ -35,11 +35,11 @@ const routes: Routes = [
 
 const route: Route[] = [
   {
-    id: "subscription",
+    id: "webhook",
     category: RouteCategory.Developer,
     icon: "http",
-    path: "/subscription",
-    display: "Subscription",
+    path: "/webhook",
+    display: "Webhook",
     data: {action: "subscription:index"}
   }
 ];

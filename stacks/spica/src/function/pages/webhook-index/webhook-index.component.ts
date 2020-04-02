@@ -2,43 +2,43 @@ import {Component, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
-import {Subscription} from "../../interface";
-import {SubscriptionService} from "../../subscription.service";
+import {Webhook} from "../../interface";
+import {WebhookService} from "../../webhook.service";
 
 @Component({
-  selector: "subscription-index",
-  templateUrl: "./subscription-index.component.html",
-  styleUrls: ["./subscription-index.component.scss"]
+  selector: "webhook-index",
+  templateUrl: "./webhook-index.component.html",
+  styleUrls: ["./webhook-index.component.scss"]
 })
-export class SubscriptionIndexComponent implements OnInit {
+export class WebhookIndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
-  public $data: Observable<Subscription[]>;
+  public $data: Observable<Webhook[]>;
   refresh: Subject<void> = new Subject<void>();
   displayedColumns = ["_id", "url", "actions"];
 
-  constructor(private ss: SubscriptionService) {}
+  constructor(private webHookService: WebhookService) {}
 
   ngOnInit() {
     this.$data = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
-        this.ss.getAll(
+        this.webHookService.getAll(
           this.paginator.pageSize || 12,
           this.paginator.pageSize * this.paginator.pageIndex
         )
       ),
-      map(subscriptions => {
+      map(webhooks => {
         this.paginator.length = 0;
-        if (subscriptions.meta && subscriptions.meta.total) {
-          this.paginator.length = subscriptions.meta.total;
+        if (webhooks.meta && webhooks.meta.total) {
+          this.paginator.length = webhooks.meta.total;
         }
-        return subscriptions.data;
+        return webhooks.data;
       })
     );
   }
 
   delete(id: string) {
-    this.ss
+    this.webHookService
       .delete(id)
       .toPromise()
       .then(() => this.refresh.next());

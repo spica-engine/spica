@@ -115,13 +115,13 @@ export interface Log {
   created_at: string;
 }
 
-export interface Subscription {
+export interface Webhook {
   _id?: string;
   trigger: TriggerDescription;
   url: string;
 }
 
-export function emptySubscription(): Subscription {
+export function emptyWebhook(): Webhook {
   return {trigger: {type: undefined, options: {}}, url: undefined};
 }
 
