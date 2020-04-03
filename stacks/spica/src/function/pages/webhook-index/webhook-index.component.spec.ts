@@ -74,7 +74,7 @@ describe("Webhook Index", () => {
     expect(url.nativeElement.textContent).toBe("test_url");
   });
 
-  it("should navigate to the next page", async () => {
+  fit("should navigate to the next page", async () => {
     component["paginator"].nextPage();
 
     fixture.detectChanges();
@@ -84,6 +84,12 @@ describe("Webhook Index", () => {
 
     expect(getAllSpy).toHaveBeenCalledTimes(2);
     expect(getAllSpy.calls.argsFor(1)).toEqual([10, 10]);
+
+    const id = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(1)"));
+    const url = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(2)"));
+
+    expect(id.nativeElement.textContent).toBe("10");
+    expect(url.nativeElement.textContent).toBe("test_url");
   });
 
   it("should delete webhook", async () => {
