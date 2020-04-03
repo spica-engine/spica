@@ -2,7 +2,6 @@ import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
 import {filter, switchMap} from "rxjs/operators";
-import {FunctionService} from "../../function.service";
 import {emptyWebhook, Webhook, Trigger} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 
@@ -16,30 +15,31 @@ export class WebhookAddComponent implements OnInit {
   public webhook: Webhook = emptyWebhook();
 
   constructor(
-    private webHookService: WebhookService,
-    private functionService: FunctionService,
+    private webhookService: WebhookService,
     private activatedRoute: ActivatedRoute,
     private router: Router
-  ) {
-    //this.triggers = this.functionService.getTriggers("webhook");
-  }
+  ) {}
 
   ngOnInit() {
+    this.triggers = this.webhookService.getTriggers();
+
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
-        switchMap(params => this.webHookService.get(params.id))
+        switchMap(params => this.webhookService.get(params.id))
       )
       .subscribe(data => {
         this.webhook = {...emptyWebhook(), ...data};
       });
   }
 
-  add() {
-    this.webHookService
-      .add(this.webhook)
+  save() {
+    (this.webhook._id
+      ? this.webhookService.update(this.webhook)
+      : this.webhookService.add(this.webhook)
+    )
       .toPromise()
-      .then(data => {
+      .then(() => {
         this.router.navigate(["webhook"]);
       });
   }

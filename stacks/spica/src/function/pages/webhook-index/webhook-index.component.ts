@@ -17,12 +17,12 @@ export class WebhookIndexComponent implements OnInit {
   refresh: Subject<void> = new Subject<void>();
   displayedColumns = ["_id", "url", "actions"];
 
-  constructor(private webHookService: WebhookService) {}
+  constructor(private webhookService: WebhookService) {}
 
   ngOnInit() {
     this.$data = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
-        this.webHookService.getAll(
+        this.webhookService.getAll(
           this.paginator.pageSize || 12,
           this.paginator.pageSize * this.paginator.pageIndex
         )
@@ -38,7 +38,7 @@ export class WebhookIndexComponent implements OnInit {
   }
 
   delete(id: string) {
-    this.webHookService
+    this.webhookService
       .delete(id)
       .toPromise()
       .then(() => this.refresh.next());
