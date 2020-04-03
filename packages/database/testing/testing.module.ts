@@ -1,6 +1,5 @@
 import {DynamicModule, Global, Module, OnModuleDestroy, Optional} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
-import * as fs from "fs";
 import {MongoMemoryReplSet, MongoMemoryServer} from "mongodb-memory-server-core";
 import * as which from "which";
 
@@ -31,7 +30,9 @@ export class DatabaseTestingModule implements OnModuleDestroy {
         {
           provide: MongoClient,
           useFactory: async (server: MongoMemoryServer) =>
-            MongoClient.connect(await server.getConnectionString(), {}),
+            MongoClient.connect(await server.getConnectionString(), {
+              useNewUrlParser: true
+            }),
           inject: [MongoMemoryServer]
         },
         {
@@ -69,7 +70,8 @@ export class DatabaseTestingModule implements OnModuleDestroy {
             await server.waitUntilRunning();
             const connection = await MongoClient.connect(await server.getConnectionString(), {
               replicaSet: server.opts.replSet.name,
-              poolSize: Number.MAX_SAFE_INTEGER
+              poolSize: Number.MAX_SAFE_INTEGER,
+              useNewUrlParser: true
             });
 
             const retry = <T>(fn: () => Promise<T>, ms) =>

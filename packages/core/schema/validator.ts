@@ -1,7 +1,8 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import * as ajv from "ajv";
 import * as request from "request-promise-native";
-import {from} from "rxjs";
+import {from, isObservable} from "rxjs";
+import {skip, take} from "rxjs/operators";
 import {
   Default,
   Format,
@@ -122,7 +123,18 @@ export class Validator {
     for (const interceptor of this._resolvers) {
       const result = interceptor(uri);
       if (!!result) {
-        return from(result).toPromise();
+        if (isObservable<Object>(result)) {
+          result.pipe(skip(1)).subscribe({
+            next: schema => {
+              this._ajv.removeSchema(uri);
+              this._ajv.addSchema(schema);
+            },
+            complete: () => this.removeSchema(uri)
+          });
+          return result.pipe(take(1)).toPromise();
+        } else {
+          return from(result).toPromise();
+        }
       }
     }
     return request({uri, json: true}).catch(() =>
