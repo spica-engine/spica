@@ -74,7 +74,7 @@ describe("Webhook Index", () => {
     expect(url.nativeElement.textContent).toBe("test_url");
   });
 
-  fit("should navigate to the next page", async () => {
+  it("should navigate to the next page", async () => {
     component["paginator"].nextPage();
 
     fixture.detectChanges();
