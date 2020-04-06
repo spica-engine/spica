@@ -7,7 +7,7 @@
   <button mat-icon-button (click)="applyFilters()">
     <mat-icon>refresh</mat-icon>
   </button>
-  <button mat-icon-button (click)="clearActivities()">
+  <button mat-icon-button canInteract="activity:delete" (click)="clearActivities()">
     <mat-icon>clear_all</mat-icon>
   </button>
 </mat-toolbar>
@@ -65,9 +65,9 @@
   <mat-card-content>
     <cdk-virtual-scroll-viewport itemSize="75" class="example-viewport">
       <mat-list>
-        <span class="emptyList" *ngIf="!activities.length && !isPending"
-          >Couldn't find any activity to show.</span
-        >
+        <span class="emptyList" *ngIf="!activities.length && !isPending">
+          Couldn't find any activity to show.
+        </span>
         <mat-list-item *cdkVirtualFor="let activity of dataSource">
           <span class="info">
             Identifier {{ activity.identifier | titlecase }}

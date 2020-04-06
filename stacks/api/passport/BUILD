@@ -16,7 +16,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/preference/service",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
@@ -71,7 +71,7 @@ ts_library(
         "**/activity.resource.spec.ts",
     ]),
     deps = [
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/passport",
         "@npm//@types/jasmine",
     ],

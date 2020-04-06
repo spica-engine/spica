@@ -1,4 +1,3 @@
-import {Schema} from "@spica-server/core/schema";
 import {
   BadRequestException,
   Body,
@@ -10,20 +9,20 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
   Req,
+  UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {PassportService} from "../passport.service";
-import {Identity} from "./interface";
-import {IdentityService} from "./identity.service";
+import {activity} from "@spica-server/activity/services";
 import {NUMBER} from "@spica-server/core";
+import {Schema} from "@spica-server/core/schema";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {AuthGuard} from "../auth.guard";
+import {PassportService} from "../passport.service";
 import {ActionGuard, PolicyService} from "../policy";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {activity} from "@spica-server/activity";
-
 import {createIdentityResource} from "./activity.resource";
+import {IdentityService} from "./identity.service";
+import {Identity} from "./interface";
 
 @Controller("passport/identity")
 export class IdentityController {

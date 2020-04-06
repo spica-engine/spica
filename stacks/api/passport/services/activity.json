@@ -1,0 +1,10 @@
+{
+	"$schema": "http://spica.internal/passport/service",
+	"$id": "http://spica.internal/activity",
+	"$resource": "activity",
+	"title": "Activity",
+	"actions": [
+		"passport:apikey:index",
+		"passport:apikey:delete"
+	]
+}

@@ -23,7 +23,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",
@@ -227,7 +227,7 @@ ts_library(
         "activity.resource.spec.ts",
     ],
     deps = [
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/bucket",
         "@npm//@types/jasmine",
     ],
