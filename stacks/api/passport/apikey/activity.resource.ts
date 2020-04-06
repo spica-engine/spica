@@ -1,7 +1,7 @@
 import {Resource, Action} from "@spica-server/activity";
 
 export function createApikeyResource(action: Action, req: any, res: any): Resource {
-  let name = "APIKEY";
+  let name = "Apikey";
 
   let documentId: string[] = [];
   switch (action) {
@@ -17,16 +17,4 @@ export function createApikeyResource(action: Action, req: any, res: any): Resour
   }
 
   return {name, documentId};
-}
-
-export function createApikeyPolicyResource(action: Action, req: any, res: any): Resource {
-  let name = "APIKEY";
-  let documentId = [req.params.id];
-
-  let subResource: Resource = {
-    name: "POLICY",
-    documentId: req.body
-  };
-
-  return {name, documentId, subResource};
 }

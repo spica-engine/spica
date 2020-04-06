@@ -15,7 +15,13 @@ import {
 import {FormsModule, NgModel} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
-import {CanInteractDirectiveTest} from "@spica-client/passport";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+}
 
 describe("Policy Add Component", () => {
   let fixture: ComponentFixture<PolicyAddComponent>;

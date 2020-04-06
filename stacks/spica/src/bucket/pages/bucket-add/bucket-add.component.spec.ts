@@ -25,7 +25,6 @@ import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
-import {CanInteractDirectiveTest} from "@spica-client/passport";
 
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
@@ -33,6 +32,13 @@ import {of} from "rxjs";
 import {Bucket} from "src/bucket/interfaces/bucket";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+}
 
 describe("Bucket Add Component", () => {
   let fixture: ComponentFixture<BucketAddComponent>;

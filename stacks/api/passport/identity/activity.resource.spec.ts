@@ -1,5 +1,5 @@
-import {Action} from "@spica-server/activity";
-import {createIdentityResource, createIdentityPolicyResource} from "./activity.resource";
+import {Action} from "@spica-server/activity/src";
+import {createIdentityResource} from "./activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
@@ -10,7 +10,7 @@ describe("Activity Resource", () => {
 
     const resource = createIdentityResource(action, {}, res);
     expect(resource).toEqual({
-      name: "IDENTITY",
+      name: "Identity",
       documentId: ["identity_id"]
     });
   });
@@ -25,7 +25,7 @@ describe("Activity Resource", () => {
 
     const resource = createIdentityResource(action, req, {});
     expect(resource).toEqual({
-      name: "IDENTITY",
+      name: "Identity",
       documentId: ["identity_id"]
     });
   });
@@ -40,7 +40,7 @@ describe("Activity Resource", () => {
 
     const resource = createIdentityResource(action, req, {});
     expect(resource).toEqual({
-      name: "IDENTITY",
+      name: "Identity",
       documentId: ["identity_id"]
     });
   });
@@ -54,14 +54,10 @@ describe("Activity Resource", () => {
     };
     const action = Action.PUT;
 
-    const resource = createIdentityPolicyResource(action, req, {});
+    const resource = createIdentityResource(action, req, {});
     expect(resource).toEqual({
-      name: "IDENTITY",
-      documentId: ["identity_id"],
-      subResource: {
-        name: "POLICY",
-        documentId: ["policy1", "policy2"]
-      }
+      name: "Identity",
+      documentId: ["identity_id"]
     });
   });
 });

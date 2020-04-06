@@ -1,7 +1,7 @@
 import {Resource, Action} from "@spica-server/activity";
 
 export function createPolicyResource(action: Action, req: any, res: any): Resource {
-  let name = "POLICY";
+  let name = "Policy";
 
   let documentId: string[] = [];
   switch (action) {

@@ -1,4 +1,4 @@
-import {DebugElement} from "@angular/core";
+import {DebugElement, Directive, HostBinding, Input} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
 import {
@@ -20,7 +20,6 @@ import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material/";
-import {CanInteractDirectiveTest} from "@spica-client/passport";
 
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {of, Subject} from "rxjs";
@@ -33,6 +32,12 @@ import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
 import {RequiredTranslate} from "../../validators";
 import {AddComponent} from "./add.component";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+}
 
 describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;
