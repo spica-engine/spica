@@ -50,6 +50,8 @@ export class AddComponent implements OnInit, OnDestroy {
   private dispose = new EventEmitter();
   editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
 
+  isIndexPending = false;
+
   index: string;
   $indexSave: Observable<Date | "inprogress">;
 
@@ -92,11 +94,18 @@ export class AddComponent implements OnInit, OnDestroy {
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.getDependencies();
+          this.isIndexPending = true;
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
         takeUntil(this.dispose)
       )
-      .subscribe(response => (this.index = response.index));
+      .subscribe(
+        response => {
+          this.isIndexPending = false;
+          this.index = response.index;
+        },
+        error => (this.isIndexPending = false)
+      );
   }
 
   ngOnDestroy() {
@@ -143,6 +152,8 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   updateIndex() {
+    if (this.isIndexPending) return;
+
     if (this.function._id) {
       this.$markers.next([]);
       this.$indexSave = this.functionService.updateIndex(this.function._id, this.index).pipe(
@@ -175,6 +186,8 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   save() {
+    if (this.isIndexPending) return;
+
     this.serverError = undefined;
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
