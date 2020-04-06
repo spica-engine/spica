@@ -18,7 +18,13 @@ import {PreferencesService} from "../../../../packages/core/preferences/preferen
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {IdentityAddComponent} from "./identity-add.component";
-import {CanInteractDirectiveTest} from "@spica-client/passport";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+}
 
 describe("Identity Add Component", () => {
   let fixture: ComponentFixture<IdentityAddComponent>;

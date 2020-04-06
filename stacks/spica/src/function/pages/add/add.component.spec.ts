@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {Directive, Input} from "@angular/core";
+import {Directive, Input, HostBinding} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
@@ -22,7 +22,12 @@ import {EditorComponent} from "../../components/editor/editor.component";
 import {FunctionService} from "../../function.service";
 import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
-import {CanInteractDirectiveTest} from "@spica-client/passport";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+}
 
 @Directive({selector: "function-editor[language]"})
 class MockLanguageDirective {
