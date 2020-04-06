@@ -11,7 +11,7 @@ describe("Activity Resource", () => {
 
       const resource = createBucketResource(action, {}, res);
       expect(resource).toEqual({
-        name: "BUCKET",
+        name: "Bucket",
         documentId: ["bucket_id"]
       });
     });
@@ -26,7 +26,7 @@ describe("Activity Resource", () => {
 
       const resource = createBucketResource(action, req, {});
       expect(resource).toEqual({
-        name: "BUCKET",
+        name: "Bucket",
         documentId: ["bucket_id"]
       });
     });
@@ -41,7 +41,7 @@ describe("Activity Resource", () => {
 
       const resource = createBucketResource(action, req, {});
       expect(resource).toEqual({
-        name: "BUCKET",
+        name: "Bucket",
         documentId: ["bucket_id"]
       });
     });
@@ -60,12 +60,8 @@ describe("Activity Resource", () => {
 
       const resource = createBucketDataResource(action, req, res);
       expect(resource).toEqual({
-        name: "BUCKET",
-        documentId: ["bucket_id"],
-        subResource: {
-          name: "BUCKET-DATA",
-          documentId: ["bucket_data_id"]
-        }
+        name: "Bucket_bucket_id",
+        documentId: ["bucket_data_id"]
       });
     });
 
@@ -80,12 +76,8 @@ describe("Activity Resource", () => {
       const action = Action.PUT;
       const resource = createBucketDataResource(action, req, {});
       expect(resource).toEqual({
-        name: "BUCKET",
-        documentId: ["bucket_id"],
-        subResource: {
-          name: "BUCKET-DATA",
-          documentId: ["bucket_data_id"]
-        }
+        name: "Bucket_bucket_id",
+        documentId: ["bucket_data_id"]
       });
     });
 
@@ -100,12 +92,8 @@ describe("Activity Resource", () => {
 
       const resource = createBucketDataResource(action, req, {});
       expect(resource).toEqual({
-        name: "BUCKET",
-        documentId: ["bucket_id"],
-        subResource: {
-          name: "BUCKET-DATA",
-          documentId: ["bucket_data_id"]
-        }
+        name: "Bucket_bucket_id",
+        documentId: ["bucket_data_id"]
       });
     });
 
@@ -120,12 +108,8 @@ describe("Activity Resource", () => {
 
       const resource = createBucketDataResource(action, req, {});
       expect(resource).toEqual({
-        name: "BUCKET",
-        documentId: ["bucket_id"],
-        subResource: {
-          name: "BUCKET-DATA",
-          documentId: ["bucket_data_1", "bucket_data_2"]
-        }
+        name: "Bucket_bucket_id",
+        documentId: ["bucket_data_1", "bucket_data_2"]
       });
     });
   });

@@ -1,6 +1,7 @@
 import {JSONSchema7} from "json-schema";
-import {Validator} from "./validator";
+import {BehaviorSubject} from "rxjs";
 import {Format} from "./interface";
+import {Validator} from "./validator";
 
 describe("schema validator", () => {
   let validator: Validator;
@@ -62,6 +63,40 @@ describe("schema validator", () => {
       expect(resolver.calls.first().args[0]).toBe("unknown-schema");
       done();
     });
+  });
+
+  it("should resolve referenced schema and validate and invalidate subsequent schemas", async () => {
+    let schema = new BehaviorSubject({
+      $id: "http://spica.internal/schema",
+      type: "object",
+      properties: {
+        prop: {
+          type: "string"
+        }
+      }
+    });
+    const validatedSchema = {$id: "testing", $ref: "http://spica.internal/schema"};
+    const resolver = jasmine.createSpy().and.callFake(() => schema);
+    validator.registerUriResolver(resolver);
+
+    expect(await validator.validate(validatedSchema, {prop: ""})).toBe(true);
+
+    schema.next({
+      $id: "http://spica.internal/schema",
+      type: "object",
+      properties: {
+        prop: {
+          type: "number"
+        }
+      }
+    });
+
+    validator.removeSchema("testing");
+
+    await expectAsync(
+      validator.validate(validatedSchema, {prop: "notatextanymore"})
+    ).toBeRejected();
+    await expectAsync(validator.validate(validatedSchema, {prop: 1})).toBeResolvedTo(true);
   });
 
   it("should resolve referenced schema and validate", async () => {

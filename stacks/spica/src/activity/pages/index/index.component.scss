@@ -1,0 +1,52 @@
+:host {
+  mat-toolbar {
+    min-height: 150px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h4 > * {
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+    .space-between {
+      flex: 1 1 auto;
+    }
+  }
+  .mat-card {
+    margin: -50px auto;
+    width: 95%;
+
+    .mat-card-content {
+      .cdk-virtual-scroll-viewport {
+        .mat-list {
+          .emptyList {
+            display: flex;
+            justify-content: center;
+          }
+        }
+        .mat-progress-spinner {
+          margin: 15px auto;
+        }
+      }
+    }
+
+    .mat-form-field {
+      margin: 5px 10px;
+    }
+    .example-viewport {
+      height: 600px;
+      width: 100%;
+    }
+
+    .mat-list-item {
+      height: 75px;
+      width: 100%;
+      span.info {
+        width: 85%;
+      }
+      span.date {
+        width: 15%;
+        text-align: end;
+      }
+    }
+  }
+}
