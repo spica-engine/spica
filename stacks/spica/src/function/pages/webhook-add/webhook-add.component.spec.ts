@@ -15,6 +15,7 @@ import {MatCardModule} from "@angular/material/card";
 import {Directive, HostBinding, Input} from "@angular/core";
 import {MatInputModule} from "@angular/material/input";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {By} from "@angular/platform-browser";
 
@@ -45,6 +46,7 @@ describe("Webhook", () => {
           MatSelectModule,
           MatCardModule,
           MatInputModule,
+          MatSlideToggleModule,
           NoopAnimationsModule,
           HttpClientTestingModule
         ],
@@ -67,7 +69,7 @@ describe("Webhook", () => {
       component = fixture.componentInstance;
 
       getSpy = spyOn(component["webhookService"], "get").and.callThrough();
-      getTriggersSpy = spyOn(component["webhookService"], "getTriggers").and.callThrough();
+      getTriggersSpy = spyOn(component["webhookService"], "getCollections").and.callThrough();
       addSpy = spyOn(component["webhookService"], "add").and.callThrough();
       navigateSpy = spyOn(component["router"], "navigate");
 
@@ -76,36 +78,48 @@ describe("Webhook", () => {
 
       fixture.detectChanges();
     });
-    it("should set webhook and trigger", async () => {
+    it("should set webhook and trigger", fakeAsync(() => {
       expect(getSpy).toHaveBeenCalledTimes(0);
       expect(getTriggersSpy).toHaveBeenCalledTimes(1);
 
-      expect(component.webhook).toEqual({trigger: {type: undefined, options: {}}, url: undefined});
-
-      const triggers = await component.triggers.toPromise();
-
-      expect(triggers).toEqual({
-        handler: "test_handler",
-        options: {},
-        type: undefined,
-        active: true
+      expect(component.webhook).toEqual({
+        url: undefined,
+        trigger: {active: true, name: "database", options: {collection: undefined, type: undefined}}
       });
-    });
+
+      tick(1);
+
+      expect(component.trigger).toEqual({
+        collections: ["identity", "bucket"],
+        types: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+      });
+    }));
 
     it("should enable save button when form fields are valid", async () => {
       const addButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
       const urlInput = fixture.debugElement
         .query(By.css("mat-list mat-list-item:nth-of-type(1) input"))
         .injector.get(NgModel);
-      const triggerSelection = fixture.debugElement
-        .query(By.css("mat-list mat-list-item:nth-of-type(2) mat-select"))
+
+      const collectionSelection = fixture.debugElement
+        .query(
+          By.css("mat-list mat-list-item:nth-of-type(2) mat-form-field:nth-of-type(1) mat-select")
+        )
+        .injector.get(NgModel);
+
+      const typeSelection = fixture.debugElement
+        .query(
+          By.css("mat-list mat-list-item:nth-of-type(2)  mat-form-field:nth-of-type(2) mat-select")
+        )
         .injector.get(NgModel);
 
       expect(addButton.nativeElement.disabled).toEqual(true);
 
-      urlInput.control.setValue("http://www.asdqwe.com");
+      urlInput.control.setValue("http://www.test.com");
 
-      triggerSelection.control.setValue("test_trigger");
+      collectionSelection.control.setValue("identity");
+
+      typeSelection.control.setValue("INSERT");
 
       fixture.detectChanges();
 
@@ -114,8 +128,8 @@ describe("Webhook", () => {
 
     it("should insert webhook and navigate to the webhook-index page", fakeAsync(() => {
       component.webhook = {
-        trigger: {options: {}, active: true, type: "test_type"},
-        url: "test_url"
+        url: "http://www.test.com",
+        trigger: {active: true, name: "database", options: {collection: "bucket", type: "DELETE"}}
       };
 
       component.save();
@@ -124,8 +138,8 @@ describe("Webhook", () => {
 
       expect(addSpy).toHaveBeenCalledTimes(1);
       expect(addSpy).toHaveBeenCalledWith({
-        trigger: {options: {}, active: true, type: "test_type"},
-        url: "test_url"
+        url: "http://www.test.com",
+        trigger: {active: true, name: "database", options: {collection: "bucket", type: "DELETE"}}
       });
 
       expect(navigateSpy).toHaveBeenCalledTimes(1);
@@ -153,6 +167,7 @@ describe("Webhook", () => {
           MatSelectModule,
           MatCardModule,
           MatInputModule,
+          MatSlideToggleModule,
           NoopAnimationsModule,
           HttpClientTestingModule
         ],
@@ -177,13 +192,13 @@ describe("Webhook", () => {
       component = fixture.componentInstance;
 
       getSpy = spyOn(component["webhookService"], "get").and.callThrough();
-      getTriggersSpy = spyOn(component["webhookService"], "getTriggers").and.callThrough();
+      getTriggersSpy = spyOn(component["webhookService"], "getCollections").and.callThrough();
       updateSpy = spyOn(component["webhookService"], "update").and.callThrough();
       navigateSpy = spyOn(component["router"], "navigate");
 
       await component["webhookService"].add({
-        trigger: {type: "test_type", active: true, options: {}},
-        url: "test_url"
+        url: "http://www.test.com",
+        trigger: {active: true, name: "database", options: {collection: "bucket", type: "UPDATE"}}
       });
 
       fixture.detectChanges();
@@ -192,27 +207,25 @@ describe("Webhook", () => {
       fixture.detectChanges();
     });
 
-    it("should set webhook", async () => {
+    it("should set webhook", fakeAsync(() => {
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("0");
 
       expect(getTriggersSpy).toHaveBeenCalledTimes(1);
 
-      const triggers = await component.triggers.toPromise();
+      tick(1);
 
-      expect(triggers).toEqual({
-        handler: "test_handler",
-        options: {},
-        type: undefined,
-        active: true
+      expect(component.trigger).toEqual({
+        collections: ["identity", "bucket"],
+        types: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
       });
 
       expect(component.webhook).toEqual({
         _id: "0",
-        trigger: {type: "test_type", active: true, options: {}},
-        url: "test_url"
+        url: "http://www.test.com",
+        trigger: {active: true, name: "database", options: {collection: "bucket", type: "UPDATE"}}
       });
-    });
+    }));
 
     it("should update webhook then navigate to the webhook-index page", fakeAsync(() => {
       component.save();
@@ -222,8 +235,8 @@ describe("Webhook", () => {
       expect(updateSpy).toHaveBeenCalledTimes(1);
       expect(updateSpy).toHaveBeenCalledWith({
         _id: "0",
-        trigger: {options: {}, active: true, type: "test_type"},
-        url: "test_url"
+        url: "http://www.test.com",
+        trigger: {active: true, name: "database", options: {collection: "bucket", type: "UPDATE"}}
       });
 
       expect(navigateSpy).toHaveBeenCalledTimes(1);

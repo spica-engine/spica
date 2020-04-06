@@ -24,31 +24,28 @@ export class WebhookService {
   }
 
   update(payload: Webhook): Observable<Webhook> {
-    return this.http.put<Webhook>(`api:/webhook`, payload);
+    const path = `api:/webhook/${payload._id}`;
+    delete payload._id;
+    return this.http.put<Webhook>(path, payload);
   }
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`api:/webhook/${id}`);
   }
 
-  getTriggers(): Observable<Trigger> {
-    return this.http.get<Trigger>(`api:/function/trigger`);
+  getCollections(): Observable<string[]> {
+    return this.http.get<string[]>(`api:/webhook/collections`);
   }
 }
 
 export class MockWebkhookService extends WebhookService {
   webhooks: Webhook[];
+  collections: string[];
 
-  trigger: Trigger;
   constructor() {
     super(undefined);
     this.webhooks = [];
-    this.trigger = {
-      handler: "test_handler",
-      options: {},
-      type: undefined,
-      active: true
-    };
+    this.collections = ["identity", "bucket"];
   }
 
   get(id: string): Observable<Webhook> {
@@ -84,7 +81,7 @@ export class MockWebkhookService extends WebhookService {
     return of();
   }
 
-  getTriggers(): Observable<Trigger> {
-    return of(this.trigger);
+  getCollections(): Observable<string[]> {
+    return of(this.collections);
   }
 }

@@ -117,12 +117,24 @@ export interface Log {
 
 export interface Webhook {
   _id?: string;
-  trigger: TriggerDescription;
   url: string;
+  trigger: WebhookTrigger;
+}
+
+export interface WebhookTrigger {
+  name: string;
+  active: boolean;
+  options: {
+    collection: string;
+    type: "INSERT" | "UPDATE" | "REPLACE" | "DELETE";
+  };
 }
 
 export function emptyWebhook(): Webhook {
-  return {trigger: {type: undefined, options: {}}, url: undefined};
+  return {
+    url: undefined,
+    trigger: {active: true, name: "database", options: {collection: undefined, type: undefined}}
+  };
 }
 
 export interface Enqueuer {

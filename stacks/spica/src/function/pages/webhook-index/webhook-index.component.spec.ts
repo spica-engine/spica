@@ -57,7 +57,11 @@ describe("Webhook Index", () => {
   function addWebhooks(count: number) {
     for (let index = 0; index < count; index++) {
       component["webhookService"].add({
-        trigger: {type: "test_type", active: true, options: {}},
+        trigger: {
+          name: "database",
+          active: true,
+          options: {collection: "test_collection", type: "INSERT"}
+        },
         url: "test_url"
       });
     }

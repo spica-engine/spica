@@ -4,7 +4,7 @@
     <span>Webhooks</span>
   </h4>
   <span class="space-between"></span>
-  <button mat-icon-button>
+  <button mat-icon-button (click)="refresh.next()">
     <mat-icon>refresh</mat-icon>
   </button>
   <button canInteract="webhook:create" mat-icon-button routerLink="add">

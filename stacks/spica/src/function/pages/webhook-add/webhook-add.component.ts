@@ -1,8 +1,8 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, EventEmitter, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable} from "rxjs";
-import {filter, switchMap} from "rxjs/operators";
-import {emptyWebhook, Webhook, Trigger} from "../../interface";
+import {filter, switchMap, map, take, takeUntil} from "rxjs/operators";
+import {emptyWebhook, Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 
 @Component({
@@ -10,9 +10,13 @@ import {WebhookService} from "../../webhook.service";
   templateUrl: "./webhook-add.component.html",
   styleUrls: ["./webhook-add.component.scss"]
 })
-export class WebhookAddComponent implements OnInit {
-  public triggers: Observable<Trigger>;
+export class WebhookAddComponent implements OnInit, OnDestroy {
   public webhook: Webhook = emptyWebhook();
+  private dispose = new EventEmitter();
+  trigger = {
+    collections: [],
+    types: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
+  };
 
   constructor(
     private webhookService: WebhookService,
@@ -21,16 +25,18 @@ export class WebhookAddComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.triggers = this.webhookService.getTriggers();
+    this.webhookService
+      .getCollections()
+      .toPromise()
+      .then(collections => (this.trigger.collections = collections));
 
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
-        switchMap(params => this.webhookService.get(params.id))
+        switchMap(params => this.webhookService.get(params.id)),
+        takeUntil(this.dispose)
       )
-      .subscribe(data => {
-        this.webhook = {...emptyWebhook(), ...data};
-      });
+      .subscribe(data => (this.webhook = data));
   }
 
   save() {
@@ -42,5 +48,9 @@ export class WebhookAddComponent implements OnInit {
       .then(() => {
         this.router.navigate(["webhook"]);
       });
+  }
+
+  ngOnDestroy() {
+    this.dispose.next();
   }
 }
