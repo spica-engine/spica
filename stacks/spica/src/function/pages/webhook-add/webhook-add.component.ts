@@ -1,7 +1,6 @@
 import {Component, OnInit, EventEmitter, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable} from "rxjs";
-import {filter, switchMap, map, take, takeUntil} from "rxjs/operators";
+import {filter, switchMap, takeUntil} from "rxjs/operators";
 import {emptyWebhook, Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 

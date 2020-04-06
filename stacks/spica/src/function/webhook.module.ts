@@ -16,9 +16,7 @@ import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
 import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
 import {WebhookRoutingModule} from "./webhook-routing.module";
 import {PassportModule} from "@spica-client/passport";
-import {MatSlideToggleModule} from '@angular/material/slide-toggle';
-
-
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 
 @NgModule({
   imports: [
