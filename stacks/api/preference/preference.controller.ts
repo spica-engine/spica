@@ -1,8 +1,8 @@
-import {activity} from "@spica-server/activity";
-import {createPreferenceResource} from "./activity.resource";
 import {Body, Controller, Get, Param, Put, UseGuards, UseInterceptors} from "@nestjs/common";
-import {Preference, PreferenceService} from "./service";
+import {activity} from "@spica-server/activity/services";
 import {AuthGuard} from "@spica-server/passport";
+import {createPreferenceResource} from "./activity.resource";
+import {Preference, PreferenceService} from "./service";
 
 @Controller("preference")
 export class PreferenceController {

@@ -2,19 +2,20 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Headers,
   InternalServerErrorException,
   NotFoundException,
+  Optional,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
-  ForbiddenException,
-  Optional,
-  Put,
   UseInterceptors
 } from "@nestjs/common";
+import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
@@ -22,9 +23,8 @@ import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
-import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {activity} from "@spica-server/activity";
 import {createBucketDataResource} from "./activity.resource";
+import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {

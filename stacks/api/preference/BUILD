@@ -12,7 +12,7 @@ ts_library(
     module_name = "@spica-server/preference",
     deps = [
         "//packages/database",
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/passport",
         "//stacks/api/preference/service",
         "@npm//@nestjs/common",
@@ -59,7 +59,7 @@ ts_library(
         "activity.resource.spec.ts",
     ],
     deps = [
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/preference",
         "@npm//@types/jasmine",
     ],

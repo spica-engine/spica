@@ -1,4 +1,4 @@
-import {Resource, Action} from "@spica-server/activity";
+import {Resource, Action} from "@spica-server/activity/services";
 
 export function createApikeyResource(action: Action, req: any, res: any): Resource {
   let name = "Apikey";
