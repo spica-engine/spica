@@ -7,6 +7,7 @@ ts_library(
     srcs = [
         "index.ts",
         "testing.module.ts",
+        "watch-shim.ts",
     ],
     module_name = "@spica-server/database/testing",
     deps = [

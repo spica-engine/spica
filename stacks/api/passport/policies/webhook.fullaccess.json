@@ -1,0 +1,14 @@
+{
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "WebhookFullAccess",
+  "name": "Webhook Full Access",
+  "description": "Full acess to webhook service",
+  "statement": [
+    {
+      "effect": "allow",
+      "action": "webhook:*",
+      "resource": "*",
+      "service": "webhook"
+    }
+  ]
+}
