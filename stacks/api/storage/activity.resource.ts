@@ -1,7 +1,7 @@
 import {Resource, Action} from "@spica-server/activity";
 
 export function createStorageResource(action: Action, req: any, res: any): Resource {
-  let name = "STORAGE";
+  let name = "Storage";
 
   let documentId: string[] = [];
   switch (action) {

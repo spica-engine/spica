@@ -12,7 +12,7 @@ describe("Activity Resource", () => {
 
     const resource = createPreferenceResource(action, req, {});
     expect(resource).toEqual({
-      name: "PREFERENCE",
+      name: "Preference",
       documentId: ["test_scope"]
     });
   });

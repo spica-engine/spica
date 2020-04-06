@@ -41,6 +41,10 @@ describe("Activity Acceptance", () => {
     await service.deleteMany({});
   });
 
+  function objectIdToDate(id: string): string {
+    return new Date(parseInt(id.substring(0, 8), 16) * 1000).toISOString();
+  }
+
   it("should return all activities", async () => {
     await service.insertMany([
       {
@@ -55,19 +59,21 @@ describe("Activity Acceptance", () => {
       }
     ]);
 
-    const {body: activites} = await request.get("/activity", {});
-    expect(activites).toEqual([
+    const {body: activities} = await request.get("/activity", {});
+    expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: {name: "test_module", documentId: ["test_id"]},
+        date: objectIdToDate(activities[0]._id)
       },
       {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
+        resource: {name: "test_module2", documentId: ["test_id2"]},
+        date: objectIdToDate(activities[1]._id)
       }
     ]);
   });
@@ -86,13 +92,14 @@ describe("Activity Acceptance", () => {
       }
     ]);
 
-    const {body: activites} = await request.get("/activity", {identifier: "test_user"});
-    expect(activites).toEqual([
+    const {body: activities} = await request.get("/activity", {identifier: "test_user"});
+    expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: {name: "test_module", documentId: ["test_id"]},
+        date: objectIdToDate(activities[0]._id)
       }
     ]);
   });
@@ -111,13 +118,14 @@ describe("Activity Acceptance", () => {
       }
     ]);
 
-    const {body: activites} = await request.get("/activity", {action: Action.POST});
-    expect(activites).toEqual([
+    const {body: activities} = await request.get("/activity", {action: Action.POST});
+    expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
+        resource: {name: "test_module2", documentId: ["test_id2"]},
+        date: objectIdToDate(activities[0]._id)
       }
     ]);
   });
@@ -141,89 +149,23 @@ describe("Activity Acceptance", () => {
       }
     ]);
 
-    const {body: activites} = await request.get("/activity", {
+    const {body: activities} = await request.get("/activity", {
       action: [Action.POST, Action.DELETE]
     });
-    expect(activites).toEqual([
+    expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: {name: "test_module", documentId: ["test_id"]},
+        date: objectIdToDate(activities[0]._id)
       },
       {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
-      }
-    ]);
-  });
-
-  it("should filter activities my multiple sub-resource documentIDs", async () => {
-    await service.insertMany([
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: {
-          name: "test_module",
-          documentId: ["test_id3"],
-          subResource: {name: "test_submodule_name", documentId: ["test_sub_id1", "test_sub_id2"]}
-        }
-      },
-      {
-        action: Action.POST,
-        identifier: "test_user_id",
-        resource: {
-          name: "test_module",
-          documentId: ["test_id3"],
-          subResource: {
-            name: "test_submodule_name",
-            documentId: ["test_sub_id1", "test_sub_id3"]
-          }
-        }
-      },
-      {
-        action: Action.PUT,
-        identifier: "test_user_id",
-        resource: {
-          name: "test_module",
-          documentId: ["test_id3"],
-          subResource: {name: "test_submodule_name", documentId: ["test_sub_id5"]}
-        }
-      }
-    ]);
-
-    const {body: activites} = await request.get("/activity", {
-      resource: {
-        name: "test_module",
-        documentId: ["test_id3"],
-        subResource: {name: "test_submodule_name", documentId: ["test_sub_id1", "test_sub_id2"]}
-      }
-    });
-    expect(activites).toEqual([
-      {
-        _id: "object_id",
-        action: Action.DELETE,
-        identifier: "test_user",
-        resource: {
-          name: "test_module",
-          documentId: ["test_id3"],
-          subResource: {name: "test_submodule_name", documentId: ["test_sub_id1", "test_sub_id2"]}
-        }
-      },
-      {
-        _id: "object_id",
-        action: Action.POST,
-        identifier: "test_user",
-        resource: {
-          name: "test_module",
-          documentId: ["test_id3"],
-          subResource: {
-            name: "test_submodule_name",
-            documentId: ["test_sub_id1", "test_sub_id3"]
-          }
-        }
+        resource: {name: "test_module2", documentId: ["test_id2"]},
+        date: objectIdToDate(activities[1]._id)
       }
     ]);
   });
@@ -247,21 +189,23 @@ describe("Activity Acceptance", () => {
       }
     ]);
 
-    const {body: activites} = await request.get("/activity", {
+    const {body: activities} = await request.get("/activity", {
       resource: {name: "test_module2", documentId: ["test_id3"]}
     });
-    expect(activites).toEqual([
+    expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user",
-        resource: {name: "test_module2", documentId: ["test_id3"]}
+        resource: {name: "test_module2", documentId: ["test_id3"]},
+        date: objectIdToDate(activities[0]._id)
       },
       {
         _id: "object_id",
         action: Action.PUT,
         identifier: "test_user",
-        resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]}
+        resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]},
+        date: objectIdToDate(activities[0]._id)
       }
     ]);
   });
@@ -285,16 +229,17 @@ describe("Activity Acceptance", () => {
       }
     ]);
 
-    const {body: activites} = await request.get("/activity", {
+    const {body: activities} = await request.get("/activity", {
       skip: 1,
       limit: 1
     });
-    expect(activites).toEqual([
+    expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user",
-        resource: {name: "test_module2", documentId: ["test_id3"]}
+        resource: {name: "test_module2", documentId: ["test_id3"]},
+        date: objectIdToDate(activities[0]._id)
       }
     ]);
   });
@@ -316,6 +261,40 @@ describe("Activity Acceptance", () => {
     const res = await request.delete(`/activity/${insertedIds[1]}`);
     expect(res.statusCode).toEqual(204);
     expect(res.body).toEqual(undefined);
+
+    const activities = await service.find({});
+
+    expect(activities).toEqual([
+      {
+        _id: insertedIds[0],
+        action: Action.PUT,
+        identifier: "spica",
+        resource: {name: "test_module", documentId: ["test_id"]}
+      }
+    ]);
+  });
+
+  it("should delete multiple activities", async () => {
+    const insertedIds = await service.insertMany([
+      {
+        action: Action.PUT,
+        identifier: "spica",
+        resource: {name: "test_module", documentId: ["test_id"]}
+      },
+      {
+        action: Action.POST,
+        identifier: "spica",
+        resource: {name: "test_module2", documentId: ["test_id2", "test_id5"]}
+      }
+    ]);
+
+    const res = await request.delete("/activity", insertedIds);
+    expect(res.statusCode).toEqual(204);
+    expect(res.body).toEqual(undefined);
+
+    const activities = await service.find({});
+
+    expect(activities).toEqual([]);
   });
 
   afterAll(async () => {
