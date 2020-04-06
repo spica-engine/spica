@@ -1,7 +1,7 @@
 import {Resource, Action} from "@spica-server/activity";
 
 export function createIdentityResource(action: Action, req: any, res: any): Resource {
-  let name = "IDENTITY";
+  let name = "Identity";
 
   let documentId: string[] = [];
   switch (action) {
@@ -17,16 +17,4 @@ export function createIdentityResource(action: Action, req: any, res: any): Reso
   }
 
   return {name, documentId};
-}
-
-export function createIdentityPolicyResource(action: Action, req: any, res: any): Resource {
-  let name = "IDENTITY";
-  let documentId = [req.params.id];
-
-  let subResource: Resource = {
-    name: "POLICY",
-    documentId: req.body
-  };
-
-  return {name, documentId, subResource};
 }

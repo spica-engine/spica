@@ -32,7 +32,8 @@ export class HomeLayoutComponent implements OnInit {
     [RouteCategory.Content, {icon: "view_stream", index: 1}],
     [RouteCategory.System, {icon: "terrain", index: 2}],
     [RouteCategory.Developer, {icon: "double_arrow", index: 3}],
-    [RouteCategory.Function, {icon: "memory", index: 4}]
+    [RouteCategory.Function, {icon: "memory", index: 4}],
+    [RouteCategory.Activity, {icon: "today", index: 5}]
   ]);
 
   categories: Array<{icon: string; category: RouteCategory; index: number}> = [];

@@ -1,0 +1,85 @@
+<mat-toolbar color="primary">
+  <h4 class="mat-h4">
+    <mat-icon>account_box</mat-icon>
+    <span>User Activities</span>
+  </h4>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="applyFilters()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button mat-icon-button (click)="clearActivities()">
+    <mat-icon>clear_all</mat-icon>
+  </button>
+</mat-toolbar>
+
+<mat-card class="mat-elevation-z25">
+  <span>Filters: </span>
+  <mat-form-field>
+    <mat-label>Identifier</mat-label>
+    <input matInput [(ngModel)]="filters.identifier" />
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Select action type</mat-label>
+    <mat-select [(ngModel)]="filters.action" multiple>
+      <mat-option *ngFor="let action of actions" [value]="action">
+        {{ action }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Select module</mat-label>
+    <mat-select [(ngModel)]="filters.resource.name" (selectionChange)="showDocuments($event.value)">
+      <mat-optgroup *ngFor="let group of moduleGroups" [label]="group.name">
+        <mat-option *ngFor="let module of group.modules" [value]="module">
+          {{ module }}
+        </mat-option>
+      </mat-optgroup>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="documentIds && documentIds.length">
+    <mat-label>Select document id</mat-label>
+    <mat-select [(ngModel)]="filters.resource.documentId" multiple>
+      <mat-option *ngFor="let documentId of documentIds" [value]="documentId">
+        {{ documentId }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <input
+      matInput
+      [ngModel]="filters.date"
+      (ngModelChange)="setDate($event.begin, $event.end)"
+      placeholder="Select a date range"
+      [satDatepicker]="picker"
+      [max]="maxDate"
+    />
+    <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
+    <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
+  </mat-form-field>
+  <button mat-button (click)="applyFilters()">
+    Apply
+  </button>
+  <button mat-button color="warn" (click)="clearFilters()">
+    Clear
+  </button>
+  <mat-card-content>
+    <cdk-virtual-scroll-viewport itemSize="75" class="example-viewport">
+      <mat-list>
+        <span class="emptyList" *ngIf="!activities.length && !isPending"
+          >Couldn't find any activity to show.</span
+        >
+        <mat-list-item *cdkVirtualFor="let activity of dataSource">
+          <span class="info">
+            Identifier {{ activity.identifier | titlecase }}
+            {{ actions[activity.action - 1] }} document {{ activity.resource.documentId }} on
+            {{ activity.resource.name }} module.
+          </span>
+          <span class="date">{{ activity.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
+          <mat-divider></mat-divider>
+        </mat-list-item>
+      </mat-list>
+      <mat-progress-spinner *ngIf="isPending" [diameter]="35" color="primary" mode="indeterminate">
+      </mat-progress-spinner>
+    </cdk-virtual-scroll-viewport>
+  </mat-card-content>
+</mat-card>

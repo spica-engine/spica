@@ -10,7 +10,7 @@ describe("Activity Resource", () => {
 
     const resource = createPolicyResource(action, {}, res);
     expect(resource).toEqual({
-      name: "POLICY",
+      name: "Policy",
       documentId: ["policy_id"]
     });
   });
@@ -25,7 +25,7 @@ describe("Activity Resource", () => {
 
     const resource = createPolicyResource(action, req, {});
     expect(resource).toEqual({
-      name: "POLICY",
+      name: "Policy",
       documentId: ["policy_id"]
     });
   });
@@ -40,7 +40,7 @@ describe("Activity Resource", () => {
 
     const resource = createPolicyResource(action, req, {});
     expect(resource).toEqual({
-      name: "POLICY",
+      name: "Policy",
       documentId: ["policy_id"]
     });
   });

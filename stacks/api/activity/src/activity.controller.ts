@@ -1,5 +1,5 @@
-import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param} from "@nestjs/common";
-import {Activity, Resource, ActivityQuery, Action} from "./";
+import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param, Body} from "@nestjs/common";
+import {Activity, Resource} from "./";
 import {ActivityService} from "./activity.service";
 import {JSONP, DATE, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID, FilterQuery} from "@spica-server/database";
@@ -31,10 +31,15 @@ export class ActivityController {
         $set: {
           identifier: "$identifier.identifier"
         }
+      },
+      {
+        $addFields: {
+          date: {$toDate: "$_id"}
+        }
       }
     ];
 
-    let filter: FilterQuery<ActivityQuery> = {};
+    let filter: FilterQuery<Activity> = {};
 
     if (identifier) filter.identifier = identifier;
 
@@ -64,18 +69,6 @@ export class ActivityController {
           $in: Array.isArray(resource.documentId) ? resource.documentId : [resource.documentId]
         };
       }
-      if (resource.subResource) {
-        if (resource.subResource.name) {
-          filter["resource.subResource.name"] = resource.subResource.name;
-        }
-        if (resource.subResource.documentId) {
-          filter["resource.subResource.documentId"] = {
-            $in: Array.isArray(resource.subResource.documentId)
-              ? resource.subResource.documentId
-              : [resource.subResource.documentId]
-          };
-        }
-      }
     }
 
     if (filter) aggregation.push({$match: filter});
@@ -91,5 +84,11 @@ export class ActivityController {
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.activityService.deleteOne({_id: id});
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteMany(@Body() ids: ObjectId[]) {
+    return this.activityService.deleteMany({_id: {$in: ids.map(id => new ObjectId(id))}});
   }
 }
