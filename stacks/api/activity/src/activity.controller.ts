@@ -98,7 +98,6 @@ export class ActivityController {
     return this.database
       .collection(name)
       .find({})
-      .project({_id: 1})
       .map(document => document._id)
       .toArray();
   }
