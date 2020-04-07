@@ -10,7 +10,7 @@ ts_library(
         "activity.resource.spec.ts",
     ],
     deps = [
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/function",
         "@npm//@types/jasmine",
     ],

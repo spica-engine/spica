@@ -1,8 +1,10 @@
-import {Test} from "@nestjs/testing";
-import {ActivityService, ActivityModule, Action} from "@spica-server/activity";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {INestApplication} from "@nestjs/common";
+import {Test} from "@nestjs/testing";
+import {ActivityModule} from "@spica-server/activity";
+import {Action, ActivityService} from "@spica-server/activity/services";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Activity Acceptance", () => {
   let request: Request;
@@ -10,7 +12,12 @@ describe("Activity Acceptance", () => {
   let service: ActivityService;
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create(), CoreTestingModule, ActivityModule]
+      imports: [
+        DatabaseTestingModule.create(),
+        CoreTestingModule,
+        PassportTestingModule.initialize(),
+        ActivityModule.forRoot()
+      ]
     }).compile();
 
     request = module.get(Request);

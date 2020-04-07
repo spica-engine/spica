@@ -18,12 +18,14 @@ import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {FormsModule} from "@angular/forms";
 import {ActivityService} from "./services/activity.service";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {PassportModule} from "@spica-client/passport";
 
 @NgModule({
   declarations: [IndexComponent],
   imports: [
     CommonModule,
     ActivityRoutingModule,
+    PassportModule.forChild(),
     MatIconModule,
     MatToolbarModule,
     MatCardModule,

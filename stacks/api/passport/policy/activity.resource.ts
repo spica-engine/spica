@@ -1,4 +1,4 @@
-import {Resource, Action} from "@spica-server/activity";
+import {Action, Resource} from "@spica-server/activity/services";
 
 export function createPolicyResource(action: Action, req: any, res: any): Resource {
   let name = "Policy";

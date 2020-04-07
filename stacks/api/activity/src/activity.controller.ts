@@ -1,13 +1,25 @@
-import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param, Body} from "@nestjs/common";
-import {Activity, Resource} from "./";
-import {ActivityService} from "./activity.service";
-import {JSONP, DATE, NUMBER} from "@spica-server/core";
-import {ObjectId, OBJECT_ID, FilterQuery} from "@spica-server/database";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Query,
+  UseGuards
+} from "@nestjs/common";
+import {Activity, ActivityService, Resource} from "@spica-server/activity/services/src";
+import {DATE, JSONP, NUMBER} from "@spica-server/core";
+import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard} from "@spica-server/passport";
 
 @Controller("activity")
 export class ActivityController {
   constructor(private activityService: ActivityService) {}
+
   @Get()
+  @UseGuards(AuthGuard(), ActionGuard("activity:index"))
   find(
     @Query("identifier") identifier,
     @Query("action", JSONP) action: number | number[],
@@ -81,12 +93,14 @@ export class ActivityController {
   }
 
   @Delete(":id")
+  @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.activityService.deleteOne({_id: id});
   }
 
   @Delete()
+  @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteMany(@Body() ids: ObjectId[]) {
     return this.activityService.deleteMany({_id: {$in: ids.map(id => new ObjectId(id))}});
