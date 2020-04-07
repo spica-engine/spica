@@ -42,7 +42,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   isPending = false;
 
-  private activities: Activity[] = [];
+  activities: Activity[] = [];
 
   private subscription = new Subscription();
 
