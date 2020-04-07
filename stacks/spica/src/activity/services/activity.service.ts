@@ -1,7 +1,6 @@
 import {Injectable} from "@angular/core";
 import {ActivityFilter, Activity} from "../interface";
 import {HttpClient} from "@angular/common/http";
-import {map} from "rxjs/operators";
 
 @Injectable()
 export class ActivityService {
@@ -67,40 +66,17 @@ export class ActivityService {
     return this.http.get<Activity[]>("api:/activity", {params});
   }
 
-  getDocuments(moduleName: string) {
-    if (moduleName.startsWith("Bucket_")) moduleName = moduleName.replace("_", "/").concat("/data");
-    let path = "api:/";
-    switch (moduleName) {
-      case "Apikey":
-        path = `${path}passport/${moduleName}`;
+  getDocuments(collection: string) {
+    let collectionName = collection;
+    switch (collection) {
+      case "bucket":
+        collectionName = "buckets";
         break;
-      case "Policy":
-        path = `${path}passport/${moduleName}`;
-        break;
-      case "Identity":
-        path = `${path}passport/${moduleName}`;
-        break;
-      case "Passport-Settings":
-        path = `${path}preference/passport`;
-        break;
-      case "Bucket-Settings":
-        path = `${path}preference/bucket`;
-        break;
-      default:
-        path = `${path}${moduleName}`;
+      case "policy":
+        collectionName = "policies";
         break;
     }
-    return this.http.get(path).pipe(
-      map(_response => {
-        //cause of compiler error such as data is not key
-        let response: any = _response;
-        return Array.isArray(response)
-          ? response.map(item => item._id)
-          : response.data
-          ? response.data.map(item => item._id)
-          : [];
-      })
-    );
+    return this.http.get<string[]>(`api:/activity/collection/${collectionName}`);
   }
 
   deleteActivities(activities: Activity[]) {
