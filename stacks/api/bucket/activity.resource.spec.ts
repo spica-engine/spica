@@ -1,5 +1,5 @@
-import {Action} from "@spica-server/activity";
-import {createBucketResource, createBucketDataResource} from "./activity.resource";
+import {Action} from "@spica-server/activity/services";
+import {createBucketDataResource, createBucketResource} from "./activity.resource";
 
 describe("Activity Resource", () => {
   describe("bucket", () => {

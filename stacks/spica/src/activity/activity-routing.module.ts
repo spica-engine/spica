@@ -1,12 +1,18 @@
 import {NgModule} from "@angular/core";
 import {RouterModule, Routes} from "@angular/router";
-import {RouteModule, RouteCategory, Route} from "@spica-client/core";
 import {IndexComponent} from "@spica-client/activity/pages/index/index.component";
+import {Route, RouteCategory, RouteModule} from "@spica-client/core";
+import {IdentityGuard, PolicyGuard} from "@spica-client/passport";
 
 const routes: Routes = [
   {
     path: "activity",
-    component: IndexComponent
+    canActivateChild: [IdentityGuard, PolicyGuard],
+    component: IndexComponent,
+    data: {
+      service: "activity",
+      action: "index"
+    }
   }
 ];
 

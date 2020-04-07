@@ -1,6 +1,6 @@
 import {Controller, INestApplication, Post, Req, UseInterceptors} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {activity, ActivityService, Predict, Resource} from "@spica-server/activity";
+import {activity, ActivityService, Predict, Resource} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 

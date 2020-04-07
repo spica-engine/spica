@@ -8,7 +8,7 @@ const routes: Routes = [
   {
     canActivate: [IdentityGuard, PolicyGuard],
     path: "webhook",
-    data: {service: "subscription"},
+    data: {service: "webhook"},
     children: [
       {path: "", component: WebhookIndexComponent, data: {action: "index"}},
       {path: "add", component: WebhookAddComponent, data: {action: "create"}},

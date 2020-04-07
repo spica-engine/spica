@@ -5,20 +5,20 @@ import {
   Get,
   Param,
   Post,
-  UseGuards,
-  Query,
   Put,
+  Query,
+  UseGuards,
   UseInterceptors
 } from "@nestjs/common";
+import {activity} from "@spica-server/activity/services";
+import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "./action.guard";
+import {createPolicyResource} from "./activity.resource";
 import {Policy} from "./interface";
 import {PolicyService} from "./policy.service";
-import {NUMBER} from "@spica-server/core";
-import {activity} from "@spica-server/activity";
-import {createPolicyResource} from "./activity.resource";
 
 @Controller("passport/policy")
 export class PolicyController {

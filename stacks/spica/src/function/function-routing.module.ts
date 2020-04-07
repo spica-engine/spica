@@ -40,7 +40,7 @@ const route: Route[] = [
     icon: "http",
     path: "/webhook",
     display: "Webhook",
-    data: {action: "subscription:index"}
+    data: {action: "webhook:index"}
   }
 ];
 

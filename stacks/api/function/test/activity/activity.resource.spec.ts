@@ -1,4 +1,4 @@
-import {Action} from "@spica-server/activity";
+import {Action} from "@spica-server/activity/services";
 import {createFunctionResource} from "@spica-server/function/src/activity.resource";
 
 describe("Activity Resource", () => {

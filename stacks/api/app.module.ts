@@ -22,7 +22,7 @@ import {ActivityModule} from "@spica-server/activity";
       defaults: [CREATED_AT, UPDATED_AT]
     }),
     PreferenceModule,
-    ...(!!process.env.ENABLE_ACTIVITY_STREAM ? [ActivityModule] : []),
+    ...(!!process.env.ENABLE_ACTIVITY_STREAM ? [ActivityModule.forRoot()] : []),
     BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS, history: true, realtime: true}),
     DashboardModule,
     StorageModule.forRoot({

@@ -16,6 +16,7 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
+import {activity} from "@spica-server/activity/services";
 import {Bucket, BucketDocument, BucketService, ImportFile} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -24,9 +25,8 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {BucketDataService} from "./bucket-data.service";
-import {activity} from "@spica-server/activity";
 import {createBucketResource} from "./activity.resource";
+import {BucketDataService} from "./bucket-data.service";
 
 @Controller("bucket")
 export class BucketController {
