@@ -1,36 +1,31 @@
 # Default values for spica.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+database:
+    replicas: 2
+    replicaSetName: "rs0"
+    name: spica
+    version: "4.2"
+    storageSize: 2Gi
+    storageClass: 
+    resources: {}
 
+application:
+    secret: 
+    defaultPassword: spica
+    webBaseUrl: /spica/
+    apiBaseUrl: /api/
+    publicHost:
+    storageSize: 2Gi
+    storageClass: 
+    apiResources: {}
+    webResources: {}
 
-namespaceUse: false
-domainUse : false
-loadBalancerIp: "192.168.1.1"
-spicaVersion: "master"
-namespace: "master"
-domain: "master.spicaengine.com"
-dataPath: "master-data"
-secretName: "master-secret"
-history: true
-ssl: false
-spicaPath: spica/
-apiMountPath: /data
-databaseMountPath: /data/db
-proxyBodySize: 15
-clientBodyBufferSize: 15
-#resources
-databaseRequestMemory: 10
-databaseRequestCpu: 10
-databaseLimitMemory: 250
-databaseLimitCpu: 150
-spicaRequestMemory: 10
-spicaRequestCpu: 10
-spicaLimitMemory: 100
-spicaLimitCpu: 50
-apiRequestMemory: 10
-apiRequestCpu: 10
-apiLimitMemory: 250
-apiLimitCpu: 150
-apiStorage: 2
-databaseStorage: 2
-#resources
+ingress:
+    host: 
+    tls: []
+    ingressClassName: nginx
+    annotations:
+        nginx.ingress.kubernetes.io/proxy-body-size: 15M
+        nginx.ingress.kubernetes.io/client-body-buffer-size: 15Mb
+        nginx.ingress.kubernetes.io/rewrite-target: /$1
