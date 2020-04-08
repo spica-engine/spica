@@ -6,7 +6,6 @@ import {Queue} from "./queue";
 export class EventQueue {
   private server: grpc.Server;
   private queue = new Map<string, Event.Event>();
-  private eventId: number = 0;
 
   get size(): number {
     return this.queue.size;
