@@ -16,6 +16,8 @@
     height: 100vh;
     mat-sidenav {
       min-width: 250px;
+      max-width:250px;
+      word-break: break-word;
 
       section.routes {
         display: flex;
@@ -49,6 +51,8 @@
               padding-left: 18px;
             }
             mat-list-item {
+              padding: 10px 0px;
+              height: auto;
               mat-icon {
                 margin-right: 5px;
               }
