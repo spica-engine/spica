@@ -304,6 +304,21 @@ describe("Activity Acceptance", () => {
     expect(activities).toEqual([]);
   });
 
+  it("should get collection document ids", async () => {
+    const databaseService = app.get(DatabaseService);
+    await databaseService.createCollection("test_collection");
+
+    const documentIds = await databaseService
+      .collection("test_collection")
+      .insertMany([{field: "value"}, {field2: "value2"}])
+      .then(result => Object.values(result.insertedIds).map(id => id.toHexString()));
+
+    const res = await request.get("/activity/collection/test_collection", {});
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual(documentIds);
+  });
+
   afterAll(async () => {
     await app.close();
   });

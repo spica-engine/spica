@@ -11,12 +11,12 @@ import {
 } from "@nestjs/common";
 import {Activity, ActivityService, Resource} from "@spica-server/activity/services/src";
 import {DATE, JSONP, NUMBER} from "@spica-server/core";
-import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {FilterQuery, ObjectId, OBJECT_ID, DatabaseService} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 
 @Controller("activity")
 export class ActivityController {
-  constructor(private activityService: ActivityService) {}
+  constructor(private activityService: ActivityService, private database: DatabaseService) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("activity:index"))
@@ -90,6 +90,16 @@ export class ActivityController {
     if (limit) aggregation.push({$limit: limit});
 
     return this.activityService.aggregate(aggregation).toArray();
+  }
+
+  @Get("collection/:name")
+  @UseGuards(AuthGuard(), ActionGuard("activity:index"))
+  findCollection(@Param("name") name: string): Promise<string[]> {
+    return this.database
+      .collection(name)
+      .find({})
+      .map(document => document._id)
+      .toArray();
   }
 
   @Delete(":id")
