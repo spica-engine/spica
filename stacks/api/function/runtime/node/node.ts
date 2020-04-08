@@ -86,7 +86,8 @@ export class Node extends Runtime {
       allowJs: true,
       skipDefaultLibCheck: true,
       alwaysStrict: true,
-      preserveSymlinks: true
+      preserveSymlinks: true,
+      incremental:true
     };
 
     const program = ts.createProgram({

@@ -28,10 +28,12 @@ describe("Node", () => {
       expect(stat.isSymbolicLink()).toBe(true);
     });
 
-    it("should compile entrypoint", async () => {
+    fit("should compile entrypoint", async () => {
       compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
       await node.compile(compilation);
       const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.js"));
+      const files = fs.readdirSync(path.join(compilation.cwd));
+      expect(files).toEqual("")
       expect(stat.toString()).toContain("exports.default = default_1");
     });
 
