@@ -47,7 +47,7 @@
     <ng-container matColumnDef="timestamp">
       <mat-header-cell mat-header-cell *matHeaderCellDef>TIMESTAMP</mat-header-cell>
       <mat-cell *matCellDef="let log">{{
-        log.created_at | date: "yyyy-MM-dd HH:MM:ss.ms"
+        log.created_at | date: "yyyy-MM-dd HH:mm:ss.SSS"
       }}</mat-cell>
     </ng-container>
 

@@ -26,8 +26,19 @@
       width: 100%;
     }
 
-    span.trigger-property {
-      margin-left: 10px;
+    mat-list-item.triggers {
+      margin-top: 10px;
+    }
+
+    mat-list-item.triggers mat-form-field {
+      width: 20%;
+      margin: 0 5px;
+    }
+
+    .status {
+      width: 20%;
+      margin: 0 15px;
+      height: 100%;
     }
   }
 }

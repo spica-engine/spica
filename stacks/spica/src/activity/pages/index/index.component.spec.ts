@@ -150,6 +150,15 @@ describe("IndexComponent", () => {
     expect(component.documentIds).toEqual(["doc_1", "doc_2"]);
   }));
 
+  it("should get preference documents", () => {
+    const getDocumentsSpy = spyOn(component["activityService"], "getDocuments").and.callThrough();
+
+    component.showDocuments("Preference");
+    expect(getDocumentsSpy).toHaveBeenCalledTimes(0);
+
+    expect(component.documentIds).toEqual(["bucket", "passport"]);
+  });
+
   it("should set begin and end date", () => {
     let today = new Date();
     let yesterday = new Date();
