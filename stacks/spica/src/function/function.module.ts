@@ -36,7 +36,7 @@ import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
-import {SubscriptionModule} from "./subscription.module";
+import {WebhookModule} from "./webhook.module";
 import {FunctionService} from "./function.service";
 import {FunctionInitializer} from "./function.initializer";
 import {RouteService, LAYOUT_INITIALIZER} from "@spica-client/core";
@@ -84,7 +84,7 @@ import {MatSaveModule} from "@spica-client/material";
     MatTabsModule,
     StoreModule.forFeature("function", fromFunction.reducer),
     PassportModule.forChild(),
-    SubscriptionModule,
+    WebhookModule,
     MatSaveModule
   ]
 })
