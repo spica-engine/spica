@@ -42,7 +42,7 @@ export class StorageComponent implements ControlValueAccessor {
   ) {}
 
   @HostListener("drop", ["$event"])
-  uploadStorage(e: DragEvent): void {
+  uploadStorage(e: any): void {
     e.preventDefault();
     this.isDraggingOver = false;
     const files = e.dataTransfer.files;
@@ -67,7 +67,7 @@ export class StorageComponent implements ControlValueAccessor {
   }
 
   @HostListener("dragover", ["$event"])
-  dragOver(e: DragEvent): void {
+  dragOver(e: any): void {
     e.preventDefault();
     if (e.dataTransfer.types.indexOf("Files") > -1) {
       e.dataTransfer.dropEffect = "copy";
@@ -76,7 +76,7 @@ export class StorageComponent implements ControlValueAccessor {
   }
 
   @HostListener("dragleave", ["$event"])
-  dragLeave(e: DragEvent): void {
+  dragLeave(e: any): void {
     e.preventDefault();
     this.isDraggingOver = false;
   }

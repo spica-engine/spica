@@ -16,6 +16,7 @@ import {StorageService} from "../../storage.service";
 })
 export class IndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+  @ViewChild("fileSelector", {static: true}) fileSelector: any;
 
   storages$: Observable<Storage[]>;
   progress: number;
@@ -48,6 +49,12 @@ export class IndexComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    //NgModelChange doesn't work on Safari browsers
+    let fileElement = this.fileSelector.nativeElement;
+    fileElement.addEventListener("change", () => {
+      this.uploadStorageMany(fileElement.files);
+    });
+
     this.storages$ = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
         this.storage.getAll(
