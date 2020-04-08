@@ -27,9 +27,9 @@ export class PassportService {
           "StorageFullAccess",
           "PolicyFullAccess",
           "FunctionFullAccess",
-          "SubscriptionFullAccess",
           "BucketFullAccess",
-          "DashboardFullAccess"
+          "DashboardFullAccess",
+          "WebhookFullAccess"
         ]
       });
     }
