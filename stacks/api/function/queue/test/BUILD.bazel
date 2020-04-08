@@ -15,6 +15,7 @@ ts_library(
         "@npm//@types/ws",
         "@npm//grpc",
         "@npm//ws",
+        "@npm//uniqid",
     ],
 )
 

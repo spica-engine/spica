@@ -1,5 +1,6 @@
 import {Event} from "@spica-server/function/queue/proto";
 import * as grpc from "grpc";
+import * as uniqid from "uniqid";
 import {Queue} from "./queue";
 
 export class EventQueue {
@@ -41,7 +42,7 @@ export class EventQueue {
 
   enqueue(event: Event.Event) {
     // TODO: Handle overflow
-    event.id = String(this.eventId++);
+    event.id = uniqid();
     this.queue.set(event.id, event);
     this._enqueueCallback(event);
   }
