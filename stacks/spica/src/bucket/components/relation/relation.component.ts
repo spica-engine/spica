@@ -5,14 +5,13 @@ import {
   Inject,
   OnInit,
   ViewChild,
-  EventEmitter,
-  ElementRef
+  EventEmitter
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatPaginator} from "@angular/material/paginator";
 import {INPUT_SCHEMA} from "@spica-client/common";
 import {merge, Observable, of} from "rxjs";
-import {map, switchMap, tap} from "rxjs/operators";
+import {map, switchMap, tap, take} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData, BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
@@ -67,6 +66,8 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
   }
 
   ngOnInit() {
+    this.$meta.pipe(take(1)).subscribe(bucketSchema => (this.bucket = bucketSchema));
+
     this.$data = merge(this.paginator.page, of(null), this.refresh).pipe(
       switchMap(() =>
         this.bds.find(this.schema.bucketId, {

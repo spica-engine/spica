@@ -1,6 +1,12 @@
 import {TestBed, ComponentFixture, tick, fakeAsync, async} from "@angular/core/testing";
 import {RelationComponent} from "./relation.component";
-import {MatIconModule, MatTableModule, MatPaginatorModule, MatMenuModule} from "@angular/material";
+import {
+  MatIconModule,
+  MatTableModule,
+  MatPaginatorModule,
+  MatMenuModule,
+  MatButtonModule
+} from "@angular/material";
 import {INPUT_SCHEMA, EMPTY_INPUT_SCHEMA} from "@spica-client/common";
 import {BucketDataService} from "src/bucket/services/bucket-data.service";
 import {of} from "rxjs";
@@ -8,8 +14,12 @@ import {PreferencesService} from "@spica-client/core";
 import {BucketService} from "src/bucket";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {emptyBucket} from "src/bucket/interfaces/bucket";
+import {InputModule, CommonModule as SpicaCommon} from "@spica-client/common";
+
 import {By} from "@angular/platform-browser";
-import {tap} from "rxjs/operators";
+import {FilterComponent} from "src/bucket/components/filter/filter.component";
+import {MatSelectModule} from "@angular/material/select";
+import {FormsModule} from "@angular/forms";
 
 describe("Relation Component", () => {
   let fixture: ComponentFixture<RelationComponent>;
@@ -21,7 +31,12 @@ describe("Relation Component", () => {
         MatIconModule,
         MatTableModule,
         MatPaginatorModule,
-        MatMenuModule
+        MatMenuModule,
+        MatButtonModule,
+        MatSelectModule,
+        FormsModule,
+        InputModule.withPlacers([]),
+        SpicaCommon
       ],
       providers: [
         {
@@ -76,7 +91,7 @@ describe("Relation Component", () => {
           }
         }
       ],
-      declarations: [RelationComponent]
+      declarations: [RelationComponent, FilterComponent]
     }).compileComponents();
     fixture = TestBed.createComponent(RelationComponent);
     fixture.detectChanges();
