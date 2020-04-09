@@ -33,7 +33,7 @@
     [disabled]="progress"
     (click)="!progress ? fileSelector?.click() : undefined"
   >
-    <input type="file" #fileSelector multiple #fileModel="ngModel" [ngModel]="undefined" />
+    <input type="file" #fileSelector multiple #fileModel="ngModel" ngModel/>
     <mat-icon *ngIf="!progress">add</mat-icon>
     <mat-progress-spinner
       color="accent"
