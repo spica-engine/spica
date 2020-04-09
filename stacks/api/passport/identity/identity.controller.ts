@@ -96,8 +96,7 @@ export class IdentityController {
 
   @UseInterceptors(activity(createIdentityResource))
   @Put(":id")
-  // TODO(thesayyn): Check if user updates its own identity.
-  @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
   updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
