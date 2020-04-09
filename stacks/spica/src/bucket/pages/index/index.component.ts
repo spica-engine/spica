@@ -91,7 +91,7 @@ export class IndexComponent implements OnInit {
         ];
       }),
       publishReplay(),
-      refCount()
+      refCount(),
     );
 
     this.data$ = merge(this.route.params, this.paginator.page, this.refresh).pipe(

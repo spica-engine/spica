@@ -14,6 +14,24 @@
 </ng-container>
 
 <mat-menu #selector overlapTrigger="false" classList="relationPicker">
+  <button #filterButton
+    mat-icon-button
+    matTooltip="Filter data"
+    [matMenuTriggerFor]="filterMenu"
+    [color]="filterer.active ? 'accent' : ''"
+    (click)="$event.stopPropagation()"
+  >
+    <mat-icon>filter_list</mat-icon>
+    <mat-menu class="filter-menu" #filterMenu="matMenu">
+      <bucket-filter
+        #filterer
+        [filter]="filter"
+        [schema]="bucket"
+        (click)="$event.stopPropagation()"
+        (filterChange)="this.filter = $event; refresh.emit(); closeMenu()"
+      ></bucket-filter>
+    </mat-menu>
+  </button>
   <mat-table [dataSource]="$data" (click)="$event.stopPropagation()">
     <ng-container
       *ngFor="let input of ($meta | async)?.properties | keyvalue"
