@@ -40,7 +40,6 @@ export class EventQueue {
   }
 
   enqueue(event: Event.Event) {
-    // TODO: Handle overflow
     event.id = uniqid();
     this.queue.set(event.id, event);
     this._enqueueCallback(event);
