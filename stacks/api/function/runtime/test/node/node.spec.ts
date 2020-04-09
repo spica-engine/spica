@@ -34,7 +34,7 @@ describe("Node", () => {
 
       const files = fs.readdirSync(path.join(compilation.cwd, ".build"));
       expect(files).toContain(".tsbuildinfo");
-      
+
       const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.js"));
 
       expect(stat.toString()).toContain("exports.default = default_1");
