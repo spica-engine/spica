@@ -84,6 +84,8 @@ export class StorageController {
       object[obj].content.data = ((object[obj].content.data as any) as Binary).buffer;
       object[obj].content.size = object[obj].content.data.byteLength;
 
+      object[obj].name = object[obj].name.replace(/ /g, "_");
+
       insertData.push({
         name: object[obj].name,
         content: {
