@@ -19,7 +19,7 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {InputModule} from "@spica-client/common";
-import {MatAwareDialogModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {AngularCropperjsModule} from "angular-cropperjs";
 import {ngfModule} from "angular-file";
 
@@ -57,6 +57,7 @@ import {StorageRoutingModule} from "./storage-routing.module";
     MatInputModule,
     AngularCropperjsModule,
     MatToolbarModule,
+    MatClipboardModule,
     MatMenuModule,
     InputModule.withPlacers([{origin: "string", type: "storage", placer: StorageComponent}]),
     PassportModule.forChild()
