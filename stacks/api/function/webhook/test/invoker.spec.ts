@@ -3,6 +3,7 @@ import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/data
 import {WebhookService} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import * as __fetch__ from "node-fetch";
+import {WebhookLogService} from "../src/log.service";
 
 describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
@@ -17,7 +18,7 @@ describe("Webhook Invoker", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
-      providers: [WebhookInvoker, WebhookService]
+      providers: [WebhookInvoker, WebhookService, WebhookLogService]
     }).compile();
 
     service = module.get(WebhookService);
@@ -29,7 +30,7 @@ describe("Webhook Invoker", () => {
     subscribeSpy = spyOn(invoker, "subscribe" as never).and.callThrough();
     unsubscribeSpy = spyOn(invoker, "unsubscribe" as never).and.callThrough();
     fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(undefined));
-  });
+  }, 20000);
 
   afterEach(async () => await module.close());
 
@@ -98,7 +99,8 @@ describe("Webhook Invoker", () => {
     expect(unsubscribeSpy).toHaveBeenCalledWith(hook._id.toHexString());
   });
 
-  it("should report changes from the database", async () => {
+  it("should report changes from the database and call insertLog", async () => {
+    const insertLogSpy = spyOn(invoker["logService"], "insertLog").and.callFake(() => {});
     const hook = await service.insertOne({
       url: "http://spica.internal",
       trigger: {
@@ -127,5 +129,24 @@ describe("Webhook Invoker", () => {
         "Content-type": "application/json"
       }
     });
+
+    expect(insertLogSpy).toHaveBeenCalledTimes(1);
+    expect(insertLogSpy).toHaveBeenCalledWith(
+      {
+        body: {
+          type: "insert",
+          document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
+          documentKey: doc.insertedId.toHexString()
+        },
+        headers: {
+          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
+          "Content-type": "application/json"
+        },
+        path: "http://spica.internal"
+      },
+      //TODO(Tuna): this value should be a response, i will fix it after understand how to resolve nodejsReadableStream
+      undefined,
+      hook._id.toHexString()
+    );
   });
 });

@@ -4,17 +4,17 @@ import {WebhookInvoker} from "./invoker";
 import {SchemaResolver} from "./schema";
 import {WebhookController} from "./webhook.controller";
 import {WebhookService} from "./webhook.service";
+import {WebhookLogService} from "./log.service";
+import {WebhookLogController} from "./log.controller";
 
-@Module({
-  providers: [WebhookService]
-})
+@Module({})
 export class WebhookModule {
   static forRoot(): DynamicModule {
     return {
       module: WebhookModule,
       imports: [SchemaModule.forChild()],
-      controllers: [WebhookController],
-      providers: [WebhookInvoker, SchemaResolver]
+      controllers: [WebhookLogController, WebhookController],
+      providers: [WebhookInvoker, SchemaResolver, WebhookLogService, WebhookService]
     };
   }
 }

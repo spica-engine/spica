@@ -1,14 +1,19 @@
 import {Injectable} from "@nestjs/common";
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import fetch from "node-fetch";
-import {Webhook} from "./interface";
+import {Webhook, Log} from "./interface";
 import {ChangeKind, WebhookService} from "./webhook.service";
+import {WebhookLogService} from "./log.service";
 
 @Injectable()
 export class WebhookInvoker {
   private targets = new Map<string, ChangeStream>();
 
-  constructor(private webhookService: WebhookService, private db: DatabaseService) {
+  constructor(
+    private webhookService: WebhookService,
+    private db: DatabaseService,
+    private logService: WebhookLogService
+  ) {
     this.webhookService.targets().subscribe(change => {
       switch (change.kind) {
         case ChangeKind.Added:
@@ -40,15 +45,27 @@ export class WebhookInvoker {
         document: rawChange.fullDocument,
         documentKey: rawChange.documentKey._id.toString()
       };
-      fetch(url, {
+
+      let request = {
         method: "post",
         body: JSON.stringify(change),
         headers: {
           "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
           "Content-type": "application/json"
         }
-      }).catch(() => {});
+      };
+
+      fetch(url, request)
+        .then(response => {
+          this.logService.insertLog(
+            {body: JSON.parse(request.body), headers: request.headers, path: url},
+            response,
+            target
+          );
+        })
+        .catch(() => {});
     });
+
     this.targets.set(target, stream);
   }
 
