@@ -63,6 +63,10 @@
         <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
           <mat-icon>more_vert</mat-icon>
           <mat-menu class="actions-menu" #menu="matMenu" yPosition="above">
+            <button mat-menu-item [matClipboard]="storage.url">
+              <mat-icon>file_copy</mat-icon>
+              Copy
+            </button>
             <button
               canInteract="storage:update"
               *ngIf="storage.content?.type?.startsWith('image/')"
