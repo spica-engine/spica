@@ -15,6 +15,17 @@ describe("Webhook Invoker", () => {
   let unsubscribeSpy: jasmine.Spy<typeof invoker["unsubscribe"]>;
   let fetchSpy: jasmine.Spy<typeof __fetch__.default>;
 
+  let mockHttpResponse = {
+    headers: {
+      raw: () => {
+        return {key: ["value"]};
+      }
+    },
+    status: 404,
+    statusText: "Not Found",
+    text: () => Promise.resolve("res_body")
+  } as any;
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
@@ -29,7 +40,7 @@ describe("Webhook Invoker", () => {
 
     subscribeSpy = spyOn(invoker, "subscribe" as never).and.callThrough();
     unsubscribeSpy = spyOn(invoker, "unsubscribe" as never).and.callThrough();
-    fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(undefined));
+    fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(mockHttpResponse));
   }, 20000);
 
   afterEach(async () => await module.close());
@@ -133,19 +144,23 @@ describe("Webhook Invoker", () => {
     expect(insertLogSpy).toHaveBeenCalledTimes(1);
     expect(insertLogSpy).toHaveBeenCalledWith(
       {
-        body: {
+        body: JSON.stringify({
           type: "insert",
           document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
           documentKey: doc.insertedId.toHexString()
-        },
+        }),
         headers: {
           "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
           "Content-type": "application/json"
         },
-        path: "http://spica.internal"
+        url: "http://spica.internal"
       },
-      //TODO(Tuna): this value should be a response, i will fix it after understand how to resolve nodejsReadableStream
-      undefined,
+      {
+        headers: {key: ["value"]},
+        status: 404,
+        statusText: "Not Found",
+        body: "res_body"
+      },
       hook._id.toHexString()
     );
   });
