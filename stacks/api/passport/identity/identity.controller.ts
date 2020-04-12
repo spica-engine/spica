@@ -23,6 +23,7 @@ import {ActionGuard, PolicyService} from "../policy";
 import {createIdentityResource} from "./activity.resource";
 import {IdentityService} from "./identity.service";
 import {Identity} from "./interface";
+import {attachIdentityAcces} from "./utilities";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -96,7 +97,7 @@ export class IdentityController {
 
   @UseInterceptors(activity(createIdentityResource))
   @Put(":id")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update", undefined, attachIdentityAcces))
   updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))

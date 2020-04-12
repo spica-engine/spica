@@ -48,27 +48,11 @@ function createAuthGuard(type?: string): Type<CanActivate> {
         this.handleRequest(err, user, info, context)
       );
 
-      if (this.isUpdateOwnIdentity(request.method, request.url, user))
-        user = this.attachIdentityAccess(user);
-
       request[options.property || defaultOptions.property] = user;
 
       request.headers["strategy-type"] = strategyType;
 
       return true;
-    }
-
-    isUpdateOwnIdentity(method: string, url: string, user: any) {
-      return (
-        method == "PUT" &&
-        url == `/passport/identity/${user._id}` &&
-        !user.policies.includes("IdentityFullAccess")
-      );
-    }
-
-    attachIdentityAccess(user: any) {
-      user.policies.push("IdentityFullAccess");
-      return user;
     }
 
     getRequest<T = any>(context: ExecutionContext): T {
