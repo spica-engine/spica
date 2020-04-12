@@ -8,16 +8,11 @@ export class WebhookLogService extends BaseCollection<Log>("webhook_logs") {
     super(db);
   }
 
-  insertLog(request: Request, response: any, webhookId: string) {
+  insertLog(request: Request, response: Response, webhookId: string) {
     let log: Log = {
       webhook: webhookId,
-      request: {body: request.body, headers: request.headers, path: request.path},
-      response: {
-        body: response.body,
-        headers: response.headers,
-        status: response.status,
-        statusText: response.statusText
-      }
+      request: request,
+      response: response
     };
 
     this.insertOne(log).catch(err => console.log(err));

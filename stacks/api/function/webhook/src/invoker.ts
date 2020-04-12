@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import fetch from "node-fetch";
-import {Webhook, Log} from "./interface";
+import {Webhook} from "./interface";
 import {ChangeKind, WebhookService} from "./webhook.service";
 import {WebhookLogService} from "./log.service";
 
@@ -56,9 +56,17 @@ export class WebhookInvoker {
       };
 
       fetch(url, request)
+        .then(async response => {
+          return {
+            headers: response.headers.raw(),
+            status: response.status,
+            statusText: response.statusText,
+            body: await response.text()
+          };
+        })
         .then(response => {
           this.logService.insertLog(
-            {body: JSON.parse(request.body), headers: request.headers, path: url},
+            {body: request.body, headers: request.headers, url: url},
             response,
             target
           );

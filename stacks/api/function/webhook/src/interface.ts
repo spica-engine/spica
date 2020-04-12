@@ -27,17 +27,15 @@ export interface Request {
   headers: {
     [key: string]: string;
   };
-  path: string;
-  body: {
-    [key: string]: string;
-  };
+  url: string;
+  body: string;
 }
 
 export interface Response {
   status: number;
   statusText: string;
-  body: {
-    [key: string]: string;
+  body: string;
+  headers: {
+    [key: string]: string[];
   };
-  headers: any[];
 }

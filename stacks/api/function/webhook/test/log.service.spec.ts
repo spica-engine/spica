@@ -1,6 +1,6 @@
 import {WebhookLogService} from "../src/log.service";
 import {TestingModule, Test} from "@nestjs/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
 describe("Webhook Service", () => {
   let service: WebhookLogService;
@@ -11,30 +11,40 @@ describe("Webhook Service", () => {
       providers: [WebhookLogService]
     }).compile();
     service = module.get(WebhookLogService);
+
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "object_id" && actual instanceof ObjectId) {
+        return true;
+      }
+    });
   });
 
   afterEach(async () => await module.close());
 
   it("should insert a log", async () => {
     await service.insertLog(
-      {body: {test: "request_body"}, headers: {test: "test"}, path: "test_path"},
-      {},
+      {body: "req_body", headers: {test_key: "test_value"}, url: "url"},
+      {
+        body: "res_body",
+        headers: {test_key: ["test_value"]},
+        status: 404,
+        statusText: "BAD REQUEST"
+      },
       "webhook_id"
     );
 
     let logs = await service.find({});
 
-    delete logs[0]._id;
-
     expect(logs).toEqual([
       {
+        _id: "object_id" as any,
         webhook: "webhook_id",
-        request: {body: {test: "request_body"}, headers: {test: "test"}, path: "test_path"},
+        request: {body: "req_body", headers: {test_key: "test_value"}, url: "url"},
         response: {
-          body: null,
-          headers: null,
-          status: null,
-          statusText: null
+          body: "res_body",
+          headers: {test_key: ["test_value"]},
+          status: 404,
+          statusText: "BAD REQUEST"
         }
       }
     ]);
