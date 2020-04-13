@@ -5,6 +5,7 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {WebhookModule} from "..";
 import {WebhookLogService} from "../src/log.service";
+import {WebhookLogController} from "../src/log.controller";
 
 describe("Activity Acceptance", () => {
   let request: Request;
@@ -20,7 +21,12 @@ describe("Activity Acceptance", () => {
         DatabaseTestingModule.create(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        WebhookModule.forRoot()
+        {
+          imports: [],
+          module: WebhookModule,
+          controllers: [WebhookLogController],
+          providers: [WebhookLogService]
+        }
       ]
     }).compile();
 
