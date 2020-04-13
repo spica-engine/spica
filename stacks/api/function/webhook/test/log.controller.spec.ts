@@ -217,7 +217,7 @@ describe("Activity Acceptance", () => {
     ]);
   });
 
-  it("should delete spesific log", async () => {
+  it("should delete specific log", async () => {
     const response = await request.delete(`/webhook/logs/${logIds[0].toHexString()}`);
     expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
   });
