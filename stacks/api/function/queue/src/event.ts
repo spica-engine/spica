@@ -1,11 +1,11 @@
 import {Event} from "@spica-server/function/queue/proto";
 import * as grpc from "grpc";
+import * as uniqid from "uniqid";
 import {Queue} from "./queue";
 
 export class EventQueue {
   private server: grpc.Server;
   private queue = new Map<string, Event.Event>();
-  private eventId: number = 0;
 
   get size(): number {
     return this.queue.size;
@@ -40,8 +40,7 @@ export class EventQueue {
   }
 
   enqueue(event: Event.Event) {
-    // TODO: Handle overflow
-    event.id = String(this.eventId++);
+    event.id = uniqid();
     this.queue.set(event.id, event);
     this._enqueueCallback(event);
   }
