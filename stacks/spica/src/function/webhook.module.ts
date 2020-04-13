@@ -19,10 +19,9 @@ import {PassportModule} from "@spica-client/passport";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
-import {ScrollingModule} from '@angular/cdk/scrolling';
-import { MatProgressSpinnerModule } from "@angular/material";
-import {MatExpansionModule} from '@angular/material/expansion';
-
+import {ScrollingModule} from "@angular/cdk/scrolling";
+import {MatProgressSpinnerModule} from "@angular/material";
+import {MatExpansionModule} from "@angular/material/expansion";
 
 @NgModule({
   imports: [
