@@ -3,11 +3,15 @@ import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
 import {Observable, of} from "rxjs";
 
-import {Webhook, Trigger} from "./interface";
+import {Webhook, WebhookLog, WebhookLogFilter} from "./interface";
 
 @Injectable({providedIn: "root"})
 export class WebhookService {
   constructor(private http: HttpClient) {}
+
+  private resetTimezoneOffset(date: Date) {
+    return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
+  }
 
   get(id: string): Observable<Webhook> {
     return this.http.get<Webhook>(`api:/webhook/${id}`);
@@ -35,6 +39,31 @@ export class WebhookService {
 
   getCollections(): Observable<string[]> {
     return this.http.get<string[]>(`api:/webhook/collections`);
+  }
+
+  getLogs(filter: WebhookLogFilter): Observable<WebhookLog[]> {
+    let params: any = {};
+
+    if (filter.date.begin && filter.date.end) {
+      params.begin = this.resetTimezoneOffset(new Date(filter.date.begin)).toISOString();
+      params.end = this.resetTimezoneOffset(new Date(filter.date.end)).toISOString();
+    }
+
+    params.webhook = filter.webhooks;
+
+    params.status = filter.statusCodes;
+
+    params.limit = filter.limit;
+
+    params.skip = filter.skip;
+
+    return this.http.get<WebhookLog[]>(`api:/webhook/logs`, {params});
+  }
+
+  clearLogs(logIds: string[]) {
+    return this.http.request("delete", "api:/webhook/logs", {
+      body: logIds
+    });
   }
 }
 

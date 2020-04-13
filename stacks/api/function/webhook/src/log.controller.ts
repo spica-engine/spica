@@ -29,7 +29,13 @@ export class WebhookLogController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    let aggregation = [];
+    let aggregation: object[] = [
+      {
+        $addFields: {
+          execution_time: {$toDate: "$_id"}
+        }
+      }
+    ];
 
     let filter: FilterQuery<Log> = {};
 

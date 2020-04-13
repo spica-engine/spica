@@ -81,6 +81,10 @@ describe("Activity Acceptance", () => {
     await service.deleteMany({});
   });
 
+  function objectIdToDate(id: string): string {
+    return new Date(parseInt(id.substring(0, 8), 16) * 1000).toISOString();
+  }
+
   it("should get all logs", async () => {
     const response = await request.get("/webhook/logs", {});
 
@@ -99,7 +103,8 @@ describe("Activity Acceptance", () => {
           status: 404,
           statusText: "BAD REQUEST"
         },
-        webhook: "test_webhook_id"
+        webhook: "test_webhook_id",
+        execution_time: objectIdToDate(logIds[0].toHexString())
       },
       {
         _id: logIds[1].toHexString(),
@@ -114,7 +119,8 @@ describe("Activity Acceptance", () => {
           status: 201,
           statusText: "CREATED"
         },
-        webhook: "test_webhook_id2"
+        webhook: "test_webhook_id2",
+        execution_time: objectIdToDate(logIds[1].toHexString())
       }
     ]);
   });
@@ -137,7 +143,8 @@ describe("Activity Acceptance", () => {
           status: 201,
           statusText: "CREATED"
         },
-        webhook: "test_webhook_id2"
+        webhook: "test_webhook_id2",
+        execution_time: objectIdToDate(logIds[1].toHexString())
       }
     ]);
   });
@@ -160,7 +167,8 @@ describe("Activity Acceptance", () => {
           status: 404,
           statusText: "BAD REQUEST"
         },
-        webhook: "test_webhook_id"
+        webhook: "test_webhook_id",
+        execution_time: objectIdToDate(logIds[0].toHexString())
       }
     ]);
   });
@@ -183,7 +191,8 @@ describe("Activity Acceptance", () => {
           status: 201,
           statusText: "CREATED"
         },
-        webhook: "test_webhook_id2"
+        webhook: "test_webhook_id2",
+        execution_time: objectIdToDate(logIds[1].toHexString())
       }
     ]);
   });
@@ -212,7 +221,8 @@ describe("Activity Acceptance", () => {
           status: 404,
           statusText: "BAD REQUEST"
         },
-        webhook: "test_webhook_id"
+        webhook: "test_webhook_id",
+        execution_time: objectIdToDate(logIds[0].toHexString())
       }
     ]);
   });
