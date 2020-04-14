@@ -21,7 +21,7 @@ export class FilterComponent implements OnChanges {
   properties: {[key: string]: InputSchema & PropertyOptions} = {};
 
   property: string;
-  value: string | boolean | number;
+  value: string | boolean | number | object;
 
   typeMappings = new Map<string, string>([["richtext", "textarea"]]);
 
@@ -42,8 +42,12 @@ export class FilterComponent implements OnChanges {
   }
 
   apply() {
-    const origin = this.resolver.getOriginByType(this.properties[this.property].type);
-    this.filter = {[this.property]: origin == "string" ? {$regex: this.value} : this.value};
+    if (this.properties[this.property].type == "date") {
+      this.filter = {[this.property]: {begin: this.value[0], end: this.value[1]}};
+    } else {
+      const origin = this.resolver.getOriginByType(this.properties[this.property].type);
+      this.filter = {[this.property]: origin == "string" ? {$regex: this.value} : this.value};
+    }
     this.filterChange.emit(this.filter);
   }
 
