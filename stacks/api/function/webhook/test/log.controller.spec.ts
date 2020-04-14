@@ -3,9 +3,9 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {WebhookModule} from "..";
-import {WebhookLogService} from "../src/log.service";
-import {WebhookLogController} from "../src/log.controller";
+import {WebhookModule} from "@spica-server/function/webhook";
+import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
+import {WebhookLogController} from "@spica-server/function/webhook/src/log.controller";
 
 describe("Activity Acceptance", () => {
   let request: Request;

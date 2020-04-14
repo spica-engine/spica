@@ -3,7 +3,7 @@ import {ChangeStream, DatabaseService} from "@spica-server/database";
 import fetch from "node-fetch";
 import {Webhook} from "./interface";
 import {ChangeKind, WebhookService} from "./webhook.service";
-import {WebhookLogService} from "./log.service";
+import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 
 @Injectable()
 export class WebhookInvoker {
@@ -65,11 +65,11 @@ export class WebhookInvoker {
           };
         })
         .then(response => {
-          this.logService.insertLog(
-            {body: request.body, headers: request.headers, url: url},
-            response,
-            target
-          );
+          this.logService.insertOne({
+            request: {body: request.body, headers: request.headers, url: url},
+            response: response,
+            webhook: target
+          });
         })
         .catch(() => {});
     });

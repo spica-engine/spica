@@ -51,8 +51,7 @@ export function ARRAY<T>(coerce: (v: string) => T): PipeTransform<string | strin
   return {
     transform: value => {
       if (!Array.isArray(value)) {
-        if (value == undefined || value == null) value = [];
-        else value = [value];
+        value = [value];
       }
       return value.map(coerce);
     }

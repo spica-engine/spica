@@ -11,7 +11,7 @@ import {
   Body
 } from "@nestjs/common";
 import {AuthGuard} from "@spica-server/passport";
-import {NUMBER, DATE, ARRAY} from "@spica-server/core";
+import {NUMBER, DATE, ARRAY, DEFAULT} from "@spica-server/core";
 import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Log} from ".";
 
@@ -22,10 +22,10 @@ export class WebhookLogController {
   @Get()
   @UseGuards(AuthGuard())
   getLogs(
-    @Query("webhook", ARRAY(String)) webhook: string[],
+    @Query("webhook", DEFAULT([]), ARRAY(String)) webhook: string[],
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
-    @Query("status", ARRAY(Number)) status: number[],
+    @Query("status", DEFAULT([]), ARRAY(Number)) status: number[],
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
@@ -76,7 +76,7 @@ export class WebhookLogController {
   @Delete()
   @UseGuards(AuthGuard())
   @HttpCode(HttpStatus.NO_CONTENT)
-  deleteMany(@Body() ids: ObjectId[]) {
-    return this.logService.deleteMany({_id: {$in: ids.map(id => new ObjectId(id))}});
+  deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
+    return this.logService.deleteMany({_id: {$in: ids}});
   }
 }

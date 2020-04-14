@@ -3,7 +3,7 @@ import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/data
 import {WebhookService} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import * as __fetch__ from "node-fetch";
-import {WebhookLogService} from "../src/log.service";
+import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 
 describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
@@ -110,9 +110,8 @@ describe("Webhook Invoker", () => {
     expect(unsubscribeSpy).toHaveBeenCalledWith(hook._id.toHexString());
   });
 
-  it("should report changes from the database and call insertLog", async () => {
-    const insertLogSpy = spyOn(invoker["logService"], "insertLog").and.callFake(() => {});
-    const hook = await service.insertOne({
+  it("should report changes from the database", async () => {
+    await service.insertOne({
       url: "http://spica.internal",
       trigger: {
         name: "database",
@@ -140,10 +139,29 @@ describe("Webhook Invoker", () => {
         "Content-type": "application/json"
       }
     });
+  });
+
+  it("should insert log when document changed", async () => {
+    const insertLogSpy = spyOn(invoker["logService"], "insertOne");
+    const hook = await service.insertOne({
+      url: "http://spica.internal",
+      trigger: {
+        name: "database",
+        active: true,
+        options: {
+          collection: "stream_coll",
+          type: "INSERT"
+        }
+      }
+    });
+    await stream.change.wait();
+    stream.change.next();
+    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
+    await stream.change.wait();
 
     expect(insertLogSpy).toHaveBeenCalledTimes(1);
-    expect(insertLogSpy).toHaveBeenCalledWith(
-      {
+    expect(insertLogSpy).toHaveBeenCalledWith({
+      request: {
         body: JSON.stringify({
           type: "insert",
           document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
@@ -155,13 +173,13 @@ describe("Webhook Invoker", () => {
         },
         url: "http://spica.internal"
       },
-      {
+      response: {
         headers: {key: ["value"]},
         status: 404,
         statusText: "Not Found",
         body: "res_body"
       },
-      hook._id.toHexString()
-    );
+      webhook: hook._id.toHexString()
+    });
   });
 });
