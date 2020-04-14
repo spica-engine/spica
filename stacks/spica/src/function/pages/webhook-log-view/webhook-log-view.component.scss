@@ -1,0 +1,56 @@
+:host {
+  mat-toolbar {
+    min-height: 150px;
+    padding: 0 30px;
+    align-items: flex-start;
+    h4 > * {
+      vertical-align: middle;
+      margin-left: 5px;
+    }
+    .space-between {
+      flex: 1 1 auto;
+    }
+  }
+
+  .mat-form-field {
+    margin: 5px 10px;
+  }
+
+  .example-viewport {
+    height: 500px;
+    width: 100%;
+  }
+
+  .mat-card {
+    margin: -50px auto;
+    width: 95%;
+  }
+
+  .mat-card-content {
+    height: 100%;
+    .emptyList {
+      display: flex;
+      justify-content: center;
+    }
+    .cdk-virtual-scroll-viewport {
+      div.title {
+        height: 40px;
+        span {
+          display: inline-block;
+          width: 20%;
+          text-align: center;
+        }
+      }
+      .mat-expansion-panel  {
+        .mat-expansion-panel-header span {
+          width: 20%;
+          text-align: center;
+        }
+      }
+
+      .mat-progress-spinner {
+        margin: 15px auto;
+      }
+    }
+  }
+}

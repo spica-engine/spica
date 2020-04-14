@@ -17,6 +17,11 @@ import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.compone
 import {WebhookRoutingModule} from "./webhook-routing.module";
 import {PassportModule} from "@spica-client/passport";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
+import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
+import {ScrollingModule} from "@angular/cdk/scrolling";
+import {MatProgressSpinnerModule} from "@angular/material";
+import {MatExpansionModule} from "@angular/material/expansion";
 
 @NgModule({
   imports: [
@@ -35,8 +40,13 @@ import {MatSlideToggleModule} from "@angular/material/slide-toggle";
     MatInputModule,
     MatSlideToggleModule,
     PassportModule.forChild(),
-    WebhookRoutingModule
+    WebhookRoutingModule,
+    SatDatepickerModule,
+    SatNativeDateModule,
+    MatProgressSpinnerModule,
+    ScrollingModule,
+    MatExpansionModule
   ],
-  declarations: [WebhookAddComponent, WebhookIndexComponent]
+  declarations: [WebhookAddComponent, WebhookIndexComponent, WebhookLogViewComponent]
 })
 export class WebhookModule {}
