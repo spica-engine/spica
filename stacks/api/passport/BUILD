@@ -43,7 +43,10 @@ ts_library(
     testonly = True,
     srcs = glob(
         include = ["**/*.spec.ts"],
-        exclude = ["**/activity.resource.spec.ts"],
+        exclude = [
+            "**/activity.resource.spec.ts",
+            "**/utilities.spec.ts",
+        ],
     ),
     deps = [
         ":passport",
