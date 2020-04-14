@@ -59,7 +59,6 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
             .filter(([, value]) => value.options.visible)
             .map(([key]) => key)
             .concat("actions");
-          this.bucket = bSchema;
         }
       })
     );

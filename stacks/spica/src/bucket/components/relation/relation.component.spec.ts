@@ -5,7 +5,8 @@ import {
   MatTableModule,
   MatPaginatorModule,
   MatMenuModule,
-  MatButtonModule
+  MatButtonModule,
+  MatMenuTrigger
 } from "@angular/material";
 import {INPUT_SCHEMA, EMPTY_INPUT_SCHEMA} from "@spica-client/common";
 import {BucketDataService} from "src/bucket/services/bucket-data.service";
@@ -107,6 +108,31 @@ describe("Relation Component", () => {
       2,
       "should work if bucket.meta.total value is 2 "
     );
+  });
+
+  it("should set bucketSchema", () => {
+    expect(fixture.componentInstance.bucket).toEqual(emptyBucket());
+  });
+
+  it("should close menu", () => {
+    const closeSpy = spyOn(fixture.componentInstance.filterMenu.close, "emit");
+    fixture.componentInstance.closeMenu();
+    expect(closeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("should call bucketDataService with changed filter", async () => {
+    const findSpy = fixture.componentInstance["bds"].find as jasmine.Spy;
+    findSpy.calls.reset();
+
+    fixture.componentInstance.filter = {test_key: "test_value"};
+    fixture.componentInstance.refresh.emit();
+
+    expect(findSpy).toHaveBeenCalledTimes(1);
+    expect(findSpy).toHaveBeenCalledWith(undefined, {
+      filter: {test_key: "test_value"},
+      limit: 10,
+      skip: 0
+    });
   });
 
   it("should select row", () => {
