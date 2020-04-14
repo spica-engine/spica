@@ -53,7 +53,6 @@ export function ARRAY<T>(coerce: (v: string) => T): PipeTransform<string | strin
       if (!Array.isArray(value)) {
         value = [value];
       }
-
       return value.map(coerce);
     }
   };
