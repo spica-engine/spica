@@ -84,6 +84,25 @@ jasmine_node_test(
     ],
 )
 
+ts_library(
+    name = "identity_utilities_test_lib",
+    testonly = True,
+    srcs = glob([
+        "**/utilities.spec.ts",
+    ]),
+    deps = [
+        "//stacks/api/passport",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "identity_utilities_test",
+    deps = [
+        "identity_utilities_test_lib",
+    ],
+)
+
 docs(
     name = "docs",
     srcs = [
