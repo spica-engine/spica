@@ -3,12 +3,17 @@ import {ChangeStream, DatabaseService} from "@spica-server/database";
 import fetch from "node-fetch";
 import {Webhook} from "./interface";
 import {ChangeKind, WebhookService} from "./webhook.service";
+import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 
 @Injectable()
 export class WebhookInvoker {
   private targets = new Map<string, ChangeStream>();
 
-  constructor(private webhookService: WebhookService, private db: DatabaseService) {
+  constructor(
+    private webhookService: WebhookService,
+    private db: DatabaseService,
+    private logService: WebhookLogService
+  ) {
     this.webhookService.targets().subscribe(change => {
       switch (change.kind) {
         case ChangeKind.Added:
@@ -40,15 +45,35 @@ export class WebhookInvoker {
         document: rawChange.fullDocument,
         documentKey: rawChange.documentKey._id.toString()
       };
-      fetch(url, {
+
+      let request = {
         method: "post",
         body: JSON.stringify(change),
         headers: {
           "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
           "Content-type": "application/json"
         }
-      }).catch(() => {});
+      };
+
+      fetch(url, request)
+        .then(async response => {
+          return {
+            headers: response.headers.raw(),
+            status: response.status,
+            statusText: response.statusText,
+            body: await response.text()
+          };
+        })
+        .then(response => {
+          this.logService.insertOne({
+            request: {body: request.body, headers: request.headers, url: url},
+            response: response,
+            webhook: target
+          });
+        })
+        .catch(() => {});
     });
+
     this.targets.set(target, stream);
   }
 

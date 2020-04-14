@@ -3,6 +3,7 @@ import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/data
 import {WebhookService} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import * as __fetch__ from "node-fetch";
+import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 
 describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
@@ -14,10 +15,21 @@ describe("Webhook Invoker", () => {
   let unsubscribeSpy: jasmine.Spy<typeof invoker["unsubscribe"]>;
   let fetchSpy: jasmine.Spy<typeof __fetch__.default>;
 
+  let mockHttpResponse = {
+    headers: {
+      raw: () => {
+        return {key: ["value"]};
+      }
+    },
+    status: 404,
+    statusText: "Not Found",
+    text: () => Promise.resolve("res_body")
+  } as any;
+
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
-      providers: [WebhookInvoker, WebhookService]
+      providers: [WebhookInvoker, WebhookService, WebhookLogService]
     }).compile();
 
     service = module.get(WebhookService);
@@ -28,8 +40,8 @@ describe("Webhook Invoker", () => {
 
     subscribeSpy = spyOn(invoker, "subscribe" as never).and.callThrough();
     unsubscribeSpy = spyOn(invoker, "unsubscribe" as never).and.callThrough();
-    fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(undefined));
-  });
+    fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(mockHttpResponse));
+  }, 20000);
 
   afterEach(async () => await module.close());
 
@@ -99,7 +111,7 @@ describe("Webhook Invoker", () => {
   });
 
   it("should report changes from the database", async () => {
-    const hook = await service.insertOne({
+    await service.insertOne({
       url: "http://spica.internal",
       trigger: {
         name: "database",
@@ -126,6 +138,48 @@ describe("Webhook Invoker", () => {
         "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
         "Content-type": "application/json"
       }
+    });
+  });
+
+  it("should insert log when document changed", async () => {
+    const insertLogSpy = spyOn(invoker["logService"], "insertOne");
+    const hook = await service.insertOne({
+      url: "http://spica.internal",
+      trigger: {
+        name: "database",
+        active: true,
+        options: {
+          collection: "stream_coll",
+          type: "INSERT"
+        }
+      }
+    });
+    await stream.change.wait();
+    stream.change.next();
+    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
+    await stream.change.wait();
+
+    expect(insertLogSpy).toHaveBeenCalledTimes(1);
+    expect(insertLogSpy).toHaveBeenCalledWith({
+      request: {
+        body: JSON.stringify({
+          type: "insert",
+          document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
+          documentKey: doc.insertedId.toHexString()
+        }),
+        headers: {
+          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
+          "Content-type": "application/json"
+        },
+        url: "http://spica.internal"
+      },
+      response: {
+        headers: {key: ["value"]},
+        status: 404,
+        statusText: "Not Found",
+        body: "res_body"
+      },
+      webhook: hook._id.toHexString()
     });
   });
 });

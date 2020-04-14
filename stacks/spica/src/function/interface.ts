@@ -137,6 +137,25 @@ export function emptyWebhook(): Webhook {
   };
 }
 
+export interface WebhookLog {
+  _id: string;
+  webhook: string;
+  request: object;
+  response: object;
+  execution_time: Date;
+}
+
+export interface WebhookLogFilter {
+  webhooks: string[];
+  statusCodes: number[];
+  date: {
+    begin: Date;
+    end: Date;
+  };
+  limit: number;
+  skip: number;
+}
+
 export interface Enqueuer {
   description: {
     icon: string;

@@ -41,6 +41,13 @@ const route: Route[] = [
     path: "/webhook",
     display: "Webhook",
     data: {action: "webhook:index"}
+  },
+  {
+    id: "webhook_logs",
+    category: RouteCategory.Developer,
+    icon: "format_list_numbered",
+    path: "/webhook/logs",
+    display: "Webhook Logs"
   }
 ];
 
