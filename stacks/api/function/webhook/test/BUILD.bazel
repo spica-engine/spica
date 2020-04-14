@@ -134,24 +134,3 @@ jasmine_node_test(
         ":log_controller_test_lib",
     ],
 )
-
-ts_library(
-    name = "log_service_test_lib",
-    testonly = True,
-    srcs = [
-        "log.service.spec.ts",
-    ],
-    deps = [
-        "//packages/database/testing",
-        "//stacks/api/function/webhook",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-    ],
-)
-
-jasmine_node_test(
-    name = "log_service_test",
-    deps = [
-        ":log_service_test_lib",
-    ],
-)

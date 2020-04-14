@@ -60,10 +60,7 @@ export class WebhookLogController {
 
     if (limit) aggregation.push({$limit: limit});
 
-    return this.logService
-      .aggregate(aggregation)
-      .toArray()
-      .catch(err => console.log(err));
+    return this.logService.aggregate(aggregation).toArray();
   }
 
   @Delete(":id")
