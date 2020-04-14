@@ -20,7 +20,6 @@ export interface Log {
   webhook: string;
   request: Request;
   response: Response;
-  executionTime?: Date;
 }
 
 export interface Request {
