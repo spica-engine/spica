@@ -31,7 +31,7 @@ export class HighlightPipe {
   @Output() init = new EventEmitter();
   constructor(private elementRef: ElementRef<HTMLElement>) {
     const onGotAmdLoader = () => {
-      window["require"]['config']({paths: {vs: this.monacoPath}});
+      window["require"]["config"]({paths: {vs: this.monacoPath}});
       //@ts-ignore
       window["require"](["vs/editor/editor.main"], () => {
         this.editorRef = monaco.editor.create(this.elementRef.nativeElement, this._options);
