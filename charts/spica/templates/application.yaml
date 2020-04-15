@@ -54,9 +54,9 @@ spec:
     - metadata:
         name: {{ .Release.Name }}-data
       spec:
-        storageClassName: {{.Values.application.storageClass}}
+        storageClassName: {{ .Values.application.storageClass }}
         accessModes:
           - ReadWriteOnce
         resources:
           requests:
-            storage: {{.Values.application.storageSize}}
+            storage: {{ .Values.application.storageSize }}
