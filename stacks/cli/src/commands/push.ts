@@ -34,6 +34,13 @@ export class PushCommand extends Command {
           aliases: ["p"],
           default: "package.yaml",
           type: String
+        },
+        {
+          name: "push_strategy",
+          summary:
+            "Function pushing strategy. Available strategies are: exclusive, concurrent or specified number that will be push concurrently",
+          default: "exclusive",
+          type: String
         }
       ]
     };
@@ -46,6 +53,7 @@ export class PushCommand extends Command {
     }
 
     const [inputFolder] = inputs;
+    const strategy = options.push_strategy;
 
     process.chdir(path.join(process.cwd(), inputFolder));
 
@@ -82,33 +90,78 @@ export class PushCommand extends Command {
     await this.namespace.logger.spin({
       text: `Pushing functions to upstream. (0/${assets.length})`,
       op: async spinner => {
-        let pushed = 1;
-        for (const asset of assets) {
-          const func = {...asset.spec};
-          delete func.indexPath;
-          delete func.dependencies;
-          const {_id} = await request.post(functionsUrl, func, authorizationHeaders);
-
-          const index = await fs.promises.readFile(asset.spec.indexPath);
-          const functionUrl = await context.url(`/function/${_id}/index`);
-          await request.post(functionUrl, {index: index.toString()}, authorizationHeaders);
-
-          if (Array.isArray(asset.spec.dependencies)) {
-            for (const dependency of asset.spec.dependencies) {
-              const functionDependencyUrl = await context.url(`/function/${_id}/dependencies`);
-              await request.post(
-                functionDependencyUrl,
-                {
-                  name: `${dependency.name}@${dependency.version}`
-                },
-                authorizationHeaders
-              );
-            }
-          }
-
-          spinner.text = `Pushing functions to upstream. (${pushed++}/${assets.length})`;
+        switch (strategy) {
+          case "exclusive":
+            await this.exclusivePush(assets, functionsUrl, authorizationHeaders, spinner);
+            break;
+          case "concurrent":
+            await this.concurrentPush(assets, functionsUrl, authorizationHeaders, spinner);
+            break;
+          default:
+            break;
         }
       }
     });
+  }
+
+  async exclusivePush(assets, functionsUrl, authorizationHeaders, spinner) {
+    let pushed = 1;
+    for (const asset of assets) {
+      const func = {...asset.spec};
+      delete func.indexPath;
+      delete func.dependencies;
+      const {_id} = await request.post(functionsUrl, func, authorizationHeaders);
+
+      const index = await fs.promises.readFile(asset.spec.indexPath);
+      const functionUrl = await context.url(`/function/${_id}/index`);
+
+      await request.post(functionUrl, {index: index.toString()}, authorizationHeaders);
+
+      if (Array.isArray(asset.spec.dependencies)) {
+        for (const dependency of asset.spec.dependencies) {
+          const functionDependencyUrl = await context.url(`/function/${_id}/dependencies`);
+          await request.post(
+            functionDependencyUrl,
+            {
+              name: `${dependency.name}@${dependency.version}`
+            },
+            authorizationHeaders
+          );
+        }
+      }
+
+      spinner.text = `Pushing functions to upstream. (${pushed++}/${assets.length})`;
+    }
+  }
+
+  async concurrentPush(assets, functionsUrl, authorizationHeaders, spinner) {
+    spinner.text = "";
+
+    const functionIds = await Promise.all(
+      assets.map(asset => {
+        const func = {...asset.spec};
+        delete func.indexPath;
+        delete func.dependencies;
+        return request.post(functionsUrl, func, authorizationHeaders);
+      })
+    ).then(functions => functions.map(func => func["_id"]));
+
+    let indexes = [];
+    let functionUrls = [];
+    let dependencyUrls = [];
+
+    for (let assetIndex = 0; assetIndex < assets.length; assetIndex++) {
+      let index = await fs.promises.readFile(assets[assetIndex].spec.indexPath);
+      indexes.push(index);
+      let url = await context.url(`/function/${functionIds[assetIndex]}/index`);
+      functionUrls.push(url);
+      //multiple dependency
+    }
+
+    await Promise.all(
+      functionUrls.map((url, i) => {
+        request.post(url, {index: indexes[i].toString()}, authorizationHeaders);
+      })
+    ).then(res => console.log(res));
   }
 }
