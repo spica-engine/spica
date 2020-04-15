@@ -31,7 +31,12 @@ describe("Node", () => {
     it("should compile entrypoint", async () => {
       compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
       await node.compile(compilation);
+
+      const files = fs.readdirSync(path.join(compilation.cwd, ".build"));
+      expect(files).toContain(".tsbuildinfo");
+
       const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.js"));
+
       expect(stat.toString()).toContain("exports.default = default_1");
     });
 
