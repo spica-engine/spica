@@ -4,7 +4,7 @@ import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
 import {merge, Observable} from "rxjs";
-import {flatMap, map, publishReplay, refCount, switchMap, tap, retry} from "rxjs/operators";
+import {flatMap, map, publishReplay, refCount, switchMap, tap, take} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
@@ -89,6 +89,16 @@ export class IndexComponent implements OnInit {
             .map(([key]) => key),
           "$$spicainternal_actions"
         ];
+      }),
+      tap(schema => {
+        Object.keys(schema.properties).map(key => {
+          if (schema.properties[key].type == "relation") {
+            this.bs
+              .getBucket(schema.properties[key]["bucketId"])
+              .pipe(take(1))
+              .subscribe(bucket => (schema.properties[key]["primary"] = bucket.primary));
+          }
+        });
       }),
       publishReplay(),
       refCount()
