@@ -18,13 +18,30 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {createBucketDataResource} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
+
+function filterReviver(k: string, v: string) {
+  const availableConstructors = {
+    Date: v => new Date(v),
+    ObjectId: v => new ObjectId(v)
+  };
+  const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
+  if (typeof v == "string" && ctr.test(v)) {
+    const [, desiredCtr, arg] = v.match(ctr);
+    if (availableConstructors[desiredCtr]) {
+      return availableConstructors[desiredCtr](arg);
+    } else {
+      throw new Error(`Could not find the constructor ${desiredCtr} in {"${k}":"${v}"}`);
+    }
+  }
+  return v;
+}
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -128,7 +145,7 @@ export class BucketDataController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule: boolean = false,
     @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
-    @Query("filter", JSONP) filter: FilterQuery<BucketDocument>,
+    @Query("filter", JSONPR(filterReviver)) filter: FilterQuery<BucketDocument>,
     @Query("limit", NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object

@@ -11,7 +11,7 @@
   [(ngModel)]="value"
   (click)="$event.stopPropagation()"
 ></span>
-<span *ngIf="property && properties[property].type == 'date'">
+<span *ngIf="property && properties[property].type == 'date'" (click)="$event.stopPropagation()">
   <mat-form-field>
     <mat-label>{{ properties[property].title || properties[property].$name }}</mat-label>
     <input
@@ -22,7 +22,7 @@
       [owlDateTime]="dt1"
       [owlDateTimeTrigger]="dt1"
       placeholder="Date Time"
-      [selectMode]="'range'"
+      selectMode="range"
     />
     <owl-date-time #dt1></owl-date-time>
     <mat-hint *ngIf="schema.description">{{ properties[property].description }}</mat-hint>
