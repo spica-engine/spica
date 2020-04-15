@@ -5,23 +5,28 @@ metadata:
   name: {{ .Release.Name }}-application
   annotations:
 {{ toYaml .Values.ingress.annotations | indent 4 }}
+{{ if semverCompare "<1.18-0" .Capabilities.KubeVersion.GitVersion }}
+    kubernetes.io/ingress.class: {{ .Values.ingress.ingressClassName }}
+{{ end }}
 spec:
+{{ if semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion }}
   ingressClassName: {{ .Values.ingress.ingressClassName }}
+{{ end }}
   tls:
 {{ toYaml .Values.ingress.tls | indent 4 }}
   rules:
-      {{if .Values.ingress.host}}
+      {{ if .Values.ingress.host }}
     - host: {{.Values.ingress.host}}
       http:
-      {{else}}
+      {{ else }}
     - http:
-      {{end}}
+      {{ end }}
         paths:
-          - path: {{.Values.application.webBaseUrl}}?(.*)
+          - path: {{ .Values.application.webBaseUrl }}?(.*)
             backend:
               serviceName: {{ .Release.Name }}-application
               servicePort: 80
-          - path: {{.Values.application.apiBaseUrl}}?(.*)
+          - path: {{ .Values.application.apiBaseUrl }}?(.*)
             backend:
               serviceName: {{ .Release.Name }}-application
               servicePort: 4300
