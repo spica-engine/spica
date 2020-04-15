@@ -1,4 +1,4 @@
-export function attachIdentityAcces(request: any) {
+export function attachIdentityAccess(request: any) {
   if (
     request.method == "PUT" &&
     request.params.id == request.user._id &&

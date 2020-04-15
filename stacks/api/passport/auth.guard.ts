@@ -44,7 +44,7 @@ function createAuthGuard(type?: string): Type<CanActivate> {
         strategyType = type;
       }
 
-      let user = await passportFn(strategyType.toLowerCase(), options, (err, user, info) =>
+      const user = await passportFn(strategyType.toLowerCase(), options, (err, user, info) =>
         this.handleRequest(err, user, info, context)
       );
 

@@ -1,4 +1,4 @@
-import {attachIdentityAcces} from "./utilities";
+import {attachIdentityAccess} from "./utilities";
 
 describe("Attach Identity Access", () => {
   it("should attach when condition is valid", () => {
@@ -12,7 +12,7 @@ describe("Attach Identity Access", () => {
         policies: []
       }
     };
-    expect(attachIdentityAcces(request)).toEqual({
+    expect(attachIdentityAccess(request)).toEqual({
       ...request,
       user: {_id: "test_user", policies: ["IdentityFullAccess"]}
     });
