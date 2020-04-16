@@ -372,7 +372,7 @@ describe("IndexComponent", () => {
       const cell = fixture.debugElement.query(By.css("mat-table mat-row mat-cell"));
       expect(headerCells[0].nativeElement.textContent).toBe(" test ");
       expect(headerCells[1].nativeElement.textContent).toBe("Actions");
-      expect(cell.nativeElement.textContent).toBe(" 123");
+      expect(cell.nativeElement.textContent).toBe(" 123 ");
     });
 
     it("should render actions correctly", () => {
