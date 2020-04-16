@@ -37,25 +37,25 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     );
 
     stream.on("change", rawChange => {
-      const change = new Database.Change();
-      change.kind = getChangeKind(rawChange.operationType);
-      change.document = rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined;
-      change.documentKey = rawChange.documentKey._id.toString();
-      change.collection = rawChange.ns.coll;
-      if (change.kind == Database.Change.Kind.UPDATE) {
-        change.updateDescription = new Database.Change.UpdateDescription();
-        change.updateDescription.removedFields = JSON.stringify(
-          rawChange.updateDescription.removedFields
-        );
-        change.updateDescription.updatedFields = JSON.stringify(
-          rawChange.updateDescription.updatedFields
-        );
-      }
-      const event = new Event.Event();
-      event.target = target;
-      event.type = Event.Type.DATABASE;
-      this.queue.enqueue(event);
+      const change = new Database.Change({
+        kind: getChangeKind(rawChange.operationType),
+        document: rawChange.fullDocument ? JSON.stringify(rawChange.fullDocument) : undefined,
+        documentKey: rawChange.documentKey._id.toString(),
+        collection: rawChange.ns.coll
+      });
 
+      if (change.kind == Database.Change.Kind.UPDATE) {
+        change.updateDescription = new Database.Change.UpdateDescription({
+          removedFields: JSON.stringify(rawChange.updateDescription.removedFields),
+          updatedFields: JSON.stringify(rawChange.updateDescription.updatedFields)
+        });
+      }
+
+      const event = new Event.Event({
+        target,
+        type: Event.Type.DATABASE
+      });
+      this.queue.enqueue(event);
       this.databaseQueue.enqueue(event.id, change);
     });
 

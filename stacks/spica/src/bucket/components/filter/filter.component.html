@@ -1,5 +1,5 @@
 <mat-form-field (click)="$event.stopPropagation()">
-  <mat-select placeholder="Attribute to Filter" [(ngModel)]="property" (ngModelChange)="clear()">
+  <mat-select placeholder="Attribute to Filter" [(ngModel)]="property">
     <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
       {{ propertyKv.value.title || propertyKv.key }}
     </mat-option>
