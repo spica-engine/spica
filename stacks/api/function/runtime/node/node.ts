@@ -86,10 +86,12 @@ export class Node extends Runtime {
       allowJs: true,
       skipDefaultLibCheck: true,
       alwaysStrict: true,
-      preserveSymlinks: true
+      preserveSymlinks: true,
+      incremental: true,
+      tsBuildInfoFile: path.resolve(compilation.cwd, ".build", ".tsbuildinfo")
     };
 
-    const program = ts.createProgram({
+    const program = ts.createIncrementalProgram({
       rootNames: [entrypoint],
       options
     });

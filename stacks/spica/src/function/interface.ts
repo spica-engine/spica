@@ -115,14 +115,45 @@ export interface Log {
   created_at: string;
 }
 
-export interface Subscription {
+export interface Webhook {
   _id?: string;
-  trigger: TriggerDescription;
   url: string;
+  trigger: WebhookTrigger;
 }
 
-export function emptySubscription(): Subscription {
-  return {trigger: {type: undefined, options: {}}, url: undefined};
+export interface WebhookTrigger {
+  name: string;
+  active: boolean;
+  options: {
+    collection: string;
+    type: "INSERT" | "UPDATE" | "REPLACE" | "DELETE";
+  };
+}
+
+export function emptyWebhook(): Webhook {
+  return {
+    url: undefined,
+    trigger: {active: true, name: "database", options: {collection: undefined, type: undefined}}
+  };
+}
+
+export interface WebhookLog {
+  _id: string;
+  webhook: string;
+  request: object;
+  response: object;
+  execution_time: Date;
+}
+
+export interface WebhookLogFilter {
+  webhooks: string[];
+  statusCodes: number[];
+  date: {
+    begin: Date;
+    end: Date;
+  };
+  limit: number;
+  skip: number;
 }
 
 export interface Enqueuer {

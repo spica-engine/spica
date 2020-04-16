@@ -32,7 +32,7 @@ message Change {
     }
 }
 
-service DatabaseQueue {
+service Queue {
     rpc pop(Change.Pop) returns (Change);
 }
  

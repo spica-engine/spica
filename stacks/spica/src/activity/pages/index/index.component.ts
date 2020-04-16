@@ -18,11 +18,11 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
     },
     {
       name: "Bucket",
-      modules: ["Bucket", "Bucket-Settings"]
+      modules: ["Bucket"]
     },
     {
       name: "Passport",
-      modules: ["Identity", "Identity-Settings", "Policy", "Apikey"]
+      modules: ["Identity", "Policy", "Apikey"]
     },
     {
       name: "Storage",
@@ -31,6 +31,10 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
     {
       name: "Function",
       modules: ["Function"]
+    },
+    {
+      name: "Preference",
+      modules: ["Preference"]
     }
   ];
 
@@ -42,7 +46,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   isPending = false;
 
-  private activities: Activity[] = [];
+  activities: Activity[] = [];
 
   private subscription = new Subscription();
 
@@ -113,13 +117,13 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   ngOnInit() {
     this.activityService
-      .getDocuments("bucket")
+      .getDocuments("buckets")
       .toPromise()
-      .then(buckets => {
-        buckets.forEach(id => {
+      .then(documentIds =>
+        documentIds.forEach(id => {
           this.moduleGroups[0].modules.push(`Bucket_${id}`);
-        });
-      });
+        })
+      );
 
     this.filters$
       .pipe(
@@ -177,9 +181,13 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   }
 
   showDocuments(moduleName: string) {
+    if (moduleName == "Preference") {
+      this.documentIds = ["bucket", "passport"];
+      return;
+    }
     this.documentIds = undefined;
     this.activityService
-      .getDocuments(moduleName)
+      .getDocuments(moduleName.toLowerCase())
       .toPromise()
       .then(documentIds => (this.documentIds = documentIds));
   }

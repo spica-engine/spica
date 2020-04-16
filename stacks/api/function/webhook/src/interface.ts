@@ -14,3 +14,27 @@ export interface Trigger {
     type: "INSERT" | "UPDATE" | "REPLACE" | "DELETE";
   };
 }
+
+export interface Log {
+  _id?: ObjectId;
+  webhook: string;
+  request: Request;
+  response: Response;
+}
+
+export interface Request {
+  headers: {
+    [key: string]: string;
+  };
+  url: string;
+  body: string;
+}
+
+export interface Response {
+  status: number;
+  statusText: string;
+  body: string;
+  headers: {
+    [key: string]: string[];
+  };
+}

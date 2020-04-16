@@ -233,7 +233,7 @@ export class FunctionController {
     return (this.engine.addPackage(fn, name) as any).pipe(...operators);
   }
 
-  @Delete(":id/dependencies/:name")
+  @Delete(":id/dependencies/:name(*)")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
