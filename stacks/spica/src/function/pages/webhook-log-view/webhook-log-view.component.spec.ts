@@ -18,7 +18,7 @@ import {FormsModule} from "@angular/forms";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {of} from "rxjs";
 
-describe("WebhookLogViewComponent", () => {
+fdescribe("WebhookLogViewComponent", () => {
   let component: WebhookLogViewComponent;
   let fixture: ComponentFixture<WebhookLogViewComponent>;
   let filterNextSpy: jasmine.Spy;
