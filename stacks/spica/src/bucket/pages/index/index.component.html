@@ -199,7 +199,7 @@
 
           <mat-cell *matCellDef="let row">
             {{
-              row[property.key] && row[property.key][property.value.primary]
+              row[property.key] && row[property.key].hasOwnProperty(property.value.primary)
                 ? row[property.key][property.value.primary]
                 : row[property.key]
             }}
