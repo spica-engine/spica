@@ -10,7 +10,7 @@ import {
   Param,
   Body
 } from "@nestjs/common";
-import {AuthGuard} from "@spica-server/passport";
+import {AuthGuard, ActionGuard} from "@spica-server/passport";
 import {NUMBER, DATE, ARRAY, DEFAULT} from "@spica-server/core";
 import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Log} from ".";
@@ -20,7 +20,7 @@ export class WebhookLogController {
   constructor(private logService: WebhookLogService) {}
 
   @Get()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
   getLogs(
     @Query("webhook", DEFAULT([]), ARRAY(String)) webhook: string[],
     @Query("begin", DATE) begin: Date,
@@ -64,14 +64,14 @@ export class WebhookLogController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.logService.deleteOne({_id: id});
   }
 
   @Delete()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
     return this.logService.deleteMany({_id: {$in: ids}});
