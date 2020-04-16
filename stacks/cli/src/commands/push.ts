@@ -53,7 +53,7 @@ export class PushCommand extends Command {
     }
 
     const [inputFolder] = inputs;
-    const strategy = options.push_strategy;
+    const strategy = options.push_strategy.toString();
 
     process.chdir(path.join(process.cwd(), inputFolder));
 
@@ -88,23 +88,47 @@ export class PushCommand extends Command {
     });
 
     await this.namespace.logger.spin({
-      text: `Pushing functions to upstream. (0/${assets.length})`,
+      text: "",
       op: async spinner => {
         switch (strategy) {
           case "exclusive":
-            await this.exclusivePush(assets, functionsUrl, authorizationHeaders, spinner);
+            await this.exclusive(assets, functionsUrl, authorizationHeaders, spinner);
             break;
           case "concurrent":
-            await this.concurrentPush(assets, functionsUrl, authorizationHeaders, spinner);
+            await this.concurrent(assets, functionsUrl, authorizationHeaders, spinner);
             break;
           default:
+            if (Number(strategy) > 1) {
+              let pushed = 0;
+              const chunkedAssets = chunk(assets, Number(strategy));
+              spinner.text = `Pushing functions to upstream. (0/${assets.length})`;
+              for (const asset of chunkedAssets) {
+                pushed = pushed + asset.length;
+                await this.concurrent(asset, functionsUrl, authorizationHeaders, spinner)
+                  .then(() => {
+                    {
+                      this.namespace.logger.success(
+                        `\nPushed functions to upstream.(${pushed}/${assets.length})`
+                      );
+                    }
+                  })
+                  .catch(() =>
+                    this.namespace.logger.warn(
+                      `\nPushed functions to upstream with fail.(${pushed}/${assets.length})`
+                    )
+                  );
+              }
+            } else {
+              await this.exclusive(assets, functionsUrl, authorizationHeaders, spinner);
+            }
             break;
         }
       }
     });
   }
 
-  async exclusivePush(assets, functionsUrl, authorizationHeaders, spinner) {
+  async exclusive(assets: any, functionsUrl: string, authorizationHeaders: any, spinner: any) {
+    spinner.text = `Pushing functions to upstream. (0/${assets.length})`;
     let pushed = 1;
     for (const asset of assets) {
       const func = {...asset.spec};
@@ -134,34 +158,81 @@ export class PushCommand extends Command {
     }
   }
 
-  async concurrentPush(assets, functionsUrl, authorizationHeaders, spinner) {
-    spinner.text = "";
-
+  async concurrent(assets: any, functionsUrl: string, authorizationHeaders: any, spinner: any) {
+    spinner.text = "Pushing functions to upstream.";
     const functionIds = await Promise.all(
       assets.map(asset => {
         const func = {...asset.spec};
         delete func.indexPath;
         delete func.dependencies;
-        return request.post(functionsUrl, func, authorizationHeaders);
+        return request
+          .post<Function[]>(functionsUrl, func, authorizationHeaders)
+          .then(res => {
+            spinner.text = `Created function ${res["_id"]}.`;
+            return res["_id"];
+          })
+          .catch(err => (spinner.text = err));
       })
-    ).then(functions => functions.map(func => func["_id"]));
+    )
+      .then(ids => {
+        spinner.text = `Creating function completed.`;
+        return ids;
+      })
+      .catch(err => (spinner.text = err));
 
     let indexes = [];
-    let functionUrls = [];
+    let indexUrls = [];
     let dependencyUrls = [];
 
-    for (let assetIndex = 0; assetIndex < assets.length; assetIndex++) {
-      let index = await fs.promises.readFile(assets[assetIndex].spec.indexPath);
+    for (let i = 0; i < assets.length; i++) {
+      let index = await fs.promises.readFile(assets[i].spec.indexPath);
       indexes.push(index);
-      let url = await context.url(`/function/${functionIds[assetIndex]}/index`);
-      functionUrls.push(url);
-      //multiple dependency
+
+      let indexUrl = await context.url(`/function/${functionIds[i]}/index`);
+      indexUrls.push(indexUrl);
+
+      let dependencyUrl = await context.url(`/function/${functionIds[i]}/dependencies`);
+      dependencyUrls.push(dependencyUrl);
     }
 
     await Promise.all(
-      functionUrls.map((url, i) => {
-        request.post(url, {index: indexes[i].toString()}, authorizationHeaders);
-      })
-    ).then(res => console.log(res));
+      indexUrls
+        .map((url, i) =>
+          request
+            .post(url, {index: indexes[i].toString()}, authorizationHeaders)
+            .then(() => (spinner.text = `Pushed index of function ${functionIds[i]}`))
+            .catch(err => (spinner.text = err))
+        )
+        .concat(
+          dependencyUrls.map((url, i) => {
+            if (
+              Array.isArray(assets[i].spec.dependencies) &&
+              assets[i].spec.dependencies.length > 0
+            ) {
+              const dependencyBody = {
+                name: assets[i].spec.dependencies.map(
+                  dependency => `${dependency.name}@${dependency.version}`
+                )
+              };
+              return request
+                .post(url, dependencyBody, authorizationHeaders)
+                .then(() => (spinner.text = `Pushed dependencies of function ${functionIds[i]}`))
+                .catch(err => (spinner.text = err));
+            }
+          })
+        )
+    )
+      .then(() => (spinner.text = `Pushing function completed.`))
+      .catch(err => (spinner.text = err));
   }
+}
+
+export function chunk(array: Asset[], size: number) {
+  const chunked_arr: Asset[][] = [];
+  let index = 0;
+  while (index < array.length) {
+    chunked_arr.push(array.slice(index, size + index));
+    index += size;
+  }
+  return chunked_arr;
 }

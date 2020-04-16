@@ -6,13 +6,13 @@ import * as path from "path";
 import {Observable} from "rxjs";
 
 export class Npm extends PackageManager {
-  install(cwd: string, qualifiedName: string): Observable<number> {
+  install(cwd: string, qualifiedNames: string | string[]): Observable<number> {
     return new Observable(observer => {
       const proc = child_process.spawn(
         "npm",
         [
           "install",
-          qualifiedName,
+          ...qualifiedNames,
           "--no-audit",
           "--loglevel",
           "timing",
