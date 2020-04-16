@@ -7,34 +7,40 @@ import {
   Type
 } from "@nestjs/common";
 import {Key, parse, compile} from "path-to-regexp";
-import {Statement} from "./interface";
+import {Statement, PrepareUser} from "./interface";
 import {getStatementResult} from "./operators";
 import {PolicyService} from "./policy.service";
 
 export function memoize(fn: Function) {
   const cache = {};
-  return (type: string | string[], format?: string) => {
+  return (type: string | string[], format?: string, prepareUser?: PrepareUser) => {
     const n = `${(Array.isArray(type) ? type : [type]).join(",")}${format}`;
     if (n in cache) {
       return cache[n];
     } else {
-      const result = fn(type, format);
+      const result = fn(type, format, prepareUser);
       cache[n] = result;
       return result;
     }
   };
 }
 
-export const ActionGuard: (type: string | string[], format?: string) => Type<CanActivate> = memoize(
-  createActionGuard
-);
+export const ActionGuard: (
+  type: string | string[],
+  format?: string,
+  prepareUser?: PrepareUser
+) => Type<CanActivate> = memoize(createActionGuard);
 
-function createActionGuard(actions: string | string[], format?: string): Type<CanActivate> {
+function createActionGuard(
+  actions: string | string[],
+  format?: string,
+  prepareUser?: PrepareUser
+): Type<CanActivate> {
   class MixinActionGuard implements CanActivate {
     constructor(@Optional() private policy: PolicyService) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-      const request = context.switchToHttp().getRequest();
+      let request = context.switchToHttp().getRequest();
       const response = context.switchToHttp().getResponse();
       const resourceName = this.buildResourceName(request.route.path, request.params);
 
@@ -42,6 +48,10 @@ function createActionGuard(actions: string | string[], format?: string): Type<Ca
 
       if (request.TESTING_SKIP_CHECK) {
         return true;
+      }
+
+      if (prepareUser) {
+        request = prepareUser(request);
       }
 
       if (!request.user.policies) {

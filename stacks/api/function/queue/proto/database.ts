@@ -2,9 +2,26 @@ import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "grpc";
 export namespace Database {
   export class Change extends pb_1.Message {
-    constructor(data?: any[]) {
+    constructor(
+      data?:
+        | any[]
+        | {
+            kind?: Change.Kind;
+            collection?: string;
+            document?: string;
+            documentKey?: string;
+            updateDescription?: Change.UpdateDescription;
+          }
+    ) {
       super();
-      pb_1.Message.initialize(this, data, 0, -1, [], null);
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.kind = data.kind;
+        this.collection = data.collection;
+        this.document = data.document;
+        this.documentKey = data.documentKey;
+        this.updateDescription = data.updateDescription;
+      }
     }
     get kind(): Change.Kind | undefined {
       return pb_1.Message.getFieldWithDefault(this, 1, undefined) as Change.Kind | undefined;
@@ -44,16 +61,19 @@ export namespace Database {
         collection: this.collection,
         document: this.document,
         documentKey: this.documentKey,
-        updateDescription: this.updateDescription
+        updateDescription: this.updateDescription && this.updateDescription.toObject()
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.kind != undefined) writer.writeEnum(1, this.kind);
-      if (this.collection) writer.writeString(2, this.collection);
-      if (this.document) writer.writeString(3, this.document);
-      if (this.documentKey) writer.writeString(4, this.documentKey);
-      if (this.updateDescription) writer.writeMessage(5, this.updateDescription, () => {});
+      if (this.kind !== undefined) writer.writeEnum(1, this.kind);
+      if (this.collection !== undefined) writer.writeString(2, this.collection);
+      if (this.document !== undefined) writer.writeString(3, this.document);
+      if (this.documentKey !== undefined) writer.writeString(4, this.documentKey);
+      if (this.updateDescription !== undefined)
+        writer.writeMessage(5, this.updateDescription, () =>
+          this.updateDescription.serialize(writer)
+        );
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Change {
@@ -87,11 +107,23 @@ export namespace Database {
       return message;
     }
   }
+
   export namespace Change {
     export class UpdateDescription extends pb_1.Message {
-      constructor(data?: any[]) {
+      constructor(
+        data?:
+          | any[]
+          | {
+              updatedFields?: string;
+              removedFields?: string;
+            }
+      ) {
         super();
-        pb_1.Message.initialize(this, data, 0, -1, [], null);
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+          this.updatedFields = data.updatedFields;
+          this.removedFields = data.removedFields;
+        }
       }
       get updatedFields(): string | undefined {
         return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -113,8 +145,8 @@ export namespace Database {
       }
       serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
         const writer = w || new pb_1.BinaryWriter();
-        if (this.updatedFields) writer.writeString(1, this.updatedFields);
-        if (this.removedFields) writer.writeString(2, this.removedFields);
+        if (this.updatedFields !== undefined) writer.writeString(1, this.updatedFields);
+        if (this.removedFields !== undefined) writer.writeString(2, this.removedFields);
         if (!w) return writer.getResultBuffer();
       }
       static deserialize(bytes: Uint8Array | pb_1.BinaryReader): UpdateDescription {
@@ -137,9 +169,18 @@ export namespace Database {
       }
     }
     export class Pop extends pb_1.Message {
-      constructor(data?: any[]) {
+      constructor(
+        data?:
+          | any[]
+          | {
+              id?: string;
+            }
+      ) {
         super();
-        pb_1.Message.initialize(this, data, 0, -1, [], null);
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+          this.id = data.id;
+        }
       }
       get id(): string | undefined {
         return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -154,7 +195,7 @@ export namespace Database {
       }
       serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
         const writer = w || new pb_1.BinaryWriter();
-        if (this.id) writer.writeString(1, this.id);
+        if (this.id !== undefined) writer.writeString(1, this.id);
         if (!w) return writer.getResultBuffer();
       }
       static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Pop {
@@ -180,9 +221,9 @@ export namespace Database {
       DELETE = 3
     }
   }
-  export const Queue = {
+  export var Queue = {
     pop: {
-      path: "/Database/Queue/pop",
+      path: "/Database.Queue/pop",
       requestStream: false,
       responseStream: false,
       requestType: Database.Change.Pop,
@@ -193,5 +234,9 @@ export namespace Database {
       responseDeserialize: (bytes: Buffer) => Change.deserialize(new Uint8Array(bytes))
     }
   };
-  export const QueueClient = grpc_1.makeGenericClientConstructor(Queue, "Queue", {});
+  export class QueueClient extends grpc_1.makeGenericClientConstructor(Queue, "Queue", {}) {
+    constructor(address: string, credentials: grpc_1.ChannelCredentials) {
+      super(address, credentials);
+    }
+  }
 }

@@ -43,7 +43,10 @@ ts_library(
     testonly = True,
     srcs = glob(
         include = ["**/*.spec.ts"],
-        exclude = ["**/activity.resource.spec.ts"],
+        exclude = [
+            "**/activity.resource.spec.ts",
+            "**/utilities.spec.ts",
+        ],
     ),
     deps = [
         ":passport",
@@ -81,6 +84,25 @@ jasmine_node_test(
     name = "activity_test",
     deps = [
         "activity_test_lib",
+    ],
+)
+
+ts_library(
+    name = "identity_utilities_test_lib",
+    testonly = True,
+    srcs = glob([
+        "**/utilities.spec.ts",
+    ]),
+    deps = [
+        "//stacks/api/passport",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "identity_utilities_test",
+    deps = [
+        "identity_utilities_test_lib",
     ],
 )
 
