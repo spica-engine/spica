@@ -7,6 +7,7 @@ import {Observable} from "rxjs";
 
 export class Npm extends PackageManager {
   install(cwd: string, qualifiedNames: string | string[]): Observable<number> {
+    qualifiedNames = Array.isArray(qualifiedNames) ? qualifiedNames : [qualifiedNames];
     return new Observable(observer => {
       const proc = child_process.spawn(
         "npm",
