@@ -7,7 +7,7 @@
   <button mat-icon-button (click)="applyFilter()">
     <mat-icon>refresh</mat-icon>
   </button>
-  <button mat-icon-button (click)="clearLogs()">
+  <button mat-icon-button canInteract="webhook:delete" (click)="clearLogs()">
     <mat-icon>clear_all</mat-icon>
   </button>
 </mat-toolbar>

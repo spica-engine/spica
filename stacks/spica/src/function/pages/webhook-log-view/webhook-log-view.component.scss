@@ -39,12 +39,14 @@
           display: inline-block;
           width: 20%;
           text-align: center;
+          word-wrap: break-word;
         }
       }
       .mat-expansion-panel  {
         .mat-expansion-panel-header span {
           width: 20%;
           text-align: center;
+          word-wrap: break-word;
         }
       }
 
