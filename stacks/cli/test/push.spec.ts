@@ -1,7 +1,7 @@
 import {NamespaceMetadata} from "@ionic/cli-framework";
 import {context} from "@spica/cli/src/authentication";
-import {PushCommand} from "@spica/cli/src/commands/push";
-import {SpicaNamespace} from "@spica/cli/src/interface";
+import {PushCommand, chunk} from "@spica/cli/src/commands/push";
+import {SpicaNamespace, Asset} from "@spica/cli/src/interface";
 import {Logger} from "@spica/cli/src/logger";
 import {request} from "@spica/cli/src/request";
 import * as fs from "fs";
@@ -20,6 +20,8 @@ describe("push", () => {
   let command: PushCommand;
   let logger: jasmine.SpyObj<Logger>;
   let spinner: jasmine.SpyObj<ora.Ora>;
+  let exclusive: jasmine.Spy;
+  let concurrent: jasmine.Spy;
 
   let fakeResponses: Map<string, unknown>;
 
@@ -112,14 +114,17 @@ describe("push", () => {
 
   it("should fail if there is no authorization", async () => {
     hasAuthorization.and.returnValue(Promise.resolve(false));
-    const result = await command.run(["test"], {package: "package.yaml"});
+    const result = await command.run(["test"], {
+      package: "package.yaml",
+      push_strategy: "exclusive"
+    });
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledTimes(1);
     expect(result).not.toBeTruthy();
   });
 
   it("should fetch and delete remote functions", async () => {
-    await command.run(["test"], {package: "package.yaml"});
+    await command.run(["test"], {package: "package.yaml", push_strategy: "exclusive"});
     expect(get).toHaveBeenCalledTimes(1);
     expect(get.calls.argsFor(0)[0]).toBe("/function");
     expect(del).toHaveBeenCalledTimes(1);
@@ -127,7 +132,7 @@ describe("push", () => {
   });
 
   it("should overwrite functions", async () => {
-    await command.run(["test"], {package: "package.yaml"});
+    await command.run(["test"], {package: "package.yaml", push_strategy: "exclusive"});
     expect(post).toHaveBeenCalledTimes(3);
     const [url, body] = post.calls.argsFor(0);
     expect(url).toBe("/function");
@@ -148,12 +153,238 @@ describe("push", () => {
   });
 
   it("should add function dependencies", async () => {
-    await command.run(["test"], {package: "package.yaml"});
+    await command.run(["test"], {package: "package.yaml", push_strategy: "exclusive"});
     expect(post).toHaveBeenCalledTimes(3);
     const [url, body] = post.calls.argsFor(2);
     expect(url).toBe("/function/newid/dependencies");
     expect(body).toEqual({
       name: `debug@latest`
     });
+  });
+
+  it("should split assets to the parts of given limit", () => {
+    const assets: Asset[] = [
+      {
+        kind: "function",
+        metadata: {
+          name: "asset1"
+        },
+        spec: {}
+      },
+      {
+        kind: "function",
+        metadata: {
+          name: "asset2"
+        },
+        spec: {}
+      },
+      {
+        kind: "function",
+        metadata: {
+          name: "asset3"
+        },
+        spec: {}
+      }
+    ];
+
+    expect(chunk(assets, 2)).toEqual([
+      [
+        {
+          kind: "function",
+          metadata: {
+            name: "asset1"
+          },
+          spec: {}
+        },
+        {
+          kind: "function",
+          metadata: {
+            name: "asset2"
+          },
+          spec: {}
+        }
+      ],
+      [
+        {
+          kind: "function",
+          metadata: {
+            name: "asset3"
+          },
+          spec: {}
+        }
+      ]
+    ]);
+  });
+
+  it("should call exclusive method", async () => {
+    exclusive = spyOn(command, "exclusive").and.callThrough();
+    await command.run(["test"], {package: "package.yaml", push_strategy: "exclusive"});
+    expect(exclusive).toHaveBeenCalledTimes(1);
+    expect(exclusive).toHaveBeenCalledWith(
+      [
+        {
+          kind: "Function",
+          metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+          spec: {
+            name: "Testing",
+            triggers: {
+              default: {
+                type: "http",
+                active: true,
+                options: {preflight: true, method: "Get", path: "/insert"}
+              }
+            },
+            indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+            dependencies: [{name: "debug", version: "latest"}]
+          }
+        }
+      ],
+      "/function",
+      {},
+      spinner
+    );
+  });
+
+  it("should call concurrent method", async () => {
+    concurrent = spyOn(command, "concurrent").and.callThrough();
+    await command.run(["test"], {package: "package.yaml", push_strategy: "concurrent"});
+    expect(concurrent).toHaveBeenCalledTimes(1);
+    expect(concurrent).toHaveBeenCalledWith(
+      [
+        {
+          kind: "Function",
+          metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+          spec: {
+            name: "Testing",
+            triggers: {
+              default: {
+                type: "http",
+                active: true,
+                options: {preflight: true, method: "Get", path: "/insert"}
+              }
+            },
+            indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+            dependencies: [{name: "debug", version: "latest"}]
+          }
+        }
+      ],
+      "/function",
+      {},
+      spinner
+    );
+  });
+
+  it("should call concurrent with parts of asset", async () => {
+    fs.writeFileSync(
+      "test/package.yaml",
+      yaml.stringify([
+        {
+          kind: "Function",
+          metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+          spec: {
+            name: "Testing1",
+            triggers: {
+              default: {
+                type: "http",
+                active: true,
+                options: {preflight: true, method: "Get", path: "/insert"}
+              }
+            },
+            indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+            dependencies: [{name: "debug", version: "latest"}]
+          }
+        },
+        {
+          kind: "Function",
+          metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+          spec: {
+            name: "Testing2",
+            triggers: {
+              default: {
+                type: "http",
+                active: true,
+                options: {preflight: true, method: "Get", path: "/insert"}
+              }
+            },
+            indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+            dependencies: [{name: "debug", version: "latest"}]
+          }
+        },
+        {
+          kind: "Function",
+          metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+          spec: {
+            name: "Testing3",
+            triggers: {
+              default: {
+                type: "http",
+                active: true,
+                options: {preflight: true, method: "Get", path: "/insert"}
+              }
+            },
+            indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+            dependencies: [{name: "debug", version: "latest"}]
+          }
+        }
+      ])
+    );
+
+    concurrent = spyOn(command, "concurrent").and.callThrough();
+    await command.run(["test"], {package: "package.yaml", push_strategy: "2"});
+
+    expect(concurrent).toHaveBeenCalledTimes(2);
+    expect(concurrent.calls.argsFor(0)[0]).toEqual([
+      {
+        kind: "Function",
+        metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+        spec: {
+          name: "Testing1",
+          triggers: {
+            default: {
+              type: "http",
+              active: true,
+              options: {preflight: true, method: "Get", path: "/insert"}
+            }
+          },
+          indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+          dependencies: [{name: "debug", version: "latest"}]
+        }
+      },
+      {
+        kind: "Function",
+        metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+        spec: {
+          name: "Testing2",
+          triggers: {
+            default: {
+              type: "http",
+              active: true,
+              options: {preflight: true, method: "Get", path: "/insert"}
+            }
+          },
+          indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+          dependencies: [{name: "debug", version: "latest"}]
+        }
+      }
+    ]);
+
+    expect(concurrent.calls.argsFor(1)[0]).toEqual([
+      {
+        kind: "Function",
+        metadata: {name: "5e5e3831dc1304d8f20a99f6"},
+        spec: {
+          name: "Testing3",
+          triggers: {
+            default: {
+              type: "http",
+              active: true,
+              options: {preflight: true, method: "Get", path: "/insert"}
+            }
+          },
+          indexPath: "5e5e3831dc1304d8f20a99f6/index.ts",
+          dependencies: [{name: "debug", version: "latest"}]
+        }
+      }
+    ]);
   });
 });
