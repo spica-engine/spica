@@ -71,9 +71,9 @@ export class FunctionEngine {
     return this.getDefaultPackageManager().ls(functionRoot);
   }
 
-  addPackage(fn: Function, qualifiedName: string): Observable<number> {
+  addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().install(functionRoot, qualifiedName);
+    return this.getDefaultPackageManager().install(functionRoot, qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {

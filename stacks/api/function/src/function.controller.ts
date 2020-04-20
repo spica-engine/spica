@@ -18,7 +18,7 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {BOOLEAN} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
@@ -194,7 +194,7 @@ export class FunctionController {
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Query("progress", BOOLEAN) progress: boolean,
-    @Body("name") name: string,
+    @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
     @Res() res
   ) {
     if (!name) {
