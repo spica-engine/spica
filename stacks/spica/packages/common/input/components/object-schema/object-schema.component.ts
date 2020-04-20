@@ -29,7 +29,9 @@ export class ObjectSchemaComponent {
   }
 
   removeProperty(name: string) {
-    this.schema.required.includes(name) && delete this.schema.required[name];
     delete this.schema.properties[name];
+    this.schema.required &&
+      this.schema.required.includes(name) &&
+      delete this.schema.required[name];
   }
 }
