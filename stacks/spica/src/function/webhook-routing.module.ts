@@ -10,7 +10,7 @@ const routes: Routes = [
     canActivate: [IdentityGuard, PolicyGuard],
     path: "webhook/logs",
     data: {service: "webhook"},
-    children: [{path: "", component: WebhookLogViewComponent}]
+    children: [{path: "", component: WebhookLogViewComponent, data: {action: "index"}}]
   },
   {
     canActivate: [IdentityGuard, PolicyGuard],

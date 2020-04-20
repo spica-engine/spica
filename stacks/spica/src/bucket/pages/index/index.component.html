@@ -196,7 +196,14 @@
           <mat-header-cell *matHeaderCellDef mat-sort-header>
             {{ property.value.title }}
           </mat-header-cell>
-          <mat-cell *matCellDef="let row"> {{ row[property.key] }}</mat-cell>
+
+          <mat-cell *matCellDef="let row">
+            {{
+              row[property.key] && row[property.key].hasOwnProperty(property.value.primary)
+                ? row[property.key][property.value.primary]
+                : row[property.key]
+            }}
+          </mat-cell>
         </ng-container>
 
         <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>

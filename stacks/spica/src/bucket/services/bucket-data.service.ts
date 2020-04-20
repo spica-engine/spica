@@ -25,7 +25,7 @@ export class BucketDataService {
     bucketId: string,
     {filter, sort, language, limit, skip, schedule}: FindOptions = {}
   ): Observable<IndexResult<BucketEntry>> {
-    let params = new HttpParams({fromObject: {paginate: "true"}});
+    let params = new HttpParams({fromObject: {paginate: "true", relation: "true"}});
     let headers = new HttpHeaders();
 
     if (sort) {
