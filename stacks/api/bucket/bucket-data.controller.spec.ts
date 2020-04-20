@@ -492,6 +492,7 @@ describe("BucketDataController", () => {
       let achievementsBucket: Bucket;
 
       let user: BucketDocument;
+      let anotherUser: BucketDocument;
       let achievement: BucketDocument;
 
       beforeEach(async () => {
@@ -549,6 +550,13 @@ describe("BucketDataController", () => {
             name: "user66"
           })
           .then(r => r.body);
+
+        anotherUser = await req
+          .post(`/bucket/${usersBucket._id}/data`, {
+            name: "user33"
+          })
+          .then(r => r.body);
+
         achievement = await req
           .post(`/bucket/${achievementsBucket._id}/data`, {
             name: "do something until something else happens"
@@ -557,6 +565,11 @@ describe("BucketDataController", () => {
 
         await req.post(`/bucket/${statisticsBucket._id}/data`, {
           user: user._id,
+          achievement: achievement._id
+        });
+
+        await req.post(`/bucket/${statisticsBucket._id}/data`, {
+          user: anotherUser._id,
           achievement: achievement._id
         });
       });
@@ -588,6 +601,17 @@ describe("BucketDataController", () => {
               _id: "__skip__",
               name: "do something until something else happens"
             }
+          },
+          {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user33"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
           }
         ]);
       });
@@ -601,6 +625,11 @@ describe("BucketDataController", () => {
           {
             _id: "__skip__",
             user: user._id,
+            achievement: achievement._id
+          },
+          {
+            _id: "__skip__",
+            user: anotherUser._id,
             achievement: achievement._id
           }
         ]);
@@ -624,7 +653,39 @@ describe("BucketDataController", () => {
             }
           },
           {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user33"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
+          },
+          {
             _id: newRow._id
+          }
+        ]);
+      });
+
+      it("should filter by relation", async () => {
+        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          relation: true,
+          filter: JSON.stringify({"user._id": anotherUser._id})
+        });
+
+        expect(documents).toEqual([
+          {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user33"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
           }
         ]);
       });

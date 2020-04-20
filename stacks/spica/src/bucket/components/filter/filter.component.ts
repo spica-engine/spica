@@ -42,8 +42,12 @@ export class FilterComponent implements OnChanges {
   }
 
   apply() {
-    const origin = this.resolver.getOriginByType(this.properties[this.property].type);
-    this.filter = {[this.property]: origin == "string" ? {$regex: this.value} : this.value};
+    if (this.properties[this.property].type == "relation") {
+      this.filter = {[`${this.property}._id`]: this.value};
+    } else {
+      const origin = this.resolver.getOriginByType(this.properties[this.property].type);
+      this.filter = {[this.property]: origin == "string" ? {$regex: this.value} : this.value};
+    }
     this.filterChange.emit(this.filter);
   }
 
