@@ -7,11 +7,16 @@ export class EventQueue {
   private server: grpc.Server;
   private queue = new Map<string, Event.Event>();
 
+  private _next: (event: Event.Event) => void;
+
   get size(): number {
     return this.queue.size;
   }
 
-  constructor(private _enqueueCallback: (event: Event.Event) => void) {
+  constructor(
+    private _enqueueCallback: (event: Event.Event) => void,
+    private _popCallback: (event: Event.Event, worker: string) => void
+  ) {
     this._create();
   }
 
@@ -43,16 +48,23 @@ export class EventQueue {
     event.id = uniqid();
     this.queue.set(event.id, event);
     this._enqueueCallback(event);
+    if (this._next) {
+      this._next(event);
+    }
   }
 
-  pop(call: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
-    if (!this.queue.has(call.request.id)) {
-      callback(new Error(`Queue has no item with id ${call.request.id}.`), undefined);
+  async pop(call: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
+    let event: Event.Event;
+
+    if (this.size == 0) {
+      event = await new Promise(resolve => (this._next = resolve));
     } else {
-      const event = this.queue.get(call.request.id);
-      this.queue.delete(event.id);
-      callback(undefined, event);
+      event = this.queue.values().next().value;
     }
+
+    this.queue.delete(event.id);
+    this._popCallback(event, call.request.id);
+    callback(undefined, event);
   }
 
   addQueue<T>(queue: Queue<T>) {
