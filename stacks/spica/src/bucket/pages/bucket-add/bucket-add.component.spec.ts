@@ -28,6 +28,8 @@ import {MatSaveModule} from "@spica-client/material";
 
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
+import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
+
 import {of} from "rxjs";
 import {Bucket} from "src/bucket/interfaces/bucket";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -127,6 +129,12 @@ describe("Bucket Add Component", () => {
               ),
             getBucket: jasmine.createSpy("getBucket").and.returnValue(of(myBucket)),
             replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket))
+          }
+        },
+        {
+          provide: BucketHistoryService,
+          useValue: {
+            clearHistories: jasmine.createSpy("clearHistories").and.returnValue(of(undefined))
           }
         }
       ],
@@ -502,6 +510,17 @@ describe("Bucket Add Component", () => {
         readOnly: false
       } as Bucket);
     });
+
+    it("should clear histories of bucket", fakeAsync(() => {
+      expect(fixture.componentInstance.isHistoryClearPending).toBe(false);
+      let clearHistorySpy = fixture.componentInstance["historyService"].clearHistories;
+      fixture.componentInstance.clearHistories();
+      expect(clearHistorySpy).toHaveBeenCalledTimes(1);
+      expect(clearHistorySpy).toHaveBeenCalledWith("123");
+      expect(fixture.componentInstance.isHistoryClearPending).toBe(true);
+      tick(10);
+      expect(fixture.componentInstance.isHistoryClearPending).toBe(false);
+    }));
   });
 
   describe("errors", () => {

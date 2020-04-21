@@ -405,4 +405,29 @@
       <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
+  <mat-divider> </mat-divider>
+  <mat-list-item *ngIf="bucket._id" class="remove-history">
+    <h3>
+      DANGER ZONE
+    </h3>
+    <button
+      (click)="clearHistories()"
+      mat-raised-button
+      color="warn"
+      [disabled]="isHistoryClearPending"
+    >
+      <mat-progress-spinner
+        *ngIf="isHistoryClearPending"
+        [diameter]="18"
+        color="primary"
+        mode="indeterminate"
+      ></mat-progress-spinner>
+      <span>
+        {{ isHistoryClearPending ? "Removing" : "Remove" }}
+      </span>
+    </button>
+    <p>
+      This action will remove all histories of this bucket
+    </p>
+  </mat-list-item>
 </mat-card>

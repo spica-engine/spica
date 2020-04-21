@@ -22,6 +22,7 @@ import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
+import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
 
 @Component({
   selector: "bucket-add",
@@ -50,6 +51,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   $save: Observable<SavingState>;
 
+  isHistoryClearPending = false;
+
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
   immutableProperties: Array<string> = [];
@@ -62,7 +65,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     _inputResolver: InputResolver,
     private activatedRoute: ActivatedRoute,
     private router: Router,
-    private bs: BucketService
+    private bs: BucketService,
+    private historyService: BucketHistoryService
   ) {
     this.inputTypes = _inputResolver.entries();
   }
@@ -182,6 +186,14 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         catchError(() => of(SavingState.Failed))
       )
     );
+  }
+
+  clearHistories() {
+    this.isHistoryClearPending = true;
+    this.historyService
+      .clearHistories(this.bucket._id)
+      .toPromise()
+      .finally(() => (this.isHistoryClearPending = false));
   }
 
   ngOnDestroy() {
