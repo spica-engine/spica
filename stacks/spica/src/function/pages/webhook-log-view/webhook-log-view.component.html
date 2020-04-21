@@ -12,41 +12,43 @@
   </button>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25">
-  <span>Filters: </span>
-  <mat-form-field>
-    <mat-label>Select webhook id</mat-label>
-    <mat-select [(ngModel)]="filter.webhooks" multiple>
-      <mat-option *ngFor="let webhook of webhooks" [value]="webhook">
-        {{ webhook }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label>Select status code</mat-label>
-    <mat-select [(ngModel)]="filter.statusCodes" multiple>
-      <mat-option *ngFor="let code of statusCodes" [value]="code">
-        {{ code }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
-  <mat-form-field>
-    <input
-      matInput
-      [ngModel]="filter.date"
-      (ngModelChange)="setDate($event.begin, $event.end)"
-      placeholder="Select a date range"
-      [satDatepicker]="picker"
-      [max]="maxDate"
-    />
-    <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
-    <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
-  </mat-form-field>
-  <button mat-button (click)="applyFilter()">
-    Apply
-  </button>
-  <button mat-button color="warn" (click)="clearFilter()">
-    Clear
-  </button>
+  <div class="filters">
+    <span>Filters: </span>
+    <mat-form-field>
+      <mat-label>Select webhook id</mat-label>
+      <mat-select [(ngModel)]="filter.webhooks" multiple>
+        <mat-option *ngFor="let webhook of webhooks" [value]="webhook">
+          {{ webhook }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Select status code</mat-label>
+      <mat-select [(ngModel)]="filter.statusCodes" multiple>
+        <mat-option *ngFor="let code of statusCodes" [value]="code">
+          {{ code }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <input
+        matInput
+        [ngModel]="filter.date"
+        (ngModelChange)="setDate($event.begin, $event.end)"
+        placeholder="Select a date range"
+        [satDatepicker]="picker"
+        [max]="maxDate"
+      />
+      <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
+      <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
+    </mat-form-field>
+    <button mat-button (click)="applyFilter()">
+      Apply
+    </button>
+    <button mat-button color="warn" (click)="clearFilter()">
+      Clear
+    </button>
+  </div>
   <mat-card-content>
     <mat-accordion>
       <cdk-virtual-scroll-viewport itemSize="50" class="example-viewport">

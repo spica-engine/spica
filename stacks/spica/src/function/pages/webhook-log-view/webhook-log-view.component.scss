@@ -1,6 +1,6 @@
 :host {
   mat-toolbar {
-    min-height: 150px;
+    min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
     h4 > * {
@@ -22,8 +22,15 @@
   }
 
   .mat-card {
-    margin: -50px auto;
-    width: 95%;
+    margin: 5%;
+    margin: 30px;
+    margin-top: -110px;
+    // For proper border radius
+    overflow: hidden;
+    div.filters {
+      padding-top: 19px;
+      margin: 0px 24px;
+    }
   }
 
   .mat-card-content {
@@ -34,12 +41,23 @@
     }
     .cdk-virtual-scroll-viewport {
       div.title {
-        height: 40px;
+        margin-right: 24px;
+        padding: 0px 24px;
+        height: 48px;
+        display: flex;
+        align-items: center;
         span {
           display: inline-block;
           width: 20%;
           text-align: center;
           word-wrap: break-word;
+        }
+        span:first-child {
+          text-align: left;
+        }
+
+        span:last-child {
+          text-align: right;
         }
       }
       .mat-expansion-panel  {
@@ -47,6 +65,12 @@
           width: 20%;
           text-align: center;
           word-wrap: break-word;
+        }
+        .mat-expansion-panel-header span:first-child {
+          text-align: left;
+        }
+        .mat-expansion-panel-header span:last-child {
+          text-align: right;
         }
       }
 

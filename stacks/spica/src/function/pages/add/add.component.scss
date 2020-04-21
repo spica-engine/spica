@@ -30,6 +30,9 @@
     margin-top: -110px;
     // For proper border radius
     overflow: hidden;
+    mat-card-content {
+      padding: 0px 8px;
+    }
     mat-card-header {
       mat-card-title > * {
         vertical-align: middle;
