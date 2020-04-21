@@ -8,6 +8,7 @@ export interface Bucket {
   icon?: string;
   description?: string;
   primary: string;
+  history?:boolean;
   properties?: {
     [key: string]: JSONSchema7 & PropertyOptions;
   };
