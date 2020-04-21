@@ -68,7 +68,7 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.type && this.type) {
       for (const key of Object.keys(this.schema)) {
-        if (key === "type" || key === "description" || key === "options") {
+        if (key === "type" || key === "title" || key === "description" || key === "options") {
           continue;
         }
         delete this.schema[key];
