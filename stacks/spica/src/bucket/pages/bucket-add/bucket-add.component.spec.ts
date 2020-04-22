@@ -51,6 +51,7 @@ describe("Bucket Add Component", () => {
     icon: "myIcon",
     required: ["prop1"],
     readOnly: false,
+    history: true,
     properties: {
       prop1: {
         type: "string",
@@ -211,10 +212,13 @@ describe("Bucket Add Component", () => {
           .injector.get(NgModel).model
       ).toBe("description");
 
-      expect(form.query(By.css("mat-slide-toggle")).injector.get(NgModel).model).toBe(
-        false,
-        "should work if readonly value is false"
-      );
+      expect(
+        form.query(By.css(".toggles .read-only mat-slide-toggle")).injector.get(NgModel).model
+      ).toBe(false, "should work if readonly value is false");
+
+      expect(
+        form.query(By.css(".toggles .history mat-slide-toggle")).injector.get(NgModel).model
+      ).toBe(true, "should work if history value is true");
 
       const firstProperty = fixture.debugElement.query(
         By.css("mat-list-item.properties mat-expansion-panel:nth-child(1)")
@@ -490,7 +494,8 @@ describe("Bucket Add Component", () => {
       form.setValue({
         title: "new title",
         description: "new description",
-        readOnly: false
+        readOnly: false,
+        history: false
       });
       fixture.detectChanges();
       await fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
@@ -499,7 +504,8 @@ describe("Bucket Add Component", () => {
         ...myBucket,
         title: "new title",
         description: "new description",
-        readOnly: false
+        readOnly: false,
+        history: false
       } as Bucket);
     });
   });
