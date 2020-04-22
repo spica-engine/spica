@@ -1,7 +1,7 @@
 import {Global, Module} from "@nestjs/common";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SCHEMA} from "@spica-server/function";
-import {SCHEDULER} from "@spica-server/function/horizon";
+import {ENQUEUER} from "@spica-server/function/horizon";
 import {EventQueue} from "@spica-server/function/queue";
 import {JSONSchema7} from "json-schema";
 import {ActionDispatcher} from "./dispatcher";
@@ -36,7 +36,7 @@ function createSchema(service: BucketService) {
 export const hookModuleProviders = [
   ActionDispatcher,
   {
-    provide: SCHEDULER,
+    provide: ENQUEUER,
     useFactory: (dispatcher: ActionDispatcher) => {
       return (queue: EventQueue) => {
         const actionQueue = new ActionQueue();
@@ -62,6 +62,6 @@ export const hookModuleProviders = [
 @Module({
   imports: [ServicesModule],
   providers: hookModuleProviders,
-  exports: [SCHEDULER, SCHEMA, ActionDispatcher]
+  exports: [ENQUEUER, SCHEMA, ActionDispatcher]
 })
 export class HookModule {}
