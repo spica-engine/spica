@@ -7,7 +7,7 @@ export class EventQueue {
   private server: grpc.Server;
   private queue = new Map<string, Event.Event>();
 
-  private _next: (event: Event.Event) => void;
+  private _next: {(event: Event.Event): void}[] = [];
 
   get size(): number {
     return this.queue.size;
@@ -48,8 +48,8 @@ export class EventQueue {
     event.id = uniqid();
     this.queue.set(event.id, event);
     this._enqueueCallback(event);
-    if (this._next) {
-      this._next(event);
+    if (this._next[0]) {
+      this._next.shift()(event);
     }
   }
 
@@ -57,7 +57,7 @@ export class EventQueue {
     let event: Event.Event;
 
     if (this.size == 0) {
-      event = await new Promise(resolve => (this._next = resolve));
+      event = await new Promise(resolve => this._next.push(resolve));
     } else {
       event = this.queue.values().next().value;
     }
