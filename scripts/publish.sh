@@ -84,3 +84,6 @@ for PACKAGE_LABEL in $NPM_PACKAGE_LABELS; do
 done
 
 
+echo ""
+echo "## Publishing Helm charts"
+source ./scripts/sync_charts.sh
