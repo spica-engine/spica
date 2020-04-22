@@ -13,7 +13,9 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  HttpStatus,
+  HttpCode
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
@@ -349,18 +351,75 @@ export class BucketDataController {
 
   @UseInterceptors(activity(createBucketDataResource))
   @Delete(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteOne(
+  async deleteOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    return this.bds.deleteOne(bucketId, {_id: documentId});
+    let deletedCount = await this.bds
+      .deleteOne(bucketId, {_id: documentId})
+      .then(result => result.deletedCount);
+    if (deletedCount < 1) return;
+
+    return this.clearRelations(this.bs, bucketId, documentId);
   }
 
   @UseInterceptors(activity(createBucketDataResource))
   @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
-    return this.bds.deleteMany(bucketId, body);
+  async deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
+    let deletedCount = await this.bds
+      .deleteMany(bucketId, body)
+      .then(result => result.deletedCount);
+    if (deletedCount < 1) return;
+
+    return Promise.all(
+      body.map(id => {
+        this.clearRelations(this.bs, bucketId, new ObjectId(id)).catch(err => err);
+      })
+    );
+  }
+
+  async clearRelations(bucketService: BucketService, bucketId: ObjectId, documentId: ObjectId) {
+    let buckets = await bucketService.find({_id: {$ne: bucketId}});
+    if (buckets.length < 1) return;
+
+    for (const bucket of buckets) {
+      let targets = this.findRelations(bucket.properties, bucketId.toHexString(), "", []);
+      if (targets.length < 1) continue;
+
+      for (const target of targets) {
+        await bucketService
+          .collection(`bucket_${bucket._id.toHexString()}`)
+          .updateMany({[target]: documentId}, {$unset: {[target]: ""}});
+      }
+    }
+  }
+
+  findRelations(schema: any, bucketId: string, path: string = "", targets: string[]) {
+    path = path ? `${path}.` : ``;
+    for (const key of Object.keys(schema)) {
+      if (this.isObject(schema[key])) {
+        this.findRelations(schema[key].properties, bucketId, `${path}${key}`, targets);
+      } else if (this.isRelation(schema[key], bucketId)) {
+        targets.push(`${path}${key}`);
+      }
+    }
+    return targets;
+  }
+
+  isObject(schema: any) {
+    return schema &&
+      schema.type == "object" &&
+      schema.properties &&
+      Object.keys(schema.properties).length > 0
+      ? true
+      : false;
+  }
+
+  isRelation(schema: any, bucketId: string) {
+    return schema && schema.type == "relation" && schema.bucketId == bucketId ? true : false;
   }
 }
