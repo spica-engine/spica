@@ -7,7 +7,7 @@ export class EventQueue {
   private server: grpc.Server;
   private queue = new Map<string, Event.Event>();
 
-  private _next: {(event: Event.Event): void}[] = [];
+  private _next = new Array<(event: Event.Event) => void>();
 
   get size(): number {
     return this.queue.size;
