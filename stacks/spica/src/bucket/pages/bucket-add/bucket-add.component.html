@@ -414,17 +414,30 @@
       (click)="clearHistories()"
       mat-raised-button
       color="warn"
-      [disabled]="isHistoryClearPending"
+      *matSave="$remove | async; let state"
+      [disabled]="!!state"
+      [ngSwitch]="state"
     >
-      <mat-progress-spinner
-        *ngIf="isHistoryClearPending"
-        [diameter]="18"
-        color="primary"
-        mode="indeterminate"
-      ></mat-progress-spinner>
-      <span>
-        {{ isHistoryClearPending ? "Removing" : "Remove" }}
-      </span>
+      <div *ngSwitchDefault>
+        <mat-icon>delete</mat-icon>
+        <span>Remove</span>
+      </div>
+      <div *ngSwitchCase="'saving'">
+        <mat-progress-spinner
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        ></mat-progress-spinner
+        ><span>Removing..</span>
+      </div>
+      <div *ngSwitchCase="'saved'">
+        <mat-icon>done</mat-icon>
+        <span>Removed</span>
+      </div>
+      <div *ngSwitchCase="'failed'">
+        <mat-icon>clear</mat-icon>
+        <span>Failed</span>
+      </div>
     </button>
     <p>
       This action will remove all histories of this bucket

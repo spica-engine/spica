@@ -51,6 +51,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   $save: Observable<SavingState>;
 
+  $remove: Observable<SavingState>;
+
   isHistoryClearPending = false;
 
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
@@ -88,6 +90,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         ),
         tap(params => {
           this.$save = of(SavingState.Pristine);
+          this.$remove = of(SavingState.Pristine);
           if (!params.id) {
             this.bucket = emptyBucket();
             this.updatePositionProperties();
@@ -189,11 +192,15 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   clearHistories() {
-    this.isHistoryClearPending = true;
-    this.historyService
-      .clearHistories(this.bucket._id)
-      .toPromise()
-      .finally(() => (this.isHistoryClearPending = false));
+    const remove = this.historyService.clearHistories(this.bucket._id);
+    this.$remove = merge(
+      of(SavingState.Saving),
+      remove.pipe(
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
   }
 
   ngOnDestroy() {
