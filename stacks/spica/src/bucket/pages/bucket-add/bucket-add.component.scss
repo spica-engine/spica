@@ -196,5 +196,17 @@
         margin-right: 5px;
       }
     }
+
+    .remove-history {
+      padding: 30px 0px;
+      display: block;
+      button {
+        float: right;
+        mat-progress-spinner {
+          display: inline-block;
+          margin-right: 5px;
+        }
+      }
+    }
   }
 }
