@@ -57,9 +57,6 @@ export class AddComponent implements OnInit {
       tap(params => {
         this.$save = of(SavingState.Pristine);
         this.bucketId = params.id;
-        if (params.rid) {
-          this.histories$ = this.bhs.historyList(params.id, params.rid);
-        }
       }),
       flatMap(params => {
         if (params.rid) {
@@ -71,6 +68,12 @@ export class AddComponent implements OnInit {
           );
         }
         return this.bs.getBucket(params.id);
+      }),
+      tap(schema => {
+        if (schema.history) {
+          console.log(this.data)
+          this.histories$ = this.bhs.historyList(this.bucketId, this.data._id);
+        }
       }),
       map(schema => {
         this.data._schedule = this.data._schedule && new Date(this.data._schedule);
@@ -128,7 +131,9 @@ export class AddComponent implements OnInit {
       of(SavingState.Saving),
       save.pipe(
         tap(bucketDocument => {
-          this.histories$ = this.bhs.historyList(this.bucketId, bucketDocument._id);
+          this.histories$ = this.histories$
+            ? this.bhs.historyList(this.bucketId, bucketDocument._id)
+            : undefined;
           if (isInsert) return this.router.navigate([`bucket/${this.bucketId}`]);
         }),
         ignoreElements(),
