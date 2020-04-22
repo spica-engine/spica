@@ -418,26 +418,26 @@
       [disabled]="!!state"
       [ngSwitch]="state"
     >
-      <div *ngSwitchDefault>
+      <ng-container *ngSwitchDefault>
         <mat-icon>delete</mat-icon>
         <span>Remove</span>
-      </div>
-      <div *ngSwitchCase="'saving'">
+      </ng-container>
+      <ng-container *ngSwitchCase="'saving'">
         <mat-progress-spinner
           [diameter]="18"
           color="primary"
           mode="indeterminate"
         ></mat-progress-spinner
         ><span>Removing..</span>
-      </div>
-      <div *ngSwitchCase="'saved'">
+      </ng-container>
+      <ng-container *ngSwitchCase="'saved'">
         <mat-icon>done</mat-icon>
         <span>Removed</span>
-      </div>
-      <div *ngSwitchCase="'failed'">
+      </ng-container>
+      <ng-container *ngSwitchCase="'failed'">
         <mat-icon>clear</mat-icon>
         <span>Failed</span>
-      </div>
+      </ng-container>
     </button>
     <p>
       This action will remove all histories of this bucket

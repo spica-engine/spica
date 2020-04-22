@@ -53,8 +53,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   $remove: Observable<SavingState>;
 
-  isHistoryClearPending = false;
-
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
   immutableProperties: Array<string> = [];
