@@ -1,4 +1,5 @@
 import * as crypto from "crypto";
+import {EventEmitter} from "events";
 import * as fs from "fs";
 import * as path from "path";
 import * as rimraf from "rimraf";
@@ -8,9 +9,8 @@ import {Compilation} from "./compilation";
 
 export abstract class Runtime {
   abstract description: Description;
-  abstract execute(execution: Execution): Promise<unknown>;
   abstract compile(compilation: Compilation): Promise<void>;
-
+  abstract spawn(id: string): Worker;
   protected async prepare(compilation: Compilation): Promise<void> {
     return fs.promises.mkdir(path.join(compilation.cwd, ".build"), {recursive: true});
   }
@@ -43,4 +43,8 @@ export interface Execution {
   timeout?: number;
   cwd: string;
   eventId: string;
+}
+
+export abstract class Worker extends EventEmitter {
+  abstract attach(stdout?: Writable, stderr?: Writable): void;
 }
