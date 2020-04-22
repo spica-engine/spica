@@ -2,10 +2,13 @@ import {CommonModule} from "@angular/common";
 import {Component, forwardRef, SimpleChange} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR} from "@angular/forms";
+import {MatInputModule} from "@angular/material/input";
 import {MatSelectModule} from "@angular/material/select";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {InputModule} from "@spica-client/common";
+import {OwlDateTimeModule} from "ng-pick-datetime";
+import {OwlDateTimeInputDirective} from "ng-pick-datetime/date-time/date-time-picker-input.directive";
 import {FilterComponent} from "./filter.component";
 
 @Component({
@@ -38,6 +41,7 @@ describe("FilterComponent", () => {
         FormsModule,
         CommonModule,
         MatSelectModule,
+        MatInputModule,
         InputModule.withPlacers([
           {
             origin: "string",
@@ -45,7 +49,8 @@ describe("FilterComponent", () => {
             placer: StringPlacer
           }
         ]),
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        OwlDateTimeModule
       ],
       declarations: [FilterComponent, StringPlacer]
     }).compileComponents();
@@ -56,6 +61,9 @@ describe("FilterComponent", () => {
       properties: {
         test: {
           type: "mytype"
+        },
+        test1: {
+          type: "date"
         }
       }
     };
@@ -69,8 +77,8 @@ describe("FilterComponent", () => {
     fixture.debugElement.query(By.css("mat-select")).nativeElement.click();
     fixture.detectChanges();
     const properties = document.body.querySelectorAll(".mat-select-panel > mat-option");
-    expect(properties.length).toBe(1);
     expect(properties[0].textContent).toBe(" test ");
+    expect(properties[1].textContent).toBe(" test1 ");
   });
 
   it("should render properties with title", () => {
@@ -97,6 +105,15 @@ describe("FilterComponent", () => {
     expect(placer).toBeTruthy();
   });
 
+  it("should render date picker when the selected property is a date", () => {
+    fixture.componentInstance.property = "test1";
+    fixture.detectChanges();
+    const directive = fixture.debugElement
+      .query(By.directive(OwlDateTimeInputDirective))
+      .injector.get(OwlDateTimeInputDirective);
+    expect(directive.selectMode).toBe("range");
+  });
+
   describe("apply and clear", () => {
     const changeSpy = jasmine.createSpy("changeSpy");
 
@@ -105,6 +122,26 @@ describe("FilterComponent", () => {
       fixture.componentInstance.property = "test";
       fixture.detectChanges();
       fixture.debugElement.query(By.directive(StringPlacer)).componentInstance._change("test1");
+    });
+
+    it("should generate the filter", () => {
+      fixture.componentInstance.property = "test";
+      fixture.detectChanges();
+      fixture.debugElement.query(By.directive(StringPlacer)).componentInstance._change("test1");
+      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.filter).toEqual({test: {$regex: "test1"}});
+    });
+
+    it("should generate the filter", () => {
+      const dates = [new Date("2020-04-20T10:00:00.000Z"), new Date("2020-05-20T10:00:00.000Z")];
+      fixture.componentInstance.property = "test1";
+      fixture.componentInstance.value = dates;
+      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.filter).toEqual({
+        test1: {$gte: "Date(2020-04-20T10:00:00.000Z)", $lt: "Date(2020-05-20T10:00:00.000Z)"}
+      });
     });
 
     it("should emit filter", () => {
@@ -121,15 +158,6 @@ describe("FilterComponent", () => {
       expect(fixture.componentInstance.filter).toBeUndefined();
       expect(changeSpy).toHaveBeenCalledWith(undefined);
     });
-  });
-
-  it("should generate the filter", () => {
-    fixture.componentInstance.property = "test";
-    fixture.detectChanges();
-    fixture.debugElement.query(By.directive(StringPlacer)).componentInstance._change("test1");
-    fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
-    fixture.detectChanges();
-    expect(fixture.componentInstance.filter).toEqual({test: {$regex: "test1"}});
   });
 
   describe("placer", () => {

@@ -68,6 +68,11 @@ describe("BucketDataController", () => {
           type: "number",
           title: "Age of the person",
           options: {position: "right"}
+        },
+        created_at: {
+          type: "date",
+          title: "Creation Timestamp",
+          options: {position: "bottom"}
         }
       }
     };
@@ -322,6 +327,77 @@ describe("BucketDataController", () => {
           {_id: "__skip__", name: "Jim", age: 20},
           {_id: "__skip__", name: "Michael", age: 22}
         ]);
+      });
+
+      describe("advanced filter", () => {
+        let rows;
+        beforeAll(async () => {
+          rows = [
+            await req.post(`/bucket/${bucket._id}/data`, {
+              name: "Sherlock",
+              age: 28,
+              created_at: new Date("2020-04-20T10:00:00.000Z")
+            }),
+            await req.post(`/bucket/${bucket._id}/data`, {
+              name: "Doctor Who",
+              age: 25,
+              created_at: new Date("2020-05-20T10:00:00.000Z")
+            })
+          ].map(r => r.body);
+        });
+
+        it("should get documents between dates", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+            filter: JSON.stringify({
+              created_at: {
+                $gte: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`,
+                $lt: `Date(${new Date("2020-05-20T10:00:00.000Z").toISOString()})`
+              }
+            })
+          });
+
+          expect(documents).toEqual([
+            {_id: "__skip__", name: "Sherlock", age: 28, created_at: "2020-04-20T10:00:00.000Z"}
+          ]);
+        });
+
+        it("should get documents whose creation date is the greatest", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+            filter: JSON.stringify({
+              created_at: {
+                $gt: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`
+              }
+            })
+          });
+
+          expect(documents).toEqual([
+            {_id: "__skip__", name: "Doctor Who", age: 25, created_at: "2020-05-20T10:00:00.000Z"}
+          ]);
+        });
+
+        it("should throw error if the advanced filter constructor does not exist", async () => {
+          const {body: error} = await req
+            .get(`/bucket/${bucket._id}/data`, {
+              filter: JSON.stringify({
+                created_at: {
+                  $gt: `Throw(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`
+                }
+              })
+            })
+            .catch(e => e);
+
+          expect(error).toEqual({
+            statusCode: 400,
+            message:
+              'Could not find the constructor Throw in {"$gt":"Throw(2020-04-20T10:00:00.000Z)"}'
+          });
+        });
+
+        afterAll(async () => {
+          for (const row of rows) {
+            await req.delete(`/bucket/${bucket._id}/data/${row._id}`);
+          }
+        });
       });
     });
 
