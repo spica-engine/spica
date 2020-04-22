@@ -1,4 +1,4 @@
-import {database} from "@spica-devkit/database";
+import {close, connected, database} from "@spica-devkit/database";
 import * as mongodb from "mongodb";
 import {ObjectId} from "mongodb";
 
@@ -14,6 +14,7 @@ function setEnvironment() {
 
 describe("database", () => {
   let connectSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.connect>;
+  let closeSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.close>;
   let isConnectedSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.isConnected>;
   let dbSpy: jasmine.Spy<typeof mongodb.MongoClient.prototype.db>;
   let collectionSpy: jasmine.Spy<typeof mongodb.Db.prototype.collection>;
@@ -21,9 +22,19 @@ describe("database", () => {
   let emitWarningSpy: jasmine.Spy<typeof process.emitWarning>;
 
   beforeEach(() => {
+    let connected = false;
     emitWarningSpy = spyOn(process, "emitWarning");
-    connectSpy = spyOn(mongodb.MongoClient.prototype, "connect");
-    isConnectedSpy = spyOn(mongodb.MongoClient.prototype, "isConnected");
+    connectSpy = spyOn(mongodb.MongoClient.prototype, "connect").and.callFake(async () => {
+      connected = true;
+      return undefined;
+    });
+    isConnectedSpy = spyOn(mongodb.MongoClient.prototype, "isConnected").and.callFake(
+      () => connected
+    );
+    closeSpy = spyOn(mongodb.MongoClient.prototype, "close").and.callFake(async () => {
+      connected = false;
+      return undefined;
+    });
     dbSpy = spyOn(mongodb.MongoClient.prototype, "db").and.callFake(() => {
       return ({collection: collectionSpy} as unknown) as mongodb.Db;
     });
@@ -63,7 +74,7 @@ describe("database", () => {
     setEnvironment();
     const db = await database();
     expect(connectSpy).toHaveBeenCalledTimes(1);
-    expect(isConnectedSpy).toHaveBeenCalledTimes(1);
+    expect(isConnectedSpy).toHaveBeenCalled();
     expect(dbSpy).toHaveBeenCalledTimes(1);
     expect(dbSpy).toHaveBeenCalledWith("testingdb");
     expect(db).toBeTruthy();
@@ -78,6 +89,14 @@ describe("database", () => {
     expect(emitWarningSpy.calls.mostRecent().args[0]).toBe(
       "It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing."
     );
+  });
+
+  it("should close the connection", async () => {
+    setEnvironment();
+    const _ = await database();
+    expect(connected()).toBe(true);
+    await close();
+    expect(connected()).toBe(false);
   });
 
   describe("presence of objectid", () => {

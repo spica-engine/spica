@@ -13,10 +13,11 @@ import {PackageManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import {Runtime} from "@spica-server/function/runtime";
+import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
-import {SCHEDULER, Scheduler} from "./scheduler";
+import * as uniqid from "uniqid";
+import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 
 @Injectable()
 export class Horizon implements OnModuleInit {
@@ -32,10 +33,12 @@ export class Horizon implements OnModuleInit {
   readonly pkgmanagers = new Map<string, PackageManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
 
+  private readonly pool = new Map<string, Worker>();
+
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
-    @Optional() @Inject(SCHEDULER) private schedulerFactory: Scheduler<unknown, unknown>
+    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
     this.output = new DatabaseOutput(database);
 
@@ -44,7 +47,7 @@ export class Horizon implements OnModuleInit {
 
     this.pkgmanagers.set(this.runtime.description.name, new Npm());
 
-    this.queue = new EventQueue(this.enqueue.bind(this));
+    this.queue = new EventQueue(this.schedule.bind(this), this.scheduled.bind(this));
 
     this.httpQueue = new HttpQueue();
     this.queue.addQueue(this.httpQueue);
@@ -71,26 +74,40 @@ export class Horizon implements OnModuleInit {
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
-    if (typeof this.schedulerFactory == "function") {
-      const scheduler = this.schedulerFactory(this.queue);
+    if (typeof this.enqueuerFactory == "function") {
+      const scheduler = this.enqueuerFactory(this.queue);
       this.queue.addQueue(scheduler.queue);
       this.enqueuers.add(scheduler.enqueuer);
     }
 
     this.queue.listen();
+
+    const poolSize = process.env.FUNCTION_POOL_SIZE ? Number(process.env.FUNCTION_POOL_SIZE) : 10;
+    for (let i = 0; i < poolSize; i++) {
+      this.schedule();
+    }
   }
 
-  private enqueue(event: Event.Event) {
+  private schedule() {
+    const id = uniqid();
+    const worker = this.runtime.spawn(id);
+    this.pool.set(id, worker);
+  }
+
+  private scheduled(event: Event.Event, workerId: string) {
+    const worker = this.pool.get(workerId);
     const path = event.target.cwd.split("/");
     const functionId = path[path.length - 1];
-    this.runtime.execute({
+
+    const stdOut = this.output.create({
       eventId: event.id,
-      cwd: event.target.cwd,
-      stdout: this.output.create({
-        eventId: event.id,
-        functionId
-      })
+      functionId
     });
+
+    // TODO: forward stderr to another channel
+    worker.attach(stdOut, stdOut);
+
+    this.pool.delete(workerId);
   }
 
   /**
