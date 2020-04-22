@@ -511,15 +511,11 @@ describe("Bucket Add Component", () => {
       } as Bucket);
     });
 
-    it("should clear histories of bucket", fakeAsync(() => {
-      expect(fixture.componentInstance.isHistoryClearPending).toBe(false);
+    fit("should clear histories of bucket", fakeAsync(() => {
       let clearHistorySpy = fixture.componentInstance["historyService"].clearHistories;
       fixture.componentInstance.clearHistories();
       expect(clearHistorySpy).toHaveBeenCalledTimes(1);
       expect(clearHistorySpy).toHaveBeenCalledWith("123");
-      expect(fixture.componentInstance.isHistoryClearPending).toBe(true);
-      tick(10);
-      expect(fixture.componentInstance.isHistoryClearPending).toBe(false);
     }));
   });
 
