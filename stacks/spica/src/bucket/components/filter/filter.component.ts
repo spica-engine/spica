@@ -42,7 +42,9 @@ export class FilterComponent implements OnChanges {
   }
 
   apply() {
-    if (this.properties[this.property].type == "date") {
+    if (this.properties[this.property].type == "relation") {
+      this.filter = {[`${this.property}._id`]: this.value};
+    } else if (this.properties[this.property].type == "date") {
       this.filter = {
         [this.property]: {
           $gte: `Date(${new Date(this.value[0]).toISOString()})`,
