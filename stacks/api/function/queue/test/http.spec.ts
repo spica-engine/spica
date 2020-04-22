@@ -8,7 +8,7 @@ describe("HttpQueue", () => {
   let httpQueueClient: any;
 
   beforeEach(() => {
-    queue = new EventQueue(() => {});
+    queue = new EventQueue(() => {}, () => {});
     httpQueue = new HttpQueue();
     queue.addQueue(httpQueue);
     queue.listen();

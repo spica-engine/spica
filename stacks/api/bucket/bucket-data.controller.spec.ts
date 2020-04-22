@@ -9,6 +9,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {ObjectId} from "@spica-server/database";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {BucketDataController} from "./bucket-data.controller";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -33,6 +34,7 @@ describe("BucketDataController", () => {
     }).compile();
     db = module.get(DatabaseService);
     app = module.createNestApplication();
+
     app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
@@ -66,6 +68,11 @@ describe("BucketDataController", () => {
           type: "number",
           title: "Age of the person",
           options: {position: "right"}
+        },
+        created_at: {
+          type: "date",
+          title: "Creation Timestamp",
+          options: {position: "bottom"}
         }
       }
     };
@@ -320,6 +327,77 @@ describe("BucketDataController", () => {
           {_id: "__skip__", name: "Jim", age: 20},
           {_id: "__skip__", name: "Michael", age: 22}
         ]);
+      });
+
+      describe("advanced filter", () => {
+        let rows;
+        beforeAll(async () => {
+          rows = [
+            await req.post(`/bucket/${bucket._id}/data`, {
+              name: "Sherlock",
+              age: 28,
+              created_at: new Date("2020-04-20T10:00:00.000Z")
+            }),
+            await req.post(`/bucket/${bucket._id}/data`, {
+              name: "Doctor Who",
+              age: 25,
+              created_at: new Date("2020-05-20T10:00:00.000Z")
+            })
+          ].map(r => r.body);
+        });
+
+        it("should get documents between dates", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+            filter: JSON.stringify({
+              created_at: {
+                $gte: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`,
+                $lt: `Date(${new Date("2020-05-20T10:00:00.000Z").toISOString()})`
+              }
+            })
+          });
+
+          expect(documents).toEqual([
+            {_id: "__skip__", name: "Sherlock", age: 28, created_at: "2020-04-20T10:00:00.000Z"}
+          ]);
+        });
+
+        it("should get documents whose creation date is the greatest", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+            filter: JSON.stringify({
+              created_at: {
+                $gt: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`
+              }
+            })
+          });
+
+          expect(documents).toEqual([
+            {_id: "__skip__", name: "Doctor Who", age: 25, created_at: "2020-05-20T10:00:00.000Z"}
+          ]);
+        });
+
+        it("should throw error if the advanced filter constructor does not exist", async () => {
+          const {body: error} = await req
+            .get(`/bucket/${bucket._id}/data`, {
+              filter: JSON.stringify({
+                created_at: {
+                  $gt: `Throw(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`
+                }
+              })
+            })
+            .catch(e => e);
+
+          expect(error).toEqual({
+            statusCode: 400,
+            message:
+              'Could not find the constructor Throw in {"$gt":"Throw(2020-04-20T10:00:00.000Z)"}'
+          });
+        });
+
+        afterAll(async () => {
+          for (const row of rows) {
+            await req.delete(`/bucket/${bucket._id}/data/${row._id}`);
+          }
+        });
       });
     });
 
@@ -890,9 +968,10 @@ describe("BucketDataController", () => {
         .catch();
     });
 
-    it("should delete last data and return deletedCount as 1", async () => {
+    it("should delete document", async () => {
       const response = await req.delete(`/bucket/${myBucketId}/data/${myBucketData[1]._id}`);
-      expect(response.body.deletedCount).toBe(1);
+      expect(response.statusCode).toBe(204);
+      expect(response.body).toBe(undefined);
 
       const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
 
@@ -901,16 +980,315 @@ describe("BucketDataController", () => {
       expect(bucketData[0].description).toBe("first description");
     });
 
-    it("should delete multiple data and return deletedCount as 2", async () => {
+    it("should delete multiple document", async () => {
       const response = await req.delete(`/bucket/${myBucketId}/data`, [
         myBucketData[0]._id.toHexString(),
         myBucketData[1]._id.toHexString()
       ]);
-      expect(response.body.deletedCount).toBe(2);
+
+      expect(response.statusCode).toBe(204);
+      expect(response.body).toBe(undefined);
 
       const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
 
       expect(bucketData).toEqual([]);
+    });
+  });
+
+  describe("delete relations", () => {
+    let relationBucketId: ObjectId;
+    let usersBucketId: ObjectId;
+    let otherBucketId: ObjectId;
+
+    let documentOneId: ObjectId;
+    let documentTwoId: ObjectId;
+
+    let userOneId: ObjectId;
+    let userTwoId: ObjectId;
+    let otherBucketDocumentId: ObjectId;
+
+    beforeAll(async () => {
+      usersBucketId = await req
+        .post("/bucket", {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            name: {
+              type: "string",
+              title: "name",
+              description: "Title of the name",
+              options: {position: "left"}
+            }
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      otherBucketId = await req
+        .post("/bucket", {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the title",
+              options: {position: "left"}
+            }
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      relationBucketId = await req
+        .post("/bucket", {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            nested_relation: {
+              type: "object",
+              options: {position: "left", visible: true},
+              properties: {
+                user_relation: {
+                  type: "relation",
+                  bucketId: usersBucketId
+                },
+                other_relation: {
+                  type: "relation",
+                  bucketId: otherBucketId
+                }
+              }
+            }
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+    });
+
+    beforeEach(async () => {
+      userOneId = await req
+        .post(`/bucket/${usersBucketId}/data`, {
+          name: "user_one"
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      userTwoId = await req
+        .post(`/bucket/${usersBucketId}/data`, {
+          name: "user_two"
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      otherBucketDocumentId = await req
+        .post(`/bucket/${otherBucketId}/data`, {
+          title: "test_title"
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      documentOneId = await req
+        .post(`/bucket/${relationBucketId}/data`, {
+          title: "document_one",
+          nested_relation: {
+            user_relation: userOneId,
+            other_relation: otherBucketDocumentId
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      documentTwoId = await req
+        .post(`/bucket/${relationBucketId}/data`, {
+          title: "document_two",
+          nested_relation: {
+            user_relation: userTwoId,
+            other_relation: otherBucketDocumentId
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+    });
+
+    afterEach(async () => {
+      await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+      await req.delete(`/bucket/${relationBucketId}/data`, [documentOneId, documentTwoId]);
+      await req.delete(`/bucket/${otherBucketId}/data/${otherBucketDocumentId}`);
+    });
+
+    it("should clear relations of documentOne when userOne deleted", async () => {
+      let response = await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+      expect(response.statusCode).toEqual(204);
+      expect(response.body).toEqual(undefined);
+
+      let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+      expect(relationDocuments).toEqual([
+        {
+          _id: "__skip__",
+          title: "document_one",
+          nested_relation: {
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        },
+        {
+          _id: "__skip__",
+          title: "document_two",
+          nested_relation: {
+            user_relation: userTwoId.toHexString(),
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        }
+      ]);
+    });
+
+    it("should clear relations for both documents when userOne and userTwo deleted", async () => {
+      let response = await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+      expect(response.statusCode).toEqual(204);
+      expect(response.body).toEqual(undefined);
+
+      let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+      expect(relationDocuments).toEqual([
+        {
+          _id: "__skip__",
+          title: "document_one",
+          nested_relation: {
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        },
+        {
+          _id: "__skip__",
+          title: "document_two",
+          nested_relation: {
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        }
+      ]);
+    });
+  });
+
+  describe("clear relation methods", () => {
+    let controller: BucketDataController;
+    let bucketService: any;
+    let findSpy: jasmine.Spy;
+    let collectionSpy: jasmine.Spy;
+    let updateSpy: jasmine.Spy;
+
+    let bucketId = new ObjectId();
+    let anotherBucketId = new ObjectId();
+    let relationBucketId = new ObjectId();
+    let documentId = new ObjectId();
+
+    let mockCollection: any = {
+      updateMany: () => {}
+    };
+
+    let buckets = [
+      {
+        _id: bucketId,
+        properties: {
+          nested_relation: {
+            type: "object",
+            properties: {
+              here: {type: "relation", bucketId: relationBucketId},
+              not_here: {type: "relation", bucketId: new ObjectId()}
+            }
+          },
+          root_relation: {type: "relation", bucketId: relationBucketId},
+          not_relation: {type: "string"}
+        }
+      },
+      {
+        _id: anotherBucketId,
+        properties: {
+          relation_field: {type: "relation", bucketId: relationBucketId}
+        }
+      }
+    ];
+
+    beforeEach(() => {
+      controller = app.get(BucketDataController);
+      bucketService = {
+        find: () => {},
+        collection: () => mockCollection
+      };
+
+      findSpy = spyOn(bucketService, "find").and.returnValue(
+        new Promise((resolve, reject) => resolve(buckets))
+      );
+      collectionSpy = spyOn(bucketService, "collection").and.callThrough();
+      updateSpy = spyOn(mockCollection, "updateMany");
+    });
+
+    it("should clear relations", async () => {
+      await controller.clearRelations(bucketService, relationBucketId, documentId);
+      expect(findSpy).toHaveBeenCalledTimes(1);
+      expect(findSpy).toHaveBeenCalledWith({_id: {$ne: relationBucketId}});
+
+      expect(collectionSpy).toHaveBeenCalledTimes(3);
+      expect(collectionSpy.calls.allArgs()).toEqual([
+        [`bucket_${bucketId.toHexString()}`],
+        [`bucket_${bucketId.toHexString()}`],
+        [`bucket_${anotherBucketId.toHexString()}`]
+      ]);
+
+      expect(updateSpy).toHaveBeenCalledTimes(3);
+      expect(updateSpy.calls.allArgs()).toEqual([
+        [{"nested_relation.here": documentId}, {$unset: {"nested_relation.here": ""}}],
+        [{root_relation: documentId}, {$unset: {root_relation: ""}}],
+        [{relation_field: documentId}, {$unset: {relation_field: ""}}]
+      ]);
+    });
+
+    it("should check whether schema is object or not", () => {
+      let schema = {
+        type: "object",
+        properties: {
+          test: ""
+        }
+      };
+
+      expect(controller.isObject(schema)).toBe(true);
+
+      schema.type = "string";
+      expect(controller.isObject(schema)).toBe(false);
+    });
+
+    it("should check whether schema is correct relation or not", () => {
+      let schema = {
+        type: "relation",
+        bucketId: "id1"
+      };
+      expect(controller.isRelation(schema, "id1")).toEqual(true);
+
+      expect(controller.isRelation(schema, "id2")).toEqual(false);
+
+      schema.type = "object";
+      expect(controller.isRelation(schema, "id1")).toEqual(false);
+    });
+
+    it("should find relations", () => {
+      let schema = {
+        nested_relation: {
+          type: "object",
+          properties: {
+            here: {type: "relation", bucketId: "id1"},
+            not_here: {type: "relation", bucketId: "id2"}
+          }
+        },
+        root_relation: {type: "relation", bucketId: "id1"},
+        not_relation: {type: "string"}
+      };
+
+      let targets = controller.findRelations(schema, "id1", "", []);
+
+      expect(targets).toEqual(["nested_relation.here", "root_relation"]);
     });
   });
 });

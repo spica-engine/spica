@@ -13,18 +13,37 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  HttpStatus,
+  HttpCode
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {createBucketDataResource} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
+
+function filterReviver(k: string, v: string) {
+  const availableConstructors = {
+    Date: v => new Date(v),
+    ObjectId: v => new ObjectId(v)
+  };
+  const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
+  if (typeof v == "string" && ctr.test(v)) {
+    const [, desiredCtr, arg] = v.match(ctr);
+    if (availableConstructors[desiredCtr]) {
+      return availableConstructors[desiredCtr](arg);
+    } else {
+      throw new Error(`Could not find the constructor ${desiredCtr} in {"${k}":"${v}"}`);
+    }
+  }
+  return v;
+}
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -128,7 +147,7 @@ export class BucketDataController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule: boolean = false,
     @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
-    @Query("filter", JSONP) filter: FilterQuery<BucketDocument>,
+    @Query("filter", JSONPR(filterReviver)) filter: FilterQuery<BucketDocument>,
     @Query("limit", NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object
@@ -349,18 +368,75 @@ export class BucketDataController {
 
   @UseInterceptors(activity(createBucketDataResource))
   @Delete(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteOne(
+  async deleteOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    return this.bds.deleteOne(bucketId, {_id: documentId});
+    let deletedCount = await this.bds
+      .deleteOne(bucketId, {_id: documentId})
+      .then(result => result.deletedCount);
+    if (deletedCount < 1) return;
+
+    return this.clearRelations(this.bs, bucketId, documentId);
   }
 
   @UseInterceptors(activity(createBucketDataResource))
   @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
-    return this.bds.deleteMany(bucketId, body);
+  async deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
+    let deletedCount = await this.bds
+      .deleteMany(bucketId, body)
+      .then(result => result.deletedCount);
+    if (deletedCount < 1) return;
+
+    return Promise.all(
+      body.map(id => {
+        this.clearRelations(this.bs, bucketId, new ObjectId(id)).catch(err => err);
+      })
+    );
+  }
+
+  async clearRelations(bucketService: BucketService, bucketId: ObjectId, documentId: ObjectId) {
+    let buckets = await bucketService.find({_id: {$ne: bucketId}});
+    if (buckets.length < 1) return;
+
+    for (const bucket of buckets) {
+      let targets = this.findRelations(bucket.properties, bucketId.toHexString(), "", []);
+      if (targets.length < 1) continue;
+
+      for (const target of targets) {
+        await bucketService
+          .collection(`bucket_${bucket._id.toHexString()}`)
+          .updateMany({[target]: documentId}, {$unset: {[target]: ""}});
+      }
+    }
+  }
+
+  findRelations(schema: any, bucketId: string, path: string = "", targets: string[]) {
+    path = path ? `${path}.` : ``;
+    for (const key of Object.keys(schema)) {
+      if (this.isObject(schema[key])) {
+        this.findRelations(schema[key].properties, bucketId, `${path}${key}`, targets);
+      } else if (this.isRelation(schema[key], bucketId)) {
+        targets.push(`${path}${key}`);
+      }
+    }
+    return targets;
+  }
+
+  isObject(schema: any) {
+    return schema &&
+      schema.type == "object" &&
+      schema.properties &&
+      Object.keys(schema.properties).length > 0
+      ? true
+      : false;
+  }
+
+  isRelation(schema: any, bucketId: string) {
+    return schema && schema.type == "relation" && schema.bucketId == bucketId ? true : false;
   }
 }
