@@ -68,11 +68,15 @@ export class BucketController {
   @UseInterceptors(activity(createBucketResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
-  replaceOne(
+  async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    let oldSchema = await this.bs.findOne({_id: id});
+
+    let newSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    await this.clearRemovedFields(this.bds, oldSchema, newSchema);
+    return newSchema;
   }
 
   @Patch(":id")
@@ -261,5 +265,48 @@ export class BucketController {
         }
       });
     });
+  }
+
+  async clearRemovedFields(
+    bucketDataService: BucketDataService,
+    oldSchema: Bucket,
+    newSchema: Bucket
+  ) {
+    let missingKeys = this.findMissingKeys(oldSchema.properties, newSchema.properties, [], "");
+    if (missingKeys.length < 1) return;
+
+    let unsetAggregation = missingKeys.reduce((pre, acc: any, index, array) => {
+      acc = {...pre, [array[index]]: ""};
+      return acc;
+    }, {});
+    
+    await bucketDataService.updateMany(oldSchema._id, {}, {$unset: unsetAggregation});
+  }
+
+  findMissingKeys(oldSchema: any, newSchema: any, missingKeys: string[], path: string) {
+    for (const key of Object.keys(oldSchema)) {
+      if (!newSchema.hasOwnProperty(key)) {
+        missingKeys.push(path ? `${path}.${key}` : key);
+        //we dont need to check child keys of this key anymore
+        continue;
+      }
+      if (this.isObject(oldSchema[key]) && this.isObject(newSchema[key])) {
+        this.findMissingKeys(
+          oldSchema[key].properties,
+          newSchema[key].properties,
+          missingKeys,
+          path ? `${path}.${key}` : key
+        );
+      }
+    }
+    return missingKeys;
+  }
+  isObject(schema: any) {
+    return schema &&
+      schema.type == "object" &&
+      schema.properties &&
+      Object.keys(schema.properties).length > 0
+      ? true
+      : false;
   }
 }
