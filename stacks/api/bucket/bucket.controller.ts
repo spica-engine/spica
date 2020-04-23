@@ -72,11 +72,11 @@ export class BucketController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    let oldSchema = await this.bs.findOne({_id: id});
+    let previousSchema = await this.bs.findOne({_id: id});
 
-    let newSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
-    await this.clearRemovedFields(this.bds, oldSchema, newSchema);
-    return newSchema;
+    let currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    await this.clearRemovedFields(this.bds, previousSchema, currentSchema);
+    return currentSchema;
   }
 
   @Patch(":id")
@@ -269,37 +269,42 @@ export class BucketController {
 
   async clearRemovedFields(
     bucketDataService: BucketDataService,
-    oldSchema: Bucket,
-    newSchema: Bucket
+    previousSchema: Bucket,
+    currentSchema: Bucket
   ) {
-    let missingKeys = this.findMissingKeys(oldSchema.properties, newSchema.properties, [], "");
-    if (missingKeys.length < 1) return;
+    let removedKeys = this.findRemovedKeys(
+      previousSchema.properties,
+      currentSchema.properties,
+      [],
+      ""
+    );
+    if (removedKeys.length < 1) return;
 
-    let unsetAggregation = missingKeys.reduce((pre, acc: any, index, array) => {
+    let unsetFields = removedKeys.reduce((pre, acc: any, index, array) => {
       acc = {...pre, [array[index]]: ""};
       return acc;
     }, {});
-    
-    await bucketDataService.updateMany(oldSchema._id, {}, {$unset: unsetAggregation});
+
+    await bucketDataService.updateMany(previousSchema._id, {}, {$unset: unsetFields});
   }
 
-  findMissingKeys(oldSchema: any, newSchema: any, missingKeys: string[], path: string) {
-    for (const key of Object.keys(oldSchema)) {
-      if (!newSchema.hasOwnProperty(key)) {
-        missingKeys.push(path ? `${path}.${key}` : key);
+  findRemovedKeys(previousSchema: any, currentSchema: any, removedKeys: string[], path: string) {
+    for (const key of Object.keys(previousSchema)) {
+      if (!currentSchema.hasOwnProperty(key)) {
+        removedKeys.push(path ? `${path}.${key}` : key);
         //we dont need to check child keys of this key anymore
         continue;
       }
-      if (this.isObject(oldSchema[key]) && this.isObject(newSchema[key])) {
-        this.findMissingKeys(
-          oldSchema[key].properties,
-          newSchema[key].properties,
-          missingKeys,
+      if (this.isObject(previousSchema[key]) && this.isObject(currentSchema[key])) {
+        this.findRemovedKeys(
+          previousSchema[key].properties,
+          currentSchema[key].properties,
+          removedKeys,
           path ? `${path}.${key}` : key
         );
       }
     }
-    return missingKeys;
+    return removedKeys;
   }
   isObject(schema: any) {
     return schema &&
