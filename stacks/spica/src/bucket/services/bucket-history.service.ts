@@ -17,4 +17,8 @@ export class BucketHistoryService {
       `api:/bucket/${bucketId}/history/${bucketDataId}/${historyId}`
     );
   }
+
+  clearHistories(bucketId: string) {
+    return this.http.delete(`api:/bucket/${bucketId}/history`);
+  }
 }

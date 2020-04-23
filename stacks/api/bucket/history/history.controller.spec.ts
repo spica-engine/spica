@@ -13,6 +13,9 @@ describe("History Acceptance", () => {
   let module: TestingModule;
 
   const bucketId = new ObjectId();
+  const anotherBucketId = new ObjectId();
+  const anotherBucketDocumentId = new ObjectId();
+
   const documentId = new ObjectId();
   const anotherDocumentId = new ObjectId();
 
@@ -21,6 +24,9 @@ describe("History Acceptance", () => {
   );
   const secondHistoryId = new ObjectId(
     Math.floor(new Date(2018, 5, 11).getTime() / 1000).toString(16) + "0000000000000000"
+  );
+  const thirdHistoryId = new ObjectId(
+    Math.floor(new Date(2018, 5, 12).getTime() / 1000).toString(16) + "0000000000000000"
   );
 
   beforeAll(async () => {
@@ -38,7 +44,6 @@ describe("History Acceptance", () => {
     req = module.get(Request);
     await app.listen(req.socket);
 
-    //add bucket
     await app
       .get(DatabaseService)
       .collection("buckets")
@@ -64,12 +69,11 @@ describe("History Acceptance", () => {
           }
         }
       });
-    //add documents
+
     await app
       .get(DatabaseService)
       .collection(`bucket_${bucketId}`)
       .insertMany([
-        //we need to keep last updated data
         {
           _id: documentId,
           title: "last updated title",
@@ -81,7 +85,6 @@ describe("History Acceptance", () => {
           description: "another description"
         }
       ]);
-    //add histories
 
     await app
       .get(DatabaseService)
@@ -152,6 +155,12 @@ describe("History Acceptance", () => {
               ]
             }
           ]
+        },
+        {
+          _id: thirdHistoryId,
+          bucket_id: anotherBucketId,
+          document_id: anotherBucketDocumentId,
+          changes: []
         }
       ]);
   }, 120000);
@@ -210,5 +219,21 @@ describe("History Acceptance", () => {
       title: "current title",
       description: "current description"
     });
+  });
+  it("should clear histories for given bucketId", async () => {
+    const response = await req.delete(`/bucket/${bucketId}/history`);
+    expect(response.statusCode).toEqual(204);
+    expect(response.body).toEqual(undefined);
+
+    const {body: deletedHistories} = await req.get(`/bucket/${bucketId}/history/${documentId}`, {});
+    expect(deletedHistories).toEqual([]);
+
+    const {body: histories} = await req.get(
+      `/bucket/${anotherBucketId}/history/${anotherBucketDocumentId}`,
+      {}
+    );
+    expect(histories).toEqual([
+      {_id: thirdHistoryId.toHexString(), date: new Date(2018, 5, 12).toISOString(), changes: 0}
+    ]);
   });
 });

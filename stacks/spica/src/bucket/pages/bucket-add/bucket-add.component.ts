@@ -22,6 +22,7 @@ import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
+import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
 
 @Component({
   selector: "bucket-add",
@@ -50,6 +51,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   $save: Observable<SavingState>;
 
+  $remove: Observable<SavingState>;
+
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
   immutableProperties: Array<string> = [];
@@ -62,7 +65,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     _inputResolver: InputResolver,
     private activatedRoute: ActivatedRoute,
     private router: Router,
-    private bs: BucketService
+    private bs: BucketService,
+    private historyService: BucketHistoryService
   ) {
     this.inputTypes = _inputResolver.entries();
   }
@@ -84,6 +88,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         ),
         tap(params => {
           this.$save = of(SavingState.Pristine);
+          this.$remove = of(SavingState.Pristine);
           if (!params.id) {
             this.bucket = emptyBucket();
             this.updatePositionProperties();
@@ -177,6 +182,18 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       of(SavingState.Saving),
       save.pipe(
         tap(bucket => isInsert && this.router.navigate([`buckets/${bucket._id}`])),
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
+  }
+
+  clearHistories() {
+    const remove = this.historyService.clearHistories(this.bucket._id);
+    this.$remove = merge(
+      of(SavingState.Saving),
+      remove.pipe(
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{ .Release.Name }}-application
+spec:
+  serviceName: {{ .Release.Name }}-application
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-application
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-application
+    spec:
+      containers:
+        - name: web
+          image: spicaengine/spica:{{ $.Chart.AppVersion }}
+          resources:
+{{ toYaml .Values.application.webResources | indent 12 }}
+          ports:
+            - containerPort: 80
+          env:
+            - name: BASE_URL
+              value: {{.Values.application.webBaseUrl}}
+        - name: api
+          image: spicaengine/api:{{ $.Chart.AppVersion }}
+          resources:
+{{ toYaml .Values.application.apiResources | indent 12 }}
+          ports:
+            - containerPort: 4300
+          env:
+            - name: PORT
+              value: "4300"
+            - name: DATABASE_URI
+              value: {{ template "database.connection-uri" . }}
+            - name: REPLICA_SET
+              value: {{ .Values.database.replicaSetName }}
+            - name: DATABASE_NAME
+              value: {{ .Values.database.name }}
+            - name: SECRET
+              value: {{ required "A valid .Values.application.secret is required!" .Values.application.secret }}
+            - name: DEFAULT_PASSWORD
+              value: {{ .Values.application.defaultPassword }}
+            - name: PUBLIC_HOST
+              value: {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}}
+            - name: PERSISTENT_PATH
+              value: /data
+          volumeMounts:
+            - name: {{ .Release.Name }}-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Release.Name }}-data
+      spec:
+        storageClassName: {{ .Values.application.storageClass }}
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.application.storageSize }}
