@@ -69,15 +69,11 @@ export class AddComponent implements OnInit {
         }
         return this.bs.getBucket(params.id);
       }),
-      tap(schema => {
-        if (schema.history) {
-          console.log(this.data)
+      map(schema => {
+        if (schema.history && this.data._id) {
           this.histories$ = this.bhs.historyList(this.bucketId, this.data._id);
         }
-      }),
-      map(schema => {
         this.data._schedule = this.data._schedule && new Date(this.data._schedule);
-
         // What we do here is simply coercing the translated data
         Object.keys(schema.properties).forEach(key => {
           const property = schema.properties[key];
