@@ -22,6 +22,10 @@
     // For proper border radius
     overflow: hidden;
 
+    mat-card-content form mat-list h4 {
+      padding: 16px 0px 24px 0px;
+    }
+
     mat-form-field.url {
       width: 100%;
     }
@@ -32,7 +36,7 @@
 
     mat-list-item.triggers mat-form-field {
       width: 20%;
-      margin: 0 5px;
+      margin-right: 10px;
     }
 
     .status {
