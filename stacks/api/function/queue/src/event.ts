@@ -33,7 +33,7 @@ export class EventQueue {
   }
 
   listen() {
-    this.server.bind("0.0.0.0:5678", grpc.ServerCredentials.createInsecure());
+    this.server.bind(process.env.FUNCTION_GRPC_ADDRESS, grpc.ServerCredentials.createInsecure());
     this.server.start();
   }
 

@@ -5,7 +5,10 @@ export class DatabaseQueue {
   private client: any;
 
   constructor() {
-    this.client = new Database.QueueClient("0.0.0.0:5678", grpc.credentials.createInsecure());
+    this.client = new Database.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      grpc.credentials.createInsecure()
+    );
   }
 
   pop(e: Database.Change.Pop): Promise<Database.Change> {

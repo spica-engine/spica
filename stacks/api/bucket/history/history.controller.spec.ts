@@ -220,6 +220,7 @@ describe("History Acceptance", () => {
       description: "current description"
     });
   });
+
   it("should clear histories for given bucketId", async () => {
     const response = await req.delete(`/bucket/${bucketId}/history`);
     expect(response.statusCode).toEqual(204);
