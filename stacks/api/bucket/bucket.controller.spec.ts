@@ -304,17 +304,30 @@ describe("Bucket acceptance", () => {
   });
 
   describe("delete requests", () => {
-    it("should delete spesific bucket", async () => {
-      //add buckets
+    it("should delete spesific bucket and it's documents", async () => {
       const firstInsertedBukcet = (await req.post("/bucket", bucket)).body;
       const secondInsertedBucket = (await req.post("/bucket", bucket)).body;
 
-      const response = await req.delete(`/bucket/${secondInsertedBucket._id}`);
-      expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
+      let {body: insertedDocument} = await req.post(`/bucket/${secondInsertedBucket._id}/data`, {
+        title: "title",
+        description: "description"
+      });
+
+      let {body: bucketDocuments} = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
+      expect(bucketDocuments).toBeDefined([insertedDocument]);
+
+      let deleteResponse = await req.delete(`/bucket/${secondInsertedBucket._id}`);
+      expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
 
       const buckets = (await req.get("/bucket", {})).body;
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual(firstInsertedBukcet);
+
+      let getDataResponse = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
+      expect([getDataResponse.statusCode, getDataResponse.statusText]).toEqual([
+        500,
+        "Internal Server Error"
+      ]);
     });
   });
 

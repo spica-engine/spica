@@ -27,6 +27,7 @@ import * as mime from "mime-types";
 import * as request from "request";
 import {createBucketResource} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
+import {findRelations} from "./utilities";
 
 @Controller("bucket")
 export class BucketController {
@@ -98,8 +99,15 @@ export class BucketController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.bs.deleteOne({_id: id});
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    let deletedCount = await this.bs.deleteOne({_id: id});
+    if (deletedCount < 1) return;
+
+    await this.bds.deleteAll(id);
+
+    await this.clearRelations(this.bs, this.bds, id);
+
+    return;
   }
 
   @Post("import/:id")
@@ -261,5 +269,34 @@ export class BucketController {
         }
       });
     });
+  }
+
+  async clearRelations(
+    bucketService: BucketService,
+    bucketDataService: BucketDataService,
+    bucketId: ObjectId
+  ) {
+    let buckets = await bucketService.find({_id: {$ne: bucketId}});
+    if (buckets.length < 1) return;
+
+    for (const bucket of buckets) {
+      let targets = findRelations(bucket.properties, bucketId.toHexString(), "", []);
+      if (targets.length < 1) continue;
+
+      let unsetFieldsBucket = targets.reduce((pre, acc: any, index, array) => {
+        let key = "properties." + array[index].replace(/\./g, ".properties.");
+        acc = {...pre, [key]: ""};
+        return acc;
+      }, {});
+
+      await bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket});
+
+      let unsetFieldsBucketData = targets.reduce((pre, acc: any, index, array) => {
+        acc = {...pre, [array[index]]: ""};
+        return acc;
+      }, {});
+
+      await bucketDataService.updateMany(bucket._id, {}, {$unset: unsetFieldsBucketData});
+    }
   }
 }
