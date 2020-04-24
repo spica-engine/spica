@@ -1,15 +1,15 @@
-import {Controller, Get, Param, UseGuards} from "@nestjs/common";
+import {Controller, Get, Param, UseGuards, Delete, HttpCode, HttpStatus} from "@nestjs/common";
 import {BucketService, compile} from "@spica-server/bucket/services";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {AuthGuard} from "@spica-server/passport";
 import {applyPatch} from "./differ";
 import {HistoryService} from "./history.service";
 
-@Controller("bucket/:bucketId/history/:documentId")
+@Controller("bucket/:bucketId/history")
 export class HistoryController {
   constructor(private historyService: HistoryService, private bucketService: BucketService) {}
 
-  @Get()
+  @Get(":documentId")
   @UseGuards(AuthGuard())
   getHistories(
     @Param("bucketId", OBJECT_ID) bucket_id: ObjectId,
@@ -18,7 +18,7 @@ export class HistoryController {
     return this.historyService.find({$and: [{bucket_id: bucket_id}, {document_id: document_id}]});
   }
 
-  @Get(":historyId")
+  @Get(":documentId/:historyId")
   @UseGuards(AuthGuard())
   async revertTo(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -34,5 +34,12 @@ export class HistoryController {
       applyPatch(history.changes, document, compiledSchema);
     }
     return document;
+  }
+
+  @Delete()
+  @UseGuards(AuthGuard())
+  @HttpCode(HttpStatus.NO_CONTENT)
+  clearHistories(@Param("bucketId", OBJECT_ID) bucketId: ObjectId) {
+    return this.historyService.deleteMany({bucket_id: bucketId});
   }
 }

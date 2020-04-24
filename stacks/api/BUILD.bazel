@@ -26,6 +26,7 @@ ts_library(
         "@npm//@nestjs/core",
         "@npm//@nestjs/platform-express",
         "@npm//@nestjs/platform-socket.io",
+        "@npm//@types/express",
         "@npm//@types/node",
     ],
 )

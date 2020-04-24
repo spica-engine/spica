@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {database} from "@spica-devkit/database";
+import {database, connected, close} from "@spica-devkit/database";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {Db} from "mongodb";
 
@@ -22,7 +22,16 @@ describe("Database e2e", () => {
 
   it("should connect to database", async () => {
     const db = await database();
+
     expect(db instanceof Db).toBe(true);
+    expect(await connected()).toBe(true);
+  });
+
+  it("should close the connection to the database", async () => {
+    const _ = await database();
+    expect(connected()).toBe(true);
+    await close();
+    expect(connected()).toBe(false);
   });
 
   it("should write to database", async () => {

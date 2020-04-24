@@ -26,7 +26,7 @@ pkg_stamp = rule(
     attrs = {
         "srcs": attr.label_list(
             doc = """Transitive dependencies that will stamped upon build.""",
-            allow_files = False,
+            allow_files = True,
         ),
         "substitutions": attr.string_dict(
             doc = """Key-value pairs which are replaced in all the files while building the package.""",

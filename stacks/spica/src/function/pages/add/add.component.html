@@ -301,7 +301,7 @@
     <button
       mat-button
       *matSave="$save | async; let state"
-      [disabled]="form.invalid || isHandlerDuplicated || !!state"
+      [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
       [canInteract]="function._id ? 'function:update' : 'function:create'"
       (click)="save()"
       [ngSwitch]="state"
