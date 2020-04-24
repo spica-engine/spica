@@ -20,6 +20,7 @@ describe("Watcher", () => {
       icon: "view_stream",
       primary: "title",
       readOnly: false,
+      history: true,
       properties: {
         title: {
           type: "string",
@@ -42,6 +43,7 @@ describe("Watcher", () => {
       icon: "view_stream",
       primary: "title",
       readOnly: false,
+      history: true,
       properties: {
         name: {
           type: "string",
@@ -89,6 +91,7 @@ describe("Watcher", () => {
   ];
 
   let deleteManySpy: jasmine.SpyObj<any>;
+  let schemaSpy: jasmine.SpyObj<any>;
   let previousSchemaSpy: jasmine.SpyObj<any>;
   let deleteAtPathSpy: jasmine.SpyObj<any>;
   let previousDocumentSpy: jasmine.SpyObj<any>;
@@ -96,6 +99,7 @@ describe("Watcher", () => {
 
   const mockHistoryService = {
     deleteMany: jasmine.createSpy("deleteMany"),
+    getSchema: jasmine.createSpy("getSchema"),
     getPreviousSchema: jasmine.createSpy("getPreviousSchema"),
     deleteHistoryAtPath: jasmine.createSpy("deleteHistoryAtPath"),
     getPreviousDocument: jasmine.createSpy("getPreviousDocument"),
@@ -127,6 +131,7 @@ describe("Watcher", () => {
     await new Promise(resolve => setTimeout(resolve, 100));
     //create spies
     deleteManySpy = bucketWatcher["historyService"].deleteMany;
+    schemaSpy = bucketWatcher["historyService"].getSchema;
     previousSchemaSpy = bucketWatcher["historyService"].getPreviousSchema;
     deleteAtPathSpy = bucketWatcher["historyService"].deleteHistoryAtPath;
     previousDocumentSpy = bucketWatcher["historyService"].getPreviousDocument;
@@ -156,6 +161,7 @@ describe("Watcher", () => {
     //wait until spies called, then reset all of them
     await new Promise(resolve => setTimeout(resolve, 100));
     deleteManySpy.calls.reset();
+    schemaSpy.calls.reset();
     previousSchemaSpy.calls.reset();
     deleteAtPathSpy.calls.reset();
     previousDocumentSpy.calls.reset();
@@ -234,6 +240,8 @@ describe("Watcher", () => {
     //update spy as it returns previous bucket document
     previousDocumentSpy.and.returnValue(Promise.resolve(secondBucketDocuments[1]));
 
+    schemaSpy.and.returnValue(Promise.resolve(buckets[1]));
+
     let updatedDocument = {...secondBucketDocuments[1], name: "updated second name", age: 21};
 
     await databaseService
@@ -288,6 +296,8 @@ describe("Watcher", () => {
     const updatedDocument = {...firstBucketDocuments[0], title: "new title"};
     previousDocumentSpy.and.returnValue(Promise.resolve(updatedDocument));
 
+    schemaSpy.and.returnValue(Promise.resolve(buckets[0]));
+
     await databaseService
       .collection(`bucket_${buckets[0]._id}`)
       .replaceOne({_id: updatedDocument._id}, updatedDocument);
@@ -300,4 +310,27 @@ describe("Watcher", () => {
 
     expect(insertOneSpy).toHaveBeenCalledTimes(0);
   }, 35000);
+
+  it("shouldn't insert history if bucket history is false", async () => {
+    let disabledHistoryBucket = {...buckets[0], history: false};
+
+    schemaSpy.and.returnValue(Promise.resolve(disabledHistoryBucket));
+
+    let updatedDocument = {
+      ...firstBucketDocuments[0],
+      title: "updated title",
+      description: "updated description"
+    };
+
+    await databaseService
+      .collection(`bucket_${buckets[0]._id}`)
+      .replaceOne({_id: updatedDocument._id}, updatedDocument);
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(schemaSpy).toHaveBeenCalledTimes(1);
+    expect(schemaSpy).toHaveBeenCalledWith(buckets[0]._id);
+
+    expect(previousDocumentSpy).toHaveBeenCalledTimes(0);
+  });
 });

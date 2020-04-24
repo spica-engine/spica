@@ -52,6 +52,7 @@ describe("Bucket acceptance", () => {
     icon: "view_stream",
     primary: "title",
     readOnly: false,
+    history: true,
     properties: {
       title: {
         type: "string",
@@ -126,6 +127,7 @@ describe("Bucket acceptance", () => {
         icon: "view_stream",
         primary: "title",
         readOnly: false,
+        history: true,
         properties: {
           title: {
             type: "string",
@@ -184,6 +186,7 @@ describe("Bucket acceptance", () => {
         icon: "view_stream",
         primary: "title",
         readOnly: false,
+        history: true,
         properties: {
           title: {
             type: "string",
@@ -210,6 +213,7 @@ describe("Bucket acceptance", () => {
         icon: "view_stream",
         primary: "title",
         readOnly: false,
+        history: true,
         properties: {
           title: {
             type: "string",
