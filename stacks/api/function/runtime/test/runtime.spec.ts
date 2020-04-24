@@ -1,10 +1,10 @@
-import {Compilation, Runtime} from "@spica-server/function/runtime";
+import {Compilation, Runtime, Worker} from "@spica-server/function/runtime";
 import * as fs from "fs";
 
 class FooRuntime extends Runtime {
   description = undefined;
 
-  execute(): Promise<void> {
+  spawn(id: string): Worker {
     throw new Error("Method not implemented.");
   }
 

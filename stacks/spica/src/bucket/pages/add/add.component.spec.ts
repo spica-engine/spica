@@ -218,75 +218,96 @@ describe("AddComponent", () => {
   });
 
   describe("history", () => {
-    beforeEach(() => {
-      activatedRoute.params.next({id: "1", rid: "2"});
-      fixture.detectChanges();
+    describe("disabled", () => {
+      beforeEach(fakeAsync(() => {
+        activatedRoute.params.next({id: "1", rid: "2"});
+        row.next({_id: "2"});
+        bucket.next({history: false, properties: {}});
+        tick(1);
+        fixture.detectChanges();
+      }));
+
+      it("shouldn't set history observable and render button", () => {
+        expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(0);
+        expect(fixture.componentInstance.histories$).toBeUndefined();
+        const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
+        expect(button).toBeFalsy();
+      });
     });
+    describe("enabled", () => {
+      beforeEach(fakeAsync(() => {
+        activatedRoute.params.next({id: "1", rid: "2"});
+        row.next({_id: "2"});
+        bucket.next({history: true, properties: {}});
+        tick(1);
+        fixture.detectChanges();
+      }));
 
-    it("should show history button in edit mode", () => {
-      historyList.next([{_id: "1", changes: 1, date: new Date().toISOString()}]);
-      fixture.detectChanges();
-      expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(1);
-      expect(bucketHistoryService.historyList).toHaveBeenCalledWith("1", "2");
-      const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
-      expect(button).toBeTruthy();
-      expect(button.injector.get(MatBadge).content).toBe((1 as unknown) as string);
+      it("should show history button in edit mode", () => {
+        historyList.next([{_id: "1", changes: 1, date: new Date().toISOString()}]);
+        fixture.detectChanges();
+        expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
+        expect(bucketHistoryService.historyList).toHaveBeenCalledWith("1", "2");
+        const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
+        expect(button).toBeTruthy();
+        expect(button.injector.get(MatBadge).content).toBe((1 as unknown) as string);
+      });
+
+      it("should list changes", () => {
+        historyList.next([
+          {_id: "1", changes: 5, date: new Date().toISOString()},
+          {_id: "2", changes: 8, date: new Date().toISOString()}
+        ]);
+        fixture.detectChanges();
+        expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
+        expect(bucketHistoryService.historyList).toHaveBeenCalledWith("1", "2");
+        fixture.debugElement.query(By.css("mat-toolbar > button")).nativeElement.click();
+        fixture.detectChanges();
+        const options = document.body.querySelectorAll<HTMLButtonElement>(
+          ".mat-menu-panel > .mat-menu-content button"
+        );
+
+        expect(options.item(0).textContent).toBe(" N ");
+        expect(options.item(0).disabled).toBe(true);
+        expect(options.item(1).querySelector("span.mat-button-wrapper").textContent).toBe(" 1 ");
+        expect(options.item(1).querySelector("span.mat-badge-content").textContent).toBe("5");
+        expect(options.item(2).querySelector("span.mat-button-wrapper").textContent).toBe(" 2 ");
+        expect(options.item(2).querySelector("span.mat-badge-content").textContent).toBe("8");
+      });
+
+      it("should set data to specific data point", fakeAsync(() => {
+        const data = {_id: "2", test: "12"},
+          specificPoint = {_id: "2", test: "123"};
+        historyList.next([
+          {_id: "1", changes: 3, date: new Date().toISOString()},
+          {_id: "2", changes: 2, date: new Date().toISOString()}
+        ]);
+        row.next(data);
+        fixture.detectChanges();
+
+        fixture.debugElement.query(By.css("mat-toolbar > button")).nativeElement.click();
+        fixture.detectChanges();
+
+        const nowButton = document.body.querySelector<HTMLButtonElement>(
+          ".mat-menu-panel > .mat-menu-content button"
+        );
+        const secondButton = document.body.querySelector<HTMLButtonElement>(
+          ".mat-menu-panel > .mat-menu-content button:nth-of-type(2)"
+        );
+
+        secondButton.click();
+        history.next(specificPoint);
+        history.complete();
+        tick();
+        fixture.detectChanges();
+
+        expect(bucketHistoryService.revertTo).toHaveBeenCalledTimes(1);
+        expect(bucketHistoryService.revertTo).toHaveBeenCalledWith("1", "2", "1");
+        expect(fixture.componentInstance.data).toEqual(specificPoint);
+        expect(fixture.componentInstance.now).toEqual(data);
+        expect(nowButton.disabled).toBe(false);
+      }));
     });
-
-    it("should list changes", () => {
-      historyList.next([
-        {_id: "1", changes: 5, date: new Date().toISOString()},
-        {_id: "2", changes: 8, date: new Date().toISOString()}
-      ]);
-      fixture.detectChanges();
-      expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(1);
-      expect(bucketHistoryService.historyList).toHaveBeenCalledWith("1", "2");
-      fixture.debugElement.query(By.css("mat-toolbar > button")).nativeElement.click();
-      fixture.detectChanges();
-      const options = document.body.querySelectorAll<HTMLButtonElement>(
-        ".mat-menu-panel > .mat-menu-content button"
-      );
-
-      expect(options.item(0).textContent).toBe(" N ");
-      expect(options.item(0).disabled).toBe(true);
-      expect(options.item(1).querySelector("span.mat-button-wrapper").textContent).toBe(" 1 ");
-      expect(options.item(1).querySelector("span.mat-badge-content").textContent).toBe("5");
-      expect(options.item(2).querySelector("span.mat-button-wrapper").textContent).toBe(" 2 ");
-      expect(options.item(2).querySelector("span.mat-badge-content").textContent).toBe("8");
-    });
-
-    it("should set data to specific data point", fakeAsync(() => {
-      const data = {_id: "2", test: "12"},
-        specificPoint = {_id: "2", test: "123"};
-      historyList.next([
-        {_id: "1", changes: 3, date: new Date().toISOString()},
-        {_id: "2", changes: 2, date: new Date().toISOString()}
-      ]);
-      row.next(data);
-      fixture.detectChanges();
-
-      fixture.debugElement.query(By.css("mat-toolbar > button")).nativeElement.click();
-      fixture.detectChanges();
-
-      const nowButton = document.body.querySelector<HTMLButtonElement>(
-        ".mat-menu-panel > .mat-menu-content button"
-      );
-      const secondButton = document.body.querySelector<HTMLButtonElement>(
-        ".mat-menu-panel > .mat-menu-content button:nth-of-type(2)"
-      );
-
-      secondButton.click();
-      history.next(specificPoint);
-      history.complete();
-      tick();
-      fixture.detectChanges();
-
-      expect(bucketHistoryService.revertTo).toHaveBeenCalledTimes(1);
-      expect(bucketHistoryService.revertTo).toHaveBeenCalledWith("1", "2", "1");
-      expect(fixture.componentInstance.data).toEqual(specificPoint);
-      expect(fixture.componentInstance.now).toEqual(data);
-      expect(nowButton.disabled).toBe(false);
-    }));
   });
 
   describe("properties", () => {

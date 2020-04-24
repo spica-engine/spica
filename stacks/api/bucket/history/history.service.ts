@@ -19,6 +19,10 @@ export class HistoryService {
     this.collection = this.db.collection<History>("history");
   }
 
+  getSchema(bucketId: ObjectId) {
+    return this.db.collection<any>("buckets").findOne({_id: bucketId});
+  }
+
   getPreviousSchema(bucketId: ObjectId) {
     return this.db.collection<any>("buckets").findOne(
       {_id: bucketId},

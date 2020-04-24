@@ -2,13 +2,13 @@ import {
   Compilation,
   Description,
   Diagnostic,
-  Execution,
-  Runtime
+  Runtime,
+  Worker
 } from "@spica-server/function/runtime";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import {Transform} from "stream";
+import {Transform, Writable} from "stream";
 import * as ts from "typescript";
 
 class FilterExperimentalWarnings extends Transform {
@@ -25,6 +25,42 @@ class FilterExperimentalWarnings extends Transform {
     } else {
       cb();
     }
+  }
+}
+
+class NodeWorker extends Worker {
+  private _process: child_process.ChildProcess;
+
+  constructor(id: string) {
+    super();
+    this._process = child_process.spawn(
+      `node`,
+      [
+        "--experimental-modules",
+        "--enable-source-maps",
+        "--unhandled-rejections=strict",
+        `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap.js")}`
+      ],
+      {
+        stdio: ["ignore", "pipe", "pipe"],
+        env: {
+          PATH: process.env.PATH,
+          HOME: process.env.HOME,
+          ENTRYPOINT: "index.js",
+          RUNTIME: "node",
+          WORKER_ID: id,
+          __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
+          __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
+          __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+        }
+      }
+    );
+    Object.assign(this, this._process);
+  }
+
+  attach(stdout?: Writable, stderr?: Writable): void {
+    this._process.stdout.pipe(stdout);
+    this._process.stderr.pipe(new FilterExperimentalWarnings()).pipe(stderr);
   }
 }
 
@@ -126,52 +162,8 @@ export class Node extends Runtime {
     }
   }
 
-  async execute(execution: Execution): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const worker = child_process.spawn(
-        `node`,
-        [
-          "--experimental-modules",
-          "--enable-source-maps",
-          "--unhandled-rejections=strict",
-          `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap.js")}`
-        ],
-        {
-          stdio: [
-            "ignore",
-            typeof execution.stdout == "string" ? execution.stdout : "pipe",
-            typeof execution.stdout == "string" ? execution.stdout : "pipe"
-          ],
-          env: {
-            PATH: process.env.PATH,
-            EVENT_ID: execution.eventId,
-            ENTRYPOINT: "index.js",
-            RUNTIME: "node",
-            __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
-            __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
-            __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
-          },
-          cwd: path.join(execution.cwd, ".build")
-        }
-      );
-
-      if (typeof execution.stdout == "object") {
-        worker.stdout.pipe(execution.stdout);
-        worker.stderr.pipe(new FilterExperimentalWarnings()).pipe(execution.stdout);
-      }
-
-      worker.once("error", e => {
-        reject(e);
-      });
-
-      worker.once("exit", (code, signal) => {
-        if (code == 0) {
-          resolve(code);
-        } else {
-          reject(code);
-        }
-      });
-    });
+  spawn(id: string): Worker {
+    return new NodeWorker(id);
   }
 
   clear(compilation: Compilation) {

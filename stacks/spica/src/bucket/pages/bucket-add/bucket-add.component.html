@@ -98,22 +98,44 @@
             </mat-error>
           </mat-form-field>
 
-          <mat-slide-toggle
-            matInput
-            name="readOnly"
-            placeholder="Read Only"
-            [(ngModel)]="bucket.readOnly"
-          >
-            Read Only
-          </mat-slide-toggle>
-          <button
-            mat-icon-button
-            color="accent"
-            disableRipple
-            matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
-          >
-            <mat-icon>info</mat-icon>
-          </button>
+          <div class="toggles">
+            <div class="read-only">
+              <mat-slide-toggle
+                matInput
+                name="readOnly"
+                placeholder="Read Only"
+                [(ngModel)]="bucket.readOnly"
+              >
+                Read Only
+              </mat-slide-toggle>
+              <button
+                mat-icon-button
+                color="accent"
+                disableRipple
+                matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+            <div class="history">
+              <mat-slide-toggle
+                matInput
+                name="history"
+                placeholder="History"
+                [(ngModel)]="bucket.history"
+              >
+                History
+              </mat-slide-toggle>
+              <button
+                mat-icon-button
+                color="accent"
+                disableRipple
+                matTooltip="To keep your bucket data histories, make enable this feature."
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+          </div>
         </form>
       </mat-list-item>
       <span>
@@ -405,4 +427,42 @@
       <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
+  <mat-list-item *ngIf="bucket._id" class="remove-history">
+    <mat-divider></mat-divider>
+    <h3>
+      DANGER ZONE
+    </h3>
+    <button
+      (click)="clearHistories()"
+      mat-raised-button
+      color="warn"
+      *matSave="$remove | async; let state"
+      [disabled]="!!state"
+      [ngSwitch]="state"
+    >
+      <ng-container *ngSwitchDefault>
+        <mat-icon>delete</mat-icon>
+        <span>Remove</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="'saving'">
+        <mat-progress-spinner
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        ></mat-progress-spinner
+        ><span>Removing..</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="'saved'">
+        <mat-icon>done</mat-icon>
+        <span>Removed</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="'failed'">
+        <mat-icon>clear</mat-icon>
+        <span>Failed</span>
+      </ng-container>
+    </button>
+    <p>
+      This action will remove all histories of this bucket
+    </p>
+  </mat-list-item>
 </mat-card>
