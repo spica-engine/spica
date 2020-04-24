@@ -302,10 +302,27 @@ export class BucketController {
           removedKeys,
           path ? `${path}.${key}` : key
         );
+      } else if (this.isArray(previousSchema[key]) && this.isArray(currentSchema[key])) {
+        this.addArrayPattern(
+          previousSchema[key].items,
+          currentSchema[key].items,
+          removedKeys,
+          path ? `${path}.${key}` : key
+        );
       }
     }
     return removedKeys;
   }
+
+  addArrayPattern(previousSchema: any, currentSchema: any, removedKeys: string[], path: string) {
+    path = `${path}.$[]`;
+    if (this.isArray(previousSchema) && this.isArray(currentSchema)) {
+      this.addArrayPattern(previousSchema.items, currentSchema.items, removedKeys, path);
+    } else if (this.isObject(previousSchema) && this.isObject(currentSchema)) {
+      this.findRemovedKeys(previousSchema.properties, currentSchema.properties, removedKeys, path);
+    }
+  }
+
   isObject(schema: any) {
     return schema &&
       schema.type == "object" &&
@@ -313,5 +330,9 @@ export class BucketController {
       Object.keys(schema.properties).length > 0
       ? true
       : false;
+  }
+
+  isArray(schema: any) {
+    return schema && schema.type == "array" && schema.items ? true : false;
   }
 }

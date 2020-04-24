@@ -7,6 +7,7 @@ import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {BucketModule} from ".";
+import {BucketController} from "./bucket.controller";
 
 export const CREATED_AT: Default = {
   keyword: ":created_at",
@@ -584,6 +585,280 @@ describe("Bucket acceptance", () => {
           "validation failed"
         ]);
       });
+    });
+  });
+
+  describe("clear removed fields", () => {
+    let bucketId;
+    let bucketDataId;
+    let previousSchema = {
+      title: "test_title",
+      description: "test_desc",
+      properties: {
+        nested_object: {
+          type: "object",
+          options: {},
+          properties: {
+            nested_object_child: {
+              type: "object",
+              properties: {
+                removed: {type: "string"},
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        nested_array_object: {
+          type: "array",
+          options: {},
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                removed: {type: "string"},
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        root_removed: {
+          type: "string",
+          options: {}
+        }
+      }
+    };
+
+    let updatedSchema = {
+      title: "test_title",
+      description: "test_desc",
+      properties: {
+        nested_object: {
+          type: "object",
+          options: {},
+          properties: {
+            nested_object_child: {
+              type: "object",
+              properties: {
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        nested_array_object: {
+          type: "array",
+          options: {},
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    let bucketData = {
+      nested_object: {
+        nested_object_child: {
+          removed: "removed",
+          not_removed: "not_removed"
+        }
+      },
+      nested_array_object: [
+        [
+          {
+            removed: "removed",
+            not_removed: "not_removed"
+          },
+          {
+            removed: "removed_also",
+            not_removed: "not_removed_also"
+          }
+        ]
+      ],
+      root_removed: "removed"
+    };
+    beforeEach(async () => {
+      bucketId = (await req.post("/bucket", previousSchema)).body._id;
+      bucketDataId = (await req.post(`/bucket/${bucketId}/data`, bucketData)).body._id;
+    });
+
+    afterEach(async () => {
+      await req.delete(`/bucket/${bucketId}`);
+      await req.delete(`/bucket/${bucketId}/data/${bucketDataId}`);
+    });
+
+    it("should update bucket document when bucket schema updated", async () => {
+      await req.put(`/bucket/${bucketId}`, updatedSchema);
+      let {body: updatedBucketDocument} = await req.get(
+        `/bucket/${bucketId}/data/${bucketDataId}`,
+        {}
+      );
+      expect(updatedBucketDocument).toEqual({
+        _id: bucketDataId,
+        nested_object: {
+          nested_object_child: {
+            not_removed: "not_removed"
+          }
+        },
+        nested_array_object: [
+          [
+            {
+              not_removed: "not_removed"
+            },
+            {
+              not_removed: "not_removed_also"
+            }
+          ]
+        ]
+      });
+    });
+  });
+
+  describe("clear removed field methods", () => {
+    let controller: BucketController;
+    let bucketDataService: any;
+    let updateManySpy: jasmine.Spy;
+    beforeEach(() => {
+      controller = app.get(BucketController);
+      bucketDataService = {
+        updateMany: () => {}
+      };
+
+      updateManySpy = spyOn(bucketDataService, "updateMany");
+    });
+
+    let previousSchema: any = {
+      _id: "bucket_id",
+      properties: {
+        nested_object: {
+          type: "object",
+          properties: {
+            nested_object_child: {
+              type: "object",
+              properties: {
+                removed: {type: "string"},
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        nested_array_object: {
+          type: "array",
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                removed: {type: "string"},
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        root_removed: {
+          type: "string",
+          options: {}
+        },
+        nested_root_removed: {
+          type: "object",
+          properties: {
+            dont_check_me: {
+              type: "string"
+            }
+          }
+        }
+      }
+    };
+
+    let currentSchema: any = {
+      _id: "bucket_id",
+      properties: {
+        nested_object: {
+          type: "object",
+          properties: {
+            nested_object_child: {
+              type: "object",
+              properties: {
+                not_removed: {type: "string"},
+                new_field: {type: "string"}
+              }
+            }
+          }
+        },
+        nested_array_object: {
+          type: "array",
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                not_removed: {type: "string"},
+                new_field: {type: "string"}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    it("should find removed keys", () => {
+      let removedKeys = controller.findRemovedKeys(
+        previousSchema.properties,
+        currentSchema.properties,
+        [],
+        ""
+      );
+      expect(removedKeys).toEqual([
+        "nested_object.nested_object_child.removed",
+        "nested_array_object.$[].$[].removed",
+        "root_removed",
+        "nested_root_removed"
+      ]);
+    });
+
+    it("should check whether schema is object or not", () => {
+      let isObject = controller.isObject({type: "object", properties: {test: "test"}});
+      expect(isObject).toBe(true);
+
+      isObject = controller.isObject({type: "object", properties: {}});
+      expect(isObject).toBe(false);
+
+      isObject = controller.isObject({type: "string"});
+      expect(isObject).toBe(false);
+    });
+
+    it("should check whether schema is array or not", () => {
+      let isArray = controller.isArray({type: "array", items: {type: "string"}});
+      expect(isArray).toBe(true);
+
+      isArray = controller.isArray({type: "array"});
+      expect(isArray).toBe(false);
+
+      isArray = controller.isArray({type: "string"});
+      expect(isArray).toBe(false);
+    });
+
+    it("should clear removed fields", () => {
+      controller.clearRemovedFields(bucketDataService, previousSchema, currentSchema);
+
+      expect(updateManySpy).toHaveBeenCalledTimes(1);
+      expect(updateManySpy).toHaveBeenCalledWith(
+        "bucket_id",
+        {},
+        {
+          $unset: {
+            "nested_object.nested_object_child.removed": "",
+            "nested_array_object.$[].$[].removed": "",
+            root_removed: "",
+            nested_root_removed: ""
+          }
+        }
+      );
     });
   });
 });
