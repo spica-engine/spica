@@ -4,6 +4,8 @@ import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/data
 import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
 import {bufferCount, take} from "rxjs/operators";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 describe("Schema Resolver", () => {
   let resolver: SchemaResolver;
   let module: TestingModule;

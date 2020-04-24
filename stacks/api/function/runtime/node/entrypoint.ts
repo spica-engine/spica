@@ -16,6 +16,10 @@ import {
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
 
+if (!process.env.FUNCTION_GRPC_ADDRESS) {
+  exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
+}
+
 if (!process.env.ENTRYPOINT) {
   exitAbnormally("Environment variable ENTRYPOINT was not set.");
 }

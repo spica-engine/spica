@@ -1,1 +1,1 @@
-export * from "./preference.module";
+export * from "./src/index";

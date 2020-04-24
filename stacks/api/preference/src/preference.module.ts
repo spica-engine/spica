@@ -1,7 +1,7 @@
-import {Module, Global} from "@nestjs/common";
+import {Global, Module} from "@nestjs/common";
 import {DatabaseModule} from "@spica-server/database";
+import {PreferenceService} from "../services";
 import {PreferenceController} from "./preference.controller";
-import {PreferenceService} from "./service";
 
 @Global()
 @Module({
