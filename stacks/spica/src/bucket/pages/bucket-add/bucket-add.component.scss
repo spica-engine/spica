@@ -95,9 +95,6 @@
             mat-form-field:last-of-type {
               width: 40%;
             }
-            mat-slide-toggle {
-              align-self: center;
-            }
           }
         }
 
@@ -208,5 +205,11 @@
         }
       }
     }
+  }
+
+  .toggles div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 }
