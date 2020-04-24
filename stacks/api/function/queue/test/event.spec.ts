@@ -69,4 +69,46 @@ describe("EventQueue", () => {
     expect(lastCall.args[1] instanceof Event.Event).toBe(true);
     expect(popSpy).toHaveBeenCalledBefore(callbackSpy);
   });
+
+  it("should give the next message to first worker in the queue", async () => {
+    const firstCallback = jasmine.createSpy("firstWorkerCallback"),
+      secondCallBack = jasmine.createSpy("firstWorkerCallback");
+
+    (() => {
+      eventQueue.pop(
+        {
+          request: new Event.Pop({
+            id: "first_worker"
+          })
+        } as any,
+        firstCallback
+      );
+
+      eventQueue.pop(
+        {
+          request: new Event.Pop({
+            id: "second_worker"
+          })
+        } as any,
+        secondCallBack
+      );
+    })();
+
+    eventQueue.enqueue(
+      new Event.Event({
+        type: Event.Type.DATABASE
+      })
+    );
+    await Promise.resolve();
+    expect(firstCallback).toHaveBeenCalledTimes(1);
+    expect(secondCallBack).not.toHaveBeenCalled();
+
+    eventQueue.enqueue(
+      new Event.Event({
+        type: Event.Type.DATABASE
+      })
+    );
+    await Promise.resolve();
+    expect(secondCallBack).toHaveBeenCalledTimes(1);
+  });
 });
