@@ -98,22 +98,44 @@
             </mat-error>
           </mat-form-field>
 
-          <mat-slide-toggle
-            matInput
-            name="readOnly"
-            placeholder="Read Only"
-            [(ngModel)]="bucket.readOnly"
-          >
-            Read Only
-          </mat-slide-toggle>
-          <button
-            mat-icon-button
-            color="accent"
-            disableRipple
-            matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
-          >
-            <mat-icon>info</mat-icon>
-          </button>
+          <div class="toggles">
+            <div class="read-only">
+              <mat-slide-toggle
+                matInput
+                name="readOnly"
+                placeholder="Read Only"
+                [(ngModel)]="bucket.readOnly"
+              >
+                Read Only
+              </mat-slide-toggle>
+              <button
+                mat-icon-button
+                color="accent"
+                disableRipple
+                matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+            <div class="history">
+              <mat-slide-toggle
+                matInput
+                name="history"
+                placeholder="History"
+                [(ngModel)]="bucket.history"
+              >
+                History
+              </mat-slide-toggle>
+              <button
+                mat-icon-button
+                color="accent"
+                disableRipple
+                matTooltip="To keep your bucket data histories, make enable this feature."
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+          </div>
         </form>
       </mat-list-item>
       <span>
