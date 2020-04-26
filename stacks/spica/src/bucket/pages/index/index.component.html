@@ -7,12 +7,9 @@
         mat-icon-button
         #clipboard="matClipboard"
         [matClipboard]="bucketId"
-        [matTooltip]="'Copied!'"
         (mouseenter)="$event.stopImmediatePropagation()"
-        (click)="tooltip.toggle()"
-        #tooltip="matTooltip"
       >
-        <mat-icon>{{ clipboard.icon }}</mat-icon>
+        <mat-icon [matTooltip]="clipboard.icon == 'info' ? 'Copy to clipboard' : 'Copied!'" >{{ clipboard.icon }}</mat-icon>
       </button>
       <mat-chip-list *ngIf="schema.readOnly">
         <mat-chip disableRipple>Read Only</mat-chip>
@@ -199,9 +196,9 @@
 
           <mat-cell *matCellDef="let row">
             {{
-              row[property.key] && row[property.key].hasOwnProperty(property.value.primary)
-                ? row[property.key][property.value.primary]
-                : row[property.key]
+              (row[property.key] && row[property.key].hasOwnProperty(property.value.primary))
+                ? (row[property.key][property.value.primary])
+                : ((row[property.key]?.constructor.name == 'Object') ? (row[property.key] | json) : (row[property.key]) )
             }}
           </mat-cell>
         </ng-container>
