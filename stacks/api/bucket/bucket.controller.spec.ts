@@ -810,43 +810,6 @@ describe("Bucket acceptance", () => {
       }
     };
 
-    it("should find removed keys", () => {
-      let removedKeys = controller.findRemovedKeys(
-        previousSchema.properties,
-        currentSchema.properties,
-        [],
-        ""
-      );
-      expect(removedKeys).toEqual([
-        "nested_object.nested_object_child.removed",
-        "nested_array_object.$[].$[].removed",
-        "root_removed",
-        "nested_root_removed"
-      ]);
-    });
-
-    it("should check whether schema is object or not", () => {
-      let isObject = controller.isObject({type: "object", properties: {test: "test"}});
-      expect(isObject).toBe(true);
-
-      isObject = controller.isObject({type: "object", properties: {}});
-      expect(isObject).toBe(false);
-
-      isObject = controller.isObject({type: "string"});
-      expect(isObject).toBe(false);
-    });
-
-    it("should check whether schema is array or not", () => {
-      let isArray = controller.isArray({type: "array", items: {type: "string"}});
-      expect(isArray).toBe(true);
-
-      isArray = controller.isArray({type: "array"});
-      expect(isArray).toBe(false);
-
-      isArray = controller.isArray({type: "string"});
-      expect(isArray).toBe(false);
-    });
-
     it("should clear removed fields", () => {
       controller.clearRemovedFields(bucketDataService, previousSchema, currentSchema);
 

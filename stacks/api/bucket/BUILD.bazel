@@ -16,6 +16,7 @@ ts_library(
         "cache.ts",
         "index.ts",
         "scheduler.ts",
+        "utilities.ts",
     ],
     data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
@@ -237,6 +238,25 @@ jasmine_node_test(
     name = "activity_test",
     deps = [
         "activity_test_lib",
+    ],
+)
+
+ts_library(
+    name = "utilities_test_lib",
+    testonly = True,
+    srcs = [
+        "utilities.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/bucket",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "utilities_test",
+    deps = [
+        "utilities_test_lib",
     ],
 )
 

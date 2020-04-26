@@ -27,6 +27,7 @@ import * as mime from "mime-types";
 import * as request from "request";
 import {createBucketResource} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
+import {findRemovedKeys} from "./utilities";
 
 @Controller("bucket")
 export class BucketController {
@@ -272,12 +273,7 @@ export class BucketController {
     previousSchema: Bucket,
     currentSchema: Bucket
   ) {
-    let removedKeys = this.findRemovedKeys(
-      previousSchema.properties,
-      currentSchema.properties,
-      [],
-      ""
-    );
+    let removedKeys = findRemovedKeys(previousSchema.properties, currentSchema.properties, [], "");
     if (removedKeys.length < 1) return;
 
     let unsetFields = removedKeys.reduce((pre, acc: any, index, array) => {
@@ -286,53 +282,5 @@ export class BucketController {
     }, {});
 
     await bucketDataService.updateMany(previousSchema._id, {}, {$unset: unsetFields});
-  }
-
-  findRemovedKeys(previousSchema: any, currentSchema: any, removedKeys: string[], path: string) {
-    for (const key of Object.keys(previousSchema)) {
-      if (!currentSchema.hasOwnProperty(key)) {
-        removedKeys.push(path ? `${path}.${key}` : key);
-        //we dont need to check child keys of this key anymore
-        continue;
-      }
-      if (this.isObject(previousSchema[key]) && this.isObject(currentSchema[key])) {
-        this.findRemovedKeys(
-          previousSchema[key].properties,
-          currentSchema[key].properties,
-          removedKeys,
-          path ? `${path}.${key}` : key
-        );
-      } else if (this.isArray(previousSchema[key]) && this.isArray(currentSchema[key])) {
-        this.addArrayPattern(
-          previousSchema[key].items,
-          currentSchema[key].items,
-          removedKeys,
-          path ? `${path}.${key}` : key
-        );
-      }
-    }
-    return removedKeys;
-  }
-
-  addArrayPattern(previousSchema: any, currentSchema: any, removedKeys: string[], path: string) {
-    path = `${path}.$[]`;
-    if (this.isArray(previousSchema) && this.isArray(currentSchema)) {
-      this.addArrayPattern(previousSchema.items, currentSchema.items, removedKeys, path);
-    } else if (this.isObject(previousSchema) && this.isObject(currentSchema)) {
-      this.findRemovedKeys(previousSchema.properties, currentSchema.properties, removedKeys, path);
-    }
-  }
-
-  isObject(schema: any) {
-    return schema &&
-      schema.type == "object" &&
-      schema.properties &&
-      Object.keys(schema.properties).length > 0
-      ? true
-      : false;
-  }
-
-  isArray(schema: any) {
-    return schema && schema.type == "array" && schema.items ? true : false;
   }
 }

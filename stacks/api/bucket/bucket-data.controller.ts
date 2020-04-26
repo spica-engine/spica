@@ -27,6 +27,7 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {createBucketDataResource} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
+import {findRelations} from "./utilities";
 
 function filterReviver(k: string, v: string) {
   const availableConstructors = {
@@ -404,7 +405,7 @@ export class BucketDataController {
     if (buckets.length < 1) return;
 
     for (const bucket of buckets) {
-      let targets = this.findRelations(bucket.properties, bucketId.toHexString(), "", []);
+      let targets = findRelations(bucket.properties, bucketId.toHexString(), "", []);
       if (targets.length < 1) continue;
 
       for (const target of targets) {
@@ -413,30 +414,5 @@ export class BucketDataController {
           .updateMany({[target]: documentId}, {$unset: {[target]: ""}});
       }
     }
-  }
-
-  findRelations(schema: any, bucketId: string, path: string = "", targets: string[]) {
-    path = path ? `${path}.` : ``;
-    for (const key of Object.keys(schema)) {
-      if (this.isObject(schema[key])) {
-        this.findRelations(schema[key].properties, bucketId, `${path}${key}`, targets);
-      } else if (this.isRelation(schema[key], bucketId)) {
-        targets.push(`${path}${key}`);
-      }
-    }
-    return targets;
-  }
-
-  isObject(schema: any) {
-    return schema &&
-      schema.type == "object" &&
-      schema.properties &&
-      Object.keys(schema.properties).length > 0
-      ? true
-      : false;
-  }
-
-  isRelation(schema: any, bucketId: string) {
-    return schema && schema.type == "relation" && schema.bucketId == bucketId ? true : false;
   }
 }
