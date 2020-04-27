@@ -7,6 +7,7 @@ import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {BucketModule} from ".";
+import {BucketController} from "./bucket.controller";
 
 export const CREATED_AT: Default = {
   keyword: ":created_at",
@@ -601,6 +602,266 @@ describe("Bucket acceptance", () => {
           "validation failed"
         ]);
       });
+    });
+  });
+
+  describe("clear removed fields", () => {
+    let bucketId;
+    let bucketDataId;
+    let previousSchema = {
+      title: "test_title",
+      description: "test_desc",
+      properties: {
+        nested_object: {
+          type: "object",
+          options: {},
+          properties: {
+            nested_object_child: {
+              type: "object",
+              properties: {
+                removed: {type: "string"},
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        nested_array_object: {
+          type: "array",
+          options: {},
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                removed: {type: "string"},
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        root_removed: {
+          type: "string",
+          options: {}
+        }
+      }
+    };
+
+    let updatedSchema = {
+      title: "test_title",
+      description: "test_desc",
+      properties: {
+        nested_object: {
+          type: "object",
+          options: {},
+          properties: {
+            nested_object_child: {
+              type: "object",
+              properties: {
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        },
+        nested_array_object: {
+          type: "array",
+          options: {},
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                not_removed: {type: "string"}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    let bucketData = {
+      nested_object: {
+        nested_object_child: {
+          removed: "removed",
+          not_removed: "not_removed"
+        }
+      },
+      nested_array_object: [
+        [
+          {
+            removed: "removed",
+            not_removed: "not_removed"
+          },
+          {
+            removed: "removed_also",
+            not_removed: "not_removed_also"
+          }
+        ]
+      ],
+      root_removed: "removed"
+    };
+    beforeEach(async () => {
+      bucketId = (await req.post("/bucket", previousSchema)).body._id;
+      bucketDataId = (await req.post(`/bucket/${bucketId}/data`, bucketData)).body._id;
+    });
+
+    afterEach(async () => {
+      await req.delete(`/bucket/${bucketId}`);
+      await req.delete(`/bucket/${bucketId}/data/${bucketDataId}`);
+    });
+
+    it("should update bucket document when bucket schema updated", async () => {
+      await req.put(`/bucket/${bucketId}`, updatedSchema);
+      let {body: updatedBucketDocument} = await req.get(
+        `/bucket/${bucketId}/data/${bucketDataId}`,
+        {}
+      );
+      expect(updatedBucketDocument).toEqual({
+        _id: bucketDataId,
+        nested_object: {
+          nested_object_child: {
+            not_removed: "not_removed"
+          }
+        },
+        nested_array_object: [
+          [
+            {
+              not_removed: "not_removed"
+            },
+            {
+              not_removed: "not_removed_also"
+            }
+          ]
+        ]
+      });
+    });
+  });
+
+  describe("delete bucket,data and related data", () => {
+    let usersBucketId;
+    let scoresBucketId;
+    let settingsBucketId;
+
+    let userId: ObjectId;
+    let scoreId: ObjectId;
+    let settingId: ObjectId;
+
+    beforeEach(async () => {
+      usersBucketId = await req
+        .post("/bucket", {
+          title: "Users",
+          description: "Users bucket",
+          properties: {
+            name: {
+              type: "string",
+              options: {}
+            }
+          }
+        })
+        .then(res => res.body._id);
+
+      settingsBucketId = await req
+        .post("/bucket", {
+          title: "Settings",
+          description: "Settings Bucket",
+          properties: {
+            setting: {
+              type: "string",
+              options: {}
+            }
+          }
+        })
+        .then(res => res.body._id);
+
+      scoresBucketId = await req
+        .post("/bucket", {
+          title: "Scores",
+          description: "Scores bucket",
+          properties: {
+            score: {
+              type: "number",
+              options: {}
+            },
+            user: {
+              type: "relation",
+              bucketId: usersBucketId,
+              options: {}
+            },
+            setting: {
+              type: "relation",
+              bucketId: settingsBucketId,
+              options: {}
+            }
+          }
+        })
+        .then(res => res.body._id);
+
+      userId = await req
+        .post(`/bucket/${usersBucketId}/data`, {
+          name: "user1"
+        })
+        .then(res => new ObjectId(res.body._id));
+
+      settingId = await req
+        .post(`/bucket/${settingsBucketId}/data`, {
+          setting: "setting1"
+        })
+        .then(res => new ObjectId(res.body._id));
+
+      scoreId = await req
+        .post(`/bucket/${scoresBucketId}/data`, {
+          score: 500,
+          user: userId,
+          setting: settingId
+        })
+        .then(res => new ObjectId(res.body._id));
+    });
+
+    afterEach(async () => {
+      await req.delete(`/bucket/${usersBucketId}`);
+      await req.delete(`/bucket/${usersBucketId}/data`, userId);
+
+      await req.delete(`/bucket/${settingsBucketId}`);
+      await req.delete(`/bucket/${settingsBucketId}/data`, settingId);
+
+      await req.delete(`/bucket/${scoresBucketId}`);
+      await req.delete(`/bucket/${scoresBucketId}/data`, scoreId);
+    });
+
+    it("should delete users, update scores bucket schema and data when the users bucket deleted", async () => {
+      let deleteResponse = await req.delete(`/bucket/${usersBucketId}`);
+      expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
+      expect(deleteResponse.body).toEqual(undefined);
+
+      let {body: usersBucket} = await req.get(`/bucket/${usersBucketId}`, {});
+      expect(usersBucket).toBeUndefined();
+
+      let usersResponse = await req.get(`/bucket/${usersBucketId}/data`, {});
+      expect([usersResponse.statusCode, usersResponse.statusText]).toEqual([
+        500,
+        "Internal Server Error"
+      ]);
+
+      let {body: scoresBucket} = await req.get(`/bucket/${scoresBucketId}`, {});
+      expect(scoresBucket.properties).toEqual({
+        score: {
+          type: "number",
+          options: {}
+        },
+        setting: {
+          type: "relation",
+          bucketId: settingsBucketId,
+          options: {}
+        }
+      });
+
+      let {body: scores} = await req.get(`/bucket/${scoresBucketId}/data`, {});
+      expect(scores).toEqual([
+        {
+          _id: scoreId.toHexString(),
+          score: 500,
+          setting: settingId.toHexString()
+        }
+      ]);
     });
   });
 });

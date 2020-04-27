@@ -1,10 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {hookModuleProviders} from "@spica-server/bucket/hooks";
-import {Bucket, ServicesModule} from "@spica-server/bucket/services";
-import {BucketService} from "@spica-server/bucket/services/bucket.service";
+import {Bucket, BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {SCHEMA} from "@spica-server/function";
-
 import {PreferenceModule} from "@spica-server/preference";
 
 class MockBucketService extends BucketService {

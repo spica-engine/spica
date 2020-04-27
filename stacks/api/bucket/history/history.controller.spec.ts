@@ -29,7 +29,7 @@ describe("History Acceptance", () => {
     Math.floor(new Date(2018, 5, 12).getTime() / 1000).toString(16) + "0000000000000000"
   );
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         CoreTestingModule,
@@ -100,7 +100,7 @@ describe("History Acceptance", () => {
               path: ["title"],
               patches: [
                 {
-                  diffs: [[-1, "updated"], [1, "current"], [0, " tit"]],
+                  diffs: [[-1, "updated"], [1, "initial"], [0, " tit"]],
                   start1: 0,
                   start2: 0,
                   length1: 11,
@@ -113,7 +113,7 @@ describe("History Acceptance", () => {
               path: ["description"],
               patches: [
                 {
-                  diffs: [[-1, "updated"], [1, "current"], [0, " des"]],
+                  diffs: [[-1, "updated"], [1, "initial"], [0, " des"]],
                   start1: 0,
                   start2: 0,
                   length1: 11,
@@ -165,7 +165,7 @@ describe("History Acceptance", () => {
       ]);
   }, 120000);
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app
       .get(DatabaseService)
       .collection("buckets")
@@ -216,10 +216,11 @@ describe("History Acceptance", () => {
 
     expect(response.body).toEqual({
       _id: documentId.toHexString(),
-      title: "current title",
-      description: "current description"
+      title: "initial title",
+      description: "initial description"
     });
   });
+
   it("should clear histories for given bucketId", async () => {
     const response = await req.delete(`/bucket/${bucketId}/history`);
     expect(response.statusCode).toEqual(204);

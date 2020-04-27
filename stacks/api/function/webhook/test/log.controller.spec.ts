@@ -7,6 +7,8 @@ import {WebhookModule} from "@spica-server/function/webhook";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import {WebhookLogController} from "@spica-server/function/webhook/src/log.controller";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 describe("Activity Acceptance", () => {
   let request: Request;
   let app: INestApplication;

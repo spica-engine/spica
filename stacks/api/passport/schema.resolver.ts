@@ -1,5 +1,5 @@
 import {Validator} from "@spica-server/core/schema";
-import {PreferenceService} from "@spica-server/preference/service/preference.service";
+import {PreferenceService} from "@spica-server/preference/services";
 
 export class SchemaResolver {
   constructor(validator: Validator, private pref: PreferenceService) {
