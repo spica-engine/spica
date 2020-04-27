@@ -12,7 +12,10 @@ describe("DatabaseQueue", () => {
     databaseQueue = new DatabaseQueue();
     queue.addQueue(databaseQueue);
     queue.listen();
-    databaseQueueClient = new Database.QueueClient("0.0.0.0:5678", credentials.createInsecure());
+    databaseQueueClient = new Database.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      credentials.createInsecure()
+    );
   });
 
   afterEach(() => {

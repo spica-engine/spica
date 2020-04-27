@@ -5,7 +5,10 @@ export class HttpQueue {
   private client: any;
 
   constructor() {
-    this.client = new Http.QueueClient("0.0.0.0:5678", grpc.credentials.createInsecure());
+    this.client = new Http.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      grpc.credentials.createInsecure()
+    );
   }
 
   end(e: Http.End): Promise<Http.End.Result> {

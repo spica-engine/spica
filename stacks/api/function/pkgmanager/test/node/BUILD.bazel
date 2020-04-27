@@ -21,6 +21,6 @@ jasmine_node_test(
     name = "test",
     srcs = [":specs"],
     tags = [
-        "integration",
+        "flaky",
     ],
 )
