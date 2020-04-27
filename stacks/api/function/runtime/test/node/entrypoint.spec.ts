@@ -6,7 +6,7 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as os from "os";
 import {PassThrough, Writable} from "stream";
 
-process.env.FUNCTION_GRPC_ADDRESS = ":5848";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5848";
 
 describe("Entrypoint", () => {
   let queue: EventQueue;
