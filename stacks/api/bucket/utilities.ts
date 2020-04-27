@@ -56,13 +56,13 @@ export function addArrayPattern(
 }
 
 export function isObject(schema: any) {
-  return schema.type == "object" && Object.keys(schema.properties).length > 0 ? true : false;
+  return schema.type == "object";
 }
 
 export function isRelation(schema: any, bucketId: string) {
-  return schema.type == "relation" && schema.bucketId == bucketId ? true : false;
+  return schema.type == "relation" && schema.bucketId == bucketId;
 }
 
 export function isArray(schema: any) {
-  return schema.type == "array" ? true : false;
+  return schema.type == "array";
 }
