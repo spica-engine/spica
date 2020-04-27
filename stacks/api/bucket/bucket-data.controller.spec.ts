@@ -995,7 +995,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  describe("delete relations", () => {
+  describe("clear relations", () => {
     let relationBucketId: ObjectId;
     let usersBucketId: ObjectId;
     let otherBucketId: ObjectId;
@@ -1169,80 +1169,6 @@ describe("BucketDataController", () => {
             other_relation: otherBucketDocumentId.toHexString()
           }
         }
-      ]);
-    });
-  });
-
-  describe("clear relation methods", () => {
-    let controller: BucketDataController;
-    let bucketService: any;
-    let findSpy: jasmine.Spy;
-    let collectionSpy: jasmine.Spy;
-    let updateSpy: jasmine.Spy;
-
-    let bucketId = new ObjectId();
-    let anotherBucketId = new ObjectId();
-    let relationBucketId = new ObjectId();
-    let documentId = new ObjectId();
-
-    let mockCollection: any = {
-      updateMany: () => {}
-    };
-
-    let buckets = [
-      {
-        _id: bucketId,
-        properties: {
-          nested_relation: {
-            type: "object",
-            properties: {
-              here: {type: "relation", bucketId: relationBucketId},
-              not_here: {type: "relation", bucketId: new ObjectId()}
-            }
-          },
-          root_relation: {type: "relation", bucketId: relationBucketId},
-          not_relation: {type: "string"}
-        }
-      },
-      {
-        _id: anotherBucketId,
-        properties: {
-          relation_field: {type: "relation", bucketId: relationBucketId}
-        }
-      }
-    ];
-
-    beforeEach(() => {
-      controller = app.get(BucketDataController);
-      bucketService = {
-        find: () => {},
-        collection: () => mockCollection
-      };
-
-      findSpy = spyOn(bucketService, "find").and.returnValue(
-        new Promise((resolve, reject) => resolve(buckets))
-      );
-      collectionSpy = spyOn(bucketService, "collection").and.callThrough();
-      updateSpy = spyOn(mockCollection, "updateMany");
-    });
-
-    it("should clear relations", async () => {
-      await controller.clearRelations(bucketService, relationBucketId, documentId);
-      expect(findSpy).toHaveBeenCalledTimes(1);
-      expect(findSpy).toHaveBeenCalledWith({_id: {$ne: relationBucketId}});
-
-      expect(collectionSpy).toHaveBeenCalledTimes(3);
-      expect(collectionSpy.calls.allArgs()).toEqual([
-        [`bucket_${bucketId.toHexString()}`],
-        [`bucket_${bucketId.toHexString()}`],
-        [`bucket_${anotherBucketId.toHexString()}`]
-      ]);
-
-      expect(updateSpy).toHaveBeenCalledTimes(3);
-      expect(updateSpy.calls.allArgs()).toEqual([
-        [{"nested_relation.here": documentId}, {$unset: {"nested_relation.here": ""}}],
-        [{root_relation: documentId}, {$unset: {root_relation: ""}}],
-        [{relation_field: documentId}, {$unset: {relation_field: ""}}]
       ]);
     });
   });
