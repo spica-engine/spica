@@ -1,7 +1,7 @@
 import {EventQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 
-process.env.FUNCTION_GRPC_ADDRESS = ":5847";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5847";
 
 describe("EventQueue", () => {
   let eventQueue: EventQueue;
