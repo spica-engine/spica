@@ -27,6 +27,7 @@ import * as mime from "mime-types";
 import * as request from "request";
 import {createBucketResource} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
+import {findRemovedKeys} from "./utilities";
 
 @Controller("bucket")
 export class BucketController {
@@ -68,11 +69,15 @@ export class BucketController {
   @UseInterceptors(activity(createBucketResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
-  replaceOne(
+  async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    let previousSchema = await this.bs.findOne({_id: id});
+
+    let currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    await this.clearRemovedFields(this.bds, previousSchema, currentSchema);
+    return currentSchema;
   }
 
   @Patch(":id")
@@ -261,5 +266,21 @@ export class BucketController {
         }
       });
     });
+  }
+
+  async clearRemovedFields(
+    bucketDataService: BucketDataService,
+    previousSchema: Bucket,
+    currentSchema: Bucket
+  ) {
+    let removedKeys = findRemovedKeys(previousSchema.properties, currentSchema.properties, [], "");
+    if (removedKeys.length < 1) return;
+
+    let unsetFields = removedKeys.reduce((pre, acc: any, index, array) => {
+      acc = {...pre, [array[index]]: ""};
+      return acc;
+    }, {});
+
+    await bucketDataService.updateMany(previousSchema._id, {}, {$unset: unsetFields});
   }
 }
