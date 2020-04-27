@@ -25,7 +25,4 @@ ts_library(
 jasmine_node_test(
     name = "horizon_test",
     srcs = [":horizon"],
-    tags = [
-        "flaky",
-    ],
 )

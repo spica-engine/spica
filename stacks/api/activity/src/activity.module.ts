@@ -1,5 +1,5 @@
 import {DynamicModule, Module} from "@nestjs/common";
-import {ActivityServicesModule} from "@spica-server/activity/services/src";
+import {ActivityServicesModule} from "@spica-server/activity/services";
 import {ActivityController} from "./activity.controller";
 
 @Module({})

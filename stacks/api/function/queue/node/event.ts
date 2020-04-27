@@ -5,7 +5,10 @@ export class EventQueue {
   private client: any;
 
   constructor() {
-    this.client = new Event.QueueClient("0.0.0.0:5678", grpc.credentials.createInsecure());
+    this.client = new Event.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      grpc.credentials.createInsecure()
+    );
   }
 
   pop(pop: Event.Pop): Promise<Event.Event> {

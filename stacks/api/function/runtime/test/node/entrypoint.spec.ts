@@ -6,6 +6,8 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as os from "os";
 import {PassThrough, Writable} from "stream";
 
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5848";
+
 describe("Entrypoint", () => {
   let queue: EventQueue;
 
@@ -72,13 +74,27 @@ describe("Entrypoint", () => {
     expect(queue.size).toBe(0);
   });
 
-  it("should exit abnormally worker id was not set", async () => {
+  it("should exit abnormally when worker id was not set", async () => {
     const stream = new PassThrough();
     const writeSpy = spyOn(stream, "write").and.callThrough();
     expect(await spawn(stream, "").catch(e => e)).toBe(126);
     expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
       "Environment variable WORKER_ID was not set.\n"
     ]);
+  });
+
+  it("should exit abnormally when grpc address was not set", async () => {
+    const address = process.env.FUNCTION_GRPC_ADDRESS;
+    delete process.env.FUNCTION_GRPC_ADDRESS;
+
+    const stream = new PassThrough();
+    const writeSpy = spyOn(stream, "write").and.callThrough();
+    expect(await spawn(stream, "").catch(e => e)).toBe(126);
+    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+      "Environment variable FUNCTION_GRPC_ADDRESS was not set.\n"
+    ]);
+
+    process.env.FUNCTION_GRPC_ADDRESS = address;
   });
 
   it("should exit abnormally if it can not find the exported handler", async () => {

@@ -40,6 +40,7 @@ build --define=SECRET=2b10shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
 build --define=DEFAULT_PASSWORD=spica
 build --define=ENABLE_BUCKET_HOOKS=true
 build --define=ENABLE_ACTIVITY_STREAM=true
+build --define=FUNCTION_GRPC_ADDRESS=0.0.0.0:5688
 
 
 build:release --stamp --workspace_status_command="./scripts/current_version.sh"

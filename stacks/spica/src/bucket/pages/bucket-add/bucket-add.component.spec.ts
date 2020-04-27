@@ -517,7 +517,7 @@ describe("Bucket Add Component", () => {
       } as Bucket);
     });
 
-    fit("should clear histories of bucket", fakeAsync(() => {
+    it("should clear histories of bucket", fakeAsync(() => {
       let clearHistorySpy = fixture.componentInstance["historyService"].clearHistories;
       fixture.componentInstance.clearHistories();
       expect(clearHistorySpy).toHaveBeenCalledTimes(1);

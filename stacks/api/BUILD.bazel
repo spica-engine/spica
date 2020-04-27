@@ -40,6 +40,7 @@ nodejs_binary(
         "PUBLIC_HOST",
         "PERSISTENT_PATH",
         "PORT",
+        "FUNCTION_GRPC_ADDRESS",
         "SECRET",
         "DEFAULT_PASSWORD",
         "ENABLE_BUCKET_HOOKS",
@@ -54,6 +55,7 @@ container_image(
     base = "@node_image//image",
     env = {
         "DEFAULT_PASSWORD": "spica",
+        "FUNCTION_GRPC_ADDRESS": "0.0.0.0:5688",
     },
     visibility = ["//visibility:private"],
 )

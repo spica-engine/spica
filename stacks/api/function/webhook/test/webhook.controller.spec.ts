@@ -8,6 +8,8 @@ import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
 import {WebhookController} from "@spica-server/function/webhook/src/webhook.controller";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 describe("Webhook Controller", () => {
   let app: INestApplication;
   let req: Request;

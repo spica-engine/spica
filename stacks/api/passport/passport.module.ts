@@ -3,8 +3,9 @@ import {JwtModule} from "@nestjs/jwt";
 import {PassportModule as CorePassportModule} from "@nestjs/passport";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference/service";
+import {PreferenceService} from "@spica-server/preference/services";
 import {readdirSync} from "fs";
+import {ApiKeyStrategy} from "./apikey.strategy";
 import {ApiKeyController} from "./apikey/apikey.controller";
 import {ApiKeyService} from "./apikey/apikey.service";
 import {IdentityService} from "./identity";
@@ -19,7 +20,6 @@ import {SamlService} from "./saml.service";
 import {provideSchemaResolver, SchemaResolver} from "./schema.resolver";
 import {StrategyController} from "./strategies/strategy.controller";
 import {StrategyService} from "./strategies/strategy.service";
-import {ApiKeyStrategy} from "./apikey.strategy";
 
 @Global()
 @Module({})

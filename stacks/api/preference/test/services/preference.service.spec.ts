@@ -1,9 +1,8 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {Preference, PreferenceService} from "@spica-server/preference/services";
 import {Observable} from "rxjs";
 import {take} from "rxjs/operators";
-import {Preference} from "./interface";
-import {PreferenceService} from "./preference.service";
 
 describe("Preference Service", () => {
   async function addPref(prefs: Preference[]) {

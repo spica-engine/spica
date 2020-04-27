@@ -3,6 +3,8 @@ import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {ChangeKind, WebhookService} from "@spica-server/function/webhook";
 import {bufferCount, bufferTime} from "rxjs/operators";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 describe("Webhook Service", () => {
   let service: WebhookService;
   let module: TestingModule;
