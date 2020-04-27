@@ -16,7 +16,7 @@ ts_library(
         "cache.ts",
         "index.ts",
         "scheduler.ts",
-        "utilities.ts"
+        "utilities.ts",
     ],
     data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
