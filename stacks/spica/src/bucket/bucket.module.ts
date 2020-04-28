@@ -1,6 +1,6 @@
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule} from "@angular/common";
-import {ModuleWithProviders, NgModule, Injectable} from "@angular/core";
+import {ModuleWithProviders, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
