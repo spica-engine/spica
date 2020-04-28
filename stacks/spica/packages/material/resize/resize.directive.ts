@@ -2,6 +2,7 @@ import {
   Directive,
   ElementRef,
   EventEmitter,
+  Host,
   HostListener,
   Input,
   Optional,
@@ -19,8 +20,7 @@ import {MatSortHeader} from "@angular/material";
     "[attr.disabled]": "_isDragging",
     "(mousedown)": "mouseDown($event)",
     "(mouseup)": "mouseUp()",
-    "(mousemove)": "mouseMove($event)",
-    "(mouseover)": "mouseOver($event)"
+    "(mousemove)": "mouseMove($event)"
   }
 })
 export class MatResizeHeader {
@@ -47,7 +47,7 @@ export class MatResizeHeader {
 
   constructor(
     private elem: ElementRef<HTMLTableColElement>,
-    @Optional() private matSort: MatSortHeader
+    @Optional() @Host() private matSort: MatSortHeader
   ) {}
 
   @HostListener("mousedown", ["$event"])
@@ -65,18 +65,18 @@ export class MatResizeHeader {
       this.resizeend.emit(this._width);
     }
     this._startX = this._startWidth = undefined;
-    this.setMatSortDisabled(false);
-  }
-
-  @HostListener("mouseover", ["$event"])
-  mouseOver(event: MouseEvent) {
-    const isInMovementRect = this.getIsInMovementRect(event.screenX);
-    this._cursor = isInMovementRect ? "col-resize" : undefined;
-    this.setMatSortDisabled(isInMovementRect);
   }
 
   @HostListener("mousemove", ["$event"])
   mouseMove(event: MouseEvent) {
+    const isInMovementRect = this.getIsInMovementRect(event.screenX);
+    if (isInMovementRect) {
+      this._cursor = "col-resize";
+      this.setMatSortDisabled(true);
+    } else {
+      this._cursor = undefined;
+      this.setMatSortDisabled(false);
+    }
     if (this._isDragging) {
       const diff = event.screenX - this._startX;
       if (diff != 0) {
@@ -90,9 +90,22 @@ export class MatResizeHeader {
     return this._rect.left + this._rect.width - x < this.size;
   }
 
+  /**
+   * PS: I had to remove the click handler to prevent sort
+   * Disabling the sort has a weird UI behavior which is not what we want
+   */
+  private _originalHandleClick: () => void;
   setMatSortDisabled(disabled: boolean) {
     if (this.matSort) {
-      this.matSort.disabled = disabled;
+      if (!this._originalHandleClick) {
+        this._originalHandleClick = this.matSort["_handleClick"];
+      }
+
+      if (disabled) {
+        this.matSort["_handleClick"] = () => {};
+      } else {
+        this.matSort["_handleClick"] = this._originalHandleClick;
+      }
     }
   }
 }

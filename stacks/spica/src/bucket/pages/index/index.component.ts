@@ -4,13 +4,13 @@ import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
 import {merge, Observable} from "rxjs";
-import {flatMap, map, publishReplay, refCount, switchMap, tap, take} from "rxjs/operators";
+import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
-import {environment} from "../../../../environments/environment";
+
 @Component({
   selector: "bucket-index",
   templateUrl: "./index.component.html",

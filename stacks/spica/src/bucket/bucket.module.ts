@@ -47,6 +47,7 @@ import {createLocation, LocationComponent} from "./components/location/location.
 import {RelationSchemaComponent} from "./components/relation-schema/relation-schema.component";
 import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
+import {PersistHeaderWidthDirective} from "./directives/persist-header-width/persist-header-width.directive";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
@@ -142,7 +143,8 @@ import {RequiredTranslate} from "./validators";
     PropertyLanguageComponent,
     SettingsComponent,
     FilterComponent,
-    RequiredTranslate
+    RequiredTranslate,
+    PersistHeaderWidthDirective
   ]
 })
 export class BucketModule {

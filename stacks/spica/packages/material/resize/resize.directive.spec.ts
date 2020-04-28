@@ -40,7 +40,13 @@ function getElementScreenXForSize(elem: DebugElement, size: number) {
   return rect.left + rect.width - size;
 }
 
-fdescribe("MatResize", () => {
+function hasOriginalClickHandler(elem: DebugElement) {
+  const sort = elem.injector.get(MatSortHeader);
+  const resize = elem.injector.get(MatResizeHeader);
+  return resize["_originalHandleClick"] == sort["_handleClick"];
+}
+
+describe("MatResize", () => {
   let fixture: ComponentFixture<TestComponent>;
   let columnHeaders: DebugElement[];
 
@@ -62,28 +68,18 @@ fdescribe("MatResize", () => {
 
   it("should disable sort when mouseover and re-enable when the mouse move away", () => {
     const [positionColumnHeader] = columnHeaders;
-    const sortHeader = positionColumnHeader.injector.get(MatSortHeader);
-    positionColumnHeader.triggerEventHandler("mouseover", {
+
+    positionColumnHeader.triggerEventHandler("mousemove", {
       screenX: getElementScreenXForSize(positionColumnHeader, 90)
     });
     fixture.detectChanges();
-    expect(sortHeader.disabled).toBe(true);
+    expect(hasOriginalClickHandler(positionColumnHeader)).toBe(false);
 
-    positionColumnHeader.triggerEventHandler("mouseover", {
+    positionColumnHeader.triggerEventHandler("mousemove", {
       screenX: getElementScreenXForSize(positionColumnHeader, 120)
     });
     fixture.detectChanges();
-    expect(sortHeader.disabled).toBe(false);
-  });
-
-  it("should enable sort when mouseup", () => {
-    const [positionColumnHeader] = columnHeaders;
-    const sortHeader = positionColumnHeader.injector.get(MatSortHeader);
-    sortHeader.disabled = true;
-
-    positionColumnHeader.triggerEventHandler("mouseup", {});
-    fixture.detectChanges();
-    expect(sortHeader.disabled).toBe(false);
+    expect(hasOriginalClickHandler(positionColumnHeader)).toBe(true);
   });
 
   it("should resize and invoke resize and resizeend events", () => {
