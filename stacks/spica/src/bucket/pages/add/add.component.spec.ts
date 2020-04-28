@@ -234,7 +234,7 @@ describe("AddComponent", () => {
         expect(button).toBeFalsy();
       });
     });
-    describe("enabled", () => {
+    fdescribe("enabled", () => {
       beforeEach(fakeAsync(() => {
         activatedRoute.params.next({id: "1", rid: "2"});
         row.next({_id: "2"});
@@ -242,6 +242,28 @@ describe("AddComponent", () => {
         tick(1);
         fixture.detectChanges();
       }));
+
+      it("shouldn't render history button and throw error if http response status 404 which means replicaset didn't initialized", () => {
+        historyList.error({status: 404});
+        fixture.detectChanges();
+
+        expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
+        expect(fixture.componentInstance.histories$).toBeUndefined();
+        const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
+        expect(button).toBeFalsy();
+      });
+
+      it("should throw error when http response status 500", () => {
+        historyList.error({status: 500});
+        fixture.detectChanges();
+
+        expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
+        fixture.componentInstance.histories$
+          .toPromise()
+          .catch(err => expect(err).toEqual({status: 500}));
+        const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
+        expect(button).toBeFalsy();
+      });
 
       it("should show history button in edit mode", () => {
         historyList.next([{_id: "1", changes: 1, date: new Date().toISOString()}]);
