@@ -1,9 +1,5 @@
 ::ng-deep {
-  mat-toolbar p {
-    font-size: 12px;
-    margin: 0px 0px 0px 5px;
-  }
-  .preview-file {
+  mat-toolbar .preview-file {
     position: relative !important;
     .mat-dialog-container {
       height: unset;
@@ -13,6 +9,10 @@
 
 :host {
   mat-toolbar {
+    p {
+      font-size: 12px;
+      margin: 0px 0px 0px 5px;
+    }
     min-height: 150px;
     padding: 0 30px;
     align-items: flex-start;
@@ -72,4 +72,9 @@
       }
     }
   }
+
+  mat-paginator{
+    margin-top:95px
+  }
+
 }
