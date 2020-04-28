@@ -1,6 +1,6 @@
 import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule} from "@angular/common";
-import {ModuleWithProviders, NgModule} from "@angular/core";
+import {ModuleWithProviders, NgModule, Injectable} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
@@ -57,6 +57,8 @@ import * as fromBucket from "./state/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
 import {RequiredTranslate} from "./validators";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
+import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
 
 @NgModule({
   imports: [
@@ -159,6 +161,11 @@ export class BucketModule {
           useFactory: provideBucketLoader,
           multi: true,
           deps: [BucketInitializer]
+        },
+        {
+          provide: ACTIVITY_FACTORY,
+          useValue: provideActivityFactory,
+          multi: true
         }
       ]
     };
