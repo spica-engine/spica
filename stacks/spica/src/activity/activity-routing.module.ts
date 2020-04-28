@@ -19,7 +19,7 @@ const routes: Routes = [
 const route: Route[] = [
   {
     id: "activity",
-    category: RouteCategory.Activity,
+    category: RouteCategory.Primary,
     display: "User Activities",
     icon: "account_box",
     path: "/activity"

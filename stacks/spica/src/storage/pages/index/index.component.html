@@ -1,8 +1,13 @@
 <mat-toolbar color="primary">
-  <h4 class="mat-h4">
-    <mat-icon>filter_drama</mat-icon>
-    <span>Storage</span>
-  </h4>
+  <div>
+    <h4 class="mat-h4">
+      <mat-icon>filter_drama</mat-icon>
+      <span>Storage</span>
+    </h4>
+    <p>
+      Upload any kind of document into public storage.
+    </p>
+  </div>
   <span class="space-between"></span>
 
   <button mat-icon-button [matMenuTriggerFor]="menu">
@@ -103,8 +108,10 @@
     </mat-card>
   </mat-grid-tile>
 </mat-grid-list>
-
-<mat-paginator [pageSize]="12" [pageSizeOptions]="[12, 24, 46]"></mat-paginator>
+<mat-paginator
+  [pageSize]="12"
+  [pageSizeOptions]="[12, 24, 46]"
+></mat-paginator>
 
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>
