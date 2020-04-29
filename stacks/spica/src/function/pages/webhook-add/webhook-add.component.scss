@@ -1,5 +1,5 @@
-:host ::ng-deep {
-  .mat-list-item-content {
+:host {
+  ::ng-deep .mat-list-item-content {
     padding: 0px !important;
   }
 
@@ -19,26 +19,33 @@
     padding: 25px;
     margin: 30px;
     margin-top: -110px;
-    // For proper border radius
     overflow: hidden;
 
-    mat-form-field.url {
-      width: 100%;
-    }
+    mat-list {
+      mat-list-item {
+        margin-top: 10px;
+        height: auto !important;
 
-    mat-list-item.triggers {
-      margin-top: 10px;
-    }
+        &:first-of-type {
+          ::ng-deep .mat-list-item-content {
+            display: flex;
+            mat-form-field {
+              flex: 1;
+            }
+            span {
+              margin-left: 15px;
+              vertical-align: middle;
+            }
+          }
+        }
 
-    mat-list-item.triggers mat-form-field {
-      width: 20%;
-      margin: 0 5px;
-    }
-
-    .status {
-      width: 20%;
-      margin: 0 15px;
-      height: 100%;
+        &.triggers {
+          mat-form-field:not(:first-of-type) {
+            width: 20%;
+            margin-left: 15px;
+          }
+        }
+      }
     }
   }
 }

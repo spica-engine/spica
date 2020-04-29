@@ -19,6 +19,7 @@ export class WebhookService extends BaseCollection<Webhook>("webhook") {
         if (change.kind != ChangeKind.Removed) {
           change.webhook = {
             url: hook.url,
+            body: hook.body,
             trigger: hook.trigger
           };
         }

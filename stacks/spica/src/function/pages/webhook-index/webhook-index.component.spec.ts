@@ -1,24 +1,51 @@
-import {TestBed, ComponentFixture} from "@angular/core/testing";
-import {MatIconModule} from "@angular/material/icon";
-import {MatToolbarModule} from "@angular/material/toolbar";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {MatCardModule} from "@angular/material/card";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
-import {WebhookService, MockWebkhookService} from "../../webhook.service";
+import {MatIconModule} from "@angular/material/icon";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 import {MatTableModule} from "@angular/material/table";
-import {RouterTestingModule} from "@angular/router/testing";
-import {MatPaginatorModule} from "@angular/material/paginator";
-import {MatAwareDialogModule} from "@spica-client/material";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {RouterTestingModule} from "@angular/router/testing";
+import {IndexResult} from "@spica-client/core/interfaces";
+import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
+import {of} from "rxjs";
+import {Webhook} from "../../interface";
+import {WebhookService} from "../../webhook.service";
+import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
 
 describe("Webhook Index", () => {
   let fixture: ComponentFixture<WebhookIndexComponent>;
-  let component: WebhookIndexComponent;
-  let getAllSpy: jasmine.Spy;
-  let deleteSpy: jasmine.Spy;
-  let refreshSpy: jasmine.Spy;
+  let webhookService: jasmine.SpyObj<WebhookService>;
 
   beforeEach(async () => {
+    webhookService = jasmine.createSpyObj("WebhookService", ["getAll", "delete"]);
+    webhookService.getAll.and.callFake((limit, skip) => {
+      let data = new Array(20).fill(null).map(
+        (_, i) =>
+          ({
+            _id: String(i),
+            trigger: {
+              name: "database",
+              active: true,
+              options: {collection: "test_collection", type: "INSERT"}
+            },
+            body: "",
+            url: "test_url"
+          } as Webhook)
+      );
+
+      if (skip) {
+        data = data.slice(skip);
+      }
+      if (limit) {
+        data = data.slice(0, limit);
+      }
+
+      console.log(data);
+      return of({meta: {total: 20}, data} as IndexResult<Webhook>);
+    });
+
     TestBed.configureTestingModule({
       imports: [
         MatPaginatorModule,
@@ -34,42 +61,18 @@ describe("Webhook Index", () => {
       providers: [
         {
           provide: WebhookService,
-          useValue: new MockWebkhookService()
+          useValue: webhookService
         }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(WebhookIndexComponent);
-    component = fixture.componentInstance;
-
-    getAllSpy = spyOn(component["webhookService"], "getAll").and.callThrough();
-    deleteSpy = spyOn(component["webhookService"], "delete").and.callThrough();
-    refreshSpy = spyOn(component["refresh"], "next").and.callThrough();
-
-    addWebhooks(20);
-
-    fixture.detectChanges();
-    await fixture.whenStable();
-
     fixture.detectChanges();
   });
 
-  function addWebhooks(count: number) {
-    for (let index = 0; index < count; index++) {
-      component["webhookService"].add({
-        trigger: {
-          name: "database",
-          active: true,
-          options: {collection: "test_collection", type: "INSERT"}
-        },
-        url: "test_url"
-      });
-    }
-  }
-
   it("should render webhooks", async () => {
-    expect(getAllSpy).toHaveBeenCalledTimes(1);
-    expect(getAllSpy).toHaveBeenCalledWith(10, 0);
+    expect(webhookService.getAll).toHaveBeenCalledTimes(1);
+    expect(webhookService.getAll).toHaveBeenCalledWith(10, 0);
 
     const id = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(1)"));
     const url = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(2)"));
@@ -78,16 +81,15 @@ describe("Webhook Index", () => {
     expect(url.nativeElement.textContent).toBe("test_url");
   });
 
-  it("should navigate to the next page", async () => {
-    component["paginator"].nextPage();
-
+  it("should advance to the next page", async () => {
+    const paginator = fixture.debugElement
+      .query(By.directive(MatPaginator))
+      .injector.get(MatPaginator);
+    paginator.nextPage();
     fixture.detectChanges();
-    await fixture.whenStable();
 
-    fixture.detectChanges();
-
-    expect(getAllSpy).toHaveBeenCalledTimes(2);
-    expect(getAllSpy.calls.argsFor(1)).toEqual([10, 10]);
+    expect(webhookService.getAll).toHaveBeenCalledTimes(2);
+    expect(webhookService.getAll.calls.argsFor(1)).toEqual([10, 10]);
 
     const id = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(1)"));
     const url = fixture.debugElement.query(By.css("mat-table mat-cell:nth-of-type(2)"));
@@ -96,17 +98,12 @@ describe("Webhook Index", () => {
     expect(url.nativeElement.textContent).toBe("test_url");
   });
 
-  it("should delete webhook", async () => {
-    component.delete("0");
-
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    fixture.detectChanges();
-
-    expect(deleteSpy).toHaveBeenCalledTimes(1);
-    expect(deleteSpy).toHaveBeenCalledWith("0");
-
-    expect(refreshSpy).toHaveBeenCalledTimes(1);
-  });
+  it("should delete webhook", fakeAsync(() => {
+    webhookService.delete.and.returnValue(of(null));
+    fixture.componentInstance.delete("0");
+    tick();
+    expect(webhookService.getAll).toHaveBeenCalledTimes(2);
+    expect(webhookService.delete).toHaveBeenCalledTimes(1);
+    expect(webhookService.delete).toHaveBeenCalledWith("0");
+  }));
 });

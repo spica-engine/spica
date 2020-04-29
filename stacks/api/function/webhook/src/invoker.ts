@@ -2,8 +2,9 @@ import {Injectable} from "@nestjs/common";
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import fetch from "node-fetch";
 import {Webhook} from "./interface";
+import {WebhookLogService} from "./log.service";
 import {ChangeKind, WebhookService} from "./webhook.service";
-import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
+import {compile, registerHelper} from "handlebars";
 
 @Injectable()
 export class WebhookInvoker {
@@ -30,7 +31,15 @@ export class WebhookInvoker {
     });
   }
 
-  private subscribe(target: string, {trigger, url}: Webhook) {
+  private subscribe(target: string, {trigger, url, body}: Webhook) {
+    /**
+     * This is here to get backward-compatibility
+     * @breaking-change 0.0.3 Remove this logic
+     */
+    if (body == undefined) {
+      body = "{{{ toJSON this }}}";
+    }
+    const bodyTemplate = compile(body, {strict: true});
     const stream = this.db.collection(trigger.options.collection).watch(
       [
         {
@@ -48,9 +57,15 @@ export class WebhookInvoker {
 
       let request = {
         method: "post",
-        body: JSON.stringify(change),
+        body: bodyTemplate(change, {
+          allowProtoPropertiesByDefault: false,
+          allowProtoMethodsByDefault: false,
+          helpers: {
+            toJSON: (object: unknown) => JSON.stringify(object)
+          }
+        }),
         headers: {
-          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
+          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
           "Content-type": "application/json"
         }
       };

@@ -32,15 +32,19 @@ describe("Schema Resolver", () => {
     await expectAsync(schema.pipe(take(1)).toPromise()).toBeResolvedTo({
       $id: "http://spica.internal/webhook",
       type: "object",
+      required: ["url", "body", "trigger"],
       properties: {
         url: {type: "string", title: "Url", format: "url"},
+        body: {type: "string", title: "Template of the body"},
         trigger: {
           type: "object",
+          required: ["name", "options"],
           properties: {
             name: {type: "string", enum: ["database"]},
             active: {type: "boolean", title: "Active", default: true},
             options: {
               type: "object",
+              required: ["collection", "type"],
               properties: {
                 collection: {type: "string", title: "Collection", enum: ["test"]},
                 type: {

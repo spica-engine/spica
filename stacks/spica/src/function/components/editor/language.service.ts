@@ -1,8 +1,7 @@
 import {Inject, Injectable} from "@angular/core";
 import {Observable} from "rxjs";
 import * as socketio from "socket.io-client";
-
-import {FUNCTION_OPTIONS, FunctionOptions} from "../../interface";
+import {FunctionOptions, FUNCTION_OPTIONS} from "../../interface";
 
 @Injectable({providedIn: "root"})
 export class LanguageService {
