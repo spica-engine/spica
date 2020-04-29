@@ -16,9 +16,11 @@ import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {FormsModule} from "@angular/forms";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {ActivityService} from "../../services/activity.service";
-
 import {ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
 import {of} from "rxjs";
+import {BuildLinkPipe} from "@spica-client/common/build_link.pipe";
+import {ACTIVITY_FACTORY} from "@spica-client/core";
+import {RouterTestingModule} from "@angular/router/testing";
 
 describe("IndexComponent", () => {
   let component: IndexComponent;
@@ -57,9 +59,10 @@ describe("IndexComponent", () => {
         MatButtonModule,
         ScrollingModule,
         MatListModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        RouterTestingModule
       ],
-      declarations: [IndexComponent],
+      declarations: [IndexComponent, BuildLinkPipe],
       providers: [
         {
           provide: ActivityService,
@@ -71,6 +74,11 @@ describe("IndexComponent", () => {
               return of(["doc_1", "doc_2"]);
             }
           }
+        },
+        {
+          provide: ACTIVITY_FACTORY,
+          useValue: [],
+          multi: true
         }
       ]
     }).compileComponents();

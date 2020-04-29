@@ -19,6 +19,7 @@ import {FormsModule} from "@angular/forms";
 import {ActivityService} from "./services/activity.service";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {PassportModule} from "@spica-client/passport";
+import {CommonModule as SpicaCommon} from "@spica-client/common";
 
 @NgModule({
   declarations: [IndexComponent],
@@ -39,7 +40,8 @@ import {PassportModule} from "@spica-client/passport";
     MatButtonModule,
     ScrollingModule,
     MatListModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    SpicaCommon
   ],
   providers: [ActivityService]
 })
