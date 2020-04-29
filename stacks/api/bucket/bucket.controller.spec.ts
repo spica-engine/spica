@@ -305,17 +305,27 @@ describe("Bucket acceptance", () => {
   });
 
   describe("delete requests", () => {
-    it("should delete spesific bucket", async () => {
-      //add buckets
+    it("should delete spesific bucket and it's documents", async () => {
       const firstInsertedBukcet = (await req.post("/bucket", bucket)).body;
       const secondInsertedBucket = (await req.post("/bucket", bucket)).body;
 
-      const response = await req.delete(`/bucket/${secondInsertedBucket._id}`);
-      expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
+      let {body: insertedDocument} = await req.post(`/bucket/${secondInsertedBucket._id}/data`, {
+        title: "title",
+        description: "description"
+      });
+
+      let {body: bucketDocuments} = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
+      expect(bucketDocuments).toBeDefined([insertedDocument]);
+
+      let deleteResponse = await req.delete(`/bucket/${secondInsertedBucket._id}`);
+      expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
 
       const buckets = (await req.get("/bucket", {})).body;
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual(firstInsertedBukcet);
+
+      let getDataResponse = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
+      expect([getDataResponse.statusCode, getDataResponse.statusText]).toEqual([404, "Not Found"]);
     });
   });
 
@@ -720,6 +730,135 @@ describe("Bucket acceptance", () => {
           ]
         ]
       });
+    });
+  });
+
+  describe("delete bucket,data and related data", () => {
+    let usersBucket;
+    let scoresBucket;
+    let settingsBucket;
+
+    let user;
+    let score;
+    let setting;
+
+    beforeEach(async () => {
+      usersBucket = await req
+        .post("/bucket", {
+          title: "Users",
+          description: "Users bucket",
+          properties: {
+            name: {
+              type: "string",
+              options: {}
+            }
+          }
+        })
+        .then(res => res.body);
+
+      settingsBucket = await req
+        .post("/bucket", {
+          title: "Settings",
+          description: "Settings Bucket",
+          properties: {
+            setting: {
+              type: "string",
+              options: {}
+            }
+          }
+        })
+        .then(res => res.body);
+
+      scoresBucket = await req
+        .post("/bucket", {
+          title: "Scores",
+          description: "Scores bucket",
+          properties: {
+            score: {
+              type: "number",
+              options: {}
+            },
+            user: {
+              type: "relation",
+              bucketId: usersBucket._id,
+              options: {}
+            },
+            setting: {
+              type: "relation",
+              bucketId: settingsBucket._id,
+              options: {}
+            }
+          }
+        })
+        .then(res => res.body);
+
+      user = await req
+        .post(`/bucket/${usersBucket._id}/data`, {
+          name: "user1"
+        })
+        .then(res => res.body);
+
+      setting = await req
+        .post(`/bucket/${settingsBucket._id}/data`, {
+          setting: "setting1"
+        })
+        .then(res => res.body);
+
+      score = await req
+        .post(`/bucket/${scoresBucket._id}/data`, {
+          score: 500,
+          user: user._id,
+          setting: setting._id
+        })
+        .then(res => res.body);
+    });
+
+    afterEach(async () => {
+      await req.delete(`/bucket/${usersBucket._id}`);
+      await req.delete(`/bucket/${usersBucket._id}/data`, user._id);
+
+      await req.delete(`/bucket/${settingsBucket._id}`);
+      await req.delete(`/bucket/${settingsBucket._id}/data`, setting._id);
+
+      await req.delete(`/bucket/${scoresBucket._id}`);
+      await req.delete(`/bucket/${scoresBucket._id}/data`, score._id);
+    });
+
+    it("should delete users, update scores bucket schema and data when the users bucket deleted", async () => {
+      let deleteResponse = await req.delete(`/bucket/${usersBucket._id}`);
+      expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
+      expect(deleteResponse.body).toEqual(undefined);
+
+      let {body: usersBucketResponse} = await req.get(`/bucket/${usersBucket._id}`, {});
+      expect(usersBucketResponse).toBeUndefined();
+
+      let usersDocumentResponse = await req.get(`/bucket/${usersBucket._id}/data`, {});
+      expect([usersDocumentResponse.statusCode, usersDocumentResponse.statusText]).toEqual([
+        404,
+        "Not Found"
+      ]);
+
+      let {body: scoresBucketResponse} = await req.get(`/bucket/${scoresBucket._id}`, {});
+      expect(scoresBucketResponse.properties).toEqual({
+        score: {
+          type: "number",
+          options: {}
+        },
+        setting: {
+          type: "relation",
+          bucketId: settingsBucket._id,
+          options: {}
+        }
+      });
+
+      let {body: scoresDocumentResponse} = await req.get(`/bucket/${scoresBucket._id}/data`, {});
+      expect(scoresDocumentResponse).toEqual([
+        {
+          _id: score._id,
+          score: 500,
+          setting: setting._id
+        }
+      ]);
     });
   });
 });
