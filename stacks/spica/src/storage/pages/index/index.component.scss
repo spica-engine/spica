@@ -13,7 +13,7 @@
       font-size: 12px;
       margin: 0px 0px 0px 5px;
     }
-    min-height: 150px;
+    min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
     display: flex;
@@ -39,7 +39,7 @@
 
   mat-grid-list {
     margin: 30px;
-    margin-top: -95px;
+    margin-top: -110px;
     overflow: hidden;
 
     mat-card {
@@ -73,8 +73,7 @@
     }
   }
 
-  mat-paginator{
-    margin-top:95px
+  mat-paginator {
+    margin-top: 110px;
   }
-
 }

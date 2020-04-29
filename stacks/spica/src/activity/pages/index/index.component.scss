@@ -1,6 +1,6 @@
 :host {
   mat-toolbar {
-    min-height: 150px;
+    min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
     h4 > * {
@@ -12,7 +12,8 @@
     }
   }
   .mat-card {
-    margin: -50px auto;
+    margin: 30px;
+    margin-top: -110px;
     width: 95%;
 
     .mat-card-content {
@@ -41,6 +42,7 @@
       height: 75px;
       width: 100%;
       span.info {
+        word-break: break-word;
         width: 85%;
       }
       span.date {

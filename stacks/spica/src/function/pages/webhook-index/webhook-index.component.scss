@@ -1,6 +1,9 @@
 :host {
   mat-header-cell.action,
   mat-cell.action {
+    word-break: break-word;
+    justify-content: flex-end;
+    flex: 1;
     max-width: 150px;
     justify-content: flex-end;
   }
@@ -73,18 +76,13 @@
   }
   .id-header,
   .id-content {
+    word-break: break-word;
     text-align: left;
-    flex: 3;
+    flex: 2;
   }
   .url-header,
   .url-content {
-    flex: 3;
-  }
-
-  .actions-header,
-  .actions-content {
-    display: inline-flex;
-    justify-content: flex-end;
-    flex: 1;
+    word-break: break-word;
+    flex: 4;
   }
 }
