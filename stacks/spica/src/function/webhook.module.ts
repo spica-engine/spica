@@ -22,6 +22,7 @@ import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {MatProgressSpinnerModule} from "@angular/material";
 import {MatExpansionModule} from "@angular/material/expansion";
+import {WebhookWelcomeComponent} from "./pages/webhook-welcome/webhook-welcome.component";
 
 @NgModule({
   imports: [
@@ -47,6 +48,11 @@ import {MatExpansionModule} from "@angular/material/expansion";
     ScrollingModule,
     MatExpansionModule
   ],
-  declarations: [WebhookAddComponent, WebhookIndexComponent, WebhookLogViewComponent]
+  declarations: [
+    WebhookAddComponent,
+    WebhookIndexComponent,
+    WebhookLogViewComponent,
+    WebhookWelcomeComponent
+  ]
 })
 export class WebhookModule {}

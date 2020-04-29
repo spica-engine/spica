@@ -23,6 +23,8 @@ export class IndexComponent implements OnInit {
   sorter;
   cols: number = 4;
 
+  isEmpty = true;
+
   constructor(
     private storage: StorageService,
     public breakpointObserver: BreakpointObserver,
@@ -61,6 +63,7 @@ export class IndexComponent implements OnInit {
         if (storages.meta && storages.meta.total) {
           this.paginator.length = storages.meta.total;
         }
+        this.isEmpty = !storages.data.length;
         return storages.data;
       })
     );

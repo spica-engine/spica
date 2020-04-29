@@ -4,6 +4,8 @@ import {IdentityGuard, PolicyGuard} from "../passport";
 import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
 import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
 import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
+import {WebhookWelcomeComponent} from "./pages/webhook-welcome/webhook-welcome.component";
+import {WebhookNavigator} from "./resolvers/webhook.navigator";
 
 const routes: Routes = [
   {
@@ -17,7 +19,13 @@ const routes: Routes = [
     path: "webhook",
     data: {service: "webhook"},
     children: [
-      {path: "", component: WebhookIndexComponent, data: {action: "index"}},
+      {path: "welcome", component: WebhookWelcomeComponent, data: {action: ""}},
+      {
+        path: "",
+        component: WebhookIndexComponent,
+        canActivate: [WebhookNavigator],
+        data: {action: "index"}
+      },
       {path: "add", component: WebhookAddComponent, data: {action: "create"}},
       {path: ":id", component: WebhookAddComponent, data: {action: "show"}}
     ]

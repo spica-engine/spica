@@ -20,7 +20,7 @@
         />
         <mat-error *ngIf="identifierModel?.errors?.required">This field is required.</mat-error>
       </mat-form-field>
-      <button
+      <button class="change-password"
         mat-button
         *ngIf="identity._id && !changePasswordState"
         (click)="changePasswordState = !changePasswordState"

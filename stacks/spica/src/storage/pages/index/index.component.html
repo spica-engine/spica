@@ -108,7 +108,11 @@
     </mat-card>
   </mat-grid-tile>
 </mat-grid-list>
-<mat-paginator [pageSize]="12" [pageSizeOptions]="[12, 24, 46]"></mat-paginator>
+<mat-paginator
+  [style.visibility]="isEmpty ? 'hidden' : 'visible'"
+  [pageSize]="12"
+  [pageSizeOptions]="[12, 24, 46]"
+></mat-paginator>
 
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>

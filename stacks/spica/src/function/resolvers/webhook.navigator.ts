@@ -1,0 +1,18 @@
+import {Injectable} from "@angular/core";
+import {WebhookService} from "../webhook.service";
+import {Router} from "@angular/router";
+import {take, map} from "rxjs/operators";
+
+@Injectable({providedIn: "root"})
+export class WebhookNavigator {
+  constructor(private webhookService: WebhookService, private router: Router) {}
+
+  canActivate() {
+    return this.webhookService.getAll(1, 0).pipe(
+      take(1),
+      map(webhooks =>
+        webhooks.meta.total ? true : this.router.createUrlTree(["webhook", "welcome"])
+      )
+    );
+  }
+}

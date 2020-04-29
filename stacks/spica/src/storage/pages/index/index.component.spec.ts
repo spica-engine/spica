@@ -27,8 +27,6 @@ import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {HttpEvent, HttpEventType, HttpResponse} from "@angular/common/http";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 
-//@TODO: sorting parameters send correctly but service doesn't return data as sorted by parameter
-
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let storageService: jasmine.SpyObj<Partial<StorageService>>;
@@ -107,11 +105,14 @@ describe("Storage/IndexComponent", () => {
               })
               .and.callThrough()
           }
+        },
+        {
+          provide: StorageService,
+          useValue: storageService
         }
       ],
       declarations: [IndexComponent, StorageViewComponent]
     });
-    TestBed.overrideProvider(StorageService, {useValue: storageService});
 
     fixture = TestBed.createComponent(IndexComponent);
     location = TestBed.get(Location);
