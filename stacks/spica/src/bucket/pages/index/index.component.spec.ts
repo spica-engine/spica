@@ -25,10 +25,12 @@ import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
+import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {OwlDateTimeModule} from "ng-pick-datetime";
 import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {FilterComponent} from "../../components/filter/filter.component";
+import {PersistHeaderWidthDirective} from "../../directives/persist-header-width/persist-header-width.directive";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
@@ -77,6 +79,7 @@ describe("IndexComponent", () => {
         MatButtonModule,
         MatTableModule,
         MatSortModule,
+        MatResizeHeaderModule,
         MatPaginatorModule,
         MatSelectModule,
         InputModule.withPlacers([]),
@@ -105,7 +108,7 @@ describe("IndexComponent", () => {
           useValue: activatedRoute
         }
       ],
-      declarations: [IndexComponent, FilterComponent]
+      declarations: [IndexComponent, FilterComponent, PersistHeaderWidthDirective]
     }).compileComponents();
 
     fixture = TestBed.createComponent(IndexComponent);
@@ -353,6 +356,7 @@ describe("IndexComponent", () => {
       fixture.detectChanges();
       bucket.next({
         _id: "1",
+        primary: "test",
         properties: {
           test: {
             title: "test",
@@ -368,22 +372,23 @@ describe("IndexComponent", () => {
     });
 
     it("should render correctly", () => {
-      const headerCells = fixture.debugElement.queryAll(
-        By.css("mat-table mat-header-row mat-header-cell")
+      const headerCells = fixture.debugElement.nativeElement.querySelectorAll(
+        "table[mat-table] tr[mat-header-row] th[mat-header-cell]"
       );
-      const cell = fixture.debugElement.query(By.css("mat-table mat-row mat-cell"));
-      expect(headerCells[0].nativeElement.textContent).toBe(" test ");
-      expect(headerCells[1].nativeElement.textContent).toBe("Actions");
-      expect(cell.nativeElement.textContent).toBe(" 123 ");
+      const cell = fixture.debugElement.nativeElement.querySelector(
+        "table[mat-table] tr[mat-row] td[mat-cell]"
+      );
+      expect(headerCells[0].textContent).toBe(" test ");
+      expect(headerCells[1].textContent).toBe("Actions");
+      expect(cell.textContent).toBe(" 123 ");
     });
 
     it("should render actions correctly", () => {
-      const lastCell = fixture.debugElement.query(
-        By.css("mat-table mat-row mat-cell:last-of-type")
+      const [editButton, deleteButton] = fixture.debugElement.nativeElement.querySelectorAll(
+        "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type > button"
       );
-      const [editButton, deleteButton] = lastCell.queryAll(By.css("button"));
-      expect(editButton.nativeElement.textContent).toBe("edit");
-      expect(deleteButton.nativeElement.textContent).toBe("delete");
+      expect(editButton.textContent).toBe("edit");
+      expect(deleteButton.textContent).toBe("delete");
     });
 
     describe("select", () => {
@@ -393,11 +398,11 @@ describe("IndexComponent", () => {
       });
 
       it("should select", fakeAsync(() => {
-        fixture.debugElement
-          .query(
-            By.css("mat-table mat-row mat-cell:first-of-type mat-checkbox .mat-checkbox-label")
+        fixture.debugElement.nativeElement
+          .querySelector(
+            "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type mat-checkbox .mat-checkbox-label"
           )
-          .nativeElement.click();
+          .click();
         fixture.detectChanges();
 
         tick();
@@ -405,36 +410,36 @@ describe("IndexComponent", () => {
 
         expect(fixture.componentInstance.selectedItems).toContain("1");
         expect(
-          fixture.debugElement.query(
-            By.css("mat-table mat-header-row mat-header-cell:first-of-type mat-checkbox")
-          ).nativeElement.classList
+          fixture.debugElement.nativeElement.querySelector(
+            "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type mat-checkbox"
+          ).classList
         ).toContain("mat-checkbox-checked");
         expect(
-          fixture.debugElement.query(
-            By.css("mat-table mat-row mat-cell:first-of-type mat-checkbox")
-          ).nativeElement.classList
+          fixture.debugElement.nativeElement.querySelector(
+            "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type mat-checkbox"
+          ).classList
         ).toContain("mat-checkbox-checked");
       }));
 
       it("should select all", fakeAsync(() => {
         expect(fixture.componentInstance.selectedItems).toEqual([]);
 
-        const selectAllCheckbox = fixture.debugElement.query(
-          By.css("mat-table mat-header-row mat-header-cell:first-of-type mat-checkbox")
+        const selectAllCheckbox = fixture.debugElement.nativeElement.querySelector(
+          "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type mat-checkbox"
         );
 
-        selectAllCheckbox.query(By.css(".mat-checkbox-label")).nativeElement.click();
+        selectAllCheckbox.querySelector(".mat-checkbox-label").click();
         fixture.detectChanges();
 
         tick();
         fixture.detectChanges();
 
         expect(
-          fixture.debugElement.query(
-            By.css("mat-table mat-row mat-cell:first-of-type mat-checkbox")
-          ).nativeElement.classList
+          fixture.debugElement.nativeElement.querySelector(
+            "table[mat-table] tr[mat-row] td[mat-cell]:first-of-type mat-checkbox"
+          ).classList
         ).toContain("mat-checkbox-checked");
-        expect(selectAllCheckbox.nativeElement.classList).toContain("mat-checkbox-checked");
+        expect(selectAllCheckbox.classList).toContain("mat-checkbox-checked");
         expect(fixture.componentInstance.selectedItems).toEqual(["1"]);
       }));
 
@@ -442,7 +447,7 @@ describe("IndexComponent", () => {
         fixture.componentInstance.selectedItems.push("1");
         fixture.detectChanges();
         expect(
-          fixture.debugElement.query(By.css("mat-toolbar > button:first-of-type")).nativeElement
+          fixture.debugElement.nativeElement.querySelector("mat-toolbar > button:first-of-type")
             .textContent
         ).toBe("delete");
       });
@@ -470,18 +475,18 @@ describe("IndexComponent", () => {
 
     it("should disable remove button", () => {
       expect(
-        fixture.debugElement.query(
-          By.css("mat-table mat-row mat-cell:last-of-type button:last-of-type")
-        ).nativeElement.disabled
+        fixture.debugElement.nativeElement.querySelector(
+          "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type button:last-of-type"
+        ).disabled
       ).toBe(true);
     });
 
     it("should change icon of edit button", () => {
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(
-          By.css("mat-table mat-row mat-cell:last-of-type button:first-of-type")
-        ).nativeElement.textContent
+        fixture.debugElement.nativeElement.querySelector(
+          "table[mat-table] tr[mat-row] td[mat-cell]:last-of-type button:first-of-type"
+        ).textContent
       ).toBe("remove_red_eye");
     });
   });
@@ -506,13 +511,17 @@ describe("IndexComponent", () => {
     });
 
     it("should sort ascending", () => {
-      fixture.debugElement.query(By.css("mat-table mat-header-cell")).nativeElement.click();
+      fixture.debugElement.nativeElement
+        .querySelector("table[mat-table] th[mat-header-cell]")
+        .click();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
       expect(bucketDataService.find.calls.mostRecent().args[1].sort).toEqual({test: 1});
     });
 
     it("should sort descending", () => {
-      const sort = fixture.debugElement.query(By.css("mat-table mat-header-cell")).nativeElement;
+      const sort = fixture.debugElement.nativeElement.querySelector(
+        "table[mat-table] th[mat-header-cell]"
+      );
       sort.click();
       sort.click();
       expect(bucketDataService.find).toHaveBeenCalledTimes(2);
