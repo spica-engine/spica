@@ -53,6 +53,10 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   $remove: Observable<SavingState>;
 
+  isHistoryEndpointEnable = false;
+
+  dummyObjectId = "000000000000000000000000";
+
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
   immutableProperties: Array<string> = [];
@@ -72,6 +76,12 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.historyService
+      .historyList(this.dummyObjectId, this.dummyObjectId)
+      .toPromise()
+      .then(() => (this.isHistoryEndpointEnable = true))
+      .catch(() => (this.isHistoryEndpointEnable = false));
+      
     this.activatedRoute.params
       .pipe(
         flatMap(params =>
@@ -100,6 +110,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
           this.bucket = deepCopy<Bucket>(scheme);
           this.immutableProperties = Object.keys(this.bucket.properties);
         }),
+
         takeUntil(this.onDestroy)
       )
       .subscribe(() => this.updatePositionProperties());

@@ -81,13 +81,12 @@ export class AddComponent implements OnInit {
       }),
       map(schema => {
         if (schema.history && this.data._id) {
-          //@ts-ignore
           this.histories$ = this.bhs.historyList(this.bucketId, this.data._id).pipe(
-            catchError(res => {
-              if (res.status == 404) {
-                return undefined;
+            catchError(err => {
+              if (err.status == 404) {
+                return of(undefined);
               } else {
-                throw res;
+                throw err;
               }
             })
           );
@@ -146,9 +145,18 @@ export class AddComponent implements OnInit {
       of(SavingState.Saving),
       save.pipe(
         tap(bucketDocument => {
-          this.histories$ = this.histories$
-            ? this.bhs.historyList(this.bucketId, bucketDocument._id)
-            : undefined;
+          this.histories$ =
+            this.bucketId && this.data._id
+              ? this.bhs.historyList(this.bucketId, this.data._id).pipe(
+                  catchError(res => {
+                    if (res.status == 404) {
+                      return of(undefined);
+                    } else {
+                      throw res;
+                    }
+                  })
+                )
+              : undefined;
           if (isInsert) return this.router.navigate([`bucket/${this.bucketId}`]);
         }),
         ignoreElements(),

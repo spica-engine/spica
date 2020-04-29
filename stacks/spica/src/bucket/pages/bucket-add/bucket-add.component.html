@@ -119,6 +119,7 @@
             </div>
             <div class="history">
               <mat-slide-toggle
+                [disabled]="!isHistoryEndpointEnable"
                 matInput
                 name="history"
                 placeholder="History"
@@ -135,6 +136,9 @@
                 <mat-icon>info</mat-icon>
               </button>
             </div>
+            <mat-error *ngIf="!isHistoryEndpointEnable">
+              This feature is unavailable because we could not find a replica set.
+            </mat-error>
           </div>
         </form>
       </mat-list-item>

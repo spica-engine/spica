@@ -135,7 +135,8 @@ describe("Bucket Add Component", () => {
         {
           provide: BucketHistoryService,
           useValue: {
-            clearHistories: jasmine.createSpy("clearHistories").and.returnValue(of(undefined))
+            clearHistories: jasmine.createSpy("clearHistories").and.returnValue(of(undefined)),
+            historyList: jasmine.createSpy("historyList").and.returnValue(of(undefined))
           }
         }
       ],
