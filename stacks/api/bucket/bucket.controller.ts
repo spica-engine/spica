@@ -287,16 +287,16 @@ export class BucketController {
       let targets = findRelations(bucket.properties, bucketId.toHexString(), "", []);
       if (targets.length < 1) continue;
 
-      let unsetFieldsBucket = targets.reduce((pre, acc: any, index, array) => {
-        let key = "properties." + array[index].replace(/\./g, ".properties.");
-        acc = {...pre, [key]: ""};
+      let unsetFieldsBucket = targets.reduce((acc, current) => {
+        current = "properties." + current.replace(/\./g, ".properties.");
+        acc = {...acc, [current]: ""};
         return acc;
       }, {});
 
       await bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket});
 
-      let unsetFieldsBucketData = targets.reduce((pre, acc: any, index, array) => {
-        acc = {...pre, [array[index]]: ""};
+      let unsetFieldsBucketData = targets.reduce((acc, current) => {
+        acc = {...acc, [current]: ""};
         return acc;
       }, {});
 

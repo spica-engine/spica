@@ -325,10 +325,7 @@ describe("Bucket acceptance", () => {
       expect(buckets[0]).toEqual(firstInsertedBukcet);
 
       let getDataResponse = await req.get(`/bucket/${secondInsertedBucket._id}/data`, {});
-      expect([getDataResponse.statusCode, getDataResponse.statusText]).toEqual([
-        500,
-        "Internal Server Error"
-      ]);
+      expect([getDataResponse.statusCode, getDataResponse.statusText]).toEqual([404, "Not Found"]);
     });
   });
 
@@ -737,16 +734,16 @@ describe("Bucket acceptance", () => {
   });
 
   describe("delete bucket,data and related data", () => {
-    let usersBucketId;
-    let scoresBucketId;
-    let settingsBucketId;
+    let usersBucket;
+    let scoresBucket;
+    let settingsBucket;
 
-    let userId: ObjectId;
-    let scoreId: ObjectId;
-    let settingId: ObjectId;
+    let user;
+    let score;
+    let setting;
 
     beforeEach(async () => {
-      usersBucketId = await req
+      usersBucket = await req
         .post("/bucket", {
           title: "Users",
           description: "Users bucket",
@@ -757,9 +754,9 @@ describe("Bucket acceptance", () => {
             }
           }
         })
-        .then(res => res.body._id);
+        .then(res => res.body);
 
-      settingsBucketId = await req
+      settingsBucket = await req
         .post("/bucket", {
           title: "Settings",
           description: "Settings Bucket",
@@ -770,9 +767,9 @@ describe("Bucket acceptance", () => {
             }
           }
         })
-        .then(res => res.body._id);
+        .then(res => res.body);
 
-      scoresBucketId = await req
+      scoresBucket = await req
         .post("/bucket", {
           title: "Scores",
           description: "Scores bucket",
@@ -783,83 +780,83 @@ describe("Bucket acceptance", () => {
             },
             user: {
               type: "relation",
-              bucketId: usersBucketId,
+              bucketId: usersBucket._id,
               options: {}
             },
             setting: {
               type: "relation",
-              bucketId: settingsBucketId,
+              bucketId: settingsBucket._id,
               options: {}
             }
           }
         })
-        .then(res => res.body._id);
+        .then(res => res.body);
 
-      userId = await req
-        .post(`/bucket/${usersBucketId}/data`, {
+      user = await req
+        .post(`/bucket/${usersBucket._id}/data`, {
           name: "user1"
         })
-        .then(res => new ObjectId(res.body._id));
+        .then(res => res.body);
 
-      settingId = await req
-        .post(`/bucket/${settingsBucketId}/data`, {
+      setting = await req
+        .post(`/bucket/${settingsBucket._id}/data`, {
           setting: "setting1"
         })
-        .then(res => new ObjectId(res.body._id));
+        .then(res => res.body);
 
-      scoreId = await req
-        .post(`/bucket/${scoresBucketId}/data`, {
+      score = await req
+        .post(`/bucket/${scoresBucket._id}/data`, {
           score: 500,
-          user: userId,
-          setting: settingId
+          user: user._id,
+          setting: setting._id
         })
-        .then(res => new ObjectId(res.body._id));
+        .then(res => res.body);
     });
 
     afterEach(async () => {
-      await req.delete(`/bucket/${usersBucketId}`);
-      await req.delete(`/bucket/${usersBucketId}/data`, userId);
+      await req.delete(`/bucket/${usersBucket._id}`);
+      await req.delete(`/bucket/${usersBucket._id}/data`, user._id);
 
-      await req.delete(`/bucket/${settingsBucketId}`);
-      await req.delete(`/bucket/${settingsBucketId}/data`, settingId);
+      await req.delete(`/bucket/${settingsBucket._id}`);
+      await req.delete(`/bucket/${settingsBucket._id}/data`, setting._id);
 
-      await req.delete(`/bucket/${scoresBucketId}`);
-      await req.delete(`/bucket/${scoresBucketId}/data`, scoreId);
+      await req.delete(`/bucket/${scoresBucket._id}`);
+      await req.delete(`/bucket/${scoresBucket._id}/data`, score._id);
     });
 
     it("should delete users, update scores bucket schema and data when the users bucket deleted", async () => {
-      let deleteResponse = await req.delete(`/bucket/${usersBucketId}`);
+      let deleteResponse = await req.delete(`/bucket/${usersBucket._id}`);
       expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
       expect(deleteResponse.body).toEqual(undefined);
 
-      let {body: usersBucket} = await req.get(`/bucket/${usersBucketId}`, {});
-      expect(usersBucket).toBeUndefined();
+      let {body: usersBucketResponse} = await req.get(`/bucket/${usersBucket._id}`, {});
+      expect(usersBucketResponse).toBeUndefined();
 
-      let usersResponse = await req.get(`/bucket/${usersBucketId}/data`, {});
-      expect([usersResponse.statusCode, usersResponse.statusText]).toEqual([
-        500,
-        "Internal Server Error"
+      let usersDocumentResponse = await req.get(`/bucket/${usersBucket._id}/data`, {});
+      expect([usersDocumentResponse.statusCode, usersDocumentResponse.statusText]).toEqual([
+        404,
+        "Not Found"
       ]);
 
-      let {body: scoresBucket} = await req.get(`/bucket/${scoresBucketId}`, {});
-      expect(scoresBucket.properties).toEqual({
+      let {body: scoresBucketResponse} = await req.get(`/bucket/${scoresBucket._id}`, {});
+      expect(scoresBucketResponse.properties).toEqual({
         score: {
           type: "number",
           options: {}
         },
         setting: {
           type: "relation",
-          bucketId: settingsBucketId,
+          bucketId: settingsBucket._id,
           options: {}
         }
       });
 
-      let {body: scores} = await req.get(`/bucket/${scoresBucketId}/data`, {});
-      expect(scores).toEqual([
+      let {body: scoresDocumentResponse} = await req.get(`/bucket/${scoresBucket._id}/data`, {});
+      expect(scoresDocumentResponse).toEqual([
         {
-          _id: scoreId.toHexString(),
+          _id: score._id,
           score: 500,
-          setting: settingId.toHexString()
+          setting: setting._id
         }
       ]);
     });
