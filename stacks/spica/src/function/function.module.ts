@@ -42,6 +42,8 @@ import {FunctionInitializer} from "./function.initializer";
 import {RouteService, LAYOUT_INITIALIZER} from "@spica-client/core";
 import {PassportService} from "@spica-client/passport";
 import {MatSaveModule} from "@spica-client/material";
+import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {provideActivityFactory} from "@spica-client/function/providers/activity";
 
 @NgModule({
   declarations: [
@@ -104,12 +106,16 @@ export class FunctionModule {
           useFactory: provideFunctionLoader,
           multi: true,
           deps: [FunctionInitializer]
+        },
+        {
+          provide: ACTIVITY_FACTORY,
+          useValue: provideActivityFactory,
+          multi: true
         }
       ]
     };
   }
 }
-
 export function provideFunctionLoader(l: FunctionInitializer) {
   return l.appInitializer.bind(l);
 }
