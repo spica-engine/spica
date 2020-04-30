@@ -10,7 +10,11 @@
   </div>
   <span class="space-between"></span>
 
-  <button mat-icon-button [matMenuTriggerFor]="menu">
+  <button
+    [style.visibility]="isEmpty ? 'hidden' : 'visible'"
+    mat-icon-button
+    [matMenuTriggerFor]="menu"
+  >
     <mat-icon>filter_list</mat-icon>
     <mat-menu #menu="matMenu" class="storage-filter-menu">
       <button mat-menu-item (click)="sortStorage({direction: 'desc', name: 'name'})">
