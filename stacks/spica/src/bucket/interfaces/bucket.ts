@@ -35,7 +35,7 @@ export function emptyBucket(): Bucket {
     icon: "view_stream",
     primary: "title",
     readOnly: false,
-    history: true,
+    history: false,
     properties: {
       title: {
         type: "string",

@@ -42,12 +42,13 @@ export class CanInteractDirectiveTest {
 describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;
 
-  let bucket = new Subject<Partial<Bucket>>();
-  let row = new Subject<BucketRow>();
-  let historyList = new Subject<BucketHistory[]>();
-  let history = new Subject<BucketRow>();
+  let bucket: Subject<Partial<Bucket>>;
+  let row: Subject<BucketRow>;
+  let historyList: Subject<BucketHistory[]>;
+  let history: Subject<BucketRow>;
+
   let bucketService = {
-    getBucket: jasmine.createSpy("getBucket").and.returnValue(bucket),
+    getBucket: jasmine.createSpy("getBucket").and.callFake(() => bucket),
     getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
       of({
         language: {
@@ -61,17 +62,26 @@ describe("AddComponent", () => {
     )
   };
   let bucketDataService = {
-    findOne: jasmine.createSpy("findOne").and.returnValue(row)
+    findOne: jasmine.createSpy("findOne").and.callFake(() => row)
   };
   let bucketHistoryService = {
-    historyList: jasmine.createSpy("historyList").and.returnValue(historyList),
-    revertTo: jasmine.createSpy("revertTo").and.returnValue(history)
+    historyList: jasmine.createSpy("historyList").and.callFake(() => historyList),
+    revertTo: jasmine.createSpy("revertTo").and.callFake(() => history)
   };
-  let activatedRoute = {
-    params: new Subject()
+  let activatedRoute: {
+    params: Subject<any>;
   };
 
   beforeEach(() => {
+    bucket = new Subject<Partial<Bucket>>();
+    row = new Subject<BucketRow>();
+    historyList = new Subject<BucketHistory[]>();
+    history = new Subject<BucketRow>();
+
+    activatedRoute = {
+      params: new Subject()
+    };
+
     TestBed.configureTestingModule({
       imports: [
         MatIconModule,
@@ -234,6 +244,7 @@ describe("AddComponent", () => {
         expect(button).toBeFalsy();
       });
     });
+
     describe("enabled", () => {
       beforeEach(fakeAsync(() => {
         activatedRoute.params.next({id: "1", rid: "2"});
@@ -242,6 +253,29 @@ describe("AddComponent", () => {
         tick(1);
         fixture.detectChanges();
       }));
+
+      it("shouldn't render history button and shouldn't throw error if status code was 404 which means replicaset didn't initialized", () => {
+        historyList.error({status: 404});
+        fixture.detectChanges();
+
+        expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
+        expect(fixture.componentInstance.histories$).toBeUndefined();
+
+        const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
+        expect(button).toBeFalsy();
+      });
+
+      it("should throw error when status code was 500", async () => {
+        historyList.error({status: 500});
+        fixture.detectChanges();
+
+        expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
+        await fixture.componentInstance.histories$
+          .toPromise()
+          .catch(err => expect(err).toEqual({status: 500}));
+        const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
+        expect(button).toBeFalsy();
+      });
 
       it("should show history button in edit mode", () => {
         historyList.next([{_id: "1", changes: 1, date: new Date().toISOString()}]);
