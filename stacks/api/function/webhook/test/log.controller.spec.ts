@@ -1,15 +1,14 @@
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {WebhookModule} from "@spica-server/function/webhook";
-import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {WebhookLogController} from "@spica-server/function/webhook/src/log.controller";
+import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe("Activity Acceptance", () => {
+describe("Activity Controller", () => {
   let request: Request;
   let app: INestApplication;
   let service: WebhookLogService;
@@ -22,14 +21,10 @@ describe("Activity Acceptance", () => {
       imports: [
         DatabaseTestingModule.create(),
         CoreTestingModule,
-        PassportTestingModule.initialize(),
-        {
-          imports: [],
-          module: WebhookModule,
-          controllers: [WebhookLogController],
-          providers: [WebhookLogService]
-        }
-      ]
+        PassportTestingModule.initialize()
+      ],
+      controllers: [WebhookLogController],
+      providers: [WebhookLogService]
     }).compile();
 
     request = module.get(Request);

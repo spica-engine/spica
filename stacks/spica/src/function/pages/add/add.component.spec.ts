@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {Directive, Input, HostBinding} from "@angular/core";
+import {Directive, HostBinding, Input} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
@@ -16,12 +16,12 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {MatSaveModule} from "@spica/client/packages/material";
 import {of} from "rxjs";
 import {InputPlacerComponent} from "../../../../packages/common/input/input.placer";
-import {SchemeObserver} from "../../../../packages/core/layout/scheme.observer";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {EditorComponent} from "../../components/editor/editor.component";
 import {FunctionService} from "../../function.service";
 import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
+import {LayoutModule} from "@spica-client/core/layout";
 
 @Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {
@@ -29,7 +29,7 @@ export class CanInteractDirectiveTest {
   @Input("canInteract") action: string;
 }
 
-@Directive({selector: "function-editor[language]"})
+@Directive({selector: "code-editor[language]"})
 class MockLanguageDirective {
   @Input() marker: any;
 }
@@ -39,9 +39,12 @@ describe("Function Add", () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
+        RouterTestingModule,
+        HttpClientTestingModule,
+        FormsModule,
+
         MatIconModule,
         MatToolbarModule,
-        FormsModule,
         MatFormFieldModule,
         MatListModule,
         MatExpansionModule,
@@ -49,9 +52,8 @@ describe("Function Add", () => {
         MatSelectModule,
         MatSlideToggleModule,
         MatCardModule,
-        RouterTestingModule,
-        HttpClientTestingModule,
-        MatSaveModule
+        MatSaveModule,
+        LayoutModule
       ],
       providers: [
         {
@@ -73,14 +75,6 @@ describe("Function Add", () => {
           useValue: {
             url: ""
           }
-        },
-        {
-          provide: SchemeObserver,
-          useValue: {
-            observe: () => {
-              return of();
-            }
-          }
         }
       ],
       declarations: [
@@ -94,6 +88,7 @@ describe("Function Add", () => {
     }).compileComponents();
     fixture = TestBed.createComponent(AddComponent);
   });
+
   it("should set isHandlerDuplicated true", () => {
     fixture.componentInstance.function = {
       name: "test function",
@@ -105,6 +100,7 @@ describe("Function Add", () => {
     fixture.componentInstance.checkHandlers();
     expect(fixture.componentInstance.isHandlerDuplicated).toBe(true);
   });
+
   it("should set isHandlerDuplicated false", () => {
     fixture.componentInstance.function = {
       name: "test function",

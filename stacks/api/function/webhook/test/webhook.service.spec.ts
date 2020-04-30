@@ -19,8 +19,9 @@ describe("Webhook Service", () => {
   afterEach(async () => await module.close());
 
   it("should report send target which is not active", async done => {
-    const hook = await service.insertOne({
+    await service.insertOne({
       url: "http://spica.internal/test",
+      body: "",
       trigger: {
         name: "database",
         options: {
@@ -42,6 +43,7 @@ describe("Webhook Service", () => {
   it("should report target which is active", async done => {
     const hook = await service.insertOne({
       url: "http://spica.internal/test",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -62,6 +64,7 @@ describe("Webhook Service", () => {
             target: hook._id.toHexString(),
             webhook: {
               url: hook.url,
+              body: hook.body,
               trigger: hook.trigger
             }
           }
@@ -81,6 +84,7 @@ describe("Webhook Service", () => {
             target: hook._id.toHexString(),
             webhook: {
               url: hook.url,
+              body: hook.body,
               trigger: hook.trigger
             }
           }
@@ -90,6 +94,7 @@ describe("Webhook Service", () => {
     await stream.wait();
     const hook = await service.insertOne({
       url: "http://spica.internal/test",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -104,6 +109,7 @@ describe("Webhook Service", () => {
   it("should report removed hook", async done => {
     const hook = await service.insertOne({
       url: "http://spica.internal/test",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -123,6 +129,7 @@ describe("Webhook Service", () => {
             target: hook._id.toHexString(),
             webhook: {
               url: hook.url,
+              body: hook.body,
               trigger: hook.trigger
             }
           },
@@ -140,6 +147,7 @@ describe("Webhook Service", () => {
   it("should report hook as removed when deactivated", async done => {
     const hook = await service.insertOne({
       url: "http://spica.internal/test",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -159,6 +167,7 @@ describe("Webhook Service", () => {
             target: hook._id.toHexString(),
             webhook: {
               url: hook.url,
+              body: hook.body,
               trigger: hook.trigger
             }
           },

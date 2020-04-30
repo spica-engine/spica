@@ -53,6 +53,7 @@
     "get-port": "^5.0.0",
     "google-protobuf": "^3.10.0",
     "grpc": "^1.24.2",
+    "handlebars": "^4.7.6",
     "htmlparser": "^1.7.7",
     "http-proxy-middleware": "^0.19.1",
     "locale": "^0.1.0",
@@ -74,6 +75,7 @@
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.8",
+    "rimraf": "^3.0.2",
     "rxjs": "^6.4.0",
     "saml2-js": "^2.0.3",
     "short-id": "^0.1.0-1",
@@ -82,11 +84,9 @@
     "uniqid": "^5.2.0",
     "url": "^0.11.0",
     "vm2": "^3.6.9",
-    "ws": "^7.1.2",
-    "rimraf": "^3.0.2"
+    "ws": "^7.1.2"
   },
   "devDependencies": {
-    "which": "^2.0.2",
     "@bazel/bazelisk": "^1.4.0",
     "@bazel/buildifier": "^2.2.1",
     "@bazel/hide-bazel-files": "^1.6.0",
@@ -121,6 +121,7 @@
     "rollup": "^1.27.5",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.2.0"
+    "rollup-plugin-terser": "^5.2.0",
+    "which": "^2.0.2"
   }
 }

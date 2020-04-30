@@ -17,6 +17,7 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//@types/node-fetch",
+        "@npm//handlebars",
         "@npm//node-fetch",
         "@npm//rxjs",
     ],

@@ -55,6 +55,7 @@ describe("Webhook Controller", () => {
   it("should insert a new webhook", async () => {
     const {body: hook} = await req.post("/webhook", {
       url: "https://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         options: {
@@ -67,6 +68,7 @@ describe("Webhook Controller", () => {
     expect(hook).toEqual({
       _id: "__skip__",
       url: "https://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -81,6 +83,7 @@ describe("Webhook Controller", () => {
   it("should update existing webhook", async () => {
     const {body: hook} = await req.post("/webhook", {
       url: "https://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         options: {
@@ -92,6 +95,7 @@ describe("Webhook Controller", () => {
 
     const {body: updatedHook} = await req.put(`/webhook/${hook._id}`, {
       url: "https://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         options: {
@@ -104,6 +108,7 @@ describe("Webhook Controller", () => {
     expect(updatedHook).toEqual({
       _id: "__skip__",
       url: "https://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -118,6 +123,7 @@ describe("Webhook Controller", () => {
   it("should delete existing webhook", async () => {
     const {body: hook} = await req.post("/webhook", {
       url: "https://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         options: {
@@ -136,6 +142,7 @@ describe("Webhook Controller", () => {
   it("should show existing webhook", async () => {
     const {body: hook} = await req.post("/webhook", {
       url: "https://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         options: {
@@ -159,6 +166,7 @@ describe("Webhook Controller", () => {
       const {body: validationErrors} = await req
         .post("/webhook", {
           url: "https://spica.internal",
+          body: "",
           trigger: {
             name: "database",
             options: {
@@ -171,6 +179,23 @@ describe("Webhook Controller", () => {
       expect(validationErrors.error).toBe(
         ".trigger.options.collection should be equal to one of the allowed values"
       );
+      expect(validationErrors.statusCode).toBe(400);
+    });
+
+    it("should report if body is missing", async () => {
+      const {body: validationErrors} = await req
+        .post("/webhook", {
+          url: "https://spica.internal",
+          trigger: {
+            name: "database",
+            options: {
+              collection: "collection_that_does_not_exist",
+              type: "INSERT"
+            }
+          }
+        })
+        .catch(e => e);
+      expect(validationErrors.error).toBe(" should have required property 'body'");
       expect(validationErrors.statusCode).toBe(400);
     });
   });

@@ -28,10 +28,7 @@ export class WebhookIndexComponent implements OnInit {
         )
       ),
       map(webhooks => {
-        this.paginator.length = 0;
-        if (webhooks.meta && webhooks.meta.total) {
-          this.paginator.length = webhooks.meta.total;
-        }
+        this.paginator.length = webhooks.meta.total;
         return webhooks.data;
       })
     );
