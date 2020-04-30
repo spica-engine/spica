@@ -207,9 +207,18 @@
     }
   }
 
-  .toggles div {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .toggles {
+    width: 200px;
+    padding: 0px 10px;
+
+    div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    mat-error {
+      font-size: 12px !important;
+    }
   }
 }
