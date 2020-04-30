@@ -23,7 +23,11 @@ import {StorageModule} from "@spica-server/storage";
     }),
     PreferenceModule,
     ...(!!process.env.ENABLE_ACTIVITY_STREAM ? [ActivityModule.forRoot()] : []),
-    BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS, history: true, realtime: true}),
+    BucketModule.forRoot({
+      hooks: !!process.env.ENABLE_BUCKET_HOOKS,
+      history: !!process.env.ENABLE_BUCKET_HISTORY,
+      realtime: true
+    }),
     DashboardModule,
     StorageModule.forRoot({
       path: process.env.PERSISTENT_PATH

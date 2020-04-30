@@ -194,7 +194,7 @@ jasmine_node_test(
 )
 
 ts_library(
-    name = "bucket_module_test",
+    name = "bucket_module_test_library",
     testonly = True,
     srcs = ["bucket.module.spec.ts"],
     deps = [
@@ -215,9 +215,9 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "bucket_test",
+    name = "bucket_module_test",
     deps = [
-        ":bucket_module_test",
+        ":bucket_module_test_library",
     ],
 )
 

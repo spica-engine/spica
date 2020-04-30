@@ -120,6 +120,8 @@ spec:
               value: /data
             - name: ENABLE_BUCKET_HOOKS
               value: "true"
+            - name: ENABLE_BUCKET_HISTORY
+              value: "true"
             - name: ENABLE_ACTIVITY_STREAM
               value: "true"
           volumeMounts:
