@@ -106,56 +106,11 @@
       width: calc(100% - 60px);
       margin: 30px;
       margin-top: -110px;
-      // For proper border radius
       overflow: auto;
 
-      mat-table {
+      table {
         min-width: 100%;
         width: max-content;
-
-        mat-header-cell.action,
-        mat-cell.action {
-          max-width: 150px;
-        }
-        mat-header-cell.select,
-        mat-cell.select {
-          max-width: 60px;
-        }
-        mat-header-cell.scheduled,
-        mat-cell.scheduled {
-          max-width: 200px;
-        }
-        .mat-header-row {
-          mat-header-cell {
-            mat-checkbox {
-              height: 0px;
-              margin-bottom: 15px;
-            }
-            &:first-of-type {
-              padding-left: 10px;
-            }
-            &:last-of-type {
-              justify-content: flex-end;
-            }
-          }
-        }
-        .mat-row {
-          mat-cell {
-            mat-checkbox {
-              height: 0px;
-              margin-bottom: 15px;
-            }
-            &:first-of-type {
-              padding-left: 10px;
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-            &:last-of-type {
-              justify-content: flex-end;
-            }
-          }
-        }
       }
     }
   }

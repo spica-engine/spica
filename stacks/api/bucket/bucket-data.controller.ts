@@ -163,7 +163,11 @@ export class BucketDataController {
       }
     ];
 
-    const schema = relation || localize ? await this.bs.findOne({_id: bucketId}) : null;
+    const bucket = await this.bs.findOne({_id: bucketId});
+
+    if (!bucket) throw new NotFoundException();
+
+    const schema = relation || localize ? bucket : null;
 
     if (
       localize &&

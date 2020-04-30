@@ -31,9 +31,12 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
 import {StoreModule} from "@ngrx/store";
+import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
+import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
+import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
@@ -44,21 +47,20 @@ import {createLocation, LocationComponent} from "./components/location/location.
 import {RelationSchemaComponent} from "./components/relation-schema/relation-schema.component";
 import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
+import {PersistHeaderWidthDirective} from "./directives/persist-header-width/persist-header-width.directive";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
 import {ImportExportComponent} from "./pages/import-export/import-export.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {BucketDataService} from "./services/bucket-data.service";
 import {BucketHistoryService} from "./services/bucket-history.service";
 import {BucketInitializer} from "./services/bucket.initializer";
-import * as fromBucket from "./state/bucket.reducer";
 import {BucketService} from "./services/bucket.service";
+import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
-import {WelcomeComponent} from "./pages/welcome/welcome.component";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
-import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
 
 @NgModule({
   imports: [
@@ -102,6 +104,7 @@ import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
     MatProgressSpinnerModule,
     MatListModule,
     MatSortModule,
+    MatResizeHeaderModule,
     MatRippleModule,
     MatAwareDialogModule,
     MatGridListModule,
@@ -140,7 +143,8 @@ import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
     PropertyLanguageComponent,
     SettingsComponent,
     FilterComponent,
-    RequiredTranslate
+    RequiredTranslate,
+    PersistHeaderWidthDirective
   ]
 })
 export class BucketModule {
