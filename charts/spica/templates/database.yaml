@@ -14,9 +14,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-database
     spec:
-      initContainers:
+      mongoreplicationcontrollers:
         - name: replication-controller
-          image: spicaengine/initcontainer:{{ $.Chart.AppVersion }}
+          image: spicaengine/mongoreplicationcontroller:{{ $.Chart.AppVersion }}
           imagePullPolicy: Always
       containers:
         - name: mongo

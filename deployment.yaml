@@ -12,9 +12,9 @@ spec:
         app: database
     spec:
       terminationGracePeriodSeconds: 10
-      initContainers:
+      mongoreplicationcontrollers:
         - name: init
-          image: spicaengine/initcontainer:master
+          image: spicaengine/mongoreplicationcontroller:master
           imagePullPolicy: Always
       containers:
         - name: mongo
