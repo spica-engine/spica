@@ -8,14 +8,20 @@ export function getSchema(collections: string[]): JSONSchema7 {
   return {
     $id: "http://spica.internal/webhook",
     type: "object",
+    required: ["url", "body", "trigger"],
     properties: {
       url: {
         type: "string",
         title: "Url",
         format: "url"
       },
+      body: {
+        type: "string",
+        title: "Template of the body"
+      },
       trigger: {
         type: "object",
+        required: ["name", "options"],
         properties: {
           name: {
             type: "string",
@@ -28,6 +34,7 @@ export function getSchema(collections: string[]): JSONSchema7 {
           },
           options: {
             type: "object",
+            required: ["collection", "type"],
             properties: {
               collection: {
                 type: "string",
