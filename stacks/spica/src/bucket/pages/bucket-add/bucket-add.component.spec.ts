@@ -324,6 +324,20 @@ describe("Bucket Add Component", () => {
           .nativeElement
       ).toBeDefined("should work if savingstate is false as default");
     });
+
+    it("should render disabled history toggle and error", async () => {
+      fixture.componentInstance.isHistoryEndpointEnabled$ = of(false);
+
+      fixture.detectChanges();
+
+      expect(
+        fixture.debugElement.query(By.css(".history mat-slide-toggle")).componentInstance.disabled
+      ).toEqual(true);
+
+      expect(
+        fixture.debugElement.query(By.css(".toggles mat-error")).nativeElement.textContent
+      ).toEqual(" This feature is unavailable because we could not find a replica set. ");
+    });
   });
 
   describe("actions", () => {

@@ -39,15 +39,16 @@ export class CanInteractDirectiveTest {
   @Input("canInteract") action: string;
 }
 
-fdescribe("AddComponent", () => {
+describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;
 
-  let bucket = new Subject<Partial<Bucket>>();
-  let row = new Subject<BucketRow>();
-  let historyList = new Subject<BucketHistory[]>();
-  let history = new Subject<BucketRow>();
+  let bucket: Subject<Partial<Bucket>>;
+  let row: Subject<BucketRow>;
+  let historyList: Subject<BucketHistory[]>;
+  let history: Subject<BucketRow>;
+
   let bucketService = {
-    getBucket: jasmine.createSpy("getBucket").and.returnValue(bucket),
+    getBucket: jasmine.createSpy("getBucket").and.callFake(() => bucket),
     getPreferences: jasmine.createSpy("getPreferences").and.returnValue(
       of({
         language: {
@@ -61,17 +62,26 @@ fdescribe("AddComponent", () => {
     )
   };
   let bucketDataService = {
-    findOne: jasmine.createSpy("findOne").and.returnValue(row)
+    findOne: jasmine.createSpy("findOne").and.callFake(() => row)
   };
   let bucketHistoryService = {
-    historyList: jasmine.createSpy("historyList").and.returnValue(historyList),
-    revertTo: jasmine.createSpy("revertTo").and.returnValue(history)
+    historyList: jasmine.createSpy("historyList").and.callFake(() => historyList),
+    revertTo: jasmine.createSpy("revertTo").and.callFake(() => history)
   };
-  let activatedRoute = {
-    params: new Subject()
+  let activatedRoute: {
+    params: Subject<any>;
   };
 
   beforeEach(() => {
+    bucket = new Subject<Partial<Bucket>>();
+    row = new Subject<BucketRow>();
+    historyList = new Subject<BucketHistory[]>();
+    history = new Subject<BucketRow>();
+
+    activatedRoute = {
+      params: new Subject()
+    };
+
     TestBed.configureTestingModule({
       imports: [
         MatIconModule,
@@ -234,23 +244,23 @@ fdescribe("AddComponent", () => {
         expect(button).toBeFalsy();
       });
     });
-    xdescribe("errors", () => {
+
+    describe("enabled", () => {
       beforeEach(fakeAsync(() => {
         activatedRoute.params.next({id: "1", rid: "2"});
         row.next({_id: "2"});
         bucket.next({history: true, properties: {}});
-        tick(100);
+        tick(1);
         fixture.detectChanges();
       }));
 
-      it("shouldn't render history button and shouldn't throw error if status code was 404 which means replicaset didn't initialized", async () => {
+      it("shouldn't render history button and shouldn't throw error if status code was 404 which means replicaset didn't initialized", () => {
         historyList.error({status: 404});
         fixture.detectChanges();
 
         expect(bucketHistoryService.historyList).toHaveBeenCalledTimes(2);
-        await fixture.componentInstance.histories$
-          .toPromise()
-          .then(histories => expect(histories).toEqual(undefined));
+        expect(fixture.componentInstance.histories$).toBeUndefined();
+
         const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
         expect(button).toBeFalsy();
       });
@@ -266,15 +276,6 @@ fdescribe("AddComponent", () => {
         const button = fixture.debugElement.query(By.css("mat-toolbar > button"));
         expect(button).toBeFalsy();
       });
-    });
-    describe("enabled", () => {
-      beforeEach(fakeAsync(() => {
-        activatedRoute.params.next({id: "1", rid: "2"});
-        row.next({_id: "2"});
-        bucket.next({history: true, properties: {}});
-        tick(1);
-        fixture.detectChanges();
-      }));
 
       it("should show history button in edit mode", () => {
         historyList.next([{_id: "1", changes: 1, date: new Date().toISOString()}]);
@@ -308,7 +309,7 @@ fdescribe("AddComponent", () => {
         expect(options.item(2).querySelector("span.mat-badge-content").textContent).toBe("8");
       });
 
-      it("should set data to specific data point", () => {
+      it("should set data to specific data point", fakeAsync(() => {
         const data = {_id: "2", test: "12"},
           specificPoint = {_id: "2", test: "123"};
         historyList.next([
@@ -339,7 +340,7 @@ fdescribe("AddComponent", () => {
         expect(fixture.componentInstance.data).toEqual(specificPoint);
         expect(fixture.componentInstance.now).toEqual(data);
         expect(nowButton.disabled).toBe(false);
-      });
+      }));
     });
   });
 

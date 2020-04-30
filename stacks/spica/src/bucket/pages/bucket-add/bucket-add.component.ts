@@ -16,7 +16,8 @@ import {
   tap,
   ignoreElements,
   endWith,
-  catchError
+  catchError,
+  mapTo
 } from "rxjs/operators";
 import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
@@ -53,9 +54,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   $remove: Observable<SavingState>;
 
-  isHistoryEndpointEnable = false;
-
-  dummyObjectId = "000000000000000000000000";
+  isHistoryEndpointEnabled$: Observable<boolean>;
 
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
@@ -76,12 +75,13 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.historyService
-      .historyList(this.dummyObjectId, this.dummyObjectId)
-      .toPromise()
-      .then(() => (this.isHistoryEndpointEnable = true))
-      .catch(() => (this.isHistoryEndpointEnable = false));
-      
+    this.isHistoryEndpointEnabled$ = this.historyService
+      .historyList("000000000000000000000000", "000000000000000000000000")
+      .pipe(
+        mapTo(true),
+        catchError(() => of(false))
+      );
+
     this.activatedRoute.params
       .pipe(
         flatMap(params =>
