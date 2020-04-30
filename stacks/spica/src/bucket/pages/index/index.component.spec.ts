@@ -64,6 +64,9 @@ describe("IndexComponent", () => {
     params: new Subject()
   };
 
+  let getItem: jasmine.Spy;
+  let setItem: jasmine.Spy;
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
@@ -110,6 +113,9 @@ describe("IndexComponent", () => {
       ],
       declarations: [IndexComponent, FilterComponent, PersistHeaderWidthDirective]
     }).compileComponents();
+
+    getItem = spyOn(localStorage, "getItem").and.callFake(() => null);
+    setItem = spyOn(localStorage, "setItem");
 
     fixture = TestBed.createComponent(IndexComponent);
     fixture.detectChanges();
@@ -232,6 +238,35 @@ describe("IndexComponent", () => {
         ).toEqual(["Display all", "Select", "test", "Scheduled", "Actions"]);
       });
 
+      it("should set displayed properties from local storage", async () => {
+        getItem.and.returnValue(JSON.stringify(["test"]));
+
+        bucket.next({
+          _id: "1",
+          properties: {
+            test: {
+              title: "test",
+              type: "string",
+              options: {
+                position: "bottom",
+                visible: true
+              }
+            },
+            test2: {
+              title: "test2",
+              type: "string",
+              options: {
+                position: "bottom",
+                visible: true
+              }
+            }
+          }
+        });
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.displayedProperties).toEqual(["test"]);
+      });
+
       it("should not render select when readonly", () => {
         bucket.next({
           _id: "1",
@@ -300,6 +335,8 @@ describe("IndexComponent", () => {
       }));
 
       it("should display later checked properties", fakeAsync(() => {
+        fixture.componentInstance.displayedProperties = [];
+
         fixture.debugElement
           .query(By.css("mat-toolbar > button:nth-of-type(2)"))
           .nativeElement.click();
@@ -314,6 +351,9 @@ describe("IndexComponent", () => {
         fixture.detectChanges();
 
         expect(fixture.componentInstance.displayedProperties).toContain("test");
+
+        expect(setItem).toHaveBeenCalledTimes(1);
+        expect(setItem).toHaveBeenCalledWith("1-displayedProperties", '["test"]');
       }));
     });
 
