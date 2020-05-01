@@ -124,4 +124,22 @@ describe("MatResize", () => {
     expect(fixture.componentInstance.positionColumnResize).not.toHaveBeenCalled();
     expect(fixture.componentInstance.positionColumnResizeEnd).not.toHaveBeenCalled();
   });
+
+  it("should finish resizing when the user moves and releases the mouse on out of resizing area", () => {
+    const [positionColumnHeader] = columnHeaders;
+    const borderPosition = getElementScreenXForSize(positionColumnHeader, 0);
+    const initalWidth = positionColumnHeader.nativeElement.clientWidth;
+
+    positionColumnHeader.triggerEventHandler("mousedown", {
+      target: positionColumnHeader.nativeElement,
+      screenX: borderPosition - 50
+    });
+    positionColumnHeader.triggerEventHandler("mousemove", {screenX: borderPosition + 100});
+    window.dispatchEvent(new MouseEvent("mouseup"));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledWith(initalWidth + 150);
+    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(
+      initalWidth + 150
+    );
+  });
 });
