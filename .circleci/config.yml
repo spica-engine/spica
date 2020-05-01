@@ -166,7 +166,7 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: "Publishing artifacts (latest)"
-          command: ./scripts/publish.sh next
+          command: ./scripts/publish.sh latest
 
 workflows:
   version: 2
