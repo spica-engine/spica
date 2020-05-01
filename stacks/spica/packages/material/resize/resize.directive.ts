@@ -60,6 +60,7 @@ export class MatResizeHeader {
   }
 
   @HostListener("mouseup")
+  @HostListener("window:mouseup")
   mouseUp() {
     if (this._startWidth != this._width) {
       this.resizeend.emit(this._width);
