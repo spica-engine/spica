@@ -24,5 +24,6 @@ ts_library(
         "@npm//@types/json-schema",
         "@npm//@types/node",
         "@npm//grpc",
+        "@npm//rxjs"
     ],
 )

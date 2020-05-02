@@ -1,5 +1,5 @@
 import {Global, Module} from "@nestjs/common";
-import {BucketService, ServicesModule} from "@spica-server/bucket/services";
+import {ServicesModule} from "@spica-server/bucket/services";
 import {SCHEMA} from "@spica-server/function";
 import {ENQUEUER} from "@spica-server/function/horizon";
 import {EventQueue} from "@spica-server/function/queue";
@@ -7,29 +7,74 @@ import {JSONSchema7} from "json-schema";
 import {ActionDispatcher} from "./dispatcher";
 import {ActionEnqueuer} from "./enqueuer";
 import {ActionQueue} from "./queue";
+import {Observable} from "rxjs";
+import {DatabaseService} from "@spica-server/database";
 
-function createSchema(service: BucketService) {
-  return service.find({}).then(buckets => {
-    const scheme: JSONSchema7 = {
-      $id: "http://spica.internal/function/enqueuer/bucket",
-      type: "object",
-      required: ["bucket", "type"],
-      properties: {
-        bucket: {
-          title: "Bucket",
-          type: "string",
-          enum: buckets.map(c => c._id.toHexString()).sort((a, b) => a.localeCompare(b))
+export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
+  return new Observable(observer => {
+    const bucketIds = new Set<string>();
+
+    const notifyChanges = () => {
+      const schema: JSONSchema7 = {
+        $id: "http://spica.internal/function/enqueuer/bucket",
+        type: "object",
+        required: ["bucket", "type"],
+        properties: {
+          bucket: {
+            title: "Bucket",
+            type: "string",
+            enum: Array.from(bucketIds)
+          },
+          type: {
+            title: "Operation type",
+            description: "Event Type",
+            type: "string",
+            enum: ["INSERT", "INDEX", "GET", "UPDATE"]
+          }
         },
-        type: {
-          title: "Operation type",
-          description: "Event Type",
-          type: "string",
-          enum: ["INSERT", "INDEX", "GET", "UPDATE"]
-        }
-      },
-      additionalProperties: false
+        additionalProperties: false
+      };
+      observer.next(schema);
     };
-    return scheme;
+
+    const stream = db.collection("buckets").watch([
+      {
+        $match: {
+          $or: [{operationType: "insert"}, {operationType: "delete"}]
+        }
+      }
+    ]);
+
+    stream.on("change", change => {
+      switch (change.operationType) {
+        case "delete":
+          bucketIds.delete(change.documentKey._id);
+          notifyChanges();
+          break;
+        case "insert":
+          if (!bucketIds.has(change.documentKey._id)) {
+            bucketIds.add(change.documentKey._id);
+            notifyChanges();
+          }
+          break;
+      }
+    });
+
+    stream.on("close", () => observer.complete());
+
+    db.collection("buckets")
+      .find({})
+      .toArray()
+      .then(buckets => {
+        for (const bucket of buckets) {
+          bucketIds.add(bucket._id);
+        }
+        notifyChanges();
+      });
+
+    return () => {
+      stream.close();
+    };
   });
 }
 
@@ -51,10 +96,10 @@ export const hookModuleProviders = [
   },
   {
     provide: SCHEMA,
-    useFactory: (service: BucketService) => {
-      return {name: "bucket", schema: () => createSchema(service)};
+    useFactory: (db: DatabaseService) => {
+      return {name: "bucket", schema: () => createSchema(db)};
     },
-    inject: [BucketService]
+    inject: [DatabaseService]
   }
 ];
 

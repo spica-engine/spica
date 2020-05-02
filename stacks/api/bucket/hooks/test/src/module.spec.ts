@@ -1,38 +1,34 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {hookModuleProviders} from "@spica-server/bucket/hooks";
-import {Bucket, BucketService, ServicesModule} from "@spica-server/bucket/services";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {SCHEMA} from "@spica-server/function";
+import {ServicesModule} from "@spica-server/bucket/services";
+import {DatabaseTestingModule, DatabaseService, stream} from "@spica-server/database/testing";
 import {PreferenceModule} from "@spica-server/preference";
-
-class MockBucketService extends BucketService {
-  find(filter?: any): Promise<Bucket[]> {
-    return new Promise(resolve =>
-      resolve([
-        {primary: "primary_1", _id: new ObjectId("5e4e8320a28c2f494c588aea")},
-        {primary: "primary_2", _id: new ObjectId("5e4e8320a28c2f494c588aeb")}
-      ])
-    );
-  }
-}
+import {createSchema} from "../../src/module";
+import {take, bufferCount} from "rxjs/operators";
+import {from} from "rxjs";
 
 describe("hook module", () => {
   describe("schema", () => {
     let module: TestingModule;
-    beforeAll(async () => {
+    let database: DatabaseService;
+
+    beforeEach(async () => {
       module = await Test.createTestingModule({
-        imports: [ServicesModule, DatabaseTestingModule.create(), PreferenceModule],
+        imports: [ServicesModule, DatabaseTestingModule.replicaSet(), PreferenceModule],
         providers: hookModuleProviders
-      })
-        .overrideProvider(BucketService)
-        .useClass(MockBucketService)
-        .compile();
+      }).compile();
+
+      database = module.get(DatabaseService);
+    }, 120000);
+
+    afterEach(async () => {
+      await module.close();
     });
 
-    it("should get bucket schema with name", async () => {
-      const schemaWithName = module.get(SCHEMA);
-      expect(schemaWithName.name).toEqual("bucket");
-      const schema = await schemaWithName.schema();
+    it("should get initial schema", async () => {
+      let schema = await createSchema(database)
+        .pipe(take(1))
+        .toPromise();
       expect(schema).toEqual({
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
@@ -41,7 +37,7 @@ describe("hook module", () => {
           bucket: {
             title: "Bucket",
             type: "string",
-            enum: ["5e4e8320a28c2f494c588aea", "5e4e8320a28c2f494c588aeb"]
+            enum: []
           },
           type: {
             title: "Operation type",
@@ -52,6 +48,40 @@ describe("hook module", () => {
         },
         additionalProperties: false
       });
+    });
+
+    it("should report when a bucket has been created", async done => {
+      const schema = createSchema(database);
+      await database.collection("buckets").insertOne({_id: "bucket1"});
+      from(schema)
+        .pipe(
+          bufferCount(2),
+          take(1)
+        )
+        .subscribe(changes => {
+          let collections = changes.map(c => c.properties.bucket["enum"]);
+          expect(collections).toEqual([["bucket1"], ["bucket1", "bucket2"]]);
+          done();
+        });
+      await stream.wait();
+      await database.collection("buckets").insertOne({_id: "bucket2"});
+    });
+
+    it("should report when a bucket has been dropped", async done => {
+      const schema = createSchema(database);
+      await database.collection("buckets").insertOne({_id: "bucket1"});
+      from(schema)
+        .pipe(
+          bufferCount(2),
+          take(1)
+        )
+        .subscribe(changes => {
+          let collections = changes.map(c => c.properties.bucket["enum"]);
+          expect(collections).toEqual([["bucket1"], []]);
+          done();
+        });
+      await stream.wait();
+      await database.collection("buckets").deleteOne({_id: "bucket1"});
     });
   });
 });
