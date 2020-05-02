@@ -107,12 +107,12 @@ load(
 
 nodejs_image_repos()
 
-# Prepare base image for initcontainer
+# Prepare base image for mongoreplicationcontroller
 load("@io_bazel_rules_docker//contrib:dockerfile_build.bzl", "dockerfile_image")
 
 dockerfile_image(
-    name = "initcontainer_base",
-    dockerfile = "//tools/initcontainer:Dockerfile",
+    name = "mongoreplicationcontroller_base",
+    dockerfile = "//tools/mongoreplicationcontroller:Dockerfile",
 )
 
 # Setup kubernetes workspace

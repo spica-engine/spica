@@ -66,6 +66,7 @@ executors:
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
   gcp-cli: circleci/gcp-cli@1.8.3
+  helm: circleci/helm@0.2.3
 
 jobs:
   setup:
@@ -152,6 +153,12 @@ jobs:
       - setup_remote_docker
       - custom_attach_workspace
       - setup_circleci_bazel_config
+      # We depend on these utilies cause scripts/publish.sh depends on scripts/sync_charts.sh 
+      # which depends on these utilies (gsutil, helm)
+      - gcp-cli/install
+      - gcp-cli/initialize
+      - helm/install-helm-client:
+          version: v3.2.0
       - run:
           name: "Authenticate with the registries"
           command: |
@@ -159,7 +166,7 @@ jobs:
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
       - run:
           name: "Publishing artifacts (latest)"
-          command: ./scripts/publish.sh next
+          command: ./scripts/publish.sh latest
 
 workflows:
   version: 2
