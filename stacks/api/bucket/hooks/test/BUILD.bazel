@@ -27,7 +27,7 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//rxjs"
+        "@npm//rxjs",
     ],
 )
 

@@ -11,15 +11,15 @@ ts_library(
         "function.controller.spec.ts",
     ],
     deps = [
+        "//packages/core/schema",
         "//packages/database",
         "//packages/database/testing",
         "//stacks/api/function",
         "//stacks/api/function/horizon",
-        "//packages/core/schema",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//rxjs"
+        "@npm//rxjs",
     ],
 )
 
