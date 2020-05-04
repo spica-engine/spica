@@ -2,6 +2,8 @@ import {Injectable} from "@nestjs/common";
 import {Validator} from "@spica-server/core/schema";
 import {FunctionEngine} from "../engine";
 import {Function} from "../interface";
+import {Observable} from "rxjs";
+import {JSONSchema7} from "json-schema";
 
 // TODO(thesayyn): Provide a schema invalidator
 // in order to catch up latest schemas from triggers
@@ -9,7 +11,7 @@ import {Function} from "../interface";
 export class EnqueuerSchemaResolver {
   constructor(private registry: FunctionEngine) {}
 
-  resolve(uri: string): Promise<object> | undefined {
+  resolve(uri: string): Promise<object> | Observable<JSONSchema7 | null> | undefined {
     const match = /http:\/\/spica\.internal\/function\/enqueuer\/(.*)/g.exec(uri);
 
     if (this.registry.schemas.has(match[1])) {
