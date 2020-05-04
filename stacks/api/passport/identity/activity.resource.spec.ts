@@ -9,10 +9,7 @@ describe("Activity Resource", () => {
     const action = Action.POST;
 
     const resource = createIdentityResource(action, {}, res);
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    expect(resource).toEqual(["passport", "identity", "identity_id"]);
   });
 
   it("should return activity from put request", () => {
@@ -24,10 +21,7 @@ describe("Activity Resource", () => {
     const action = Action.PUT;
 
     const resource = createIdentityResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    expect(resource).toEqual(["passport", "identity", "identity_id"]);
   });
 
   it("should return activity from delete request", () => {
@@ -39,10 +33,7 @@ describe("Activity Resource", () => {
     const action = Action.DELETE;
 
     const resource = createIdentityResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    expect(resource).toEqual(["passport", "identity", "identity_id"]);
   });
 
   it("should return activity from policy update request", () => {
@@ -55,9 +46,6 @@ describe("Activity Resource", () => {
     const action = Action.PUT;
 
     const resource = createIdentityResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    expect(resource).toEqual(["passport", "identity", "identity_id"]);
   });
 });

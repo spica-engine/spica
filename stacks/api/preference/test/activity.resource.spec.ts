@@ -11,9 +11,6 @@ describe("Activity Resource", () => {
     const action = Action.PUT;
 
     const resource = createPreferenceResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Preference",
-      documentId: ["test_scope"]
-    });
+    expect(resource).toEqual(["preference","test_scope"]);
   });
 });

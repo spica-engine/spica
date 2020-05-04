@@ -9,10 +9,7 @@ describe("Activity Resource", () => {
     const action = Action.POST;
 
     const resource = createFunctionResource(action, {}, res);
-    expect(resource).toEqual({
-      name: "Function",
-      documentId: ["function_id"]
-    });
+    expect(resource).toEqual(["function", "function_id"]);
   });
 
   it("should return activity from put request", () => {
@@ -24,10 +21,7 @@ describe("Activity Resource", () => {
     const action = Action.PUT;
 
     const resource = createFunctionResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Function",
-      documentId: ["function_id"]
-    });
+    expect(resource).toEqual(["function", "function_id"]);
   });
 
   it("should return activity from delete request", () => {
@@ -39,9 +33,6 @@ describe("Activity Resource", () => {
     const action = Action.DELETE;
 
     const resource = createFunctionResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Function",
-      documentId: ["function_id"]
-    });
+    expect(resource).toEqual(["function", "function_id"]);
   });
 });

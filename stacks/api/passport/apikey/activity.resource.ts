@@ -1,8 +1,6 @@
-import {Resource, Action} from "@spica-server/activity/services";
+import {Action} from "@spica-server/activity/services";
 
-export function createApikeyResource(action: Action, req: any, res: any): Resource {
-  let name = "Apikey";
-
+export function createApikeyResource(action: Action, req: any, res: any): string[] {
   let documentId: string[] = [];
   switch (action) {
     case Action.POST:
@@ -16,5 +14,5 @@ export function createApikeyResource(action: Action, req: any, res: any): Resour
       break;
   }
 
-  return {name, documentId};
+  return ["passport", "apikey", ...documentId];
 }

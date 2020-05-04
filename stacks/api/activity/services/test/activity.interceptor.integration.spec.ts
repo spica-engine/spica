@@ -1,10 +1,10 @@
 import {Controller, INestApplication, Post, Req, UseInterceptors} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {activity, ActivityService, Predict, Resource} from "@spica-server/activity/services";
+import {activity, ActivityService, Predict} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
-const TestPredict: Predict = (): Resource => {
+const TestPredict: Predict = (): string[] => {
   return {documentId: ["test_id"], name: "test_module"};
 };
 

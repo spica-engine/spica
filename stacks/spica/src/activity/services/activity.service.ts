@@ -1,10 +1,27 @@
 import {Injectable} from "@angular/core";
 import {ActivityFilter, Activity} from "../interface";
 import {HttpClient} from "@angular/common/http";
+import {BucketService} from "@spica-client/bucket";
+import {ApiKeyService} from "@spica-client/passport/services/apikey.service";
+import {IdentityService, PolicyService} from "@spica-client/passport";
+import {map, catchError} from "rxjs/operators";
+import {FunctionService} from "@spica-client/function/function.service";
+import {StorageService} from "@spica-client/storage";
+import {PreferencesService} from "@spica-client/core";
+import {of} from "rxjs";
 
 @Injectable()
 export class ActivityService {
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private bucket: BucketService,
+    private apiKey: ApiKeyService,
+    private identity: IdentityService,
+    private policy: PolicyService,
+    private func: FunctionService,
+    private storage: StorageService,
+    private preference: PreferencesService
+  ) {}
 
   private resetTimezoneOffset(date: Date) {
     return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
@@ -16,22 +33,7 @@ export class ActivityService {
     if (filter.identifier) params.identifier = filter.identifier;
 
     if (filter.action && filter.action.length > 0) {
-      params.action = [];
-      for (let action of filter.action) {
-        switch (action) {
-          case "Insert":
-            params.action.push("1");
-            break;
-          case "Update":
-            params.action.push("2");
-            break;
-          case "Delete":
-            params.action.push("3");
-            break;
-          default:
-            break;
-        }
-      }
+      params.action = filter.action;
     }
 
     if (filter.date) {
@@ -66,17 +68,51 @@ export class ActivityService {
     return this.http.get<Activity[]>("api:/activity", {params});
   }
 
-  getDocuments(collection: string) {
-    let collectionName = collection;
-    switch (collection) {
+  // getDocuments(collection: string) {
+  //   let collectionName = collection;
+  //   switch (collection) {
+  //     case "bucket":
+  //       collectionName = "buckets";
+  //       break;
+  //     case "policy":
+  //       collectionName = "policies";
+  //       break;
+  //   }
+  //   return this.http.get<string[]>(`api:/activity/collection/${collectionName}`);
+  // }
+
+  getBuckets() {
+    return this.bucket.getBuckets();
+  }
+
+  showDocuments(module: string, document: string) {
+    switch (module) {
+      case "passport":
+        switch (document) {
+          case "apikey":
+            //endpoint should return all without skip or limit
+            break;
+          case "identity":
+            //endpoint should return all without skip or limit
+            break;
+          case "policy":
+            return this.policy.find().pipe(
+              catchError(_ => of(undefined)),
+              map(result => result.data.map(policy => policy._id))
+            );
+        }
+        break;
       case "bucket":
-        collectionName = "buckets";
         break;
-      case "policy":
-        collectionName = "policies";
+      case "function":
+        return this.func.getFunctions().pipe(map(fns => fns.map(fn => fn._id)));
+      case "storage":
         break;
+      //endpoint should return all without skip or limit
+      case "preference":
+        break;
+      //no need to get documents
     }
-    return this.http.get<string[]>(`api:/activity/collection/${collectionName}`);
   }
 
   deleteActivities(activities: Activity[]) {

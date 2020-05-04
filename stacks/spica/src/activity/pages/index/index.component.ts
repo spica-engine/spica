@@ -1,9 +1,10 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
-import {Observable, BehaviorSubject, Subscription} from "rxjs";
+import {Observable, BehaviorSubject, Subscription, of} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
-import {map, mergeMap} from "rxjs/operators";
+import {map, mergeMap, tap, catchError} from "rxjs/operators";
+import {MatSelectChange, MatOption} from "@angular/material";
 
 @Component({
   selector: "activity-index",
@@ -11,34 +12,9 @@ import {map, mergeMap} from "rxjs/operators";
   styleUrls: ["./index.component.scss"]
 })
 export class IndexComponent extends DataSource<Activity> implements OnInit, OnDestroy {
-  moduleGroups = [
-    {
-      name: "Bucket-Data",
-      modules: []
-    },
-    {
-      name: "Bucket",
-      modules: ["Bucket"]
-    },
-    {
-      name: "Passport",
-      modules: ["Identity", "Policy", "Apikey"]
-    },
-    {
-      name: "Storage",
-      modules: ["Storage"]
-    },
-    {
-      name: "Function",
-      modules: ["Function"]
-    },
-    {
-      name: "Preference",
-      modules: ["Preference"]
-    }
-  ];
+  buckets$: Observable<any>;
 
-  actions = ["Insert", "Update", "Delete"];
+  documents$: Observable<any>;
 
   documentIds: string[] = [];
 
@@ -116,14 +92,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   }
 
   ngOnInit() {
-    this.activityService
-      .getDocuments("buckets")
-      .toPromise()
-      .then(documentIds =>
-        documentIds.forEach(id => {
-          this.moduleGroups[0].modules.push(`Bucket_${id}`);
-        })
-      );
+    this.buckets$ = this.activityService.getBuckets();
 
     this.filters$
       .pipe(
@@ -180,16 +149,12 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
     this.filters$.next(this.filters);
   }
 
-  showDocuments(moduleName: string) {
-    if (moduleName == "Preference") {
-      this.documentIds = ["bucket", "passport"];
-      return;
-    }
-    this.documentIds = undefined;
-    this.activityService
-      .getDocuments(moduleName.toLowerCase())
-      .toPromise()
-      .then(documentIds => (this.documentIds = documentIds));
+  showDocuments(event: MatSelectChange) {
+    this.documents$ = undefined;
+    let optGroup = (event.source.selected as MatOption).group.label.toLowerCase();
+    let selection = event.value;
+    this.documents$ = this.activityService
+      .showDocuments(optGroup, selection)
   }
 
   clearActivities() {

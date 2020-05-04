@@ -28,7 +28,6 @@ describe("Activity Acceptance", () => {
 
     service = app.get(ActivityService);
 
-    //insert identities
     await module
       .get(DatabaseService)
       .collection("identity")
@@ -57,12 +56,12 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
 
@@ -72,14 +71,14 @@ describe("Activity Acceptance", () => {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module", documentId: ["test_id"]},
+        resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[0]._id)
       },
       {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
-        resource: {name: "test_module2", documentId: ["test_id2"]},
+        resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[1]._id)
       }
     ]);
@@ -90,12 +89,12 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
 
@@ -105,7 +104,7 @@ describe("Activity Acceptance", () => {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module", documentId: ["test_id"]},
+        resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[0]._id)
       }
     ]);
@@ -116,12 +115,12 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
 
@@ -131,7 +130,7 @@ describe("Activity Acceptance", () => {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
-        resource: {name: "test_module2", documentId: ["test_id2"]},
+        resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[0]._id)
       }
     ]);
@@ -142,17 +141,17 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.PUT,
         identifier: "test_user_id2",
-        resource: {name: "test_module2", documentId: ["test_id2"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
 
@@ -164,40 +163,40 @@ describe("Activity Acceptance", () => {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module", documentId: ["test_id"]},
+        resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[0]._id)
       },
       {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
-        resource: {name: "test_module2", documentId: ["test_id2"]},
+        resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[1]._id)
       }
     ]);
   });
 
-  it("should filter activities by module name and document ID", async () => {
+  xit("should filter activities by resource", async () => {
     await service.insertMany([
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: {name: "test_module", documentId: ["test_id3"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "test_user_id",
-        resource: {name: "test_module2", documentId: ["test_id3"]}
+        resource: ["test_module2", "test_id2"]
       },
       {
         action: Action.PUT,
         identifier: "test_user_id",
-        resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]}
+        resource: ["test_module", "test_id", "test_id2"]
       }
     ]);
 
     const {body: activities} = await request.get("/activity", {
-      resource: {name: "test_module2", documentId: ["test_id3"]}
+      resource: ["test_module", "test_id"]
     });
     expect(activities).toEqual([
       {
@@ -222,17 +221,17 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: {name: "test_module", documentId: ["test_id3"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "test_user_id",
-        resource: {name: "test_module2", documentId: ["test_id3"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.PUT,
         identifier: "test_user_id",
-        resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
 
@@ -245,7 +244,7 @@ describe("Activity Acceptance", () => {
         _id: "object_id",
         action: Action.POST,
         identifier: "test_user",
-        resource: {name: "test_module2", documentId: ["test_id3"]},
+        resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[0]._id)
       }
     ]);
@@ -256,12 +255,12 @@ describe("Activity Acceptance", () => {
       {
         action: Action.PUT,
         identifier: "spica",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "spica",
-        resource: {name: "test_module2", documentId: ["test_id2", "test_id5"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
 
@@ -276,7 +275,7 @@ describe("Activity Acceptance", () => {
         _id: insertedIds[0],
         action: Action.PUT,
         identifier: "spica",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
   });
@@ -286,12 +285,12 @@ describe("Activity Acceptance", () => {
       {
         action: Action.PUT,
         identifier: "spica",
-        resource: {name: "test_module", documentId: ["test_id"]}
+        resource: ["test_module", "test_id"]
       },
       {
         action: Action.POST,
         identifier: "spica",
-        resource: {name: "test_module2", documentId: ["test_id2", "test_id5"]}
+        resource: ["test_module", "test_id"]
       }
     ]);
 
@@ -302,21 +301,6 @@ describe("Activity Acceptance", () => {
     const activities = await service.find({});
 
     expect(activities).toEqual([]);
-  });
-
-  it("should get collection document ids", async () => {
-    const databaseService = app.get(DatabaseService);
-    await databaseService.createCollection("test_collection");
-
-    const documentIds = await databaseService
-      .collection("test_collection")
-      .insertMany([{field: "value"}, {field2: "value2"}])
-      .then(result => Object.values(result.insertedIds).map(id => id.toHexString()));
-
-    const res = await request.get("/activity/collection/test_collection", {});
-
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toEqual(documentIds);
   });
 
   afterAll(async () => {

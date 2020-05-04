@@ -7,10 +7,7 @@ describe("Activity Resource", () => {
     const action = Action.POST;
 
     const resource = createStorageResource(action, {}, res);
-    expect(resource).toEqual({
-      name: "Storage",
-      documentId: ["storage_object1", "storage_object2"]
-    });
+    expect(resource).toEqual(["storage", "storage_object1", "storage_object2"]);
   });
 
   it("should return activity from put request", () => {
@@ -22,10 +19,7 @@ describe("Activity Resource", () => {
     const action = Action.PUT;
 
     const resource = createStorageResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Storage",
-      documentId: ["storage_object"]
-    });
+    expect(resource).toEqual(["storage", "storage_object"]);
   });
 
   it("should return activity from delete request", () => {
@@ -37,9 +31,6 @@ describe("Activity Resource", () => {
     const action = Action.DELETE;
 
     const resource = createStorageResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Storage",
-      documentId: ["storage_object"]
-    });
+    expect(resource).toEqual(["storage", "storage_object"]);
   });
 });

@@ -1,8 +1,6 @@
-import {Action, Resource} from "@spica-server/activity/services";
+import {Action} from "@spica-server/activity/services";
 
-export function createBucketResource(action: Action, req: any, res: any): Resource {
-  let name = "Bucket";
-
+export function createBucketResource(action: Action, req: any, res: any): string[] {
   let documentId: string[] = [];
   switch (action) {
     case Action.POST:
@@ -16,11 +14,10 @@ export function createBucketResource(action: Action, req: any, res: any): Resour
       break;
   }
 
-  return {name, documentId};
+  return ["bucket", ...documentId];
 }
 
-export function createBucketDataResource(action: Action, req: any, res: any): Resource {
-  let name = `Bucket_${req.params.bucketId}`;
+export function createBucketDataResource(action: Action, req: any, res: any): string[] {
   let documentId: string[] = [];
 
   switch (action) {
@@ -39,5 +36,5 @@ export function createBucketDataResource(action: Action, req: any, res: any): Re
       break;
   }
 
-  return {name, documentId};
+  return ["bucket", req.params.bucketId.toString(), ...documentId];
 }

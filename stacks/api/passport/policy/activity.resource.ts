@@ -1,8 +1,6 @@
-import {Action, Resource} from "@spica-server/activity/services";
+import {Action} from "@spica-server/activity/services";
 
-export function createPolicyResource(action: Action, req: any, res: any): Resource {
-  let name = "Policy";
-
+export function createPolicyResource(action: Action, req: any, res: any): string[] {
   let documentId: string[] = [];
   switch (action) {
     case Action.POST:
@@ -16,5 +14,5 @@ export function createPolicyResource(action: Action, req: any, res: any): Resour
       break;
   }
 
-  return {name, documentId};
+  return ["passport", "policy", ...documentId];
 }

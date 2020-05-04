@@ -2,18 +2,13 @@ import {ObjectId} from "@spica-server/database";
 
 export interface Activity {
   _id?: ObjectId;
-  resource: Resource;
+  resource: string[];
   action: Action;
   identifier: string;
 }
 
-export interface Resource {
-  name: string;
-  documentId: string[];
-}
-
 export interface Predict {
-  (action: Action, req: any, data: any): Resource;
+  (action: Action, req: any, data: any): string[];
 }
 
 export enum Action {

@@ -21,25 +21,70 @@
   <mat-form-field>
     <mat-label>Select action type</mat-label>
     <mat-select [(ngModel)]="filters.action" multiple>
-      <mat-option *ngFor="let action of actions" [value]="action">
-        {{ action }}
+      <mat-option value="1">
+        Insert
+      </mat-option>
+      <mat-option value="2">
+        Update
+      </mat-option>
+      <mat-option value="3">
+        Delete
       </mat-option>
     </mat-select>
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select module</mat-label>
-    <mat-select [(ngModel)]="filters.resource.name" (selectionChange)="showDocuments($event.value)">
-      <mat-optgroup *ngFor="let group of moduleGroups" [label]="group.name">
-        <mat-option *ngFor="let module of group.modules" [value]="module">
-          {{ module }}
+    <mat-select (selectionChange)="showDocuments($event)">
+      <mat-optgroup label="Bucket-Data">
+        <mat-option
+          class="option-bucket"
+          *ngFor="let bucket of buckets$ | async"
+          [value]="bucket._id"
+          [matTooltip]="'ID: ' + bucket._id"
+        >
+          {{ bucket.title }}
+        </mat-option>
+      </mat-optgroup>
+      <mat-optgroup label="Bucket">
+        <mat-option value="bucket">
+          Bucket
+        </mat-option>
+      </mat-optgroup>
+      <mat-optgroup label="Passport">
+        <mat-option value="identity">
+          Identity
+        </mat-option>
+        <mat-option value="policy">
+          Policy
+        </mat-option>
+        <mat-option value="apikey">
+          Apikey
+        </mat-option>
+      </mat-optgroup>
+      <mat-optgroup label="Storage">
+        <mat-option value="storage">
+          Storage
+        </mat-option>
+      </mat-optgroup>
+      <mat-optgroup label="Function">
+        <mat-option value="function">
+          Function
+        </mat-option>
+      </mat-optgroup>
+      <mat-optgroup label="Preference">
+        <mat-option value="bucket">
+          Bucket
+        </mat-option>
+        <mat-option value="passport">
+          Passport
         </mat-option>
       </mat-optgroup>
     </mat-select>
   </mat-form-field>
-  <mat-form-field *ngIf="documentIds && documentIds.length">
+  <mat-form-field >
     <mat-label>Select document id</mat-label>
     <mat-select [(ngModel)]="filters.resource.documentId" multiple>
-      <mat-option *ngFor="let documentId of documentIds" [value]="documentId">
+      <mat-option *ngFor="let documentId of documents$ | async" [value]="documentId">
         {{ documentId }}
       </mat-option>
     </mat-select>
@@ -71,11 +116,35 @@
         <mat-list-item *cdkVirtualFor="let activity of dataSource">
           <span class="info">
             Identifier {{ activity.identifier | titlecase }}
-            {{ actions[activity.action - 1] }} document
+            <ng-container [ngSwitch]="activity.action">
+              <ng-container *ngSwitchCase="1">
+                Insert
+              </ng-container>
+              <ng-container *ngSwitchCase="2">
+                Update
+              </ng-container>
+              <ng-container *ngSwitchCase="3">
+                Delete
+              </ng-container>
+            </ng-container>
+            document
             <a [routerLink]="activity | buildLink">
-              {{ activity.resource.documentId }}
+              <ng-container [ngSwitch]="activity.resource[0]">
+                <ng-container *ngSwitchCase="'passport'">
+                  {{ (activity.resource[1] | titlecase) + "-" + activity.resource[2] }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'function'">
+                  {{ activity.resource[1] }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'preference'">
+                  {{ activity.resource[1] | titlecase }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'storage'">
+                  {{ activity.resource.slice(1).toString() }}
+                </ng-container>
+              </ng-container>
             </a>
-            on {{ activity.resource.name }} module.
+            on {{ activity.resource[0] | titlecase }} module.
           </span>
           <span class="date">{{ activity.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <mat-divider></mat-divider>

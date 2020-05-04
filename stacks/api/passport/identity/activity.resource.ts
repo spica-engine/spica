@@ -1,6 +1,6 @@
-import {Resource, Action} from "@spica-server/activity/services";
+import { Action} from "@spica-server/activity/services";
 
-export function createIdentityResource(action: Action, req: any, res: any): Resource {
+export function createIdentityResource(action: Action, req: any, res: any): string[] {
   let name = "Identity";
 
   let documentId: string[] = [];
@@ -16,5 +16,5 @@ export function createIdentityResource(action: Action, req: any, res: any): Reso
       break;
   }
 
-  return {name, documentId};
+  return ["passport","identity",...documentId];
 }

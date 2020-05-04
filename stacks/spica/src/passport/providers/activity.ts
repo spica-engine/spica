@@ -1,14 +1,11 @@
 export function provideActivityFactory(activity: any) {
-  let module = activity.resource.name;
-  let documentId = activity.resource.documentId;
+  let module = activity.resource[0];
+  let subModule = activity.resource[1];
+  let documentId = activity.resource[2];
   let url;
-  if (module == "Identity") {
-    url = `passport/identity/${documentId}/edit`;
-  } else if (module == "Policy") {
-    url = `passport/policy/${documentId}/edit`;
-  } else if (module == "Apikey") {
-    url = `passport/apikey/${documentId}/edit`;
-  } else if (module == "Preference" && documentId == "passport") {
+  if (module == "passport") {
+    url = `passport/${subModule}/${documentId}/edit`;
+  } else if (module == "preference" && subModule == "passport") {
     url = `passport/settings`;
   }
   return url;
