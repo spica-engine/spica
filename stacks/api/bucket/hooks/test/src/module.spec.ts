@@ -1,11 +1,16 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {hookModuleProviders} from "@spica-server/bucket/hooks";
+import {createSchema} from "@spica-server/bucket/hooks/src/module";
 import {ServicesModule} from "@spica-server/bucket/services";
-import {DatabaseTestingModule, DatabaseService, stream} from "@spica-server/database/testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId,
+  stream
+} from "@spica-server/database/testing";
 import {PreferenceModule} from "@spica-server/preference";
-import {createSchema} from "../../src/module";
-import {take, bufferCount} from "rxjs/operators";
 import {from} from "rxjs";
+import {bufferCount, take} from "rxjs/operators";
 
 describe("hook module", () => {
   describe("schema", () => {
@@ -52,7 +57,7 @@ describe("hook module", () => {
 
     it("should report when a bucket has been created", async done => {
       const schema = createSchema(database);
-      await database.collection("buckets").insertOne({_id: "bucket1"});
+      const {insertedId: firstBucket} = await database.collection("buckets").insertOne({});
       from(schema)
         .pipe(
           bufferCount(2),
@@ -60,16 +65,20 @@ describe("hook module", () => {
         )
         .subscribe(changes => {
           let collections = changes.map(c => c.properties.bucket["enum"]);
-          expect(collections).toEqual([["bucket1"], ["bucket1", "bucket2"]]);
+          expect(collections).toEqual([
+            [firstBucket.toHexString()],
+            [firstBucket.toHexString(), secondBucket.toHexString()]
+          ]);
           done();
         });
       await stream.wait();
-      await database.collection("buckets").insertOne({_id: "bucket2"});
+      const {insertedId: secondBucket} = await database.collection("buckets").insertOne({});
     });
 
     it("should report when a bucket has been dropped", async done => {
       const schema = createSchema(database);
-      await database.collection("buckets").insertOne({_id: "bucket1"});
+      const bucketId = new ObjectId();
+      await database.collection("buckets").insertOne({_id: bucketId});
       from(schema)
         .pipe(
           bufferCount(2),
@@ -77,11 +86,11 @@ describe("hook module", () => {
         )
         .subscribe(changes => {
           let collections = changes.map(c => c.properties.bucket["enum"]);
-          expect(collections).toEqual([["bucket1"], []]);
+          expect(collections).toEqual([[bucketId.toHexString()], []]);
           done();
         });
       await stream.wait();
-      await database.collection("buckets").deleteOne({_id: "bucket1"});
+      await database.collection("buckets").deleteOne({_id: bucketId});
     });
   });
 });

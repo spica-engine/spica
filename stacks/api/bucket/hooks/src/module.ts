@@ -1,14 +1,14 @@
 import {Global, Module} from "@nestjs/common";
 import {ServicesModule} from "@spica-server/bucket/services";
+import {DatabaseService} from "@spica-server/database";
 import {SCHEMA} from "@spica-server/function";
 import {ENQUEUER} from "@spica-server/function/horizon";
 import {EventQueue} from "@spica-server/function/queue";
 import {JSONSchema7} from "json-schema";
+import {Observable} from "rxjs";
 import {ActionDispatcher} from "./dispatcher";
 import {ActionEnqueuer} from "./enqueuer";
 import {ActionQueue} from "./queue";
-import {Observable} from "rxjs";
-import {DatabaseService} from "@spica-server/database";
 
 export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
   return new Observable(observer => {
@@ -48,12 +48,12 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
     stream.on("change", change => {
       switch (change.operationType) {
         case "delete":
-          bucketIds.delete(change.documentKey._id);
+          bucketIds.delete(change.documentKey._id.toString());
           notifyChanges();
           break;
         case "insert":
-          if (!bucketIds.has(change.documentKey._id)) {
-            bucketIds.add(change.documentKey._id);
+          if (!bucketIds.has(change.documentKey._id.toString())) {
+            bucketIds.add(change.documentKey._id.toString());
             notifyChanges();
           }
           break;
@@ -67,7 +67,7 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
       .toArray()
       .then(buckets => {
         for (const bucket of buckets) {
-          bucketIds.add(bucket._id);
+          bucketIds.add(bucket._id.toString());
         }
         notifyChanges();
       });
