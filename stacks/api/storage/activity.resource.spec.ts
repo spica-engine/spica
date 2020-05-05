@@ -37,7 +37,7 @@ describe("Activity Resource", () => {
       {}
     );
     expect(activities).toEqual([
-      {action: Action.PUT, identifier: "test_identifier", resource: ["storage","storage_object"]}
+      {action: Action.PUT, identifier: "test_identifier", resource: ["storage", "storage_object"]}
     ]);
   });
 
@@ -54,7 +54,11 @@ describe("Activity Resource", () => {
       {}
     );
     expect(activities).toEqual([
-      {action: Action.DELETE, identifier: "test_identifier", resource: ["storage","storage_object"]}
+      {
+        action: Action.DELETE,
+        identifier: "test_identifier",
+        resource: ["storage", "storage_object"]
+      }
     ]);
   });
 });

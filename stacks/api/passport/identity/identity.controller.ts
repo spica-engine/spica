@@ -57,7 +57,6 @@ export class IdentityController {
 
     if (limit) dataPipeline.push({$limit: limit});
 
-
     const aggregate = [
       {
         $facet: {

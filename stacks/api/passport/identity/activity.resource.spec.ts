@@ -34,7 +34,11 @@ describe("Activity Resource", () => {
       {}
     );
     expect(activities).toEqual([
-      {action: Action.PUT, identifier: "test_user", resource: ["passport", "identity", "identity_id"]}
+      {
+        action: Action.PUT,
+        identifier: "test_user",
+        resource: ["passport", "identity", "identity_id"]
+      }
     ]);
   });
 
