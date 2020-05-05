@@ -1,165 +1,217 @@
+import {CommonModule} from "@angular/common";
+import {Component, Input} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {
   MatButtonModule,
+  MatCardModule,
+  MatFormFieldModule,
   MatIconModule,
   MatMenuModule,
   MatPaginatorModule,
-  MatTableModule
+  MatTableModule,
+  MatTooltip,
+  MatTooltipModule
 } from "@angular/material";
-import {MatSelectModule} from "@angular/material/select";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {
-  CommonModule as SpicaCommon,
-  EMPTY_INPUT_SCHEMA,
-  InputModule,
-  INPUT_SCHEMA
-} from "@spica-client/common";
-import {PreferencesService} from "@spica-client/core";
-import {OwlDateTimeModule} from "ng-pick-datetime";
+import {RouterTestingModule} from "@angular/router/testing";
+import {INPUT_SCHEMA} from "@spica-client/common";
 import {of} from "rxjs";
-import {BucketService} from "src/bucket";
-import {FilterComponent} from "src/bucket/components/filter/filter.component";
-import {emptyBucket} from "src/bucket/interfaces/bucket";
-import {BucketDataService} from "src/bucket/services/bucket-data.service";
+import {BucketDataService} from "../../services/bucket-data.service";
+import {BucketService} from "../../services/bucket.service";
 import {RelationComponent} from "./relation.component";
+
+@Component({
+  selector: "bucket-filter",
+  template: ""
+})
+class DummyBucketFilterComponent {
+  @Input() schema: unknown;
+  @Input() filter: unknown;
+}
 
 describe("Relation Component", () => {
   let fixture: ComponentFixture<RelationComponent>;
+  let bucketDataService: jasmine.SpyObj<BucketDataService>;
+  let bucketService: jasmine.SpyObj<BucketService>;
+  let onChangeSpy: jasmine.Spy<typeof fixture.componentInstance.onChangeFn>;
 
   beforeEach(() => {
+    bucketDataService = jasmine.createSpyObj("BucketDataService", ["find"]);
+    bucketService = jasmine.createSpyObj("BucketService", ["getBucket"]);
     TestBed.configureTestingModule({
       imports: [
         NoopAnimationsModule,
+        CommonModule,
         MatIconModule,
         MatTableModule,
         MatPaginatorModule,
         MatMenuModule,
+        MatCardModule,
+        MatFormFieldModule,
         MatButtonModule,
-        MatSelectModule,
-        OwlDateTimeModule,
+        MatTooltipModule,
         FormsModule,
-        InputModule.withPlacers([]),
-        SpicaCommon
+        RouterTestingModule
       ],
       providers: [
         {
           provide: INPUT_SCHEMA,
-          useValue: EMPTY_INPUT_SCHEMA
+          useValue: {
+            type: "relation",
+            bucketId: "",
+            description: "Description of the relation"
+          }
         },
         {
           provide: BucketDataService,
-          useValue: {
-            find: jasmine.createSpy("find").and.returnValue(
-              of({
-                meta: {total: 2},
-                data: [
-                  {
-                    _id: "test1",
-                    _schedule: new Date(2000),
-                    key: "value1"
-                  },
-                  {
-                    _id: "test2",
-                    _schedule: new Date(2000),
-                    key: "value2"
-                  }
-                ]
-              })
-            ),
-            findOne: jasmine.createSpy("findOne").and.returnValue(
-              of({
-                _id: "test1",
-                _schedule: new Date(2000),
-                key: "value1"
-              })
-            )
-          }
-        },
-        {
-          provide: PreferencesService,
-          useValue: {
-            get: jasmine.createSpy("get").and.returnValue(
-              of({
-                _id: "id1",
-                scope: "scope",
-                key: "value"
-              })
-            )
-          }
+          useValue: bucketDataService
         },
         {
           provide: BucketService,
-          useValue: {
-            getBucket: jasmine.createSpy("getBucket").and.returnValue(of(emptyBucket()))
-          }
+          useValue: bucketService
         }
       ],
-      declarations: [RelationComponent, FilterComponent]
-    }).compileComponents();
-    fixture = TestBed.createComponent(RelationComponent);
-    fixture.detectChanges();
-  });
-
-  it("should render component", () => {
-    expect(fixture.debugElement.query(By.css("button")).nativeElement.textContent).toBe(
-      "view_stream Select a New Bucket\n",
-      "should work if bucket icon and title rendered correctly"
-    );
-
-    expect(fixture.componentInstance.paginator.length).toBe(
-      2,
-      "should work if bucket.meta.total value is 2 "
-    );
-  });
-
-  it("should set bucketSchema", () => {
-    expect(fixture.componentInstance.bucket).toEqual(emptyBucket());
-  });
-
-  it("should close menu", () => {
-    const closeSpy = spyOn(fixture.componentInstance.filterMenu.close, "emit");
-    fixture.componentInstance.closeMenu();
-    expect(closeSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it("should call bucketDataService with changed filter", async () => {
-    const findSpy = fixture.componentInstance["bds"].find as jasmine.Spy;
-    findSpy.calls.reset();
-
-    fixture.componentInstance.filter = {test_key: "test_value"};
-    fixture.componentInstance.refresh.emit();
-
-    expect(findSpy).toHaveBeenCalledTimes(1);
-    expect(findSpy).toHaveBeenCalledWith(undefined, {
-      filter: {test_key: "test_value"},
-      limit: 10,
-      skip: 0
+      declarations: [RelationComponent, DummyBucketFilterComponent]
     });
+    fixture = TestBed.createComponent(RelationComponent);
+    onChangeSpy = spyOn(fixture.componentInstance, "onChangeFn");
+    bucketService.getBucket.and.returnValue(
+      of({
+        _id: "",
+        primary: "name",
+        icon: "anicon",
+        title: "Wallet",
+        properties: {
+          name: {
+            type: "string",
+            title: "Name"
+          }
+        }
+      })
+    );
+    bucketDataService.find.and.callFake((_, options) => {
+      const rows = [
+        {
+          _id: "1",
+          name: "Wallet 1"
+        },
+        {
+          _id: "2",
+          name: "Wallet 2"
+        }
+      ];
+      let data = rows;
+      if (options.filter) {
+        data = data.filter(r => options.filter._id.$in.indexOf(r._id) > -1);
+      }
+      return of({meta: {total: rows.length}, data: data});
+    });
+
+    fixture.detectChanges();
   });
 
-  it("should select row", () => {
-    const fetchSpy = spyOn(fixture.componentInstance, "_fetchRow").and.callThrough();
+  it("should render description", () => {
+    const hint = fixture.debugElement.query(By.css("mat-hint"));
+    expect(hint.nativeElement.textContent).toBe("Description of the relation");
+  });
 
-    fixture.debugElement.query(By.css("button")).nativeElement.click();
-    expect(
-      fixture.debugElement.query(By.css("mat-table mat-header-cell")).nativeElement.textContent
-    ).toBe(" title ", "should work if bucket.properties.title value rendered correctly");
+  it("should show picker button", () => {
+    const button = fixture.debugElement.query(By.css("section button"));
+    expect(button.nativeElement.textContent).toBe("anicon Select from Wallet ");
+  });
+
+  it("should open the relation picker", () => {
+    const button = fixture.debugElement.query(By.css("section button"));
+    button.triggerEventHandler("click", undefined);
+    fixture.detectChanges();
+    const panel = document.querySelector(".mat-menu-panel");
+    expect(panel).toBeTruthy();
+  });
+
+  it("should pick a row and render changes and propagate", () => {
+    const button = fixture.debugElement.query(By.css("section button"));
+    button.triggerEventHandler("click", undefined);
     fixture.detectChanges();
 
-    fixture.debugElement.queryAll(By.css("mat-table mat-cell button"))[0].nativeElement.click();
+    const pickButton = document.querySelector(".mat-menu-panel mat-cell button");
+    pickButton.dispatchEvent(new MouseEvent("click"));
     fixture.detectChanges();
 
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith("test1");
+    const row = fixture.debugElement.query(By.css("section div span button"));
+    const tooltip = row.injector.get(MatTooltip);
 
-    fixture.componentInstance.$row.toPromise().then(value => {
-      expect(value).toEqual({
-        _id: "test1",
-        _schedule: new Date(2000),
-        key: "value1"
-      });
+    expect(tooltip.message).toBe("name of the row");
+    expect(row.nativeElement.textContent).toBe("anicon Wallet 1 ");
+    expect(onChangeSpy).toHaveBeenCalledWith("1");
+  });
+
+  it("should not render remove button in one to one mode", () => {
+    fixture.debugElement.query(By.css("section button")).triggerEventHandler("click", undefined);
+    fixture.detectChanges();
+    document
+      .querySelector(".mat-menu-panel mat-cell button")
+      .dispatchEvent(new MouseEvent("click"));
+
+    const buttons = fixture.debugElement.queryAll(By.css("section div span button"));
+    expect(buttons.length).toBe(0);
+  });
+
+  it("should clear selected row(s)", () => {
+    fixture.componentInstance.value = "1";
+    fixture.detectChanges();
+    fixture.debugElement
+      .query(By.css("section button:last-of-type"))
+      .triggerEventHandler("click", undefined);
+
+    fixture.detectChanges();
+    const row = fixture.debugElement.query(By.css("section div span"));
+    expect(row).not.toBeTruthy();
+  });
+
+  describe("many to many", () => {
+    beforeEach(() => {
+      fixture.componentInstance._oneToManyRelation = true;
+      fixture.detectChanges();
+    });
+
+    it("should pick more than one", () => {
+      const button = fixture.debugElement.query(By.css("section button"));
+      button.triggerEventHandler("click", undefined);
+      fixture.detectChanges();
+
+      const pickButtons = document.querySelectorAll(".mat-menu-panel mat-table button");
+      pickButtons[0].dispatchEvent(new MouseEvent("click"));
+      pickButtons[1].dispatchEvent(new MouseEvent("click"));
+      fixture.detectChanges();
+
+      const firstRow = fixture.debugElement.query(By.css("section div span button"));
+      const secondRow = fixture.debugElement.query(By.css("section div span:last-of-type button"));
+
+      expect(firstRow.nativeElement.textContent).toBe("anicon Wallet 1 ");
+      expect(secondRow.nativeElement.textContent).toBe("anicon Wallet 2 ");
+    });
+
+    it("should remove the picked row", () => {
+      const button = fixture.debugElement.query(By.css("section button"));
+      button.triggerEventHandler("click", undefined);
+      fixture.detectChanges();
+
+      const pickButtons = document.querySelectorAll(".mat-menu-panel mat-cell button");
+      pickButtons[0].dispatchEvent(new MouseEvent("click"));
+      pickButtons[1].dispatchEvent(new MouseEvent("click"));
+      fixture.detectChanges();
+
+      fixture.debugElement
+        .query(By.css("section div span:first-of-type button:last-of-type"))
+        .triggerEventHandler("click", "undefined");
+
+      fixture.detectChanges();
+
+      const row = fixture.debugElement.query(By.css("section div span button"));
+
+      expect(row.nativeElement.textContent).toBe("anicon Wallet 2 ");
     });
   });
 });

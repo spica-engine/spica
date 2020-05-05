@@ -20,8 +20,17 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
           schema.type = "string";
           break;
         case "relation":
-          schema.type = "string";
-          schema.format = "objectid";
+          if (schema["relationType"] == "onetomany") {
+            schema.type = "array";
+            schema.items = {
+              type: "string",
+              format: "objectid"
+            };
+          } else {
+            schema.type = "string";
+            schema.format = "objectid";
+          }
+
           break;
         case "date":
           schema.type = "string";
@@ -60,7 +69,7 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
 
   bucket.properties = Object.keys(bucket.properties).reduce((accumulator, key) => {
     const property = schema.properties[key];
-    if (property.options.translate) {
+    if (property.options && property.options.translate) {
       accumulator[key] = {
         type: "object",
         required: [preferences.language.default],

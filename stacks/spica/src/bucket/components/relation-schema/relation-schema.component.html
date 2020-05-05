@@ -6,4 +6,13 @@
   </mat-select>
   <mat-error *ngIf="model?.errors?.required">You must select a bucket</mat-error>
 </mat-form-field>
-{{ schema.bucketId }}
+<mat-form-field>
+  <mat-select
+    placeholder="Relation Type"
+    #relationTypeModel="ngModel"
+    [(ngModel)]="schema.relationType"
+  >
+    <mat-option value="onetoone">One To One</mat-option>
+    <mat-option value="onetomany">One To Many</mat-option>
+  </mat-select>
+</mat-form-field>

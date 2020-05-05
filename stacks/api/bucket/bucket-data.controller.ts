@@ -5,6 +5,8 @@ import {
   ForbiddenException,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   InternalServerErrorException,
   NotFoundException,
   Optional,
@@ -13,9 +15,7 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors,
-  HttpStatus,
-  HttpCode
+  UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
@@ -111,30 +111,60 @@ export class BucketDataController {
     };
   }
 
-  private buildRelationAggreation(
+  private buildRelationAggregation(
     property: string,
     bucketId: string,
+    type: "onetomany" | "onetoone",
     locale: {best: string; fallback: string}
   ) {
-    return [
-      {
-        $lookup: {
-          from: getBucketDataCollection(bucketId),
-          let: {
-            documentId: {
-              $toObjectId: `$${property}`
-            }
-          },
-          pipeline: [
-            {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
-            {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
-            {$set: {_id: {$toString: "$_id"}}}
-          ],
-          as: property
+    if (type == "onetomany") {
+      return [
+        {
+          $lookup: {
+            from: getBucketDataCollection(bucketId),
+            let: {
+              documentIds: {
+                $ifNull: [
+                  {
+                    $map: {
+                      input: `$${property}`,
+                      in: {$toObjectId: "$$this"}
+                    }
+                  },
+                  []
+                ]
+              }
+            },
+            pipeline: [
+              {$match: {$expr: {$in: ["$_id", "$$documentIds"]}}},
+              {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+              {$set: {_id: {$toString: "$_id"}}}
+            ],
+            as: property
+          }
         }
-      },
-      {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
-    ];
+      ];
+    } else {
+      return [
+        {
+          $lookup: {
+            from: getBucketDataCollection(bucketId),
+            let: {
+              documentId: {
+                $toObjectId: `$${property}`
+              }
+            },
+            pipeline: [
+              {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
+              {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+              {$set: {_id: {$toString: "$_id"}}}
+            ],
+            as: property
+          }
+        },
+        {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
+      ];
+    }
   }
 
   @Get()
@@ -153,7 +183,7 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object
   ) {
-    let aggregation: any[] = [
+    let aggregation: unknown[] = [
       {
         $match: {
           _schedule: {
@@ -165,7 +195,9 @@ export class BucketDataController {
 
     const bucket = await this.bs.findOne({_id: bucketId});
 
-    if (!bucket) throw new NotFoundException();
+    if (!bucket) {
+      throw new NotFoundException(`Could not find the bucket with id ${bucketId}`);
+    }
 
     const schema = relation || localize ? bucket : null;
 
@@ -193,7 +225,12 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
+            ...this.buildRelationAggregation(
+              propertyKey,
+              property["bucketId"],
+              property["relationType"],
+              locale
+            )
           );
         }
       }
@@ -221,13 +258,12 @@ export class BucketDataController {
       }
     }
 
+    let data: Promise<unknown>;
+
     if (paginate && !skip && !limit) {
-      const data = await this.bds
+      data = this.bds
         .find(bucketId, aggregation)
-        .catch((error: MongoError) =>
-          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
-        );
-      return {meta: {total: data.length}, data};
+        .then(data => ({meta: {total: data.length}, data}));
     } else if (paginate && (skip || limit)) {
       const subAggregation = [];
       if (skip) {
@@ -246,12 +282,9 @@ export class BucketDataController {
         },
         {$unwind: "$meta"}
       );
-      return this.bds
+      data = this.bds
         .find(bucketId, aggregation)
-        .then(r => r[0] || {meta: {total: 0}, data: []})
-        .catch((error: MongoError) =>
-          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
-        );
+        .then(([result]) => (result ? result : {meta: {total: 0}, data: []}));
     } else {
       if (skip) {
         aggregation.push({$skip: skip});
@@ -261,12 +294,11 @@ export class BucketDataController {
         aggregation.push({$limit: limit});
       }
 
-      return this.bds
-        .find(bucketId, aggregation)
-        .catch((error: MongoError) =>
-          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
-        );
+      data = this.bds.find(bucketId, aggregation);
     }
+    return data.catch((error: MongoError) =>
+      Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
+    );
   }
 
   @Get(":documentId")
@@ -302,7 +334,12 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
+            ...this.buildRelationAggregation(
+              propertyKey,
+              property["bucketId"],
+              property["relationType"],
+              locale
+            )
           );
         }
       }

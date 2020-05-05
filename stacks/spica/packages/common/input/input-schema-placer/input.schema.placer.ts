@@ -35,6 +35,8 @@ import {InputResolver} from "../input.resolver";
 export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   @Input("inputSchemaPlacer") type: string;
 
+  @Input() forbiddenTypes: string[];
+
   public placer: Type<any>;
   public injector: Injector;
 
@@ -74,6 +76,9 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
         delete this.schema[key];
       }
       this.updatePlacer();
+    }
+    if (changes.forbiddenTypes) {
+      this.inputTypes = this.inputTypes.filter(type => this.forbiddenTypes.indexOf(type) == -1);
     }
   }
 

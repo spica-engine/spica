@@ -9,7 +9,6 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {ObjectId} from "@spica-server/database";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {BucketDataController} from "./bucket-data.controller";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -568,10 +567,13 @@ describe("BucketDataController", () => {
       let statisticsBucket: Bucket;
       let usersBucket: Bucket;
       let achievementsBucket: Bucket;
+      let walletBucket: Bucket;
 
       let user: BucketDocument;
       let anotherUser: BucketDocument;
+      let userWithWallet: BucketDocument;
       let achievement: BucketDocument;
+      let wallets: BucketDocument[];
 
       beforeEach(async () => {
         achievementsBucket = await req
@@ -580,10 +582,19 @@ describe("BucketDataController", () => {
             description: "Achievement",
             properties: {
               name: {
-                type: "string",
-                title: "achievement",
-                description: "Title of the row",
-                options: {position: "left"}
+                type: "string"
+              }
+            }
+          })
+          .then(r => r.body);
+
+        walletBucket = await req
+          .post("/bucket", {
+            title: "Wallet",
+            description: "Wallet",
+            properties: {
+              name: {
+                type: "string"
               }
             }
           })
@@ -595,10 +606,12 @@ describe("BucketDataController", () => {
             description: "Users",
             properties: {
               name: {
-                type: "string",
-                title: "username",
-                description: "Title of the row",
-                options: {position: "left"}
+                type: "string"
+              },
+              wallet: {
+                type: "relation",
+                bucketId: walletBucket._id,
+                relationType: "onetomany"
               }
             }
           })
@@ -629,15 +642,31 @@ describe("BucketDataController", () => {
           })
           .then(r => r.body);
 
+        achievement = await req
+          .post(`/bucket/${achievementsBucket._id}/data`, {
+            name: "do something until something else happens"
+          })
+          .then(r => r.body);
+
         anotherUser = await req
           .post(`/bucket/${usersBucket._id}/data`, {
             name: "user33"
           })
           .then(r => r.body);
 
-        achievement = await req
-          .post(`/bucket/${achievementsBucket._id}/data`, {
-            name: "do something until something else happens"
+        wallets = [
+          await req.post(`/bucket/${walletBucket._id}/data`, {
+            name: "GNB"
+          }),
+          await req.post(`/bucket/${walletBucket._id}/data`, {
+            name: "FNB"
+          })
+        ].map(r => r.body);
+
+        userWithWallet = await req
+          .post(`/bucket/${usersBucket._id}/data`, {
+            name: "wealthy user",
+            wallet: wallets.map(wallet => wallet._id)
           })
           .then(r => r.body);
 
@@ -653,18 +682,40 @@ describe("BucketDataController", () => {
       });
 
       afterEach(async () => {
-        const db = app.get(DatabaseService);
-
-        await db.collection("buckets").deleteMany({
-          _id: {$in: [statisticsBucket._id, usersBucket._id, achievementsBucket._id]}
-        });
-        // TODO: This should be handled by bucket controller
-        await db.collection(`bucket_${statisticsBucket._id}`).drop();
-        await db.collection(`bucket_${usersBucket._id}`).drop();
-        await db.collection(`bucket_${achievementsBucket._id}`).drop();
+        await req.delete(`/bucket/${statisticsBucket._id}`);
+        await req.delete(`/bucket/${usersBucket._id}`);
+        await req.delete(`/bucket/${achievementsBucket._id}`);
+        await req.delete(`/bucket/${walletBucket._id}`);
       });
 
-      it("should get statics with username and achievement name", async () => {
+      it("should return users with wallets", async () => {
+        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {relation: true});
+        expect(users).toEqual([
+          {_id: "__skip__", name: "user66", wallet: []},
+          {_id: "__skip__", name: "user33", wallet: []},
+          {
+            _id: "__skip__",
+            name: "wealthy user",
+            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+          }
+        ]);
+      });
+
+      it("should return users by their wallet name", async () => {
+        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {
+          relation: true,
+          filter: JSON.stringify({"wallet.name": "GNB"})
+        });
+        expect(users).toEqual([
+          {
+            _id: "__skip__",
+            name: "wealthy user",
+            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+          }
+        ]);
+      });
+
+      it("should get statistics with username and achievement name", async () => {
         const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
           relation: true
         });
@@ -694,7 +745,7 @@ describe("BucketDataController", () => {
         ]);
       });
 
-      it("should get statics with only id", async () => {
+      it("should get statistics with only id", async () => {
         const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
           relation: false
         });
