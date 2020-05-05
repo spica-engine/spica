@@ -34,56 +34,47 @@
   </mat-form-field>
   <mat-form-field>
     <mat-label>Select module</mat-label>
-    <mat-select (selectionChange)="showDocuments($event)">
-      <mat-optgroup label="Bucket-Data">
+    <mat-select
+      [ngModel]="filters.resource.$all[filters.resource.$all.length - 1]"
+      (selectionChange)="selectionChange($event)"
+    >
+      <mat-optgroup label="Bucket">
         <mat-option
-          class="option-bucket"
           *ngFor="let bucket of buckets$ | async"
           [value]="bucket._id"
-          [matTooltip]="'ID: ' + bucket._id"
+          [matTooltip]="'Id: ' + bucket._id"
         >
           {{ bucket.title }}
         </mat-option>
       </mat-optgroup>
-      <mat-optgroup label="Bucket">
-        <mat-option value="bucket">
-          Bucket
-        </mat-option>
-      </mat-optgroup>
+      <mat-option *ngIf="checkAllowed('bucket:index') | async" value="bucket">
+        Buckets
+      </mat-option>
       <mat-optgroup label="Passport">
-        <mat-option value="identity">
+        <mat-option *ngIf="checkAllowed('passport:identity:index') | async" value="identity">
           Identity
         </mat-option>
-        <mat-option value="policy">
+        <mat-option *ngIf="checkAllowed('passport:policy:index') | async" value="policy">
           Policy
         </mat-option>
-        <mat-option value="apikey">
+        <mat-option *ngIf="checkAllowed('passport:apikey:index') | async" value="apikey">
           Apikey
         </mat-option>
       </mat-optgroup>
-      <mat-optgroup label="Storage">
-        <mat-option value="storage">
-          Storage
-        </mat-option>
-      </mat-optgroup>
-      <mat-optgroup label="Function">
-        <mat-option value="function">
-          Function
-        </mat-option>
-      </mat-optgroup>
-      <mat-optgroup label="Preference">
-        <mat-option value="bucket">
-          Bucket
-        </mat-option>
-        <mat-option value="passport">
-          Passport
-        </mat-option>
-      </mat-optgroup>
+      <mat-option *ngIf="checkAllowed('storage:index') | async" value="storage">
+        Storage
+      </mat-option>
+      <mat-option *ngIf="checkAllowed('function:index') | async" value="function">
+        Function
+      </mat-option>
+      <mat-option value="preference">
+        Preference
+      </mat-option>
     </mat-select>
   </mat-form-field>
-  <mat-form-field >
+  <mat-form-field>
     <mat-label>Select document id</mat-label>
-    <mat-select [(ngModel)]="filters.resource.documentId" multiple>
+    <mat-select [(ngModel)]="filters.resource.$in" multiple>
       <mat-option *ngFor="let documentId of documents$ | async" [value]="documentId">
         {{ documentId }}
       </mat-option>
@@ -141,6 +132,13 @@
                 </ng-container>
                 <ng-container *ngSwitchCase="'storage'">
                   {{ activity.resource.slice(1).toString() }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'bucket'">
+                  {{
+                    activity.resource[2] == "data"
+                      ? "Bucket Data" + "-" + activity.resource[3]
+                      : activity.resource[1]
+                  }}
                 </ng-container>
               </ng-container>
             </a>

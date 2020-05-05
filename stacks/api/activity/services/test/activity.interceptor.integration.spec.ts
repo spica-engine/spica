@@ -1,11 +1,17 @@
 import {Controller, INestApplication, Post, Req, UseInterceptors} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {activity, ActivityService, Predict} from "@spica-server/activity/services";
+import {activity, ActivityService, Predict, Activity} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
-const TestPredict: Predict = (): string[] => {
-  return {documentId: ["test_id"], name: "test_module"};
+const TestPredict: Predict = (): Activity[] => {
+  return [
+    {
+      identifier: "test",
+      action: 1,
+      resource: ["test_module", "test_id"]
+    }
+  ];
 };
 
 @Controller("test")
@@ -45,7 +51,7 @@ describe("Interceptor with a proper activity handler", () => {
     request = module.get(Request);
     app = module.createNestApplication();
     await app.listen(request.socket);
-    insertSpy = spyOn(service, "insertOne");
+    insertSpy = spyOn(service, "insertMany");
   });
 
   beforeEach(() => {
@@ -65,11 +71,13 @@ describe("Interceptor with a proper activity handler", () => {
 
   it("should insert an activity", async () => {
     await request.post("/test/withuser");
-    expect(insertSpy).toHaveBeenCalledWith({
-      identifier: "test",
-      action: 1,
-      resource: {documentId: ["test_id"], name: "test_module"}
-    });
+    expect(insertSpy).toHaveBeenCalledWith([
+      {
+        identifier: "test",
+        action: 1,
+        resource: ["test_module", "test_id"]
+      }
+    ]);
   });
 });
 

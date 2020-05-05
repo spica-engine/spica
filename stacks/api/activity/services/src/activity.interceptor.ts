@@ -30,9 +30,9 @@ export abstract class ActivityInterceptor implements NestInterceptor {
           return;
         }
         const action = getAction(req.method);
-        const resource = this.predict(action, req, res);
-        const activity: Activity = {identifier, action, resource};
-        this.service.insertOne(activity);
+        const activities: Activity[] = this.predict({identifier, action}, req, res);
+
+        this.service.insertMany(activities);
       })
     );
   }

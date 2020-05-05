@@ -1,9 +1,9 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
-import {Observable, BehaviorSubject, Subscription, of} from "rxjs";
+import {Observable, BehaviorSubject, Subscription, of, merge} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
-import {map, mergeMap, tap, catchError} from "rxjs/operators";
+import {map, mergeMap, tap, catchError, flatMap, switchMap} from "rxjs/operators";
 import {MatSelectChange, MatOption} from "@angular/material";
 
 @Component({
@@ -69,17 +69,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   filters: ActivityFilter = {
     identifier: undefined,
-    action: undefined,
-    resource: {
-      name: undefined,
-      documentId: undefined
-    },
+    action: [],
+    resource: {$all:[],$in:[]},
     date: {
       begin: undefined,
       end: undefined
     },
     limit: this.defaultLimit,
-    skip: undefined
+    skip: 0
   };
 
   dataSource: IndexComponent;
@@ -92,7 +89,9 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   }
 
   ngOnInit() {
-    this.buckets$ = this.activityService.getBuckets();
+    this.buckets$ = this.checkAllowed("bucket:index").pipe(
+      switchMap(allowed => (allowed ? this.activityService.getBuckets() : of([])))
+    );
 
     this.filters$
       .pipe(
@@ -114,7 +113,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
           this.activities = activities;
           this.dataStream.next(this.activities);
         },
-        error => {
+        _ => {
           this.isPending = false;
         }
       );
@@ -123,17 +122,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   clearFilters() {
     this.filters = {
       identifier: undefined,
-      action: undefined,
-      resource: {
-        name: undefined,
-        documentId: undefined
-      },
+      action: [],
+      resource: {$all:[],$in:[]},
       date: {
         begin: undefined,
         end: undefined
       },
       limit: this.defaultLimit,
-      skip: undefined
+      skip: 0
     };
 
     this.documentIds = undefined;
@@ -145,16 +141,16 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   applyFilters() {
     this.pageSize = 0;
 
-    this.filters = {...this.filters, limit: this.defaultLimit, skip: undefined};
+    this.filters = {...this.filters, limit: this.defaultLimit, skip: 0};
     this.filters$.next(this.filters);
   }
 
-  showDocuments(event: MatSelectChange) {
-    this.documents$ = undefined;
-    let optGroup = (event.source.selected as MatOption).group.label.toLowerCase();
+  selectionChange(event: MatSelectChange) {
+    let optGroup = (event.source.selected as MatOption).group?.label.toLowerCase();
     let selection = event.value;
-    this.documents$ = this.activityService
-      .showDocuments(optGroup, selection)
+    this.documents$ = this.activityService.showDocuments(optGroup, selection);
+    this.filters.resource.$all = optGroup ? [optGroup, selection] : [selection]
+    this.filters.resource.$in = []
   }
 
   clearActivities() {
@@ -171,6 +167,10 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
       begin: new Date(begin.setHours(0, 0, 0, 0)),
       end: new Date(end.setHours(23, 59, 59, 999))
     };
+  }
+
+  checkAllowed(action: string) {
+    return this.activityService.checkAllowed(action);
   }
 
   ngOnDestroy() {

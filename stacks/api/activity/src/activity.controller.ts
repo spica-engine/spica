@@ -23,7 +23,7 @@ export class ActivityController {
   find(
     @Query("identifier") identifier,
     @Query("action", DEFAULT([]), ARRAY(Number)) action: number[],
-    @Query("resource", DEFAULT([]), ARRAY(String)) resource: string[],
+    @Query("resource", JSONP) resource: object,
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
     @Query("skip", NUMBER) skip: number,
@@ -66,17 +66,10 @@ export class ActivityController {
       filter["$or"] = action.map(act => {
         return {action: act};
       });
-      // if (Array.isArray(action) && action.length > 0) {
-      //   filter["$or"] = action.map(val => {
-      //     return {action: Number(val)};
-      //   });
-      // } else if (!Array.isArray(action)) {
-      //   filter["$or"] = [{action: Number(action)}];
-      // }
     }
 
-    if (resource.length > 0) {
-      //
+    if (resource) {
+      filter = {...filter, resource};
     }
 
     if (filter) aggregation.push({$match: filter});

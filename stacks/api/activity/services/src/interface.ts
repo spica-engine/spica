@@ -7,8 +7,13 @@ export interface Activity {
   identifier: string;
 }
 
+export interface PreActivity {
+  identifier: string;
+  action: Action;
+}
+
 export interface Predict {
-  (action: Action, req: any, data: any): string[];
+  (preActivity: PreActivity, req: any, res: any): Activity[];
 }
 
 export enum Action {

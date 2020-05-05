@@ -25,7 +25,7 @@ import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
-import {createBucketDataResource} from "./activity.resource";
+import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {findRelations} from "./utilities";
 
@@ -327,7 +327,7 @@ export class BucketDataController {
     return document;
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:create"]))
   async replaceOne(
@@ -348,7 +348,7 @@ export class BucketDataController {
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard(["bucket:data:update"]))
   async update(
@@ -371,7 +371,7 @@ export class BucketDataController {
     return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Delete(":documentId")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
@@ -387,7 +387,7 @@ export class BucketDataController {
     return this.clearRelations(this.bs, bucketId, documentId);
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))

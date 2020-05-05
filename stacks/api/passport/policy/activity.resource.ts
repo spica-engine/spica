@@ -1,18 +1,19 @@
-import {Action} from "@spica-server/activity/services";
+import {Action, PreActivity, Activity} from "@spica-server/activity/services";
 
-export function createPolicyResource(action: Action, req: any, res: any): string[] {
-  let documentId: string[] = [];
-  switch (action) {
+export function createPolicyActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
+  let activities: Activity[] = [];
+
+  switch (preActivity.action) {
     case Action.POST:
-      documentId.push(res._id.toString());
+      activities.push({...preActivity, resource: ["passport", "policy", res._id.toString()]});
       break;
     case Action.PUT:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["passport", "policy", req.params.id]});
       break;
     case Action.DELETE:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["passport", "policy", req.params.id]});
       break;
   }
 
-  return ["passport", "policy", ...documentId];
+  return activities;
 }

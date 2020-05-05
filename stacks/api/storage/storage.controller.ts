@@ -17,7 +17,7 @@ import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Binary} from "bson";
-import {createStorageResource} from "./activity.resource";
+import {createStorageActivity} from "./activity.resource";
 import {Storage, StorageObject} from "./storage.service";
 
 @Controller("storage")
@@ -27,11 +27,11 @@ export class StorageController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
   async findAll(
-    @Query("limit", NUMBER) limit: number,
+    @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP, DEFAULT({_id: -1})) sort: object
   ) {
-    const object = await this.storage.getAll(limit || 10, skip, sort);
+    const object = await this.storage.getAll(limit, skip, sort);
     object.data = object.data.map(m => {
       m.url = `${process.env.PUBLIC_HOST}/storage/${m._id}`;
       return m;
@@ -56,7 +56,7 @@ export class StorageController {
     }
   }
 
-  @UseInterceptors(activity(createStorageResource))
+  @UseInterceptors(activity(createStorageActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
   async updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
@@ -70,7 +70,7 @@ export class StorageController {
     return await this.storage.updateOne({_id: id}, object);
   }
 
-  @UseInterceptors(activity(createStorageResource))
+  @UseInterceptors(activity(createStorageActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
   async insertMany(@Body() object: StorageObject[]) {
@@ -96,7 +96,7 @@ export class StorageController {
     return await this.storage.insertMany(insertData);
   }
 
-  @UseInterceptors(activity(createStorageResource))
+  @UseInterceptors(activity(createStorageActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

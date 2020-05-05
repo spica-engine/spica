@@ -1,5 +1,5 @@
 import {Action} from "@spica-server/activity/services";
-import {createBucketDataResource, createBucketResource} from "./activity.resource";
+import {createBucketActivity, createBucketDataActivity} from "./activity.resource";
 
 describe("Activity Resource", () => {
   describe("bucket", () => {
@@ -7,10 +7,15 @@ describe("Activity Resource", () => {
       const res = {
         _id: "bucket_id"
       };
-      const action = Action.POST;
 
-      const resource = createBucketResource(action, {}, res);
-      expect(resource).toEqual(["bucket","bucket_id"]);
+      const activities = createBucketActivity(
+        {action: Action.POST, identifier: "test_user"},
+        {},
+        res
+      );
+      expect(activities).toEqual([
+        {action: Action.POST, identifier: "test_user", resource: ["bucket", "bucket_id"]}
+      ]);
     });
 
     it("should return activity from put request", () => {
@@ -19,10 +24,15 @@ describe("Activity Resource", () => {
           id: "bucket_id"
         }
       };
-      const action = Action.PUT;
 
-      const resource = createBucketResource(action, req, {});
-      expect(resource).toEqual(["bucket","bucket_id"]);
+      const activities = createBucketActivity(
+        {action: Action.PUT, identifier: "test_user"},
+        req,
+        {}
+      );
+      expect(activities).toEqual([
+        {action: Action.PUT, identifier: "test_user", resource: ["bucket", "bucket_id"]}
+      ]);
     });
 
     it("should return activity from delete request", () => {
@@ -31,77 +41,105 @@ describe("Activity Resource", () => {
           id: "bucket_id"
         }
       };
-      const action = Action.DELETE;
 
-      const resource = createBucketResource(action, req, {});
-      expect(resource).toEqual(["bucket","bucket_id"]);
+      const activities = createBucketActivity(
+        {action: Action.DELETE, identifier: "test_user"},
+        req,
+        {}
+      );
+      expect(activities).toEqual([
+        {action: Action.DELETE, identifier: "test_user", resource: ["bucket", "bucket_id"]}
+      ]);
     });
   });
   describe("bucket-data", () => {
-    // it("should return activity from post request", () => {
-    //   const req = {
-    //     params: {
-    //       bucketId: "bucket_id"
-    //     }
-    //   };
-    //   const res = {
-    //     _id: "bucket_data_id"
-    //   };
-    //   const action = Action.POST;
+    it("should return activity from post request", () => {
+      const req = {
+        params: {
+          bucketId: "bucket_id"
+        }
+      };
+      const res = {
+        _id: "bucket_data_id"
+      };
 
-    //   const resource = createBucketDataResource(action, req, res);
-    //   expect(resource).toEqual({
-    //     name: "Bucket_bucket_id",
-    //     documentId: ["bucket_data_id"]
-    //   });
-    // });
-
-    // it("should return activity from put request", () => {
-    //   const req = {
-    //     params: {
-    //       bucketId: "bucket_id",
-    //       documentId: "bucket_data_id"
-    //     }
-    //   };
-
-    //   const action = Action.PUT;
-    //   const resource = createBucketDataResource(action, req, {});
-    //   expect(resource).toEqual({
-    //     name: "Bucket_bucket_id",
-    //     documentId: ["bucket_data_id"]
-    //   });
-    // });
-
-    // it("should return activity from single delete request", () => {
-    //   const req = {
-    //     params: {
-    //       bucketId: "bucket_id",
-    //       documentId: "bucket_data_id"
-    //     }
-    //   };
-    //   const action = Action.DELETE;
-
-    //   const resource = createBucketDataResource(action, req, {});
-    //   expect(resource).toEqual({
-    //     name: "Bucket_bucket_id",
-    //     documentId: ["bucket_data_id"]
-    //   });
-    // });
-
-    // it("should return activity from multiple delete request", () => {
-    //   const req = {
-    //     params: {
-    //       bucketId: "bucket_id"
-    //     },
-    //     body: ["bucket_data_1", "bucket_data_2"]
-    //   };
-    //   const action = Action.DELETE;
-
-    //   const resource = createBucketDataResource(action, req, {});
-    //   expect(resource).toEqual({
-    //     name: "Bucket_bucket_id",
-    //     documentId: ["bucket_data_1", "bucket_data_2"]
-    //   });
-    // });
+      const activities = createBucketDataActivity(
+        {action: Action.POST, identifier: "test_user"},
+        req,
+        res
+      );
+      expect(activities).toEqual([
+        {
+          action: Action.POST,
+          identifier: "test_user",
+          resource: ["bucket", "bucket_id", "data", "bucket_data_id"]
+        }
+      ]);
+    });
+    it("should return activity from put request", () => {
+      const req = {
+        params: {
+          bucketId: "bucket_id",
+          documentId: "bucket_data_id"
+        }
+      };
+      const activities = createBucketDataActivity(
+        {action: Action.PUT, identifier: "test_user"},
+        req,
+        {}
+      );
+      expect(activities).toEqual([
+        {
+          action: Action.PUT,
+          identifier: "test_user",
+          resource: ["bucket", "bucket_id", "data", "bucket_data_id"]
+        }
+      ]);
+    });
+    it("should return activity from single delete request", () => {
+      const req = {
+        params: {
+          bucketId: "bucket_id",
+          documentId: "bucket_data_id"
+        }
+      };
+      const activities = createBucketDataActivity(
+        {action: Action.DELETE, identifier: "test_user"},
+        req,
+        {}
+      );
+      expect(activities).toEqual([
+        {
+          action: Action.DELETE,
+          identifier: "test_user",
+          resource: ["bucket", "bucket_id", "data", "bucket_data_id"]
+        }
+      ]);
+    });
+    it("should return activity from multiple delete request", () => {
+      const req = {
+        params: {
+          bucketId: "bucket_id"
+        },
+        body: ["bucket_data_id1", "bucket_data_id2"]
+      };
+      const activities = createBucketDataActivity(
+        {action: Action.DELETE, identifier: "test_user"},
+        req,
+        {}
+      );
+      expect(activities).toEqual([
+        {
+          action: Action.DELETE,
+          identifier: "test_user",
+          resource: ["bucket", "bucket_id", "data", "bucket_data_id1"]
+        },
+        {
+          action: Action.DELETE,
+          identifier: "test_user",
+          resource: ["bucket", "bucket_id", "data", "bucket_data_id2"]
+        }
+      ]);
+    });
   });
 });

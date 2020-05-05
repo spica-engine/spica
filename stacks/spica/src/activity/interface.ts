@@ -1,20 +1,15 @@
 export interface Activity {
   _id?: string;
   identifier: string;
-  resource: Resource;
+  resource: string[];
   action: string;
-}
-
-export interface Resource {
-  name: string;
-  documentId: string[];
 }
 
 export interface ActivityFilter {
   _id?: string;
   identifier?: string;
   action?: string[];
-  resource?: Resource;
+  resource?: {$all: string[]; $in: string[]};
   date?: {
     begin?: Date;
     end?: Date;

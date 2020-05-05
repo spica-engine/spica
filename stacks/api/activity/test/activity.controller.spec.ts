@@ -176,12 +176,12 @@ describe("Activity Acceptance", () => {
     ]);
   });
 
-  xit("should filter activities by resource", async () => {
+  it("should filter activities by resources", async () => {
     await service.insertMany([
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id1"]
       },
       {
         action: Action.POST,
@@ -189,29 +189,34 @@ describe("Activity Acceptance", () => {
         resource: ["test_module2", "test_id2"]
       },
       {
-        action: Action.PUT,
+        action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id", "test_id2"]
+        resource: ["test_module", "test_id3"]
+      },
+      {
+        action: Action.DELETE,
+        identifier: "test_user_id",
+        resource: ["test_module", "test_id4"]
       }
     ]);
 
     const {body: activities} = await request.get("/activity", {
-      resource: ["test_module", "test_id"]
+      resource: {$all: ["test_module"], $in: ["test_id1", "test_id3"]}
     });
     expect(activities).toEqual([
       {
         _id: "object_id",
-        action: Action.POST,
+        action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module2", documentId: ["test_id3"]},
+        resource: ["test_module", "test_id1"],
         date: objectIdToDate(activities[0]._id)
       },
       {
         _id: "object_id",
-        action: Action.PUT,
+        action: Action.DELETE,
         identifier: "test_user",
-        resource: {name: "test_module2", documentId: ["test_id3", "test_id123"]},
-        date: objectIdToDate(activities[0]._id)
+        resource: ["test_module", "test_id3"],
+        date: objectIdToDate(activities[1]._id)
       }
     ]);
   });

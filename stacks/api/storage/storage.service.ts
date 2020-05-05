@@ -18,12 +18,20 @@ export class Storage {
     }
   }
 
-  getAll(limit: number, skip: number, order?: any): Promise<StorageResponse> {
+  getAll(limit: number, skip: number = 0, sort?: any): Promise<StorageResponse> {
+    let dataPipeline: object[] = [];
+
+    if (limit) dataPipeline.push({$limit: limit});
+
+    dataPipeline.push({$skip: skip});
+
+    if (sort) dataPipeline.push({$sort: sort});
+
     const aggregation = [
       {
         $facet: {
           meta: [{$count: "total"}],
-          data: [{$skip: skip}, {$limit: limit}, order && {$sort: order}].filter(Boolean)
+          data: dataPipeline
         }
       },
       {
