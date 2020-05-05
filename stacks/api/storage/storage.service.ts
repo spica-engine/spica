@@ -21,9 +21,9 @@ export class Storage {
   getAll(limit: number, skip: number = 0, sort?: any): Promise<StorageResponse> {
     let dataPipeline: object[] = [];
 
-    if (limit) dataPipeline.push({$limit: limit});
-
     dataPipeline.push({$skip: skip});
+
+    if (limit) dataPipeline.push({$limit: limit});
 
     if (sort) dataPipeline.push({$sort: sort});
 

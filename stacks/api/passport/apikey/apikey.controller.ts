@@ -35,9 +35,9 @@ export class ApiKeyController {
   ) {
     let dataPipeline: object[] = [];
 
-    if (limit) dataPipeline.push({$limit: limit});
-
     dataPipeline.push({$skip: skip});
+
+    if (limit) dataPipeline.push({$limit: limit});
 
     if (sort) dataPipeline.push({$sort: sort});
 

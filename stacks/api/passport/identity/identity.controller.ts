@@ -53,9 +53,10 @@ export class IdentityController {
   ) {
     let dataPipeline: object[] = [];
 
+    dataPipeline.push({$skip: skip});
+
     if (limit) dataPipeline.push({$limit: limit});
 
-    dataPipeline.push({$skip: skip});
 
     const aggregate = [
       {

@@ -6,7 +6,7 @@ import {PassportModule} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-fdescribe("ApiKey", () => {
+describe("ApiKey", () => {
   let req: Request;
   let app: INestApplication;
 
