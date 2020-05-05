@@ -131,7 +131,7 @@
                   {{ activity.resource[1] | titlecase }}
                 </ng-container>
                 <ng-container *ngSwitchCase="'storage'">
-                  {{ activity.resource.slice(1).toString() }}
+                  {{ activity.resource[1] }}
                 </ng-container>
                 <ng-container *ngSwitchCase="'bucket'">
                   {{
