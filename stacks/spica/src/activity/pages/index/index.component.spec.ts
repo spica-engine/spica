@@ -7,7 +7,8 @@ import {
   MatOptionModule,
   MatSelectModule,
   MatInputModule,
-  MatButtonModule
+  MatButtonModule,
+  MatTooltipModule
 } from "@angular/material";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {MatListModule} from "@angular/material/list";
@@ -60,7 +61,8 @@ describe("IndexComponent", () => {
         ScrollingModule,
         MatListModule,
         MatProgressSpinnerModule,
-        RouterTestingModule
+        RouterTestingModule,
+        MatTooltipModule
       ],
       declarations: [IndexComponent, BuildLinkPipe],
       providers: [
@@ -74,8 +76,9 @@ describe("IndexComponent", () => {
               return of(true);
             },
             getBuckets: () => {
-              return of(["test_bucket"]);
-            }
+              return of([{_id: "id1", title: "test_bucket"}]);
+            },
+            getDocumentIds: () => {}
           }
         },
         {
@@ -99,113 +102,134 @@ describe("IndexComponent", () => {
 
   it("should set buckets$ ", async () => {
     let buckets = await component.buckets$.toPromise();
-    expect(buckets).toEqual({
-      name: "Bucket-Data",
-      modules: ["Bucket_doc_1", "Bucket_doc_2"]
+    expect(buckets).toEqual([{_id: "id1", title: "test_bucket"}]);
+  });
+
+  it("should set buckets$ as empty array if user doesn't have bucket:index access", async () => {
+    spyOn(component, "checkAllowed").and.returnValue(of(false));
+    component.ngOnInit();
+
+    let buckets = await component.buckets$.toPromise();
+    expect(buckets).toEqual([]);
+  });
+
+  it("should apply filters", () => {
+    component.filters = filters;
+    component.applyFilters();
+
+    expect(component["pageSize"]).toEqual(0);
+    expect(filterNextSpy).toHaveBeenCalledTimes(1);
+    expect(filterNextSpy).toHaveBeenCalledWith({
+      identifier: "test_identifier",
+      action: ["test_action"],
+      resource: {
+        $all: ["test_name"],
+        $in: ["test_documentId"]
+      },
+      date: {
+        begin: new Date(2000, 0, 1),
+        end: new Date(2000, 0, 1)
+      },
+      limit: 20,
+      skip: 0
     });
   });
 
-  // it("should apply filters", () => {
-  //   component.filters = filters;
-  //   component.applyFilters();
+  it("should clear filters", () => {
+    component.filters = filters;
+    component.clearFilters();
 
-  //   expect(component["pageSize"]).toEqual(0);
-  //   expect(filterNextSpy).toHaveBeenCalledTimes(1);
-  //   expect(filterNextSpy).toHaveBeenCalledWith({
-  //     identifier: "test_identifier",
-  //     action: ["test_action"],
-  //     resource: {
-  //       $all: ["test_name"],
-  //       $in: ["test_documentId"]
-  //     },
-  //     date: {
-  //       begin: new Date(2000, 0, 1),
-  //       end: new Date(2000, 0, 1)
-  //     },
-  //     limit: 20,
-  //     skip: undefined
-  //   });
-  // });
+    expect(component.documentIds).toBeUndefined();
+    expect(component["pageSize"]).toEqual(0);
+    expect(filterNextSpy).toHaveBeenCalledTimes(1);
+    expect(filterNextSpy).toHaveBeenCalledWith({
+      identifier: undefined,
+      action: [],
+      resource: {$all: [], $in: []},
+      date: {
+        begin: undefined,
+        end: undefined
+      },
+      limit: 20,
+      skip: 0
+    });
+  });
 
-  // it("should clear filters", () => {
-  //   component.filters = filters;
-  //   component.clearFilters();
+  it("should get documentIds of selected module which has a group", fakeAsync(async () => {
+    const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
+      of(["doc_1", "doc_2"])
+    );
+    component.selectionChange({
+      source: {selected: {group: {label: "test_group"}}},
+      value: "test_module"
+    } as any);
 
-  //   expect(component.documentIds).toBeUndefined();
-  //   expect(component["pageSize"]).toEqual(0);
-  //   expect(filterNextSpy).toHaveBeenCalledTimes(1);
-  //   expect(filterNextSpy).toHaveBeenCalledWith({
-  //     identifier: undefined,
-  //     action: undefined,
-  //     resource: {
-  //       name: undefined,
-  //       documentId: undefined
-  //     },
-  //     date: {
-  //       begin: undefined,
-  //       end: undefined
-  //     },
-  //     limit: 20,
-  //     skip: undefined
-  //   });
-  // });
+    expect(getDocumentIds).toHaveBeenCalledTimes(1);
+    expect(getDocumentIds).toHaveBeenCalledWith("test_group", "test_module");
 
-  // it("should get documentIds of selected module", fakeAsync(() => {
-  //   const getDocumentsSpy = spyOn(component["activityService"], "getDocuments").and.callThrough();
-  //   component.showDocuments("test_module");
+    tick(1);
 
-  //   expect(getDocumentsSpy).toHaveBeenCalledTimes(1);
-  //   expect(getDocumentsSpy).toHaveBeenCalledWith("test_module");
+    let documentIds = await component.documents$.toPromise();
 
-  //   tick(1);
+    expect(documentIds).toEqual(["doc_1", "doc_2"]);
+    expect(component.filters.resource.$all).toEqual(["test_group", "test_module"]);
+  }));
 
-  //   expect(component.documentIds).toEqual(["doc_1", "doc_2"]);
-  // }));
+  it("should get documentIds of selected module which doesn't have a group", fakeAsync(async () => {
+    const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
+      of(["doc_1", "doc_2"])
+    );
+    component.selectionChange({
+      source: {selected: {group: undefined}},
+      value: "test_module"
+    } as any);
 
-  // it("should get preference documents", () => {
-  //   const getDocumentsSpy = spyOn(component["activityService"], "getDocuments").and.callThrough();
+    expect(getDocumentIds).toHaveBeenCalledTimes(1);
+    expect(getDocumentIds).toHaveBeenCalledWith(undefined, "test_module");
 
-  //   component.showDocuments("Preference");
-  //   expect(getDocumentsSpy).toHaveBeenCalledTimes(0);
+    tick(1);
 
-  //   expect(component.documentIds).toEqual(["bucket", "passport"]);
-  // });
+    let documentIds = await component.documents$.toPromise();
 
-  // it("should set begin and end date", () => {
-  //   let today = new Date();
-  //   let yesterday = new Date();
-  //   yesterday.setDate(today.getDate() - 1);
+    expect(documentIds).toEqual(["doc_1", "doc_2"]);
+    expect(component.filters.resource.$all).toEqual(["test_module"]);
+  }));
 
-  //   component.setDate(yesterday, today);
+  it("should set begin and end date", () => {
+    let today = new Date();
+    let yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
 
-  //   const expectedBegin = new Date(yesterday.setHours(0, 0, 0, 0));
-  //   const expectedEnd = new Date(today.setHours(23, 59, 59, 999));
+    component.setDate(yesterday, today);
 
-  //   expect(component.filters.date).toEqual({begin: expectedBegin, end: expectedEnd});
-  // });
+    const expectedBegin = new Date(yesterday.setHours(0, 0, 0, 0));
+    const expectedEnd = new Date(today.setHours(23, 59, 59, 999));
 
-  // it("should fetch next page", () => {
-  //   component.filters = filters;
-  //   component["pageIndex"] = 0;
+    expect(component.filters.date).toEqual({begin: expectedBegin, end: expectedEnd});
+  });
 
-  //   component.fetchNextPage();
+  it("should fetch next page", () => {
+    component.filters = filters;
+    component["pageIndex"] = 0;
 
-  //   expect(component["pageIndex"]).toEqual(1);
+    component.fetchNextPage();
 
-  //   expect(filterNextSpy).toHaveBeenCalledTimes(1);
-  //   expect(filterNextSpy).toHaveBeenCalledWith({
-  //     identifier: "test_identifier",
-  //     action: ["test_action"],
-  //     resource: {
-  //       $all: ["test_name"],
-  //       $in: ["test_documentId"]
-  //     },
-  //     date: {
-  //       begin: new Date(2000, 0, 1),
-  //       end: new Date(2000, 0, 1)
-  //     },
-  //     limit: 20,
-  //     skip: 20
-  //   });
-  // });
+    expect(component["pageIndex"]).toEqual(1);
+
+    expect(filterNextSpy).toHaveBeenCalledTimes(1);
+    expect(filterNextSpy).toHaveBeenCalledWith({
+      identifier: "test_identifier",
+      action: ["test_action"],
+      resource: {
+        $all: ["test_name"],
+        $in: ["test_documentId"]
+      },
+      date: {
+        begin: new Date(2000, 0, 1),
+        end: new Date(2000, 0, 1)
+      },
+      limit: 20,
+      skip: 20
+    });
+  });
 });

@@ -54,10 +54,10 @@ export class ActivityService {
     return this.bucket.getBuckets();
   }
 
-  showDocuments(module: string, document: string) {
-    switch (module) {
+  getDocumentIds(group: string, module: string) {
+    switch (group) {
       case "passport":
-        switch (document) {
+        switch (module) {
           case "apikey":
             return this.apiKey.getAll().pipe(map(result => result.data.map(apikey => apikey._id)));
           case "identity":
@@ -70,10 +70,10 @@ export class ActivityService {
         break;
       case "bucket":
         return this.bucketData
-          .find(document)
+          .find(module)
           .pipe(map(result => result.data.map(bucketData => bucketData._id)));
       default:
-        switch (document) {
+        switch (module) {
           case "bucket":
             return this.bucket.getBuckets().pipe(map(bucket => bucket.map(bucket => bucket._id)));
           case "storage":

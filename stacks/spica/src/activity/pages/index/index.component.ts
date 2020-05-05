@@ -148,7 +148,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   selectionChange(event: MatSelectChange) {
     let optGroup = (event.source.selected as MatOption).group?.label.toLowerCase();
     let selection = event.value;
-    this.documents$ = this.activityService.showDocuments(optGroup, selection);
+    this.documents$ = this.activityService.getDocumentIds(optGroup, selection);
     this.filters.resource.$all = optGroup ? [optGroup, selection] : [selection]
     this.filters.resource.$in = []
   }
