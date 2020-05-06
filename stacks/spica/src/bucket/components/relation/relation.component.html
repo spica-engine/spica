@@ -58,7 +58,7 @@
             [filter]="filter"
             [schema]="schema$ | async"
             (click)="$event.stopPropagation()"
-            (filterChange)="this.filter = $event; refresh.next(); filterMenu.close.emit()"
+            (filterChange)="this.filter = $event; refresh.next(undefined); filterMenu.close.emit()"
           ></bucket-filter>
         </mat-menu></button
     ></mat-card-subtitle>
