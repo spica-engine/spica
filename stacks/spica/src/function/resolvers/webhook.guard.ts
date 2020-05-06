@@ -4,7 +4,7 @@ import {Router} from "@angular/router";
 import {take, map} from "rxjs/operators";
 
 @Injectable({providedIn: "root"})
-export class WebhookNavigator {
+export class WebhookGuard {
   constructor(private webhookService: WebhookService, private router: Router) {}
 
   canActivate() {

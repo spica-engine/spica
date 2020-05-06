@@ -16,17 +16,17 @@
   <mat-card-content>
     <mat-table [dataSource]="$data">
       <ng-container matColumnDef="_id">
-        <mat-header-cell class="id-header" *matHeaderCellDef> # </mat-header-cell>
-        <mat-cell class="id-content" *matCellDef="let webhook">{{ webhook._id }}</mat-cell>
+        <mat-header-cell *matHeaderCellDef> # </mat-header-cell>
+        <mat-cell *matCellDef="let webhook">{{ webhook._id }}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="url">
-        <mat-header-cell class="url-header" *matHeaderCellDef> Url </mat-header-cell>
-        <mat-cell class="url-content" *matCellDef="let webhook">{{ webhook.url }}</mat-cell>
+        <mat-header-cell *matHeaderCellDef> Url </mat-header-cell>
+        <mat-cell *matCellDef="let webhook">{{ webhook.url }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell class="action" *matCellDef="let webhook">
+        <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+        <mat-cell *matCellDef="let webhook">
           <button
             canInteract="webhook:show"
             mat-icon-button

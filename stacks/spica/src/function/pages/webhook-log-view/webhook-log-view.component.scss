@@ -27,7 +27,7 @@
     margin-top: -110px;
     // For proper border radius
     overflow: hidden;
-    div.filters {
+    div:first-of-type {
       padding-top: 19px;
       margin: 0px 24px;
     }
@@ -40,7 +40,7 @@
       justify-content: center;
     }
     .cdk-virtual-scroll-viewport {
-      div.title {
+      div:first-of-type {
         margin-right: 24px;
         padding: 0px 24px;
         height: 48px;

@@ -1,7 +1,7 @@
 import {Component, OnInit} from "@angular/core";
 
 @Component({
-  selector: "app-webhook-welcome",
+  selector: "webhook-welcome",
   templateUrl: "./webhook-welcome.component.html",
   styleUrls: ["./webhook-welcome.component.scss"]
 })

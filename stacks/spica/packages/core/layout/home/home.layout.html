@@ -23,7 +23,7 @@
           <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
       </mat-nav-list>
-      <mat-nav-list class="additional">
+      <mat-nav-list>
         <h4>{{ currentCategory | async }}</h4>
         <mat-list-item
           *ngFor="let route of routes$ | async"

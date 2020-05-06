@@ -7,7 +7,7 @@
       mat-sidenav {
         max-width: 60px;
         min-width: 0;
-        .additional {
+        mat-nav-list:nth-child(2) {
           opacity: 0;
         }
       }
@@ -24,7 +24,7 @@
       max-width: 250px;
       word-break: break-word;
       transition: all 0.4s ease-in-out;
-      .additional {
+      .mat-nav-list:nth-child(2) {
         min-width: 190px;
         opacity: 1;
         transition: all 0.4s ease-in-out;

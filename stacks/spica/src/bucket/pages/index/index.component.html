@@ -9,9 +9,9 @@
         [matClipboard]="bucketId"
         (mouseenter)="$event.stopImmediatePropagation()"
       >
-        <mat-icon [matTooltip]="clipboard.icon == 'info' ? 'Copy to clipboard' : 'Copied!'">{{
-          clipboard.icon
-        }}</mat-icon>
+        <mat-icon [matTooltip]="clipboard.icon == 'info' ? 'Copy to clipboard' : 'Copied!'">
+          {{ clipboard.icon }}
+        </mat-icon>
       </button>
       <mat-chip-list *ngIf="schema.readOnly">
         <mat-chip disableRipple>Read Only</mat-chip>
