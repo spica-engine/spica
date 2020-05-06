@@ -82,6 +82,5 @@ export class HomeLayoutComponent implements OnInit {
 
   toggle(): void {
     this.expanded = !this.expanded;
-    //setTimeout(() => this.sidenav.updateContentMargins(), 10);
   }
 }
