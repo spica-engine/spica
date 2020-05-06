@@ -70,7 +70,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   filters: ActivityFilter = {
     identifier: undefined,
     action: [],
-    resource: {$all:[],$in:[]},
+    resource: {$all: [], $in: []},
     date: {
       begin: undefined,
       end: undefined
@@ -123,7 +123,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
     this.filters = {
       identifier: undefined,
       action: [],
-      resource: {$all:[],$in:[]},
+      resource: {$all: [], $in: []},
       date: {
         begin: undefined,
         end: undefined
@@ -146,11 +146,13 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   }
 
   selectionChange(event: MatSelectChange) {
-    let optGroup = (event.source.selected as MatOption).group?.label.toLowerCase();
+    let optGroup = (event.source.selected as MatOption).group
+      ? (event.source.selected as MatOption).group.label.toLowerCase()
+      : "";
     let selection = event.value;
     this.documents$ = this.activityService.getDocumentIds(optGroup, selection);
-    this.filters.resource.$all = optGroup ? [optGroup, selection] : [selection]
-    this.filters.resource.$in = []
+    this.filters.resource.$all = optGroup ? [optGroup, selection] : [selection];
+    this.filters.resource.$in = [];
   }
 
   clearActivities() {

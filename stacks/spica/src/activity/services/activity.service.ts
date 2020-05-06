@@ -72,7 +72,7 @@ export class ActivityService {
         return this.bucketData
           .find(module)
           .pipe(map(result => result.data.map(bucketData => bucketData._id)));
-      default:
+      case "":
         switch (module) {
           case "bucket":
             return this.bucket.getBuckets().pipe(map(bucket => bucket.map(bucket => bucket._id)));

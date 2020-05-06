@@ -155,7 +155,7 @@ describe("IndexComponent", () => {
     });
   });
 
-  it("should get documentIds of selected module which has a group", fakeAsync(async () => {
+  it("should get documentIds of selected module which has a group and should set resource filters", fakeAsync(async () => {
     const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
       of(["doc_1", "doc_2"])
     );
@@ -173,9 +173,10 @@ describe("IndexComponent", () => {
 
     expect(documentIds).toEqual(["doc_1", "doc_2"]);
     expect(component.filters.resource.$all).toEqual(["test_group", "test_module"]);
+    expect(component.filters.resource.$in).toEqual([]);
   }));
 
-  it("should get documentIds of selected module which doesn't have a group", fakeAsync(async () => {
+  it("should get documentIds of selected module which doesn't have a group and should set resource filters", fakeAsync(async () => {
     const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
       of(["doc_1", "doc_2"])
     );
@@ -185,7 +186,7 @@ describe("IndexComponent", () => {
     } as any);
 
     expect(getDocumentIds).toHaveBeenCalledTimes(1);
-    expect(getDocumentIds).toHaveBeenCalledWith(undefined, "test_module");
+    expect(getDocumentIds).toHaveBeenCalledWith("", "test_module");
 
     tick(1);
 
@@ -193,6 +194,7 @@ describe("IndexComponent", () => {
 
     expect(documentIds).toEqual(["doc_1", "doc_2"]);
     expect(component.filters.resource.$all).toEqual(["test_module"]);
+    expect(component.filters.resource.$in).toEqual([]);
   }));
 
   it("should set begin and end date", () => {
