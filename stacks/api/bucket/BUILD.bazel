@@ -16,6 +16,7 @@ ts_library(
         "cache.ts",
         "index.ts",
         "scheduler.ts",
+        "utilities.ts",
     ],
     data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
@@ -31,7 +32,7 @@ ts_library(
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
         "//stacks/api/preference",
-        "//stacks/api/preference/service",
+        "//stacks/api/preference/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/archiver",
@@ -193,7 +194,7 @@ jasmine_node_test(
 )
 
 ts_library(
-    name = "bucket_module_test",
+    name = "bucket_module_test_library",
     testonly = True,
     srcs = ["bucket.module.spec.ts"],
     deps = [
@@ -214,9 +215,9 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "bucket_test",
+    name = "bucket_module_test",
     deps = [
-        ":bucket_module_test",
+        ":bucket_module_test_library",
     ],
 )
 
@@ -237,6 +238,25 @@ jasmine_node_test(
     name = "activity_test",
     deps = [
         "activity_test_lib",
+    ],
+)
+
+ts_library(
+    name = "utilities_test_lib",
+    testonly = True,
+    srcs = [
+        "utilities.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/bucket",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "utilities_test",
+    deps = [
+        "utilities_test_lib",
     ],
 )
 

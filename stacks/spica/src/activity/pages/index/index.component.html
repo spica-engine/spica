@@ -71,8 +71,11 @@
         <mat-list-item *cdkVirtualFor="let activity of dataSource">
           <span class="info">
             Identifier {{ activity.identifier | titlecase }}
-            {{ actions[activity.action - 1] }} document {{ activity.resource.documentId }} on
-            {{ activity.resource.name }} module.
+            {{ actions[activity.action - 1] }} document
+            <a [routerLink]="activity | buildLink">
+              {{ activity.resource.documentId }}
+            </a>
+            on {{ activity.resource.name }} module.
           </span>
           <span class="date">{{ activity.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <mat-divider></mat-divider>

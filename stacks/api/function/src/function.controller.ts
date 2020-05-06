@@ -24,8 +24,8 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as os from "os";
-import {of, OperatorFunction} from "rxjs";
-import {catchError, finalize, last, map, switchMap, tap} from "rxjs/operators";
+import {of, OperatorFunction, from} from "rxjs";
+import {catchError, finalize, last, map, switchMap, tap, take} from "rxjs/operators";
 import {createFunctionResource} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
@@ -48,7 +48,9 @@ export class FunctionController {
     for (const enqueuer of this.horizon.enqueuers) {
       enqueuers.push({
         description: enqueuer.description,
-        options: await this.engine.getSchema(enqueuer.description.name)
+        options: await from(this.engine.getSchema(enqueuer.description.name))
+          .pipe(take(1))
+          .toPromise()
       });
     }
 

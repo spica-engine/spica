@@ -9,7 +9,6 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {ObjectId} from "@spica-server/database";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {BucketDataController} from "./bucket-data.controller";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -568,10 +567,13 @@ describe("BucketDataController", () => {
       let statisticsBucket: Bucket;
       let usersBucket: Bucket;
       let achievementsBucket: Bucket;
+      let walletBucket: Bucket;
 
       let user: BucketDocument;
       let anotherUser: BucketDocument;
+      let userWithWallet: BucketDocument;
       let achievement: BucketDocument;
+      let wallets: BucketDocument[];
 
       beforeEach(async () => {
         achievementsBucket = await req
@@ -580,10 +582,19 @@ describe("BucketDataController", () => {
             description: "Achievement",
             properties: {
               name: {
-                type: "string",
-                title: "achievement",
-                description: "Title of the row",
-                options: {position: "left"}
+                type: "string"
+              }
+            }
+          })
+          .then(r => r.body);
+
+        walletBucket = await req
+          .post("/bucket", {
+            title: "Wallet",
+            description: "Wallet",
+            properties: {
+              name: {
+                type: "string"
               }
             }
           })
@@ -595,10 +606,12 @@ describe("BucketDataController", () => {
             description: "Users",
             properties: {
               name: {
-                type: "string",
-                title: "username",
-                description: "Title of the row",
-                options: {position: "left"}
+                type: "string"
+              },
+              wallet: {
+                type: "relation",
+                bucketId: walletBucket._id,
+                relationType: "onetomany"
               }
             }
           })
@@ -629,15 +642,31 @@ describe("BucketDataController", () => {
           })
           .then(r => r.body);
 
+        achievement = await req
+          .post(`/bucket/${achievementsBucket._id}/data`, {
+            name: "do something until something else happens"
+          })
+          .then(r => r.body);
+
         anotherUser = await req
           .post(`/bucket/${usersBucket._id}/data`, {
             name: "user33"
           })
           .then(r => r.body);
 
-        achievement = await req
-          .post(`/bucket/${achievementsBucket._id}/data`, {
-            name: "do something until something else happens"
+        wallets = [
+          await req.post(`/bucket/${walletBucket._id}/data`, {
+            name: "GNB"
+          }),
+          await req.post(`/bucket/${walletBucket._id}/data`, {
+            name: "FNB"
+          })
+        ].map(r => r.body);
+
+        userWithWallet = await req
+          .post(`/bucket/${usersBucket._id}/data`, {
+            name: "wealthy user",
+            wallet: wallets.map(wallet => wallet._id)
           })
           .then(r => r.body);
 
@@ -653,18 +682,40 @@ describe("BucketDataController", () => {
       });
 
       afterEach(async () => {
-        const db = app.get(DatabaseService);
-
-        await db.collection("buckets").deleteMany({
-          _id: {$in: [statisticsBucket._id, usersBucket._id, achievementsBucket._id]}
-        });
-        // TODO: This should be handled by bucket controller
-        await db.collection(`bucket_${statisticsBucket._id}`).drop();
-        await db.collection(`bucket_${usersBucket._id}`).drop();
-        await db.collection(`bucket_${achievementsBucket._id}`).drop();
+        await req.delete(`/bucket/${statisticsBucket._id}`);
+        await req.delete(`/bucket/${usersBucket._id}`);
+        await req.delete(`/bucket/${achievementsBucket._id}`);
+        await req.delete(`/bucket/${walletBucket._id}`);
       });
 
-      it("should get statics with username and achievement name", async () => {
+      it("should return users with wallets", async () => {
+        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {relation: true});
+        expect(users).toEqual([
+          {_id: "__skip__", name: "user66", wallet: []},
+          {_id: "__skip__", name: "user33", wallet: []},
+          {
+            _id: "__skip__",
+            name: "wealthy user",
+            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+          }
+        ]);
+      });
+
+      it("should return users by their wallet name", async () => {
+        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {
+          relation: true,
+          filter: JSON.stringify({"wallet.name": "GNB"})
+        });
+        expect(users).toEqual([
+          {
+            _id: "__skip__",
+            name: "wealthy user",
+            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+          }
+        ]);
+      });
+
+      it("should get statistics with username and achievement name", async () => {
         const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
           relation: true
         });
@@ -694,7 +745,7 @@ describe("BucketDataController", () => {
         ]);
       });
 
-      it("should get statics with only id", async () => {
+      it("should get statistics with only id", async () => {
         const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
           relation: false
         });
@@ -995,7 +1046,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  describe("delete relations", () => {
+  describe("clear relations", () => {
     let relationBucketId: ObjectId;
     let usersBucketId: ObjectId;
     let otherBucketId: ObjectId;
@@ -1170,125 +1221,6 @@ describe("BucketDataController", () => {
           }
         }
       ]);
-    });
-  });
-
-  describe("clear relation methods", () => {
-    let controller: BucketDataController;
-    let bucketService: any;
-    let findSpy: jasmine.Spy;
-    let collectionSpy: jasmine.Spy;
-    let updateSpy: jasmine.Spy;
-
-    let bucketId = new ObjectId();
-    let anotherBucketId = new ObjectId();
-    let relationBucketId = new ObjectId();
-    let documentId = new ObjectId();
-
-    let mockCollection: any = {
-      updateMany: () => {}
-    };
-
-    let buckets = [
-      {
-        _id: bucketId,
-        properties: {
-          nested_relation: {
-            type: "object",
-            properties: {
-              here: {type: "relation", bucketId: relationBucketId},
-              not_here: {type: "relation", bucketId: new ObjectId()}
-            }
-          },
-          root_relation: {type: "relation", bucketId: relationBucketId},
-          not_relation: {type: "string"}
-        }
-      },
-      {
-        _id: anotherBucketId,
-        properties: {
-          relation_field: {type: "relation", bucketId: relationBucketId}
-        }
-      }
-    ];
-
-    beforeEach(() => {
-      controller = app.get(BucketDataController);
-      bucketService = {
-        find: () => {},
-        collection: () => mockCollection
-      };
-
-      findSpy = spyOn(bucketService, "find").and.returnValue(
-        new Promise((resolve, reject) => resolve(buckets))
-      );
-      collectionSpy = spyOn(bucketService, "collection").and.callThrough();
-      updateSpy = spyOn(mockCollection, "updateMany");
-    });
-
-    it("should clear relations", async () => {
-      await controller.clearRelations(bucketService, relationBucketId, documentId);
-      expect(findSpy).toHaveBeenCalledTimes(1);
-      expect(findSpy).toHaveBeenCalledWith({_id: {$ne: relationBucketId}});
-
-      expect(collectionSpy).toHaveBeenCalledTimes(3);
-      expect(collectionSpy.calls.allArgs()).toEqual([
-        [`bucket_${bucketId.toHexString()}`],
-        [`bucket_${bucketId.toHexString()}`],
-        [`bucket_${anotherBucketId.toHexString()}`]
-      ]);
-
-      expect(updateSpy).toHaveBeenCalledTimes(3);
-      expect(updateSpy.calls.allArgs()).toEqual([
-        [{"nested_relation.here": documentId}, {$unset: {"nested_relation.here": ""}}],
-        [{root_relation: documentId}, {$unset: {root_relation: ""}}],
-        [{relation_field: documentId}, {$unset: {relation_field: ""}}]
-      ]);
-    });
-
-    it("should check whether schema is object or not", () => {
-      let schema = {
-        type: "object",
-        properties: {
-          test: ""
-        }
-      };
-
-      expect(controller.isObject(schema)).toBe(true);
-
-      schema.type = "string";
-      expect(controller.isObject(schema)).toBe(false);
-    });
-
-    it("should check whether schema is correct relation or not", () => {
-      let schema = {
-        type: "relation",
-        bucketId: "id1"
-      };
-      expect(controller.isRelation(schema, "id1")).toEqual(true);
-
-      expect(controller.isRelation(schema, "id2")).toEqual(false);
-
-      schema.type = "object";
-      expect(controller.isRelation(schema, "id1")).toEqual(false);
-    });
-
-    it("should find relations", () => {
-      let schema = {
-        nested_relation: {
-          type: "object",
-          properties: {
-            here: {type: "relation", bucketId: "id1"},
-            not_here: {type: "relation", bucketId: "id2"}
-          }
-        },
-        root_relation: {type: "relation", bucketId: "id1"},
-        not_relation: {type: "string"}
-      };
-
-      let targets = controller.findRelations(schema, "id1", "", []);
-
-      expect(targets).toEqual(["nested_relation.here", "root_relation"]);
     });
   });
 });

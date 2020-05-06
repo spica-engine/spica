@@ -27,6 +27,7 @@ import * as mime from "mime-types";
 import * as request from "request";
 import {createBucketResource} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
+import {findRelations, findRemovedKeys} from "./utilities";
 
 @Controller("bucket")
 export class BucketController {
@@ -68,11 +69,15 @@ export class BucketController {
   @UseInterceptors(activity(createBucketResource))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
-  replaceOne(
+  async replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    return this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    let previousSchema = await this.bs.findOne({_id: id});
+
+    let currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    await this.clearRemovedFields(this.bds, previousSchema, currentSchema);
+    return currentSchema;
   }
 
   @Patch(":id")
@@ -98,8 +103,15 @@ export class BucketController {
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.bs.deleteOne({_id: id});
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    let deletedCount = await this.bs.deleteOne({_id: id});
+    if (deletedCount < 1) return;
+
+    await this.bds.deleteAll(id);
+
+    await this.clearRelations(this.bs, this.bds, id);
+
+    return;
   }
 
   @Post("import/:id")
@@ -261,5 +273,49 @@ export class BucketController {
         }
       });
     });
+  }
+
+  async clearRelations(
+    bucketService: BucketService,
+    bucketDataService: BucketDataService,
+    bucketId: ObjectId
+  ) {
+    let buckets = await bucketService.find({_id: {$ne: bucketId}});
+    if (buckets.length < 1) return;
+
+    for (const bucket of buckets) {
+      let targets = findRelations(bucket.properties, bucketId.toHexString(), "", []);
+      if (targets.length < 1) continue;
+
+      let unsetFieldsBucket = targets.reduce((acc, current) => {
+        current = "properties." + current.replace(/\./g, ".properties.");
+        acc = {...acc, [current]: ""};
+        return acc;
+      }, {});
+
+      await bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket});
+
+      let unsetFieldsBucketData = targets.reduce((acc, current) => {
+        acc = {...acc, [current]: ""};
+        return acc;
+      }, {});
+
+      await bucketDataService.updateMany(bucket._id, {}, {$unset: unsetFieldsBucketData});
+    }
+  }
+  async clearRemovedFields(
+    bucketDataService: BucketDataService,
+    previousSchema: Bucket,
+    currentSchema: Bucket
+  ) {
+    let removedKeys = findRemovedKeys(previousSchema.properties, currentSchema.properties, [], "");
+    if (removedKeys.length < 1) return;
+
+    let unsetFields = removedKeys.reduce((pre, acc: any, index, array) => {
+      acc = {...pre, [array[index]]: ""};
+      return acc;
+    }, {});
+
+    await bucketDataService.updateMany(previousSchema._id, {}, {$unset: unsetFields});
   }
 }

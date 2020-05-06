@@ -1,5 +1,5 @@
-:host ::ng-deep {
-  .mat-list-item-content {
+:host {
+  ::ng-deep .mat-list-item-content {
     padding: 0px !important;
   }
 
@@ -19,30 +19,35 @@
     padding: 25px;
     margin: 30px;
     margin-top: -110px;
-    // For proper border radius
     overflow: hidden;
 
-    mat-card-content form mat-list h4 {
-      padding: 16px 0px 24px 0px;
-    }
+    mat-list {
+      padding-top: 0px;
+      mat-list-item {
+        margin-top: 10px;
+        height: auto !important;
+        &:nth-child(1) {
+          margin-top: 0px;
+        }
+        &:nth-child(2) {
+          ::ng-deep .mat-list-item-content {
+            display: flex;
+            mat-form-field {
+              flex: 1;
+            }
+            span {
+              vertical-align: middle;
+            }
+          }
+        }
 
-    mat-form-field.url {
-      width: 100%;
-    }
-
-    mat-list-item.triggers {
-      margin-top: 10px;
-    }
-
-    mat-list-item.triggers mat-form-field {
-      width: 20%;
-      margin-right: 10px;
-    }
-
-    .status {
-      width: 20%;
-      margin: 0 15px;
-      height: 100%;
+        &.triggers {
+          mat-form-field:not(:first-of-type) {
+            width: 20%;
+            margin-left: 15px;
+          }
+        }
+      }
     }
   }
 }

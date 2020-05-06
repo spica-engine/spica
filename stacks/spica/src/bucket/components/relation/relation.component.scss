@@ -1,19 +1,23 @@
 ::ng-deep {
-  .relationPicker {
+  .mat-menu-panel.relation-picker {
     max-width: unset !important;
-    mat-header-row,
-    mat-row {
-      mat-header-cell,
-      mat-cell {
-        &:first-of-type,
-        &:nth-of-type(2) {
-          flex: 5;
-        }
-        &:last-of-type {
-          flex: 1;
-          button[mat-icon-button].selected {
-            color: #009688;
-            font-size: 20px;
+    mat-card {
+      mat-table {
+        mat-header-row,
+        mat-row {
+          mat-header-cell,
+          mat-cell {
+            &:first-of-type,
+            &:nth-of-type(2) {
+              flex: 5;
+            }
+            &:last-of-type {
+              flex: 1;
+              button[mat-icon-button].selected {
+                color: #009688;
+                font-size: 20px;
+              }
+            }
           }
         }
       }
@@ -21,9 +25,51 @@
   }
 }
 
+:root.dark :host {
+  --opacity: 0.5;
+}
+
 :host {
+  --opacity: 1;
   display: inline-block;
-  border-bottom: 1px solid var(--primary-500);
-  padding-left: 1.3em !important;
-  padding-right: 1.3em !important;
+  &.disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+  section {
+    display: flex;
+    align-items: center;
+    padding: 10px 10px;
+    border-radius: 4px;
+    background: rgba(
+      var(--background-app-bar-rgb),
+      calc(var(--opacity) - calc(var(--opacity) / 2))
+    );
+
+    div {
+      overflow-x: auto;
+      max-height: 180px;
+      span {
+        button:first-of-type {
+          margin: 5px;
+        }
+        button:nth-of-type(2) {
+          margin-left: -15px;
+          display: none;
+          transition: all 0.2s ease-in-out;
+        }
+        &:hover > button:nth-of-type(2) {
+          display: initial;
+        }
+      }
+    }
+
+    span {
+      flex: 1;
+    }
+  }
+  mat-hint {
+    margin-top: 1.25em;
+    font-size: 10.5px;
+  }
 }

@@ -9,7 +9,15 @@
     <form #form="ngForm">
       <mat-list>
         <mat-list-item>
-          <mat-form-field class="url">
+          <span class="slide-toggle">
+            <mat-label>
+              {{ webhook.trigger.active ? "Active" : "Deactive" }}
+            </mat-label>
+            <mat-slide-toggle name="status" [(ngModel)]="webhook.trigger.active"></mat-slide-toggle>
+          </span>
+        </mat-list-item>
+        <mat-list-item>
+          <mat-form-field url>
             <input
               matInput
               type="url"
@@ -27,13 +35,23 @@
             <mat-error *ngIf="urlModel.errors?.required">Url is required.</mat-error>
           </mat-form-field>
         </mat-list-item>
+        <h4>Body</h4>
+        <mat-list-item>
+          <code-editor
+            matInput
+            [(ngModel)]="webhook.body"
+            #bodyModel="ngModel"
+            required
+            name="body"
+            language="handlebars"
+            [options]="{language: 'handlebars', minimap: {enabled: false}}"
+          ></code-editor>
+          <mat-error *ngIf="bodyModel.errors?.required">Body mapping is required</mat-error>
+        </mat-list-item>
         <h4>
           Trigger
         </h4>
-        <mat-list-item
-          class="triggers"
-          *ngIf="trigger.collections && trigger.collections.length > 0"
-        >
+        <mat-list-item class="triggers">
           <mat-form-field>
             <mat-label>Collection</mat-label>
             <mat-select
@@ -42,11 +60,7 @@
               #collectionModel="ngModel"
               required
             >
-              <mat-option
-                option
-                *ngFor="let collection of trigger.collections"
-                [value]="collection"
-              >
+              <mat-option *ngFor="let collection of collections$ | async" [value]="collection">
                 {{ collection }}
               </mat-option>
             </mat-select>
@@ -60,18 +74,13 @@
               #typeModel="ngModel"
               required
             >
-              <mat-option option *ngFor="let type of trigger.types" [value]="type">
-                {{ type }}
-              </mat-option>
+              <mat-option value="INSERT">INSERT</mat-option>
+              <mat-option value="UPDATE">UPDATE</mat-option>
+              <mat-option value="REPLACE">REPLACE</mat-option>
+              <mat-option value="DELETE">DELETE</mat-option>
             </mat-select>
             <mat-error *ngIf="typeModel.errors?.required">Type is required.</mat-error>
           </mat-form-field>
-          <div class="status">
-            <mat-label>
-              {{ webhook.trigger.active ? "Active" : "Deactive" }}
-            </mat-label>
-            <mat-slide-toggle name="status" [(ngModel)]="webhook.trigger.active"></mat-slide-toggle>
-          </div>
         </mat-list-item>
       </mat-list>
     </form>

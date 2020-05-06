@@ -1,5 +1,6 @@
-import {Component, OnInit, EventEmitter, OnDestroy} from "@angular/core";
+import {Component, EventEmitter, OnDestroy, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
+import {Observable} from "rxjs";
 import {filter, switchMap, takeUntil} from "rxjs/operators";
 import {emptyWebhook, Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
@@ -12,10 +13,8 @@ import {WebhookService} from "../../webhook.service";
 export class WebhookAddComponent implements OnInit, OnDestroy {
   public webhook: Webhook = emptyWebhook();
   private dispose = new EventEmitter();
-  trigger = {
-    collections: [],
-    types: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
-  };
+
+  collections$: Observable<string[]>;
 
   constructor(
     private webhookService: WebhookService,
@@ -24,10 +23,7 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.webhookService
-      .getCollections()
-      .toPromise()
-      .then(collections => (this.trigger.collections = collections));
+    this.collections$ = this.webhookService.getCollections();
 
     this.activatedRoute.params
       .pipe(

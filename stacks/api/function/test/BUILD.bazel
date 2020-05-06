@@ -11,6 +11,7 @@ ts_library(
         "function.controller.spec.ts",
     ],
     deps = [
+        "//packages/core/schema",
         "//packages/database",
         "//packages/database/testing",
         "//stacks/api/function",
@@ -18,6 +19,7 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
+        "@npm//rxjs",
     ],
 )
 

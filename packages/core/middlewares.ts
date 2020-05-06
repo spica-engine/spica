@@ -1,4 +1,4 @@
-import {raw, json} from "body-parser";
+import {json, raw} from "body-parser";
 import * as BSON from "bson";
 
 export namespace Middlewares {
@@ -21,10 +21,17 @@ export namespace Middlewares {
 
   export function Preflight(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
+
     if (req.header("access-control-request-method")) {
       res.header("Access-Control-Allow-Methods", req.header("access-control-request-method"));
     }
-    res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept-Language");
+
+    let allowedHeaders = "Authorization, Content-Type, Accept-Language";
+    if (req.header("access-control-request-headers")) {
+      allowedHeaders = req.header("access-control-request-headers");
+    }
+
+    res.header("Access-Control-Allow-Headers", allowedHeaders);
 
     if (req.method == "OPTIONS") {
       res.end();

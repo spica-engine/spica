@@ -13,9 +13,12 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
+import {Scheme, SchemeObserver} from "@spica-client/core/layout";
+import {Subject} from "rxjs";
+import {takeUntil} from "rxjs/operators";
 
 @Component({
-  selector: "function-editor",
+  selector: "code-editor",
   template: "",
   styleUrls: ["./editor.component.scss"],
   providers: [
@@ -28,12 +31,17 @@ export class EditorComponent
   @Output() init = new EventEmitter();
   @Output() save = new EventEmitter();
   @Input() options: monaco.editor.IEditorConstructionOptions;
+
   private monacoPath: string = "assets/function/min/vs";
   private editorRef: monaco.editor.IStandaloneCodeEditor;
+  private dispose = new Subject();
 
   private get _options() {
     return {
-      model: monaco.editor.createModel(this.value, "typescript"),
+      model: monaco.editor.createModel(
+        this.value,
+        (this.options && this.options.language) || "typescript"
+      ),
       ...this.options,
       scrollBeyondLastLine: false,
       cursorBlinking: "phase",
@@ -52,7 +60,16 @@ export class EditorComponent
   private onTouched = () => {};
   private onChanged = (obj: any) => {};
 
-  constructor(private elementRef: ElementRef<HTMLElement>, private zone: NgZone) {}
+  constructor(
+    private elementRef: ElementRef<HTMLElement>,
+    private zone: NgZone,
+    schemeObserver: SchemeObserver
+  ) {
+    schemeObserver
+      .observe(Scheme.Dark)
+      .pipe(takeUntil(this.dispose))
+      .subscribe(r => this.changeScheme(r));
+  }
 
   writeValue(obj: any): void {
     this.value = obj;
@@ -79,6 +96,16 @@ export class EditorComponent
     this.editorRef.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () =>
       this.zone.run(() => this.save.emit())
     );
+  }
+
+  changeScheme(isDark: boolean) {
+    const theme = isDark ? "vs-dark" : "vs-light";
+    if (window.monaco) {
+      monaco.editor.setTheme(theme);
+    } else {
+      this.options = this.options || {};
+      this.options.theme = theme;
+    }
   }
 
   ngOnInit(): void {
@@ -135,6 +162,10 @@ export class EditorComponent
   }
 
   ngOnDestroy(): void {
-    this.editorRef.dispose();
+    if (this.editorRef) {
+      this.editorRef.dispose();
+    }
+
+    this.dispose.next();
   }
 }

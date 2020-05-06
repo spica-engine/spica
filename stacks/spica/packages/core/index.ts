@@ -8,3 +8,4 @@ export * from "./utils";
 export * from "./preferences";
 export * from "./layout";
 export * from "./interfaces";
+export * from "./factories/factory";

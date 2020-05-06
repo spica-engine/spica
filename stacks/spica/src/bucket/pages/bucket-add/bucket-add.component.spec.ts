@@ -135,7 +135,8 @@ describe("Bucket Add Component", () => {
         {
           provide: BucketHistoryService,
           useValue: {
-            clearHistories: jasmine.createSpy("clearHistories").and.returnValue(of(undefined))
+            clearHistories: jasmine.createSpy("clearHistories").and.returnValue(of(undefined)),
+            historyList: jasmine.createSpy("historyList").and.returnValue(of(undefined))
           }
         }
       ],
@@ -322,6 +323,20 @@ describe("Bucket Add Component", () => {
         fixture.debugElement.query(By.css("mat-card mat-card-actions button mat-icon"))
           .nativeElement
       ).toBeDefined("should work if savingstate is false as default");
+    });
+
+    it("should render disabled history toggle and error", async () => {
+      fixture.componentInstance.isHistoryEndpointEnabled$ = of(false);
+
+      fixture.detectChanges();
+
+      expect(
+        fixture.debugElement.query(By.css(".history mat-slide-toggle")).componentInstance.disabled
+      ).toEqual(true);
+
+      expect(
+        fixture.debugElement.query(By.css(".toggles mat-error")).nativeElement.textContent
+      ).toEqual(" This feature is unavailable because we could not find a replica set. ");
     });
   });
 
@@ -517,7 +532,7 @@ describe("Bucket Add Component", () => {
       } as Bucket);
     });
 
-    fit("should clear histories of bucket", fakeAsync(() => {
+    it("should clear histories of bucket", fakeAsync(() => {
       let clearHistorySpy = fixture.componentInstance["historyService"].clearHistories;
       fixture.componentInstance.clearHistories();
       expect(clearHistorySpy).toHaveBeenCalledTimes(1);

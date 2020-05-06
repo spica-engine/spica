@@ -1,4 +1,5 @@
 import {Module} from "@nestjs/common";
+import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, DATE_TIME, OBJECT_ID, UPDATED_AT} from "@spica-server/core/schema/defaults";
@@ -8,7 +9,6 @@ import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
-import {ActivityModule} from "@spica-server/activity";
 
 @Module({
   imports: [
@@ -23,7 +23,11 @@ import {ActivityModule} from "@spica-server/activity";
     }),
     PreferenceModule,
     ...(!!process.env.ENABLE_ACTIVITY_STREAM ? [ActivityModule.forRoot()] : []),
-    BucketModule.forRoot({hooks: !!process.env.ENABLE_BUCKET_HOOKS, history: true, realtime: true}),
+    BucketModule.forRoot({
+      hooks: !!process.env.ENABLE_BUCKET_HOOKS,
+      history: !!process.env.ENABLE_BUCKET_HISTORY,
+      realtime: true
+    }),
     DashboardModule,
     StorageModule.forRoot({
       path: process.env.PERSISTENT_PATH

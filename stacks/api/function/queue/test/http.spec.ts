@@ -12,7 +12,10 @@ describe("HttpQueue", () => {
     httpQueue = new HttpQueue();
     queue.addQueue(httpQueue);
     queue.listen();
-    httpQueueClient = new Http.QueueClient("0.0.0.0:5678", credentials.createInsecure());
+    httpQueueClient = new Http.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      credentials.createInsecure()
+    );
   });
 
   afterEach(() => {

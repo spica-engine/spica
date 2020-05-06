@@ -1,8 +1,11 @@
 import {Directive, EventEmitter, Input, NgZone, OnDestroy, Output} from "@angular/core";
 import {LanguageService} from "./language.service";
 
-@Directive({selector: "function-editor[language]", host: {"(init)": "onEditorInit($event)"}})
-export class LanguageDirective implements OnDestroy {
+@Directive({
+  selector: "code-editor[language='typescript']",
+  host: {"(init)": "onEditorInit($event)"}
+})
+export class TypescriptLanguageDirective implements OnDestroy {
   @Output() run = new EventEmitter();
   private disposables: Array<monaco.IDisposable> = [];
   private _editorRef: monaco.editor.IStandaloneCodeEditor;
@@ -23,9 +26,7 @@ export class LanguageDirective implements OnDestroy {
     if (monaco.languages.getLanguages().findIndex(l => l.id == "typescript") == -1) {
       monaco.languages.register({
         id: "typescript",
-        extensions: [".ts"],
-        aliases: ["typescript"],
-        mimetypes: ["text/typescript"]
+        extensions: [".ts"]
       });
       import("monaco-languages/release/esm/typescript/typescript").then(m => {
         monaco.languages.setMonarchTokensProvider("typescript", m.language);

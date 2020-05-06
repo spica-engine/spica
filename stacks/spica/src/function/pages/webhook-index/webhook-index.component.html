@@ -17,20 +17,20 @@
     <mat-table [dataSource]="$data">
       <ng-container matColumnDef="_id">
         <mat-header-cell class="id-header" *matHeaderCellDef> # </mat-header-cell>
-        <mat-cell class="id-content" *matCellDef="let element">{{ element._id }}</mat-cell>
+        <mat-cell class="id-content" *matCellDef="let webhook">{{ webhook._id }}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="url">
         <mat-header-cell class="url-header" *matHeaderCellDef> Url </mat-header-cell>
-        <mat-cell class="url-content" *matCellDef="let element">{{ element.url }}</mat-cell>
+        <mat-cell class="url-content" *matCellDef="let webhook">{{ webhook.url }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
         <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-        <mat-cell *matCellDef="let element">
+        <mat-cell class="action" *matCellDef="let webhook">
           <button
             canInteract="webhook:show"
             mat-icon-button
-            [routerLink]="element._id"
+            [routerLink]="webhook._id"
             matTooltip="Edit"
           >
             <mat-icon>edit</mat-icon>
@@ -44,7 +44,7 @@
               templateOrDescription: dialogTemplate,
               answer: 'yes'
             }"
-            (confirm)="delete(element._id)"
+            (confirm)="delete(webhook._id)"
           >
             <mat-icon>delete</mat-icon>
           </button>

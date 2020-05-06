@@ -135,9 +135,9 @@
 <div class="data-guide">
   <mat-card class="mat-elevation-z25" [class.with-examples]="guide">
     <mat-card-content>
-      <mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
+      <table mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
         <ng-container matColumnDef="$$spicainternal_select">
-          <mat-header-cell class="select" *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef>
             <mat-checkbox
               *ngIf="dataIds?.length > 0"
               color="primary"
@@ -145,8 +145,8 @@
               [ngModel]="selectedItems.length == dataIds.length"
               (ngModelChange)="selectedItems = $event ? [].concat(dataIds) : []"
             ></mat-checkbox>
-          </mat-header-cell>
-          <mat-cell class="select" *matCellDef="let row">
+          </th>
+          <td mat-cell *matCellDef="let row">
             <mat-checkbox
               color="primary"
               (ngModelChange)="
@@ -156,17 +156,17 @@
               "
               [ngModel]="selectedItems.indexOf(row._id) > -1"
             ></mat-checkbox>
-          </mat-cell>
+          </td>
         </ng-container>
         <ng-container matColumnDef="$$spicainternal_schedule">
-          <mat-header-cell class="scheduled" *matHeaderCellDef>Scheduled</mat-header-cell>
-          <mat-cell class="scheduled" *matCellDef="let row">
+          <th mat-header-cell *matHeaderCellDef>Scheduled</th>
+          <td mat-cell *matCellDef="let row">
             {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
-          </mat-cell>
+          </td>
         </ng-container>
         <ng-container matColumnDef="$$spicainternal_actions">
-          <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
-          <mat-cell class="action" *matCellDef="let row">
+          <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
+          <td mat-cell class="action" *matCellDef="let row">
             <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
               <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
             </button>
@@ -185,34 +185,43 @@
             >
               <mat-icon>delete</mat-icon>
             </button>
-          </mat-cell>
+          </td>
         </ng-container>
 
-        <ng-container
-          *ngFor="let property of (schema$ | async)?.properties | keyvalue"
-          [matColumnDef]="property.key"
-        >
-          <mat-header-cell *matHeaderCellDef mat-sort-header>
-            {{ property.value.title }}
-          </mat-header-cell>
+        <ng-container *ngIf="schema$ | async; let schema">
+          <ng-container
+            *ngFor="let property of schema.properties | keyvalue"
+            [matColumnDef]="property.key"
+          >
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              mat-resize-header
+              [persist-header-width]="schema._id"
+            >
+              {{ property.value.title }}
+            </th>
 
-          <mat-cell *matCellDef="let row">
-            {{
-              row[property.key] && row[property.key].hasOwnProperty(property.value.primary)
-                ? row[property.key][property.value.primary]
-                : property.value.type == "object"
-                ? (row[property.key] | json)
-                : property.value.type == "date"
-                ? (row[property.key] | date: "d/M/yy, h:mm a")
-                : row[property.key]
-            }}
-          </mat-cell>
+            <td mat-cell *matCellDef="let row">
+              {{
+                row[property.key] && row[property.key].hasOwnProperty(property.value.primary)
+                  ? row[property.key][property.value.primary]
+                  : property.value.type == "object"
+                  ? (row[property.key] | json)
+                  : property.value.type == "date"
+                  ? (row[property.key] | date: "d/M/yy, h:mm a")
+                  : row[property.key]
+              }}
+            </td>
+          </ng-container>
         </ng-container>
 
-        <mat-header-row *matHeaderRowDef="displayedProperties"></mat-header-row>
+        <tr mat-header-row *matHeaderRowDef="displayedProperties"></tr>
 
-        <mat-row *matRowDef="let row; columns: displayedProperties"></mat-row>
-      </mat-table>
+        <tr mat-row *matRowDef="let row; columns: displayedProperties"></tr>
+      </table>
+
       <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
     </mat-card-content>
   </mat-card>

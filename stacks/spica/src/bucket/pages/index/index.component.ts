@@ -4,13 +4,13 @@ import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
 import {merge, Observable} from "rxjs";
-import {flatMap, map, publishReplay, refCount, switchMap, tap, take} from "rxjs/operators";
+import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
-import {environment} from "../../../../environments/environment";
+
 @Component({
   selector: "bucket-index",
   templateUrl: "./index.component.html",
@@ -83,12 +83,17 @@ export class IndexComponent implements OnInit {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
         }
 
-        this.displayedProperties = [
-          ...Object.entries(schema.properties)
-            .filter(([, value]) => value.options.visible)
-            .map(([key]) => key),
-          "$$spicainternal_actions"
-        ];
+        const cachedDisplayedProperties = JSON.parse(
+          localStorage.getItem(`${this.bucketId}-displayedProperties`)
+        );
+        this.displayedProperties = cachedDisplayedProperties
+          ? cachedDisplayedProperties
+          : [
+              ...Object.entries(schema.properties)
+                .filter(([, value]) => value.options.visible)
+                .map(([key]) => key),
+              "$$spicainternal_actions"
+            ];
       }),
       tap(schema => {
         Object.keys(schema.properties).map(key => {
@@ -167,6 +172,10 @@ export class IndexComponent implements OnInit {
         "$$spicainternal_actions"
       ];
     }
+    localStorage.setItem(
+      `${this.bucketId}-displayedProperties`,
+      JSON.stringify(this.displayedProperties)
+    );
   }
 
   toggleProperty(name: string, selected: boolean) {
@@ -178,6 +187,10 @@ export class IndexComponent implements OnInit {
     this.displayedProperties = this.displayedProperties.sort(
       (a, b) =>
         this.properties.findIndex(p => p.name == a) - this.properties.findIndex(p => p.name == b)
+    );
+    localStorage.setItem(
+      `${this.bucketId}-displayedProperties`,
+      JSON.stringify(this.displayedProperties)
     );
   }
 
@@ -191,6 +204,10 @@ export class IndexComponent implements OnInit {
       let lastIndex = this.displayedProperties.lastIndexOf("$$spicainternal_actions");
       this.displayedProperties.splice(lastIndex, 0, "$$spicainternal_schedule");
     }
+    localStorage.setItem(
+      `${this.bucketId}-displayedProperties`,
+      JSON.stringify(this.displayedProperties)
+    );
     this.refresh.next();
   }
 

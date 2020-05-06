@@ -14,7 +14,7 @@ spec:
       terminationGracePeriodSeconds: 10
       initContainers:
         - name: init
-          image: spicaengine/initcontainer:master
+          image: spicaengine/mongoreplicationcontroller:master
           imagePullPolicy: Always
       containers:
         - name: mongo
@@ -119,6 +119,8 @@ spec:
             - name: PERSISTENT_PATH
               value: /data
             - name: ENABLE_BUCKET_HOOKS
+              value: "true"
+            - name: ENABLE_BUCKET_HISTORY
               value: "true"
             - name: ENABLE_ACTIVITY_STREAM
               value: "true"

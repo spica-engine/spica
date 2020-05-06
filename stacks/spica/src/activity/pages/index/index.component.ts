@@ -1,7 +1,7 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
-import {Observable, BehaviorSubject, Subscription, pipe} from "rxjs";
+import {Observable, BehaviorSubject, Subscription} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
 import {map, mergeMap} from "rxjs/operators";
 

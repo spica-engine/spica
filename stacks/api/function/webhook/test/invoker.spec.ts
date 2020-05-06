@@ -2,8 +2,10 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {WebhookService} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
-import * as __fetch__ from "node-fetch";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
+import * as __fetch__ from "node-fetch";
+
+const FULL_CHANGE_TEMPLATE = "{{{toJSON this}}}";
 
 describe("Webhook Invoker", () => {
   let invoker: WebhookInvoker;
@@ -48,6 +50,7 @@ describe("Webhook Invoker", () => {
   it("should subscribe and open a change stream against the collection", async () => {
     const {_id, ...hook} = await service.insertOne({
       url: "http://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -75,6 +78,7 @@ describe("Webhook Invoker", () => {
   it("should unsubscribe after the webhook has deleted", async () => {
     const hook = await service.insertOne({
       url: "http://spica.internal",
+      body: "",
       trigger: {
         name: "database",
         active: true,
@@ -94,6 +98,7 @@ describe("Webhook Invoker", () => {
   it("should unsubscribe after the webhook has disabled", async () => {
     const hook = await service.insertOne({
       url: "http://spica.internal",
+      body: FULL_CHANGE_TEMPLATE,
       trigger: {
         name: "database",
         active: true,
@@ -113,6 +118,7 @@ describe("Webhook Invoker", () => {
   it("should report changes from the database", async () => {
     await service.insertOne({
       url: "http://spica.internal",
+      body: FULL_CHANGE_TEMPLATE,
       trigger: {
         name: "database",
         active: true,
@@ -135,16 +141,45 @@ describe("Webhook Invoker", () => {
         documentKey: doc.insertedId.toHexString()
       }),
       headers: {
-        "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
+        "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
         "Content-type": "application/json"
       }
     });
   });
 
-  it("should insert log when document changed", async () => {
-    const insertLogSpy = spyOn(invoker["logService"], "insertOne");
+  it("should report changes from the database with mapping", async () => {
+    await service.insertOne({
+      url: "http://spica.internal",
+      body: "{{{toJSON document}}}",
+      trigger: {
+        name: "database",
+        active: true,
+        options: {
+          collection: "stream_coll",
+          type: "INSERT"
+        }
+      }
+    });
+    await stream.change.wait();
+    stream.change.next();
+    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
+    await stream.change.wait();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledWith("http://spica.internal", {
+      method: "post",
+      body: JSON.stringify({_id: doc.insertedId.toHexString(), doc: "fromdb"}),
+      headers: {
+        "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
+        "Content-type": "application/json"
+      }
+    });
+  });
+
+  it("should insert a log when hook has been invoked", async () => {
+    const insertLog = spyOn(invoker["logService"], "insertOne");
     const hook = await service.insertOne({
       url: "http://spica.internal",
+      body: FULL_CHANGE_TEMPLATE,
       trigger: {
         name: "database",
         active: true,
@@ -159,8 +194,8 @@ describe("Webhook Invoker", () => {
     const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
     await stream.change.wait();
 
-    expect(insertLogSpy).toHaveBeenCalledTimes(1);
-    expect(insertLogSpy).toHaveBeenCalledWith({
+    expect(insertLog).toHaveBeenCalledTimes(1);
+    expect(insertLog).toHaveBeenCalledWith({
       request: {
         body: JSON.stringify({
           type: "insert",
@@ -168,7 +203,7 @@ describe("Webhook Invoker", () => {
           documentKey: doc.insertedId.toHexString()
         }),
         headers: {
-          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/subscription)",
+          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
           "Content-type": "application/json"
         },
         url: "http://spica.internal"

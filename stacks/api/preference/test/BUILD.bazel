@@ -1,0 +1,77 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "services_specs",
+    testonly = True,
+    srcs = [
+        "services/preference.service.spec.ts",
+    ],
+    deps = [
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/preference/services",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//rxjs",
+    ],
+)
+
+jasmine_node_test(
+    name = "service_test",
+    deps = [
+        ":services_specs",
+    ],
+)
+
+ts_library(
+    name = "acceptance_specs",
+    testonly = True,
+    srcs = [
+        "preference.acceptance.spec.ts",
+    ],
+    deps = [
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//rxjs",
+    ],
+)
+
+jasmine_node_test(
+    name = "acceptance_test",
+    deps = [
+        ":acceptance_specs",
+    ],
+)
+
+ts_library(
+    name = "tests",
+    testonly = True,
+    srcs = [
+        "activity.resource.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/activity/services",
+        "//stacks/api/preference",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    deps = [
+        ":tests",
+    ],
+)
