@@ -70,17 +70,25 @@
     float: left;
     user-select: none;
     mat-card-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-transform: capitalize;
-      font-size: 20px;
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-transform: capitalize;
+        font-size: 20px;
+      }
+      width: 255px;
       display: inline-flex;
       justify-content: center;
       align-items: center;
       .space-between {
         flex: 1 1 auto;
       }
+    }
+    mat-card-content p {
+      height: 68px;
+      overflow-wrap: break-word;
+      overflow: hidden;
     }
     .mat-card-actions {
       position: absolute;
