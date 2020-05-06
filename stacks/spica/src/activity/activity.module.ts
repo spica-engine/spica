@@ -10,7 +10,8 @@ import {
   MatOptionModule,
   MatSelectModule,
   MatInputModule,
-  MatButtonModule
+  MatButtonModule,
+  MatTooltipModule
 } from "@angular/material";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {MatListModule} from "@angular/material/list";
@@ -41,7 +42,8 @@ import {CommonModule as SpicaCommon} from "@spica-client/common";
     ScrollingModule,
     MatListModule,
     MatProgressSpinnerModule,
-    SpicaCommon
+    SpicaCommon,
+    MatTooltipModule
   ],
   providers: [ActivityService]
 })

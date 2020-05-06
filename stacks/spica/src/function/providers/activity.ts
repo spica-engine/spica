@@ -1,9 +1,7 @@
 export function provideActivityFactory(activity: any) {
-  let module = activity.resource.name;
-  let documentId = activity.resource.documentId;
   let url;
-  if (module == "Function") {
-    url = `function/${documentId}`;
+  if (activity.resource[0] == "function") {
+    url = `function/${activity.resource[1]}`;
   }
   return url;
 }

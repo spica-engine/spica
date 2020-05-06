@@ -2,7 +2,7 @@ import {Body, Controller, Get, Param, Put, UseGuards, UseInterceptors} from "@ne
 import {activity} from "@spica-server/activity/services";
 import {AuthGuard} from "@spica-server/passport";
 import {Preference, PreferenceService} from "../services";
-import {createPreferenceResource} from "./activity.resource";
+import {createPreferenceActivity} from "./activity.resource";
 
 @Controller("preference")
 export class PreferenceController {
@@ -13,7 +13,7 @@ export class PreferenceController {
     return this.preference.get(scope);
   }
 
-  @UseInterceptors(activity(createPreferenceResource))
+  @UseInterceptors(activity(createPreferenceActivity))
   @Put(":scope")
   @UseGuards(AuthGuard())
   replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {

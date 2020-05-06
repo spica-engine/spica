@@ -1,9 +1,9 @@
-import {Action, Resource} from "@spica-server/activity/services";
+import {Activity, PreActivity} from "@spica-server/activity/services";
 
-export function createPreferenceResource(action: Action, req: any, res: any): Resource {
-  let name = "Preference";
+export function createPreferenceActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
+  let activities: Activity[] = [];
 
-  let documentId: string[] = [req.params.scope];
+  activities.push({...preActivity, resource: ["preference", req.params.scope]});
 
-  return {name, documentId};
+  return activities;
 }

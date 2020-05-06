@@ -50,18 +50,6 @@ describe("Storage acceptance test", () => {
     afterAll(async () => {
       await app.get(DatabaseService).dropCollection("storage");
     });
-    it("should get 10 storage objects if there is no limit ", async () => {
-      const response = await req.get("/storage", {});
-      expect(response.body.meta.total).toEqual(20);
-
-      const objects = response.body.data;
-      expect(objects.length).toEqual(10);
-      objects.map((value, index) => {
-        expect(value._id).toBeDefined();
-        expect(value.name).toEqual(`name${objects.length - index}`);
-        expect(value.url).toBeDefined();
-      });
-    });
     it("should work with limit query", async () => {
       const response = await req.get("/storage", {limit: "5"});
       expect(response.body.meta.total).toEqual(20);
@@ -79,7 +67,7 @@ describe("Storage acceptance test", () => {
       expect(response.body.meta.total).toEqual(20);
 
       const objects = response.body.data;
-      expect(objects.length).toEqual(10, "should work because default limit number is 10");
+      expect(objects.length).toEqual(17);
       objects.map((value, index) => {
         expect(value._id).toBeDefined();
         expect(value.name).toEqual(`name${objects.length + 3 - index}`);
@@ -185,8 +173,8 @@ describe("Storage acceptance test", () => {
     it("should get storage object withMeta false", async () => {
       const selectedData = (await req.get("/storage", {})).body.data[5];
       const response = await req.get(`/storage/${selectedData._id}`, {withMeta: "false"});
-      expect(response.headers["content-type"]).toEqual("type5");
-      expect(response.body).toEqual(5);
+      expect(response.headers["content-type"]).toEqual("type15");
+      expect(response.body).toEqual(15);
     });
   });
 
@@ -219,7 +207,7 @@ describe("Storage acceptance test", () => {
       expect(response.statusCode).toEqual(400);
       expect(response.statusText).toEqual("Bad Request");
 
-      expect((await req.get(`/storage/${selectedData._id}`, {withMeta: "false"})).body).toEqual(7);
+      expect((await req.get(`/storage/${selectedData._id}`, {withMeta: "false"})).body).toEqual(17);
     });
   });
 

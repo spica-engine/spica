@@ -7,7 +7,8 @@ import {
   MatOptionModule,
   MatSelectModule,
   MatInputModule,
-  MatButtonModule
+  MatButtonModule,
+  MatTooltipModule
 } from "@angular/material";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {MatListModule} from "@angular/material/list";
@@ -31,8 +32,8 @@ describe("IndexComponent", () => {
     identifier: "test_identifier",
     action: ["test_action"],
     resource: {
-      name: "test_name",
-      documentId: ["test_documentId"]
+      $all: ["test_name"],
+      $in: ["test_documentId"]
     },
     date: {
       begin: new Date(2000, 0, 1),
@@ -60,7 +61,8 @@ describe("IndexComponent", () => {
         ScrollingModule,
         MatListModule,
         MatProgressSpinnerModule,
-        RouterTestingModule
+        RouterTestingModule,
+        MatTooltipModule
       ],
       declarations: [IndexComponent, BuildLinkPipe],
       providers: [
@@ -70,9 +72,13 @@ describe("IndexComponent", () => {
             get: () => {
               return of([]);
             },
-            getDocuments: () => {
-              return of(["doc_1", "doc_2"]);
-            }
+            checkAllowed: () => {
+              return of(true);
+            },
+            getBuckets: () => {
+              return of([{_id: "id1", title: "test_bucket"}]);
+            },
+            getDocumentIds: () => {}
           }
         },
         {
@@ -94,11 +100,17 @@ describe("IndexComponent", () => {
     filterNextSpy = spyOn(component.filters$, "next").and.callThrough();
   });
 
-  it("should push buckets to bucket-data group", () => {
-    expect(component.moduleGroups[0]).toEqual({
-      name: "Bucket-Data",
-      modules: ["Bucket_doc_1", "Bucket_doc_2"]
-    });
+  it("should set buckets$ ", async () => {
+    let buckets = await component.buckets$.toPromise();
+    expect(buckets).toEqual([{_id: "id1", title: "test_bucket"}]);
+  });
+
+  it("should set buckets$ as empty array if user doesn't have bucket:index access", async () => {
+    spyOn(component, "checkAllowed").and.returnValue(of(false));
+    component.ngOnInit();
+
+    let buckets = await component.buckets$.toPromise();
+    expect(buckets).toEqual([]);
   });
 
   it("should apply filters", () => {
@@ -111,15 +123,15 @@ describe("IndexComponent", () => {
       identifier: "test_identifier",
       action: ["test_action"],
       resource: {
-        name: "test_name",
-        documentId: ["test_documentId"]
+        $all: ["test_name"],
+        $in: ["test_documentId"]
       },
       date: {
         begin: new Date(2000, 0, 1),
         end: new Date(2000, 0, 1)
       },
       limit: 20,
-      skip: undefined
+      skip: 0
     });
   });
 
@@ -132,40 +144,58 @@ describe("IndexComponent", () => {
     expect(filterNextSpy).toHaveBeenCalledTimes(1);
     expect(filterNextSpy).toHaveBeenCalledWith({
       identifier: undefined,
-      action: undefined,
-      resource: {
-        name: undefined,
-        documentId: undefined
-      },
+      action: [],
+      resource: {$all: [], $in: []},
       date: {
         begin: undefined,
         end: undefined
       },
       limit: 20,
-      skip: undefined
+      skip: 0
     });
   });
 
-  it("should get documentIds of selected module", fakeAsync(() => {
-    const getDocumentsSpy = spyOn(component["activityService"], "getDocuments").and.callThrough();
-    component.showDocuments("test_module");
+  it("should get documentIds of selected module which has a group and should set resource filters", fakeAsync(async () => {
+    const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
+      of(["doc_1", "doc_2"])
+    );
+    component.selectionChange({
+      source: {selected: {group: {label: "test_group"}}},
+      value: "test_module"
+    } as any);
 
-    expect(getDocumentsSpy).toHaveBeenCalledTimes(1);
-    expect(getDocumentsSpy).toHaveBeenCalledWith("test_module");
+    expect(getDocumentIds).toHaveBeenCalledTimes(1);
+    expect(getDocumentIds).toHaveBeenCalledWith("test_group", "test_module");
 
     tick(1);
 
-    expect(component.documentIds).toEqual(["doc_1", "doc_2"]);
+    let documentIds = await component.documents$.toPromise();
+
+    expect(documentIds).toEqual(["doc_1", "doc_2"]);
+    expect(component.filters.resource.$all).toEqual(["test_group", "test_module"]);
+    expect(component.filters.resource.$in).toEqual([]);
   }));
 
-  it("should get preference documents", () => {
-    const getDocumentsSpy = spyOn(component["activityService"], "getDocuments").and.callThrough();
+  it("should get documentIds of selected module which doesn't have a group and should set resource filters", fakeAsync(async () => {
+    const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
+      of(["doc_1", "doc_2"])
+    );
+    component.selectionChange({
+      source: {selected: {group: undefined}},
+      value: "test_module"
+    } as any);
 
-    component.showDocuments("Preference");
-    expect(getDocumentsSpy).toHaveBeenCalledTimes(0);
+    expect(getDocumentIds).toHaveBeenCalledTimes(1);
+    expect(getDocumentIds).toHaveBeenCalledWith("", "test_module");
 
-    expect(component.documentIds).toEqual(["bucket", "passport"]);
-  });
+    tick(1);
+
+    let documentIds = await component.documents$.toPromise();
+
+    expect(documentIds).toEqual(["doc_1", "doc_2"]);
+    expect(component.filters.resource.$all).toEqual(["test_module"]);
+    expect(component.filters.resource.$in).toEqual([]);
+  }));
 
   it("should set begin and end date", () => {
     let today = new Date();
@@ -193,8 +223,8 @@ describe("IndexComponent", () => {
       identifier: "test_identifier",
       action: ["test_action"],
       resource: {
-        name: "test_name",
-        documentId: ["test_documentId"]
+        $all: ["test_name"],
+        $in: ["test_documentId"]
       },
       date: {
         begin: new Date(2000, 0, 1),

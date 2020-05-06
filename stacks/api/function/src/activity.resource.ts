@@ -1,20 +1,19 @@
-import {Action, Resource} from "@spica-server/activity/services";
+import {Action, PreActivity, Activity} from "@spica-server/activity/services";
 
-export function createFunctionResource(action: Action, req: any, res: any): Resource {
-  let name = "Function";
+export function createFunctionActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
+  let activities: Activity[] = [];
 
-  let documentId: string[] = [];
-  switch (action) {
+  switch (preActivity.action) {
     case Action.POST:
-      documentId.push(res._id.toString());
+      activities.push({...preActivity, resource: ["function", res._id.toString()]});
       break;
     case Action.PUT:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["function", req.params.id]});
       break;
     case Action.DELETE:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["function", req.params.id]});
       break;
   }
 
-  return {name, documentId};
+  return activities;
 }

@@ -1,4 +1,4 @@
-import {getAction, getUser} from "@spica-server/activity/services";
+import {getUser, getAction} from "@spica-server/activity/services";
 
 describe("Interceptor Unit Test", () => {
   it("should get action from method", () => {

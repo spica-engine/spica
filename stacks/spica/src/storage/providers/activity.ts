@@ -1,9 +1,7 @@
 export function provideActivityFactory(activity: any) {
-  let module = activity.resource.name;
-  let documentId = activity.resource.documentId;
   let url;
-  if (module == "Storage") {
-    url = `storage/${documentId}`;
+  if (activity.resource[0] == "storage") {
+    url = `storage/${activity.resource[1]}`;
   }
   return url;
 }

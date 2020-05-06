@@ -25,7 +25,7 @@ import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
 import * as request from "request";
-import {createBucketResource} from "./activity.resource";
+import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {findRelations, findRemovedKeys} from "./utilities";
 
@@ -59,14 +59,14 @@ export class BucketController {
     return this.bs.getPredefinedDefaults();
   }
 
-  @UseInterceptors(activity(createBucketResource))
+  @UseInterceptors(activity(createBucketActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
   add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     return this.bs.insertOne(bucket);
   }
 
-  @UseInterceptors(activity(createBucketResource))
+  @UseInterceptors(activity(createBucketActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   async replaceOne(
@@ -99,7 +99,7 @@ export class BucketController {
     return this.bs.findOne({_id: id});
   }
 
-  @UseInterceptors(activity(createBucketResource))
+  @UseInterceptors(activity(createBucketActivity))
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))

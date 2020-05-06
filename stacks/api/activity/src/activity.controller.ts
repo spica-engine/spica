@@ -9,8 +9,8 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import {Activity, ActivityService, Resource} from "@spica-server/activity/services";
-import {DATE, JSONP, NUMBER} from "@spica-server/core";
+import {Activity, ActivityService} from "@spica-server/activity/services";
+import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
 import {DatabaseService, FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 
@@ -22,8 +22,8 @@ export class ActivityController {
   @UseGuards(AuthGuard(), ActionGuard("activity:index"))
   find(
     @Query("identifier") identifier,
-    @Query("action", JSONP) action: number | number[],
-    @Query("resource", JSONP) resource: Resource,
+    @Query("action", DEFAULT([]), ARRAY(Number)) action: number[],
+    @Query("resource", JSONP) resource: object,
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
     @Query("skip", NUMBER) skip: number,
@@ -62,25 +62,14 @@ export class ActivityController {
       };
     }
 
-    if (action) {
-      if (Array.isArray(action) && action.length > 0) {
-        filter["$or"] = action.map(val => {
-          return {action: Number(val)};
-        });
-      } else if (!Array.isArray(action)) {
-        filter["$or"] = [{action: Number(action)}];
-      }
+    if (action.length > 0) {
+      filter["$or"] = action.map(act => {
+        return {action: act};
+      });
     }
 
     if (resource) {
-      if (resource.name) {
-        filter["resource.name"] = resource.name;
-      }
-      if (resource.documentId) {
-        filter["resource.documentId"] = {
-          $in: Array.isArray(resource.documentId) ? resource.documentId : [resource.documentId]
-        };
-      }
+      filter = {...filter, resource};
     }
 
     if (filter) aggregation.push({$match: filter});
@@ -90,16 +79,6 @@ export class ActivityController {
     if (limit) aggregation.push({$limit: limit});
 
     return this.activityService.aggregate(aggregation).toArray();
-  }
-
-  @Get("collection/:name")
-  @UseGuards(AuthGuard(), ActionGuard("activity:index"))
-  findCollection(@Param("name") name: string): Promise<string[]> {
-    return this.database
-      .collection(name)
-      .find({})
-      .map(document => document._id)
-      .toArray();
   }
 
   @Delete(":id")
