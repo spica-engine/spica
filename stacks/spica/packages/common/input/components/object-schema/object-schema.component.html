@@ -25,9 +25,10 @@
   <span
     [name]="property.key"
     [inputSchemaPlacer]="schema.properties[property.key]['type']"
+    [forbiddenTypes]="['relation']"
     [(ngModel)]="schema.properties[property.key]"
   >
-    <button mat-icon-button (click)="removeProperty(property.key)">
+    <button mat-icon-button mat-flat-button (click)="removeProperty(property.key)">
       <mat-icon>remove</mat-icon>
     </button>
   </span>
