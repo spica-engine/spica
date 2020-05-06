@@ -16,7 +16,7 @@ Spica API, on the other hand, is a fully controllable REST API. As Spica has an 
 
 This tutorial helps you to install Spica to different environments. We provide a few ways to install, so you can choose which one of them suits you. 
 
-### Using Spica Cli
+### Using Spica CLI
 
 Spica has a command-line interface for quick installation. To use it, you must have [Docker](https://www.docker.com/) and [NodeJs](https://nodejs.org) installed on your development environment.
 
@@ -235,14 +235,28 @@ A API key enables machine to machine communication. -->
 # Guides
 ## Passport
 
-### Authenticating and Authorizing on Spica
+Fundamentally, this module is used for authentication and authorization on Spica Client and API.
+
+### Authentication
 
 Out of the box, Spica supports two different authentication stretagies. This document will explain the fundemantals of those stretegies. 
 
 #### Identity
 
+Fundemantally, Identities are the users of a Spica instance. It contains **identified** and **password** informations for login. 
 
+> Right after the installation, Spica creates a default identitiy to get you started. We suggest you to change at least its password before going live.
 
+To create an Identitiy, navigate to **System** -> **Identities** in the left-hand menu.
+
+- Click "+" icon on the top right toolbar.
+- Fill the **Identifier** and **Password** field.
+- Press **Save** 
+
+##### Adding Additional Properties
+
+If you want to store additional informations on **Identities**, you can create custom fields. To create a custom field on Identities, navigate to **System** -> **Settings** in the left-hand menu.
+  
 #### API Key
 
 Instead of Identity, API key is allows the machine to machine communication. The token, it provides doesn't have an expiration date so it can be used as long as it's intentionally deleted from Spica.
@@ -255,7 +269,33 @@ To create an API Key, navigate to **System** -> **API Keys** in the left-hand me
 
 #### SSO Integration
 
+### Policies
 
+Policies are basically a set of rules which can be attached to your **Identities** and **API Keys** to encapsulate their behavior. 
+
+#### Using the Policies
+
+Spica cames with various different built-in Policies to meet your needs on encapsulation, so you don't have to create each of them individually. 
+
+To attach Policies, enter either **Identity Edit Page** or **API Key Edit Page**. At the bottom, you will see `Owned Policies` section. 
+
+To attach the policy, click the `link` buttom. To detach click on `unlink` button.
+
+#### Creating a Custom Policy
+
+It is possible to create your own Custom Policy by clicking on the `+` button on Policies page to create from scratch or clone a Policy and start to work where it left off by clicking the `copy` button on Policies page next to each policy.
+
+Here you can enter your Policy's `Name` and `Description`.
+
+Click on `Add Statement` button to add new statement. You'll see a new statement added to list in that page. You'll see a new form to fill. Let's dig in.
+
+`Effect`: If you want to restrict a certain sets of rules, set the Effect as `Deny`, otherwise select `Allow`.
+
+`Service`: Select the scope of the Statement.
+
+`Actions`: After selecting the scope, this input will show up. You'll see a list of actions on the selected scope. Select one or more actions to add them to your Statement.
+
+`Add Resource`: Optional. If you want to allow/deny actions on resource based, add resource and enter the \_id of the resource. You can add infinite number of resources to a Statement.
 
 ## Buckets as Data Layer
 Buckets are the main foundation of Spica Development Engine. While creating a Bucket, the user defines a data schema. 
@@ -381,30 +421,28 @@ See [triggers](#triggers) section for parameter types.
 
 Spica provides modules to your function in runtime. Modules work like a module in node_modules but not placed in node_modules directory.
 
-> NOTE: Modules are not published in a registry like npmjs.com, so you can not install or use outside of a spica.
-
-Currently, there are few modules helps you to get information about your spica.
+In order to use these modules in a **function**, they need to be added to **dependencies** section on **Function Edit page**.
 
 | Module               | Description                                                                                                  |
 | -------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `@internal/database` | This module has a public API for making database operations like **update**, **delete**, **create**, **get** |
+| `@spica-devkit/database` | This module has a public API for making database operations like **update**, **delete**, **create**, **get** |
 
 
 #### Database
 
 The database module is an in-memory module that has public API for basic database operations like `FIND`, `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 
-> Database module imported from `@internal/database`.
+> Database module imported from `@spica-devkit/database`.
 
 ##### Getting Database Service
 
-You can get database instance with `database()` function exported from `@internal/database` module.
+You can get database instance with `database()` function exported from `@spica-devkit/database` module.
 
 ```typescript
-import {database, Database} from "@internal/database";
+import {database, Database} from "@spica-devkit/database";
 
 const db: Database = database();
-// Type of db variable is  Database which exported from `@internal/database`
+// Type of db variable is  Database which exported from `@spica-devkit/database`
 ```
 
 ##### Getting the reference to a Collection
@@ -412,7 +450,7 @@ const db: Database = database();
 To make changes in a collection you need to get it reference first. You can get reference for a specific collection with `Database.collection()` function exported by your database instance. For more information check [mongoDB API](https://mongodb.github.io/node-mongodb-native/3.2/api/Collection.html)
 
 ```typescript
-import {database, Database, Collection} from "@internal/database";
+import {database, Database, Collection} from "@spica-devkit/database";
 
 const db: Database = database();
 const collection: Collection = db.collection("persistent_collection");
@@ -425,7 +463,7 @@ Here is some fundamental examples;
 ###### Insert
 
 ```typescript
-import {database, Database, Collection} from "@internal/database";
+import {database, Database, Collection} from "@spica-devkit/database";
 
 export default async function() {
   const db: Database = database();
@@ -445,7 +483,7 @@ export default async function() {
 ###### Find
 
 ```typescript
-import {database, Database, Collection} from "@internal/database";
+import {database, Database, Collection} from "@spica-devkit/database";
 
 export default async function() {
   const db: Database = database();
@@ -467,7 +505,7 @@ export default async function() {
 ###### Find One
 
 ```typescript
-import {database, Database, Collection} from "@internal/database";
+import {database, Database, Collection} from "@spica-devkit/database";
 
 export default async function() {
   const db: Database = database();
@@ -483,7 +521,7 @@ export default async function() {
 ###### Update
 
 ```typescript
-import {database, Database, Collection} from "@internal/database";
+import {database, Database, Collection} from "@spica-devkit/database";
 
 export default async function() {
   const db: Database = database();
@@ -749,3 +787,6 @@ To list all Spica users' activity, simply navigate to **Acitivity** -> **User Ac
 ## Dashboard
 TBC
 
+## Spica CLI
+
+// TODO: Function push pull, dependancy update
