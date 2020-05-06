@@ -53,7 +53,7 @@ nodejs_binary(
 
 container_image(
     name = "api_image_base",
-    base = "@node_image//image",
+    base = "@debian_image//image",
     env = {
         "DEFAULT_PASSWORD": "spica",
         "FUNCTION_GRPC_ADDRESS": "0.0.0.0:5688",
