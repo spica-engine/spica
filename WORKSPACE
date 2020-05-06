@@ -93,11 +93,11 @@ container_pull(
 )
 
 container_pull(
-    name = "node_image",
-    digest = "sha256:c953b001ea2acf18a6ef99a90fc50630e70a7c0a6b49d774a7aee1f9c937b645",
+    name = "debian_image",
+    digest = "sha256:1ceec96ca567c40500a2745728f7c19c0801785c8b10187b1d66bcd538694fc2",
     registry = "index.docker.io",
-    repository = "library/node",
-    tag = "12.10.0",
+    repository = "library/debian",
+    tag = "buster-slim",
 )
 
 load(
