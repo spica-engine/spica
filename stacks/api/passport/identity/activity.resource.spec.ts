@@ -1,18 +1,24 @@
 import {Action} from "@spica-server/activity/services";
-import {createIdentityResource} from "./activity.resource";
+import {createIdentityActivity} from "./activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
     const res = {
       _id: "identity_id"
     };
-    const action = Action.POST;
 
-    const resource = createIdentityResource(action, {}, res);
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    const activities = createIdentityActivity(
+      {action: Action.POST, identifier: "test_user"},
+      {},
+      res
+    );
+    expect(activities).toEqual([
+      {
+        action: Action.POST,
+        identifier: "test_user",
+        resource: ["passport", "identity", "identity_id"]
+      }
+    ]);
   });
 
   it("should return activity from put request", () => {
@@ -21,13 +27,19 @@ describe("Activity Resource", () => {
         id: "identity_id"
       }
     };
-    const action = Action.PUT;
 
-    const resource = createIdentityResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    const activities = createIdentityActivity(
+      {action: Action.PUT, identifier: "test_user"},
+      req,
+      {}
+    );
+    expect(activities).toEqual([
+      {
+        action: Action.PUT,
+        identifier: "test_user",
+        resource: ["passport", "identity", "identity_id"]
+      }
+    ]);
   });
 
   it("should return activity from delete request", () => {
@@ -36,13 +48,19 @@ describe("Activity Resource", () => {
         id: "identity_id"
       }
     };
-    const action = Action.DELETE;
 
-    const resource = createIdentityResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    const activities = createIdentityActivity(
+      {action: Action.DELETE, identifier: "test_user"},
+      req,
+      {}
+    );
+    expect(activities).toEqual([
+      {
+        action: Action.DELETE,
+        identifier: "test_user",
+        resource: ["passport", "identity", "identity_id"]
+      }
+    ]);
   });
 
   it("should return activity from policy update request", () => {
@@ -52,12 +70,18 @@ describe("Activity Resource", () => {
       },
       body: ["policy1", "policy2"]
     };
-    const action = Action.PUT;
 
-    const resource = createIdentityResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Identity",
-      documentId: ["identity_id"]
-    });
+    const activities = createIdentityActivity(
+      {action: Action.DELETE, identifier: "test_user"},
+      req,
+      {}
+    );
+    expect(activities).toEqual([
+      {
+        action: Action.DELETE,
+        identifier: "test_user",
+        resource: ["passport", "identity", "identity_id"]
+      }
+    ]);
   });
 });

@@ -18,7 +18,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import * as uniqid from "uniqid";
 import {AuthGuard} from "../auth.guard";
 import {ActionGuard} from "../policy/action.guard";
-import {createApikeyResource} from "./activity.resource";
+import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
 
@@ -29,14 +29,18 @@ export class ApiKeyController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:index"))
   find(
-    @Query("limit", DEFAULT(10), NUMBER) limit: number,
+    @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[k: string]: number}
   ) {
-    const dataPipeline: object[] = [{$skip: skip}, {$limit: limit}];
-    if (sort) {
-      dataPipeline.push({$sort: sort});
-    }
+    let dataPipeline: object[] = [];
+
+    dataPipeline.push({$skip: skip});
+
+    if (limit) dataPipeline.push({$limit: limit});
+
+    if (sort) dataPipeline.push({$sort: sort});
+
     const pipeline = [
       {
         $facet: {
@@ -73,7 +77,7 @@ export class ApiKeyController {
     });
   }
 
-  @UseInterceptors(activity(createApikeyResource))
+  @UseInterceptors(activity(createApikeyActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:create"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/apikey")) apiKey: ApiKey) {
@@ -82,7 +86,7 @@ export class ApiKeyController {
     return this.apiKeyService.insertOne(apiKey);
   }
 
-  @UseInterceptors(activity(createApikeyResource))
+  @UseInterceptors(activity(createApikeyActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:update"))
   replaceOne(
@@ -99,7 +103,7 @@ export class ApiKeyController {
       });
   }
 
-  @UseInterceptors(activity(createApikeyResource))
+  @UseInterceptors(activity(createApikeyActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -110,7 +114,7 @@ export class ApiKeyController {
     });
   }
 
-  @UseInterceptors(activity(createApikeyResource))
+  @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async attachPolicy(
@@ -132,7 +136,7 @@ export class ApiKeyController {
     );
   }
 
-  @UseInterceptors(activity(createApikeyResource))
+  @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
   async detachPolicy(

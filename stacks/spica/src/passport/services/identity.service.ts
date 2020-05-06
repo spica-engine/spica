@@ -11,7 +11,7 @@ import {PredefinedDefault} from "../interfaces/predefined-default";
 export class IdentityService {
   constructor(private http: HttpClient) {}
 
-  find(limit: number, skip: number): Observable<IndexResult<Identity>> {
+  find(limit: number = 10, skip: number): Observable<IndexResult<Identity>> {
     return this.http.get<IndexResult<Identity>>("api:/passport/identity", {
       params: {limit: String(limit), skip: String(skip)}
     });

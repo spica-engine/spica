@@ -42,6 +42,14 @@
       width: 100%;
       span.info {
         width: 85%;
+        a {
+          font-weight: bold;
+          color: var(--foreground-text);
+          text-decoration: none;
+          mat-icon {
+            font-size: 18px;
+          }
+        }
       }
       span.date {
         width: 15%;

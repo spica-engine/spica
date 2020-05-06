@@ -1,18 +1,24 @@
 import {Action} from "@spica-server/activity/services";
-import {createPolicyResource} from "./activity.resource";
+import {createPolicyActivity} from "./activity.resource";
 
 describe("Activity Resource", () => {
   it("should return activity from post request", () => {
     const res = {
       _id: "policy_id"
     };
-    const action = Action.POST;
 
-    const resource = createPolicyResource(action, {}, res);
-    expect(resource).toEqual({
-      name: "Policy",
-      documentId: ["policy_id"]
-    });
+    const activities = createPolicyActivity(
+      {action: Action.POST, identifier: "test_user"},
+      {},
+      res
+    );
+    expect(activities).toEqual([
+      {
+        action: Action.POST,
+        identifier: "test_user",
+        resource: ["passport", "policy", "policy_id"]
+      }
+    ]);
   });
 
   it("should return activity from put request", () => {
@@ -21,13 +27,11 @@ describe("Activity Resource", () => {
         id: "policy_id"
       }
     };
-    const action = Action.PUT;
 
-    const resource = createPolicyResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Policy",
-      documentId: ["policy_id"]
-    });
+    const activities = createPolicyActivity({action: Action.PUT, identifier: "test_user"}, req, {});
+    expect(activities).toEqual([
+      {action: Action.PUT, identifier: "test_user", resource: ["passport", "policy", "policy_id"]}
+    ]);
   });
 
   it("should return activity from delete request", () => {
@@ -36,12 +40,18 @@ describe("Activity Resource", () => {
         id: "policy_id"
       }
     };
-    const action = Action.DELETE;
 
-    const resource = createPolicyResource(action, req, {});
-    expect(resource).toEqual({
-      name: "Policy",
-      documentId: ["policy_id"]
-    });
+    const activities = createPolicyActivity(
+      {action: Action.DELETE, identifier: "test_user"},
+      req,
+      {}
+    );
+    expect(activities).toEqual([
+      {
+        action: Action.DELETE,
+        identifier: "test_user",
+        resource: ["passport", "policy", "policy_id"]
+      }
+    ]);
   });
 });

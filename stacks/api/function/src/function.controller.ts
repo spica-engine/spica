@@ -26,7 +26,7 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as os from "os";
 import {of, OperatorFunction, from} from "rxjs";
 import {catchError, finalize, last, map, switchMap, tap, take} from "rxjs/operators";
-import {createFunctionResource} from "./activity.resource";
+import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
@@ -76,7 +76,7 @@ export class FunctionController {
     return this.fs.findOne({_id: id});
   }
 
-  @UseInterceptors(activity(createFunctionResource))
+  @UseInterceptors(activity(createFunctionActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -112,7 +112,7 @@ export class FunctionController {
       });
   }
 
-  @UseInterceptors(activity(createFunctionResource))
+  @UseInterceptors(activity(createFunctionActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
@@ -130,7 +130,7 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
-  @UseInterceptors(activity(createFunctionResource))
+  @UseInterceptors(activity(createFunctionActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {

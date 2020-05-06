@@ -1,14 +1,17 @@
 export function provideActivityFactory(activity: any) {
-  let module = activity.resource.name;
-  let documentId = activity.resource.documentId;
   let url;
-  if (module == "Bucket") {
-    url = `buckets/${documentId}`;
-  } else if (module.startsWith("Bucket_")) {
-    module = module.substring(module.indexOf("_") + 1);
-    url = `bucket/${module}/${documentId}`;
-  } else if (module == "Preference" && documentId == "bucket") {
+  let module = activity.resource[0];
+
+  if (module == "bucket") {
+    let bucketId = activity.resource[1];
+    if (activity.resource[2] == "data") {
+      url = `bucket/${bucketId}/${activity.resource[3]}`;
+    } else {
+      url = `buckets/${bucketId}`;
+    }
+  } else if (module == "preference" && activity.resource[1] == "bucket") {
     url = `buckets/settings`;
   }
+
   return url;
 }

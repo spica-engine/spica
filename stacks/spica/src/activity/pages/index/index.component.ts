@@ -1,9 +1,10 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
-import {Observable, BehaviorSubject, Subscription} from "rxjs";
+import {Observable, BehaviorSubject, Subscription, of, merge} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
-import {map, mergeMap} from "rxjs/operators";
+import {map, mergeMap, tap, catchError, flatMap, switchMap} from "rxjs/operators";
+import {MatSelectChange, MatOption} from "@angular/material";
 
 @Component({
   selector: "activity-index",
@@ -11,34 +12,9 @@ import {map, mergeMap} from "rxjs/operators";
   styleUrls: ["./index.component.scss"]
 })
 export class IndexComponent extends DataSource<Activity> implements OnInit, OnDestroy {
-  moduleGroups = [
-    {
-      name: "Bucket-Data",
-      modules: []
-    },
-    {
-      name: "Bucket",
-      modules: ["Bucket"]
-    },
-    {
-      name: "Passport",
-      modules: ["Identity", "Policy", "Apikey"]
-    },
-    {
-      name: "Storage",
-      modules: ["Storage"]
-    },
-    {
-      name: "Function",
-      modules: ["Function"]
-    },
-    {
-      name: "Preference",
-      modules: ["Preference"]
-    }
-  ];
+  buckets$: Observable<any>;
 
-  actions = ["Insert", "Update", "Delete"];
+  documents$: Observable<any>;
 
   documentIds: string[] = [];
 
@@ -93,17 +69,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   filters: ActivityFilter = {
     identifier: undefined,
-    action: undefined,
-    resource: {
-      name: undefined,
-      documentId: undefined
-    },
+    action: [],
+    resource: {$all: [], $in: []},
     date: {
       begin: undefined,
       end: undefined
     },
     limit: this.defaultLimit,
-    skip: undefined
+    skip: 0
   };
 
   dataSource: IndexComponent;
@@ -116,14 +89,9 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   }
 
   ngOnInit() {
-    this.activityService
-      .getDocuments("buckets")
-      .toPromise()
-      .then(documentIds =>
-        documentIds.forEach(id => {
-          this.moduleGroups[0].modules.push(`Bucket_${id}`);
-        })
-      );
+    this.buckets$ = this.checkAllowed("bucket:index").pipe(
+      switchMap(allowed => (allowed ? this.activityService.getBuckets() : of([])))
+    );
 
     this.filters$
       .pipe(
@@ -145,7 +113,7 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
           this.activities = activities;
           this.dataStream.next(this.activities);
         },
-        error => {
+        _ => {
           this.isPending = false;
         }
       );
@@ -154,17 +122,14 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   clearFilters() {
     this.filters = {
       identifier: undefined,
-      action: undefined,
-      resource: {
-        name: undefined,
-        documentId: undefined
-      },
+      action: [],
+      resource: {$all: [], $in: []},
       date: {
         begin: undefined,
         end: undefined
       },
       limit: this.defaultLimit,
-      skip: undefined
+      skip: 0
     };
 
     this.documentIds = undefined;
@@ -176,20 +141,18 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
   applyFilters() {
     this.pageSize = 0;
 
-    this.filters = {...this.filters, limit: this.defaultLimit, skip: undefined};
+    this.filters = {...this.filters, limit: this.defaultLimit, skip: 0};
     this.filters$.next(this.filters);
   }
 
-  showDocuments(moduleName: string) {
-    if (moduleName == "Preference") {
-      this.documentIds = ["bucket", "passport"];
-      return;
-    }
-    this.documentIds = undefined;
-    this.activityService
-      .getDocuments(moduleName.toLowerCase())
-      .toPromise()
-      .then(documentIds => (this.documentIds = documentIds));
+  selectionChange(event: MatSelectChange) {
+    let optGroup = (event.source.selected as MatOption).group
+      ? (event.source.selected as MatOption).group.label.toLowerCase()
+      : "";
+    let selection = event.value;
+    this.documents$ = this.activityService.getDocumentIds(optGroup, selection);
+    this.filters.resource.$all = optGroup ? [optGroup, selection] : [selection];
+    this.filters.resource.$in = [];
   }
 
   clearActivities() {
@@ -206,6 +169,10 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
       begin: new Date(begin.setHours(0, 0, 0, 0)),
       end: new Date(end.setHours(23, 59, 59, 999))
     };
+  }
+
+  checkAllowed(action: string) {
+    return this.activityService.checkAllowed(action);
   }
 
   ngOnDestroy() {
