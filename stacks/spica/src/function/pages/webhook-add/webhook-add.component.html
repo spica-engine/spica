@@ -9,7 +9,15 @@
     <form #form="ngForm">
       <mat-list>
         <mat-list-item>
-          <mat-form-field class="url">
+          <span>
+            <mat-label>
+              {{ webhook.trigger.active ? "Active" : "Deactive" }}
+            </mat-label>
+            <mat-slide-toggle name="status" [(ngModel)]="webhook.trigger.active"></mat-slide-toggle>
+          </span>
+        </mat-list-item>
+        <mat-list-item>
+          <mat-form-field url>
             <input
               matInput
               type="url"
@@ -26,14 +34,8 @@
             <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
             <mat-error *ngIf="urlModel.errors?.required">Url is required.</mat-error>
           </mat-form-field>
-          <span>
-            <mat-label>
-              {{ webhook.trigger.active ? "Active" : "Deactive" }}
-            </mat-label>
-            <mat-slide-toggle name="status" [(ngModel)]="webhook.trigger.active"></mat-slide-toggle>
-          </span>
         </mat-list-item>
-        <h4 mat-subheader>Body</h4>
+        <h4>Body</h4>
         <mat-list-item>
           <code-editor
             matInput
@@ -46,7 +48,7 @@
           ></code-editor>
           <mat-error *ngIf="bodyModel.errors?.required">Body mapping is required</mat-error>
         </mat-list-item>
-        <h4 mat-subheader>
+        <h4>
           Trigger
         </h4>
         <mat-list-item class="triggers">

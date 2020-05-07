@@ -23,6 +23,7 @@ import {HandlebarsLanguageDirective} from "./components/editor/handlebars.langua
 import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
 import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
 import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
+import {WebhookWelcomeComponent} from "./pages/webhook-welcome/webhook-welcome.component";
 import {WebhookRoutingModule} from "./webhook-routing.module";
 
 @NgModule({
@@ -53,6 +54,7 @@ import {WebhookRoutingModule} from "./webhook-routing.module";
     WebhookAddComponent,
     WebhookIndexComponent,
     WebhookLogViewComponent,
+    WebhookWelcomeComponent,
     EditorComponent,
     HandlebarsLanguageDirective
   ],

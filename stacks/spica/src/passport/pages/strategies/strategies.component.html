@@ -1,9 +1,15 @@
 <ng-template #toolbar>
   <mat-toolbar-row>
-    <h4>
-      <mat-icon>linear_scale</mat-icon>
-      <span>Strategies</span>
-    </h4>
+    <div>
+      <h4>
+        <mat-icon>linear_scale</mat-icon>
+        <span>Strategies</span>
+      </h4>
+      <p>
+        A strategy helps you to enable a single-sign on authentication to Spica. Once you create a
+        strategy, your users will be able to login via a 3rd party service.
+      </p>
+    </div>
     <span class="space-between"></span>
     <button mat-icon-button (click)="refresh$.next()">
       <mat-icon>refresh</mat-icon>

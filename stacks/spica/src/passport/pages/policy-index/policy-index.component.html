@@ -1,9 +1,14 @@
 <ng-template #toolbar>
   <mat-toolbar-row>
-    <h4 class="mat-h4">
-      <mat-icon>layers</mat-icon>
-      <span>Policy List</span>
-    </h4>
+    <div>
+      <h4 class="mat-h4">
+        <mat-icon>layers</mat-icon>
+        <span>Policy List</span>
+      </h4>
+      <p>
+        A Policy is a collection of statements. A statement is an access level for an action.
+      </p>
+    </div>
     <span class="space-between"></span>
     <button mat-icon-button (click)="refresh$.next()">
       <mat-icon>refresh</mat-icon>

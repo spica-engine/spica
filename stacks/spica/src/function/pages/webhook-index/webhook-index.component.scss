@@ -1,9 +1,4 @@
 :host {
-  mat-header-cell.action,
-  mat-cell.action {
-    max-width: 150px;
-    justify-content: flex-end;
-  }
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
@@ -71,20 +66,26 @@
     display: block;
     text-align: center;
   }
-  .id-header,
-  .id-content {
+
+  mat-card mat-card-content mat-table mat-header-cell:nth-child(1),
+  mat-cell:nth-child(1) {
+    word-break: break-word;
     text-align: left;
-    flex: 3;
-  }
-  .url-header,
-  .url-content {
-    flex: 3;
+    flex: 2;
   }
 
-  .actions-header,
-  .actions-content {
-    display: inline-flex;
+  mat-card mat-card-content mat-table mat-header-cell:nth-child(2),
+  mat-cell:nth-child(2) {
+    word-break: break-word;
+    flex: 4;
+  }
+
+  mat-card mat-card-content mat-table mat-header-cell:nth-child(3),
+  mat-cell:nth-child(3) {
+    word-break: break-word;
     justify-content: flex-end;
     flex: 1;
+    max-width: 150px;
+    justify-content: flex-end;
   }
 }

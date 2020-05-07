@@ -1,9 +1,14 @@
 <ng-template #toolbar>
   <mat-toolbar-row>
-    <h4>
-      <mat-icon>vpn_key</mat-icon>
-      <span>API Keys</span>
-    </h4>
+    <div>
+      <h4>
+        <mat-icon>vpn_key</mat-icon>
+        <span>API Keys</span>
+      </h4>
+      <p>
+        Enable machine to machine communication with an API key
+      </p>
+    </div>
     <span class="space-between"></span>
     <button mat-icon-button (click)="refresh$.next()">
       <mat-icon>refresh</mat-icon>

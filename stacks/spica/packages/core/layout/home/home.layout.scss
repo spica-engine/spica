@@ -5,9 +5,14 @@
   &:not(.expanded) {
     mat-sidenav-container {
       mat-sidenav {
-        width: 60px;
+        max-width: 60px;
         min-width: 0;
-        transition: all 0.4s ease-in-out;
+        mat-nav-list:nth-child(2) {
+          opacity: 0;
+        }
+      }
+      mat-sidenav-content {
+        margin-left: 60px !important;
       }
     }
   }
@@ -18,7 +23,12 @@
       min-width: 250px;
       max-width: 250px;
       word-break: break-word;
-
+      transition: all 0.4s ease-in-out;
+      .mat-nav-list:nth-child(2) {
+        min-width: 190px;
+        opacity: 1;
+        transition: all 0.4s ease-in-out;
+      }
       section.routes {
         display: flex;
         flex-flow: row;
@@ -80,6 +90,8 @@
       }
     }
     mat-sidenav-content {
+      margin-left: 250px;
+      transition: all 0.4s ease-in-out;
       mat-toolbar {
         padding: 0 30px;
         background-color: var(--current-color, var(--primary-default, black));

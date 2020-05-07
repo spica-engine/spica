@@ -1,12 +1,18 @@
-::ng-deep .preview-file {
-  position: relative !important;
-  .mat-dialog-container {
-    height: unset;
+::ng-deep {
+  mat-toolbar .preview-file {
+    position: relative !important;
+    .mat-dialog-container {
+      height: unset;
+    }
   }
 }
 
 :host {
   mat-toolbar {
+    p {
+      font-size: 12px;
+      margin: 0px 0px 0px 5px;
+    }
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
@@ -65,5 +71,9 @@
         }
       }
     }
+  }
+
+  mat-paginator {
+    margin-top: 110px;
   }
 }

@@ -7,6 +7,7 @@
   </mat-toolbar-row>
 </ng-template>
 <mat-card class="mat-elevation-z25" *ngIf="preferences">
+  <h4>Identity Custom Properties</h4>
   <mat-card-content>
     <mat-list-item>
       <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">

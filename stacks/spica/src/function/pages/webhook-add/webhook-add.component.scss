@@ -22,18 +22,20 @@
     overflow: hidden;
 
     mat-list {
+      padding-top: 0px;
       mat-list-item {
         margin-top: 10px;
         height: auto !important;
-
-        &:first-of-type {
+        &:nth-child(1) {
+          margin-top: 0px;
+        }
+        &:nth-child(2) {
           ::ng-deep .mat-list-item-content {
             display: flex;
             mat-form-field {
               flex: 1;
             }
             span {
-              margin-left: 15px;
               vertical-align: middle;
             }
           }

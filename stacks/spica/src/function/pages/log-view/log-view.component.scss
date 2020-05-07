@@ -4,6 +4,7 @@
     padding: 0 30px;
     align-items: flex-start;
     h4 > * {
+      margin-left: 5px;
       vertical-align: middle;
     }
     .space-between {
@@ -14,7 +15,8 @@
   mat-card {
     width: calc(100% - 60px);
     margin: 30px;
-    margin-top: -160px;
+    margin-top: -110px;
+    padding: 24px;
 
     mat-form-field:not(:first-of-type) {
       margin-left: 10px;
