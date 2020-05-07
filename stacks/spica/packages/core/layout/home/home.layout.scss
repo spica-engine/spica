@@ -17,6 +17,21 @@
     }
   }
 
+  @media screen and (max-width: 1280px) {
+    mat-sidenav-container {
+      mat-sidenav-content {
+        margin-left: 0px !important;
+      }
+    }
+    &:not(.expanded) {
+      mat-sidenav-container {
+        mat-sidenav-content {
+          margin-left: 60px !important;
+        }
+      }
+    }
+  }
+
   mat-sidenav-container {
     height: 100vh;
     mat-sidenav {
