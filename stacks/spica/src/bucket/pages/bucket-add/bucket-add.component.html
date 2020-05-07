@@ -196,7 +196,7 @@
                       </div>
                       <div
                         mat-menu-item
-                        *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+                        *ngIf="visibleTypes.includes(propertyKv.value.type)"
                         role="menuitemcheckbox"
                         disableRipple
                         (click)="$event.stopImmediatePropagation()"
