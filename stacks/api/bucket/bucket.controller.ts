@@ -62,8 +62,10 @@ export class BucketController {
   @UseInterceptors(activity(createBucketActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
-  add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    return this.bs.insertOne(bucket);
+  async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
+    let insertedDocument = await this.bs.insertOne(bucket);
+    await this.bs.createCollection(`bucket_${insertedDocument._id}`);
+    return insertedDocument;
   }
 
   @UseInterceptors(activity(createBucketActivity))
