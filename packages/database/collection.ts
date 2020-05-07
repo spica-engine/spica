@@ -9,7 +9,8 @@ import {
   FindOneOptions,
   ObjectId,
   UpdateManyOptions,
-  UpdateQuery
+  UpdateQuery,
+  CollectionCreateOptions
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 
@@ -26,6 +27,10 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
 
     aggregate(pipeline?: object[], options?: CollectionAggregationOptions): AggregationCursor<T> {
       return this._coll.aggregate(pipeline, options);
+    }
+
+    createCollection(name: string, options?: CollectionCreateOptions): Promise<Collection<any>> {
+      return this.db.createCollection(name, options);
     }
 
     // Insert
