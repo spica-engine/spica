@@ -47,6 +47,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   basicPropertyTypes = ["string", "textarea", "boolean", "number"];
+  visibleTypes = ["string", "textarea", "boolean", "number", "relation", "date"];
 
   bucket: Bucket;
 

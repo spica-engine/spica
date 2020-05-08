@@ -81,6 +81,9 @@
             margin-top: 25px;
           }
         }
+        code-editor {
+          height: calc(100vh - 100px);
+        }
         .editor {
           .decorationsOverviewRuler {
             display: none;
