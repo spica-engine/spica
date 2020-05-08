@@ -22,7 +22,6 @@ describe("Hooks Integration", () => {
   let bucket: Bucket;
   let user1: BucketDocument;
   let user2: BucketDocument;
-  let user3: BucketDocument;
 
   let apikey: ApiKey;
 
@@ -353,8 +352,7 @@ describe("Hooks Integration", () => {
       );
       expect(user3).toEqual({_id: "__skip__", username: "user3", password: "password3", age: 36});
 
-      //delete user3
-      await req.delete(`/bucket/${bucket._id}/data/${user3._id}`,{},{Authorization:token});
+      await req.delete(`/bucket/${bucket._id}/data/${user3._id}`, {}, {Authorization: token});
     });
   });
 });
