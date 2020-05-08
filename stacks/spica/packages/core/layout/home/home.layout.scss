@@ -29,6 +29,10 @@
         opacity: 1;
         transition: all 0.4s ease-in-out;
       }
+      ::ng-deep .mat-drawer-inner-container {
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
       section.routes {
         display: flex;
         flex-flow: row;
@@ -61,7 +65,9 @@
               padding-left: 18px;
             }
             mat-list-item {
-              padding: 10px 0px;
+              ::ng-deep .mat-list-item-content {
+                padding: 16px;
+              }
               height: auto;
               mat-icon {
                 margin-right: 5px;

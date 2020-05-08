@@ -37,3 +37,33 @@ jasmine_node_test(
         ":hook_test_lib",
     ],
 )
+
+
+ts_library(
+    name = "integration_test_lib",
+    testonly = True,
+    srcs = [
+        "src/integration.spec.ts",
+    ],
+    deps = [
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/passport",
+        "//stacks/api/bucket",
+        "//stacks/api/bucket/services",
+        "//stacks/api/function",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@nestjs/common",
+        # search why we need to this dependency
+        "@npm//@nestjs/platform-socket.io",
+    ],
+)
+
+jasmine_node_test(
+    name = "integration_test",
+    deps = [
+        ":integration_test_lib",
+    ],
+)

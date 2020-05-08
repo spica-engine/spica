@@ -374,11 +374,11 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (this.dispatcher && strategyType == "APIKEY") {
-      const result = await this.dispatcher.dispatch(
+      const allowed = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INSERT"},
         headers
       );
-      if (!result) {
+      if (!allowed) {
         throw new ForbiddenException("Forbidden action.");
       }
     }
@@ -396,12 +396,12 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (this.dispatcher && strategyType == "APIKEY") {
-      const result = await this.dispatcher.dispatch(
+      const allowed = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "UPDATE"},
         headers,
         documentId.toHexString()
       );
-      if (!result) {
+      if (!allowed) {
         throw new ForbiddenException("Forbidden action.");
       }
     }
