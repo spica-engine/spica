@@ -45,7 +45,7 @@ const args = yargs
     "database-pool-size": {
       number: true,
       description: "Amount of connection that will be opened against database.",
-      default: 100
+      default: 50
     }
   })
   .demandOption("database-name")

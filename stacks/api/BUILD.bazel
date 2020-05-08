@@ -27,8 +27,8 @@ ts_library(
         "@npm//@nestjs/platform-socket.io",
         "@npm//@types/express",
         "@npm//@types/node",
+        "@npm//@types/yargs",
         "@npm//yargs",
-        "@npm//@types/yargs"
     ],
 )
 
