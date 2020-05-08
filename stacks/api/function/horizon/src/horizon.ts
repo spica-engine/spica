@@ -14,7 +14,7 @@ import {Npm} from "@spica-server/function/pkgmanager/node";
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 import {Runtime, Worker} from "@spica-server/function/runtime";
-import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
+import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
@@ -26,7 +26,7 @@ export class Horizon implements OnModuleInit {
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
 
-  private output: StdOut;
+  private output: StandartStream;
   runtime: Node;
 
   readonly runtimes = new Set<Runtime>();
@@ -99,13 +99,13 @@ export class Horizon implements OnModuleInit {
     const path = event.target.cwd.split("/");
     const functionId = path[path.length - 1];
 
-    const stdOut = this.output.create({
+    const [stdout, stderr] = this.output.create({
       eventId: event.id,
       functionId
     });
 
     // TODO: forward stderr to another channel
-    worker.attach(stdOut, stdOut);
+    worker.attach(stdout, stderr);
 
     this.pool.delete(workerId);
   }

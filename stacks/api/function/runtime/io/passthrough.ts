@@ -1,8 +1,8 @@
-import {PassThrough} from "stream";
-import {StdOut, StdOutOptions} from "./stdout";
+import {PassThrough, Writable} from "stream";
+import {StandartStream, StreamOptions} from "./standart_stream";
 
-export class PassThroughOutput extends StdOut {
-  create(options: StdOutOptions) {
-    return new PassThrough();
+export class PassThroughOutput extends StandartStream {
+  create(options: StreamOptions): [Writable, Writable] {
+    return [new PassThrough(), new PassThrough()];
   }
 }
