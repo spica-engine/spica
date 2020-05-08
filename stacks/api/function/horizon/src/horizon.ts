@@ -18,6 +18,7 @@ import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
+import {HorizonOptions, HORIZON_OPTIONS} from "./options";
 
 @Injectable()
 export class Horizon implements OnModuleInit {
@@ -38,6 +39,7 @@ export class Horizon implements OnModuleInit {
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
+    @Inject(HORIZON_OPTIONS) private options: HorizonOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
     this.output = new DatabaseOutput(database);
@@ -82,15 +84,21 @@ export class Horizon implements OnModuleInit {
 
     this.queue.listen();
 
-    const poolSize = process.env.FUNCTION_POOL_SIZE ? Number(process.env.FUNCTION_POOL_SIZE) : 10;
-    for (let i = 0; i < poolSize; i++) {
+    for (let i = 0; i < this.options.poolSize; i++) {
       this.schedule();
     }
   }
 
   private schedule() {
-    const id = uniqid();
-    const worker = this.runtime.spawn(id);
+    const id: string = uniqid();
+    const worker = this.runtime.spawn({
+      id,
+      env: {
+        __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+        __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet
+      }
+    });
     this.pool.set(id, worker);
   }
 

@@ -30,23 +30,16 @@ spec:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
             - containerPort: 4300
-          env:
-            - name: PORT
-              value: "4300"
-            - name: DATABASE_URI
-              value: {{ template "database.connection-uri" . }}
-            - name: REPLICA_SET
-              value: {{ .Values.database.replicaSetName }}
-            - name: DATABASE_NAME
-              value: {{ .Values.database.name }}
-            - name: SECRET
-              value: {{ required "A valid .Values.application.secret is required!" .Values.application.secret }}
-            - name: DEFAULT_PASSWORD
-              value: {{ .Values.application.defaultPassword }}
-            - name: PUBLIC_HOST
-              value: {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}}
-            - name: PERSISTENT_PATH
-              value: /data
+          args: [
+            --port, "4300", 
+            --database-uri, {{ template "database.connection-uri" . }},
+            --database-replica-set,  {{ .Values.database.replicaSetName }},
+            --database-name,  {{ .Values.database.name }},
+            --passport-secret, {{ required "A valid .Values.application.secret is required!" .Values.application.secret }},
+            --passport-password,  {{ .Values.application.defaultPassword }},
+            --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
+            --persistent-path, /data
+          ]
           volumeMounts:
             - name: {{ .Release.Name }}-data
               mountPath: /data

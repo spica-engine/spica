@@ -8,7 +8,6 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 ts_library(
     name = "api",
     srcs = [
-        "app.module.ts",
         "main.ts",
     ],
     deps = [
@@ -28,6 +27,8 @@ ts_library(
         "@npm//@nestjs/platform-socket.io",
         "@npm//@types/express",
         "@npm//@types/node",
+        "@npm//yargs",
+        "@npm//@types/yargs"
     ],
 )
 

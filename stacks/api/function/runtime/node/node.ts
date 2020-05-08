@@ -3,6 +3,7 @@ import {
   Description,
   Diagnostic,
   Runtime,
+  SpawnOptions,
   Worker
 } from "@spica-server/function/runtime";
 import * as child_process from "child_process";
@@ -31,7 +32,7 @@ class FilterExperimentalWarnings extends Transform {
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
 
-  constructor(id: string) {
+  constructor(options: SpawnOptions) {
     super();
     this._process = child_process.spawn(
       `node`,
@@ -49,10 +50,8 @@ class NodeWorker extends Worker {
           FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
           ENTRYPOINT: "index.js",
           RUNTIME: "node",
-          WORKER_ID: id,
-          __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
-          __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
-          __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+          WORKER_ID: options.id,
+          ...options.env
         }
       }
     );
@@ -163,8 +162,8 @@ export class Node extends Runtime {
     }
   }
 
-  spawn(id: string): Worker {
-    return new NodeWorker(id);
+  spawn(options: SpawnOptions): Worker {
+    return new NodeWorker(options);
   }
 
   clear(compilation: Compilation) {
