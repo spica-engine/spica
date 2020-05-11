@@ -23,12 +23,10 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
           if (schema["relationType"] == "onetomany") {
             schema.type = "array";
             schema.items = {
-              type: "string",
-              format: "objectid"
+              type: "string"
             };
           } else {
             schema.type = "string";
-            schema.format = "objectid";
           }
 
           break;
