@@ -1,24 +1,17 @@
-import {Inject, Injectable, OnModuleInit, Optional} from "@nestjs/common";
-import {HttpAdapterHost} from "@nestjs/core";
-import {DatabaseService} from "@spica-server/database";
-import {
-  DatabaseEnqueuer,
-  Enqueuer,
-  FirehoseEnqueuer,
-  HttpEnqueuer,
-  ScheduleEnqueuer,
-  SystemEnqueuer
-} from "@spica-server/function/enqueuer";
-import {PackageManager} from "@spica-server/function/pkgmanager";
-import {Npm} from "@spica-server/function/pkgmanager/node";
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
-import {Event} from "@spica-server/function/queue/proto";
-import {Runtime, Worker} from "@spica-server/function/runtime";
-import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
-import {Node} from "@spica-server/function/runtime/node";
+import { Inject, Injectable, OnModuleInit, Optional } from "@nestjs/common";
+import { HttpAdapterHost } from "@nestjs/core";
+import { DatabaseService } from "@spica-server/database";
+import { DatabaseEnqueuer, Enqueuer, FirehoseEnqueuer, HttpEnqueuer, ScheduleEnqueuer, SystemEnqueuer } from "@spica-server/function/enqueuer";
+import { PackageManager } from "@spica-server/function/pkgmanager";
+import { Npm } from "@spica-server/function/pkgmanager/node";
+import { DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue } from "@spica-server/function/queue";
+import { Event } from "@spica-server/function/queue/proto";
+import { Runtime, Worker } from "@spica-server/function/runtime";
+import { DatabaseOutput, StandartStream } from "@spica-server/function/runtime/io";
+import { Node } from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
-import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
-import {HorizonOptions, HORIZON_OPTIONS} from "./options";
+import { ENQUEUER, EnqueuerFactory } from "./enqueuer";
+import { HorizonOptions, HORIZON_OPTIONS } from "./options";
 
 @Injectable()
 export class Horizon implements OnModuleInit {
@@ -111,8 +104,6 @@ export class Horizon implements OnModuleInit {
       eventId: event.id,
       functionId
     });
-
-    // TODO: forward stderr to another channel
     worker.attach(stdout, stderr);
 
     this.pool.delete(workerId);
