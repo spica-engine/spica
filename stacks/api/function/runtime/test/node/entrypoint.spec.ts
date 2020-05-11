@@ -27,7 +27,14 @@ describe("Entrypoint", () => {
 
   function spawn(stdout?: Writable, idOverride?: string): Promise<number> {
     return new Promise((resolve, reject) => {
-      const worker = runtime.spawn(idOverride != undefined ? idOverride : String(++id));
+      const worker = runtime.spawn({
+        id: idOverride != undefined ? idOverride : String(++id),
+        env: {
+          __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
+          __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
+          __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+        }
+      });
       worker.attach(stdout || process.stdout, stdout || process.stderr);
 
       worker.once("error", e => {

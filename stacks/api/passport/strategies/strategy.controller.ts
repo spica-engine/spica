@@ -3,23 +3,28 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
+  Inject,
   Param,
   Post,
-  UseGuards,
-  HttpException,
-  HttpStatus
+  UseGuards
 } from "@nestjs/common";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import * as pem from "pem";
 import * as util from "util";
 import {AuthGuard} from "../auth.guard";
 import {Strategy} from "../interface";
+import {PassportOptions, PASSPORT_OPTIONS} from "../options";
 import {ActionGuard} from "../policy";
 import {StrategyService} from "./strategy.service";
 
 @Controller("strategies")
 export class StrategyController {
-  constructor(private strategy: StrategyService) {}
+  constructor(
+    private strategy: StrategyService,
+    @Inject(PASSPORT_OPTIONS) private options: PassportOptions
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:index"))
@@ -33,7 +38,7 @@ export class StrategyController {
     return this.strategy.findOne({_id: id}).then(strategy => {
       strategy[
         "callbackUrl"
-      ] = `${process.env.PUBLIC_HOST}/passport/strategy/${strategy.name}/complete`;
+      ] = `${this.options.publicUrl}/passport/strategy/${strategy.name}/complete`;
       return strategy;
     });
   }

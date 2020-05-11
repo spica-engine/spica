@@ -1,5 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Storage, StorageObject} from "./storage.service";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
@@ -26,8 +27,11 @@ describe("storage service", () => {
       providers: [
         Storage,
         {
-          provide: String,
-          useValue: ""
+          provide: STORAGE_OPTIONS,
+          useValue: <StorageOptions>{
+            publicUrl: "",
+            path: ""
+          }
         }
       ]
     }).compile();

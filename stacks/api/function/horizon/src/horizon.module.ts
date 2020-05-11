@@ -1,16 +1,20 @@
-import {Module} from "@nestjs/common";
-import {HttpAdapterHost} from "@nestjs/core";
+import {DynamicModule, Module} from "@nestjs/common";
 import {Horizon} from "./horizon";
+import {HorizonOptions, HORIZON_OPTIONS} from "./options";
 
-@Module({
-  imports: [],
-  providers: [
-    {
-      provide: Horizon,
-      useClass: Horizon,
-      inject: [HttpAdapterHost]
-    }
-  ],
-  exports: [Horizon]
-})
-export class HorizonModule {}
+@Module({})
+export class HorizonModule {
+  static forRoot(options: HorizonOptions): DynamicModule {
+    return {
+      module: HorizonModule,
+      providers: [
+        Horizon,
+        {
+          provide: HORIZON_OPTIONS,
+          useValue: options
+        }
+      ],
+      exports: [Horizon]
+    };
+  }
+}

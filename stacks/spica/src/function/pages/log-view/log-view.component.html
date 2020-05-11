@@ -44,7 +44,7 @@
     </mat-select>
   </mat-form-field>
   <mat-slide-toggle [(ngModel)]="showErrors" (ngModelChange)="filter$.next(filter$.value)">
-    Hide Errors
+    {{ showErrors ? "Show Errors" : "Hide Errors" }}
   </mat-slide-toggle>
   <mat-table multiTemplateDataRows [dataSource]="logs$">
     <ng-container matColumnDef="timestamp">

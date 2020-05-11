@@ -2,10 +2,10 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {Middlewares} from "@spica-server/core";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 import * as BSON from "bson";
 import {StorageModule} from "./storage.module";
-import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Storage acceptance test", () => {
   async function addRandomData(count: number) {
@@ -34,7 +34,7 @@ describe("Storage acceptance test", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.create(),
-        StorageModule.forRoot({path: "/tmp"})
+        StorageModule.forRoot({path: "/tmp", publicUrl: ""})
       ]
     }).compile();
     app = module.createNestApplication();

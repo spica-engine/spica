@@ -1,8 +1,9 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {StorageController} from "./storage.controller";
-import {Storage} from "./storage.service";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {Binary} from "crypto";
+import {StorageOptions, STORAGE_OPTIONS} from "./options";
+import {StorageController} from "./storage.controller";
+import {Storage} from "./storage.service";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -54,8 +55,11 @@ describe("Storage Controller", () => {
       providers: [
         Storage,
         {
-          provide: String,
-          useValue: ""
+          provide: STORAGE_OPTIONS,
+          useValue: <StorageOptions>{
+            publicUrl: "",
+            path: ""
+          }
         }
       ]
     }).compile();
@@ -71,9 +75,9 @@ describe("Storage Controller", () => {
         expect(getAllSpy).toHaveBeenCalledTimes(1);
         expect(getAllSpy).toHaveBeenCalledWith(3, 0, {});
 
-        expect(result.data[0].url).toEqual("undefined/storage/56cb91bdc3464f14678934ca");
-        expect(result.data[1].url).toEqual("undefined/storage/56cb91bdc3464f14678934cb");
-        expect(result.data[2].url).toEqual("undefined/storage/56cb91bdc3464f14678934cc");
+        expect(result.data[0].url).toEqual("/storage/56cb91bdc3464f14678934ca");
+        expect(result.data[1].url).toEqual("/storage/56cb91bdc3464f14678934cb");
+        expect(result.data[2].url).toEqual("/storage/56cb91bdc3464f14678934cc");
 
         return;
       })
@@ -101,7 +105,7 @@ describe("Storage Controller", () => {
             expect(jsonSpy).toHaveBeenCalledTimes(1);
             expect(jsonSpy).toHaveBeenCalledWith({
               _id: new ObjectId("56cb91bdc3464f14678934cc"),
-              url: "undefined/storage/56cb91bdc3464f14678934cc",
+              url: "/storage/56cb91bdc3464f14678934cc",
               content: {
                 data: Buffer.from("3"),
                 type: "text3"

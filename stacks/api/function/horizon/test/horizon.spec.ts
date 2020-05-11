@@ -34,7 +34,16 @@ describe("horizon enqueuer factory", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create(), HorizonModule, SpySchedulerModule]
+      imports: [
+        DatabaseTestingModule.create(),
+        HorizonModule.forRoot({
+          databaseName: undefined,
+          databaseReplicaSet: undefined,
+          databaseUri: undefined,
+          poolSize: 10
+        }),
+        SpySchedulerModule
+      ]
     }).compile();
     app = module.createNestApplication();
     horizon = module.get(Horizon);
@@ -59,7 +68,15 @@ describe("horizon", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create(), HorizonModule]
+      imports: [
+        DatabaseTestingModule.create(),
+        HorizonModule.forRoot({
+          databaseUri: undefined,
+          databaseName: undefined,
+          databaseReplicaSet: undefined,
+          poolSize: 10
+        })
+      ]
     }).compile();
 
     horizon = module.get(Horizon);

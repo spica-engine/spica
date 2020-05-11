@@ -19,7 +19,8 @@ describe("ApiKey", () => {
         PassportModule.forRoot({
           issuer: "spica.internal",
           secretOrKey: "test",
-          defaultStrategy: "noop"
+          defaultStrategy: "noop",
+          publicUrl: undefined
         }),
         PassportTestingModule.initialize()
       ]

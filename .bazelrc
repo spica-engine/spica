@@ -38,9 +38,10 @@ build --define=PORT=4300
 build --define=PERSISTENT_PATH=/tmp #Very persistent!
 build --define=SECRET=2b10shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
 build --define=DEFAULT_PASSWORD=spica
-build --define=ENABLE_BUCKET_HOOKS=true
-build --define=ENABLE_BUCKET_HISTORY=true
-build --define=ENABLE_ACTIVITY_STREAM=true
+build --define=BUCKET_HOOKS=true
+build --define=BUCKET_HISTORY=true
+build --define=ACTIVITY_STREAM=true
+build --define=EXPERIMENTAL_BUCKET_REALTIME=true
 build --define=FUNCTION_GRPC_ADDRESS=0.0.0.0:5688
 
 
