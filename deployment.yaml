@@ -101,29 +101,21 @@ spec:
               cpu: "150m"
           ports:
             - containerPort: 4300
-          env:
-            - name: PORT
-              value: "4300"
-            - name: DATABASE_URI
-              value: mongodb://database-0.mongo.master.svc.cluster.local,database-1.mongo.master.svc.cluster.local,database-2.mongo.master.svc.cluster.local
-            - name: REPLICA_SET
-              value: rs0
-            - name: DATABASE_NAME
-              value: spica
-            - name: SECRET
-              value: $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
-            - name: DEFAULT_PASSWORD
-              value: spica
-            - name: PUBLIC_HOST
-              value: "https://master.spicaengine.com/api"
-            - name: PERSISTENT_PATH
-              value: /data
-            - name: ENABLE_BUCKET_HOOKS
-              value: "true"
-            - name: ENABLE_BUCKET_HISTORY
-              value: "true"
-            - name: ENABLE_ACTIVITY_STREAM
-              value: "true"
+          args:
+            - --port
+            - "4300"
+            - --database-uri
+            - mongodb://database-0.mongo.master.svc.cluster.local,database-1.mongo.master.svc.cluster.local,database-2.mongo.master.svc.cluster.local
+            - --database-name
+            - spica
+            - --database-replica-set
+            - rs0
+            - --passport-secret
+            - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
+            - --passport-password
+            - spica
+            - --persistent-path
+            - /data
           volumeMounts:
             - name: master-data
               mountPath: /data

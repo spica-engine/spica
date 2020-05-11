@@ -1,7 +1,8 @@
-import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, ObjectId, FilterQuery} from "@spica-server/database";
+import {Inject, Injectable} from "@nestjs/common";
+import {Collection, DatabaseService, FilterQuery, ObjectId} from "@spica-server/database";
 import * as fs from "fs";
 import * as path from "path";
+import {StorageOptions, STORAGE_OPTIONS} from "./options";
 
 @Injectable()
 export class Storage {
@@ -10,9 +11,9 @@ export class Storage {
 
   private _collection: Collection<StorageObject>;
 
-  constructor(database: DatabaseService, pPath: string) {
+  constructor(database: DatabaseService, @Inject(STORAGE_OPTIONS) options: StorageOptions) {
     this._collection = database.collection("storage");
-    this.path = path.resolve(pPath, "storage");
+    this.path = path.resolve(options.path, "storage");
     if (!fs.existsSync(this.path)) {
       fs.mkdirSync(this.path);
     }
