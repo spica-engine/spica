@@ -26,8 +26,8 @@ import {InputResolver} from "../input.resolver";
       :host {
         display: block;
       }
-      mat-form-field:not(:first-child-of-type) {
-        margin-left: 5px;
+      mat-form-field {
+        margin: 15px 5px 0px 5px;
       }
     `
   ]
