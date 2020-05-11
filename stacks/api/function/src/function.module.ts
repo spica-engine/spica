@@ -9,11 +9,12 @@ import {FunctionService} from "./function.service";
 import {FUNCTION_OPTIONS} from "./interface";
 import {LogController} from "./log.controller";
 import {LogService} from "./log.service";
+import {FunctionOptions} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 
 @Module({})
 export class FunctionModule {
-  static forRoot(options: {path: string}): DynamicModule {
+  static forRoot(options: FunctionOptions): DynamicModule {
     return {
       module: FunctionModule,
       imports: [
@@ -21,7 +22,12 @@ export class FunctionModule {
           schemas: [require("./schema/function.json")]
         }),
         WebhookModule.forRoot(),
-        HorizonModule
+        HorizonModule.forRoot({
+          databaseName: options.databaseName,
+          databaseReplicaSet: options.databaseReplicaSet,
+          databaseUri: options.databaseUri,
+          poolSize: options.poolSize
+        })
       ],
       controllers: [LogController, FunctionController],
       providers: [

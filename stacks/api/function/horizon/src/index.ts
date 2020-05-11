@@ -1,3 +1,4 @@
-export * from "./horizon.module";
-export * from "./horizon";
 export * from "./enqueuer";
+export * from "./horizon";
+export * from "./horizon.module";
+export * from "./options";

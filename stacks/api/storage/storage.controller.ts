@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Post,
   Put,
@@ -18,11 +19,12 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Binary} from "bson";
 import {createStorageActivity} from "./activity.resource";
+import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Storage, StorageObject} from "./storage.service";
 
 @Controller("storage")
 export class StorageController {
-  constructor(public storage: Storage) {}
+  constructor(private storage: Storage, @Inject(STORAGE_OPTIONS) private options: StorageOptions) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
@@ -33,7 +35,7 @@ export class StorageController {
   ) {
     const object = await this.storage.getAll(limit, skip, sort);
     object.data = object.data.map(m => {
-      m.url = `${process.env.PUBLIC_HOST}/storage/${m._id}`;
+      m.url = `${this.options.publicUrl}/storage/${m._id}`;
       return m;
     });
 
@@ -48,7 +50,7 @@ export class StorageController {
   ) {
     const object = await this.storage.get(id);
     if (withMeta) {
-      object.url = `${process.env.PUBLIC_HOST}/storage/${object._id}`;
+      object.url = `${this.options.publicUrl}/storage/${object._id}`;
       res.json(object);
     } else {
       res.header("Content-type", object.content.type);

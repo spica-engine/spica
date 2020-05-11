@@ -4,7 +4,7 @@ import * as fs from "fs";
 class FooRuntime extends Runtime {
   description = undefined;
 
-  spawn(id: string): Worker {
+  spawn(): Worker {
     throw new Error("Method not implemented.");
   }
 

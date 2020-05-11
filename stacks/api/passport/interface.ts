@@ -1,15 +1,5 @@
 import {ObjectId} from "@spica-server/database";
 
-export const PASSPORT_OPTIONS = "PASSPORT_OPTIONS";
-
-export interface PassportOptions {
-  issuer: string;
-  audience?: string;
-  secretOrKey: string;
-  defaultPassword?: string;
-  defaultStrategy?: string;
-}
-
 export interface Strategy {
   _id: ObjectId;
   type: string;

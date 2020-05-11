@@ -10,7 +10,7 @@ import {Compilation} from "./compilation";
 export abstract class Runtime {
   abstract description: Description;
   abstract compile(compilation: Compilation): Promise<void>;
-  abstract spawn(id: string): Worker;
+  abstract spawn(options: SpawnOptions): Worker;
   protected async prepare(compilation: Compilation): Promise<void> {
     return fs.promises.mkdir(path.join(compilation.cwd, ".build"), {recursive: true});
   }
@@ -26,6 +26,13 @@ export abstract class Runtime {
     shasum.update(code);
     shasum.digest("hex").toString();
   }
+}
+
+export interface SpawnOptions {
+  id: string;
+  env: {
+    [key: string]: string;
+  };
 }
 
 export interface Description {
