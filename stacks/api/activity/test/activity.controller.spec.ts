@@ -69,17 +69,17 @@ describe("Activity Acceptance", () => {
     expect(activities).toEqual([
       {
         _id: "object_id",
-        action: Action.DELETE,
-        identifier: "test_user",
-        resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[0]._id)
-      },
-      {
-        _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
         resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[1]._id)
+      },
+      {
+        _id: "object_id",
+        action: Action.DELETE,
+        identifier: "test_user",
+        resource: ["test_module", "test_id"],
+        date: objectIdToDate(activities[0]._id)
       }
     ]);
   });
@@ -161,17 +161,17 @@ describe("Activity Acceptance", () => {
     expect(activities).toEqual([
       {
         _id: "object_id",
-        action: Action.DELETE,
-        identifier: "test_user",
-        resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[0]._id)
-      },
-      {
-        _id: "object_id",
         action: Action.POST,
         identifier: "test_user2",
         resource: ["test_module", "test_id"],
         date: objectIdToDate(activities[1]._id)
+      },
+      {
+        _id: "object_id",
+        action: Action.DELETE,
+        identifier: "test_user",
+        resource: ["test_module", "test_id"],
+        date: objectIdToDate(activities[0]._id)
       }
     ]);
   });
@@ -208,15 +208,15 @@ describe("Activity Acceptance", () => {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: ["test_module", "test_id1"],
-        date: objectIdToDate(activities[0]._id)
+        resource: ["test_module", "test_id3"],
+        date: objectIdToDate(activities[1]._id)
       },
       {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
-        resource: ["test_module", "test_id3"],
-        date: objectIdToDate(activities[1]._id)
+        resource: ["test_module", "test_id1"],
+        date: objectIdToDate(activities[0]._id)
       }
     ]);
   });
