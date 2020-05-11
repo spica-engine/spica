@@ -35,7 +35,7 @@ describe("IO Database", () => {
     });
   });
 
-  it("should write std to collection", done => {
+  it("should write stderr to collection", done => {
     const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
     stderr.write(Buffer.from("this is my message"), async err => {
       expect(err).toBeUndefined();
