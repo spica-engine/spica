@@ -31,10 +31,17 @@ describe("Hooks Integration", () => {
     module = await Test.createTestingModule({
       imports: [
         BucketModule.forRoot({hooks: true, history: false, realtime: false}),
-        FunctionModule.forRoot({path: "/tmp"}),
+        FunctionModule.forRoot({
+          path: "/tmp",
+          databaseName: "spica",
+          poolSize: 1,
+          databaseReplicaSet: "test",
+          databaseUri: "mongodb://localhost:27017"
+        }),
         PassportModule.forRoot({
           issuer: "spica.internal",
           secretOrKey: "test",
+          publicUrl: "http://localhost:4300",
           defaultPassword: "spica",
           audience: "spica.io"
         }),
