@@ -20,8 +20,9 @@
   display: block;
   min-height: 400px;
   width: 100%;
-  border-radius: 5px;
-  overflow: hidden;
+  .overflow-guard {
+    border-radius: 5px;
+  }
 
   .line-numbers {
     color: --primary-50;

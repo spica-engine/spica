@@ -9,6 +9,7 @@ ts_library(
     srcs = [
         "index.ts",
         "node.ts",
+        "compiler_worker.ts"
     ],
     data = [
         ":runtime",
