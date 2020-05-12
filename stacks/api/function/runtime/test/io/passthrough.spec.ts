@@ -8,7 +8,7 @@ describe("IO Passthrough", () => {
   });
 
   it("should create a writable stream", () => {
-    const stream = io.create({eventId: "event", functionId: "test"});
-    expect(stream.writable).toBe(true);
+    const [stdout] = io.create({eventId: "event", functionId: "test"});
+    expect(stdout.writable).toBe(true);
   });
 });

@@ -112,6 +112,7 @@ export interface Log {
   function: string;
   event_id: string;
   content: string;
+  channel: "stderr" | "stdout";
   created_at: string;
 }
 
