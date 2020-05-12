@@ -1,8 +1,9 @@
-import {HttpClient, HttpParams} from "@angular/common/http";
+import {HttpParams} from "@angular/common/http";
 import {Component, Input, OnInit, ViewChild} from "@angular/core";
 import {MatSort, MatTableDataSource} from "@angular/material";
 import {MatPaginator} from "@angular/material/paginator";
 import {Component as DashboardComponent} from "../../interfaces";
+import {DashboardService} from "@spica-client/dashboard/services/dashboard.service";
 
 @Component({
   selector: "app-dashboard-table",
@@ -17,13 +18,13 @@ export class DashboardTableComponent implements OnInit {
   @Input() data: DashboardComponent;
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
   @ViewChild(MatSort, {static: true}) sort: MatSort;
-  constructor(private http: HttpClient) {}
+  constructor(private dashboardService: DashboardService) {}
 
   ngOnInit() {
     this.getData();
   }
   getData() {
-    this.http.get(`api:/fn-execute/${this.data.target}`, {params: this.params}).subscribe(d => {
+    this.dashboardService.executeComponent(this.data.url, this.params).subscribe(d => {
       Object.values(d).map(f => {
         if (f[this.data.key]) {
           this.dataSource = new MatTableDataSource(f[this.data.key].data);

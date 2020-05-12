@@ -8,6 +8,6 @@ export class DashboardController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
   findAll() {
-    return this.ds.find();
+    return this.ds.findAll();
   }
 }

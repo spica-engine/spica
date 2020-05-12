@@ -1,4 +1,4 @@
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpParams} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {Store} from "@ngrx/store";
 import {Observable} from "rxjs";
@@ -16,6 +16,10 @@ export class DashboardService {
 
   getDashboard(key: string): Observable<Dashboard> {
     return this.store.select(fromDashboard.selectEntity(key));
+  }
+
+  executeComponent(url: string, params: HttpParams) {
+    return this.http.get<Dashboard>(url, {params: params});
   }
 
   retrieve() {

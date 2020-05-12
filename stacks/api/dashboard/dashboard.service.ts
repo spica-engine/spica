@@ -5,15 +5,19 @@ import {Dashboard} from "./dashboard";
 export class DashboardService {
   constructor() {}
 
-  find(): Dashboard[] {
-    return Array.from(global["dashboards"]).map(dashboard => {
-      const data: Dashboard = {
-        key: dashboard[0],
-        name: dashboard[1].name,
-        components: dashboard[1].components,
-        icon: dashboard[1].icon
-      };
-      return data;
-    });
+  findAll(): Dashboard[] {
+    return Array.from(global["dashboards"].values());
+  }
+
+  find(key: string): Dashboard {
+    return global["dashboards"].get(key);
+  }
+
+  register(dashboard: Dashboard): void {
+    global["dashboards"].set(dashboard.key, dashboard);
+  }
+
+  unregister(key: string): void {
+    global["dashboards"].delete(key);
   }
 }
