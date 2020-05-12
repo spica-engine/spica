@@ -8,7 +8,7 @@ ts_library(
         "database.ts",
         "index.ts",
         "passthrough.ts",
-        "stdout.ts",
+        "standart_stream.ts",
     ],
     module_name = "@spica-server/function/runtime/io",
     deps = [
