@@ -116,6 +116,8 @@ spec:
             - spica
             - --persistent-path
             - /data
+            - --public-url
+            - https://master.spicaengine.com/api
           volumeMounts:
             - name: master-data
               mountPath: /data

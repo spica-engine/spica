@@ -78,6 +78,8 @@ export class ActivityController {
 
     if (limit) aggregation.push({$limit: limit});
 
+    aggregation.push({$sort: {_id: -1}});
+
     return this.activityService.aggregate(aggregation).toArray();
   }
 
