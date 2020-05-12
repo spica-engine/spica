@@ -52,6 +52,9 @@
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+            mat-icon {
+              margin-right: 5px;
+            }
           }
         }
       }
@@ -63,6 +66,9 @@
           white-space: pre-wrap;
           line-height: 20px;
           opacity: 0.8;
+          &[channel="stderr"] {
+            color: var(--warn-500);
+          }
           div {
             padding-top: 10px;
             padding-bottom: 10px;

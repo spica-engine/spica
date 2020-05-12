@@ -20,13 +20,29 @@ describe("IO Database", () => {
     });
   });
 
-  it("should write to collection", done => {
-    const stream = dbOutput.create({eventId: "event", functionId: "1"});
-    stream.write(Buffer.from("this is my message"), async err => {
+  it("should write stdout to collection", done => {
+    const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
+    stdout.write(Buffer.from("this is my message"), async err => {
       expect(err).toBeUndefined();
       expect(await db.collection("function_logs").findOne({})).toEqual({
         _id: "__skip",
         content: "this is my message",
+        channel: "stdout",
+        event_id: "event",
+        function: "1"
+      });
+      done();
+    });
+  });
+
+  it("should write stderr to collection", done => {
+    const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
+    stderr.write(Buffer.from("this is my message"), async err => {
+      expect(err).toBeUndefined();
+      expect(await db.collection("function_logs").findOne({})).toEqual({
+        _id: "__skip",
+        content: "this is my message",
+        channel: "stderr",
         event_id: "event",
         function: "1"
       });
