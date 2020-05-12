@@ -63,6 +63,8 @@ body {
 }
 
 .mat-form-field {
+  padding-top: 1em !important;
+  margin:0px 5px;
   &.mat-focused {
     .mat-form-field-infix {
       box-shadow: 3px 3px 5px var(--foreground-base-rgb) !important;
@@ -81,7 +83,6 @@ body {
       transform: translate(0.75em, 0.4375em) scale(1);
     }
   }
-
   &.mat-form-field-should-float {
     .mat-form-field-infix {
       .mat-form-field-label {
@@ -89,7 +90,6 @@ body {
       }
     }
   }
-
   .mat-form-field-underline {
     opacity: 0 !important;
   }

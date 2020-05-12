@@ -15,7 +15,10 @@
     margin: 30px;
     margin-top: -110px;
     width: 95%;
-
+    > span {
+      margin-left: 1em;
+    }
+    
     .mat-card-content {
       .cdk-virtual-scroll-viewport {
         .mat-list {
@@ -30,9 +33,6 @@
       }
     }
 
-    .mat-form-field {
-      margin: 5px 10px;
-    }
     .example-viewport {
       height: 600px;
       width: 100%;
