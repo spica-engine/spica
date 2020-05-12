@@ -1,44 +1,18 @@
 import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {Middlewares} from "@spica-server/core";
-import {Default, Format, SchemaModule} from "@spica-server/core/schema";
+import {SchemaModule} from "@spica-server/core/schema";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseService, ObjectId} from "@spica-server/database";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {BucketModule} from ".";
-import {BucketController} from "./bucket.controller";
-
-export const CREATED_AT: Default = {
-  keyword: ":created_at",
-  type: "date",
-  create: data => {
-    return data || new Date().toISOString();
-  }
-};
-
-export const UPDATED_AT: Default = {
-  keyword: ":updated_at",
-  type: "date",
-  create: () => {
-    return new Date().toISOString();
-  }
-};
-
-export const OBJECT_ID: Format = {
-  name: "objectid",
-  type: "string",
-  coerce: bucketId => {
-    return new ObjectId(bucketId);
-  },
-  validate: bucketId => {
-    try {
-      return !!bucketId && !!new ObjectId(bucketId);
-    } catch {
-      return false;
-    }
-  }
-};
+import {
+  OBJECT_ID,
+  CREATED_AT,
+  UPDATED_AT,
+  OBJECTID_STRING
+} from "@spica-server/core/schema/defaults";
 
 describe("Bucket acceptance", () => {
   let app: INestApplication;
@@ -73,7 +47,7 @@ describe("Bucket acceptance", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID],
+          formats: [OBJECT_ID, OBJECTID_STRING],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
