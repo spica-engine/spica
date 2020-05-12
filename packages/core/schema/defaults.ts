@@ -31,9 +31,6 @@ export const OBJECT_ID: Format = {
 export const OBJECTID_STRING: Format = {
   name: "objectid-string",
   type: "string",
-  coerce: bucketId => {
-    return bucketId;
-  },
   validate: objectId => {
     return ObjectId.isValid(objectId);
   }
