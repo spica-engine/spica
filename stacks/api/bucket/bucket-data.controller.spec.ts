@@ -4,7 +4,13 @@ import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {CREATED_AT, DATE_TIME, OBJECT_ID, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {
+  CREATED_AT,
+  DATE_TIME,
+  OBJECT_ID,
+  UPDATED_AT,
+  OBJECTID_STRING
+} from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {ObjectId} from "@spica-server/database";
 import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
@@ -22,7 +28,7 @@ describe("BucketDataController", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME],
+          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
