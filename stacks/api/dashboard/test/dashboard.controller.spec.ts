@@ -1,15 +1,16 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DashboardModule} from "./dashboard.module";
+import {DashboardModule} from "@spica-server/dashboard";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+
 describe("DashboardController", () => {
   let request: Request;
   let app: INestApplication;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [CoreTestingModule, PassportTestingModule.initialize(), DashboardModule.forRoot()]
+      imports: [CoreTestingModule, PassportTestingModule.initialize(), DashboardModule]
     }).compile();
 
     request = module.get(Request);

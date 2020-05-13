@@ -12,6 +12,7 @@ import {
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {DashboardService} from "./dashboard.service";
 import {Dashboard} from "./dashboard";
+import {Schema} from "@spica-server/core/schema";
 
 @Controller("dashboard")
 export class DashboardController {
@@ -30,13 +31,16 @@ export class DashboardController {
   }
 
   @Put()
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
-  register(@Body() dashboard: Dashboard) {
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:update"))
+  register(
+    @Body(Schema.validate("http://spica.internal/dashboard"))
+    dashboard: Dashboard
+  ) {
     return this.dashboardService.register(dashboard);
   }
 
   @Delete(":key")
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   unregister(@Param("key") key: string) {
     return this.dashboardService.unregister(key);

@@ -1,5 +1,4 @@
-import {DashboardService} from "./dashboard.service";
-import {Dashboard} from "./dashboard";
+import {DashboardService, Dashboard} from "@spica-server/dashboard/src";
 
 describe("DashboardController", () => {
   let dashboardService: DashboardService;
