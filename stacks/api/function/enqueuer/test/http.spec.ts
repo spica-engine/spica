@@ -73,7 +73,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.unsubscribe(noopTarget);
   });
 
-  it("should not handle preflight requests head method", async () => {
+  it("should not handle preflight requests for head method", async () => {
     httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Head, path: "/test2", preflight: true});
     let response = await req.options("/fn-execute/test2");
     expect(response.statusCode).toBe(404);

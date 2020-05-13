@@ -15,14 +15,14 @@ export function initialize(apikey: string) {
   url = `${publicUrl}/dashboard`;
 }
 
-function isInitialized() {
+function checkInitialized() {
   if (!_apikey) {
     throw new Error("You should call initialize method with apikey before this action.");
   }
 }
 
 export function create(dashboard: Dashboard): Promise<any> {
-  isInitialized();
+  checkInitialized();
 
   let request = {
     method: "put",
@@ -36,7 +36,7 @@ export function create(dashboard: Dashboard): Promise<any> {
 }
 
 export function update(dashboard: Dashboard): Promise<any> {
-  isInitialized();
+  checkInitialized();
 
   let request = {
     method: "put",
@@ -50,7 +50,7 @@ export function update(dashboard: Dashboard): Promise<any> {
 }
 
 export function get(key: string): Promise<any> {
-  isInitialized();
+  checkInitialized();
 
   let request = {
     method: "get",
@@ -63,7 +63,7 @@ export function get(key: string): Promise<any> {
 }
 
 export function getAll(): Promise<any> {
-  isInitialized();
+  checkInitialized();
 
   let request = {
     method: "get",
@@ -76,7 +76,7 @@ export function getAll(): Promise<any> {
 }
 
 export function remove(key: string): Promise<any> {
-  isInitialized();
+  checkInitialized();
 
   let request = {
     method: "delete",
