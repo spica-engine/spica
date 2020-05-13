@@ -7,9 +7,9 @@ load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 ts_library(
     name = "node",
     srcs = [
+        "compiler_worker.ts",
         "index.ts",
         "node.ts",
-        "compiler_worker.ts"
     ],
     data = [
         ":runtime",
