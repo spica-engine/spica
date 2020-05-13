@@ -46,7 +46,7 @@ export class AddComponent implements OnInit, OnDestroy {
   serverError: string;
 
   private dispose = new EventEmitter();
-  editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
+  editorOptions = {language: "typescript", minimap: {enabled: false}};
 
   isIndexPending = false;
 
