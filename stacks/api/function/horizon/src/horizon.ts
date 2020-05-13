@@ -96,7 +96,8 @@ export class Horizon implements OnModuleInit {
       env: {
         __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
         __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
-        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet
+        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+        __INTERNAL__SPICA__PUBLIC_URL__: this.options.publicUrl
       }
     });
     this.pool.set(id, worker);

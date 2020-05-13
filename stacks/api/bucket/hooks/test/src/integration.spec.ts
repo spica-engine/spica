@@ -36,7 +36,8 @@ describe("Hooks Integration", () => {
           databaseName: "spica",
           poolSize: 1,
           databaseReplicaSet: "test",
-          databaseUri: "mongodb://localhost:27017"
+          databaseUri: "mongodb://localhost:27017",
+          publicUrl: ""
         }),
         PassportModule.forRoot({
           issuer: "spica.internal",
