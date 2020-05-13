@@ -60,7 +60,7 @@ yarn --silent docs
 echo ""
 echo "## Building spicaengine.com"
 (cd docs/site && 
-yarn --silent install &&
+yarn --silent install --frozen-lockfile &&
 yarn --silent ng build --prod --progress=false)
 
 
@@ -82,6 +82,16 @@ for PACKAGE_LABEL in $NPM_PACKAGE_LABELS; do
   echo "** Publishing $PACKAGE_LABEL"
   $BAZEL run ${PACKAGE_LABEL}.publish --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --access public --tag $1
 done
+
+if [ $TAG == "latest" ]; then
+  echo ""
+  echo "## Deploying spicaengine.com"
+  $BAZEL run //docs/site:deploy.replace --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --force
+else 
+  echo ""
+  echo "WARNING: Skipping publish of spicaengine.com because the provided tag was not 'latest'"
+  echo ""
+fi
 
 
 echo ""
