@@ -22,23 +22,44 @@ ts_library(
 )
 
 ts_library(
-    name = "test_lib",
+    name = "service_test_lib",
     testonly = True,
     srcs = [
-        "dashboard.controller.spec.ts",
         "dashboard.service.spec.ts",
     ],
     deps = [
-        ":dashboard",
-        "@npm//@nestjs/testing",
+        "//stacks/api/dashboard",
+        "@npm//@nestjs/common",
         "@npm//@types/jasmine",
-        "@npm//@types/node",
     ],
 )
 
 jasmine_node_test(
-    name = "test",
+    name = "service_test",
     deps = [
-        ":test_lib",
+        ":service_test_lib",
+    ],
+)
+
+ts_library(
+    name = "controller_test_lib",
+    testonly = True,
+    srcs = [
+        "dashboard.controller.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//stacks/api/passport/testing",
+        "//stacks/api/dashboard",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "controller_test",
+    deps = [
+        ":controller_test_lib",
     ],
 )

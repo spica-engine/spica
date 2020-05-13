@@ -3,7 +3,9 @@ import {Dashboard} from "./dashboard";
 
 @Injectable()
 export class DashboardService {
-  constructor() {}
+  constructor() {
+    global["dashboards"] = new Map<string, Dashboard>();
+  }
 
   findAll(): Dashboard[] {
     return Array.from(global["dashboards"].values());

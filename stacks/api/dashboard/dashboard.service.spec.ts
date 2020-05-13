@@ -13,15 +13,15 @@ describe("DashboardController", () => {
     {
       key: "dashboard_id2",
       name: "My Dashboard2",
-      components: [{key: "component_id", type: "line2", url: "test_url2"}],
+      components: [{key: "component_id", type: "pie", url: "test_url2"}],
       icon: "icon2"
     }
   ];
 
   beforeEach(() => {
-    global["dashboards"] = new Map<string, Dashboard>();
-    dashboards.forEach(dashboard => global["dashboards"].set(dashboard.key, dashboard));
     dashboardService = new DashboardService();
+    dashboardService.register(dashboards[0]);
+    dashboardService.register(dashboards[1]);
   });
 
   it("should return all dashboards", () => {
@@ -36,7 +36,7 @@ describe("DashboardController", () => {
       {
         key: "dashboard_id2",
         name: "My Dashboard2",
-        components: [{key: "component_id", type: "line2", url: "test_url2"}],
+        components: [{key: "component_id", type: "pie", url: "test_url2"}],
         icon: "icon2"
       }
     ]);
@@ -47,7 +47,7 @@ describe("DashboardController", () => {
     expect(dashboard).toEqual({
       key: "dashboard_id2",
       name: "My Dashboard2",
-      components: [{key: "component_id", type: "line2", url: "test_url2"}],
+      components: [{key: "component_id", type: "pie", url: "test_url2"}],
       icon: "icon2"
     });
   });
@@ -77,7 +77,7 @@ describe("DashboardController", () => {
       {
         key: "dashboard_id2",
         name: "My Dashboard2",
-        components: [{key: "component_id", type: "line2", url: "test_url2"}],
+        components: [{key: "component_id", type: "pie", url: "test_url2"}],
         icon: "icon2"
       },
       {
@@ -95,6 +95,37 @@ describe("DashboardController", () => {
     ]);
   });
 
+  it("should update dashboard", () => {
+    dashboardService.register({
+      key: "dashboard_id",
+      name: "My Updated Dashboard",
+      components: [
+        {key: "component_id", type: "line", url: "test_url"},
+        {key: "component_id2", type: "pie", url: "test_url2"}
+      ],
+      icon: "icon1"
+    });
+
+    let dashboards = dashboardService.findAll();
+    expect(dashboards).toEqual([
+      {
+        key: "dashboard_id",
+        name: "My Updated Dashboard",
+        components: [
+          {key: "component_id", type: "line", url: "test_url"},
+          {key: "component_id2", type: "pie", url: "test_url2"}
+        ],
+        icon: "icon1"
+      },
+      {
+        key: "dashboard_id2",
+        name: "My Dashboard2",
+        components: [{key: "component_id", type: "pie", url: "test_url2"}],
+        icon: "icon2"
+      }
+    ]);
+  });
+
   it("should unregister dashboard", () => {
     dashboardService.unregister("dashboard_id");
     let dashboards = dashboardService.findAll();
@@ -102,7 +133,7 @@ describe("DashboardController", () => {
       {
         key: "dashboard_id2",
         name: "My Dashboard2",
-        components: [{key: "component_id", type: "line2", url: "test_url2"}],
+        components: [{key: "component_id", type: "pie", url: "test_url2"}],
         icon: "icon2"
       }
     ]);
