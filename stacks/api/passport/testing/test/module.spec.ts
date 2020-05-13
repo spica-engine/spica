@@ -1,9 +1,8 @@
-import {Controller, Get, INestApplication, UseGuards, Req} from "@nestjs/common";
+import {Controller, Get, INestApplication, Req, UseGuards} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {AuthGuard} from "../auth.guard";
-import {ActionGuard} from "../policy";
-import {PassportTestingModule} from "./module";
+import {AuthGuard, ActionGuard} from "@spica-server/passport";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 
 @Controller("test")
 class TestController {
@@ -18,6 +17,12 @@ class TestController {
   test2(@Req() req) {
     return [req.TESTING_SKIP_CHECK];
   }
+
+  @Get("3")
+  @UseGuards(AuthGuard())
+  test3(@Req() req) {
+    return req.headers["strategy-type"];
+  }
 }
 
 describe("Passport testing", () => {
@@ -26,7 +31,12 @@ describe("Passport testing", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [PassportTestingModule.initialize(), CoreTestingModule],
+      imports: [
+        PassportTestingModule.initialize({
+          overriddenStrategyType: "INDISTINCT_STRATEGY_BUT_OKAY"
+        }),
+        CoreTestingModule
+      ],
       controllers: [TestController]
     }).compile();
     req = module.get(Request);
@@ -46,5 +56,10 @@ describe("Passport testing", () => {
   it("should bypass AuthGuard and ActionGuard", async () => {
     const res = await req.get("/test/2", {});
     expect(res.body).toEqual([true]);
+  });
+
+  it("should override strategy type", async () => {
+    const res = await req.get("/test/3", {});
+    expect(res.body).toBe("INDISTINCT_STRATEGY_BUT_OKAY");
   });
 });
