@@ -1,7 +1,7 @@
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: database
 spec:
   serviceName: mongo
@@ -49,7 +49,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: mongo
 spec:
   publishNotReadyAddresses: true
@@ -63,7 +63,7 @@ spec:
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: spica
 spec:
   serviceName: spica
@@ -105,7 +105,7 @@ spec:
             - --port
             - "4300"
             - --database-uri
-            - mongodb://database-0.mongo.master.svc.cluster.local,database-1.mongo.master.svc.cluster.local,database-2.mongo.master.svc.cluster.local
+            - mongodb://database-0.mongo.infrastructure-master-spicaengine-com.svc.cluster.local,database-1.mongo.infrastructure-master-spicaengine-com.svc.cluster.local,database-2.mongo.infrastructure-master-spicaengine-com.svc.cluster.local
             - --database-name
             - spica
             - --database-replica-set
@@ -134,7 +134,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: spica
 spec:
   type: NodePort
@@ -151,7 +151,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: gateway
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 15M
@@ -161,9 +161,8 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
-    - hosts:
-        - master.spicaengine.com
-      secretName: master-spica
+    - hosts: [master.spicaengine.com]
+      secretName: spica
   rules:
     - host: master.spicaengine.com
       http:
