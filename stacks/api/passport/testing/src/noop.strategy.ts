@@ -1,9 +1,10 @@
 import {Injectable} from "@nestjs/common";
 import {PassportStrategy} from "@nestjs/passport";
 import * as passport from "passport";
+import {TestingOptions} from "./interface";
 
 class _NoopStrategy extends passport.Strategy {
-  constructor(private callback: (req) => void) {
+  constructor(private options: TestingOptions, private callback: (req) => void) {
     super();
   }
 
@@ -16,6 +17,9 @@ class _NoopStrategy extends passport.Strategy {
         this["fail"](reason);
       } else {
         this["success"](user, reason);
+        if (this.options.overriddenStrategyType) {
+          req.headers["strategy-type"] = this.options.overriddenStrategyType;
+        }
       }
     });
   }
@@ -23,6 +27,9 @@ class _NoopStrategy extends passport.Strategy {
 
 @Injectable()
 export class NoopStrategy extends PassportStrategy(_NoopStrategy, "noop") {
+  constructor(options: TestingOptions) {
+    super(options);
+  }
   validate() {
     return Promise.resolve({identifier: "noop", policies: []});
   }
