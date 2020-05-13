@@ -452,7 +452,7 @@ export class BucketDataController {
       for (const target of targets) {
         await bucketService
           .collection(`bucket_${bucket._id.toHexString()}`)
-          .updateMany({[target]: documentId}, {$unset: {[target]: ""}});
+          .updateMany({[target]: documentId.toHexString()}, {$unset: {[target]: ""}});
       }
     }
   }

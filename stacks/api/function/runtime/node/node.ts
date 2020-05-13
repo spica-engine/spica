@@ -1,7 +1,6 @@
 import {
   Compilation,
   Description,
-  Diagnostic,
   Runtime,
   SpawnOptions,
   Worker
@@ -10,7 +9,7 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import {Transform, Writable} from "stream";
-import * as ts from "typescript";
+import * as worker_threads from "worker_threads";
 
 class FilterExperimentalWarnings extends Transform {
   _transform(rawChunk: Buffer, encoding: string, cb: Function) {
@@ -71,9 +70,15 @@ export class Node extends Runtime {
     description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
   };
 
+  private compilationWorker: worker_threads.Worker;
+
+  constructor() {
+    super();
+    this.compilationWorker = new worker_threads.Worker(__dirname + "/compiler_worker.js");
+  }
+
   async compile(compilation: Compilation): Promise<void> {
     await super.prepare(compilation);
-
     const hasSpicaDevkitDatabasePackage = await fs.promises
       .access(path.join(compilation.cwd, "node_modules", "@spica-devkit"), fs.constants.F_OK)
       .then(() => true)
@@ -110,56 +115,20 @@ export class Node extends Runtime {
         }
         return Promise.reject(e);
       });
-
-    const entrypoint = path.resolve(compilation.cwd, compilation.entrypoint);
-
-    const options: ts.CompilerOptions = {
-      moduleResolution: ts.ModuleResolutionKind.NodeJs,
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2018,
-      outDir: path.resolve(compilation.cwd, ".build"),
-      sourceMap: true,
-      allowJs: true,
-      skipDefaultLibCheck: true,
-      alwaysStrict: true,
-      preserveSymlinks: true,
-      incremental: true,
-      tsBuildInfoFile: path.resolve(compilation.cwd, ".build", ".tsbuildinfo")
-    };
-
-    const program = ts.createIncrementalProgram({
-      rootNames: [entrypoint],
-      options
+    return new Promise((resolve, reject) => {
+      const handleMessage = message => {
+        if (message.baseUrl == compilation.cwd) {
+          this.compilationWorker.off("message", handleMessage);
+          if (message.diagnostics.length) {
+            reject(message.diagnostics);
+          } else {
+            resolve();
+          }
+        }
+      };
+      this.compilationWorker.on("message", handleMessage);
+      this.compilationWorker.postMessage(compilation);
     });
-
-    program.emit();
-
-    const semanticDiagnostics = program.getSemanticDiagnostics();
-
-    if (semanticDiagnostics.length) {
-      return Promise.reject(
-        semanticDiagnostics.map(diagnostic => {
-          const start = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
-          const end = ts.getLineAndCharacterOfPosition(
-            diagnostic.file,
-            diagnostic.start + diagnostic.length
-          );
-          return <Diagnostic>{
-            code: diagnostic.code,
-            category: diagnostic.category,
-            text: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
-            start: {
-              line: start.line + 1,
-              column: start.character + 1
-            },
-            end: {
-              line: end.line + 1,
-              column: end.character + 1
-            }
-          };
-        })
-      );
-    }
   }
 
   spawn(options: SpawnOptions): Worker {

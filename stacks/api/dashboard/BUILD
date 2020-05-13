@@ -49,8 +49,8 @@ ts_library(
     ],
     deps = [
         "//packages/core/testing",
-        "//stacks/api/passport/testing",
         "//stacks/api/dashboard",
+        "//stacks/api/passport/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",

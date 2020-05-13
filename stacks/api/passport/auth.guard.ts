@@ -44,13 +44,13 @@ function createAuthGuard(type?: string): Type<CanActivate> {
         strategyType = type;
       }
 
+      request.headers["strategy-type"] = strategyType;
+
       const user = await passportFn(strategyType.toLowerCase(), options, (err, user, info) =>
         this.handleRequest(err, user, info, context)
       );
 
       request[options.property || defaultOptions.property] = user;
-
-      request.headers["strategy-type"] = strategyType;
 
       return true;
     }

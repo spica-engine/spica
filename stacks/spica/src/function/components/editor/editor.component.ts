@@ -36,13 +36,16 @@ export class EditorComponent
   private editorRef: monaco.editor.IStandaloneCodeEditor;
   private dispose = new Subject();
 
-  private get _options() {
+  private theme: string;
+
+  private get _options(): monaco.editor.IEditorConstructionOptions {
     return {
       model: monaco.editor.createModel(
         this.value,
         (this.options && this.options.language) || "typescript"
       ),
       ...this.options,
+      theme: this.theme,
       scrollBeyondLastLine: false,
       cursorBlinking: "phase",
       fontLigatures: true,
@@ -63,13 +66,8 @@ export class EditorComponent
   constructor(
     private elementRef: ElementRef<HTMLElement>,
     private zone: NgZone,
-    schemeObserver: SchemeObserver
-  ) {
-    schemeObserver
-      .observe(Scheme.Dark)
-      .pipe(takeUntil(this.dispose))
-      .subscribe(r => this.changeScheme(r));
-  }
+    private schemeObserver: SchemeObserver
+  ) {}
 
   writeValue(obj: any): void {
     this.value = obj;
@@ -99,12 +97,9 @@ export class EditorComponent
   }
 
   changeScheme(isDark: boolean) {
-    const theme = isDark ? "vs-dark" : "vs-light";
+    this.theme = isDark ? "vs-dark" : "vs-light";
     if (window.monaco) {
-      monaco.editor.setTheme(theme);
-    } else {
-      this.options = this.options || {};
-      this.options.theme = theme;
+      monaco.editor.setTheme(this.theme);
     }
   }
 
@@ -135,6 +130,11 @@ export class EditorComponent
     } else {
       onGotAmdLoader();
     }
+
+    this.schemeObserver
+      .observe(Scheme.Dark)
+      .pipe(takeUntil(this.dispose))
+      .subscribe(r => this.changeScheme(r));
   }
 
   ngDoCheck(): void {

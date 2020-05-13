@@ -41,7 +41,7 @@ describe("horizon enqueuer factory", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           poolSize: 10,
-          publicUrl: ""
+          publicUrl: undefined
         }),
         SpySchedulerModule
       ]
@@ -76,7 +76,7 @@ describe("horizon", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           poolSize: 10,
-          publicUrl: ""
+          publicUrl: undefined
         })
       ]
     }).compile();

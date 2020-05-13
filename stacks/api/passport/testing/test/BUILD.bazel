@@ -5,18 +5,23 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "test_lib",
-    srcs = glob(
-        include = ["*.spec.ts"],
-    ),
+    testonly = True,
+    srcs = [
+        "module.spec.ts",
+    ],
     deps = [
-        "//stacks/api/function/packages/dashboard",
+        "//packages/core/testing",
+        "//stacks/api/passport",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
-        "@npm//@types/node-fetch",
-        "@npm//node-fetch",
     ],
 )
 
 jasmine_node_test(
     name = "test",
-    srcs = [":test_lib"],
+    deps = [
+        ":test_lib",
+    ],
 )

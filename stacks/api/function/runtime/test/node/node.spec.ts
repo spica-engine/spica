@@ -85,5 +85,41 @@ export default function() {
         }
       ]);
     });
+
+    it("should report diagnostics for multiple functions", async () => {
+      const first: Compilation = {
+        cwd: FunctionTestBed.initialize(`const a;`),
+        entrypoint: "index.ts"
+      };
+      const second: Compilation = {
+        cwd: FunctionTestBed.initialize(`import {} from 'non-existent-module';`),
+        entrypoint: "index.ts"
+      };
+      const diagnostics = await Promise.all([
+        node.compile(first).catch(e => e),
+        node.compile(second).catch(e => e)
+      ]);
+
+      expect(diagnostics).toEqual([
+        [
+          {
+            code: 1155,
+            category: 1,
+            text: "'const' declarations must be initialized.",
+            start: {line: 1, column: 7},
+            end: {line: 1, column: 8}
+          }
+        ],
+        [
+          {
+            code: 2307,
+            category: 1,
+            text: "Cannot find module 'non-existent-module'.",
+            start: {line: 1, column: 16},
+            end: {line: 1, column: 37}
+          }
+        ]
+      ]);
+    });
   });
 });

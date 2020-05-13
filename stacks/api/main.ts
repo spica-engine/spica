@@ -4,7 +4,13 @@ import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {CREATED_AT, DATE_TIME, OBJECT_ID, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {
+  CREATED_AT,
+  DATE_TIME,
+  OBJECT_ID,
+  UPDATED_AT,
+  OBJECTID_STRING
+} from "@spica-server/core/schema/defaults";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
@@ -131,7 +137,7 @@ const modules = [
     poolSize: args["database-pool-size"]
   }),
   SchemaModule.forRoot({
-    formats: [OBJECT_ID, DATE_TIME],
+    formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
     defaults: [CREATED_AT, UPDATED_AT]
   }),
   BucketModule.forRoot({
