@@ -53,11 +53,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     const method = options.method.toLowerCase();
     const path = options.path.replace(/^\/?(.*?)\/?$/, "/$1");
 
-    if (
-      options.preflight &&
-      options.method != HttpMethod.Get &&
-      options.method != HttpMethod.Head
-    ) {
+    if (options.preflight && options.method != HttpMethod.Head) {
       if (options.method == HttpMethod.Options) {
         throw new Error("Preflight option was used with HttpMethod.Options");
       }

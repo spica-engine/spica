@@ -161,7 +161,8 @@ const modules = [
     databaseName: args["database-name"],
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
-    poolSize: args["function-pool-size"]
+    poolSize: args["function-pool-size"],
+    publicUrl: args["public-url"]
   })
 ];
 

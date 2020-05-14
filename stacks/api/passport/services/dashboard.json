@@ -1,0 +1,7 @@
+{
+  "$schema": "http://spica.internal/passport/service",
+  "$id": "http://spica.internal/dashboard",
+  "$resource": "dashboard",
+  "title": "Dashboard",
+  "actions": ["dashboard:index", "dashboard:show", "dashboard:update", "dashboard:delete"]
+}

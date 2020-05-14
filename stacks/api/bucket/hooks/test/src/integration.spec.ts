@@ -49,7 +49,8 @@ describe("Hooks Integration", () => {
           databaseName: undefined,
           poolSize: 1,
           databaseReplicaSet: undefined,
-          databaseUri: undefined
+          databaseUri: undefined,
+          publicUrl: undefined
         })
       ]
     }).compile();

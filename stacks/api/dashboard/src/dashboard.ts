@@ -1,6 +1,6 @@
 export interface Component {
   type: string;
-  target: string;
+  url: string;
   key: string;
 }
 export interface Dashboard {

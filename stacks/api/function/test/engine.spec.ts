@@ -25,7 +25,8 @@ describe("engine", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          poolSize: 10
+          poolSize: 10,
+          publicUrl: undefined
         }),
         DatabaseTestingModule.replicaSet()
       ]

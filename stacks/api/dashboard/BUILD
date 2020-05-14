@@ -9,36 +9,13 @@ ts_library(
         include = ["**/*.ts"],
         exclude = ["**/*.spec.ts"],
     ),
+    data = glob(["schema/*.json"]),
     module_name = "@spica-server/dashboard",
     deps = [
-        "//packages/core",
+        "//packages/core/schema",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
-        "@npm//@types/json-schema",
         "@npm//@types/node",
-        "@npm//locale",
-    ],
-)
-
-ts_library(
-    name = "test_lib",
-    testonly = True,
-    srcs = [
-        "dashboard.controller.spec.ts",
-        "dashboard.service.spec.ts",
-    ],
-    deps = [
-        ":dashboard",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "test",
-    deps = [
-        ":test_lib",
     ],
 )
