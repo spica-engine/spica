@@ -25,7 +25,7 @@ export class DashboardController {
   }
 
   @Get(":key")
-  @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:show"))
   find(@Param("key") key: string) {
     return this.dashboardService.find(key);
   }

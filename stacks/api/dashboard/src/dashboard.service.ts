@@ -15,8 +15,9 @@ export class DashboardService {
     return global["dashboards"].get(key);
   }
 
-  register(dashboard: Dashboard): void {
+  register(dashboard: Dashboard): Dashboard {
     global["dashboards"].set(dashboard.key, dashboard);
+    return dashboard;
   }
 
   unregister(key: string): void {

@@ -28,11 +28,12 @@ export function create(dashboard: Dashboard): Promise<any> {
     method: "put",
     body: JSON.stringify(dashboard),
     headers: {
-      Authorization: _apikey
+      Authorization: _apikey,
+      "Content-Type": "application/json"
     }
   };
 
-  return fetch(url, request);
+  return fetch(url, request).then(res => res.json());
 }
 
 export function update(dashboard: Dashboard): Promise<any> {
@@ -42,11 +43,12 @@ export function update(dashboard: Dashboard): Promise<any> {
     method: "put",
     body: JSON.stringify(dashboard),
     headers: {
-      Authorization: _apikey
+      Authorization: _apikey,
+      "Content-Type": "application/json"
     }
   };
 
-  return fetch(url, request);
+  return fetch(url, request).then(res => res.json());
 }
 
 export function get(key: string): Promise<any> {
@@ -59,7 +61,7 @@ export function get(key: string): Promise<any> {
     }
   };
 
-  return fetch(`${url}/${key}`, request);
+  return fetch(`${url}/${key}`, request).then(res => res.json());
 }
 
 export function getAll(): Promise<any> {
@@ -72,7 +74,7 @@ export function getAll(): Promise<any> {
     }
   };
 
-  return fetch(url, request);
+  return fetch(url, request).then(res => res.json());
 }
 
 export function remove(key: string): Promise<any> {

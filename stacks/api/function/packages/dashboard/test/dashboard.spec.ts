@@ -17,7 +17,13 @@ describe("Dashboard", () => {
   };
   beforeAll(() => {
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "TEST_URL";
-    fetchSpy = spyOn(Fetch, "default");
+    fetchSpy = spyOn(Fetch, "default").and.returnValue(
+      new Promise(resolve =>
+        resolve({
+          json: () => {}
+        } as any)
+      )
+    );
     initialize("TEST_APIKEY");
   });
 
@@ -33,7 +39,8 @@ describe("Dashboard", () => {
       method: "put",
       body: JSON.stringify(customDashboard),
       headers: {
-        Authorization: "APIKEY TEST_APIKEY"
+        Authorization: "APIKEY TEST_APIKEY",
+        "Content-Type": "application/json"
       }
     });
   });
@@ -48,7 +55,8 @@ describe("Dashboard", () => {
       method: "put",
       body: JSON.stringify({...customDashboard, icon: "test_icon"}),
       headers: {
-        Authorization: "APIKEY TEST_APIKEY"
+        Authorization: "APIKEY TEST_APIKEY",
+        "Content-Type": "application/json"
       }
     });
   });

@@ -33,7 +33,7 @@ describe("DashboardController", () => {
         {
           key: "bar_component",
           type: "bar",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
@@ -46,7 +46,7 @@ describe("DashboardController", () => {
         {
           key: "table_component",
           type: "table",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
@@ -63,7 +63,7 @@ describe("DashboardController", () => {
           {
             key: "bar_component",
             type: "bar",
-            url: "some_url"
+            url: "http://www.test.com"
           }
         ]
       },
@@ -75,7 +75,7 @@ describe("DashboardController", () => {
           {
             key: "table_component",
             type: "table",
-            url: "some_url"
+            url: "http://www.test.com"
           }
         ]
       }
@@ -91,7 +91,7 @@ describe("DashboardController", () => {
         {
           key: "bar_component",
           type: "bar",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
@@ -107,7 +107,7 @@ describe("DashboardController", () => {
         {
           key: "bar_component",
           type: "bar",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
@@ -122,12 +122,24 @@ describe("DashboardController", () => {
         {
           key: "bar_component",
           type: "bar",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+    expect(response.body).toEqual({
+      key: "first_dashboard",
+      name: "First Dashboard",
+      icon: "none",
+      components: [
+        {
+          key: "bar_component",
+          type: "bar",
+          url: "http://www.test.com"
+        }
+      ]
+    });
 
     let {body: dashboards} = await request.get("/dashboard", {});
 
@@ -140,7 +152,7 @@ describe("DashboardController", () => {
           {
             key: "bar_component",
             type: "bar",
-            url: "some_url"
+            url: "http://www.test.com"
           }
         ]
       }
@@ -156,7 +168,7 @@ describe("DashboardController", () => {
         {
           key: "bar_component",
           type: "bar",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
@@ -169,12 +181,24 @@ describe("DashboardController", () => {
         {
           key: "pie_component",
           type: "pie",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+    expect(response.body).toEqual({
+      key: "first_dashboard",
+      name: "First Updated Dashboard",
+      icon: "none",
+      components: [
+        {
+          key: "pie_component",
+          type: "pie",
+          url: "http://www.test.com"
+        }
+      ]
+    });
 
     let {body: dashboards} = await request.get("/dashboard", {});
 
@@ -187,7 +211,7 @@ describe("DashboardController", () => {
           {
             key: "pie_component",
             type: "pie",
-            url: "some_url"
+            url: "http://www.test.com"
           }
         ]
       }
@@ -203,7 +227,7 @@ describe("DashboardController", () => {
         {
           key: "bar_component",
           type: "bar",
-          url: "some_url"
+          url: "http://www.test.com"
         }
       ]
     });
