@@ -69,7 +69,9 @@ export class StorageController {
     object.content.data = ((object.content.data as any) as Binary).buffer;
     object.content.size = object.content.data.byteLength;
 
-    return this.storage.updateOne({_id: id}, object);
+    return this.storage.updateOne({_id: id}, object).then(res => {
+      return {...res, url: `${this.options.publicUrl}/storage/${id}`};
+    });
   }
 
   @UseInterceptors(activity(createStorageActivity))
