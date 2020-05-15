@@ -6,7 +6,7 @@ import {Event} from "@spica-server/function/queue/proto";
 import {Worker} from "@spica-server/function/runtime";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:6798";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7510";
 
 const spyScheduler = jasmine
   .createSpy("schedulerSpy")

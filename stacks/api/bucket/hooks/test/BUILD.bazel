@@ -62,6 +62,9 @@ ts_library(
 
 jasmine_node_test(
     name = "integration_test",
+    tags = [
+        "e2e",
+    ],
     deps = [
         ":integration_test_lib",
     ],

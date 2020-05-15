@@ -10,7 +10,7 @@ import {Function} from "@spica-server/function/src/interface";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import * as os from "os";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:6798";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
 
 describe("Hooks Integration", () => {
   let app: INestApplication;
