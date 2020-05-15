@@ -82,7 +82,7 @@ export class Storage {
 
     data.forEach(d => {
       d._id = new ObjectId(d._id);
-      fs.writeFileSync(this.buildPath(d), d.content.data);
+      fs.promises.writeFile(this.buildPath(d), d.content.data);
       delete d.content.data;
     });
 
