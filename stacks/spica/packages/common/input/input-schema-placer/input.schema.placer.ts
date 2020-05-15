@@ -26,9 +26,6 @@ import {InputResolver} from "../input.resolver";
       :host {
         display: block;
       }
-      mat-form-field {
-        margin: 15px 5px 0px 5px;
-      }
     `
   ]
 })
