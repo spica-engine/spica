@@ -51,11 +51,8 @@
             display: contents;
           }
 
-          &.triggers {
-            mat-form-field.trigger,
-            span {
-              margin: 10px 10px 0 0;
-            }
+          &.triggers .mat-list-item-content > *:not(mat-form-field) {
+            margin: 0px 5px;
           }
 
           &.dependency {
@@ -136,7 +133,6 @@
           padding-bottom: 20px;
           height: 80px;
           mat-form-field {
-            margin-right: 20px;
             mat-select {
               mat-select-trigger {
                 & > * {
