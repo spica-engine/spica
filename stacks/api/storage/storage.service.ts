@@ -80,13 +80,11 @@ export class Storage {
   insertMany(object: StorageObject[]): Promise<StorageObject[]> {
     const data = Array.from(object);
 
-    Promise.all(
-      data.map(d => {
-        d._id = new ObjectId(d._id);
-        fs.writeFileSync(this.buildPath(d), d.content.data);
-        delete d.content.data;
-      })
-    );
+    data.forEach(d => {
+      d._id = new ObjectId(d._id);
+      fs.writeFileSync(this.buildPath(d), d.content.data);
+      delete d.content.data;
+    });
 
     return this._collection.insertMany(data).then(() => object);
   }

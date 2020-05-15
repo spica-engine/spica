@@ -61,7 +61,7 @@ export class StorageController {
   @UseInterceptors(activity(createStorageActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
-  async updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
+  updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
     if (!object.content.data) {
       throw new BadRequestException("No content specified.");
     }
@@ -69,13 +69,13 @@ export class StorageController {
     object.content.data = ((object.content.data as any) as Binary).buffer;
     object.content.size = object.content.data.byteLength;
 
-    return await this.storage.updateOne({_id: id}, object);
+    return this.storage.updateOne({_id: id}, object);
   }
 
   @UseInterceptors(activity(createStorageActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
-  async insertMany(@Body() object: StorageObject[]) {
+  insertMany(@Body() object: StorageObject[]) {
     const insertData = [];
 
     for (let obj of Object.keys(object)) {
@@ -95,7 +95,11 @@ export class StorageController {
         }
       });
     }
-    return await this.storage.insertMany(insertData);
+    return this.storage.insertMany(insertData).then(storages =>
+      storages.map(storage => {
+        return {...storage, url: `${this.options.publicUrl}/storage/${storage._id}`};
+      })
+    );
   }
 
   @UseInterceptors(activity(createStorageActivity))
