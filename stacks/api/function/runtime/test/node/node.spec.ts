@@ -121,5 +121,24 @@ export default function() {
         ]
       ]);
     });
+
+    it("should report diagnostics incrementally", async () => {
+      compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
+      const indexPath = path.join(compilation.cwd, "index.ts");
+      expect(await node.compile(compilation)).not.toBeTruthy();
+
+      setTimeout(() => {
+        fs.promises.writeFile(indexPath, `const a;`);
+      }, 1);
+      expect(await node.compile(compilation).catch(e => e)).toEqual([
+        {
+          code: 1155,
+          category: 1,
+          text: "'const' declarations must be initialized.",
+          start: {line: 1, column: 7},
+          end: {line: 1, column: 8}
+        }
+      ]);
+    }, 20000);
   });
 });

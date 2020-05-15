@@ -8,7 +8,11 @@ const ROOT_TSCONFIG_PATH = "/tmp/_tsconfig.json";
 
 function initializeRootTsConfig() {
   updateRootTsConfig({
-    exclude: ["*"],
+    compilerOptions: {
+      skipDefaultLibCheck: true,
+      noEmit: true
+    },
+    files: [],
     references: []
   });
 }
@@ -21,11 +25,61 @@ function readRootTsConfig(): object {
   return require(ROOT_TSCONFIG_PATH);
 }
 
-const host = ts.createSolutionBuilderWithWatchHost({
-  ...ts.sys,
-  clearScreen: () => {},
-  write: () => {}
-});
+const astCache = new Map<string, ts.SourceFile>();
+const watchers = new Map<string, void>();
+function createEmitAndSemanticDiagnosticsBuilderProgram(
+  rootNames: readonly string[] | undefined,
+  options: ts.CompilerOptions | undefined,
+  host?: ts.CompilerHost,
+  oldProgram?: ts.EmitAndSemanticDiagnosticsBuilderProgram,
+  configFileParsingDiagnostics?: readonly ts.Diagnostic[],
+  projectReferences?: readonly ts.ProjectReference[]
+) {
+  const originalGetSourceFile = host.getSourceFile;
+
+  host.getSourceFile = (
+    fileName: string,
+    languageVersion: ts.ScriptTarget,
+    onError?: (message: string) => void,
+    shouldCreateNewSourceFile?: boolean
+  ) => {
+    const sourceFile = astCache.has(fileName)
+      ? astCache.get(fileName)
+      : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
+    setImmediate(() => {
+      if (!astCache.has(fileName)) {
+        astCache.set(fileName, sourceFile);
+      }
+      if (!watchers.has(fileName)) {
+        watchers.set(
+          fileName,
+          fs.watchFile(fileName, {persistent: false}, () => {
+            astCache.delete(fileName);
+          })
+        );
+      }
+    });
+    return sourceFile;
+  };
+
+  return ts.createEmitAndSemanticDiagnosticsBuilderProgram(
+    rootNames,
+    options,
+    host,
+    oldProgram,
+    configFileParsingDiagnostics,
+    projectReferences
+  );
+}
+
+const host = ts.createSolutionBuilderWithWatchHost(
+  {
+    ...ts.sys,
+    clearScreen: () => {},
+    write: () => {}
+  },
+  createEmitAndSemanticDiagnosticsBuilderProgram
+);
 
 let diagnostics: ts.Diagnostic[] = [];
 
@@ -38,26 +92,28 @@ host.reportSolutionBuilderStatus = () => {};
 host.afterProgramEmitAndDiagnostics = program => {
   parentPort.postMessage({
     baseUrl: program.getCompilerOptions().baseUrl,
-    diagnostics: diagnostics.map((diagnostic: ts.Diagnostic) => {
-      const start = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
-      const end = ts.getLineAndCharacterOfPosition(
-        diagnostic.file,
-        diagnostic.start + diagnostic.length
-      );
-      return {
-        code: diagnostic.code,
-        category: diagnostic.category,
-        text: ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine),
-        start: {
-          line: start.line + 1,
-          column: start.character + 1
-        },
-        end: {
-          line: end.line + 1,
-          column: end.character + 1
-        }
-      };
-    })
+    diagnostics: diagnostics
+      .filter(d => d.file)
+      .map((diagnostic: ts.Diagnostic) => {
+        const start = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
+        const end = ts.getLineAndCharacterOfPosition(
+          diagnostic.file,
+          diagnostic.start + diagnostic.length
+        );
+        return {
+          code: diagnostic.code,
+          category: diagnostic.category,
+          text: ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine),
+          start: {
+            line: start.line + 1,
+            column: start.character + 1
+          },
+          end: {
+            line: end.line + 1,
+            column: end.character + 1
+          }
+        };
+      })
   });
   diagnostics = [];
 };
@@ -65,36 +121,37 @@ host.afterProgramEmitAndDiagnostics = program => {
 let builder: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 
 function build(compilation: Compilation) {
-  const options = {
-    moduleResolution: "node",
-    module: "commonjs",
-    target: "ES2020",
-    sourceMap: true,
-    skipDefaultLibCheck: true,
-    alwaysStrict: true,
-    preserveSymlinks: true,
-    composite: true,
-    tsBuildInfoFile: path.join(compilation.cwd, ".build", ".tsbuildinfo"),
-    baseUrl: compilation.cwd,
-    rootDir: compilation.cwd,
-    outDir: path.join(compilation.cwd, ".build")
-  };
-
   const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
-
-  fs.writeFileSync(
-    path.join("/tmp", referencedProject),
-    JSON.stringify({
-      compilerOptions: options,
-      files: [path.join(compilation.cwd, compilation.entrypoint)]
-    })
-  );
 
   const rootTsConfig: any = readRootTsConfig();
 
   const refPath = `./${referencedProject}`;
 
   if (rootTsConfig.references.findIndex(ref => ref.path == refPath) == -1) {
+    const options = {
+      moduleResolution: "node",
+      module: "commonjs",
+      target: "ES2020",
+      sourceMap: true,
+      alwaysStrict: true,
+      preserveSymlinks: true,
+      composite: true,
+      incremental: true,
+      tsBuildInfoFile: path.join(compilation.cwd, ".build", ".tsbuildinfo"),
+      baseUrl: compilation.cwd,
+      rootDir: compilation.cwd,
+      outDir: path.join(compilation.cwd, ".build")
+    };
+
+    fs.writeFileSync(
+      path.join("/tmp", referencedProject),
+      JSON.stringify({
+        compilerOptions: options,
+        files: [path.join(compilation.cwd, compilation.entrypoint)],
+        exclude: ["**/node_modules/***", "**/.build/**"]
+      })
+    );
+
     rootTsConfig.references.push({path: refPath});
     updateRootTsConfig(rootTsConfig);
 
