@@ -136,7 +136,7 @@
   <mat-card class="mat-elevation-z25" [class.with-examples]="guide">
     <mat-card-content>
       <table mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
-        <ng-container  matColumnDef="$$spicainternal_select">
+        <ng-container matColumnDef="$$spicainternal_select">
           <th class="select" mat-header-cell *matHeaderCellDef>
             <mat-checkbox
               *ngIf="dataIds?.length > 0"

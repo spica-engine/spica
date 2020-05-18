@@ -52,8 +52,10 @@ export class MatResizeHeader implements AfterViewInit {
   ) {}
 
   ngAfterViewInit() {
-    this._width = parseInt(window.getComputedStyle(this.elem.nativeElement).width);
-    this.resizeend.emit(this._width);
+    setTimeout(() => {
+      this._width = parseInt(window.getComputedStyle(this.elem.nativeElement).width);
+      this.resizeend.emit(this._width);
+    });
   }
 
   @HostListener("mousedown", ["$event"])

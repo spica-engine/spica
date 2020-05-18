@@ -1,5 +1,5 @@
 import {Component, DebugElement, ViewChild} from "@angular/core";
-import {ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatSortHeader, MatSortModule} from "@angular/material";
 import {MatHeaderCell, MatTableModule} from "@angular/material/table";
 import {By} from "@angular/platform-browser";
@@ -46,7 +46,7 @@ function hasOriginalClickHandler(elem: DebugElement) {
   return resize["_originalHandleClick"] == sort["_handleClick"];
 }
 
-fdescribe("MatResize", () => {
+describe("MatResize", () => {
   let fixture: ComponentFixture<TestComponent>;
   let columnHeaders: DebugElement[];
 
@@ -58,13 +58,19 @@ fdescribe("MatResize", () => {
     fixture = TestBed.createComponent(TestComponent);
     fixture.detectChanges();
     columnHeaders = fixture.debugElement.queryAll(By.directive(MatHeaderCell));
-
   });
 
-  it("should set initial width of element", () => {
+  it("should set initial width of element", async () => {
+    const [positionColumnHeader] = columnHeaders;
+    expect(fixture.componentInstance.positionColumnResizeEnd).not.toHaveBeenCalled();
+
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(
+      parseInt(positionColumnHeader.styles.width)
+    );
   });
 
   it("should add the size as a padding from right", () => {
