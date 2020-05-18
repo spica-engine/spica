@@ -1,5 +1,5 @@
 import {animate, style, transition, trigger} from "@angular/animations";
-import {Component, EventEmitter, OnInit, ViewChild, ElementRef, AfterViewInit} from "@angular/core";
+import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
