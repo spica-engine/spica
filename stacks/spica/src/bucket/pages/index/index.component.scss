@@ -111,6 +111,9 @@
       table {
         min-width: 100%;
         width: max-content;
+        .select {
+          width: 75px;
+        }
       }
     }
   }
