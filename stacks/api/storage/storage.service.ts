@@ -77,14 +77,17 @@ export class Storage {
     return this._collection.updateOne(filter, {$set: object}, {upsert: true}).then(() => object);
   }
 
-  insertMany(object: StorageObject[]): Promise<StorageObject[]> {
+  async insertMany(object: StorageObject[]): Promise<StorageObject[]> {
     const data = Array.from(object);
 
-    data.forEach(d => {
-      d._id = new ObjectId(d._id);
-      fs.promises.writeFile(this.buildPath(d), d.content.data);
-      delete d.content.data;
-    });
+    await Promise.all(
+      data.map(d => {
+        d._id = new ObjectId(d._id);
+        return fs.promises.writeFile(this.buildPath(d), d.content.data).then(_ => {
+          delete d.content.data;
+        });
+      })
+    );
 
     return this._collection.insertMany(data).then(() => object);
   }
