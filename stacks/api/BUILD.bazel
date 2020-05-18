@@ -52,21 +52,29 @@ nodejs_binary(
     entry_point = "//stacks/api:main.ts",
 )
 
-container_image(
-    name = "api_image_base",
+nodejs_image(
+    name = "image_base",
     base = "@debian_image//image",
+    data = ["//stacks/api"],
+    entry_point = "//stacks/api:main.ts",
+    layers = [
+        "@nodejs_linux_amd64//:bin/npm",
+        "@nodejs_linux_amd64//:npm_files",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+container_image(
+    name = "image",
+    base = ":image_base",
     env = {
         "DEFAULT_PASSWORD": "spica",
         "FUNCTION_GRPC_ADDRESS": "0.0.0.0:5688",
     },
-    visibility = ["//visibility:private"],
-)
-
-nodejs_image(
-    name = "image",
-    base = ":api_image_base",
-    data = ["//stacks/api"],
-    entry_point = "//stacks/api:main.ts",
+    legacy_run_behavior = False,
+    symlinks = {
+        "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/nodejs/bin/npm": "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/npm",
+    },
 )
 
 container_push(
