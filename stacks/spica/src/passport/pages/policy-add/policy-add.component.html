@@ -51,6 +51,7 @@
             <mat-form-field *ngIf="servicePicker.value">
               <mat-select placeholder="Actions" multiple [(ngModel)]="statement.action">
                 <mat-option
+                  class="mat-accent"
                   *ngFor="let action of services[servicePicker.value]?.actions"
                   [value]="action"
                   >{{ action }}
