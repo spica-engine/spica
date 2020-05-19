@@ -350,14 +350,13 @@ describe("IndexComponent", () => {
         tick(1);
         fixture.detectChanges();
 
-        //resize directive has a setTimeOut method inside of ngAfterViewInit
+        //resize directive has a setTimeout method inside of ngAfterViewInit
         tick(1);
         fixture.detectChanges();
 
         expect(fixture.componentInstance.displayedProperties).toContain("test");
 
-        //first call is for saving initial width of column to the localStorage
-        expect(setItem).toHaveBeenCalledTimes(2);
+        expect(setItem).toHaveBeenCalledTimes(1);
         expect(setItem).toHaveBeenCalledWith("1-displayedProperties", '["test"]');
       }));
     });

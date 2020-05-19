@@ -61,10 +61,12 @@ describe("MatResize", () => {
   });
 
   it("should set initial width of element", async () => {
-    const [positionColumnHeader] = columnHeaders;
-    expect(fixture.componentInstance.positionColumnResizeEnd).not.toHaveBeenCalled();
-
     await fixture.whenStable();
+    fixture.detectChanges();
+
+    const [positionColumnHeader] = columnHeaders;
+    positionColumnHeader.triggerEventHandler("mouseup", {});
+
     fixture.detectChanges();
 
     expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledTimes(1);

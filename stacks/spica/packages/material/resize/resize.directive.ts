@@ -54,7 +54,6 @@ export class MatResizeHeader implements AfterViewInit {
   ngAfterViewInit() {
     setTimeout(() => {
       this._width = parseInt(window.getComputedStyle(this.elem.nativeElement).width);
-      this.resizeend.emit(this._width);
     });
   }
 
