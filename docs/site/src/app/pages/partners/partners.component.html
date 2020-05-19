@@ -7,6 +7,36 @@
   selected partner agencies in the world. All of them are licensed agencies and having official Spica tests."
   subtitle="Don’t hesitate to contact them for:"
 >
+  <div fxLayout="row" fxFlex="100%" fxLayoutAlign="flex-end">
+    <div fxFlex.gt-sm="25%" fxflex.lt-md="100%" fxLayoutAlign="center center">
+      <div fxFlex="75%">
+        <mat-form-field appearance="outline">
+          <mat-label>Select from country for see partner.</mat-label>
+          <mat-select name="country" [(value)]="selectedCountry">
+            <mat-option *ngFor="let country of countryList " [value]="country.key">
+              {{ country.value }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div fxFlex="25%" class="partner-search">
+        <button mat-flat-button color="primary" class="btn" (click)="countrySelect()">
+          <mat-icon>search</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div fxFlex="100">
+    <div fxFlex="60" fxLayout="row wrap" fxLayoutAlign="start" fxLayoutGap="5px grid">
+      <div fxFlex.lt-md="100%" fxFlex="50%" *ngFor="let item of partnerFilter">
+        <a href="{{ item.url }}" target="_blank">
+          <img src="{{ item.logo }}" width="250" height="125" />
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div intersect="fly" class="left" fxFlex.gt-md="60" fxFlex.lt-md="100%" ngClass.lt-md="mobile">
     <div fxFlex="50">
       <img fxFlex="50" src="assets/icons/setting.svg" alt="Setting" />
@@ -31,13 +61,23 @@
   </div>
   <img
     fxFlex.gt-md="40"
-    fxFlex.gt-xs="100%"
+    fxFlex.gt-xs="auto"
     ngClass.lt-md="mobile-img"
     intersect="flyOne"
     wait="true"
     src="assets/artboard/partner.svg"
     alt="Partner"
   />
+
+  <div
+    fxLayout="row wrap"
+    fxLayout.lt-md="column"
+    fxLayoutGap="1% grid"
+    fxLayoutAlign="left center"
+    fxFlex.gt-sm="column"
+  >
+
+  </div>
 </home-section>
 
 <app-footer></app-footer>

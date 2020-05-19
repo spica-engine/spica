@@ -7,15 +7,19 @@
     padding-bottom: 50px;
     padding-left: 4%;
     padding-right: 8%;
+
     p {
       font-weight: 100;
     }
+
     a {
       text-decoration: none;
       color: rgb(28, 28, 80);
       font-weight: 700;
+
       &.external-link {
         color: #1c1c50;
+
         &::after {
           content: "";
           background-image: url(../../../assets/icons/link.svg);
@@ -32,6 +36,7 @@
     table {
       border-width: 1px 0 0 1px;
       overflow-x: auto;
+
       &,
       td,
       th {
@@ -39,6 +44,7 @@
         border-color: #ddd;
         border-style: solid;
       }
+
       td,
       th {
         border-width: 0 1px 1px 0;
@@ -57,15 +63,18 @@
       padding: 1em;
       font-weight: 700;
       font-family: Menlo, Courier, monospace;
+      border-radius: 5px;
     }
 
     doc-toc {
       ul {
         padding-left: 8px;
         list-style-type: none;
+
         li {
           position: relative;
           padding: 0;
+
           a {
             font-weight: 400;
             text-decoration: none;
@@ -73,6 +82,7 @@
           }
         }
       }
+
       > ul {
         padding: 0;
         margin: 0;
@@ -85,8 +95,10 @@
           display: none;
         }
       }
+
       div.body {
         display: block;
+
         section.resource {
           &:not(:first-of-type) {
             margin-top: 65px;
@@ -99,14 +111,18 @@
               padding: 3px 15px;
               border-radius: 23px;
             }
+
             span.path {
               margin-left: 6px;
+
               span.route-path {
                 span {
                   margin-left: -2px;
+
                   &.separator {
                     color: #948b8b;
                   }
+
                   &.param {
                     color: #16c98d;
                   }
