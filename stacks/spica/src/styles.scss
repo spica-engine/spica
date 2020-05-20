@@ -2,10 +2,11 @@
 @include mat-core();
 
 $primary: mat-palette($mat-gray, 900, 500, 700);
+$primary-for-dark: mat-palette($mat-gray, 900, 100, 700, 100);
 $accent: mat-palette($mat-amber, A200, A100, A400);
 
 $app-light-theme: mat-light-theme($primary, $accent);
-$app-dark-theme: mat-dark-theme($primary, $accent);
+$app-dark-theme: mat-dark-theme($primary-for-dark, $accent);
 
 @mixin vars($theme, $tone) {
   --tone-diff: #{$tone};
