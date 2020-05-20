@@ -60,6 +60,21 @@ describe("MatResize", () => {
     columnHeaders = fixture.debugElement.queryAll(By.directive(MatHeaderCell));
   });
 
+  it("should set initial width of element", async () => {
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const [positionColumnHeader] = columnHeaders;
+    positionColumnHeader.triggerEventHandler("mouseup", {});
+
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledTimes(1);
+    expect(fixture.componentInstance.positionColumnResizeEnd).toHaveBeenCalledWith(
+      parseInt(positionColumnHeader.styles.width)
+    );
+  });
+
   it("should add the size as a padding from right", () => {
     const [positionColumnHeader, weightColumnHeader] = columnHeaders;
     expect(positionColumnHeader.styles["padding-right"]).toBe("100px");

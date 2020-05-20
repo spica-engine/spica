@@ -350,6 +350,10 @@ describe("IndexComponent", () => {
         tick(1);
         fixture.detectChanges();
 
+        //resize directive has a setTimeout method inside of ngAfterViewInit
+        tick(1);
+        fixture.detectChanges();
+
         expect(fixture.componentInstance.displayedProperties).toContain("test");
 
         expect(setItem).toHaveBeenCalledTimes(1);
