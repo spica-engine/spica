@@ -6,7 +6,8 @@ import {
   HostListener,
   Input,
   Optional,
-  Output
+  Output,
+  AfterViewInit
 } from "@angular/core";
 import {MatSortHeader} from "@angular/material";
 
@@ -23,7 +24,7 @@ import {MatSortHeader} from "@angular/material";
     "(mousemove)": "mouseMove($event)"
   }
 })
-export class MatResizeHeader {
+export class MatResizeHeader implements AfterViewInit {
   @Input() size: number = 100;
 
   @Output() resize = new EventEmitter<number>();
@@ -49,6 +50,12 @@ export class MatResizeHeader {
     private elem: ElementRef<HTMLTableColElement>,
     @Optional() @Host() private matSort: MatSortHeader
   ) {}
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this._width = parseInt(window.getComputedStyle(this.elem.nativeElement).width);
+    });
+  }
 
   @HostListener("mousedown", ["$event"])
   mouseDown(event: MouseEvent) {

@@ -137,7 +137,7 @@
     <mat-card-content>
       <table mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
         <ng-container matColumnDef="$$spicainternal_select">
-          <th mat-header-cell *matHeaderCellDef>
+          <th class="select" mat-header-cell *matHeaderCellDef>
             <mat-checkbox
               *ngIf="dataIds?.length > 0"
               color="primary"
