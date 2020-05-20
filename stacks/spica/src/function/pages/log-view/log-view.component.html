@@ -38,7 +38,11 @@
       [(ngModel)]="filter$.value.functions"
       (ngModelChange)="filter$.next(filter$.value)"
     >
-      <mat-option *ngFor="let function of functions$ | async" [value]="function._id">
+      <mat-option
+        class="mat-accent"
+        *ngFor="let function of functions$ | async"
+        [value]="function._id"
+      >
         {{ function.name }}
       </mat-option>
     </mat-select>
