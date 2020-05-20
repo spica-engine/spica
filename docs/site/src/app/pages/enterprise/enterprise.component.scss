@@ -50,10 +50,6 @@
     min-height: 150px;
     background: #fff !important;
 
-    h3 {
-      font-size: 150%;
-    }
-
     p {
       padding-left: 30px;
       padding-right: 30px;
@@ -64,13 +60,33 @@
     }
 
     h3 {
-      vertical-align: middle;
+      font-size: 150%;
       margin: 0;
       padding-bottom: 12px;
       font-weight: normal;
+      display: flex;
+      align-items: center;
 
       mat-icon {
-        vertical-align: bottom;
+        margin-right: 5px;
+      }
+    }
+  }
+
+  .features {
+    padding-top: 10px;
+    ul {
+      width: 50%;
+      li {
+        font-weight: 400;
+        margin: 10px 0px;
+        display: flex;
+        align-items: center;
+
+        mat-icon {
+          color: #1abde7;
+          margin-right: 5px;
+        }
       }
     }
   }
@@ -85,12 +101,16 @@
     padding-top: 0 !important;
   }
 
+  .p-0 {
+    padding: 0 !important;
+  }
+
   .unset-padding {
     padding: unset !important;
   }
 
   .blue {
-    background-color: #2196f3;
+    background-color: #1abde7;
   }
 
   .gray {
@@ -101,13 +121,14 @@
     background: #eee;
   }
 
-  .bg-black {
-    background:transparent
-  }
-
-  .contact-button {
-    display: block;
-    margin: 0 auto;
+  .contact-link {
+    text-decoration: none;
+    button {
+      display: block;
+      margin: 0 auto;
+      background-color: white;
+      color: rgb(50, 50, 93);
+    }
   }
 
   a {
@@ -193,19 +214,9 @@
   }
 
   .enterprise-property {
-    text-align: center;
-    padding: 10px 0px;
-    color: #78909c;
-    box-sizing: border-box;
-
-    &:hover {
-      color: #465157cc;
-    }
-
-    transition: all 0.3s;
-
+    margin: 15px 0px;
     span {
-      display: block;
+      margin-left: 10px;
     }
   }
 
@@ -224,10 +235,22 @@
       margin: auto;
       max-width: 1224px !important;
 
+      .packet:last-of-type  {
+        button {
+          margin: 0px !important;
+        }
+      }
+
       img {
         display: block;
         margin: auto;
       }
+    }
+    .request-demo {
+      margin: 12vh 0;
+      background-color: rgb(50, 50, 93);
+      padding: 12vh 0 !important;
+      max-width: unset !important;
     }
   }
 
@@ -241,21 +264,20 @@
 
   .packet {
     margin: 0 10px;
-    border-radius: 4px;
 
     .bg-black {
       background-color: #263238;
     }
 
     mat-toolbar {
-      border-top-left-radius: 3px !important;
-      border-top-right-radius: 3px !important;
+      border-top-left-radius: 15px !important;
+      border-top-right-radius: 15px !important;
     }
 
     mat-card {
-      border-bottom-left-radius: 3px !important;
-      border-bottom-right-radius: 3px !important;
+      border-radius: 15px !important;
       height: 410px;
+      box-shadow: 0px 5px 25px rgba(0, 0, 0, 0.2) !important;
     }
   }
 
@@ -279,9 +301,14 @@
       display: block;
       color: white;
       font-size: 18px;
-      font-weight: bold;
-      color: black;
+      font-weight: 500;
       margin: 14px 0px;
+    }
+
+    mat-card-content {
+      .packet-information {
+        margin-top: 15px !important;
+      }
     }
 
     button {
@@ -304,11 +331,10 @@
         &.price {
           border: 0;
           padding: 10px 0px;
-          color: #050505;
+          color: #1c1c50;
           font-size: 36px;
           margin: 5px 0px;
           height: 50px;
-
           .period {
             font-size: 14px;
             display: block;
@@ -320,12 +346,9 @@
   }
 
   .end {
-
-
     .link-button {
       height: 50px;
       font-size: 125%;
     }
-
   }
 }

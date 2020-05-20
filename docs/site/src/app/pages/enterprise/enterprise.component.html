@@ -142,40 +142,75 @@
 
   <div class="flex-margin br-bottom"></div>
 
-  <div class="container" fxFlex="100%" fxLayoutAlign="space-around">
-    <div fxFlex="100%">
+  <div class="container p-0" fxFlex="100%" fxLayoutAlign="space-around">
+    <div fxFlex="33%">
       <ul fxLayout="row wrap">
-        <li class="enterprise-property" fxFlex="25%">
+        <li class="enterprise-property" fxFlex="100%">
           <mat-icon class="enterprise-icon">update</mat-icon> <span>Auto-Updates</span>
         </li>
-        <li class="enterprise-property" fxFlex="25%">
-          <mat-icon class="enterprise-icon">translate</mat-icon> <span>Unlimited Locales</span>
-        </li>
-        <li class="enterprise-property" fxFlex="25%">
-          <mat-icon class="enterprise-icon">code</mat-icon> <span>GraphQL+REST API</span>
-        </li>
 
-        <li class="enterprise-property" fxFlex="25%">
+        <li class="enterprise-property" fxFlex="100%">
           <mat-icon class="enterprise-icon">location_city</mat-icon> <span>Monitoring</span>
         </li>
 
-        <li class="enterprise-property" fxFlex="25%">
-          <mat-icon class="enterprise-icon">content_copy</mat-icon> <span>Realtime Database</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="25%">
-          <mat-icon class="enterprise-icon">photo_size_select_small</mat-icon>
-          <span>Scheduled Backups</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="25%">
+        <li class="enterprise-property" fxFlex="100%">
           <mat-icon class="enterprise-icon">timeline</mat-icon> <span>Auto-Scales</span>
         </li>
 
-        <li class="enterprise-property" fxFlex="25%">
+        <li class="enterprise-property" fxFlex="100%">
           <mat-icon class="enterprise-icon">flash_on</mat-icon> <span>Multi Tenancy</span>
         </li>
       </ul>
+    </div>
+
+    <div class="features" fxFlex="66%">
+      <div fxLayout="row wrap">
+        <h3>
+          WHAT'S INCLUDED
+        </h3>
+        <p>
+          Get 100+ features out of the box with Managed Spica service. All features are included in
+          every package.
+        </p>
+
+        <ul class="text-default">
+          <li>
+            <mat-icon>done</mat-icon>
+            Custom Data Modeling
+          </li>
+          <li>
+            <mat-icon>done</mat-icon>
+            File Management
+          </li>
+          <li>
+            <mat-icon>done</mat-icon>
+            Restful API
+          </li>
+          <li>
+            <mat-icon>done</mat-icon>
+            Multilingual Content Management
+          </li>
+        </ul>
+
+        <ul class="text-default">
+          <li>
+            <mat-icon>done</mat-icon>
+            Revision History
+          </li>
+          <li>
+            <mat-icon>done</mat-icon>
+            Function Module
+          </li>
+          <li>
+            <mat-icon>done</mat-icon>
+            Identity And Access Management
+          </li>
+          <li>
+            <mat-icon>done</mat-icon>
+            Webhooks
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -185,20 +220,20 @@
     <div fxFlex="100%">
       <div class="packet" fxFlex="20%">
         <mat-card class="unset-padding">
-          <mat-toolbar class="bg-black">
-            <mat-icon class="packet-icon">star_border</mat-icon>
+          <mat-toolbar color="primary">
+            <p class="packet-title">Starter</p>
           </mat-toolbar>
           <mat-card-content>
-            <h4 class="packet-title">Small</h4>
             <ul class="packet-information">
-              <li>5.000 Entries</li>
-              <li>100.000 Requests</li>
+              <li>850 Entries</li>
+              <li>450 vCPU</li>
+              <li>850 vRAM</li>
               <li>2GB Storage Limit</li>
-              <li class="price">19$ <span class="period">per month</span></li>
+              <li class="price">$19 <span class="period">per month</span></li>
             </ul>
             <div class="get">
-              <a href="https://github.com/spica-engine/spica" target="_blank">
-                <button mat-flat-button class="gray">Get Started</button>
+              <a href="https://dashboard.spicaengine.com" target="_blank">
+                <button mat-flat-button color="primary">Get Started</button>
               </a>
             </div>
           </mat-card-content>
@@ -208,19 +243,20 @@
       <div class="packet" fxFlex="20%">
         <mat-card class="unset-padding">
           <mat-toolbar class="blue">
-            <mat-icon class="packet-icon">star_border</mat-icon>
+            <p class="packet-title">Professional</p>
           </mat-toolbar>
           <mat-card-content>
-            <h4 class="packet-title">Medium</h4>
-
             <ul class="packet-information">
               <li>50.000 Entries</li>
-              <li>400.000 Requests</li>
+              <li>650 vCPU</li>
+              <li>2000 vRAM</li>
               <li>10GB Storage Limit</li>
-              <li class="price">49$ <span class="period">per month</span></li>
+              <li class="price">$49 <span class="period">per month</span></li>
             </ul>
             <div class="get">
-              <button mat-flat-button class="gray">Get Started</button>
+              <a href="https://dashboard.spicaengine.com" target="_blank">
+                <button mat-flat-button color="primary">Get Started</button>
+              </a>
             </div>
           </mat-card-content>
         </mat-card>
@@ -229,18 +265,20 @@
       <div class="packet" fxFlex="20%">
         <mat-card class="unset-padding">
           <mat-toolbar class="blue">
-            <mat-icon class="packet-icon">star_border</mat-icon>
+            <p class="packet-title">Business</p>
           </mat-toolbar>
           <mat-card-content>
-            <h4 class="packet-title">Large</h4>
             <ul class="packet-information">
               <li>250.000 Entries</li>
-              <li>1.000.000 Requests</li>
+              <li>1850 vCPU</li>
+              <li>3800 vRAM</li>
               <li>50GB Storage Limit</li>
-              <li class="price">149$ <span class="period">per month</span></li>
+              <li class="price">$149 <span class="period">per month</span></li>
             </ul>
             <div class="get">
-              <button mat-flat-button class="gray">Get Started</button>
+              <a href="https://dashboard.spicaengine.com" target="_blank">
+                <button mat-flat-button color="primary">Get Started</button>
+              </a>
             </div>
           </mat-card-content>
         </mat-card>
@@ -249,18 +287,20 @@
       <div class="packet" fxFlex="20%">
         <mat-card class="unset-padding">
           <mat-toolbar class="blue">
-            <mat-icon class="packet-icon">star_border</mat-icon>
+            <p class="packet-title">Enterprise</p>
           </mat-toolbar>
           <mat-card-content>
-            <h4 class="packet-title">xLarge</h4>
             <ul class="packet-information">
               <li>750.000 Entries</li>
-              <li>10.000.000 Requests</li>
+              <li>4150 vCPU</li>
+              <li>9000 vRAM</li>
               <li>250GB Storage Limit</li>
-              <li class="price">649$ <span class="period">per month</span></li>
+              <li class="price">$649 <span class="period">per month</span></li>
             </ul>
             <div class="get">
-              <button mat-flat-button class="gray">Get Started</button>
+              <a href="https://dashboard.spicaengine.com" target="_blank">
+                <button mat-flat-button color="primary">Get Started</button>
+              </a>
             </div>
           </mat-card-content>
         </mat-card>
@@ -268,19 +308,22 @@
 
       <div class="packet" fxFlex="20%">
         <mat-card class="unset-padding">
-          <mat-toolbar class="gray">
-            <mat-icon class="packet-icon">star_border</mat-icon>
+          <mat-toolbar color="primary">
+            <p class="packet-title">Custom</p>
           </mat-toolbar>
           <mat-card-content>
-            <h4 class="packet-title">Enterprise</h4>
             <ul class="packet-information">
               <li>Custom Entries</li>
-              <li>Custom Requests</li>
+              <li>Custom vCPU</li>
+              <li>Custom vRAM</li>
               <li>Custom Storage Limit</li>
-              <li class="price"></li>
+              <li>SLA</li>
+              <li>Dedicated Hardware</li>
             </ul>
             <div class="get">
-              <button mat-flat-button class="gray">Talk to us</button>
+              <a href="/calendar" target="_blank">
+                <button mat-flat-button color="primary">Talk to us</button>
+              </a>
             </div>
           </mat-card-content>
         </mat-card>
@@ -306,9 +349,9 @@
       <div fxFlex="70">
         <h3><mat-icon>info</mat-icon> Chronos</h3>
         <p>
-          Chronos is a backup service with features such as scheduled backups, 
-          snapshots to make your server time travel. All backups and snapshots 
-          are stored in the cloud and you can download them anytime anywhere.
+          Chronos is a backup service with features such as scheduled backups, snapshots to make
+          your server time travel. All backups and snapshots are stored in the cloud and you can
+          download them anytime anywhere.
         </p>
       </div>
       <div fxFlex="30" class="price" fxLayoutAlign="center center" fxLayout="column">
@@ -323,9 +366,8 @@
       <div fxFlex="70">
         <h3><mat-icon>info</mat-icon> Auditing Tool</h3>
         <p>
-          Auditing Tool offers real-time data & critical 
-          information monitoring of your web-site, keeps 
-          you on your project at all times.
+          Auditing Tool offers real-time data & critical information monitoring of your web-site,
+          keeps you on your project at all times.
         </p>
       </div>
       <div fxFlex="30" class="price" fxLayoutAlign="center center" fxLayout="column">
@@ -334,8 +376,6 @@
       </div>
     </div>
   </div>
-
-  
 
   <div class="container plugin" fxFlex="100%" fxLayout="column">
     <div>
@@ -357,7 +397,7 @@
   <div class="container plugin" fxFlex="100%" fxLayout="column">
     <div>
       <div fxFlex="70">
-        <h3><mat-icon>info</mat-icon> Premium Support Service</h3>
+        <h3><mat-icon>info</mat-icon> Integrated Success Services</h3>
         <p>
           For critic projects, customer support services are very important. We know each second is
           valuable for high volume projects, start-ups, and enterprises. We create a private slack
@@ -402,11 +442,10 @@
       </div>
     </div>
   </div>
-
 </section>
 
-<section class="content-wrapper bg-black">
-  <div class="container" fxFlex="100%" fxLayoutAlign="center">
+<section class="content-wrapper">
+  <div class="container request-demo" fxFlex="100%" fxLayoutAlign="center">
     <div fxFlex="100">
       <h1 class="info text-white">
         REQUEST A DEMO
@@ -415,54 +454,11 @@
         Options for Premium Support, On-Boarding, Exclusive Integrations and Integrated Success
         Services guarantees your success.
       </h4>
-
-      <button [routerLink]="['/calendly']" mat-flat-button class="contact-button" color="primary">Talk to an expert</button>
-    </div>
-  </div>
-
-  <div class="container" fxFlex="100%" fxLayoutAlign="space-around">
-    <div fxFlex="100%">
-      <ul fxLayout="row wrap">
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">update</mat-icon> <span>SLA</span>
-        </li>
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">translate</mat-icon> <span>Premium Support</span>
-        </li>
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">code</mat-icon> <span>Custom Limits</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">location_city</mat-icon> <span>Training&Onboarding</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">content_copy</mat-icon> <span>Dedicated Hardware</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">photo_size_select_small</mat-icon>
-          <span>SExclusie Features</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">timeline</mat-icon> <span>Customer Success Services</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">flash_on</mat-icon> <span>Solution Architect</span>
-        </li>
-
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">flash_on</mat-icon> <span>7/24 Remote Monitoring</span>
-        </li>
-
-
-        <li class="enterprise-property" fxFlex="20%">
-          <mat-icon class="enterprise-icon">flash_on</mat-icon> <span>Special Offers</span>
-        </li>
-      </ul>
+      <a href="/calendar" target="_blank" class="contact-link">
+        <button mat-flat-button>
+          Talk to an expert
+        </button>
+      </a>
     </div>
   </div>
 </section>
@@ -500,7 +496,7 @@
 
   <div class="container end" fxFlex="100%" fxLayoutAlign="center center">
     <div fxFlex="40%" fxLayoutAlign="space-between" class="enterprise-button-wrapper">
-      <a fxFlex="45%" fxLayoutAlign="center" fxLayout="column" href="#" target="_blank">
+      <a fxFlex="45%" fxLayoutAlign="center" fxLayout="column" href="/calendar" target="_blank">
         <button class="link-button" mat-flat-button color="primary">
           Request a demo
         </button>

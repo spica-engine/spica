@@ -69,7 +69,7 @@ const routes: Routes = [
     component: FairusagePolicyComponent
   },
   {
-    path: "calendly",
+    path: "calendar",
     component: CalendlyComponent
   }
 ];
