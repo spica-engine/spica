@@ -5,18 +5,26 @@ import {FormsModule, NgModel, NgForm} from "@angular/forms";
 import {MatIconModule} from "@angular/material/icon";
 import {MatCardModule} from "@angular/material/card";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {PassportService, IdentifyParams} from "../../services/passport.service";
-import {RouterModule} from "@angular/router";
-import {of, throwError} from "rxjs";
+import {PassportService} from "../../services/passport.service";
+import {RouterModule, ActivatedRoute} from "@angular/router";
+import {of, throwError, Subject} from "rxjs";
 import {MatInputModule} from "@angular/material";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 
-describe("Identify Component", () => {
+fdescribe("Identify Component", () => {
   let fixture: ComponentFixture<IdentifyComponent>;
   let routerSpy;
 
+  let activatedRoute: {
+    queryParams: Subject<any>;
+  };
+
   beforeEach(() => {
+    activatedRoute = {
+      queryParams: new Subject()
+    };
+
     TestBed.configureTestingModule({
       imports: [
         RouterModule.forRoot([]),
@@ -56,6 +64,10 @@ describe("Identify Component", () => {
             identify: jasmine.createSpy("identify").and.returnValue(of({})),
             identified: true
           }
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: activatedRoute
         }
       ],
       declarations: [IdentifyComponent]
@@ -63,7 +75,20 @@ describe("Identify Component", () => {
 
     fixture = TestBed.createComponent(IdentifyComponent);
     routerSpy = spyOn(fixture.componentInstance.router, "navigate");
+    activatedRoute.queryParams.next({});
+
     fixture.detectChanges();
+  });
+
+  describe("login", () => {
+    it("should perform auto login when JWT token provided", () => {});
+    it("should login if user has been identified already", async () => {
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(routerSpy).toHaveBeenCalledTimes(1);
+      expect(routerSpy).toHaveBeenCalledWith("");
+    });
   });
 
   describe("basic behaviours", () => {
@@ -92,11 +117,6 @@ describe("Identify Component", () => {
         fixture.debugElement.query(By.css("mat-card-actions button:last-of-type")).nativeElement
           .disabled
       ).toBe(true);
-    });
-
-    it("should navigate if passport identified is true", () => {
-      expect(routerSpy).toHaveBeenCalledTimes(1);
-      expect(routerSpy).toHaveBeenCalledWith([""]);
     });
   });
 
