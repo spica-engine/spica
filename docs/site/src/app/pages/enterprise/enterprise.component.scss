@@ -57,6 +57,8 @@
 
     .price {
       border-left: 1px solid #eee;
+      margin: 20px;
+      padding: 20px;
     }
 
     h3 {
@@ -197,7 +199,7 @@
   }
 
   .enterprise-button-wrapper {
-    margin-top: 22px;
+    margin: 22px 0px;
   }
 
   .br-bottom {
@@ -221,21 +223,12 @@
   .content-wrapper {
     flex-flow: row wrap;
 
-    .container {
-
-      .packet:last-of-type  {
-        button {
-          margin: 0px !important;
-        }
-      }
-
-      img {
-        display: block;
-        margin: auto;
-      }
+    img {
+      display: block;
+      margin: auto;
     }
   }
-  
+
   .request-demo {
     margin: 12vh 0;
     background-color: rgb(50, 50, 93);
@@ -252,7 +245,7 @@
   }
 
   .packet {
-    margin:10px;
+    margin: 10px;
 
     .bg-black {
       background-color: #263238;
@@ -308,6 +301,9 @@
     .get {
       text-align: center;
       width: 100%;
+      button{
+        margin:0px
+      }
     }
 
     ul {
@@ -338,6 +334,7 @@
     .link-button {
       height: 50px;
       font-size: 125%;
+      word-break: break-all;
     }
   }
 }
