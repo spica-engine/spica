@@ -74,9 +74,7 @@
   }
 
   .features {
-    padding-top: 10px;
     ul {
-      width: 50%;
       li {
         font-weight: 400;
         margin: 10px 0px;
@@ -141,6 +139,11 @@
     list-style: none;
   }
 
+  section {
+    max-width: 80%;
+    margin: auto;
+  }
+
   home-section.enterprise {
     ul {
       display: flex;
@@ -164,11 +167,6 @@
             background-repeat: no-repeat;
           }
         }
-
-        /*     p {
-          font-weight: 100;
-          line-height: 2;
-        }*/
       }
     }
   }
@@ -214,26 +212,16 @@
   }
 
   .enterprise-property {
-    margin: 15px 0px;
+    margin: 20px 0px;
     span {
       margin-left: 10px;
     }
   }
 
   .content-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 12px 0;
     flex-flow: row wrap;
-    box-sizing: border-box;
-    display: flex;
-    place-content: center space-around;
-    align-items: center;
 
     .container {
-      padding: 36px 0;
-      margin: auto;
-      max-width: 1224px !important;
 
       .packet:last-of-type  {
         button {
@@ -246,12 +234,13 @@
         margin: auto;
       }
     }
-    .request-demo {
-      margin: 12vh 0;
-      background-color: rgb(50, 50, 93);
-      padding: 12vh 0 !important;
-      max-width: unset !important;
-    }
+  }
+  
+  .request-demo {
+    margin: 12vh 0;
+    background-color: rgb(50, 50, 93);
+    padding: 12vh 0 !important;
+    max-width: unset !important;
   }
 
   .content-wrapper {
@@ -263,7 +252,7 @@
   }
 
   .packet {
-    margin: 0 10px;
+    margin:10px;
 
     .bg-black {
       background-color: #263238;
