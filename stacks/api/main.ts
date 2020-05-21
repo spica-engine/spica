@@ -7,10 +7,11 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {
   CREATED_AT,
   DATE_TIME,
+  OBJECTID_STRING,
   OBJECT_ID,
-  UPDATED_AT,
-  OBJECTID_STRING
+  UPDATED_AT
 } from "@spica-server/core/schema/defaults";
+import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
@@ -186,6 +187,7 @@ if (args["cert-file"] && args["key-file"]) {
 NestFactory.create(RootModule, {
   httpsOptions
 }).then(app => {
+  app.useWebSocketAdapter(new WsAdapter(app));
   app.use(Middlewares.BsonBodyParser, Middlewares.MergePatchJsonParser, Middlewares.Preflight);
   app.listen(args.port);
 });

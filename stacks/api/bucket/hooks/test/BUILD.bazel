@@ -53,7 +53,6 @@ ts_library(
         "//stacks/api/function",
         "//stacks/api/passport/testing",
         "@npm//@nestjs/common",
-        "@npm//@nestjs/platform-socket.io",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",
