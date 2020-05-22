@@ -17,7 +17,7 @@
     <mat-form-field>
       <mat-label>Select webhook id</mat-label>
       <mat-select [(ngModel)]="filter.webhooks" multiple>
-        <mat-option *ngFor="let webhook of webhooks" [value]="webhook">
+        <mat-option class="mat-accent" *ngFor="let webhook of webhooks" [value]="webhook">
           {{ webhook }}
         </mat-option>
       </mat-select>
@@ -25,7 +25,7 @@
     <mat-form-field>
       <mat-label>Select status code</mat-label>
       <mat-select [(ngModel)]="filter.statusCodes" multiple>
-        <mat-option *ngFor="let code of statusCodes" [value]="code">
+        <mat-option class="mat-accent" *ngFor="let code of statusCodes" [value]="code">
           {{ code }}
         </mat-option>
       </mat-select>

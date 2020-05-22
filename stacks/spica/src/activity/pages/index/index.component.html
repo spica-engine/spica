@@ -21,13 +21,13 @@
   <mat-form-field>
     <mat-label>Select action type</mat-label>
     <mat-select [(ngModel)]="filters.action" multiple>
-      <mat-option value="1">
+      <mat-option class="mat-accent" value="1">
         Insert
       </mat-option>
-      <mat-option value="2">
+      <mat-option class="mat-accent" value="2">
         Update
       </mat-option>
-      <mat-option value="3">
+      <mat-option class="mat-accent" value="3">
         Delete
       </mat-option>
     </mat-select>
@@ -75,7 +75,11 @@
   <mat-form-field>
     <mat-label>Select document id</mat-label>
     <mat-select [(ngModel)]="filters.resource.$in" multiple>
-      <mat-option *ngFor="let documentId of documents$ | async" [value]="documentId">
+      <mat-option
+        class="mat-accent"
+        *ngFor="let documentId of documents$ | async"
+        [value]="documentId"
+      >
         {{ documentId }}
       </mat-option>
     </mat-select>
