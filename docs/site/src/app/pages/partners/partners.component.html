@@ -30,8 +30,8 @@
   <div fxFlex="100">
     <div fxFlex="60" fxLayout="row wrap" fxLayoutAlign="start" fxLayoutGap="5px grid">
       <div fxFlex.lt-md="100%" fxFlex="50%" *ngFor="let item of partnerFilter">
-        <a href="{{ item.url }}" target="_blank">
-          <img src="{{ item.logo }}" width="250" height="125" />
+        <a [href]="item.url" target="_blank">
+          <img [src]="item.logo" width="250" height="125" />
         </a>
       </div>
     </div>

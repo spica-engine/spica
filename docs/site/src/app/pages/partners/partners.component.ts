@@ -2,8 +2,6 @@ import {Component, OnInit} from "@angular/core";
 import {fly, flyOne} from "../../pages/animations";
 import {Observable} from "rxjs";
 import {HttpClient} from "@angular/common/http";
-import countries from "../../../assets/countries.json";
-import partners from "../../../assets/partners.json";
 
 @Component({
   selector: "app-partners",
