@@ -26,7 +26,6 @@ export class IdentifyComponent implements OnInit {
     this.strategies = this.passport.getStrategies();
     this.activatedRoute.queryParams
       .pipe(
-        tap(console.log),
         map(params => params.token),
         tap(token => {
           if (token) this.passport.token = token;
