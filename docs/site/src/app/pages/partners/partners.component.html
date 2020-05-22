@@ -13,7 +13,7 @@
         <mat-form-field appearance="outline">
           <mat-label>Select from country for see partner.</mat-label>
           <mat-select name="country" [(value)]="selectedCountry">
-            <mat-option *ngFor="let country of countryList " [value]="country.key">
+            <mat-option *ngFor="let country of countryList" [value]="country.key">
               {{ country.value }}
             </mat-option>
           </mat-select>
@@ -75,9 +75,7 @@
     fxLayoutGap="1% grid"
     fxLayoutAlign="left center"
     fxFlex.gt-sm="column"
-  >
-
-  </div>
+  ></div>
 </home-section>
 
 <app-footer></app-footer>

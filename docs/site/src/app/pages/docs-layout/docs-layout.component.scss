@@ -61,7 +61,6 @@
 
     mat-sidenav-content {
       ::ng-deep {
-
         app-doc,
         app-doc-list {
           flex: 1;
@@ -75,7 +74,4 @@
        Every toolbar row uses a flexbox row layout. */
     flex: 1 1 auto;
   }
-
-
-
 }

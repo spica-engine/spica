@@ -222,6 +222,11 @@
 
   .content-wrapper {
     flex-flow: row wrap;
+    color: #1c1c50;
+
+    ul {
+      padding: 0;
+    }
 
     img {
       display: block;
@@ -234,14 +239,6 @@
     background-color: rgb(50, 50, 93);
     padding: 12vh 0 !important;
     max-width: unset !important;
-  }
-
-  .content-wrapper {
-    color: #1c1c50;
-
-    ul {
-      padding: 0;
-    }
   }
 
   .packet {
@@ -301,8 +298,8 @@
     .get {
       text-align: center;
       width: 100%;
-      button{
-        margin:0px
+      button {
+        margin: 0px;
       }
     }
 
@@ -333,8 +330,7 @@
   .end {
     .link-button {
       height: 50px;
-      font-size: 125%;
-      word-break: break-all;
+      font-size: calc(12px + 0.6vw);
     }
   }
 }
