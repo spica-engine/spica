@@ -17,6 +17,7 @@
       "effect": "allow",
       "action": [
         "bucket:data:index",
+        "bucket:data:stream",
         "bucket:data:show"
       ],
       "resource": "bucket:data/*",

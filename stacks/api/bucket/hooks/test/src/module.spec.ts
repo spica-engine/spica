@@ -8,7 +8,7 @@ import {
   ObjectId,
   stream
 } from "@spica-server/database/testing";
-import {PreferenceModule} from "@spica-server/preference";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
 
@@ -19,7 +19,7 @@ describe("hook module", () => {
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
-        imports: [ServicesModule, DatabaseTestingModule.replicaSet(), PreferenceModule],
+        imports: [ServicesModule, DatabaseTestingModule.replicaSet(), PreferenceTestingModule],
         providers: hookModuleProviders
       }).compile();
 
