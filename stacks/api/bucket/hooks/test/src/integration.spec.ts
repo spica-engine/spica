@@ -8,6 +8,7 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {Function} from "@spica-server/function/src/interface";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
@@ -43,6 +44,7 @@ describe("Hooks Integration", () => {
         }),
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: true, history: false, realtime: false}),
         FunctionModule.forRoot({
           path: os.tmpdir(),

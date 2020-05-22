@@ -1,0 +1,1 @@
+export {WsAdapter} from "./adapter";

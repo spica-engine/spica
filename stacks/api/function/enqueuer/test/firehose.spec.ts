@@ -34,7 +34,9 @@ describe("FirehoseEnqueuer", () => {
     );
   });
 
-  afterEach(async () => await app.close());
+  afterEach(() => {
+    app.close();
+  });
 
   it("should send client description", async () => {
     firehoseEnqueuer.subscribe(noopTarget, {event: "**"});

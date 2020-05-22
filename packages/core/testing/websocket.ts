@@ -1,23 +1,21 @@
 import {Injectable} from "@nestjs/common";
 import * as CL from "ws";
 
+export type WebsocketOptions = CL.ClientOptions;
+
 @Injectable()
 export class Websocket {
   get socket() {
     return `/tmp/${process.env.BAZEL_TARGET.replace(/\/|:/g, "_")}.sock`;
   }
 
-  get(path: string) {
-    return new Client(`ws+unix://${this.socket}:${path}`);
+  get(path: string, options?: WebsocketOptions): Client {
+    return new Client(`ws+unix://${this.socket}:${path}`, options);
   }
 }
 
 export class Client extends CL {
   get connect() {
-    return new Promise(resolve => this.once("open", (...args) => setTimeout(resolve, 2, args)));
-  }
-
-  get() {
     return new Promise(resolve => this.once("open", (...args) => setTimeout(resolve, 2, args)));
   }
 
