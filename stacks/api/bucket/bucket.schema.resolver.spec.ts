@@ -2,7 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {BucketService} from "@spica-server/bucket/services";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PreferenceModule} from "@spica-server/preference";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {BucketSchemaResolver} from "./bucket.schema.resolver";
 
 describe("Bucket Schema Resolver", () => {
@@ -58,7 +58,7 @@ describe("Bucket Schema Resolver", () => {
     };
 
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create(), PreferenceModule, SchemaModule.forChild()],
+      imports: [DatabaseTestingModule.create(), PreferenceTestingModule, SchemaModule.forChild()],
       providers: [
         {
           provide: BucketService,

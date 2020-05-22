@@ -19,10 +19,6 @@ export class Client extends CL {
     return new Promise(resolve => this.once("open", (...args) => setTimeout(resolve, 2, args)));
   }
 
-  get() {
-    return new Promise(resolve => this.once("open", (...args) => setTimeout(resolve, 2, args)));
-  }
-
   close() {
     super.close();
     return new Promise(resolve => this.once("close", (...args) => setTimeout(resolve, 2, args)));

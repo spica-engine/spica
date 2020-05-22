@@ -1,5 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 import {Binary} from "crypto";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {StorageController} from "./storage.controller";
@@ -50,7 +51,7 @@ describe("Storage Controller", () => {
       ]
     };
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.create(), PassportTestingModule.initialize()],
       controllers: [StorageController],
       providers: [
         Storage,
