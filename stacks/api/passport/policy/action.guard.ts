@@ -7,7 +7,6 @@ import {
   Optional,
   Type
 } from "@nestjs/common";
-import {memoize} from "@nestjs/passport/dist/utils/memoize.util";
 import {compile, Key, parse} from "path-to-regexp";
 import {PrepareUser, Statement} from "./interface";
 import {getStatementResult} from "./operators";
@@ -90,7 +89,7 @@ export const ActionGuard: (
   actions: string | string[],
   format?: string,
   prepareUser?: PrepareUser
-) => Type<CanActivate> = memoize(createActionGuard);
+) => Type<CanActivate> = createActionGuard;
 
 function createActionGuard(
   actions: string | string[],
