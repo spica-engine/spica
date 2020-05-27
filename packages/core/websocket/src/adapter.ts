@@ -14,7 +14,7 @@ export class WsAdapter extends BaseAdapter {
         };
         const keys: pathtoregexp.Key[] = [];
         const path = pathtoregexp(options.path, keys);
-        const result = path.exec(url.pathname).slice(1);
+        const result = (path.exec(url.pathname) || []).slice(1);
         for (const [index, key] of keys.entries()) {
           req.params[key.name] = result[index];
         }

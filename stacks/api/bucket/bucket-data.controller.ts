@@ -168,7 +168,7 @@ export class BucketDataController {
   }
 
   @Get()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -302,7 +302,7 @@ export class BucketDataController {
   }
 
   @Get(":documentId")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show"))
   async findOne(
     @Headers("strategy-type") strategyType: string,
     @Headers("accept-language") acceptedLanguage: string,
@@ -366,7 +366,7 @@ export class BucketDataController {
 
   @UseInterceptors(activity(createBucketDataActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:create"]))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async replaceOne(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -387,7 +387,7 @@ export class BucketDataController {
 
   @UseInterceptors(activity(createBucketDataActivity))
   @Put(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:update"]))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
   async update(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,

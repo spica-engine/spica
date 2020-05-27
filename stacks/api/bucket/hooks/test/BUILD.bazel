@@ -47,6 +47,7 @@ ts_library(
     deps = [
         "//packages/core",
         "//packages/core/testing",
+        "//packages/core/websocket",
         "//packages/database/testing",
         "//stacks/api/bucket",
         "//stacks/api/bucket/services",
