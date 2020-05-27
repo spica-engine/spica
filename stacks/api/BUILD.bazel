@@ -13,6 +13,7 @@ ts_library(
     deps = [
         "//packages/core",
         "//packages/core/schema",
+        "//packages/core/websocket",
         "//packages/database",
         "//stacks/api/activity",
         "//stacks/api/bucket",
@@ -24,7 +25,6 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/platform-express",
-        "@npm//@nestjs/platform-socket.io",
         "@npm//@types/express",
         "@npm//@types/node",
         "@npm//@types/yargs",

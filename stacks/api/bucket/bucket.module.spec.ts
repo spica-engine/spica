@@ -1,18 +1,20 @@
 import {Test} from "@nestjs/testing";
+import {BucketModule} from "@spica-server/bucket";
+import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import {BucketModule} from "./bucket.module";
-import {HistoryModule} from "./history";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 12000;
 
-describe("bucket module", () => {
+describe("Bucket Module", () => {
   it("should import hook module", async () => {
-    let module = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: true, realtime: false, history: false})
       ]
     }).compile();
@@ -22,24 +24,30 @@ describe("bucket module", () => {
   });
 
   it("shouldn't import hook module", async () => {
-    let module = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: false, history: false, realtime: false})
       ]
     }).compile();
 
     expect(() => {
       module.get(HookModule);
-    }).toThrow(new Error("Nest cannot find given element (it does not exist in current context)"));
+    }).toThrow(
+      new Error(
+        "Nest could not find HookModule element (this provider does not exist in the current context)"
+      )
+    );
   });
 
   it("should import history module", async () => {
-    let module = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: false, realtime: false, history: true})
       ]
     }).compile();
@@ -49,16 +57,21 @@ describe("bucket module", () => {
   });
 
   it("shouldn't import history module", async () => {
-    let module = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       imports: [
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: false, realtime: false, history: false})
       ]
     }).compile();
 
     expect(() => {
       module.get(HistoryModule);
-    }).toThrow(new Error("Nest cannot find given element (it does not exist in current context)"));
+    }).toThrow(
+      new Error(
+        "Nest could not find HistoryModule element (this provider does not exist in the current context)"
+      )
+    );
   });
 });

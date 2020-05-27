@@ -9,7 +9,7 @@ class _NoopStrategy extends passport.Strategy {
   }
 
   authenticate(req: any) {
-    req.TESTING_SKIP_CHECK = true;
+    req.TESTING_SKIP_CHECK = this.options.skipActionCheck;
     this.callback((err, user, reason) => {
       if (err) {
         this["error"](err);
@@ -29,6 +29,10 @@ class _NoopStrategy extends passport.Strategy {
 export class NoopStrategy extends PassportStrategy(_NoopStrategy, "noop") {
   constructor(options: TestingOptions) {
     super(options);
+    if (options.overriddenStrategyType) {
+      passport._strategies[options.overriddenStrategyType.toLowerCase()] =
+        passport._strategies.noop;
+    }
   }
   validate() {
     return Promise.resolve({identifier: "noop", policies: []});

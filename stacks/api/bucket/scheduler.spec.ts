@@ -2,6 +2,8 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {BucketDataService, BucketModule} from "@spica-server/bucket";
 import {DocumentScheduler} from "@spica-server/bucket/scheduler";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 describe("scheduler", () => {
   let bds: jasmine.SpyObj<BucketDataService>;
@@ -14,6 +16,8 @@ describe("scheduler", () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
+        PassportTestingModule.initialize(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: false, realtime: false, history: false})
       ]
     })

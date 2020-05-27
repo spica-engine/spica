@@ -7,14 +7,15 @@ import {SchemaModule} from "@spica-server/core/schema";
 import {
   CREATED_AT,
   DATE_TIME,
+  OBJECTID_STRING,
   OBJECT_ID,
-  UPDATED_AT,
-  OBJECTID_STRING
+  UPDATED_AT
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {ObjectId} from "@spica-server/database";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {WsAdapter} from "@spica-server/core/websocket";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -34,12 +35,13 @@ describe("BucketDataController", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: false, history: false, realtime: false})
       ]
     }).compile();
     db = module.get(DatabaseService);
     app = module.createNestApplication();
-
+    app.useWebSocketAdapter(new WsAdapter(app));
     app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
