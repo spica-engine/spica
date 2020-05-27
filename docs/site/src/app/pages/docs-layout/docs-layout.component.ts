@@ -10,8 +10,7 @@ import {DocService} from "../../services/doc.service";
   styleUrls: ["./docs-layout.component.scss"]
 })
 export class DocsLayoutComponent implements OnInit {
-  innerWidth: number;
-
+  
   $apiDocs: Observable<any>;
   $contentDocs: Observable<any>;
   isHandset$: Observable<boolean> = this.breakpointObserver

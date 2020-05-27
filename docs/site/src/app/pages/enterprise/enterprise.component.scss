@@ -1,6 +1,18 @@
 :host {
   app-header {
     min-height: 200px;
+    line-height: 30px;
+  }
+
+  section:first-of-type {
+    > div h3 {
+      margin-bottom: 0px;
+    }
+    
+    > h4 {
+      color: #78909c;
+      font-weight: 400;
+    }
   }
 
   .info {
@@ -146,46 +158,10 @@
     margin: auto;
   }
 
-  home-section.enterprise {
-    ul {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      padding-left: 0;
-
-      li {
-        flex-basis: 40%;
-
-        h1 {
-          vertical-align: middle;
-
-          &::before {
-            display: inline-block;
-            content: "";
-            height: 20px;
-            width: 20px;
-            padding-right: 8px;
-            background-image: url("../../../assets/images/star.svg");
-            background-repeat: no-repeat;
-          }
-        }
-      }
-    }
-  }
-
-  .mobile-img {
-    max-width: 100% !important;
-  }
-
   .flex-margin {
     margin: 12vh 0;
     width: 100%;
     display: flex;
-  }
-
-  .description-title {
-    margin: 0 0 2px 0 !important;
-    display: block;
   }
 
   .inline-button {
@@ -202,8 +178,10 @@
     margin: 22px 0px;
   }
 
-  .br-bottom {
-    border-bottom: 1px solid #cfd8dc;
+  hr {
+    border: 0.1px solid #cfd8dc;
+    width: 100%;
+    margin: 70px 0px;
   }
 
   .enterprise-icon {

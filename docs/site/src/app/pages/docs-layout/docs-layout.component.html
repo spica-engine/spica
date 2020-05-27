@@ -5,11 +5,7 @@
     <mat-icon>menu</mat-icon>
   </button>
 
-  <!-- This fills the remaining space of the current row -->
   <span class="fill-space"></span>
-  <!--
-  <span>Spica</span>
-  -->
 </mat-toolbar>
 
 <mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
@@ -19,7 +15,7 @@
     [opened]="!(isHandset$ | async)"
     ngClass.gt-md="desktop"
   >
-    <mat-nav-list fxHide.lt-md="false" fxHide="true">
+    <mat-nav-list fxShow.lt-md="true" fxShow="false">
       <a href="https://spicaengine.com/" target="_blank">
         <h6 mat-subheader>Website <mat-icon>open_in_new</mat-icon></h6>
       </a>
