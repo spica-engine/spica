@@ -25,7 +25,9 @@ export class IdentifyComponent implements OnInit {
   ngOnInit() {
     this.strategies = this.passport.getStrategies();
     this.activatedRoute.queryParams.pipe(take(1)).subscribe(params => {
-      if (params.token) this.passport.token = params.token;
+      if (params.token) {
+        this.passport.token = params.token;
+      }
       if (this.passport.identified) {
         this.router.navigate([""]);
       }
