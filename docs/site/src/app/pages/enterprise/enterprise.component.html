@@ -23,29 +23,31 @@
   </div>
 </home-section>
 
-<section class="content-wrapper" fxLayoutAlign="space-between start">
-  <div fxFlex="30" fxFlex.lt-md="100" fxLayout="column">
-    <h3>Don’t Spend Time on Maintenance</h3>
-    <p>
-      We handle all Spica Instances and keep them up-to-date with the latest Spica versions. Don’t
-      spend time on data security, backups or server maintenance.
-    </p>
-  </div>
+<section>
+  <div fxFlex="100" fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="space-between">
+    <div fxFlex="30" fxFlex.lt-md="100" fxLayout="column">
+      <h3>Don’t Spend Time on Maintenance</h3>
+      <p>
+        We handle all Spica Instances and keep them up-to-date with the latest Spica versions. Don’t
+        spend time on data security, backups or server maintenance.
+      </p>
+    </div>
 
-  <div fxFlex="30" fxFlex.lt-md="100" fxLayout="column">
-    <h3>Copy Images</h3>
-    <p>
-      Do you need another Spica Instance for your other client? Copy your server images just with
-      one click.
-    </p>
-  </div>
+    <div fxFlex="30" fxFlex.lt-md="100" fxLayout="column">
+      <h3>Copy Images</h3>
+      <p>
+        Do you need another Spica Instance for your other client? Copy your server images just with
+        one click.
+      </p>
+    </div>
 
-  <div fxFlex="30" fxFlex.lt-md="100" fxLayout="column">
-    <h3>One Account</h3>
-    <p>
-      Manage your clients or projects with one account. With a multi-tenant architecture, you can
-      manage multiple projects in the easiest way.
-    </p>
+    <div fxFlex="30" fxFlex.lt-md="100" fxLayout="column">
+      <h3>One Account</h3>
+      <p>
+        Manage your clients or projects with one account. With a multi-tenant architecture, you can
+        manage multiple projects in the easiest way.
+      </p>
+    </div>
   </div>
 
   <h4 fxFlex="100" fxLayoutAlign="center">
@@ -55,46 +57,26 @@
 
   <hr />
 
-  <ul fxFlex="33" fxFlex.lt-md="100" fxLayout.lt-md="row">
-    <li
-      fxFlex.lt-md="25"
-      fxLayout.lt-md="column"
-      fxLayoutAlign.lt-md="center center"
-      class="enterprise-property"
-    >
-      <mat-icon class="enterprise-icon">update</mat-icon> <span>Auto-Updates</span>
+  <ul class="features" fxFlex="33" fxFlex.lt-md="100" fxLayout.lt-md="row">
+    <li fxFlex.lt-md="25" fxLayout.lt-md="column" fxLayoutAlign.lt-md="center center">
+      <mat-icon>update</mat-icon> <span>Auto-Updates</span>
     </li>
 
-    <li
-      fxFlex.lt-md="25"
-      fxLayout.lt-md="column"
-      fxLayoutAlign.lt-md="center center"
-      class="enterprise-property"
-    >
-      <mat-icon class="enterprise-icon">location_city</mat-icon> <span>Monitoring</span>
+    <li fxFlex.lt-md="25" fxLayout.lt-md="column" fxLayoutAlign.lt-md="center center">
+      <mat-icon>location_city</mat-icon> <span>Monitoring</span>
     </li>
 
-    <li
-      fxFlex.lt-md="25"
-      fxLayout.lt-md="column"
-      fxLayoutAlign.lt-md="center center"
-      class="enterprise-property"
-    >
-      <mat-icon class="enterprise-icon">timeline</mat-icon> <span>Auto-Scales</span>
+    <li fxFlex.lt-md="25" fxLayout.lt-md="column" fxLayoutAlign.lt-md="center center">
+      <mat-icon>timeline</mat-icon> <span>Auto-Scales</span>
     </li>
 
-    <li
-      fxFlex.lt-md="25"
-      fxLayout.lt-md="column"
-      fxLayoutAlign.lt-md="center center"
-      class="enterprise-property"
-    >
-      <mat-icon class="enterprise-icon">flash_on</mat-icon> <span>Multi Tenancy</span>
+    <li fxFlex.lt-md="25" fxLayout.lt-md="column" fxLayoutAlign.lt-md="center center">
+      <mat-icon>flash_on</mat-icon> <span>Multi Tenancy</span>
     </li>
   </ul>
 
   <div
-    class="features"
+    class="includes"
     fxFlex="66"
     fxLayout="column"
     fxFlex.lt-md="100"
@@ -109,7 +91,7 @@
     </p>
 
     <div fxLayout="row">
-      <ul fxFlex="50" class="text-default">
+      <ul fxFlex="50">
         <li>
           <mat-icon>done</mat-icon>
           Custom Data Modeling
@@ -128,7 +110,7 @@
         </li>
       </ul>
 
-      <ul fxFlex="50" class="text-default">
+      <ul fxFlex="50">
         <li>
           <mat-icon>done</mat-icon>
           Revision History
@@ -151,138 +133,110 @@
 
   <hr />
 
-  <div class="packet" fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
-    <mat-card class="unset-padding">
-      <mat-toolbar color="primary">
-        <p class="packet-title">Starter</p>
-      </mat-toolbar>
-      <mat-card-content>
-        <ul class="packet-information">
-          <li>850 Entries</li>
-          <li>450 vCPU</li>
-          <li>850 vRAM</li>
-          <li>2GB Storage Limit</li>
-          <li class="price">$19 <span class="period">per month</span></li>
-        </ul>
-        <div class="get">
-          <a href="https://dashboard.spicaengine.com" target="_blank">
-            <button mat-flat-button color="primary">Get Started</button>
-          </a>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <mat-card fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
+    <mat-toolbar color="primary">
+      <p>Starter</p>
+    </mat-toolbar>
+    <mat-card-content>
+      <ul>
+        <li>850 Entries</li>
+        <li>450 vCPU</li>
+        <li>850 vRAM</li>
+        <li>2GB Storage Limit</li>
+        <li>$19<span>per month</span></li>
+      </ul>
+      <a href="https://dashboard.spicaengine.com" target="_blank">
+        <button mat-flat-button color="primary">Get Started</button>
+      </a>
+    </mat-card-content>
+  </mat-card>
 
-  <div class="packet" fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
-    <mat-card class="unset-padding">
-      <mat-toolbar class="blue">
-        <p class="packet-title">Professional</p>
-      </mat-toolbar>
-      <mat-card-content>
-        <ul class="packet-information">
-          <li>50.000 Entries</li>
-          <li>650 vCPU</li>
-          <li>2000 vRAM</li>
-          <li>10GB Storage Limit</li>
-          <li class="price">$49 <span class="period">per month</span></li>
-        </ul>
-        <div class="get">
-          <a href="https://dashboard.spicaengine.com" target="_blank">
-            <button mat-flat-button color="primary">Get Started</button>
-          </a>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <mat-card fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
+    <mat-toolbar>
+      <p>Professional</p>
+    </mat-toolbar>
+    <mat-card-content>
+      <ul>
+        <li>50.000 Entries</li>
+        <li>650 vCPU</li>
+        <li>2000 vRAM</li>
+        <li>10GB Storage Limit</li>
+        <li>$49<span>per month</span></li>
+      </ul>
+      <a href="https://dashboard.spicaengine.com" target="_blank">
+        <button mat-flat-button color="primary">Get Started</button>
+      </a>
+    </mat-card-content>
+  </mat-card>
 
-  <div class="packet" fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
-    <mat-card class="unset-padding">
-      <mat-toolbar class="blue">
-        <p class="packet-title">Business</p>
-      </mat-toolbar>
-      <mat-card-content>
-        <ul class="packet-information">
-          <li>250.000 Entries</li>
-          <li>1850 vCPU</li>
-          <li>3800 vRAM</li>
-          <li>50GB Storage Limit</li>
-          <li class="price">$149 <span class="period">per month</span></li>
-        </ul>
-        <div class="get">
-          <a href="https://dashboard.spicaengine.com" target="_blank">
-            <button mat-flat-button color="primary">Get Started</button>
-          </a>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <mat-card fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
+    <mat-toolbar>
+      <p>Business</p>
+    </mat-toolbar>
+    <mat-card-content>
+      <ul>
+        <li>250.000 Entries</li>
+        <li>1850 vCPU</li>
+        <li>3800 vRAM</li>
+        <li>50GB Storage Limit</li>
+        <li>$149<span>per month</span></li>
+      </ul>
+      <a href="https://dashboard.spicaengine.com" target="_blank">
+        <button mat-flat-button color="primary">Get Started</button>
+      </a>
+    </mat-card-content>
+  </mat-card>
 
-  <div class="packet" fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
-    <mat-card class="unset-padding">
-      <mat-toolbar class="blue">
-        <p class="packet-title">Enterprise</p>
-      </mat-toolbar>
-      <mat-card-content>
-        <ul class="packet-information">
-          <li>750.000 Entries</li>
-          <li>4150 vCPU</li>
-          <li>9000 vRAM</li>
-          <li>250GB Storage Limit</li>
-          <li class="price">$649 <span class="period">per month</span></li>
-        </ul>
-        <div class="get">
-          <a href="https://dashboard.spicaengine.com" target="_blank">
-            <button mat-flat-button color="primary">Get Started</button>
-          </a>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <mat-card fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
+    <mat-toolbar>
+      <p>Enterprise</p>
+    </mat-toolbar>
+    <mat-card-content>
+      <ul>
+        <li>750.000 Entries</li>
+        <li>4150 vCPU</li>
+        <li>9000 vRAM</li>
+        <li>250GB Storage Limit</li>
+        <li>$649<span>per month</span></li>
+      </ul>
+      <a href="https://dashboard.spicaengine.com" target="_blank">
+        <button mat-flat-button color="primary">Get Started</button>
+      </a>
+    </mat-card-content>
+  </mat-card>
 
-  <div class="packet" fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
-    <mat-card class="unset-padding">
-      <mat-toolbar color="primary">
-        <p class="packet-title">Custom</p>
-      </mat-toolbar>
-      <mat-card-content>
-        <ul class="packet-information">
-          <li>Custom Entries</li>
-          <li>Custom vCPU</li>
-          <li>Custom vRAM</li>
-          <li>Custom Storage Limit</li>
-          <li>SLA</li>
-          <li>Dedicated Hardware</li>
-        </ul>
-        <div class="get">
-          <a href="/calendar" target="_blank">
-            <button mat-flat-button color="primary">Talk to us</button>
-          </a>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <mat-card fxFlex.lg="18" fxFlex.md="45" fxFlex.sm="100" fxFlex.xs="100">
+    <mat-toolbar color="primary">
+      <p>Custom</p>
+    </mat-toolbar>
+    <mat-card-content>
+      <ul>
+        <li>Custom Entries</li>
+        <li>Custom vCPU</li>
+        <li>Custom vRAM</li>
+        <li>Custom Storage Limit</li>
+        <li>SLA</li>
+        <li>Dedicated Hardware</li>
+      </ul>
+      <a href="/calendar" target="_blank">
+        <button mat-flat-button color="primary">Talk to us</button>
+      </a>
+    </mat-card-content>
+  </mat-card>
 
-  <div class="container" fxFlex="100" fxLayout="row" fxLayoutAlign="center center">
-    <div>
-      <p>
-        All tiers are subject to our
-        <a [routerLink]="['/limit-policy']"> Technical Limits Policy</a>,
-        <a [routerLink]="['/support-policy']">Support Policy</a>, and
-        <a [routerLink]="['/fairusage-policy']">Usage Policy</a>
-      </p>
-    </div>
-  </div>
+  <p fxFlex="100" fxLayout="row" fxLayoutAlign="center center">
+    <span>
+      All tiers are subject to our
+      <a [routerLink]="['/limit-policy']"> Technical Limits Policy</a>,
+      <a [routerLink]="['/support-policy']">Support Policy</a>, and
+      <a [routerLink]="['/fairusage-policy']">Usage Policy</a>
+    </span>
+  </p>
 </section>
 
-<section class="content-wrapper">
-  <div
-    class="container plugin"
-    fxFlex="100"
-    fxLayout="row"
-    fxLayout.lt-sm="column"
-    fxLayoutAlign.lt-sm="space-between center"
-  >
-    <div fxFlex="70" fxLayout.lt-sm="column" fxLayoutAlign.lt-sm="center center">
+<section>
+  <div fxLayout="row" fxLayout.lt-sm="column">
+    <div fxFlex="70" fxLayout="column" fxLayoutAlign.lt-sm="center center">
       <h3><mat-icon>info</mat-icon> Chronos</h3>
       <p>
         Chronos is a backup service with features such as scheduled backups, snapshots to make your
@@ -292,23 +246,16 @@
     </div>
     <div
       fxFlex="30"
-      class="price"
-      fxLayoutAlign="center center"
       fxLayout="column"
-      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee', width: '100%'}"
+      fxLayoutAlign="center center"
+      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee'}"
     >
       <h3>$8</h3>
-      <span class="text-default">per month</span>
+      <span>per month</span>
     </div>
   </div>
 
-  <div
-    class="container plugin"
-    fxFlex="100"
-    fxLayout="row"
-    fxLayout.lt-sm="column"
-    fxLayoutAlign.lt-sm="space-between center"
-  >
+  <div fxFlex="100" fxLayout="row" fxLayout.lt-sm="column">
     <div fxFlex="70" fxLayout.lt-sm="column" fxLayoutAlign.lt-sm="center center">
       <h3><mat-icon>info</mat-icon> Auditing Tool</h3>
       <p>
@@ -318,23 +265,16 @@
     </div>
     <div
       fxFlex="30"
-      class="price"
-      fxLayoutAlign="center center"
       fxLayout="column"
-      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee', width: '100%'}"
+      fxLayoutAlign="center center"
+      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee'}"
     >
       <h3>$5</h3>
-      <span class="text-default">per month</span>
+      <span>per month</span>
     </div>
   </div>
 
-  <div
-    class="container plugin"
-    fxFlex="100"
-    fxLayout="row"
-    fxLayout.lt-sm="column"
-    fxLayoutAlign.lt-sm="space-between center"
-  >
+  <div fxFlex="100" fxLayout="row" fxLayout.lt-sm="column">
     <div fxFlex="70" fxLayout.lt-sm="column" fxLayoutAlign.lt-sm="center center">
       <h3><mat-icon>info</mat-icon> Training Onboarding</h3>
       <p>
@@ -345,23 +285,16 @@
     </div>
     <div
       fxFlex="30"
-      class="price"
-      fxLayoutAlign="center center"
       fxLayout="column"
-      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee', width: '100%'}"
+      fxLayoutAlign="center center"
+      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee'}"
     >
       <h3>$300</h3>
-      <span class="text-default">one time</span>
+      <span>one time</span>
     </div>
   </div>
 
-  <div
-    class="container plugin"
-    fxFlex="100"
-    fxLayout="row"
-    fxLayout.lt-sm="column"
-    fxLayoutAlign.lt-sm="space-between center"
-  >
+  <div fxFlex="100" fxLayout="row" fxLayout.lt-sm="column">
     <div fxFlex="70" fxLayout.lt-sm="column" fxLayoutAlign.lt-sm="center center">
       <h3><mat-icon>info</mat-icon> Integrated Success Services</h3>
       <p>
@@ -372,23 +305,16 @@
     </div>
     <div
       fxFlex="30"
-      class="price"
-      fxLayoutAlign="center center"
       fxLayout="column"
-      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee', width: '100%'}"
+      fxLayoutAlign="center center"
+      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee'}"
     >
       <h3>$200</h3>
-      <span class="text-default">per month</span>
+      <span>per month</span>
     </div>
   </div>
 
-  <div
-    class="container plugin"
-    fxFlex="100"
-    fxLayout="row"
-    fxLayout.lt-sm="column"
-    fxLayoutAlign.lt-sm="space-between center"
-  >
+  <div fxFlex="100" fxLayout="row" fxLayout.lt-sm="column">
     <div fxFlex="70" fxLayout.lt-sm="column" fxLayoutAlign.lt-sm="center center">
       <h3><mat-icon>info</mat-icon> Solution Architect</h3>
       <p>
@@ -398,23 +324,16 @@
     </div>
     <div
       fxFlex="30"
-      class="price"
-      fxLayoutAlign="center center"
       fxLayout="column"
-      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee', width: '100%'}"
+      fxLayoutAlign="center center"
+      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee'}"
     >
       <h3>$600</h3>
-      <span class="text-default">per month</span>
+      <span>per month</span>
     </div>
   </div>
 
-  <div
-    class="container plugin"
-    fxFlex="100"
-    fxLayout="row"
-    fxLayout.lt-sm="column"
-    fxLayoutAlign.lt-sm="space-between center"
-  >
+  <div fxFlex="100" fxLayout="row" fxLayout.lt-sm="column">
     <div fxFlex="70" fxLayout.lt-sm="column" fxLayoutAlign.lt-sm="center center">
       <h3><mat-icon>info</mat-icon> On-Premise License</h3>
       <p>
@@ -424,43 +343,45 @@
     </div>
     <div
       fxFlex="30"
-      class="price"
-      fxLayoutAlign="center center"
       fxLayout="column"
-      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee', width: '100%'}"
+      fxLayoutAlign="center center"
+      [ngStyle.lt-sm]="{'border-left': 'none', 'border-top': '1px solid #eee'}"
     >
       <h3>$200</h3>
-      <span class="text-default">per month</span>
+      <span>per month</span>
     </div>
   </div>
 </section>
 
-<section class="request-demo">
-  <div class="container" fxFlex="100" fxLayoutAlign="center">
-    <div fxFlex="100">
-      <h1 class="info text-white">
-        REQUEST A DEMO
-      </h1>
-      <h4 class="info text-white">
-        Options for Premium Support, On-Boarding, Exclusive Integrations and Integrated Success
-        Services guarantees your success.
-      </h4>
-      <a href="/calendar" target="_blank" class="contact-link">
-        <button mat-flat-button>
-          Talk to an expert
-        </button>
-      </a>
-    </div>
+<section>
+  <div fxFlex="100" fxLayout="column" fxLayoutAlign="center">
+    <h1>
+      REQUEST A DEMO
+    </h1>
+    <p>
+      Options for Premium Support, On-Boarding, Exclusive Integrations and Integrated Success
+      Services guarantees your success.
+    </p>
+    <a href="/calendar" target="_blank">
+      <button mat-flat-button>
+        Talk to an expert
+      </button>
+    </a>
   </div>
 </section>
 
-<section class="content-wrapper" fxLayoutAlign="center center">
-  <div fxFlex.lt-md="30" fxFlex.gt-sm="35">
-    <img intersect="flyOne" wait="true" src="assets/artboard/partner.svg" alt="Enterprise" />
-  </div>
+<section fxLayoutAlign="center center">
+  <img
+    fxFlex="30"
+    fxFlex.lt-md="45"
+    intersect="flyOne"
+    wait="true"
+    src="assets/artboard/partner.svg"
+    alt="Enterprise"
+  />
 
-  <div fxFlex.lt-md="100" fxFlex="60" fxLayoutGap="14px grid" fxLayout="column">
-    <h3 class="description-title">Free for Open Source</h3>
+  <div fxFlex="70" fxFlex.lt-md="100" fxLayout="column">
+    <h3>Free for Open Source</h3>
     <p>
       Free Starter repository plan for Open Source and Open Content projects. Spica has been
       licensed under GNU Affero General Public License for non-commercial projects, open content,
@@ -471,31 +392,25 @@
     </p>
   </div>
 
-  <div class="container end" fxFlex="100" fxLayoutAlign="center center">
-    <div
-      class="enterprise-button-wrapper"
-      fxFlex="50"
-      fxLayoutAlign="space-evenly"
-      fxFlex.lt-md="90"
-    >
-      <a fxFlex="45" fxLayoutAlign="center" fxLayout="column" href="/calendar" target="_blank">
-        <button class="link-button" mat-flat-button color="primary">
-          Request a demo
-        </button>
-      </a>
+  <div fxFlex="100" fxLayoutAlign="center">
+    <a fxFlex="20" fxFlex.xs="45" fxFlex.sm="35" fxFlex.md="30" href="/calendar" target="_blank">
+      <button mat-flat-button color="primary">
+        Request a demo
+      </button>
+    </a>
 
-      <a
-        fxFlex="45"
-        fxLayoutAlign="center"
-        fxLayout="column"
-        href="https://github.com/spica-engine/spica"
-        target="_blank"
-      >
-        <button class="link-button" mat-flat-button color="primary">
-          Get started
-        </button>
-      </a>
-    </div>
+    <a
+      fxFlex="20"
+      fxFlex.xs="45"
+      fxFlex.sm="35"
+      fxFlex.md="30"
+      href="https://github.com/spica-engine/spica"
+      target="_blank"
+    >
+      <button mat-flat-button color="primary">
+        Get started
+      </button>
+    </a>
   </div>
 </section>
 <app-footer></app-footer>
