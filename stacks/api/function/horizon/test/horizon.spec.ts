@@ -137,7 +137,7 @@ describe("horizon", () => {
     expect(spawnSpy).toHaveBeenCalledTimes(11);
   });
 
-  fit("should kill worker when timeout expired", () => {
+  it("should kill worker when timeout expired", () => {
     const event = new Event.Event({
       target: new Event.Target({
         cwd: compilation.cwd,
