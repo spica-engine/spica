@@ -102,6 +102,13 @@ const args = yargs
       default: 10
     }
   })
+  .options({
+    "function-timeout": {
+      number: true,
+      description: "The timeout value to be reached before kill the process",
+      default: 60000
+    }
+  })
   /* Common Options */
   .option("port", {
     number: true,
@@ -163,7 +170,8 @@ const modules = [
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
-    publicUrl: args["public-url"]
+    publicUrl: args["public-url"],
+    timeout: args["function-timeout"]
   })
 ];
 

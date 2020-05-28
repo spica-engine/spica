@@ -41,7 +41,8 @@ describe("horizon enqueuer factory", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           poolSize: 10,
-          publicUrl: undefined
+          publicUrl: undefined,
+          timeout: 60000
         }),
         SpySchedulerModule
       ]
@@ -66,19 +67,20 @@ describe("horizon", () => {
   let horizon: Horizon;
   let app: INestApplication;
   let spawnSpy: jasmine.Spy;
+  let horizonOptions = {
+    databaseUri: undefined,
+    databaseName: undefined,
+    databaseReplicaSet: undefined,
+    poolSize: 10,
+    publicUrl: undefined,
+    timeout: 60000
+  };
+
+  let clock: jasmine.Clock;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [
-        DatabaseTestingModule.create(),
-        HorizonModule.forRoot({
-          databaseUri: undefined,
-          databaseName: undefined,
-          databaseReplicaSet: undefined,
-          poolSize: 10,
-          publicUrl: undefined
-        })
-      ]
+      imports: [DatabaseTestingModule.create(), HorizonModule.forRoot(horizonOptions)]
     }).compile();
 
     horizon = module.get(Horizon);
@@ -86,6 +88,10 @@ describe("horizon", () => {
     spawnSpy = spyOn(horizon.runtime, "spawn").and.callThrough();
 
     app = module.createNestApplication();
+
+    clock = jasmine.clock();
+    clock.mockDate(new Date(2015, 1, 1, 1, 1, 31, 0));
+    clock.install();
 
     await app.init();
   });
@@ -103,6 +109,7 @@ describe("horizon", () => {
   afterEach(() => {
     horizon.kill();
     app.close();
+    clock.uninstall();
   });
 
   it("should spawn N process", () => {
@@ -128,5 +135,25 @@ describe("horizon", () => {
     expect(spawnSpy).toHaveBeenCalledTimes(10);
     horizon["schedule"]();
     expect(spawnSpy).toHaveBeenCalledTimes(11);
+  });
+
+  fit("should kill worker when timeout expired", () => {
+    const event = new Event.Event({
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "default"
+      }),
+      type: -1
+    });
+
+    const [id, worker] = Array.from(horizon["pool"]).pop() as [string, Worker];
+    const killSpy = spyOn(worker, "kill");
+    horizon["scheduled"](event, id);
+
+    expect(killSpy).not.toHaveBeenCalled();
+
+    clock.tick(horizonOptions.timeout);
+
+    expect(killSpy).toHaveBeenCalledTimes(1);
   });
 });
