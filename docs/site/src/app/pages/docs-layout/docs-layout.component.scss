@@ -2,9 +2,11 @@
   app-header {
     position: sticky;
     min-height: 150px;
+
     button {
       position: absolute;
       left: 20px;
+
       mat-icon {
         font-size: 1.5rem;
       }
@@ -12,15 +14,18 @@
   }
 
   mat-sidenav-container {
-    max-width: 90%;
+    max-width: 100%;
     margin-left: 12%;
+    margin-right: 12%;
+    background-color: #fff;
+    padding: 15px;
     min-height: 95vh;
-    background: none;
     color: #1c1c50;
 
     &.handset {
       max-width: unset;
       margin-left: unset;
+
       mat-sidenav {
         background: #fff;
       }
@@ -42,6 +47,7 @@
           color: #1c1c50;
           font-weight: 700;
         }
+
         a.mat-list-item {
           height: 35px;
         }
@@ -61,5 +67,9 @@
         }
       }
     }
+  }
+
+  .fill-space {
+    flex: 1 1 auto;
   }
 }
