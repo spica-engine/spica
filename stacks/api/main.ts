@@ -100,12 +100,10 @@ const args = yargs
       number: true,
       description: "Number of worker processes to fork at start up.",
       default: 10
-    }
-  })
-  .options({
+    },
     "function-timeout": {
       number: true,
-      description: "The timeout value to be reached before kill the process",
+      description: "Amount of time in milliseconds that has to elapse before aborting a function.",
       default: 60000
     }
   })
