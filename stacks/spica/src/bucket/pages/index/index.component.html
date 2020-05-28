@@ -156,8 +156,16 @@
             ></mat-checkbox>
           </td>
         </ng-container>
-        <ng-container matColumnDef="$$spicainternal_schedule">
-          <th mat-header-cell *matHeaderCellDef>Scheduled</th>
+        <ng-container matColumnDef="$$spicainternal_schedule" *ngIf="schema$ | async; let schema">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            mat-resize-header
+            [persist-header-width]="schema._id"
+          >
+            Scheduled
+          </th>
           <td mat-cell *matCellDef="let row">
             {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
           </td>
