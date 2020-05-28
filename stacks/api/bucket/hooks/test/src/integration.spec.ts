@@ -54,7 +54,8 @@ describe("Hooks Integration", () => {
           poolSize: 1,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          publicUrl: undefined
+          publicUrl: undefined,
+          timeout: 60000
         })
       ]
     }).compile();
