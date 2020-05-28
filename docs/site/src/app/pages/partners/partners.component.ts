@@ -1,7 +1,9 @@
 import {Component, OnInit} from "@angular/core";
 import {fly, flyOne} from "../../pages/animations";
-import {Observable} from "rxjs";
-import {HttpClient} from "@angular/common/http";
+import {Observable, BehaviorSubject} from "rxjs";
+import {Country, Partner} from "../../interface/partner";
+import {map, switchMap} from "rxjs/operators";
+import {PartnerService} from "src/app/services/partners.service";
 
 @Component({
   selector: "app-partners",
@@ -10,36 +12,24 @@ import {HttpClient} from "@angular/common/http";
   animations: [fly("fly"), flyOne("flyOne")]
 })
 export class PartnersComponent implements OnInit {
-  countryList: object;
-  partnerList: object;
-  partnerFilter: any = [];
-  selectedCountry: string;
-  constructor(private http: HttpClient) {}
+  countries: Observable<Country[]>;
+  partners: Observable<Partner[]>;
+  filter = new BehaviorSubject(undefined);
+
+  constructor(private partnerService: PartnerService) {}
 
   ngOnInit() {
-    this.getCountries().subscribe(r => {
-      this.countryList = r;
-    });
-
-    this.getPartners().subscribe(r => {
-      this.partnerList = r;
-    });
+    this.countries = this.partnerService.getCountries();
+    this.partners = this.filter.pipe(
+      switchMap(country =>
+        this.partnerService
+          .getPartners()
+          .pipe(map(partners => partners.filter(partner => partner.country == country)))
+      )
+    );
   }
 
-  getCountries(): Observable<any> {
-    return this.http.get("../../../assets/countries.json");
-  }
-  getPartners(): Observable<any> {
-    return this.http.get("../../../assets/partners.json");
-  }
-
-  countrySelect() {
-    this.partnerFilter = [];
-    Object(this.partnerList).find(partner => {
-      if ((partner.country == this.selectedCountry) == true) {
-        this.partnerFilter.push(partner);
-      }
-      return null;
-    });
+  applyFilter(country: string) {
+    this.filter.next(country);
   }
 }

@@ -12,15 +12,20 @@
       <div fxFlex="75%">
         <mat-form-field appearance="outline">
           <mat-label>Select from country for see partner.</mat-label>
-          <mat-select name="country" [(value)]="selectedCountry">
-            <mat-option *ngFor="let country of countryList" [value]="country.key">
+          <mat-select name="country" #selectedCountry>
+            <mat-option *ngFor="let country of countries | async" [value]="country.key">
               {{ country.value }}
             </mat-option>
           </mat-select>
         </mat-form-field>
       </div>
       <div fxFlex="25%" class="partner-search">
-        <button mat-flat-button color="primary" class="btn" (click)="countrySelect()">
+        <button
+          mat-flat-button
+          color="primary"
+          class="btn"
+          (click)="applyFilter(selectedCountry.value)"
+        >
           <mat-icon>search</mat-icon>
         </button>
       </div>
@@ -29,9 +34,9 @@
 
   <div fxFlex="100">
     <div fxFlex="60" fxLayout="row wrap" fxLayoutAlign="start" fxLayoutGap="5px grid">
-      <div fxFlex.lt-md="100%" fxFlex="50%" *ngFor="let item of partnerFilter">
-        <a [href]="item.url" target="_blank">
-          <img [src]="item.logo" width="250" height="125" />
+      <div fxFlex.lt-md="100%" fxFlex="50%" *ngFor="let partner of partners | async">
+        <a [href]="partner.url" target="_blank">
+          <img [src]="partner.logo" width="250" height="125" />
         </a>
       </div>
     </div>
