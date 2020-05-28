@@ -1,8 +1,9 @@
 import {Component, OnInit} from "@angular/core";
-import {Router} from "@angular/router";
+import {Router, ActivatedRoute} from "@angular/router";
 import {Observable} from "rxjs";
 import {Strategy} from "../../interfaces/strategy";
 import {IdentifyParams, PassportService} from "../../services/passport.service";
+import {tap, take, map} from "rxjs/operators";
 
 @Component({
   selector: "passport-identify",
@@ -15,13 +16,22 @@ export class IdentifyComponent implements OnInit {
 
   strategies: Observable<Strategy[]>;
 
-  constructor(public passport: PassportService, public router: Router) {}
+  constructor(
+    public passport: PassportService,
+    public router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {}
 
   ngOnInit() {
     this.strategies = this.passport.getStrategies();
-    if (this.passport.identified) {
-      this.router.navigate([""]);
-    }
+    this.activatedRoute.queryParams.pipe(take(1)).subscribe(params => {
+      if (params.token) {
+        this.passport.token = params.token;
+      }
+      if (this.passport.identified) {
+        this.router.navigate([""]);
+      }
+    });
   }
 
   identify(strategy?: Strategy) {
