@@ -12,7 +12,7 @@ export class ActionDispatcher extends EventEmitter {
     options: ActionOptions,
     headers: Object,
     document?: string
-  ): Promise<boolean | unknown[]> {
+  ): Promise<boolean | unknown[] | object> {
     return new Promise<boolean | unknown[]>((resolve, reject) => {
       const ak = actionKey(options.bucket, options.type);
       if (this.listeners(ak).length) {

@@ -2,17 +2,18 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, ObjectId} from "@spica-server/database";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {BucketModule} from ".";
 import {
-  OBJECT_ID,
   CREATED_AT,
-  UPDATED_AT,
-  OBJECTID_STRING
+  OBJECTID_STRING,
+  OBJECT_ID,
+  UPDATED_AT
 } from "@spica-server/core/schema/defaults";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {WsAdapter} from "@spica-server/core/websocket";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {BucketModule} from "./bucket.module";
 
 describe("Bucket acceptance", () => {
   let app: INestApplication;
@@ -53,11 +54,13 @@ describe("Bucket acceptance", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: false, history: false, realtime: false})
       ]
     }).compile();
     app = module.createNestApplication();
     req = module.get(Request);
+    app.useWebSocketAdapter(new WsAdapter(app));
     app.use(Middlewares.MergePatchJsonParser);
     await app.listen(req.socket);
   }, 120000);

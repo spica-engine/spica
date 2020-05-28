@@ -6,15 +6,16 @@ load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "realtime",
-    srcs = [
+    srcs = glob([
+        "src/*.ts",
         "index.ts",
-        "realtime.gateway.ts",
-        "realtime.module.ts",
-    ],
+    ]),
     module_name = "@spica-server/bucket/realtime",
     deps = [
         "//packages/database",
         "//packages/database/realtime",
+        "//stacks/api/bucket/hooks",
+        "//stacks/api/passport",
         "@npm//@nestjs/common",
         "@npm//@nestjs/websockets",
         "@npm//rxjs",

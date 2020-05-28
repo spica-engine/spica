@@ -8,13 +8,14 @@ import {readdirSync} from "fs";
 import {ApiKeyStrategy} from "./apikey.strategy";
 import {ApiKeyController} from "./apikey/apikey.controller";
 import {ApiKeyService} from "./apikey/apikey.service";
+import {AuthGuardService} from "./auth.guard";
 import {IdentityService} from "./identity";
 import {IdentityController} from "./identity/identity.controller";
 import {JwtStrategy} from "./jwt.strategy";
 import {PassportOptions, PASSPORT_OPTIONS} from "./options";
 import {PassportController} from "./passport.controller";
 import {PassportService} from "./passport.service";
-import {PolicyService} from "./policy";
+import {ActionGuardService, PolicyService} from "./policy";
 import {PolicyController} from "./policy/policy.controller";
 import {SamlService} from "./saml.service";
 import {provideSchemaResolver, SchemaResolver} from "./schema.resolver";
@@ -38,8 +39,17 @@ class PassportCoreModule {
         }),
         SchemaModule.forChild()
       ],
-      exports: [PolicyService, IdentityService, JwtModule, CorePassportModule],
+      exports: [
+        PolicyService,
+        IdentityService,
+        AuthGuardService,
+        ActionGuardService,
+        JwtModule,
+        CorePassportModule
+      ],
       providers: [
+        AuthGuardService,
+        ActionGuardService,
         {
           provide: PolicyService,
           useFactory: db => {

@@ -3,11 +3,13 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica-server/core";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
+import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {Function} from "@spica-server/function/src/interface";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
@@ -15,6 +17,7 @@ process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
 describe("Hooks Integration", () => {
   let app: INestApplication;
   let req: Request;
+  let wsc: Websocket;
   let module: TestingModule;
 
   let headers = {Authorization: "MY_SECRET_TOKEN"};
@@ -43,7 +46,8 @@ describe("Hooks Integration", () => {
         }),
         CoreTestingModule,
         DatabaseTestingModule.replicaSet(),
-        BucketModule.forRoot({hooks: true, history: false, realtime: false}),
+        PreferenceTestingModule,
+        BucketModule.forRoot({hooks: true, history: false, realtime: true}),
         FunctionModule.forRoot({
           path: os.tmpdir(),
           databaseName: undefined,
@@ -55,9 +59,11 @@ describe("Hooks Integration", () => {
       ]
     }).compile();
 
-    app = module.createNestApplication();
     req = module.get(Request);
+    wsc = module.get(Websocket);
 
+    app = module.createNestApplication();
+    app.useWebSocketAdapter(new WsAdapter(app));
     app.use(Middlewares.MergePatchJsonParser);
 
     await app.listen(req.socket);
@@ -126,6 +132,14 @@ describe("Hooks Integration", () => {
               },
               type: "bucket",
               active: true
+            },
+            stream: {
+              options: {
+                bucket: bucket._id,
+                type: "STREAM"
+              },
+              type: "bucket",
+              active: true
             }
           },
           env: {}
@@ -135,9 +149,7 @@ describe("Hooks Integration", () => {
       .then(res => res.body);
   }, 20000);
 
-  afterAll(async () => {
-    await app.close();
-  });
+  afterAll(() => app.close());
 
   beforeEach(async () => {
     await updateIndex(`
@@ -162,9 +174,7 @@ describe("Hooks Integration", () => {
       .then(res => res.body);
   });
 
-  afterEach(async () => {
-    await req.delete(`/bucket/${bucket._id}/data`, [user1._id, user2._id], headers);
-  });
+  afterEach(() => req.delete(`/bucket/${bucket._id}/data`, [user1._id, user2._id], headers));
 
   describe("GET", () => {
     it("should not change the behaviour of bucket-data endpoint", async () => {
@@ -268,7 +278,7 @@ describe("Hooks Integration", () => {
     });
 
     it("should allow to insert", async () => {
-      await updateIndex(`export const insert = (req) => true;`);
+      await updateIndex(`export const insert = () => true;`);
       const {body: user3} = await req.post(
         `/bucket/${bucket._id}/data`,
         {username: "user3", password: "password3", age: 36},
@@ -276,6 +286,74 @@ describe("Hooks Integration", () => {
       );
       expect(user3).toEqual({_id: "__skip__", username: "user3", password: "password3", age: 36});
       await req.delete(`/bucket/${bucket._id}/data/${user3._id}`, {}, headers);
+    });
+  });
+
+  describe("STREAM", () => {
+    it("should apply filter", async done => {
+      await updateIndex(`export const stream = () => ({username: "test"});`);
+      const ws = wsc.get(`/bucket/${bucket._id}/data`);
+      ws.onclose = done;
+      const message = jasmine.createSpy();
+      ws.onmessage = e => {
+        const data = JSON.parse(e.data as string);
+        console.log(data);
+        if (data.kind == 1) {
+          expect(message).not.toHaveBeenCalled();
+          ws.close();
+        } else {
+          message(data);
+        }
+      };
+    });
+
+    it("should not fail when an empty object returned", async done => {
+      await updateIndex(`export function stream(action) {
+        return {};
+      };`);
+      const ws = wsc.get(`/bucket/${bucket._id}/data`);
+      const message = jasmine.createSpy();
+      ws.onmessage = e => {
+        const data = JSON.parse(e.data as string);
+        message(data);
+        if (data.kind == 1) {
+          ws.close();
+        }
+      };
+      ws.onclose = () => {
+        expect(message.calls.allArgs().map(([a]) => a)).toEqual([
+          {kind: 0, document: user1},
+          {kind: 0, document: user2},
+          {kind: 1}
+        ]);
+        done();
+      };
+    });
+
+    it("should filter by incoming headers", async done => {
+      await updateIndex(`export function stream(action) {
+        return {username: action.headers.user};
+      };`);
+      const ws = wsc.get(`/bucket/${bucket._id}/data`, {
+        headers: {
+          user: user1.username
+        }
+      });
+      const message = jasmine.createSpy();
+      ws.onmessage = e => {
+        const data = JSON.parse(e.data as string);
+        message(data);
+        if (data.kind == 1) {
+          ws.close();
+        }
+      };
+      ws.onclose = () => {
+        expect(message.calls.allArgs().map(([a]) => a)).toEqual([
+          {kind: 0, document: user1},
+          {kind: 1}
+        ]);
+        done();
+      };
     });
   });
 });

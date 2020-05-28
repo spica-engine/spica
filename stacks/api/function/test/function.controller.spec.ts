@@ -46,7 +46,7 @@ describe("FunctionController", () => {
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
-    expect(result.message.message).toBe(
+    expect(result.message).toBe(
       "Multiple handlers on same bucket and event type are not supported."
     );
   });
@@ -77,7 +77,7 @@ describe("FunctionController", () => {
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
-    expect(result.message.message).toBe(
+    expect(result.message).toBe(
       "Multiple handlers on same bucket and event type are not supported."
     );
   });
@@ -105,7 +105,7 @@ describe("FunctionController", () => {
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
-    expect(result.message.message).toBe(
+    expect(result.message).toBe(
       "Multiple handlers on same bucket and event type are not supported."
     );
   });

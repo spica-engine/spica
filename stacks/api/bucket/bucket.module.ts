@@ -5,7 +5,6 @@ import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
-import {PreferenceModule} from "@spica-server/preference";
 import {PreferenceService} from "@spica-server/preference/services";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
@@ -21,8 +20,6 @@ const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
     const imports: (Type<any> | DynamicModule)[] = [
-      PreferenceModule,
-      RealtimeModule,
       SchemaModule.forChild({
         schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
       }),

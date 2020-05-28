@@ -12,6 +12,7 @@ ts_library(
     ]),
     module_name = "@spica-server/passport/testing",
     deps = [
+        "//stacks/api/passport",
         "@npm//@nestjs/common",
         "@npm//@nestjs/passport",
     ],
