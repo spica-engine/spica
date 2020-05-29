@@ -19,7 +19,7 @@
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
-        <mat-list-item (click)="toggle()">
+        <mat-list-item *ngIf="!(isHandset$ | async)" (click)="toggle()">
           <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
       </mat-nav-list>
