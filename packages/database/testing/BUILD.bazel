@@ -7,6 +7,8 @@ ts_library(
     srcs = [
         "index.ts",
         "testing.module.ts",
+        "start.ts",
+        "worker.ts",
         "watch-shim.ts",
     ],
     module_name = "@spica-server/database/testing",
@@ -19,5 +21,9 @@ ts_library(
         "@npm//mongodb",
         "@npm//mongodb-memory-server-core",
         "@npm//which",
+        "@npm//get-port",
+        "@npm//cross-process-lock",
+        "@npm//lockfile",
+        "@npm//@types/lockfile"
     ],
 )

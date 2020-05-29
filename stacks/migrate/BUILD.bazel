@@ -1,0 +1,31 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
+
+
+ts_library(
+    name = "migrate",
+    srcs = glob([
+        "src/**/*.ts"
+    ]),
+    data = [
+        "src/migrations/index.json"
+    ],
+    deps = [
+        "@npm//semver",
+        "@npm//mongodb",
+        "@npm//cli-color",
+        "@npm//@types/mongodb",
+        "@npm//@types/semver",
+        "@npm//@types/node",
+        "@npm//@types/yargs",
+        "@npm//yargs",
+    ],
+)
+
+nodejs_binary(
+    name = "bin",
+    data = [":migrate"],
+    entry_point = "//stacks/migrate:src/main.ts",
+)
