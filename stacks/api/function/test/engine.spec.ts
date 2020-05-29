@@ -26,7 +26,8 @@ describe("engine", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           poolSize: 10,
-          publicUrl: undefined
+          publicUrl: undefined,
+          timeout: 60000
         }),
         DatabaseTestingModule.replicaSet()
       ]

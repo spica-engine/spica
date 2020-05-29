@@ -100,6 +100,11 @@ const args = yargs
       number: true,
       description: "Number of worker processes to fork at start up.",
       default: 10
+    },
+    "function-timeout": {
+      number: true,
+      description: "Amount of time in milliseconds that has to elapse before aborting a function.",
+      default: 60000
     }
   })
   /* Common Options */
@@ -163,7 +168,8 @@ const modules = [
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
-    publicUrl: args["public-url"]
+    publicUrl: args["public-url"],
+    timeout: args["function-timeout"]
   })
 ];
 
