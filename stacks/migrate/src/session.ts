@@ -1,3 +1,4 @@
+// @prettier-ignore
 import type * as mongodb from "mongodb";
 
 let _session: mongodb.ClientSession;

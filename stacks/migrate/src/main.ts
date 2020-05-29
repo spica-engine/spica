@@ -3,7 +3,7 @@ require("./session");
 // Keep as is. We need to evaluate this script before any other script
 import * as semver from "semver";
 import * as yargs from "yargs";
-import { migrate } from "./migrate";
+import {migrate} from "./migrate";
 
 const args = yargs
   .option("from", {

@@ -3,23 +3,22 @@ package(default_visibility = ["//visibility:public"])
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
 
-
 ts_library(
     name = "migrate",
     srcs = glob([
-        "src/**/*.ts"
+        "src/**/*.ts",
     ]),
     data = [
-        "src/migrations/index.json"
+        "src/migrations/index.json",
     ],
     deps = [
-        "@npm//semver",
-        "@npm//mongodb",
-        "@npm//cli-color",
         "@npm//@types/mongodb",
-        "@npm//@types/semver",
         "@npm//@types/node",
+        "@npm//@types/semver",
         "@npm//@types/yargs",
+        "@npm//cli-color",
+        "@npm//mongodb",
+        "@npm//semver",
         "@npm//yargs",
     ],
 )
