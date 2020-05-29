@@ -27,7 +27,8 @@ export class FunctionModule {
           databaseReplicaSet: options.databaseReplicaSet,
           databaseUri: options.databaseUri,
           poolSize: options.poolSize,
-          publicUrl: options.publicUrl
+          publicUrl: options.publicUrl,
+          timeout: options.timeout
         })
       ],
       controllers: [LogController, FunctionController],

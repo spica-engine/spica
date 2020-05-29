@@ -115,6 +115,10 @@ export class Horizon implements OnModuleInit {
     worker.attach(stdout, stderr);
 
     this.pool.delete(workerId);
+
+    setTimeout(() => {
+      worker.kill();
+    }, this.options.timeout);
   }
 
   /**

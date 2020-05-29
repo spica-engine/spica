@@ -61,6 +61,10 @@ class NodeWorker extends Worker {
     this._process.stdout.pipe(stdout);
     this._process.stderr.pipe(new FilterExperimentalWarnings()).pipe(stderr);
   }
+
+  kill() {
+    this._process.kill("SIGKILL");
+  }
 }
 
 export class Node extends Runtime {
