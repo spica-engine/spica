@@ -107,6 +107,7 @@
           <span
             class="input-placer-area"
             [inputSchemaPlacer]="propertyKv.value.type"
+            [forbiddenTypes]="['relation']"
             [(ngModel)]="preferences.identity.attributes.properties[propertyKv.key]"
           >
           </span>
