@@ -5,11 +5,11 @@ import * as path from "path";
 import * as semver from "semver";
 import {setSession} from "./session";
 
-export type MigrationIndex = {
+export type MigrationManifest = {
   [k: string]: string[];
 };
 
-export function loadMigrations(): MigrationIndex {
+export function loadMigrations(): MigrationManifest {
   const index =
     (fs.existsSync("./migrations/index.json") ? "." : __dirname) + "/migrations/index.json";
   return JSON.parse(fs.readFileSync(index).toString());

@@ -17,14 +17,13 @@ export class DatabaseTestingModule implements OnModuleDestroy {
       providers: [
         {
           provide: MongoMemoryServer,
-          useFactory: async () => {
-            return new MongoMemoryServer({
+          useFactory: async () =>
+            new MongoMemoryServer({
               binary: {
                 // @ts-ignore
                 systemBinary: MONGOD_PATH
               }
-            });
-          }
+            })
         },
         {
           provide: MongoClient,
