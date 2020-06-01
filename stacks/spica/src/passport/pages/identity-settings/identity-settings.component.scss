@@ -1,4 +1,35 @@
-::ng-deep {
+:host {
+  mat-list-item.property {
+    text-align: center;
+    mat-form-field {
+      margin-top: 20px;
+    }
+    mat-form-field input {
+      text-transform: lowercase;
+    }
+  }
+
+  mat-expansion-panel {
+    box-shadow: none;
+    margin-top: 10px;
+    .input-placer-area {
+      display: flex;
+    }
+    mat-panel-title {
+      mat-icon {
+        margin-right: 10px;
+      }
+    }
+  }
+
+  mat-card > p {
+    font-size: 13px;
+  }
+
+  mat-card-content {
+    margin-bottom: 0px;
+  }
+
   mat-expansion-panel.identity-settings {
     mat-panel-title {
       padding-top: 10px;
@@ -39,56 +70,6 @@
       cursor: move;
       flex: unset;
       padding-top: 2px;
-    }
-  }
-}
-:host {
-  mat-list-item.property {
-    text-align: center;
-    mat-form-field {
-      margin-top: 20px;
-    }
-    mat-form-field input {
-      text-transform: lowercase;
-    }
-  }
-
-  mat-expansion-panel {
-    box-shadow: none;
-    margin-top: 10px;
-    .input-placer-area {
-      display: flex;
-    }
-    mat-panel-title {
-      mat-icon {
-        margin-right: 10px;
-      }
-    }
-  }
-
-  ::ng-deep {
-    mat-card-content {
-      margin-bottom: 0px;
-      mat-divider {
-        position: relative !important;
-        width: 100% !important;
-      }
-      mat-list {
-        .mat-list-item {
-          height: auto;
-          padding-top: 34px;
-          padding-bottom: 10px;
-          .mat-list-item-content {
-            display: contents;
-            mat-form-field {
-              margin-left: 10px;
-            }
-            .title-description-form {
-              display: flex;
-            }
-          }
-        }
-      }
     }
   }
 }
