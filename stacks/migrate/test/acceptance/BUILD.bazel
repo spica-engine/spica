@@ -6,16 +6,20 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 ts_library(
     name = "test_lib",
     testonly = True,
-    srcs = glob(["*.spec.ts"]),
+    srcs = glob(["**/*.ts"]),
     deps = [
+        "//packages/database/testing",
         "//stacks/migrate",
         "@npm//@types/jasmine",
         "@npm//@types/node",
+        "@npm//cli-color",
         "@npm//rimraf",
     ],
 )
 
 jasmine_node_test(
     name = "test",
-    srcs = [":test_lib"],
+    srcs = [
+        ":test_lib",
+    ],
 )

@@ -5,10 +5,14 @@ import * as path from "path";
 import * as semver from "semver";
 import {setSession} from "./session";
 
-export function loadMigrations(): {
+export type MigrationIndex = {
   [k: string]: string[];
-} {
-  return JSON.parse(fs.readFileSync("./migrations/index.json").toString());
+};
+
+export function loadMigrations(): MigrationIndex {
+  const index =
+    (fs.existsSync("./migrations/index.json") ? "." : __dirname) + "/migrations/index.json";
+  return JSON.parse(fs.readFileSync(index).toString());
 }
 
 export function migrationVersions(from: string, to: string): string[] {
@@ -19,8 +23,10 @@ export function migrationVersions(from: string, to: string): string[] {
     });
 }
 
-function getMigrations(version: string): string[] {
-  return loadMigrations()[version].map(script => path.join("migrations", script));
+export function getMigrations(version: string): string[] {
+  return loadMigrations()[version].map(script =>
+    path.isAbsolute(script) ? script : path.join("migrations", script)
+  );
 }
 
 export async function migrate(options: Options) {
@@ -35,24 +41,30 @@ export async function migrate(options: Options) {
 
   const ctx: Context = {
     database: db,
-    console: new console.Console(process.stdout, process.stderr)
+    console: options.console
   };
 
   const session = mongo.startSession();
-  setSession(session);
   session.startTransaction();
+  setSession(session);
+
+  let error: Error;
 
   for (const version of versions) {
     ctx.console.info(`${color.yellow("VERSION:")} ${version}`);
     for (const script of getMigrations(version)) {
       ctx.console.log(`${color.green("APPLYING:")} ${script}`);
       try {
-        const module = await import(path.join(__dirname, script));
+        const module = await import(
+          path.isAbsolute(script) ? script : path.join(__dirname, script)
+        );
         await module.default(ctx);
         ctx.console.log(`${color.green("SUCCESS:")} ${script}`);
       } catch (e) {
         ctx.console.error(`${color.red("FAILED:")} ${script}`);
         ctx.console.error(e);
+        error = e;
+
         await session.abortTransaction();
         break; // do not go futher
       }
@@ -63,7 +75,9 @@ export async function migrate(options: Options) {
       await session.commitTransaction();
       ctx.console.info(color.green("Migration was successful."));
     } else {
-      ctx.console.info(color.blue("Migration was successful but option --dry-run was given."));
+      ctx.console.info(
+        color.blue("Migration was successful but no changes were made due to --dry-run flag.")
+      );
       await session.abortTransaction();
     }
   } else {
@@ -71,12 +85,18 @@ export async function migrate(options: Options) {
   }
   session.endSession();
   await mongo.close();
+  setSession(undefined);
+
+  if (error) {
+    return Promise.reject(error);
+  }
 }
 
 export interface Options {
   from: string;
   to: string;
-  dryRun: boolean;
+  dryRun?: boolean;
+  console: typeof console;
   database: {
     uri: string;
     name: string;

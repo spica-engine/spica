@@ -1,4 +1,5 @@
 import * as mongodb from "mongodb";
+import * as operation from "mongodb/lib/operations/operation";
 
 let _session: mongodb.ClientSession;
 
@@ -9,14 +10,20 @@ export function setSession(session: mongodb.ClientSession) {
   _session = session;
 }
 
-const op = require("mongodb/lib/operations/operation");
-const OperationBase = op.OperationBase;
-op.OperationBase = class extends OperationBase {
-  constructor(options) {
-    super(options);
-    this.options = Object.assign({}, options);
-    if (!this.options.session) {
-      this.options.session = getSession();
+Object.defineProperty(operation.OperationBase.prototype, "_options", {
+  writable: true
+});
+
+Object.defineProperty(operation.OperationBase.prototype, "options", {
+  enumerable: true,
+  configurable: false,
+  set: function(options) {
+    this._options = Object.assign({}, options);
+    if (!this._options.session) {
+      this._options.session = getSession();
     }
+  },
+  get: function() {
+    return this._options;
   }
-};
+});
