@@ -5,6 +5,10 @@
     .space-between {
       flex: 1 1 auto;
     }
+    mat-toolbar-row p {
+      font-size: 12px;
+      margin: 0px 0px 0px 5px;
+    }
     h4 {
       mat-icon,
       span {
@@ -13,29 +17,6 @@
       }
     }
   }
-  mat-toolbar-row:last-of-type {
-    height: auto;
-    nav[mat-tab-nav-bar] {
-      width: 100%;
-      .mat-tab-header-pagination {
-        box-shadow: unset;
-        .mat-tab-header-pagination-chevron {
-          border-color: var(--primary-50);
-        }
-        &.mat-tab-header-pagination-disabled .mat-tab-header-pagination-chevron {
-          border-color: var(--primary-700);
-        }
-      }
-    }
-    .mat-tab-link {
-      color: inherit;
-      mat-icon {
-        vertical-align: middle;
-        margin-right: 2px;
-      }
-    }
-  }
-
   mat-card:first-of-type {
     margin: 30px;
     overflow: hidden;
