@@ -8,6 +8,9 @@
 </ng-template>
 <mat-card class="mat-elevation-z25" *ngIf="preferences">
   <h4>Identity Custom Properties</h4>
+  <p>
+    Add custom properties to store additional data on Identities
+  </p>
   <mat-card-content>
     <mat-list-item>
       <mat-accordion #propertyStepper cdkDropList (cdkDropListDropped)="cardDrop($event)">
