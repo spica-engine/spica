@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   namespace: infrastructure-master-spicaengine-com
@@ -6,6 +6,9 @@ metadata:
 spec:
   serviceName: mongo
   replicas: 3
+  selector:
+    matchLabels:
+        app: database
   template:
     metadata:
       labels:
@@ -60,7 +63,7 @@ spec:
   selector:
     app: database
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   namespace: infrastructure-master-spicaengine-com
@@ -68,6 +71,9 @@ metadata:
 spec:
   serviceName: spica
   replicas: 1
+  selector:
+    matchLabels:
+        app: spica
   template:
     metadata:
       labels:
