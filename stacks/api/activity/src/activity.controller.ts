@@ -51,6 +51,8 @@ export class ActivityController {
       }
     ];
 
+    aggregation.push({$sort: {_id: -1}});
+
     let filter: FilterQuery<Activity> = {};
 
     if (identifier) filter.identifier = identifier;
@@ -77,8 +79,6 @@ export class ActivityController {
     if (skip) aggregation.push({$skip: skip});
 
     if (limit) aggregation.push({$limit: limit});
-
-    aggregation.push({$sort: {_id: -1}});
 
     return this.activityService.aggregate(aggregation).toArray();
   }
