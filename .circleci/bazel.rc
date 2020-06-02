@@ -32,3 +32,7 @@ test --test_output=errors
 
 # Cache tests under CI
 test --cache_test_results
+
+
+# Do not run in worker mode
+build --strategy=TypeScriptCompile=standalone
