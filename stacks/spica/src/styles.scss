@@ -63,9 +63,13 @@ body {
   box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
 }
 
+.mat-card-actions {
+  margin: 0px !important;
+  padding: 0px !important;
+}
+
 .mat-form-field {
   padding-top: 1em !important;
-  margin: 0px 5px;
   &.mat-focused {
     .mat-form-field-infix {
       box-shadow: 3px 3px 5px var(--foreground-base-rgb) !important;
