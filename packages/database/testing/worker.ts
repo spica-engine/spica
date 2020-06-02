@@ -1,16 +1,10 @@
 import * as fs from "fs";
 import {MongoMemoryReplSet} from "mongodb-memory-server-core";
 import * as which from "which";
+
 const MONGOD_PATH: string = which.sync("mongod");
 
-fs.writeFileSync(process.env.WORKER_PID_FILE, process.pid);
-
-let timeout = setTimeout(() => process.exit(0), 200000);
-
-fs.watchFile(process.env.WORKER_TEST_PID_FILE, () => {
-  clearTimeout(timeout);
-  timeout = setTimeout(() => process.exit(0), 20000);
-});
+fs.promises.writeFile(process.env.WORKER_PID_FILE, process.pid);
 
 const replSet = new MongoMemoryReplSet({
   binary: {
@@ -18,7 +12,7 @@ const replSet = new MongoMemoryReplSet({
     systemBinary: MONGOD_PATH
   },
   replSet: {count: 1},
-  instanceOpts: [{storageEngine: "wiredTiger"}]
+  instanceOpts: [{storageEngine: "wiredTiger", port: 27020}]
 });
 
 replSet
@@ -29,9 +23,17 @@ replSet
     fs.writeFileSync(process.env.WORKER_CONNECTION_URI_FILE, connectionString);
   });
 
+const INTERVAL = 20000;
+
+let timeout = setTimeout(() => process.exit(0), INTERVAL);
+
+fs.watchFile(process.env.WORKER_TEST_PID_FILE, () => {
+  clearTimeout(timeout);
+  timeout = setTimeout(() => process.exit(0), INTERVAL);
+});
+
 process.once("exit", () => {
-  replSet.stop();
+  fs.unlinkSync(process.env.WORKER_CONNECTION_URI_FILE);
   fs.unlinkSync(process.env.WORKER_PID_FILE);
   fs.unlinkSync(process.env.WORKER_TEST_PID_FILE);
-  fs.unlinkSync(process.env.WORKER_CONNECTION_URI_FILE);
 });

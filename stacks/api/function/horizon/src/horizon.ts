@@ -1,4 +1,4 @@
-import {Inject, Injectable, OnModuleInit, Optional} from "@nestjs/common";
+import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {
@@ -21,7 +21,7 @@ import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {HorizonOptions, HORIZON_OPTIONS} from "./options";
 
 @Injectable()
-export class Horizon implements OnModuleInit {
+export class Horizon implements OnModuleInit, OnModuleDestroy {
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
@@ -59,6 +59,10 @@ export class Horizon implements OnModuleInit {
 
     this.firehoseQueue = new FirehoseQueue();
     this.queue.addQueue(this.firehoseQueue);
+  }
+
+  onModuleDestroy() {
+    return this.queue.kill();
   }
 
   onModuleInit() {

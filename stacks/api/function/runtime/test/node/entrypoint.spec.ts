@@ -6,7 +6,8 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as os from "os";
 import {PassThrough, Writable} from "stream";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4546";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24075";
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("Entrypoint", () => {
   let queue: EventQueue;

@@ -6,7 +6,8 @@ import {Event} from "@spica-server/function/queue/proto";
 import {Worker} from "@spica-server/function/runtime";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7510";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7910";
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 const spyScheduler = jasmine
   .createSpy("schedulerSpy")

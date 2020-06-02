@@ -61,9 +61,9 @@ export class DatabaseTestingModule implements OnModuleDestroy {
     };
   }
 
-  async onModuleDestroy() {
+  onModuleDestroy() {
     if (this.server) {
-      await this.server.stop().catch(console.log);
+      this.server.stop();
     }
   }
 }
