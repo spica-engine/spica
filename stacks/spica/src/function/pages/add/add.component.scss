@@ -29,9 +29,6 @@
     margin-top: -110px;
     // For proper border radius
     overflow: hidden;
-    mat-card-content {
-      padding: 0px 8px;
-    }
     mat-card-header {
       mat-card-title > * {
         vertical-align: middle;
@@ -45,6 +42,16 @@
       }
 
       mat-list {
+        padding-top: 0px;
+        mat-list-item:not(:first-of-type) {
+          mat-form-field:not(:first-of-type) {
+            margin: 0px 5px !important;
+          }
+          mat-form-field:first-of-type {
+            margin-right: 5px !important;
+          }
+        }
+
         .mat-list-item {
           height: auto;
           .mat-list-item-content {

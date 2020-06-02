@@ -2,7 +2,8 @@
   mat-list-item.property {
     text-align: center;
     mat-form-field {
-      margin-top: 20px;
+      margin-top: 1em;
+      margin-right: 10px;
     }
     mat-form-field input {
       text-transform: lowercase;
@@ -14,11 +15,6 @@
     margin-top: 10px;
     .input-placer-area {
       display: flex;
-    }
-    mat-panel-title {
-      mat-icon {
-        margin-right: 10px;
-      }
     }
   }
 
@@ -46,7 +42,7 @@
         flex-shrink: 0;
         line-height: 0px;
         border-radius: 50%;
-        margin-right: 5px;
+        margin-right: 10px;
       }
     }
     .mat-subheader {
