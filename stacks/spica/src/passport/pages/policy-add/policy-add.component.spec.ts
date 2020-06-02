@@ -150,7 +150,7 @@ describe("Policy Add Component", () => {
         fixture.debugElement
           .query(
             By.css(
-              "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(1) mat-select"
+              "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(1) mat-select"
             )
           )
           .injector.get(NgModel).value
@@ -160,7 +160,7 @@ describe("Policy Add Component", () => {
         fixture.debugElement
           .query(
             By.css(
-              "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(2) mat-select"
+              "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(2) mat-select"
             )
           )
           .injector.get(NgModel).value
@@ -170,7 +170,7 @@ describe("Policy Add Component", () => {
         fixture.debugElement
           .query(
             By.css(
-              "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(3) mat-select"
+              "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(3) mat-select"
             )
           )
           .injector.get(NgModel).value
@@ -225,7 +225,7 @@ describe("Policy Add Component", () => {
     it("should change effect value from allow to deny of first policy", () => {
       const select = fixture.debugElement.query(
         By.css(
-          "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(1) mat-select"
+          "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(1) mat-select"
         )
       );
       select.nativeElement.click();
@@ -243,7 +243,7 @@ describe("Policy Add Component", () => {
       fixture.debugElement
         .query(
           By.css(
-            "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(2) mat-select"
+            "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(2) mat-select"
           )
         )
         .nativeElement.click();
@@ -264,7 +264,7 @@ describe("Policy Add Component", () => {
       fixture.debugElement
         .query(
           By.css(
-            "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(3) mat-select"
+            "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(3) mat-select"
           )
         )
         .nativeElement.click();
@@ -289,7 +289,7 @@ describe("Policy Add Component", () => {
     });
 
     it("should add resource to first statement", () => {
-      fixture.debugElement.query(By.css("div.resource:last-of-type button")).nativeElement.click();
+      fixture.debugElement.query(By.css("div.resource button:last-of-type")).nativeElement.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.policy.statement[0].resource).toEqual(["*", undefined]);

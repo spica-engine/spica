@@ -26,6 +26,16 @@ import {InputResolver} from "../input.resolver";
       :host {
         display: block;
       }
+    `,
+    `
+      :host > mat-form-field:not(:first-of-type) {
+        margin: 0px 5px !important;
+      }
+    `,
+    `
+      :host > mat-form-field:first-of-type {
+        margin-right: 5px !important;
+      }
     `
   ]
 })
