@@ -2,19 +2,29 @@
   mat-card {
     margin: 30px;
     overflow: hidden;
-    padding: 25px;
+    mat-card-content  {
+      > *:not(mat-form-field) {
+        margin-top: 1em;
+      }
+      > button {
+        margin-right: 10px;
+      }
+    }
   }
   mat-form-field {
     width: 100%;
   }
   .resource {
+    margin-bottom: 1em;
     padding-left: 30px;
-  }
-  .resource-input {
-    padding-left: 5px;
-  }
-
-  mat-expansion-panel {
-    margin-top: 10px;
+    width: 70%;
+    mat-form-field {
+      width: 80%;
+      margin-right: 10px;
+    }
+    > button:last-of-type {
+      margin-top: 1em;
+      display: block;
+    }
   }
 }
