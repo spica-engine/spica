@@ -1,41 +1,43 @@
 <mat-toolbar color="primary">
-  <h4 class="mat-h4 bucket-title">
-    <button
-      mat-icon-button
-      menu-icon
-      class="mat-elevation-z25"
-      matTooltip="You can select a icon by clicking here."
-      [matMenuTriggerFor]="iconSelector"
-    >
-      <mat-icon>{{ bucket?.icon }}</mat-icon>
-      <mat-menu #iconSelector="matMenu">
-        <ng-container matMenuContent>
-          <button
-            *ngFor="let icon of visibleIcons"
-            mat-icon-button
-            mat-flat-button
-            [matTooltip]="icon"
-            (click)="bucket.icon = icon"
-          >
-            <mat-icon>{{ icon }}</mat-icon>
-          </button>
-          <mat-paginator
-            (page)="
-              this.visibleIcons = this.icons.slice(
-                $event.pageIndex * $event.pageSize,
-                ($event.pageIndex + 1) * $event.pageSize
-              )
-            "
-            (click)="$event.stopPropagation()"
-            [length]="icons.length"
-            [pageSize]="iconPageSize"
-          >
-          </mat-paginator>
-        </ng-container>
-      </mat-menu>
-    </button>
-    <span>{{ bucket?.title }}</span>
-  </h4>
+  <span>
+    <h4 class="mat-h4 bucket-title">
+      <button
+        mat-icon-button
+        menu-icon
+        class="mat-elevation-z25"
+        matTooltip="You can select a icon by clicking here."
+        [matMenuTriggerFor]="iconSelector"
+      >
+        <mat-icon>{{ bucket?.icon }}</mat-icon>
+        <mat-menu #iconSelector="matMenu">
+          <ng-container matMenuContent>
+            <button
+              *ngFor="let icon of visibleIcons"
+              mat-icon-button
+              mat-flat-button
+              [matTooltip]="icon"
+              (click)="bucket.icon = icon"
+            >
+              <mat-icon>{{ icon }}</mat-icon>
+            </button>
+            <mat-paginator
+              (page)="
+                this.visibleIcons = this.icons.slice(
+                  $event.pageIndex * $event.pageSize,
+                  ($event.pageIndex + 1) * $event.pageSize
+                )
+              "
+              (click)="$event.stopPropagation()"
+              [length]="icons.length"
+              [pageSize]="iconPageSize"
+            >
+            </mat-paginator>
+          </ng-container>
+        </mat-menu>
+      </button>
+      <span>{{ bucket?.title }}</span>
+    </h4>
+  </span>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25" *ngIf="bucket" @smooth>
   <mat-card-content>

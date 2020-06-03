@@ -1,27 +1,25 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
-    <div>
-      <h4>
-        <mat-icon>layers</mat-icon>
-        <span>Identities</span>
-      </h4>
-      <p>
-        Add your team members to collaborate. Control who is authenticated and authorized to use
-        resources on Spica
-      </p>
-    </div>
-    <span class="space-between"></span>
-    <button mat-icon-button (click)="refresh$.next()">
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button
-      mat-icon-button
-      canInteract="passport:identity:create"
-      routerLink="/passport/identity/add"
-    >
-      <mat-icon>add</mat-icon>
-    </button>
-  </mat-toolbar-row>
+  <span>
+    <h4>
+      <mat-icon>account_circle</mat-icon>
+      <span>Identities</span>
+    </h4>
+    <h6>
+      Add your team members to collaborate. Control who is authenticated and authorized to use
+      resources on Spica
+    </h6>
+  </span>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="refresh$.next()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    canInteract="passport:identity:create"
+    routerLink="/passport/identity/add"
+  >
+    <mat-icon>add</mat-icon>
+  </button>
 </ng-template>
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
