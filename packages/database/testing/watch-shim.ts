@@ -50,7 +50,7 @@ function _poll(stream: ChangeStream) {
   const i = setInterval(() => {
     if (stream["cursor"] && stream["cursor"].cursorState.cursorId) {
       clearInterval(i);
-      stream.emit("ready", stream["cursor"].cursorState.cursorId.toString());
+      stream.emit("ready" as any, stream["cursor"].cursorState.cursorId.toString());
     }
   }, 1);
 }

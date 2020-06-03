@@ -50,6 +50,7 @@
     "error-stack-parser": "^2.0.2",
     "fast-glob": "^2.2.6",
     "get-port": "^5.0.0",
+    "semver": "^7.3.2",
     "google-protobuf": "^3.10.0",
     "grpc": "^1.24.2",
     "handlebars": "^4.7.6",
@@ -59,7 +60,7 @@
     "locale": "^0.1.0",
     "matcher": "^1.1.1",
     "mime-types": "^2.1.24",
-    "mongodb": "3.2.7",
+    "mongodb": "^3.5.8",
     "mongodb-memory-server-core": "^6.3.3",
     "multimatch": "^3.0.0",
     "nearest-color": "^0.4.4",
@@ -88,12 +89,12 @@
   },
   "devDependencies": {
     "@bazel/bazelisk": "^1.4.0",
-    "@bazel/buildifier": "^2.2.1",
-    "@bazel/hide-bazel-files": "^1.6.0",
-    "@bazel/ibazel": "^0.12.4",
-    "@bazel/jasmine": "^1.6.0",
-    "@bazel/rollup": "^1.6.0",
-    "@bazel/typescript": "^1.6.0",
+    "@bazel/buildifier": "^3.0.0",
+    "@bazel/hide-bazel-files": "^1.7.0",
+    "@bazel/ibazel": "^0.13.1",
+    "@bazel/jasmine": "^1.7.0",
+    "@bazel/rollup": "^1.7.0",
+    "@bazel/typescript": "^1.7.0",
     "@nestjs/testing": "^7.0.13",
     "@types/archiver": "^3.0.0",
     "@types/css-tree": "^1.0.0",
@@ -109,6 +110,7 @@
     "@types/node": "^12.0.10",
     "@types/saml2-js": "^1.6.7",
     "@types/ws": "^6.0.3",
+    "@types/semver": "^7.2.0",
     "conventional-changelog-cli": "^2.0.21",
     "dgeni": "^0.4.12",
     "dgeni-packages": "^0.27.3",
@@ -123,6 +125,7 @@
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^5.2.0",
-    "which": "^2.0.2"
+    "which": "^2.0.2",
+    "lockfile": "^1.0.4"
   }
 }
