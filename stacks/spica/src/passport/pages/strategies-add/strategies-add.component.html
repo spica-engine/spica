@@ -1,6 +1,6 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
-    <h4 class="mat-h4">
+  <span>
+    <h4>
       <button
         mat-icon-button
         menu-icon
@@ -35,8 +35,8 @@
       </button>
       <span>{{ strategy.name || "Add Strategy" }}</span>
     </h4>
-    <span class="space-between"></span>
-  </mat-toolbar-row>
+  </span>
+  <span class="space-between"></span>
 </ng-template>
 <mat-card>
   <mat-card-content>
