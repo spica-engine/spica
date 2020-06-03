@@ -33,7 +33,12 @@ export async function start(topology: "standalone" | "replset") {
   inprogress = true;
 
   if (!WORKER_PWD) {
-    WORKER_PWD = path.join("/tmp", topology);
+    WORKER_PWD = path.join(
+      `${/(.*?)\/sandbox\//.exec(process.env.RUNFILES_DIR)[1]}/execroot/${
+        process.env.TEST_WORKSPACE
+      }/_tmp`,
+      topology
+    );
     fs.mkdirSync(WORKER_PWD, {recursive: true});
 
     WORKER_LOCK = path.join(WORKER_PWD, "worker.lock");
