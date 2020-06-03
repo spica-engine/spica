@@ -1,7 +1,5 @@
 :host {
   mat-card {
-    margin: 30px;
-    overflow: hidden;
     mat-card-content  {
       > *:not(mat-form-field) {
         margin-top: 1em;
