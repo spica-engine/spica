@@ -1,22 +1,20 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
-    <div>
-      <h4 class="mat-h4">
-        <mat-icon>layers</mat-icon>
-        <span>Policy List</span>
-      </h4>
-      <p>
-        A Policy is a collection of statements. A statement is an access level for an action.
-      </p>
-    </div>
-    <span class="space-between"></span>
-    <button mat-icon-button (click)="refresh$.next()">
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button mat-icon-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
-      <mat-icon>add</mat-icon>
-    </button>
-  </mat-toolbar-row>
+  <span>
+    <h4>
+      <mat-icon>layers</mat-icon>
+      <span>Policy List</span>
+    </h4>
+    <h6>
+      A Policy is a collection of statements. A statement is an access level for an action.
+    </h6>
+  </span>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="refresh$.next()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button mat-icon-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
+    <mat-icon>add</mat-icon>
+  </button>
 </ng-template>
 
 <mat-card class="mat-elevation-z25">

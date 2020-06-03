@@ -33,7 +33,9 @@
   --opacity: 0.5;
 
   mat-toolbar {
+    min-height: 250px;
     padding: 0 30px;
+    align-items: flex-start;
     .bucket-title {
       margin-left: -10px;
       display: flex;
@@ -58,6 +60,7 @@
 
   & > mat-card {
     margin: 30px;
+    margin-top: -110px;
 
     mat-list {
       > span {
