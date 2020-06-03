@@ -12,10 +12,6 @@
     }
   }
 
-  .mat-form-field {
-    margin: 5px 10px;
-  }
-
   .example-viewport {
     height: 500px;
     width: 100%;
@@ -27,9 +23,13 @@
     margin-top: -110px;
     // For proper border radius
     overflow: hidden;
-    div:first-of-type {
-      padding-top: 19px;
-      margin: 0px 24px;
+
+    > *:first-child {
+      margin-right: 5px;
+    }
+
+    > *:not(:first-child):not(mat-card-content) {
+      margin: 0px 5px;
     }
   }
 
@@ -60,17 +60,31 @@
           text-align: right;
         }
       }
+
+      ::ng-deep .mat-expansion-panel {
+        box-shadow: none;
+        border-bottom: 1px solid #efefef !important;
+      }
+
       .mat-expansion-panel  {
+        .mat-expansion-panel-header {
+          min-height: 64px !important;
+          height: auto !important;
+        }
         .mat-expansion-panel-header span {
           width: 20%;
           text-align: center;
-          word-wrap: break-word;
+          word-break: break-word;
+          align-self: center;
+          margin: 10px 5px;
         }
         .mat-expansion-panel-header span:first-child {
           text-align: left;
+          margin: 10px 5px 10px 0px;
         }
         .mat-expansion-panel-header span:last-child {
           text-align: right;
+          margin: 10px 0px 10px 5px;
         }
       }
 
