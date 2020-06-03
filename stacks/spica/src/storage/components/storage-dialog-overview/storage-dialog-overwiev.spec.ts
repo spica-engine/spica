@@ -1,23 +1,26 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
-import {MatDialogRef, MatIconModule, MAT_DIALOG_DATA} from "@angular/material";
-import {By} from "@angular/platform-browser";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {MatIconModule, MAT_DIALOG_DATA} from "@angular/material";
 import {StorageViewComponent} from "../storage-view/storage-view.component";
 import {StorageDialogOverviewDialog} from "./storage-dialog-overview";
+import {Component, Input} from "@angular/core";
+import {By} from "@angular/platform-browser";
+
+@Component({
+  selector: "storage-view",
+  template: ""
+})
+class StorageViewCmp {
+  @Input() blob: string | Blob | Storage;
+}
 
 describe("StorageDialogOverview", () => {
   let fixture: ComponentFixture<StorageDialogOverviewDialog>;
-  let observeSpy;
   beforeEach(() => {
-    observeSpy = {close: null};
     TestBed.configureTestingModule({
       imports: [MatIconModule, HttpClientTestingModule],
-      declarations: [StorageDialogOverviewDialog, StorageViewComponent],
+      declarations: [StorageDialogOverviewDialog, StorageViewCmp],
       providers: [
-        {
-          provide: MatDialogRef,
-          useValue: observeSpy
-        },
         {
           provide: MAT_DIALOG_DATA,
           useValue: "test"
@@ -29,13 +32,9 @@ describe("StorageDialogOverview", () => {
     fixture.detectChanges();
   });
 
-  it("Should be seen item, button close working", fakeAsync(() => {
-    expect(document.querySelector("storage-view")).toBeTruthy();
-    const spy = spyOn(fixture.componentInstance["dialogRef"], "close");
-    const button = fixture.debugElement.query(By.css("button"));
-    button.nativeElement.click();
-    tick();
-    fixture.detectChanges();
-    expect(spy).toHaveBeenCalledTimes(1);
-  }));
+  it("should pass the MAT_DIALOG_DATA to the component", () => {
+    expect(fixture.debugElement.query(By.directive(StorageViewCmp)).componentInstance.blob).toEqual(
+      "test"
+    );
+  });
 });
