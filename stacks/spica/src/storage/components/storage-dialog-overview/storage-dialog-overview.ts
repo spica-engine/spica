@@ -8,12 +8,5 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 })
 // tslint:disable-next-line:component-class-suffix
 export class StorageDialogOverviewDialog {
-  constructor(
-    public dialogRef: MatDialogRef<StorageDialogOverviewDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: any
-  ) {}
-
-  onNoClick(): void {
-    this.dialogRef.close();
-  }
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {}
 }

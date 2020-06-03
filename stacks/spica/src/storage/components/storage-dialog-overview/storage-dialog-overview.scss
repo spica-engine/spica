@@ -16,19 +16,4 @@
       }
     }
   }
-  .close-window {
-    display: table;
-    position: absolute;
-    top: 0;
-    right: 0;
-    button {
-      color: #f44336;
-      width: 26px;
-      height: 26px;
-      line-height: 26px;
-      .mat-icon {
-        font-size: 22px;
-      }
-    }
-  }
 }
