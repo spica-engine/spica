@@ -4,6 +4,8 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as fs from "fs";
 import * as path from "path";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 describe("Node", () => {
   let node: Node;
 

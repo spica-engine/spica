@@ -6,11 +6,6 @@ query --output=label_kind
 common --experimental_allow_incremental_repository_updates
 
 
-# Make TypeScript compilation fast, by keeping a few
-# copies of the compiler running as daemons, and cache SourceFile
-# ASTs to reduce parse time.
-build --strategy=TypeScriptCompile=standalone
-
 # Turn off legacy external runfiles
 build --nolegacy_external_runfiles
 run --nolegacy_external_runfiles

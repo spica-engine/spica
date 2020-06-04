@@ -64,15 +64,13 @@ describe("Webhook Invoker", () => {
     const subsequentStream = await stream.wait();
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
     expect(subscribeSpy).toHaveBeenCalledWith(_id.toHexString(), hook);
-    expect(subsequentStream).toEqual([
-      "stream_coll",
-      [
-        {
-          $match: {operationType: "insert"}
-        }
-      ],
-      {fullDocument: "updateLookup"}
+    expect(subsequentStream[0]).toBe("stream_coll");
+    expect(subsequentStream[1]).toEqual([
+      {
+        $match: {operationType: "insert"}
+      }
     ]);
+    expect(subsequentStream[2]["fullDocument"]).toBe("updateLookup");
   });
 
   it("should unsubscribe after the webhook has deleted", async () => {
