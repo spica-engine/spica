@@ -10,7 +10,7 @@ import {Function} from "../../interface";
 })
 export class IndexComponent implements OnInit {
   public $data: Observable<Function[]>;
-  public displayedColumns = ["_id", "name", "description", "info", "actions"];
+  public displayedColumns = ["_id", "name", "description", "actions"];
 
   constructor(private functionService: FunctionService) {}
 
