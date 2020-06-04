@@ -11,7 +11,6 @@ ts_library(
         "pipes.ts",
     ],
     module_name = "@spica-server/core",
-    tsconfig = "//:tsconfig.json",
     deps = [
         "@npm//@nestjs/common",
         "@npm//@types/body-parser",
