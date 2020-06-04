@@ -14,26 +14,42 @@
       }
     }
   }
-  mat-header-cell.action,
-  mat-cell.action {
-    max-width: 150px;
-    justify-content: flex-end;
-  }
 
   mat-card {
     margin: 30px;
     margin-top: -110px;
     overflow: hidden;
+  }
 
-    mat-card-content {
-      mat-table {
-        mat-header-cell.info,
-        mat-cell.info,
-        mat-header-cell.name,
-        mat-cell.name {
-          justify-content: center;
-        }
-      }
-    }
+  mat-header-cell:first-of-type,
+  mat-cell:first-of-type {
+    word-break: break-all;
+    flex: 1.5;
+    justify-content: flex-start;
+    margin: 10px 5px 10px 0px;
+  }
+
+  mat-header-cell:nth-child(2),
+  mat-cell:nth-child(2) {
+    word-break: break-word;
+    flex: 2;
+    justify-content: center;
+    margin: 10px 5px;
+  }
+
+  mat-header-cell:nth-child(3),
+  mat-cell:nth-child(3) {
+    word-break: break-word;
+    flex: 3;
+    justify-content: center;
+    margin: 10px 5px;
+  }
+
+  mat-header-cell:last-of-type,
+  mat-cell:last-of-type {
+    min-width: 150px;
+    flex: 1;
+    justify-content: flex-end;
+    margin: 10px 0px 10px 5px;
   }
 }
