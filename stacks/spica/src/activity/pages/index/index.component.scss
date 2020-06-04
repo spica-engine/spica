@@ -15,8 +15,12 @@
     margin: 30px;
     margin-top: -110px;
     width: 95%;
-    > span {
-      margin-left: 1em;
+    > *:first-child {
+      margin-right: 5px;
+    }
+
+    > *:not(:first-child):not(mat-card-content) {
+      margin: 0px 5px;
     }
 
     .mat-card-content {

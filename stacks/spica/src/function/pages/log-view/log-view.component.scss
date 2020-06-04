@@ -18,9 +18,12 @@
     margin-top: -110px;
     padding: 24px;
 
-    mat-form-field:not(:first-of-type) {
-      margin-left: 10px;
-      margin-top: 10px;
+    > *:first-child {
+      margin-right: 5px;
+    }
+
+    > *:not(:first-child):not(mat-table) {
+      margin: 0px 10px;
     }
 
     mat-table {

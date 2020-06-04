@@ -1,0 +1,21 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = glob(["*.spec.ts"]),
+    deps = [
+        "//stacks/migrate",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+        "@npm//rimraf",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)
