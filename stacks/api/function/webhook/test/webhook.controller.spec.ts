@@ -7,6 +7,8 @@ import {WebhookService} from "@spica-server/function/webhook";
 import {SchemaResolver} from "@spica-server/function/webhook/src/schema";
 import {WebhookController} from "@spica-server/function/webhook/src/webhook.controller";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
+import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
@@ -24,7 +26,7 @@ describe("Webhook Controller", () => {
         SchemaModule.forChild()
       ],
       controllers: [WebhookController],
-      providers: [WebhookService, SchemaResolver]
+      providers: [WebhookService, SchemaResolver, WebhookInvoker, WebhookLogService]
     }).compile();
     req = module.get(Request);
     app = module.createNestApplication();
@@ -197,6 +199,56 @@ describe("Webhook Controller", () => {
         .catch(e => e);
       expect(validationErrors.error).toBe(" should have required property 'body'");
       expect(validationErrors.statusCode).toBe(400);
+    });
+
+    it("should report if compilation failed for insert", async () => {
+      const {body: validationErrors} = await req
+        .post("/webhook", {
+          url: "https://spica.internal",
+          body: "{{invali_body}",
+          trigger: {
+            name: "database",
+            options: {
+              collection: "coll1",
+              type: "INSERT"
+            }
+          }
+        })
+        .catch(e => e);
+      expect(validationErrors.error).toBe("Bad Request");
+      expect(validationErrors.statusCode).toBe(400);
+      expect(validationErrors.message.startsWith("Error: Parse error")).toEqual(true);
+    });
+
+    it("should report if compilation failed for update", async () => {
+      const {body: webhook} = await req.post("/webhook", {
+        url: "https://spica.internal",
+        body: "{}",
+        trigger: {
+          name: "database",
+          options: {
+            collection: "coll1",
+            type: "INSERT"
+          }
+        }
+      });
+
+      const {body: validationErrors} = await req
+        .put(`/webhook/${webhook._id}`, {
+          url: "https://spica.internal",
+          body: "{{invali_body}",
+          trigger: {
+            name: "database",
+            options: {
+              collection: "coll1",
+              type: "INSERT"
+            }
+          }
+        })
+        .catch(e => e);
+      expect(validationErrors.error).toBe("Bad Request");
+      expect(validationErrors.statusCode).toBe(400);
+      expect(validationErrors.message.startsWith("Error: Parse error")).toEqual(true);
     });
   });
 });

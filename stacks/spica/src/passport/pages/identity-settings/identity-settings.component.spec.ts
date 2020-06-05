@@ -1,4 +1,4 @@
-import {TestBed, ComponentFixture, tick, fakeAsync, flushMicrotasks} from "@angular/core/testing";
+import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
 import {IdentitySettingsComponent} from "./identity-settings.component";
 import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
 import {of} from "rxjs";
