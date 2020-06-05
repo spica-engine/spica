@@ -1,4 +1,4 @@
-import {TestBed, ComponentFixture, tick, fakeAsync, flushMicrotasks} from "@angular/core/testing";
+import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
 import {PolicyAddComponent} from "./policy-add.component";
 import {PolicyService} from "../../services/policy.service";
 import {of} from "rxjs";

@@ -15,7 +15,7 @@ import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {InputModule} from "@spica-client/common";
-import {MatAwareDialogModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
 import {PassportModule} from "@spica-client/passport";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {EditorComponent} from "./components/editor/editor.component";
@@ -48,7 +48,8 @@ import {WebhookRoutingModule} from "./webhook-routing.module";
     SatNativeDateModule,
     MatProgressSpinnerModule,
     ScrollingModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatSaveModule
   ],
   declarations: [
     WebhookAddComponent,

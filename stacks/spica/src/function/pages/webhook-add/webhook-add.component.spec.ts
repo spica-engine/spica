@@ -21,6 +21,8 @@ import {HandlebarsLanguageDirective} from "../../components/editor/handlebars.la
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 import {WebhookAddComponent} from "./webhook-add.component";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatSaveModule} from "@spica-client/material";
 
 @Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {
@@ -57,7 +59,9 @@ describe("Webhook", () => {
         MatSlideToggleModule,
         NoopAnimationsModule,
         LayoutModule,
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        MatProgressSpinnerModule,
+        MatSaveModule
       ],
       declarations: [
         WebhookAddComponent,
@@ -112,7 +116,7 @@ describe("Webhook", () => {
       expect(addButton.nativeElement.disabled).toEqual(false);
     }));
 
-    it("should insert webhook and navigate to the webhook-index page", fakeAsync(() => {
+    it("should insert webhook and navigate to the webhook page", fakeAsync(() => {
       fixture.componentInstance.webhook = {
         url: "http://www.test.com",
         body: "",
@@ -120,10 +124,9 @@ describe("Webhook", () => {
       };
       fixture.detectChanges();
 
-      webhookService.add.and.returnValue(of(undefined));
+      webhookService.add.and.returnValue(of({...fixture.componentInstance.webhook, _id: "1"}));
       const addButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
       addButton.triggerEventHandler("click", {});
-      tick();
 
       expect(webhookService.add).toHaveBeenCalledTimes(1);
       expect(webhookService.add).toHaveBeenCalledWith({
@@ -132,8 +135,14 @@ describe("Webhook", () => {
         trigger: {active: true, name: "database", options: {collection: "bucket", type: "DELETE"}}
       });
 
+      tick();
+      fixture.detectChanges();
+
+      tick(1000);
+      fixture.detectChanges();
+
       expect(navigateSpy).toHaveBeenCalledTimes(1);
-      expect(navigateSpy).toHaveBeenCalledWith(["webhook"]);
+      expect(navigateSpy).toHaveBeenCalledWith(["webhook/1"]);
     }));
   });
 
@@ -156,8 +165,15 @@ describe("Webhook", () => {
       expect(fixture.componentInstance.webhook).toEqual(hook);
     }));
 
-    it("should update webhook then navigate to the webhook-index page", fakeAsync(() => {
-      webhookService.update.and.returnValue(of(undefined));
+    it("should update webhook", fakeAsync(async () => {
+      webhookService.update.and.returnValue(
+        of({
+          _id: "1",
+          body: "updated_webhook",
+          url: "http://www.test.com",
+          trigger: {active: true, name: "database", options: {collection: "bucket", type: "UPDATE"}}
+        })
+      );
       const editButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
       editButton.triggerEventHandler("click", {});
       tick();
@@ -165,8 +181,19 @@ describe("Webhook", () => {
       expect(webhookService.update).toHaveBeenCalledTimes(1);
       expect(webhookService.update).toHaveBeenCalledWith(hook);
 
-      expect(navigateSpy).toHaveBeenCalledTimes(1);
-      expect(navigateSpy).toHaveBeenCalledWith(["webhook"]);
+      tick();
+      //cause of ExpressionChangedAfterItHasBeenCheckedError
+      fixture.detectChanges(false);
+
+      tick(1000);
+      fixture.detectChanges(false);
+
+      expect(fixture.componentInstance.webhook).toEqual({
+        _id: "1",
+        body: "updated_webhook",
+        url: "http://www.test.com",
+        trigger: {active: true, name: "database", options: {collection: "bucket", type: "UPDATE"}}
+      });
     }));
   });
 });

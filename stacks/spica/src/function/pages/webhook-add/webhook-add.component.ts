@@ -1,9 +1,18 @@
 import {Component, EventEmitter, OnDestroy, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable} from "rxjs";
-import {filter, switchMap, takeUntil} from "rxjs/operators";
+import {Observable, of, merge} from "rxjs";
+import {
+  filter,
+  switchMap,
+  takeUntil,
+  tap,
+  endWith,
+  catchError,
+  ignoreElements
+} from "rxjs/operators";
 import {emptyWebhook, Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
+import {SavingState} from "@spica-client/material";
 
 @Component({
   selector: "webhook-add",
@@ -15,6 +24,8 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
   private dispose = new EventEmitter();
 
   collections$: Observable<string[]>;
+
+  $save: Observable<SavingState>;
 
   constructor(
     private webhookService: WebhookService,
@@ -29,20 +40,33 @@ export class WebhookAddComponent implements OnInit, OnDestroy {
       .pipe(
         filter(params => params.id),
         switchMap(params => this.webhookService.get(params.id)),
+        tap(() => (this.$save = of(SavingState.Pristine))),
         takeUntil(this.dispose)
       )
       .subscribe(data => (this.webhook = data));
   }
 
   save() {
-    (this.webhook._id
-      ? this.webhookService.update(this.webhook)
-      : this.webhookService.add(this.webhook)
-    )
-      .toPromise()
-      .then(() => {
-        this.router.navigate(["webhook"]);
-      });
+    const isInsert = !this.webhook._id;
+
+    const save = isInsert
+      ? this.webhookService.add(this.webhook)
+      : this.webhookService.update({...this.webhook});
+
+    this.$save = merge(
+      of(SavingState.Saving),
+      save.pipe(
+        tap(webhook => {
+          this.webhook = webhook;
+          if (isInsert) {
+            this.router.navigate([`webhook/${webhook._id}`]);
+          }
+        }),
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
   }
 
   ngOnDestroy() {

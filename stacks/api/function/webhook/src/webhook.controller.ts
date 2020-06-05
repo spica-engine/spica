@@ -9,7 +9,8 @@ import {
   Post,
   Put,
   Query,
-  UseGuards
+  UseGuards,
+  BadRequestException
 } from "@nestjs/common";
 import {DEFAULT, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
@@ -17,10 +18,15 @@ import {ObjectId, OBJECT_ID, DatabaseService} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Webhook} from "./interface";
 import {WebhookService} from "./webhook.service";
+import {WebhookInvoker} from "./invoker";
 
 @Controller("webhook")
 export class WebhookController {
-  constructor(private webhookService: WebhookService, private database: DatabaseService) {}
+  constructor(
+    private webhookService: WebhookService,
+    private invoker: WebhookInvoker,
+    private database: DatabaseService
+  ) {}
 
   @Get("collections")
   @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
@@ -61,6 +67,11 @@ export class WebhookController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("webhook:create"))
   insertOne(@Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook) {
+    try {
+      this.invoker.preCompile(hook.body);
+    } catch (error) {
+      throw new BadRequestException(error.toString());
+    }
     return this.webhookService.insertOne(hook);
   }
 
@@ -70,6 +81,11 @@ export class WebhookController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/webhook")) hook: Webhook
   ) {
+    try {
+      this.invoker.preCompile(hook.body);
+    } catch (error) {
+      throw new BadRequestException(error.toString());
+    }
     return this.webhookService.findOneAndReplace({_id: id}, hook, {returnOriginal: false});
   }
 

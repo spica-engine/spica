@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import {Webhook} from "./interface";
 import {WebhookLogService} from "./log.service";
 import {ChangeKind, WebhookService} from "./webhook.service";
-import {compile, registerHelper} from "handlebars";
+import {compile, precompile} from "handlebars";
 
 @Injectable()
 export class WebhookInvoker {
@@ -29,6 +29,10 @@ export class WebhookInvoker {
           break;
       }
     });
+  }
+
+  preCompile(body: string) {
+    precompile(body, {strict: true});
   }
 
   private subscribe(target: string, {trigger, url, body}: Webhook) {
