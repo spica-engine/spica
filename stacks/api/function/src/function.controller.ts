@@ -102,7 +102,7 @@ export class FunctionController {
 
     return triggers
       .filter(trigger => trigger.type == "bucket")
-      .some((trigger, index) => {
+      .some((trigger, index, triggers) => {
         const foundIndex = triggers.findIndex(
           t =>
             t.options["bucket"] == trigger.options["bucket"] &&

@@ -80,11 +80,12 @@ export class AddComponent implements OnInit, OnDestroy {
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
           this.dependencyInstallPending = false;
+          this.serverError = undefined;
+          this.isIndexPending = true;
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
           this.getDependencies();
-          this.isIndexPending = true;
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
         takeUntil(this.dispose)
