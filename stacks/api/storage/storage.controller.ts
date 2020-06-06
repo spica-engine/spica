@@ -34,11 +34,6 @@ export class StorageController {
     @Query("sort", JSONP, DEFAULT({_id: -1})) sort: object
   ) {
     const object = await this.storage.getAll(limit, skip, sort);
-    object.data = object.data.map(m => {
-      m.url = `${this.options.publicUrl}/storage/${m._id}`;
-      return m;
-    });
-
     return object;
   }
 
@@ -50,7 +45,7 @@ export class StorageController {
   ) {
     const object = await this.storage.get(id);
     if (withMeta) {
-      object.url = `${this.options.publicUrl}/storage/${object._id}`;
+      object.url = this.storage.service.url(object._id.toString());
       res.json(object);
     } else {
       res.header("Content-type", object.content.type);
@@ -70,7 +65,7 @@ export class StorageController {
     object.content.size = object.content.data.byteLength;
 
     return this.storage.updateOne({_id: id}, object).then(res => {
-      return {...res, url: `${this.options.publicUrl}/storage/${id}`};
+      return {...res, url: this.storage.service.url(id.toHexString())};
     });
   }
 
@@ -99,7 +94,7 @@ export class StorageController {
     }
     return this.storage.insertMany(insertData).then(storages =>
       storages.map(storage => {
-        return {...storage, url: `${this.options.publicUrl}/storage/${storage._id}`};
+        return {...storage, url: this.storage.service.url(storage._id.toString())};
       })
     );
   }

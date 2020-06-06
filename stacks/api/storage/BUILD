@@ -22,6 +22,8 @@ ts_library(
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//bson",
+        "@npm//@google-cloud/storage"
+        
     ],
 )
 

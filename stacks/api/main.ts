@@ -107,6 +107,14 @@ const args = yargs
       default: 60000
     }
   })
+  /* Storage Options */
+  .option({
+    "storage-strategy": {
+      string: true,
+      description: "Strategy types such as google cloud storage, cloudfare..",
+      default: "gcloud"
+    }
+  })
   /* Common Options */
   .option("port", {
     number: true,
@@ -153,7 +161,8 @@ const modules = [
   }),
   StorageModule.forRoot({
     path: args["persistent-path"],
-    publicUrl: args["public-url"]
+    publicUrl: args["public-url"],
+    strategy: args["storage-strategy"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
