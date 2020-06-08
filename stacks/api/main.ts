@@ -21,6 +21,7 @@ import {StorageModule} from "@spica-server/storage";
 import * as fs from "fs";
 import * as https from "https";
 import * as yargs from "yargs";
+import * as os from "os";
 
 const args = yargs
   /* TLS Options */
@@ -111,8 +112,26 @@ const args = yargs
   .option({
     "storage-strategy": {
       string: true,
+      //update this description
       description: "Strategy types such as google cloud storage, cloudfare..",
-      default: "gcloud"
+      //make it default when pr is ready
+      default: "default"
+    },
+    "service-account-path": {
+      string: true,
+      description:
+        //update this description
+        "Path of the service account file that allow to make CRUD operations on GCS.",
+      //remove this line when pr is ready
+      default: `${os.homedir()}/Desktop/service_account.json`
+    },
+    "bucket-name": {
+      string: true,
+      description:
+        //update this description
+        "Name of the bucket to store data on GCS.",
+      //remove this line when pr is ready
+      default: `spica_storage_bucket`
     }
   })
   /* Common Options */
@@ -139,6 +158,15 @@ While the 'passport' module will use this url to re-route the user to the Passpo
 Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
+  .check(args => {
+    if (
+      args["storage-strategy"] == "gcloud" &&
+      (!args["service-account-path"] || !args["bucket-name"])
+    ) {
+      throw new TypeError("You should provide service-account-path and bucket-name.");
+    }
+    return true;
+  })
   .env()
   .parse();
 
@@ -162,7 +190,9 @@ const modules = [
   StorageModule.forRoot({
     path: args["persistent-path"],
     publicUrl: args["public-url"],
-    strategy: args["storage-strategy"]
+    strategy: args["storage-strategy"],
+    serviceAccountPath: args["service-account-path"],
+    bucketName: args["bucket-name"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],

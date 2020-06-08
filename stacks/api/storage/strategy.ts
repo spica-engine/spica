@@ -1,13 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
+
 import {Storage, Bucket} from "@google-cloud/storage";
 
 export abstract class Strategy {
-  abstract read(id: string);
-  abstract writeSync(id: string, data: any): void;
-  abstract writeAsync(id: string, data: any): Promise<void>;
-  abstract delete(id: any);
-  abstract url(id: string);
+  abstract read(id: string): Promise<Buffer> | Buffer;
+  abstract write(id: string, data: any): Promise<void>;
+  abstract delete(id: string);
+  abstract url(id: string): Promise<string> | string;
 }
 
 export class Default implements Strategy {
@@ -25,26 +25,21 @@ export class Default implements Strategy {
   read(id: string) {
     const objectPath = this.buildPath(id);
     if (fs.existsSync(objectPath)) {
-      return fs.readFileSync(objectPath);
+      return fs.promises.readFile(objectPath);
     } else {
       return undefined;
     }
   }
 
-  writeSync(id: string, data: any): void {
-    const objectPath = this.buildPath(id);
-    fs.writeFileSync(objectPath, data);
-  }
-
-  writeAsync(id: string, data: any): Promise<void> {
+  write(id: string, data: any) {
     const objectPath = this.buildPath(id);
     return fs.promises.writeFile(objectPath, data);
   }
 
-  delete(object: any) {
-    const objectPath = this.buildPath(object._id);
+  delete(id: string) {
+    const objectPath = this.buildPath(id);
     if (fs.existsSync(objectPath)) {
-      fs.unlinkSync(objectPath);
+      fs.promises.unlink(objectPath);
     }
   }
 
@@ -60,52 +55,33 @@ export class Default implements Strategy {
 export class GCloud implements Strategy {
   storage: Storage;
 
-  bucketName = "spica_uniqueid";
+  bucket: Bucket;
 
-  bucket: Bucket = undefined;
-
-  constructor(path: string) {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = path;
+  constructor(serviceAccountPath: string, bucketName: string) {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = serviceAccountPath;
     this.storage = new Storage();
-    this.checkBucket();
+    this.bucket = this.storage.bucket(bucketName);
   }
 
-  async checkBucket() {
-    if (!this.bucket) {
-      const bucket = (await this.storage.getBuckets())[0].some(
-        bucket => bucket.name == this.bucketName
-      );
-      if (!bucket) {
-        await this.storage.createBucket(this.bucketName);
-        this.bucket = this.storage.bucket(this.bucketName);
-      }
-    }
+  write(id: string, data: any): Promise<void> {
+    return this.bucket.file(id).save(data);
   }
 
   read(id: string) {
     return this.bucket
       .file(id)
       .download()
-      .then(res => res[0]);
+      .then(res => Buffer.from(res[0].buffer));
   }
-  writeSync(id: string, data: any): void {}
-  writeAsync(id: string, data: any): Promise<any> {
-    const filePath = `${__dirname}/${id}`;
-    fs.writeFileSync(filePath, data);
-    return this.bucket.upload(filePath, {
-      gzip: true,
-      metadata: {
-        cacheControl: "public, max-age=31536000"
-      }
-    });
-  }
-  delete(id: any) {
+
+  delete(id: string) {
     this.bucket.file(id).delete();
   }
+
   url(id: string) {
-    this.bucket
+    return this.bucket
       .file(id)
       .getMetadata()
-      .then(([meta]) => meta.mediaLink);
+      .then(res => res[0].mediaLink);
   }
 }

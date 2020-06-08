@@ -9,14 +9,18 @@ export class Storage {
 
   private _collection: Collection<StorageObject>;
 
-  service: Strategy;
+  private service: Strategy;
 
   constructor(database: DatabaseService, @Inject(STORAGE_OPTIONS) options: StorageOptions) {
-    if (options.strategy == "default") {
-      this.service = new Default(options.path, options.publicUrl);
-    } else if (options.strategy == "gcloud") {
-      this.service = new GCloud(`${__dirname}/service_account.json`);
+    switch (options.strategy) {
+      case "gcloud":
+        this.service = new GCloud(options.serviceAccountPath, options.bucketName);
+        break;
+      case "default":
+        this.service = new Default(options.path, options.publicUrl);
+        break;
     }
+
     this._collection = database.collection("storage");
   }
 
@@ -47,11 +51,10 @@ export class Storage {
     return this._collection
       .aggregate(aggregation)
       .toArray()
-      .then(d => {
-        d[0]["data"] = (d[0] as any).data.map(m => {
-          m.url = this.service.url(m._id);
-          return m;
-        });
+      .then(async d => {
+        for (const obj of (d[0] as any).data) {
+          obj.url = await this.service.url(obj._id);
+        }
         return d[0] as any;
       });
   }
@@ -59,19 +62,21 @@ export class Storage {
   async get(id: ObjectId): Promise<StorageObject> {
     const object = await this._collection.findOne({_id: new ObjectId(id)});
     if (!object) return null;
-    object.content.data = this.service.read(id.toHexString());
+    object.content.data = await this.service.read(id.toHexString());
     return object;
   }
 
   async deleteOne(id: ObjectId): Promise<void> {
-    const object = await this.get(id);
-    this.service.delete(object);
+    this.service.delete(id.toHexString());
     return this._collection.deleteOne({_id: id}).then(() => undefined);
   }
 
-  updateOne(filter: FilterQuery<StorageObject>, object: StorageObject): Promise<StorageObject> {
+  async updateOne(
+    filter: FilterQuery<StorageObject>,
+    object: StorageObject
+  ): Promise<StorageObject> {
     if (object.content.data) {
-      this.service.writeSync(filter._id, object.content.data);
+      await this.service.write(filter._id, object.content.data);
     }
     delete object.content.data;
     delete object._id;
@@ -84,13 +89,17 @@ export class Storage {
     await Promise.all(
       data.map(d => {
         d._id = new ObjectId(d._id);
-        return this.service.writeAsync(d._id.toHexString(), d.content.data).then(() => {
+        return this.service.write(d._id.toHexString(), d.content.data).then(() => {
           delete d.content.data;
         });
       })
     );
 
     return this._collection.insertMany(data).then(() => object);
+  }
+
+  async getUrl(id: string) {
+    return this.service.url(id);
   }
 }
 

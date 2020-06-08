@@ -4,4 +4,6 @@ export interface StorageOptions {
   path: string;
   publicUrl: string;
   strategy: string;
+  serviceAccountPath?: string;
+  bucketName?: string;
 }
