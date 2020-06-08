@@ -14,7 +14,7 @@ export function factoryProvider(options: StorageOptions) {
 }
 
 export abstract class Service {
-  abstract read(id: string): Promise<Buffer> | Buffer;
+  abstract read(id: string): Promise<Buffer>;
   abstract write(id: string, data: any): Promise<void>;
   abstract delete(id: string);
   abstract url(id: string): Promise<string> | string;
