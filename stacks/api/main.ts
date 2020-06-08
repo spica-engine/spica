@@ -115,7 +115,7 @@ const args = yargs
       //update this description
       description: "Strategy types such as google cloud storage, cloudfare..",
       //make it default when pr is ready
-      default: "default"
+      default: "gcloud"
     },
     "service-account-path": {
       string: true,

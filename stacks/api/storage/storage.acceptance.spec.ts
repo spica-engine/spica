@@ -34,7 +34,7 @@ describe("Storage acceptance test", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.create(),
-        StorageModule.forRoot({path: process.env.TEST_TMPDIR, publicUrl: ""})
+        StorageModule.forRoot({path: process.env.TEST_TMPDIR, publicUrl: "", strategy: "default"})
       ]
     }).compile();
     app = module.createNestApplication();

@@ -5,6 +5,7 @@ import {Binary} from "crypto";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {StorageController} from "./storage.controller";
 import {Storage} from "./storage.service";
+import {Service, factoryProvider} from "./service";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -59,8 +60,14 @@ describe("Storage Controller", () => {
           provide: STORAGE_OPTIONS,
           useValue: <StorageOptions>{
             publicUrl: "",
-            path: ""
+            path: "",
+            strategy: "default"
           }
+        },
+        {
+          provide: Service,
+          useFactory: factoryProvider,
+          inject: [STORAGE_OPTIONS]
         }
       ]
     }).compile();
@@ -76,9 +83,9 @@ describe("Storage Controller", () => {
         expect(getAllSpy).toHaveBeenCalledTimes(1);
         expect(getAllSpy).toHaveBeenCalledWith(3, 0, {});
 
-        expect(result.data[0].url).toEqual("/storage/56cb91bdc3464f14678934ca");
-        expect(result.data[1].url).toEqual("/storage/56cb91bdc3464f14678934cb");
-        expect(result.data[2].url).toEqual("/storage/56cb91bdc3464f14678934cc");
+        expect(result.data[0].url).toEqual("url1");
+        expect(result.data[1].url).toEqual("url2");
+        expect(result.data[2].url).toEqual("url3");
 
         return;
       })

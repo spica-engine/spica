@@ -1,7 +1,6 @@
-import {Inject, Injectable} from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import {Collection, DatabaseService, FilterQuery, ObjectId} from "@spica-server/database";
-import {StorageOptions, STORAGE_OPTIONS} from "./options";
-import {Default, Strategy, GCloud} from "./strategy";
+import {Service} from "./service";
 
 @Injectable()
 export class Storage {
@@ -9,18 +8,10 @@ export class Storage {
 
   private _collection: Collection<StorageObject>;
 
-  private service: Strategy;
+  private service: Service;
 
-  constructor(database: DatabaseService, @Inject(STORAGE_OPTIONS) options: StorageOptions) {
-    switch (options.strategy) {
-      case "gcloud":
-        this.service = new GCloud(options.serviceAccountPath, options.bucketName);
-        break;
-      case "default":
-        this.service = new Default(options.path, options.publicUrl);
-        break;
-    }
-
+  constructor(database: DatabaseService, private _service: Service) {
+    this.service = _service;
     this._collection = database.collection("storage");
   }
 

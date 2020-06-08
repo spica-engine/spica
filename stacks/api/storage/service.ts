@@ -2,15 +2,25 @@ import * as fs from "fs";
 import * as path from "path";
 
 import {Storage, Bucket} from "@google-cloud/storage";
+import {StorageOptions} from "./options";
 
-export abstract class Strategy {
+export function factoryProvider(options: StorageOptions) {
+  switch (options.strategy) {
+    case "gcloud":
+      return new GCloud(options.serviceAccountPath, options.bucketName);
+    case "default":
+      return new Default(options.path, options.publicUrl);
+  }
+}
+
+export abstract class Service {
   abstract read(id: string): Promise<Buffer> | Buffer;
   abstract write(id: string, data: any): Promise<void>;
   abstract delete(id: string);
   abstract url(id: string): Promise<string> | string;
 }
 
-export class Default implements Strategy {
+export class Default implements Service {
   path = "";
   publicUrl = "";
 
@@ -52,7 +62,7 @@ export class Default implements Strategy {
   }
 }
 
-export class GCloud implements Strategy {
+export class GCloud implements Service {
   storage: Storage;
 
   bucket: Bucket;
