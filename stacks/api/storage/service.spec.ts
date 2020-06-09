@@ -7,7 +7,7 @@ describe("Service", () => {
       const service = factoryProvider({
         path: "",
         publicUrl: "test",
-        strategy: "default"
+        service: "default"
       });
       expect(service instanceof Default).toEqual(true);
     });
@@ -16,7 +16,7 @@ describe("Service", () => {
       const service = factoryProvider({
         path: "",
         publicUrl: "test",
-        strategy: "gcloud",
+        service: "gcloud",
         bucketName: "test_bucket",
         serviceAccountPath: "test_accoun_path"
       });

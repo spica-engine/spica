@@ -2086,10 +2086,10 @@ amdefine@>=0.0.4:
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
   integrity sha1-SlKCrBZHKek2Gbz9OtFR+BfOkfU=
 
-angular-cropperjs@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/angular-cropperjs/-/angular-cropperjs-1.0.1.tgz#96a45bcb98828ad6ea993aca27dad595306edd06"
-  integrity sha512-ojDuXzpMo10aKgDn5lPAiWxHmrOdnLVxCL1SbSkIWy73BafhVzOm8xJiP+Ijg8Bt4WuZOhEHoJ9AEo4+2yxaJQ==
+angular-cropperjs@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/angular-cropperjs/-/angular-cropperjs-1.0.2.tgz#c5a69cae5946e7ce7deedfdf593c90d905f53dd2"
+  integrity sha512-S+fy+bJUdQ1BCcAJ1yQHxJiPM5yhfeQXzjvSjNqPfrvB/pWKXyDLtVu2jl5Z4QW6WhH/vQPu5wBn4/KxXIMdEw==
   dependencies:
     tslib "^1.9.0"
 
@@ -4010,10 +4010,15 @@ cron@^1.7.1:
   dependencies:
     moment-timezone "^0.5.x"
 
-cropperjs@*, cropperjs@^1.5.1:
+cropperjs@*:
   version "1.5.6"
   resolved "https://registry.yarnpkg.com/cropperjs/-/cropperjs-1.5.6.tgz#82faf432bec709d828f2f7a96d1179198edaf0e2"
   integrity sha512-eAgWf4j7sNJIG329qUHIFi17PSV0VtuWyAu9glZSgu/KlQSrfTQOC2zAz+jHGa5fAB+bJldEnQwvJEaJ8zRf5A==
+
+cropperjs@^1.5.7:
+  version "1.5.7"
+  resolved "https://registry.yarnpkg.com/cropperjs/-/cropperjs-1.5.7.tgz#b65019725bae1c6285e881fb661b2141fa57025b"
+  integrity sha512-sGj+G/ofKh+f6A4BtXLJwtcKJgMUsXYVUubfTo9grERiDGXncttefmue/fyQFvn8wfdyoD1KhDRYLfjkJFl0yw==
 
 cross-spawn@^3.0.0:
   version "3.0.1"

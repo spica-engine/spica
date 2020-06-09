@@ -110,28 +110,21 @@ const args = yargs
   })
   /* Storage Options */
   .option({
-    "storage-strategy": {
+    "storage-service": {
       string: true,
-      //update this description
-      description: "Strategy types such as google cloud storage, cloudfare..",
-      //make it default when pr is ready
-      default: "gcloud"
+      description:
+        "Cloud Storage service to store documents. Available options are default and gcloud.",
+      default: "default",
+      choices: ["default", "gcloud"]
     },
     "service-account-path": {
       string: true,
       description:
-        //update this description
-        "Path of the service account file that allow to make CRUD operations on GCS.",
-      //remove this line when pr is ready
-      default: `${os.homedir()}/Desktop/service_account.json`
+        "Full path of the service account file that allow to make CRUD operations on GCS."
     },
     "bucket-name": {
       string: true,
-      description:
-        //update this description
-        "Name of the bucket to store data on GCS.",
-      //remove this line when pr is ready
-      default: `spica_storage_bucket`
+      description: "Name of the bucket to store documents on GCS."
     }
   })
   /* Common Options */
@@ -160,10 +153,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .demandOption("public-url")
   .check(args => {
     if (
-      args["storage-strategy"] == "gcloud" &&
+      args["storage-service"] == "gcloud" &&
       (!args["service-account-path"] || !args["bucket-name"])
     ) {
-      throw new TypeError("You should provide service-account-path and bucket-name.");
+      throw new TypeError("You should provide service-account-path and bucket-name to use GCS.");
     }
     return true;
   })
@@ -190,7 +183,7 @@ const modules = [
   StorageModule.forRoot({
     path: args["persistent-path"],
     publicUrl: args["public-url"],
-    strategy: args["storage-strategy"],
+    service: args["storage-service"],
     serviceAccountPath: args["service-account-path"],
     bucketName: args["bucket-name"]
   }),

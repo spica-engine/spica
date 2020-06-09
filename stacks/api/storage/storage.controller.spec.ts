@@ -61,7 +61,7 @@ describe("Storage Controller", () => {
           useValue: <StorageOptions>{
             publicUrl: "",
             path: "",
-            strategy: "default"
+            service: "default"
           }
         },
         {

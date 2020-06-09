@@ -5,7 +5,7 @@ import {Storage, Bucket} from "@google-cloud/storage";
 import {StorageOptions} from "./options";
 
 export function factoryProvider(options: StorageOptions) {
-  switch (options.strategy) {
+  switch (options.service) {
     case "gcloud":
       return new GCloud(options.serviceAccountPath, options.bucketName);
     case "default":
@@ -16,7 +16,7 @@ export function factoryProvider(options: StorageOptions) {
 export abstract class Service {
   abstract read(id: string): Promise<Buffer>;
   abstract write(id: string, data: any): Promise<void>;
-  abstract delete(id: string);
+  abstract delete(id: string): Promise<any> | void;
   abstract url(id: string): Promise<string> | string;
 }
 
@@ -49,7 +49,7 @@ export class Default implements Service {
   delete(id: string) {
     const objectPath = this.buildPath(id);
     if (fs.existsSync(objectPath)) {
-      fs.promises.unlink(objectPath);
+      return fs.promises.unlink(objectPath);
     }
   }
 
@@ -73,7 +73,7 @@ export class GCloud implements Service {
     this.bucket = this.storage.bucket(bucketName);
   }
 
-  write(id: string, data: any): Promise<void> {
+  write(id: string, data: any) {
     return this.bucket.file(id).save(data);
   }
 

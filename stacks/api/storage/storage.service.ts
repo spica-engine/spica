@@ -58,7 +58,7 @@ export class Storage {
   }
 
   async deleteOne(id: ObjectId): Promise<void> {
-    this.service.delete(id.toHexString());
+    await this.service.delete(id.toHexString());
     return this._collection.deleteOne({_id: id}).then(() => undefined);
   }
 
@@ -67,7 +67,7 @@ export class Storage {
     object: StorageObject
   ): Promise<StorageObject> {
     if (object.content.data) {
-      await this.service.write(filter._id, object.content.data);
+      await this.service.write(object._id.toString(), object.content.data);
     }
     delete object.content.data;
     delete object._id;

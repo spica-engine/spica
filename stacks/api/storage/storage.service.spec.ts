@@ -32,7 +32,7 @@ describe("storage service", () => {
           useValue: <StorageOptions>{
             publicUrl: "",
             path: "",
-            strategy: "default"
+            service: "default"
           }
         },
         {
@@ -77,6 +77,7 @@ describe("storage service", () => {
     await expectAsync(storageService.insertMany([storageObject])).toBeResolved();
 
     const updatedData = {
+      _id: storageObjectId,
       name: "new name",
       url: "new_url",
       content: {
@@ -85,7 +86,9 @@ describe("storage service", () => {
         size: 10
       }
     };
-    await expectAsync(storageService.updateOne({_id: storageObjectId}, updatedData)).toBeResolved();
+    await expectAsync(
+      storageService.updateOne({_id: storageObjectId}, updatedData).catch(console.log)
+    ).toBeResolved();
 
     return await expectAsync(
       storageService.get(storageObjectId).then(result => {
