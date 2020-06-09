@@ -1,0 +1,32 @@
+{{- if .Release.IsUpgrade }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migrate
+  namespace: {{.Release.Namespace}}
+  labels:
+    name: migrate
+  annotations:
+    "helm.sh/hook": pre-upgrade
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: main
+          image: spicaengine/migrate:thesayyn-dev
+          imagePullPolicy: Always
+          args: [
+            --from, "$(FROM)",
+            --to, {{ .Chart.Version }},
+            --database-uri, {{ template "database.connection-uri" . }},
+            --database-name,  {{ .Values.database.name }}
+          ]
+          env:
+            - name: FROM
+              valueFrom:
+                configMapKeyRef:
+                  name: version
+                  key: VERSION
+{{- end -}}

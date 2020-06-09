@@ -57,7 +57,8 @@ export async function run(arg?: string | readonly string[]) {
 }
 
 if (require.main == module) {
-  run().catch(() => {
+  run().catch(e => {
+    console.error(e);
     process.exit(1);
   });
 }
