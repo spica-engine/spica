@@ -56,6 +56,8 @@ export class WebhookLogController {
 
     aggregation.push({$match: filter});
 
+    aggregation.push({$sort: {_id: -1}});
+
     if (skip) aggregation.push({$skip: skip});
 
     if (limit) aggregation.push({$limit: limit});
