@@ -1,4 +1,4 @@
-import {factoryProvider, GCloud, Default} from "./service";
+import {factoryProvider, GCloud, Default} from "./strategy";
 import * as fs from "fs";
 
 describe("Service", () => {
@@ -7,7 +7,7 @@ describe("Service", () => {
       const service = factoryProvider({
         path: "",
         publicUrl: "test",
-        service: "default"
+        strategy: "default"
       });
       expect(service instanceof Default).toEqual(true);
     });
@@ -16,9 +16,9 @@ describe("Service", () => {
       const service = factoryProvider({
         path: "",
         publicUrl: "test",
-        service: "gcloud",
-        bucketName: "test_bucket",
-        serviceAccountPath: "test_accoun_path"
+        strategy: "gcloud",
+        gcloudBucketName: "test_bucket",
+        gcloudServiceAccountPath: "test_accoun_path"
       });
       expect(service instanceof GCloud).toEqual(true);
     });

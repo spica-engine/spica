@@ -1,6 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {Collection, DatabaseService, FilterQuery, ObjectId} from "@spica-server/database";
-import {Service} from "./service";
+import {Strategy} from "./strategy";
 
 @Injectable()
 export class Storage {
@@ -8,10 +8,10 @@ export class Storage {
 
   private _collection: Collection<StorageObject>;
 
-  private service: Service;
+  private service: Strategy;
 
-  constructor(database: DatabaseService, private _service: Service) {
-    this.service = _service;
+  constructor(database: DatabaseService, private strategy: Strategy) {
+    this.service = strategy;
     this._collection = database.collection("storage");
   }
 

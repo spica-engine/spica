@@ -5,22 +5,22 @@ import {Storage, Bucket} from "@google-cloud/storage";
 import {StorageOptions} from "./options";
 
 export function factoryProvider(options: StorageOptions) {
-  switch (options.service) {
+  switch (options.strategy) {
     case "gcloud":
-      return new GCloud(options.serviceAccountPath, options.bucketName);
+      return new GCloud(options.gcloudServiceAccountPath, options.gcloudBucketName);
     case "default":
       return new Default(options.path, options.publicUrl);
   }
 }
 
-export abstract class Service {
+export abstract class Strategy {
   abstract read(id: string): Promise<Buffer>;
   abstract write(id: string, data: any): Promise<void>;
   abstract delete(id: string): Promise<any> | void;
   abstract url(id: string): Promise<string> | string;
 }
 
-export class Default implements Service {
+export class Default implements Strategy {
   path = "";
   publicUrl = "";
 
@@ -62,7 +62,7 @@ export class Default implements Service {
   }
 }
 
-export class GCloud implements Service {
+export class GCloud implements Strategy {
   storage: Storage;
 
   bucket: Bucket;

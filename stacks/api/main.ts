@@ -110,19 +110,18 @@ const args = yargs
   })
   /* Storage Options */
   .option({
-    "storage-service": {
+    "storage-strategy": {
       string: true,
       description:
         "Cloud Storage service to store documents. Available options are default and gcloud.",
       default: "default",
       choices: ["default", "gcloud"]
     },
-    "service-account-path": {
+    "gcloud-service-account-path": {
       string: true,
-      description:
-        "Full path of the service account file that allow to make CRUD operations on GCS."
+      description: "Path for the service account file to authorize on google cloud services."
     },
-    "bucket-name": {
+    "gcloud-bucket-name": {
       string: true,
       description: "Name of the bucket to store documents on GCS."
     }
@@ -156,7 +155,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
       args["storage-service"] == "gcloud" &&
       (!args["service-account-path"] || !args["bucket-name"])
     ) {
-      throw new TypeError("You should provide service-account-path and bucket-name to use GCS.");
+      throw new TypeError(
+        "--gcloud-service-account-path and --gcloud-bucket-name options must be present when --storage-strategy is set to 'gcloud'."
+      );
     }
     return true;
   })
@@ -183,9 +184,9 @@ const modules = [
   StorageModule.forRoot({
     path: args["persistent-path"],
     publicUrl: args["public-url"],
-    service: args["storage-service"],
-    serviceAccountPath: args["service-account-path"],
-    bucketName: args["bucket-name"]
+    strategy: args["storage-strategy"],
+    gcloudServiceAccountPath: args["gcloud-service-account-path"],
+    gcloudBucketName: args["gcloud-bucket-name"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
