@@ -152,8 +152,8 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .demandOption("public-url")
   .check(args => {
     if (
-      args["storage-service"] == "gcloud" &&
-      (!args["service-account-path"] || !args["bucket-name"])
+      args["storage-strategy"] == "gcloud" &&
+      (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
     ) {
       throw new TypeError(
         "--gcloud-service-account-path and --gcloud-bucket-name options must be present when --storage-strategy is set to 'gcloud'."
