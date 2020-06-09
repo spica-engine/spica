@@ -5,7 +5,7 @@ import {Binary} from "crypto";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {StorageController} from "./storage.controller";
 import {Storage} from "./storage.service";
-import {Service, factoryProvider} from "./service";
+import {Strategy, factoryProvider} from "./strategy";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -61,11 +61,11 @@ describe("Storage Controller", () => {
           useValue: <StorageOptions>{
             publicUrl: "",
             path: "",
-            service: "default"
+            strategy: "default"
           }
         },
         {
-          provide: Service,
+          provide: Strategy,
           useFactory: factoryProvider,
           inject: [STORAGE_OPTIONS]
         }
