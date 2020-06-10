@@ -91,10 +91,10 @@ jasmine_node_test(
 )
 
 ts_library(
-    name = "service_test_lib",
+    name = "strategy_test_lib",
     testonly = True,
     srcs = [
-        "service.spec.ts",
+        "strategy.spec.ts",
     ],
     deps = [
         "//stacks/api/storage",
@@ -104,8 +104,8 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "service_test",
+    name = "strategy_test",
     deps = [
-        "service_test_lib",
+        "strategy_test_lib",
     ],
 )

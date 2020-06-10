@@ -1,7 +1,7 @@
 import {factoryProvider, GCloud, Default} from "./strategy";
 import * as fs from "fs";
 
-describe("Service", () => {
+describe("Strategy", () => {
   describe("factory provider", () => {
     it("should create default service", () => {
       const service = factoryProvider({
