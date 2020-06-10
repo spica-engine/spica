@@ -16,6 +16,7 @@ ts_library(
         "//packages/database",
         "//stacks/api/activity/services",
         "//stacks/api/passport",
+        "@npm//@google-cloud/storage",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/bson",
@@ -86,5 +87,25 @@ jasmine_node_test(
     name = "activity_test",
     deps = [
         "activity_test_lib",
+    ],
+)
+
+ts_library(
+    name = "strategy_test_lib",
+    testonly = True,
+    srcs = [
+        "strategy.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/storage",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "strategy_test",
+    deps = [
+        "strategy_test_lib",
     ],
 )
