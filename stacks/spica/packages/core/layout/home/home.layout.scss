@@ -107,10 +107,10 @@
         button[mat-icon-button] {
           margin-left: -10px;
         }
-        .fill-between {
+        span {
           flex: 1 1 auto;
         }
-        .custom-action:not(:last-of-type) {
+        ::ng-deep > *:not(span):not(:first-child) {
           margin-right: 5px;
         }
       }
