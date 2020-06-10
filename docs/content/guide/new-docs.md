@@ -1071,7 +1071,9 @@ You can see the logs in Logs tab in code edit page.
 // TODO:Explain
 
 ### Webhook Logs
-// TODO: Explain
+You can see all webhook acitivites in `Webhook Logs` section. You can filter the logs by webhook ID, date or result (success/fail). In a standart build of Spica, there is no time limitation on webhook logs. So you can store all webhook logs forever. 
+
+> IMPORTANT: Because of no time limit on webhook logs, we suggest you to clear webhook logs in a time interval. Otherwise you should consider your server hardwares to use Spica instance with hight performance.
 
 ## User Activity Logs
 User Activity module gives you access to control each passport identities' activity logs. You can filter actrivity logs by identity, action type, module, date or even document id. In a standart build of Spica, you can see all user activies without any time limitation. 
@@ -1081,7 +1083,13 @@ User Activity module gives you access to control each passport identities' activ
 To list all Spica users' activity, simply navigate to **Primary** -> **User Activities**
 
 ## Dashboard
-TBC
+Dashboard module allows you to create a new custome dashboard including custom data charts or table. The only way to creating a custom dashboard is writing a function in your Spica instance. You have to import and use dashboard library provided by Spica instance in your function. You can seed the dashboard module with any data. So you can take data from buckets, database or even other 3rd party integration. You can create multiple dashboards and once you activated a new dashboard, you can see your dashboard on the left hand menu. 
+
+> IMPORTANT: We suggest you to initiate a dashboard with an `HTTP` trigger or `SYSTEM:READY` trigger. Otherwise your custom dashboard may be initiated multiple times. This may cause repeated dashboard on the left side menu. Dashboard module does not control how many times you initiated a dashboard.
+
+// TODO: Example Code
+
+To see your custom dashboards, please navigate to **Primary** section on the menu.
 
 ## Spica CLI
 
