@@ -1034,13 +1034,27 @@ Here is some example of CRON expressions
 | `* * * * *` | Run every minute                                           |
 
 #### Bucket
-//TODO: Explain
+Bucket trigger invokes your function before the selected operation for a specific bucket. For bucket trigger, all `INSERT`, `UPDATE`, `INDEX`, `GET`, `DELETE`, `STREAM` operations are available. 
+
+All required fields for a bucket trigger are listed below;
+- **Bucket:** Bucket ID of the desired bucket
+- **Event Type:** Type of the event that happens in the collection.
+
+> IMPORTANT: `STREAM` operations are used for real-time bucket connections. If your client uses real-time data transfer, you can use `STREAM` operation to trigger a function before each websocket data transfer from client application to your Spica instance.
+
+//TODO: Example Code
 
 #### System
-//TODO: Explain
+System trigger includes system related event data and invokes a function whenever the choosen event happens. System trigger is the best choice for using dashboard module, configurating the project or setting up a starting state of you data. `READY` event will be triggered when a server restarts and ready to use. For the current version system trigger is listening only `READY` event.
+
+//TODO: Example Code
 
 #### Firehose
-//TODO: Explain
+You can invoke a function in real-time from yout client application. Firehose trigger does not interact with bucket or database. Instead, it listens the real-time port so you can interact with the function directly from your client application. Firehose trigger can listen a specific event, connection start or connection closed events.
+
+As an example, if you are making a game and run a real-time serverside logic which will communicate with the client application such as real-time point calculating, you can calculate score and return via websocket using firehose trigger.
+
+//TODO: Example Code
 
 ### Debugging
 
@@ -1054,13 +1068,17 @@ You can see the logs in Logs tab in code edit page.
 
 
 ## Webhook
-### Webhook Logs
+// TODO:Explain
 
+### Webhook Logs
+// TODO: Explain
 
 ## User Activity Logs
-//TODO: Explain the concept
+User Activity module gives you access to control each passport identities' activity logs. You can filter actrivity logs by identity, action type, module, date or even document id. In a standart build of Spica, you can see all user activies without any time limitation. 
 
-To list all Spica users' activity, simply navigate to **Acitivity** -> **User Activities**
+> IMPORTANT: Because of no time limit on user acitivity logs, we suggest you to clear user activities in a time interval. Otherwise you should consider your server hardwares to use Spica instance with hight performance.
+
+To list all Spica users' activity, simply navigate to **Primary** -> **User Activities**
 
 ## Dashboard
 TBC
