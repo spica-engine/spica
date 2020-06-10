@@ -219,7 +219,7 @@ describe("Webhook Invoker", () => {
     });
   });
 
-  fit("should insert log when webhook body compilation failed", async () => {
+  it("should insert log when webhook body compilation failed", async () => {
     const insertLog = spyOn(invoker["logService"], "insertOne");
     const hook = await service.insertOne({
       url: "http://spica.internal",
