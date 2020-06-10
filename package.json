@@ -33,6 +33,7 @@
     "@nestjs/platform-express": "^7.0.13",
     "@nestjs/websockets": "^7.0.13",
     "@nestjs/platform-ws": "^7.0.13",
+    "@google-cloud/storage": "^5.0.1",
     "ajv": "^6.6.1",
     "archiver": "^3.0.0",
     "bcrypt": "^3.0.4",
