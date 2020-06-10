@@ -21,10 +21,15 @@
     </mat-select>
   </mat-form-field>
   <mat-form-field>
-    <mat-label>Select status code</mat-label>
-    <mat-select [(ngModel)]="filter.statusCodes" multiple>
-      <mat-option class="mat-accent" *ngFor="let code of statusCodes" [value]="code">
-        {{ code }}
+    <mat-label>
+      Select status
+    </mat-label>
+    <mat-select [(ngModel)]="filter.succeed">
+      <mat-option value="true">
+        Succeeded
+      </mat-option>
+      <mat-option value="false">
+        Failed
       </mat-option>
     </mat-select>
   </mat-form-field>
@@ -52,8 +57,7 @@
         <div>
           <span>Id</span>
           <span>Webhook Id</span>
-          <span>Request Url</span>
-          <span>Response Status Code</span>
+          <span>Status</span>
           <span>Execution Time</span>
         </div>
         <span class="emptyList" *ngIf="!logs.length && !isPending">
@@ -68,27 +72,34 @@
               <span>
                 {{ log.webhook }}
               </span>
-              <span>
-                {{ log.request.url }}
-              </span>
-              <span>
-                {{ log.response.status }}
+              <span [style.color]="log.succeed ? 'green' : 'red'">
+                {{ log.succeed ? "SUCCEEDED" : "FAILED" }}
               </span>
               <span>{{ log.execution_time | date: "MM/dd/yyyy HH:mm:ss" }}</span>
             </mat-panel-title>
           </mat-expansion-panel-header>
-          <h3>
-            Request
-          </h3>
-          <p>
-            {{ log.request | json }}
-          </p>
-          <h3>
-            Response
-          </h3>
-          <p>
-            {{ log.response | json }}
-          </p>
+          <ng-container *ngIf="log.content.error; else elseBlock">
+            <h3>
+              Message
+            </h3>
+            <p>
+              {{ log.content.error }}
+            </p>
+          </ng-container>
+          <ng-template #elseBlock>
+            <h3>
+              Request
+            </h3>
+            <p>
+              {{ log.content.request | json }}
+            </p>
+            <h3>
+              Response
+            </h3>
+            <p>
+              {{ log.content.response | json }}
+            </p>
+          </ng-template>
         </mat-expansion-panel>
         <mat-progress-spinner
           *ngIf="isPending"

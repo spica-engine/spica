@@ -194,25 +194,57 @@ describe("Webhook Invoker", () => {
 
     expect(insertLog).toHaveBeenCalledTimes(1);
     expect(insertLog).toHaveBeenCalledWith({
-      request: {
-        body: JSON.stringify({
-          type: "insert",
-          document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
-          documentKey: doc.insertedId.toHexString()
-        }),
-        headers: {
-          "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
-          "Content-type": "application/json"
+      content: {
+        request: {
+          body: JSON.stringify({
+            type: "insert",
+            document: {_id: doc.insertedId.toHexString(), doc: "fromdb"},
+            documentKey: doc.insertedId.toHexString()
+          }),
+          headers: {
+            "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
+            "Content-type": "application/json"
+          },
+          url: "http://spica.internal"
         },
-        url: "http://spica.internal"
+        response: {
+          headers: {key: ["value"]},
+          status: 404,
+          statusText: "Not Found",
+          body: "res_body"
+        }
       },
-      response: {
-        headers: {key: ["value"]},
-        status: 404,
-        statusText: "Not Found",
-        body: "res_body"
+      webhook: hook._id.toHexString(),
+      succeed: false
+    });
+  });
+
+  fit("should insert log when webhook body compilation failed", async () => {
+    const insertLog = spyOn(invoker["logService"], "insertOne");
+    const hook = await service.insertOne({
+      url: "http://spica.internal",
+      body: "{{{document.title}}}",
+      trigger: {
+        name: "database",
+        active: true,
+        options: {
+          collection: "stream_coll",
+          type: "INSERT"
+        }
+      }
+    });
+    await stream.change.wait();
+    stream.change.next();
+    const doc = await db.collection("stream_coll").insertOne({doc: "fromdb"});
+    await stream.change.wait();
+
+    expect(insertLog).toHaveBeenCalledTimes(1);
+    expect(insertLog).toHaveBeenCalledWith({
+      content: {
+        error: '"title" not defined in [object Object] - 1:3'
       },
-      webhook: hook._id.toHexString()
+      webhook: hook._id.toHexString(),
+      succeed: false
     });
   });
 });
