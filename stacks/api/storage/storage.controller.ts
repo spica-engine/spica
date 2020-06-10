@@ -19,12 +19,11 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {Binary} from "bson";
 import {createStorageActivity} from "./activity.resource";
-import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Storage, StorageObject} from "./storage.service";
 
 @Controller("storage")
 export class StorageController {
-  constructor(private storage: Storage, @Inject(STORAGE_OPTIONS) private options: StorageOptions) {}
+  constructor(private storage: Storage) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
@@ -34,11 +33,6 @@ export class StorageController {
     @Query("sort", JSONP, DEFAULT({_id: -1})) sort: object
   ) {
     const object = await this.storage.getAll(limit, skip, sort);
-    object.data = object.data.map(m => {
-      m.url = `${this.options.publicUrl}/storage/${m._id}`;
-      return m;
-    });
-
     return object;
   }
 
@@ -50,7 +44,7 @@ export class StorageController {
   ) {
     const object = await this.storage.get(id);
     if (withMeta) {
-      object.url = `${this.options.publicUrl}/storage/${object._id}`;
+      object.url = await this.storage.getUrl(id.toHexString());
       res.json(object);
     } else {
       res.header("Content-type", object.content.type);
@@ -69,8 +63,9 @@ export class StorageController {
     object.content.data = ((object.content.data as any) as Binary).buffer;
     object.content.size = object.content.data.byteLength;
 
-    return this.storage.updateOne({_id: id}, object).then(res => {
-      return {...res, url: `${this.options.publicUrl}/storage/${id}`};
+    return this.storage.updateOne({_id: id}, object).then(async res => {
+      const url = await this.storage.getUrl(id.toHexString());
+      return {...res, url: url};
     });
   }
 
@@ -97,11 +92,12 @@ export class StorageController {
         }
       });
     }
-    return this.storage.insertMany(insertData).then(storages =>
-      storages.map(storage => {
-        return {...storage, url: `${this.options.publicUrl}/storage/${storage._id}`};
-      })
-    );
+    return this.storage.insertMany(insertData).then(async storages => {
+      for (const obj of storages) {
+        obj.url = await this.storage.getUrl(obj._id.toString());
+      }
+      return storages;
+    });
   }
 
   @UseInterceptors(activity(createStorageActivity))

@@ -2,6 +2,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {Storage, StorageObject} from "./storage.service";
+import {Strategy, factoryProvider} from "./strategy";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -30,8 +31,14 @@ describe("storage service", () => {
           provide: STORAGE_OPTIONS,
           useValue: <StorageOptions>{
             publicUrl: "",
-            path: ""
+            path: "",
+            strategy: "default"
           }
+        },
+        {
+          provide: Strategy,
+          useFactory: factoryProvider,
+          inject: [STORAGE_OPTIONS]
         }
       ]
     }).compile();
@@ -70,6 +77,7 @@ describe("storage service", () => {
     await expectAsync(storageService.insertMany([storageObject])).toBeResolved();
 
     const updatedData = {
+      _id: storageObjectId,
       name: "new name",
       url: "new_url",
       content: {
@@ -78,7 +86,9 @@ describe("storage service", () => {
         size: 10
       }
     };
-    await expectAsync(storageService.updateOne({_id: storageObjectId}, updatedData)).toBeResolved();
+    await expectAsync(
+      storageService.updateOne({_id: storageObjectId}, updatedData).catch(console.log)
+    ).toBeResolved();
 
     return await expectAsync(
       storageService.get(storageObjectId).then(result => {
