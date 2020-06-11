@@ -25,7 +25,7 @@ describe("WebhookLogViewComponent", () => {
 
   let filter = {
     webhooks: ["test_webhook"],
-    statusCodes: [404],
+    succeed: false,
     date: {
       begin: new Date(2000, 0, 1),
       end: new Date(2000, 0, 1)
@@ -62,8 +62,11 @@ describe("WebhookLogViewComponent", () => {
                 {
                   _id: "1",
                   webhook: "test_webhook",
-                  request: {},
-                  response: {},
+                  succeed: true,
+                  content: {
+                    request: {},
+                    response: {}
+                  },
                   execution_time: new Date()
                 }
               ]);
@@ -91,7 +94,7 @@ describe("WebhookLogViewComponent", () => {
     expect(filterNextSpy).toHaveBeenCalledTimes(1);
     expect(filterNextSpy).toHaveBeenCalledWith({
       webhooks: ["test_webhook"],
-      statusCodes: [404],
+      succeed: false,
       date: {
         begin: new Date(2000, 0, 1),
         end: new Date(2000, 0, 1)
@@ -112,7 +115,7 @@ describe("WebhookLogViewComponent", () => {
         begin: undefined,
         end: undefined
       },
-      statusCodes: [],
+      succeed: null,
       webhooks: [],
       limit: 20,
       skip: undefined
@@ -143,7 +146,7 @@ describe("WebhookLogViewComponent", () => {
     expect(filterNextSpy).toHaveBeenCalledTimes(1);
     expect(filterNextSpy).toHaveBeenCalledWith({
       webhooks: ["test_webhook"],
-      statusCodes: [404],
+      succeed: false,
       date: {
         begin: new Date(2000, 0, 1),
         end: new Date(2000, 0, 1)

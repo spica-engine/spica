@@ -11,7 +11,7 @@ import {
   Body
 } from "@nestjs/common";
 import {AuthGuard, ActionGuard} from "@spica-server/passport";
-import {NUMBER, DATE, ARRAY, DEFAULT} from "@spica-server/core";
+import {NUMBER, DATE, ARRAY, DEFAULT, JSONP} from "@spica-server/core";
 import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Log} from ".";
 
@@ -25,7 +25,7 @@ export class WebhookLogController {
     @Query("webhook", DEFAULT([]), ARRAY(String)) webhook: string[],
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
-    @Query("status", DEFAULT([]), ARRAY(Number)) status: number[],
+    @Query("succeed", JSONP) succeed: boolean,
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
@@ -50,8 +50,8 @@ export class WebhookLogController {
       filter.webhook = {$in: webhook};
     }
 
-    if (status.length) {
-      filter["response.status"] = {$in: status};
+    if (succeed != null) {
+      filter.succeed = {$eq: succeed};
     }
 
     aggregation.push({$match: filter});
