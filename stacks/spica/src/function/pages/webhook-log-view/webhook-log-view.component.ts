@@ -41,7 +41,7 @@ export class WebhookLogViewComponent extends DataSource<WebhookLog> implements O
       begin: undefined,
       end: undefined
     },
-    statusCodes: [],
+    succeed: null,
     webhooks: [],
     limit: this.defaultLimit,
     skip: undefined
@@ -138,7 +138,7 @@ export class WebhookLogViewComponent extends DataSource<WebhookLog> implements O
         begin: undefined,
         end: undefined
       },
-      statusCodes: [],
+      succeed: null,
       webhooks: [],
       limit: this.defaultLimit,
       skip: undefined
