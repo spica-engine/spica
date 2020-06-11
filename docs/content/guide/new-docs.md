@@ -1194,7 +1194,7 @@ You can invoke a function in real-time from yout client application. Firehose tr
 
 As an example, if you are making a game and run a real-time serverside logic which will communicate with the client application such as real-time point calculating, you can calculate score and return via websocket using firehose trigger.
 
-```
+```typescript
 export default function (message, { socket, pool }) {
   console.log(message.name); // Outputs: connection
   console.log(message.data.url); // Outputs: /firehose
