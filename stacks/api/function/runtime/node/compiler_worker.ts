@@ -132,6 +132,7 @@ function build(compilation: Compilation) {
       moduleResolution: "node",
       module: "commonjs",
       target: "ES2020",
+      typeRoots: [path.join(compilation.cwd, "node_modules", "@types")],
       sourceMap: true,
       alwaysStrict: true,
       preserveSymlinks: true,
@@ -148,7 +149,7 @@ function build(compilation: Compilation) {
       JSON.stringify({
         compilerOptions: options,
         files: [path.join(compilation.cwd, compilation.entrypoint)],
-        exclude: ["**/node_modules/***", "**/.build/**"]
+        exclude: ["**/.build/**"]
       })
     );
 

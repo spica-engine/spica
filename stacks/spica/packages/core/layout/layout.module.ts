@@ -18,6 +18,7 @@ import {HomeLayoutComponent} from "./home/home.layout";
 import {LayoutRouterOutlet} from "./router_outlet";
 import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.component";
 import {SchemeObserver} from "./scheme.observer";
+import {ToolbarActionDirective} from "./toolbar-action";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -41,7 +42,8 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     HomeLayoutComponent,
     LayoutRouterOutlet,
     ErrorPageComponent,
-    SchemeSwitcherComponent
+    SchemeSwitcherComponent,
+    ToolbarActionDirective
   ],
   exports: [LayoutRouterOutlet, RouterModule],
   entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent]

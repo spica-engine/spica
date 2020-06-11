@@ -7,4 +7,5 @@ export interface PassportOptions {
   secretOrKey: string;
   defaultPassword?: string;
   defaultStrategy?: string;
+  samlCertificateTTL: number;
 }

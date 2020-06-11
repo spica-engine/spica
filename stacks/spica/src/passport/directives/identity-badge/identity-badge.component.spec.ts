@@ -1,8 +1,15 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {MatButtonModule, MatIconModule, MatMenuModule} from "@angular/material";
+import {
+  MatButtonModule,
+  MatIconModule,
+  MatMenuModule,
+  MatTooltip,
+  MatTooltipModule
+} from "@angular/material";
 import {By} from "@angular/platform-browser";
 import {Router} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
+import {LayoutModule} from "@spica-client/core/layout";
 import {PassportService} from "../../services/passport.service";
 import {IdentityBadgeComponent} from "./identity-badge.component";
 
@@ -16,7 +23,14 @@ describe("IdentityBadgeComponent", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [MatButtonModule, MatIconModule, MatMenuModule, RouterTestingModule],
+      imports: [
+        MatButtonModule,
+        MatIconModule,
+        MatMenuModule,
+        MatTooltipModule,
+        LayoutModule,
+        RouterTestingModule
+      ],
       declarations: [IdentityBadgeComponent],
       providers: [
         {
@@ -42,8 +56,7 @@ describe("IdentityBadgeComponent", () => {
 
   it("should show identifier", () => {
     expect(
-      fixture.debugElement.query(By.css("button .mat-button-wrapper span")).nativeElement
-        .textContent
+      fixture.debugElement.query(By.directive(MatTooltip)).injector.get(MatTooltip).message
     ).toBe("test");
   });
 
