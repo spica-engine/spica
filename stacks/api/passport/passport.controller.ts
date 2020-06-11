@@ -11,12 +11,12 @@ import {
   NotFoundException,
   Param,
   Post,
-  Query
+  Query,
+  UnauthorizedException
 } from "@nestjs/common";
-import {of, Subject} from "rxjs";
+import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
-import {Identity} from "./identity";
-import {IdentityService} from "./identity";
+import {Identity, IdentityService} from "./identity";
 import {PassportService} from "./passport.service";
 import {SamlService} from "./saml.service";
 import {StrategyService} from "./strategies/strategy.service";
@@ -44,11 +44,11 @@ export class PassportController {
       identity = await this.passport.identify(identifier, password);
       if (identity) {
       } else {
-        throw new NotFoundException("Identifier or password were incorrect.");
+        throw new NotFoundException("Identifier or password was incorrect.");
       }
     } else {
       if (!this.assertObservers.has(state)) {
-        throw new BadRequestException("invalid state.");
+        throw new BadRequestException("Authentication has failed due to invalid state.");
       }
 
       const observer = this.assertObservers.get(state);
@@ -59,10 +59,10 @@ export class PassportController {
           take(1),
           catchError(error => {
             this.assertObservers.delete(state);
-            return of(
+            return throwError(
               error && error.name == "TimeoutError"
-                ? new GatewayTimeoutException("Operation was not completed with in one minute.")
-                : new InternalServerErrorException()
+                ? new GatewayTimeoutException("Operation did not complete within one minute.")
+                : new UnauthorizedException(String(error))
             );
           })
         )
@@ -70,7 +70,7 @@ export class PassportController {
       this.assertObservers.delete(state);
 
       if (!user || (user && !user.upn)) {
-        throw new InternalServerErrorException("assertion failed.");
+        throw new InternalServerErrorException("Authentication has failed.");
       }
 
       identity =
@@ -126,10 +126,10 @@ export class PassportController {
   @HttpCode(HttpStatus.NO_CONTENT)
   complete(@Param("name") name: string, @Body() body, @Query("state") stateId: string) {
     if (!stateId) {
-      throw new BadRequestException("state parameter is required.");
+      throw new BadRequestException("state query parameter is required.");
     }
     if (!this.assertObservers.has(stateId)) {
-      throw new BadRequestException("invalid state.");
+      throw new BadRequestException("Authentication has failed due to invalid state.");
     }
     const observer = this.assertObservers.get(stateId);
     return this.saml

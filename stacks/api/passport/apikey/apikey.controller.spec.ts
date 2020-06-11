@@ -20,7 +20,8 @@ describe("ApiKey", () => {
           issuer: "spica.internal",
           secretOrKey: "test",
           defaultStrategy: "noop",
-          publicUrl: undefined
+          publicUrl: undefined,
+          samlCertificateTTL: 1
         }),
         PassportTestingModule.initialize()
       ]

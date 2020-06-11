@@ -37,7 +37,7 @@ describe("Scheme Switcher Component", () => {
           .getAttribute("ng-reflect-message")
       ).toBe("Switch to light theme.");
       expect(fixture.debugElement.nativeElement.querySelector("button mat-icon").textContent).toBe(
-        " nights_stay"
+        "nights_stay"
       );
     });
 
@@ -80,7 +80,7 @@ describe("Scheme Switcher Component", () => {
           .getAttribute("ng-reflect-message")
       ).toBe("Switch to dark theme.");
       expect(fixture.debugElement.nativeElement.querySelector("button mat-icon").textContent).toBe(
-        " wb_sunny"
+        "wb_sunny"
       );
     });
 

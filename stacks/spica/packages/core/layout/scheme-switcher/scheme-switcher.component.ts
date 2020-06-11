@@ -1,5 +1,6 @@
 import {Component} from "@angular/core";
 import {Observable} from "rxjs";
+import {map, startWith, tap} from "rxjs/operators";
 import {Scheme, SchemeObserver} from "../scheme.observer";
 
 @Component({
@@ -7,16 +8,19 @@ import {Scheme, SchemeObserver} from "../scheme.observer";
   templateUrl: "./scheme-switcher.component.html"
 })
 export class SchemeSwitcherComponent {
-  isDark$: Observable<boolean>;
-
-  private isDark = this.schemeObserver.isMatched(Scheme.Dark);
+  Scheme = Scheme;
+  scheme$: Observable<Scheme>;
 
   constructor(private schemeObserver: SchemeObserver) {
-    this.isDark$ = schemeObserver.observe(Scheme.Dark);
+    this.scheme$ = schemeObserver.observe(Scheme.Dark).pipe(
+      startWith(this.schemeObserver.isMatched(Scheme.Dark)),
+      map(isDark => (isDark ? Scheme.Dark : Scheme.Light))
+    );
   }
 
   changeScheme() {
-    this.isDark = !this.isDark;
-    this.schemeObserver.setScheme(this.isDark ? Scheme.Dark : Scheme.Light);
+    this.schemeObserver.setScheme(
+      this.schemeObserver.isMatched(Scheme.Dark) ? Scheme.Light : Scheme.Dark
+    );
   }
 }

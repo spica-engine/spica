@@ -22,7 +22,7 @@ export class SamlService {
   }
 
   getStrategy(name: string): Promise<SamlStrategy | null> {
-    return this.strategy.findOne<SamlStrategy>({name, type: "saml"});
+    return this.strategy.findOne({name, type: "saml"}) as Promise<SamlStrategy>;
   }
 
   async getLoginUrl(name: string): Promise<{url: string; state: string}> {
@@ -75,7 +75,8 @@ export class SamlService {
       certificate: strategy.options.sp.certificate,
       private_key: strategy.options.sp.private_key,
       force_authn: true,
-      nameid_format: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+      nameid_format: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+      allow_unencrypted_assertion: true
     });
 
     return {idp, sp};
