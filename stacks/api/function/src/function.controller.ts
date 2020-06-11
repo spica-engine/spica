@@ -61,7 +61,7 @@ export class FunctionController {
       });
     }
 
-    return {enqueuers, runtimes};
+    return {enqueuers, runtimes, timeout: this.horizon["options"].timeout};
   }
 
   @Get()

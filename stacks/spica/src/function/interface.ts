@@ -171,4 +171,5 @@ export interface Enqueuer {
 
 export interface Information {
   enqueuers: Enqueuer[];
+  timeout: number;
 }

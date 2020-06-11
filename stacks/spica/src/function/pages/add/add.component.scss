@@ -36,9 +36,17 @@
     }
 
     mat-card-content {
-      mat-form-field[description],
-      mat-form-field[name] {
+      mat-form-field[description] {
         width: 100%;
+      }
+
+      mat-form-field[name] {
+        width: 40%;
+      }
+
+      mat-form-field[timeout] {
+        width: 10%;
+        margin-left: 10px;
       }
 
       mat-list {
