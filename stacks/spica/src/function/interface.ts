@@ -143,14 +143,18 @@ export function emptyWebhook(): Webhook {
 export interface WebhookLog {
   _id: string;
   webhook: string;
-  request: object;
-  response: object;
+  succeed: boolean;
+  content: {
+    request?: object;
+    response?: object;
+    error?: string;
+  };
   execution_time: Date;
 }
 
 export interface WebhookLogFilter {
   webhooks: string[];
-  statusCodes: number[];
+  succeed: boolean;
   date: {
     begin: Date;
     end: Date;

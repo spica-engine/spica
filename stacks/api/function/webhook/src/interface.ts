@@ -19,8 +19,12 @@ export interface Trigger {
 export interface Log {
   _id?: ObjectId;
   webhook: string;
-  request: Request;
-  response: Response;
+  succeed: boolean;
+  content: {
+    error?: string;
+    request?: Request;
+    response?: Response;
+  };
 }
 
 export interface Request {

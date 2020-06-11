@@ -228,7 +228,9 @@ export class FunctionController {
     }
     operators.push(
       last(),
-      switchMap(() => this.engine.compile(fn).catch(() => {})),
+      tap(() => {
+        this.engine.compile(fn).catch(() => {});
+      }),
       finalize(() => res.end())
     );
 

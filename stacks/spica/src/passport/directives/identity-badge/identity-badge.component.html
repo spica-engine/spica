@@ -1,7 +1,11 @@
-<button mat-button [matMenuTriggerFor]="identityMenu">
+<button
+  mat-icon-button
+  [class.mat-flat-button]="dark$ | async"
+  [matMenuTriggerFor]="identityMenu"
+  [matTooltip]="identity.identifier"
+>
   <mat-icon>person</mat-icon>
-  <span>{{ identity.identifier }}</span>
-  <mat-menu #identityMenu="matMenu">
+  <mat-menu #identityMenu="matMenu" class="mat-elevation-z25">
     <button mat-menu-item [routerLink]="['passport', 'identity', identity._id, 'edit']">
       Profile
     </button>

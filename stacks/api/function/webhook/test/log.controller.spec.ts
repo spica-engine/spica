@@ -43,32 +43,38 @@ describe("Activity Controller", () => {
     logIds = await service.insertMany([
       {
         _id: ObjectId.createFromTime(today.getTime() / 1000),
-        request: {
-          body: "req_body",
-          headers: {test_key: "test_value"},
-          url: "url"
+        content: {
+          request: {
+            body: "req_body",
+            headers: {test_key: "test_value"},
+            url: "url"
+          },
+          response: {
+            body: "res_body",
+            headers: {test_key: ["test_value"]},
+            status: 404,
+            statusText: "BAD REQUEST"
+          }
         },
-        response: {
-          body: "res_body",
-          headers: {test_key: ["test_value"]},
-          status: 404,
-          statusText: "BAD REQUEST"
-        },
+        succeed: false,
         webhook: "test_webhook_id"
       },
       {
         _id: ObjectId.createFromTime(yesterday.getTime() / 1000),
-        request: {
-          body: "req_body2",
-          headers: {test_key: "test_value2"},
-          url: "url2"
+        content: {
+          request: {
+            body: "req_body2",
+            headers: {test_key: "test_value2"},
+            url: "url2"
+          },
+          response: {
+            body: "res_body2",
+            headers: {test_key: ["test_value2"]},
+            status: 201,
+            statusText: "CREATED"
+          }
         },
-        response: {
-          body: "res_body2",
-          headers: {test_key: ["test_value2"]},
-          status: 201,
-          statusText: "CREATED"
-        },
+        succeed: true,
         webhook: "test_webhook_id2"
       }
     ]);
@@ -89,33 +95,39 @@ describe("Activity Controller", () => {
     expect(response.body).toEqual([
       {
         _id: logIds[0].toHexString(),
-        request: {
-          body: "req_body",
-          headers: {test_key: "test_value"},
-          url: "url"
+        content: {
+          request: {
+            body: "req_body",
+            headers: {test_key: "test_value"},
+            url: "url"
+          },
+          response: {
+            body: "res_body",
+            headers: {test_key: ["test_value"]},
+            status: 404,
+            statusText: "BAD REQUEST"
+          }
         },
-        response: {
-          body: "res_body",
-          headers: {test_key: ["test_value"]},
-          status: 404,
-          statusText: "BAD REQUEST"
-        },
+        succeed: false,
         webhook: "test_webhook_id",
         execution_time: objectIdToDate(logIds[0].toHexString())
       },
       {
         _id: logIds[1].toHexString(),
-        request: {
-          body: "req_body2",
-          headers: {test_key: "test_value2"},
-          url: "url2"
+        content: {
+          request: {
+            body: "req_body2",
+            headers: {test_key: "test_value2"},
+            url: "url2"
+          },
+          response: {
+            body: "res_body2",
+            headers: {test_key: ["test_value2"]},
+            status: 201,
+            statusText: "CREATED"
+          }
         },
-        response: {
-          body: "res_body2",
-          headers: {test_key: ["test_value2"]},
-          status: 201,
-          statusText: "CREATED"
-        },
+        succeed: true,
         webhook: "test_webhook_id2",
         execution_time: objectIdToDate(logIds[1].toHexString())
       }
@@ -129,17 +141,20 @@ describe("Activity Controller", () => {
     expect(response.body).toEqual([
       {
         _id: logIds[1].toHexString(),
-        request: {
-          body: "req_body2",
-          headers: {test_key: "test_value2"},
-          url: "url2"
+        content: {
+          request: {
+            body: "req_body2",
+            headers: {test_key: "test_value2"},
+            url: "url2"
+          },
+          response: {
+            body: "res_body2",
+            headers: {test_key: ["test_value2"]},
+            status: 201,
+            statusText: "CREATED"
+          }
         },
-        response: {
-          body: "res_body2",
-          headers: {test_key: ["test_value2"]},
-          status: 201,
-          statusText: "CREATED"
-        },
+        succeed: true,
         webhook: "test_webhook_id2",
         execution_time: objectIdToDate(logIds[1].toHexString())
       }
@@ -153,41 +168,47 @@ describe("Activity Controller", () => {
     expect(response.body).toEqual([
       {
         _id: logIds[0].toHexString(),
-        request: {
-          body: "req_body",
-          headers: {test_key: "test_value"},
-          url: "url"
+        content: {
+          request: {
+            body: "req_body",
+            headers: {test_key: "test_value"},
+            url: "url"
+          },
+          response: {
+            body: "res_body",
+            headers: {test_key: ["test_value"]},
+            status: 404,
+            statusText: "BAD REQUEST"
+          }
         },
-        response: {
-          body: "res_body",
-          headers: {test_key: ["test_value"]},
-          status: 404,
-          statusText: "BAD REQUEST"
-        },
+        succeed: false,
         webhook: "test_webhook_id",
         execution_time: objectIdToDate(logIds[0].toHexString())
       }
     ]);
   });
 
-  it("should filter by statusCode", async () => {
-    const response = await request.get("/webhook/logs", {status: 201});
+  it("should filter by succeed value", async () => {
+    const response = await request.get("/webhook/logs", {succeed: true});
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
       {
         _id: logIds[1].toHexString(),
-        request: {
-          body: "req_body2",
-          headers: {test_key: "test_value2"},
-          url: "url2"
+        content: {
+          request: {
+            body: "req_body2",
+            headers: {test_key: "test_value2"},
+            url: "url2"
+          },
+          response: {
+            body: "res_body2",
+            headers: {test_key: ["test_value2"]},
+            status: 201,
+            statusText: "CREATED"
+          }
         },
-        response: {
-          body: "res_body2",
-          headers: {test_key: ["test_value2"]},
-          status: 201,
-          statusText: "CREATED"
-        },
+        succeed: true,
         webhook: "test_webhook_id2",
         execution_time: objectIdToDate(logIds[1].toHexString())
       }
@@ -207,17 +228,20 @@ describe("Activity Controller", () => {
     expect(response.body).toEqual([
       {
         _id: logIds[0].toHexString(),
-        request: {
-          body: "req_body",
-          headers: {test_key: "test_value"},
-          url: "url"
+        content: {
+          request: {
+            body: "req_body",
+            headers: {test_key: "test_value"},
+            url: "url"
+          },
+          response: {
+            body: "res_body",
+            headers: {test_key: ["test_value"]},
+            status: 404,
+            statusText: "BAD REQUEST"
+          }
         },
-        response: {
-          body: "res_body",
-          headers: {test_key: ["test_value"]},
-          status: 404,
-          statusText: "BAD REQUEST"
-        },
+        succeed: false,
         webhook: "test_webhook_id",
         execution_time: objectIdToDate(logIds[0].toHexString())
       }

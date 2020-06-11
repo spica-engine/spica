@@ -77,6 +77,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       request.path = req.path;
       request.statusCode = req.statusCode;
       request.statusMessage = req.statusMessage;
+      request.query = JSON.stringify(req.query);
       request.params = Object.keys(req.params).reduce((acc, key) => {
         const param = new Http.Param();
         param.key = key;
