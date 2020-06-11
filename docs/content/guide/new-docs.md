@@ -1,20 +1,26 @@
 # Getting Started
+
 ## Introduction
+
 These documents will take you from 0 to hero and helps you to discover advanced features of Spica Development Engine.
+
 ### What is Spica?
-Spica (a.k.a. Spica Development Engine) is an open-source package that gives virtually everything a backend developer needs. It gives a pre-built administration panel and a fully manageable no-code REST API. It can be used as a backend service, a database layer, or as a headless CMS for managing content. 
+
+Spica (a.k.a. Spica Development Engine) is an open-source package that gives virtually everything a backend developer needs. It gives a pre-built administration panel and a fully manageable no-code REST API. It can be used as a backend service, a database layer, or as a headless CMS for managing content.
 
 ### Differences Between Spica API and Spica Client
+
 Spica Development Engine divided into two parts because of principal differences.
 
 Spica Client, is a user-friendly admin panel for those who like to manage their development process from a panel with a few clicks.
 
-Spica API, on the other hand, is a fully controllable REST API. As Spica has an API-first approach, any features of the engine are controllable via HTTP calls. Also, it’s suitable to integrate with any frontend application to free the product owners from backend development costs.
+Spica API, on the other hand, is a fully controllable REST API.
+
+As Spica has an API-first approach, any features of the engine are controllable via HTTP calls. Also, it’s suitable to integrate with any frontend application to free the product owners from backend development costs.
 
 ## Installation
 
-
-This tutorial helps you to install Spica to different environments. We provide a few ways to install, so you can choose which one of them suits you. 
+This tutorial helps you to install Spica to different environments. We provide a few ways to install, so you can choose which one of them suits you.
 
 ### Using Spica CLI
 
@@ -410,9 +416,10 @@ changes to be accepted, the CLA must be read and accepted.
 [individual-cla]: https://github.com/spica-engine/spica/blob/master/CLA.md
 [stackoverflow]: http://stackoverflow.com/questions/tagged/spica
 
-
 ## Quick Start Guide
+
 ### 1. Install Spica and Login
+
 Install CLI using the `npm` package manager:
 
 ```sh
@@ -430,35 +437,27 @@ By default, Spica is served under 4500 port. It can be changed by using `--port`
 After the installation, navigate to [http://localhost:4500/spica](http://localhost:4500/spica)
 
 Fill the login form with the following credentials:
-**Username**: *spica*
-**Password**: *spica*
+**Username**: _spica_
+**Password**: _spica_
 
-> Note: After the installation, you may want to change the credentials before going live. 
+> Note: After the installation, you may want to change the credentials before going live.
 
 ### 2. Create a User Bucket Schema
 
-Navigate to **Developer** -> **Bucket** (or [http://localhost:4500/spica/buckets](http://localhost:4500/spica)) in the left-hand menu. 
+Navigate to **Developer** -> **Bucket** (or [http://localhost:4500/spica/buckets](http://localhost:4500/spica)) in the left-hand menu.
 
 - Click the "+" icon on the top right toolbar.
 - Enter "Users" to "name" field and fill the "Description" field however you want
 - Delete all "Properties" by clicking the "trash" icon on each property.
-- Add the following properties: 
-	- Add a "name" field and set its type to "String", 
-	- Add a "email" field and set its type to "String", 
-	- Add a "birthday" field and set its type to "Date"
-- Click the "cog" icon on "name" field and check the following options: 
-	- Primary field (which marks this field as primary)
-	- Visible on list (which makes this field visible on list view)
-	- Require (which marks this field a mandatory field to create an entry)
-- Click the "cog" icon on "email" field and check the following options:
-	- Visible on list (which makes this field visible on list view)
-	- Require (which marks this field a mandatory field to create an entry)
-- Click the "cog" icon on "birthday" field and check the following options:
-	- Visible on list (which makes this field visible on list view)
+- Add the following properties: - Add a "name" field and set its type to "String", - Add a "email" field and set its type to "String", - Add a "birthday" field and set its type to "Date"
+- Click the "cog" icon on "name" field and check the following options: - Primary field (which marks this field as primary) - Visible on list (which makes this field visible on list view) - Require (which marks this field a mandatory field to create an entry)
+- Click the "cog" icon on "email" field and check the following options: - Visible on list (which makes this field visible on list view) - Require (which marks this field a mandatory field to create an entry)
+- Click the "cog" icon on "birthday" field and check the following options: - Visible on list (which makes this field visible on list view)
 - Move on to the "View" section of the form and arrange your entry form view by drag and drop
 - Click **Save** and wait for the page refresh.
 
 ### 3. Add entry to "Users" Bucket
+
 Navigate to **Content** -> **Users**, in the left-hand menu.
 
 - Click "+" icon on the top right toolbar.
@@ -470,12 +469,13 @@ Navigate to **Content** -> **Users**, in the left-hand menu.
 You will see a user named John Doe listed in the entries.
 
 ### 4. Get the User Bucket entries via API
+
 Our newly created User Bucket is ready with an entry. The list of **Users** is accessible at http://localhost:4500/api/bucket/{bucket_id}
 
 > Note: The bucket id of the newly created **Users** bucket can be found by clicking on the "i" icon on the list view.
 
 **Congratulations**
-You have created your first Bucket and your first bucket entry on Spica and have accessed it both via Spica Client and the API.   
+You have created your first Bucket and your first bucket entry on Spica and have accessed it both via Spica Client and the API.
 
 <!-- ## Glossary
 Explain the common terms of Spica eg. buckets, bucket data, functions, passport, etc.
@@ -496,7 +496,7 @@ A strategy helps you to enable a single-sign on authentication to Spica. Once yo
 
 #### API Keys
 A API key enables machine to machine communication. -->
- 
+
 # Guides
 
 ## Passport
@@ -505,11 +505,11 @@ Fundamentally, this module is used for authentication and authorization on Spica
 
 ### Authentication
 
-Out of the box, Spica supports two different authentication stretagies. This document will explain the fundemantals of those stretegies. 
+Out of the box, Spica supports two different authentication stretagies. This document will explain the fundemantals of those stretegies.
 
 #### Identity
 
-Fundemantally, Identities are the users of a Spica instance. It contains **identified** and **password** informations for login. 
+Fundemantally, Identities are the users of a Spica instance. It contains **identified** and **password** informations for login.
 
 > Right after the installation, Spica creates a default identitiy to get you started. We suggest you to change at least its password before going live.
 
@@ -517,12 +517,12 @@ To create an Identitiy, navigate to **System** -> **Identities** in the left-han
 
 - Click "+" icon on the top right toolbar.
 - Fill the **Identifier** and **Password** field.
-- Press **Save** 
+- Press **Save**
 
 ##### Adding Additional Properties
 
 If you want to store additional informations on **Identities**, you can create custom fields. To create a custom field on Identities, navigate to **System** -> **Settings** in the left-hand menu.
-  
+
 #### API Key
 
 Instead of Identity, API key is allows the machine to machine communication. The token, it provides doesn't have an expiration date so it can be used as long as it's intentionally deleted from Spica.
@@ -531,9 +531,9 @@ To create an API Key, navigate to **System** -> **API Keys** in the left-hand me
 
 - Click "+" icon on the top right toolbar.
 - Fill the **name** and **description** field.
-- Press **Save** 
+- Press **Save**
 
-Once the saving completed, you can use the **API Key** value on your API calls on header section. 
+Once the saving completed, you can use the **API Key** value on your API calls on header section.
 
 > For more informations about how to use API Key, please refer the API Documentations.
 
@@ -541,13 +541,13 @@ Once the saving completed, you can use the **API Key** value on your API calls o
 
 ### Policies
 
-Policies are basically a set of rules which can be attached to your **Identities** and **API Keys** to encapsulate their behavior. 
+Policies are basically a set of rules which can be attached to your **Identities** and **API Keys** to encapsulate their behavior.
 
 #### Using the Policies
 
-Spica cames with various different built-in Policies to meet your needs on encapsulation, so you don't have to create each of them individually. 
+Spica cames with various different built-in Policies to meet your needs on encapsulation, so you don't have to create each of them individually.
 
-To attach Policies, enter either **Identity Edit Page** or **API Key Edit Page**. At the bottom, you will see `Owned Policies` section. 
+To attach Policies, enter either **Identity Edit Page** or **API Key Edit Page**. At the bottom, you will see `Owned Policies` section.
 
 To attach the policy, click the `link` buttom. To detach click on `unlink` button.
 
@@ -568,18 +568,22 @@ Click on `Add Statement` button to add new statement. You'll see a new statement
 `Add Resource`: Optional. If you want to allow/deny actions on resource based, add resource and enter the \_id of the resource. You can add infinite number of resources to a Statement.
 
 ## Buckets as Data Layer
-Buckets are the main foundation of Spica Development Engine. While creating a Bucket, the user defines a data schema. 
+
+Buckets are the main foundation of Spica Development Engine. While creating a Bucket, the user defines a data schema.
 
 ### Outlining Data Schemas
+
 To create a new Bucket, go to Bucket listing page and find the plus (+) icon. Clicking it will take you to Bucket creation page. Or if you want to edit one of your Buckets, on the listing page find the desired Bucket and click the pen icon next to it.
 Bucket Create/Edit form divides into a few sections.
 
 #### Top Bar and Describe
+
 On the top bar, you'll see an icon as default. You can click to change the icon of the Bucket. That icon will be shown on the sidebar next to the Bucket title.
 
 To save the Bucket, you have to enter a Title and a Description to explain the Bucket's purpose. While the Title is limited to 15 characters, Description is limited with 250.
 
 #### Properties
+
 Here, in this section, you will define what kind of data the Bucket will hold. By default, Description and Title properties are created. You can delete those properties by clicking the red trash icon to start with a blank Bucket.
 
 To enter a new property, find the text-box with "Enter a property name" placeholder. Enter a unique, lowercase property name and then click the button next to it to save.
@@ -588,6 +592,7 @@ Remember: Spica stores the property names as JSON keys. For this, special charac
 You'll see the name of the newly created property is added to the list. Click on it to edit the property and its options.
 
 #### View
+
 You can customize the Bucket Data Create/Edit page from this section. Left, Right and Bottom represent the divisions of the layout on Bucket Data Create/Edit page.
 
 You can drag and drop the Bucket Properties to the desired division.
@@ -644,9 +649,9 @@ This module is essentially a file manager on your Spica instance. You can store,
 
 ### Online Image Editor
 
-To edit image typed storage item, click the `three dots` next to the item to open the context menu. Clicking the `edit` button will takes you to the Image Editing page. 
+To edit image typed storage item, click the `three dots` next to the item to open the context menu. Clicking the `edit` button will takes you to the Image Editing page.
 
-On that page you crop the image, scale by percentage and rotate the image as you wish. Click on the `tick` icon to save the image after editing. 
+On that page you crop the image, scale by percentage and rotate the image as you wish. Click on the `tick` icon to save the image after editing.
 
 ## Function
 
@@ -701,10 +706,9 @@ Spica provides modules to your function in runtime. Modules work like a module i
 
 In order to use these modules in a **function**, they need to be added to **dependencies** section on **Function Edit page**.
 
-| Module               | Description                                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Module                   | Description                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | `@spica-devkit/database` | This module has a public API for making database operations like **update**, **delete**, **create**, **get** |
-
 
 #### Database
 
@@ -816,7 +820,6 @@ export default async function() {
   }
 }
 ```
-
 
 ### Triggers
 
@@ -947,7 +950,7 @@ To be able to create a function that triggered by database event, you need two r
 - **Event Type:** Type of the event that happens in the collection. It can be `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 - **Full Document:** Whether you want only full document or changes on passed data.
 
-> IMPORTANT: When a REPLACE/UPDATE event immediately followed by DELETE/DROP event, `fullDocument` property in the event will be `null`. 
+> IMPORTANT: When a REPLACE/UPDATE event immediately followed by DELETE/DROP event, `fullDocument` property in the event will be `null`.
 
 A basic database function looks like this:
 
@@ -1034,27 +1037,185 @@ Here is some example of CRON expressions
 | `* * * * *` | Run every minute                                           |
 
 #### Bucket
-Bucket trigger invokes your function before the selected operation for a specific bucket. For bucket trigger, all `INSERT`, `UPDATE`, `INDEX`, `GET`, `DELETE`, `STREAM` operations are available. 
+
+Bucket trigger invokes your function before the selected operation for a specific bucket. For bucket trigger, all `INSERT`, `UPDATE`, `INDEX`, `GET`, `DELETE`, `STREAM` operations are available.
 
 All required fields for a bucket trigger are listed below;
+
 - **Bucket:** Bucket ID of the desired bucket
 - **Event Type:** Type of the event that happens in the collection.
 
 > IMPORTANT: `STREAM` operations are used for real-time bucket connections. If your client uses real-time data transfer, you can use `STREAM` operation to trigger a function before each websocket data transfer from client application to your Spica instance.
 
-//TODO: Example Code
+INSERT request object:
+
+```typescript
+ ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: undefined,
+  type: 'INSERT',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': '546e8120-9ca2-4982-b0e2-ecb91ae64367',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
+  }
+}
+```
+
+INSERT example:
+
+```typescript
+export default function(req) {
+  if (req.headers.authorization == "FORBIDDEN_APIKEY") return false;
+  else true;
+}
+```
+
+UPDATE request object:
+
+```typescript
+ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: '5ec7b39aa33b5f160008934f',
+  type: 'UPDATE',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': 'b48d6195-c9ae-4cc5-bf63-25ee2728e1d6',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
+  }
+}
+```
+
+UPDATE example:
+
+```typescript
+export default function(req) {
+  if (req.document == "MY_SECRET_DOCUMENT") return false;
+  else true;
+}
+```
+
+GET request object:
+
+```typescript
+ ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: '5ec7b39aa33b5f160008934f',
+  type: 'GET',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': '296f149c-1d77-4ba7-83b9-b84cffca41a4',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
+  }
+}
+```
+
+GET example:
+
+```typescript
+export default function(req) {
+  const aggregation = [];
+  if (req.headers.authorization == "MY_SECRET_TOKEN") {
+    aggregation.push({$unset: ["password"]});
+    //which means hide password field
+  }
+  return aggregation;
+}
+```
+
+INDEX request object:
+
+```typescript
+ ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: undefined,
+  type: 'INDEX',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': '83bba0bf-85d4-43ef-ae39-9f0300c92115',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
+  }
+}
+```
+
+INDEX example:
+
+```typescript
+export default function(request) {
+  return [{$match: {age: {$lt: 20}}}];
+}
+```
 
 #### System
+
 System trigger includes system related event data and invokes a function whenever the choosen event happens. System trigger is the best choice for using dashboard module, configurating the project or setting up a starting state of you data. `READY` event will be triggered when a server restarts and ready to use. For the current version system trigger is listening only `READY` event.
 
-//TODO: Example Code
+```typescript
+export default function() {
+  console.log("Spica is ready");
+}
+```
 
 #### Firehose
+
 You can invoke a function in real-time from yout client application. Firehose trigger does not interact with bucket or database. Instead, it listens the real-time port so you can interact with the function directly from your client application. Firehose trigger can listen a specific event, connection start or connection closed events.
 
 As an example, if you are making a game and run a real-time serverside logic which will communicate with the client application such as real-time point calculating, you can calculate score and return via websocket using firehose trigger.
 
-//TODO: Example Code
+```
+export default function (message, { socket, pool }) {
+  console.log(message.name); // Outputs: connection
+  console.log(message.data.url); // Outputs: /firehose
+
+  const isAuthorized = false; // Decide if the user has been authorized.
+
+  if (isAuthorized) {
+    // Write back to incoming socket that authorization has been successful.
+    socket.send("authorization", { state: true });
+
+    // Announce the new connection to firehose pool (aka all connected sockets)
+    pool.send("connection", {
+      id: socket.id,
+      ip_address: socket.remoteAddress,
+    });
+  } else {
+    socket.send("authorization", { state: false, error: 'Authorization has failed.' });
+    socket.close();
+  }
+}
+```
 
 ### Debugging
 
@@ -1066,28 +1227,207 @@ A function code can have statements like `console.log`, `console.warn`, `console
 
 You can see the logs in Logs tab in code edit page.
 
-
 ## Webhook
+
 // TODO:Explain
 
 ### Webhook Logs
-You can see all webhook acitivites in `Webhook Logs` section. You can filter the logs by webhook ID, date or result (success/fail). In a standart build of Spica, there is no time limitation on webhook logs. So you can store all webhook logs forever. 
+
+You can see all webhook acitivites in `Webhook Logs` section. You can filter the logs by webhook ID, date or result (success/fail). In a standart build of Spica, there is no time limitation on webhook logs. So you can store all webhook logs forever.
 
 > IMPORTANT: Because of no time limit on webhook logs, we suggest you to clear webhook logs in a time interval. Otherwise you should consider your server hardwares to use Spica instance with hight performance.
 
 ## User Activity Logs
-User Activity module gives you access to control each passport identities' activity logs. You can filter actrivity logs by identity, action type, module, date or even document id. In a standart build of Spica, you can see all user activies without any time limitation. 
+
+User Activity module gives you access to control each passport identities' activity logs. You can filter actrivity logs by identity, action type, module, date or even document id. In a standart build of Spica, you can see all user activies without any time limitation.
 
 > IMPORTANT: Because of no time limit on user acitivity logs, we suggest you to clear user activities in a time interval. Otherwise you should consider your server hardwares to use Spica instance with hight performance.
 
 To list all Spica users' activity, simply navigate to **Primary** -> **User Activities**
 
 ## Dashboard
-Dashboard module allows you to create a new custome dashboard including custom data charts or table. The only way to creating a custom dashboard is writing a function in your Spica instance. You have to import and use dashboard library provided by Spica instance in your function. You can seed the dashboard module with any data. So you can take data from buckets, database or even other 3rd party integration. You can create multiple dashboards and once you activated a new dashboard, you can see your dashboard on the left hand menu. 
+
+Dashboard module allows you to create a new custome dashboard including custom data charts or table. The only way to creating a custom dashboard is writing a function in your Spica instance. You have to import and use dashboard library provided by Spica instance in your function. You can seed the dashboard module with any data. So you can take data from buckets, database or even other 3rd party integration. You can create multiple dashboards and once you activated a new dashboard, you can see your dashboard on the left hand menu.
 
 > IMPORTANT: We suggest you to initiate a dashboard with an `HTTP` trigger or `SYSTEM:READY` trigger. Otherwise your custom dashboard may be initiated multiple times. This may cause repeated dashboard on the left side menu. Dashboard module does not control how many times you initiated a dashboard.
 
-// TODO: Example Code
+Define a dashboard:
+
+```typescript
+export default function(req, res) {
+  const linedata: Charts.Response = {
+    linedata: {
+      title:"line title",
+      options: {legend: {display: true}, responsive: true},
+      label: ["1", "2", "3", "4", "5", "6"],
+      datasets: [{data: [65, 59, 90, 81, 56, 55, 40], label: "linedata"}],,
+      legend: true,
+      width:70,
+      filters:[{key:'line_data_filter',title:'Please enter filter',type:"string"}]
+    }
+  };
+  const radardata: Charts.Response = {
+    radardata: {
+      title:"radar title",
+      options: {legend: {display: true}, responsive: true},
+      label: ["Eating", "Drinking", "Sleeping", "Designing", "Coding", "Cycling", "Running"],
+      datasets: [
+        {data: [65, 59, 90, 81, 56, 55, 40], label: "radardata"},
+        {data: [28, 48, 40, 19, 96, 27, 100], label: "Series B"}
+      ],
+      legend: true,
+      width:30
+    }
+  };
+  const bardata: Charts.Response = {
+    bardata: {
+      title:"bar title",
+      options: {legend: {display: true}, responsive: true},
+      label: ["2006", "2007", "2008", "2009", "2010", "2011", "2012"],
+      datasets: [
+        {data: [65, 59, 80, 81, 56, 55, 40], label: "bardata"},
+        {data: [28, 48, 40, 19, 86, 27, 90], label: "Series B"}
+      ],
+      legend: true
+    }
+  };
+  const piedata: Charts.Response = {
+    piedata: {
+      title:"pie title",
+      options: {legend: {display: true}, responsive: true},
+      label: [["piedata", "Sales"], ["In", "Store", "Sales"], "Mail Sales"],
+      data: [300, 500, 100],
+      legend: true
+    }
+  };
+  const doughnutdata: Charts.Response = {
+    doughnutdata: {
+      title:"doughnot title",
+      options: {legend: {display: true}, responsive: true},
+      label: ["doughnutdata Sales", "In-Store Sales", "Mail-Order Sales"],
+      data: [[350, 450, 100], [50, 150, 120], [250, 130, 70]],
+      legend: true
+    }
+  };
+  const bubbledata: Charts.Response = {
+    bubbledata: {
+      title:"buble title",
+      options: {
+        responsive: true,
+        scales: {
+          xAxes: [
+            {
+              ticks: {
+                min: 0,
+                max: 30
+              }
+            }
+          ],
+          yAxes: [
+            {
+              ticks: {
+                min: 0,
+                max: 30
+              }
+            }
+          ]
+        }
+      },
+      datasets: [
+        {
+          data: [
+            {x: 10, y: 10, r: 10},
+            {x: 15, y: 5, r: 15},
+            {x: 26, y: 12, r: 23},
+            {x: 7, y: 8, r: 8}
+          ],
+          label: "bubbledata"
+        }
+      ],
+      legend: true
+    }
+  };
+  const scatterdata: Charts.Response = {
+    scatterdata: {
+       title:"scatter title",
+      options: {
+        responsive: true
+      },
+      datasets: [
+        {
+          data: [{x: 1, y: 1}, {x: 2, y: 3}, {x: 3, y: -2}, {x: 4, y: 4}, {x: 5, y: -3, r: 20}],
+          label: "scatterdata",
+          pointRadius: 10
+        }
+      ],
+      legend: true
+    }
+  };
+  const polarAreadata: Charts.Response = {
+    polarAreadata: {
+       title:"polar title",
+      options: {
+        responsive: true
+      },
+      data: [300, 500, 100, 40, 120],
+      legend: true
+    }
+  };
+  const tabledata: Table.Response = {
+    tabledata: {
+       title:"table title",
+      data: [
+        {position: 1, name: "Hydrogen", weight: 1.0079, symbol: "H"},
+        {position: 2, name: "Helium", weight: 4.0026, symbol: "He"},
+        {position: 3, name: "Lithium", weight: 6.941, symbol: "Li"},
+        {position: 4, name: "Beryllium", weight: 9.0122, symbol: "Be"},
+        {position: 5, name: "Boron", weight: 10.811, symbol: "B"},
+        {position: 6, name: "Carbon", weight: 12.0107, symbol: "C"},
+        {position: 7, name: "Nitrogen", weight: 14.0067, symbol: "N"},
+        {position: 8, name: "Oxygen", weight: 15.9994, symbol: "O"},
+        {position: 9, name: "Fluorine", weight: 18.9984, symbol: "F"},
+        {position: 10, name: "Neon", weight: 20.1797, symbol: "Ne"}
+      ],
+      displayedColumns: ["position", "name", "weight", "symbol"]
+    }
+  };
+  response.send([
+    bubbledata,
+    scatterdata,
+    linedata,
+    piedata,
+    radardata,
+    doughnutdata,
+    polarAreadata,
+    bardata,
+    tabledata
+  ]);
+}
+```
+
+And initialize dashboards on another function:
+
+```typescript
+// Add `@spica-devkit/dashboard` to your dependencies and import it
+import * as Dashboard from "@spica-devkit/dashboard";
+export default async function () {
+  // Create an API key and initialize dashboards with it
+  Dashboard.initialize(<APIKEY>);
+  let dashboard = await Dashboard.create({
+    key: "unique_key",
+    name: "Line Chart", // This name will be shown on Spica Client
+    icon: "none",
+    components: [
+      {
+        type: "line",
+        // Url of your dashobard function
+        url: "http://localhost:4300/fn-execute/line",
+        key: "linedata",
+      },
+    ],
+  });
+}
+```
 
 To see your custom dashboards, please navigate to **Primary** section on the menu.
 
