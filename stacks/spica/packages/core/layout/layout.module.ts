@@ -20,6 +20,7 @@ import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.compone
 import {SchemeObserver} from "./scheme.observer";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {MatSnackBarModule} from "@angular/material";
+import {ToolbarActionDirective} from "./toolbar-action";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -45,7 +46,8 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     LayoutRouterOutlet,
     ErrorPageComponent,
     SchemeSwitcherComponent,
-    SnackbarComponent
+    SnackbarComponent,
+    ToolbarActionDirective
   ],
   exports: [LayoutRouterOutlet, RouterModule],
   entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent, SnackbarComponent]

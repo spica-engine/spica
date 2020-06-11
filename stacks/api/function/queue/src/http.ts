@@ -41,9 +41,17 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
       serverResponse.writeHead(
         call.request.statusCode,
         call.request.statusMessage,
-        (call.request.headers || []).reduce((acc, header) => {
-          acc[header.key] = header.value;
-          return acc;
+        (call.request.headers || []).reduce((headers, header) => {
+          if (headers[header.key]) {
+            const prevHeader = headers[header.key];
+            if (!Array.isArray(prevHeader)) {
+              headers[header.key] = [prevHeader];
+            }
+            headers[header.key].push(header.value);
+          } else {
+            headers[header.key] = header.value;
+          }
+          return headers;
         }, {})
       );
       callback(undefined, new Http.WriteHead.Result());

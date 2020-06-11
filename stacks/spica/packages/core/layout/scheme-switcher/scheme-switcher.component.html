@@ -1,9 +1,10 @@
 <button
+  *ngIf="scheme$ | async; let scheme"
   mat-icon-button
-  [class.mat-flat-button]="isDark$ | async"
-  [matTooltip]="'Switch to ' + ((isDark$ | async) ? 'light' : 'dark') + ' theme.'"
-  disableRipple
+  [class.mat-flat-button]="scheme == Scheme.Dark"
+  [matTooltip]="'Switch to ' + (scheme == Scheme.Dark ? 'light' : 'dark') + ' theme.'"
   (click)="changeScheme()"
+  disableRipple
 >
-  <mat-icon> {{ (isDark$ | async) ? "nights_stay" : "wb_sunny" }}</mat-icon>
+  <mat-icon>{{ scheme == Scheme.Dark ? "nights_stay" : "wb_sunny" }}</mat-icon>
 </button>

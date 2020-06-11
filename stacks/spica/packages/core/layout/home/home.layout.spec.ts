@@ -1,21 +1,20 @@
-import {TestBed, ComponentFixture, fakeAsync, tick} from "@angular/core/testing";
-import {HomeLayoutComponent} from "./home.layout";
-import {MatSidenavModule} from "@angular/material/sidenav";
-import {MatListModule} from "@angular/material/list";
-import {MatIconModule} from "@angular/material/icon";
-import {MatToolbarModule} from "@angular/material/toolbar";
-import {RouterTestingModule} from "@angular/router/testing";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
-import {StoreModule} from "@ngrx/store";
-import {RouteModule, RouteCategory} from "../../route";
-import {RouteService} from "../../route/route.service";
-import {Retrieve} from "../../route/route.reducer";
 import {BreakpointObserver} from "@angular/cdk/layout";
+import {ANALYZE_FOR_ENTRY_COMPONENTS, Component} from "@angular/core";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {MatIconModule} from "@angular/material/icon";
+import {MatListModule} from "@angular/material/list";
+import {MatSidenavModule} from "@angular/material/sidenav";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {RouterTestingModule} from "@angular/router/testing";
+import {StoreModule} from "@ngrx/store";
 import {of} from "rxjs";
+import {RouteCategory, RouteModule} from "../../route";
+import {Retrieve} from "../../route/route.reducer";
+import {RouteService} from "../../route/route.service";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
-import {Component, NgModule, ANALYZE_FOR_ENTRY_COMPONENTS} from "@angular/core";
-import {BrowserDynamicTestingModule} from "@angular/platform-browser-dynamic/testing";
-import {TestingModule} from "@nestjs/testing";
+import {ToolbarActionDirective} from "../toolbar-action";
+import {HomeLayoutComponent} from "./home.layout";
 
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
@@ -24,7 +23,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -115,7 +114,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -174,7 +173,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -223,7 +222,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, DummyAction],
+        declarations: [HomeLayoutComponent, DummyAction, ToolbarActionDirective],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -273,7 +272,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective],
         imports: [
           MatSidenavModule,
           MatListModule,

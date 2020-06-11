@@ -88,6 +88,11 @@ const args = yargs
       alias: ["secret"],
       description: "PEM-encoded public key (asymmetric) for verifying the JWT token's signature."
     },
+    "passport-saml-certificate-ttl": {
+      number: true,
+      description: "Lifespan of the self-signed certificate in seconds.",
+      default: Number.MAX_SAFE_INTEGER
+    },
     "passport-password": {
       string: true,
       description: "Password of the default 'spica' account.",
@@ -193,7 +198,8 @@ const modules = [
     secretOrKey: args["passport-secret"],
     issuer: args["public-url"],
     defaultPassword: args["passport-password"],
-    audience: "spica.io"
+    audience: "spica.io",
+    samlCertificateTTL: args["passport-saml-certificate-ttl"]
   }),
   FunctionModule.forRoot({
     path: args["persistent-path"],

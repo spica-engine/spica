@@ -20,7 +20,7 @@ export namespace Middlewares {
   }
 
   export function Preflight(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Origin", req.header("Origin") || "*");
 
     if (req.header("access-control-request-method")) {
       res.header("Access-Control-Allow-Methods", req.header("access-control-request-method"));
@@ -32,6 +32,8 @@ export namespace Middlewares {
     }
 
     res.header("Access-Control-Allow-Headers", allowedHeaders);
+
+    req.header("Access-Control-Allow-Credentials", "true");
 
     if (req.method == "OPTIONS") {
       res.end();

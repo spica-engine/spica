@@ -65,7 +65,7 @@
   }
   div.data-guide {
     display: flex;
-    align-items: start;
+    align-items: flex-start;
     mat-card {
       &.with-examples {
         margin-right: 5px;
