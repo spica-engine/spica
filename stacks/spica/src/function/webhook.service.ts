@@ -50,7 +50,7 @@ export class WebhookService {
 
     params.webhook = filter.webhooks;
 
-    params.status = filter.statusCodes;
+    params.succeed = filter.succeed;
 
     params.limit = filter.limit;
 

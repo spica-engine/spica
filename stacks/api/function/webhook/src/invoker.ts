@@ -59,15 +59,30 @@ export class WebhookInvoker {
         documentKey: rawChange.documentKey._id.toString()
       };
 
-      let request = {
-        method: "post",
-        body: bodyTemplate(change, {
+      let body;
+
+      try {
+        body = bodyTemplate(change, {
           allowProtoPropertiesByDefault: false,
           allowProtoMethodsByDefault: false,
           helpers: {
             toJSON: (object: unknown) => JSON.stringify(object)
           }
-        }),
+        });
+      } catch (error) {
+        this.logService.insertOne({
+          succeed: false,
+          content: {
+            error: error.message
+          },
+          webhook: target
+        });
+        return;
+      }
+
+      let request = {
+        method: "post",
+        body: body,
         headers: {
           "User-Agent": "Spica/Webhooks; (https://spicaengine.com/docs/guide/webhook)",
           "Content-type": "application/json"
@@ -85,8 +100,11 @@ export class WebhookInvoker {
         })
         .then(response => {
           this.logService.insertOne({
-            request: {body: request.body, headers: request.headers, url: url},
-            response: response,
+            succeed: response.status < 400,
+            content: {
+              request: {body: request.body, headers: request.headers, url: url},
+              response: response
+            },
             webhook: target
           });
         })
