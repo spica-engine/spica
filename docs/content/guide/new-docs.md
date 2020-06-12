@@ -30,6 +30,7 @@ Spica has a command-line interface for quick installation. To use it, you must h
 >
 > ```shell
 > $ docker-machine create <machine name>
+> $ eval "$(docker-machine env <machine name>)"
 > ```
 
 Install CLI using the `npm` package manager:
@@ -41,7 +42,7 @@ $ npm install @spica/cli -g
 To create and serve a new Spica instance on your computer, simply run:
 
 ```sh
-$ spica serve my-spica-instance
+$ spica serve <docker machine name>
 ```
 
 By default, Spica is served under 4500 port. It can be changed by using `--port` parameter
