@@ -183,7 +183,10 @@ describe("Hooks Integration", () => {
       .then(res => res.body);
   });
 
-  afterEach(() => req.delete(`/bucket/${bucket._id}/data`, [user1._id, user2._id], headers));
+  afterEach(() => {
+    req.delete(`/bucket/${bucket._id}/data/${user1._id}`, headers).catch(() => {});
+    req.delete(`/bucket/${bucket._id}/data/${user2._id}`, headers).catch(() => {});
+  });
 
   describe("GET", () => {
     it("should not change the behaviour of bucket-data endpoint", async () => {
@@ -312,13 +315,6 @@ describe("Hooks Integration", () => {
     it("should allow to delete the user2 document", async () => {
       const response = await req.delete(`/bucket/${bucket._id}/data/${user2._id}`, {}, headers);
       expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
-      user2 = await req
-        .post(
-          `/bucket/${bucket._id}/data`,
-          {username: "test_user2", password: "test_password2", age: 19},
-          headers
-        )
-        .then(res => res.body);
     });
   });
 
