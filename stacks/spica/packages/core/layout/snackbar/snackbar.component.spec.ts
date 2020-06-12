@@ -46,7 +46,7 @@ describe("SnackbarComponent", () => {
   it("should render component with given data", () => {
     fixture.componentInstance.open();
 
-    const lines = document.body.querySelectorAll("snackbar > div > div");
+    const lines = document.body.querySelectorAll("snackbar > div");
 
     expect(lines[0].textContent).toEqual("Code: 404");
     expect(lines[1].textContent).toEqual("Not Found");
@@ -56,7 +56,7 @@ describe("SnackbarComponent", () => {
   it("should close component", async () => {
     fixture.componentInstance.open();
 
-    const container = document.body.querySelector("snackbar > div");
+    const container = document.body.querySelector("snackbar");
     (container as HTMLElement).click();
 
     fixture.detectChanges();

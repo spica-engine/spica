@@ -1,4 +1,4 @@
-import {Component, OnInit, Inject} from "@angular/core";
+import {Component, Inject, HostListener} from "@angular/core";
 import {MAT_SNACK_BAR_DATA, MatSnackBarRef} from "@angular/material";
 import {SnackbarError} from "./interface";
 
@@ -7,7 +7,7 @@ import {SnackbarError} from "./interface";
   templateUrl: "./snackbar.component.html",
   styleUrls: ["./snackbar.component.scss"]
 })
-export class SnackbarComponent implements OnInit {
+export class SnackbarComponent {
   error: SnackbarError;
   constructor(
     public snackBarRef: MatSnackBarRef<SnackbarComponent>,
@@ -16,8 +16,7 @@ export class SnackbarComponent implements OnInit {
     this.error = data;
   }
 
-  ngOnInit() {}
-
+  @HostListener("click")
   close() {
     this.snackBarRef.dismiss();
   }
