@@ -26,6 +26,12 @@ This tutorial helps you to install Spica to different environments. We provide a
 
 Spica has a command-line interface for quick installation. To use it, you must have [Docker](https://www.docker.com/) and [NodeJs](https://nodejs.org) installed on your development environment.
 
+> IMPORTANT: There has to be at least one docker machine is up and running on your environment. To create a docker machine enter the following command to your terminal:
+>
+> ```shell
+> $ docker-machine create <machine name>
+> ```
+
 Install CLI using the `npm` package manager:
 
 ```sh
@@ -663,7 +669,9 @@ On that page you crop the image, scale by percentage and rotate the image as you
 
 ### Google Cloud Storage Integaration
 
-Spica supports Google Cloud Storage out-of-the-box.
+Spica supports Google Cloud Storage out-of-the-box. To integrate your Cloud Storage account follow these steps:
+
+// TODO: steps?
 
 ## Function
 
@@ -1236,11 +1244,15 @@ export default function(message, {socket, pool}) {
 
 You can define custom environment variables for your functions. If your team is a multi-disciplined team, you may need some roles to change just function variables. For this situtation, you can define environment variables which will be passed to function as a parameter. You can see an example of how environment variable works below:
 
-// TODO: Example Code
+```typescript
+export default function() {
+  return process.env.exampleVariable;
+}
+```
 
 ### 3rd Party Dependencies
 
-This feature allows you to import 3rd party dependiencies to your functions. Spica downloads 3rd party libraries from NPM (node package manager). To use a 3rd party library, you just need to import the library into your function after you download to you Spica environment. 
+This feature allows you to import 3rd party dependiencies to your functions. Spica downloads 3rd party libraries from NPM (node package manager). To use a 3rd party library, you just need to import the library into your function after you download to you Spica environment.
 
 > IMPORTANT: Each functions are decoupled from the Spica environment. So, if you will use the same library for different functions, you need to download the library for each function.
 
