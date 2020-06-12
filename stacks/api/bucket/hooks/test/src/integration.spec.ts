@@ -13,7 +13,6 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
 describe("Hooks Integration", () => {
   let app: INestApplication;
@@ -305,7 +304,7 @@ describe("Hooks Integration", () => {
         `export const delete = (req) => req.headers.authorization.document != '${user1._id}';`
       );
     });
-    fit("should not allow to delete the user1 document", async () => {
+    it("should not allow to delete the user1 document", async () => {
       const response = await req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers);
       expect([response.statusCode, response.statusText]).toEqual([403, "Forbidden"]);
     });
