@@ -14,6 +14,7 @@ ts_library(
         "@npm//@types/node",
         "@npm//@types/ws",
         "@npm//grpc",
+        "@npm//uniqid",
         "@npm//ws",
     ],
 )
@@ -21,7 +22,4 @@ ts_library(
 jasmine_node_test(
     name = "queue_test",
     srcs = [":queue_test_lib"],
-    tags = [
-        "flaky",
-    ],
 )

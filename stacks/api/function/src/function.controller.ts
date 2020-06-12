@@ -17,16 +17,16 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity";
-import {BOOLEAN} from "@spica-server/core";
+import {activity} from "@spica-server/activity/services";
+import {BOOLEAN, DEFAULT, ARRAY} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as os from "os";
-import {of, OperatorFunction} from "rxjs";
-import {catchError, finalize, last, map, switchMap, tap} from "rxjs/operators";
-import {createFunctionResource} from "./activity.resource";
+import {of, OperatorFunction, from} from "rxjs";
+import {catchError, finalize, last, map, switchMap, tap, take} from "rxjs/operators";
+import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
@@ -48,7 +48,9 @@ export class FunctionController {
     for (const enqueuer of this.horizon.enqueuers) {
       enqueuers.push({
         description: enqueuer.description,
-        options: await this.engine.getSchema(enqueuer.description.name)
+        options: await from(this.engine.getSchema(enqueuer.description.name))
+          .pipe(take(1))
+          .toPromise()
       });
     }
 
@@ -74,7 +76,7 @@ export class FunctionController {
     return this.fs.findOne({_id: id});
   }
 
-  @UseInterceptors(activity(createFunctionResource))
+  @UseInterceptors(activity(createFunctionActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -100,7 +102,7 @@ export class FunctionController {
 
     return triggers
       .filter(trigger => trigger.type == "bucket")
-      .some((trigger, index) => {
+      .some((trigger, index, triggers) => {
         const foundIndex = triggers.findIndex(
           t =>
             t.options["bucket"] == trigger.options["bucket"] &&
@@ -110,7 +112,7 @@ export class FunctionController {
       });
   }
 
-  @UseInterceptors(activity(createFunctionResource))
+  @UseInterceptors(activity(createFunctionActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
   async replaceOne(
@@ -128,7 +130,7 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
-  @UseInterceptors(activity(createFunctionResource))
+  @UseInterceptors(activity(createFunctionActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
@@ -194,7 +196,7 @@ export class FunctionController {
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Query("progress", BOOLEAN) progress: boolean,
-    @Body("name") name: string,
+    @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
     @Res() res
   ) {
     if (!name) {
@@ -226,14 +228,16 @@ export class FunctionController {
     }
     operators.push(
       last(),
-      switchMap(() => this.engine.compile(fn).catch(() => {})),
+      tap(() => {
+        this.engine.compile(fn).catch(() => {});
+      }),
       finalize(() => res.end())
     );
 
     return (this.engine.addPackage(fn, name) as any).pipe(...operators);
   }
 
-  @Delete(":id/dependencies/:name")
+  @Delete(":id/dependencies/:name(*)")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {

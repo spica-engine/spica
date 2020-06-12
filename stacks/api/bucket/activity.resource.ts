@@ -1,49 +1,59 @@
-import {Resource, Action} from "@spica-server/activity";
+import {Action, Activity, PreActivity} from "@spica-server/activity/services";
 
-export function createBucketResource(action: Action, req: any, res: any): Resource {
-  let name = "BUCKET";
+export function createBucketActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
+  let activities: Activity[] = [];
 
-  let documentId: string[] = [];
-  switch (action) {
+  switch (preActivity.action) {
     case Action.POST:
-      documentId.push(res._id.toString());
+      activities.push({...preActivity, resource: ["bucket", res._id.toString()]});
       break;
     case Action.PUT:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["bucket", req.params.id]});
       break;
     case Action.DELETE:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["bucket", req.params.id]});
       break;
   }
 
-  return {name, documentId};
+  return activities;
 }
 
-export function createBucketDataResource(action: Action, req: any, res: any): Resource {
-  let name = "BUCKET";
-  let documentId = [req.params.bucketId];
+export function createBucketDataActivity(
+  preActivity: {identifier: string; action: Action},
+  req: any,
+  res: any
+): Activity[] {
+  let activities: Activity[] = [];
 
-  let subDocumentId: string[] = [];
-  switch (action) {
+  switch (preActivity.action) {
     case Action.POST:
-      subDocumentId.push(res._id.toString());
+      activities.push({
+        ...preActivity,
+        resource: ["bucket", req.params.bucketId.toString(), "data", res._id.toString()]
+      });
       break;
     case Action.PUT:
-      subDocumentId.push(req.params.documentId);
+      activities.push({
+        ...preActivity,
+        resource: ["bucket", req.params.bucketId.toString(), "data", req.params.documentId]
+      });
       break;
     case Action.DELETE:
       if (req.params.documentId) {
-        subDocumentId.push(req.params.documentId);
+        activities.push({
+          ...preActivity,
+          resource: ["bucket", req.params.bucketId.toString(), "data", req.params.documentId]
+        });
       } else {
-        subDocumentId = req.body;
+        req.body.forEach(id =>
+          activities.push({
+            ...preActivity,
+            resource: ["bucket", req.params.bucketId.toString(), "data", id]
+          })
+        );
       }
       break;
   }
 
-  let subResource: Resource = {
-    name: "BUCKET-DATA",
-    documentId: subDocumentId
-  };
-
-  return {name, documentId, subResource};
+  return activities;
 }

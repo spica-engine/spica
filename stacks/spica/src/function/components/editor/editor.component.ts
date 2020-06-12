@@ -13,9 +13,12 @@ import {
   SimpleChanges
 } from "@angular/core";
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
+import {Scheme, SchemeObserver} from "@spica-client/core/layout";
+import {Subject} from "rxjs";
+import {takeUntil} from "rxjs/operators";
 
 @Component({
-  selector: "function-editor",
+  selector: "code-editor",
   template: "",
   styleUrls: ["./editor.component.scss"],
   providers: [
@@ -28,13 +31,21 @@ export class EditorComponent
   @Output() init = new EventEmitter();
   @Output() save = new EventEmitter();
   @Input() options: monaco.editor.IEditorConstructionOptions;
+
   private monacoPath: string = "assets/function/min/vs";
   private editorRef: monaco.editor.IStandaloneCodeEditor;
+  private dispose = new Subject();
 
-  private get _options() {
+  private theme: string;
+
+  private get _options(): monaco.editor.IEditorConstructionOptions {
     return {
-      model: monaco.editor.createModel(this.value, "typescript"),
+      model: monaco.editor.createModel(
+        this.value,
+        (this.options && this.options.language) || "typescript"
+      ),
       ...this.options,
+      theme: this.theme,
       scrollBeyondLastLine: false,
       cursorBlinking: "phase",
       fontLigatures: true,
@@ -52,7 +63,11 @@ export class EditorComponent
   private onTouched = () => {};
   private onChanged = (obj: any) => {};
 
-  constructor(private elementRef: ElementRef<HTMLElement>, private zone: NgZone) {}
+  constructor(
+    private elementRef: ElementRef<HTMLElement>,
+    private zone: NgZone,
+    private schemeObserver: SchemeObserver
+  ) {}
 
   writeValue(obj: any): void {
     this.value = obj;
@@ -81,9 +96,17 @@ export class EditorComponent
     );
   }
 
+  changeScheme(isDark: boolean) {
+    this.theme = isDark ? "vs-dark" : "vs-light";
+    if (window.monaco) {
+      monaco.editor.setTheme(this.theme);
+    }
+  }
+
   ngOnInit(): void {
     const onGotAmdLoader = () => {
-      window["require"].config({paths: {vs: this.monacoPath}});
+      window["require"]["config"]({paths: {vs: this.monacoPath}});
+      //@ts-ignore
       window["require"](["vs/editor/editor.main"], () => {
         this.editorRef = monaco.editor.create(this.elementRef.nativeElement, this._options);
         this.editorRef.onDidChangeModelContent(() => {
@@ -107,6 +130,11 @@ export class EditorComponent
     } else {
       onGotAmdLoader();
     }
+
+    this.schemeObserver
+      .observe(Scheme.Dark)
+      .pipe(takeUntil(this.dispose))
+      .subscribe(r => this.changeScheme(r));
   }
 
   ngDoCheck(): void {
@@ -134,6 +162,10 @@ export class EditorComponent
   }
 
   ngOnDestroy(): void {
-    this.editorRef.dispose();
+    if (this.editorRef) {
+      this.editorRef.dispose();
+    }
+
+    this.dispose.next();
   }
 }

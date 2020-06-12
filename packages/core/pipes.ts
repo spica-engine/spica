@@ -14,7 +14,7 @@ export const JSONP: PipeTransform<string, object> = {
   transform: value => {
     if (typeof value == "string") {
       try {
-        return global.JSON.parse(value);
+        return JSON.parse(value);
       } catch (error) {
         throw new HttpException(error.message, 400);
       }
@@ -22,6 +22,21 @@ export const JSONP: PipeTransform<string, object> = {
     return value;
   }
 };
+
+export function JSONPR(reviver?: (key: string, value: any) => any): PipeTransform<string, object> {
+  return {
+    transform: value => {
+      if (typeof value == "string") {
+        try {
+          return JSON.parse(value, reviver);
+        } catch (error) {
+          throw new HttpException(error.message, 400);
+        }
+      }
+      return value;
+    }
+  };
+}
 
 export function DEFAULT<T = unknown>(defaultValue: T | (() => T)): PipeTransform<any, T> {
   return {
@@ -53,7 +68,6 @@ export function ARRAY<T>(coerce: (v: string) => T): PipeTransform<string | strin
       if (!Array.isArray(value)) {
         value = [value];
       }
-
       return value.map(coerce);
     }
   };

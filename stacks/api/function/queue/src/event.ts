@@ -1,17 +1,22 @@
 import {Event} from "@spica-server/function/queue/proto";
 import * as grpc from "grpc";
+import * as uniqid from "uniqid";
 import {Queue} from "./queue";
 
 export class EventQueue {
   private server: grpc.Server;
   private queue = new Map<string, Event.Event>();
-  private eventId: number = 0;
+
+  private _next = new Array<(event: Event.Event) => void>();
 
   get size(): number {
     return this.queue.size;
   }
 
-  constructor(private _enqueueCallback: (event: Event.Event) => void) {
+  constructor(
+    private _enqueueCallback: (event: Event.Event) => void,
+    private _popCallback: (event: Event.Event, worker: string) => void
+  ) {
     this._create();
   }
 
@@ -28,7 +33,7 @@ export class EventQueue {
   }
 
   listen() {
-    this.server.bind("0.0.0.0:5678", grpc.ServerCredentials.createInsecure());
+    this.server.bind(process.env.FUNCTION_GRPC_ADDRESS, grpc.ServerCredentials.createInsecure());
     this.server.start();
   }
 
@@ -40,20 +45,26 @@ export class EventQueue {
   }
 
   enqueue(event: Event.Event) {
-    // TODO: Handle overflow
-    event.id = String(this.eventId++);
+    event.id = uniqid();
     this.queue.set(event.id, event);
     this._enqueueCallback(event);
+    if (this._next[0]) {
+      this._next.shift()(event);
+    }
   }
 
-  pop(call: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
-    if (!this.queue.has(call.request.id)) {
-      callback(new Error(`Queue has no item with id ${call.request.id}.`), undefined);
+  async pop(call: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
+    let event: Event.Event;
+
+    if (this.size == 0) {
+      event = await new Promise(resolve => this._next.push(resolve));
     } else {
-      const event = this.queue.get(call.request.id);
-      this.queue.delete(event.id);
-      callback(undefined, event);
+      event = this.queue.values().next().value;
     }
+
+    this.queue.delete(event.id);
+    this._popCallback(event, call.request.id);
+    callback(undefined, event);
   }
 
   addQueue<T>(queue: Queue<T>) {

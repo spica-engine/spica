@@ -10,9 +10,9 @@
   }
 
   .drag-container {
-    margin-top: 40px;
-    margin-left: 15px;
-    margin-right: 15px;
+    margin: 30px;
+    margin-top: -110px;
+
     display: flex;
     flex-wrap: wrap;
     justify-content: space-evenly;
@@ -51,15 +51,27 @@
   }
 
   mat-toolbar {
+    min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
     .space-between {
       flex: 1 1 auto;
     }
-    h4 {
-      mat-icon,
-      span {
-        vertical-align: middle;
+    span:first-of-type {
+      h4 {
+        & > * {
+          vertical-align: middle;
+          display: inline-block;
+        }
+        mat-icon {
+          margin-left: -3px;
+        }
+        span {
+          margin-left: 5px;
+        }
+      }
+      h6 {
+        font-size: 14px;
       }
     }
   }
@@ -70,17 +82,25 @@
     float: left;
     user-select: none;
     mat-card-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-transform: capitalize;
-      font-size: 20px;
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-transform: capitalize;
+        font-size: 20px;
+      }
+      width: 255px;
       display: inline-flex;
       justify-content: center;
       align-items: center;
       .space-between {
         flex: 1 1 auto;
       }
+    }
+    mat-card-content p {
+      height: 68px;
+      overflow-wrap: break-word;
+      overflow: hidden;
     }
     .mat-card-actions {
       position: absolute;

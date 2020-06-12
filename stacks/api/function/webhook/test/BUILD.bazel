@@ -1,0 +1,136 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "service_test_lib",
+    testonly = True,
+    srcs = [
+        "webhook.service.spec.ts",
+    ],
+    deps = [
+        "//packages/database/testing",
+        "//stacks/api/function/webhook",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//rxjs",
+    ],
+)
+
+jasmine_node_test(
+    name = "service_test",
+    tags = [
+        "e2e",
+    ],
+    deps = [
+        ":service_test_lib",
+    ],
+)
+
+ts_library(
+    name = "schema_test_lib",
+    testonly = True,
+    srcs = [
+        "schema.spec.ts",
+    ],
+    deps = [
+        "//packages/core/schema",
+        "//packages/database/testing",
+        "//stacks/api/function/webhook",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//rxjs",
+    ],
+)
+
+jasmine_node_test(
+    name = "schema_test",
+    tags = [
+        "e2e",
+    ],
+    deps = [
+        ":schema_test_lib",
+    ],
+)
+
+ts_library(
+    name = "invoker_test_lib",
+    testonly = True,
+    srcs = [
+        "invoker.spec.ts",
+    ],
+    deps = [
+        "//packages/database/testing",
+        "//stacks/api/function/webhook",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node-fetch",
+        "@npm//node-fetch",
+    ],
+)
+
+jasmine_node_test(
+    name = "invoker_test",
+    tags = [
+        "e2e",
+    ],
+    deps = [
+        ":invoker_test_lib",
+    ],
+)
+
+ts_library(
+    name = "controller_test_lib",
+    testonly = True,
+    srcs = [
+        "webhook.controller.spec.ts",
+    ],
+    deps = [
+        "//packages/core/schema",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/function/webhook",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "controller_test",
+    tags = [
+        "e2e",
+    ],
+    deps = [
+        ":controller_test_lib",
+    ],
+)
+
+ts_library(
+    name = "log_controller_test_lib",
+    testonly = True,
+    srcs = [
+        "log.controller.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/function/webhook",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "log_controller_test",
+    tags = [
+        "e2e",
+    ],
+    deps = [
+        ":log_controller_test_lib",
+    ],
+)

@@ -28,7 +28,7 @@ export class LogViewComponent implements OnInit {
   functions$: Observable<Function[]>;
 
   maxDate = new Date();
-
+  showErrors: boolean = true;
   selectedFunctions: string[];
 
   filter$ = new BehaviorSubject<LogFilter>({
@@ -59,7 +59,8 @@ export class LogViewComponent implements OnInit {
           this.displayedColumns.splice(functionColumnIndex, 1);
         }
       }),
-      switchMap(([filter]) => this.fs.getLogs(filter))
+      switchMap(([filter]) => this.fs.getLogs(filter)),
+      map(logs => (this.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
     );
   }
 

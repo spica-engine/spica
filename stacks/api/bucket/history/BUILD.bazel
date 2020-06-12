@@ -80,7 +80,4 @@ ts_library(
 jasmine_node_test(
     name = "history_test",
     srcs = [":history_test_lib"],
-    tags = [
-        "flaky",
-    ],
 )

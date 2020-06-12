@@ -43,6 +43,8 @@ import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule as SpicaCommon} from "@spica-client/common";
 import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component";
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
+import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {provideActivityFactory} from "@spica-client/passport/providers/activity";
 
 @NgModule({
   declarations: [
@@ -99,7 +101,8 @@ export class PassportModule {
       providers: [
         {provide: HTTP_INTERCEPTORS, useClass: AuthorizationInterceptor, multi: true},
         {provide: LAYOUT_ACTIONS, useValue: IdentityBadgeComponent, multi: true},
-        {provide: ROUTE_FILTERS, useExisting: PassportRouteFilter, multi: true}
+        {provide: ROUTE_FILTERS, useExisting: PassportRouteFilter, multi: true},
+        {provide: ACTIVITY_FACTORY, useValue: provideActivityFactory, multi: true}
       ]
     };
   }

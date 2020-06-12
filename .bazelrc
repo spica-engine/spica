@@ -6,11 +6,6 @@ query --output=label_kind
 common --experimental_allow_incremental_repository_updates
 
 
-# Make TypeScript compilation fast, by keeping a few
-# copies of the compiler running as daemons, and cache SourceFile
-# ASTs to reduce parse time.
-build --strategy=TypeScriptCompile=standalone
-
 # Turn off legacy external runfiles
 build --nolegacy_external_runfiles
 run --nolegacy_external_runfiles
@@ -38,11 +33,14 @@ build --define=PORT=4300
 build --define=PERSISTENT_PATH=/tmp #Very persistent!
 build --define=SECRET=2b10shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
 build --define=DEFAULT_PASSWORD=spica
-build --define=ENABLE_BUCKET_HOOKS=true
-build --define=ENABLE_ACTIVITY_STREAM=true
+build --define=BUCKET_HOOKS=true
+build --define=BUCKET_HISTORY=true
+build --define=ACTIVITY_STREAM=true
+build --define=EXPERIMENTAL_BUCKET_REALTIME=true
+build --define=FUNCTION_GRPC_ADDRESS=0.0.0.0:5688
 
 
-build:release --workspace_status_command="./scripts/current_version.sh"
+build:release --stamp --workspace_status_command="./scripts/current_version.sh"
 
 
 # Use phyton 2 instead of 3

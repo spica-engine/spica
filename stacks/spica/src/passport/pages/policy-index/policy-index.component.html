@@ -1,17 +1,20 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
-    <h4 class="mat-h4">
+  <span>
+    <h4>
       <mat-icon>layers</mat-icon>
       <span>Policy List</span>
     </h4>
-    <span class="space-between"></span>
-    <button mat-icon-button (click)="refresh$.next()">
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button mat-icon-button routerLink="/passport/policy/add">
-      <mat-icon>add</mat-icon>
-    </button>
-  </mat-toolbar-row>
+    <h6>
+      A Policy is a collection of statements. A statement is an access level for an action.
+    </h6>
+  </span>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="refresh$.next()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button mat-icon-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
+    <mat-icon>add</mat-icon>
+  </button>
 </ng-template>
 
 <mat-card class="mat-elevation-z25">
@@ -36,6 +39,7 @@
         <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell *matCellDef="let policy">
           <button
+            canInteract="passport:policy:update"
             mat-icon-button
             [routerLink]="policy._id + '/edit'"
             *ngIf="policy.system !== true"
@@ -43,6 +47,7 @@
             <mat-icon>edit</mat-icon>
           </button>
           <button
+            canInteract="passport:policy:delete"
             mat-icon-button
             color="warn"
             [matAwareDialog]="{
@@ -56,6 +61,7 @@
             <mat-icon delete-button>delete</mat-icon>
           </button>
           <button
+            canInteract="passport:policy:create"
             mat-icon-button
             (click)="copyPolicy(policy)"
             *ngIf="policy.system"

@@ -56,26 +56,6 @@
           </mat-form-field>
         </mat-list-item>
         <mat-divider></mat-divider>
-        <ng-container *ngIf="$run | async; let run">
-          <mat-list-item class="run">
-            <mat-expansion-panel class="mat-elevation-z0" [expanded]="run.state == 'running'">
-              <mat-expansion-panel-header [attr.state]="run.state">
-                <mat-icon *ngIf="run.state == 'succeeded' || run.state == 'failed'">
-                  {{ run.state == "failed" ? "error" : "check_circle" }}
-                </mat-icon>
-                <mat-spinner *ngIf="run.state == 'running'" [diameter]="20"></mat-spinner>
-                <span> {{ run.state | titlecase }}</span>
-              </mat-expansion-panel-header>
-              <div class="output" *ngFor="let log of run.logs">
-                <mat-icon [style.color]="logLevelMapping[log.level]?.color"
-                  >{{ logLevelMapping[log.level]?.icon }}
-                </mat-icon>
-                <pre>{{ log.message }}</pre>
-              </div>
-            </mat-expansion-panel>
-          </mat-list-item>
-          <mat-divider></mat-divider>
-        </ng-container>
 
         <mat-list-item class="editor">
           <div class="last-saved" *ngIf="$indexSave | async; let lastSaved">
@@ -91,16 +71,15 @@
             </mat-progress-spinner>
           </div>
 
-          <function-editor
-            language
+          <code-editor
             (save)="updateIndex()"
-            (run)="run($event)"
             [(ngModel)]="index"
             name="code"
             [options]="editorOptions"
+            language="typescript"
             [marker]="$markers | async"
           >
-          </function-editor>
+          </code-editor>
         </mat-list-item>
         <mat-divider></mat-divider>
         <h4 mat-subheader>
@@ -207,7 +186,7 @@
             <mat-progress-spinner
               *ngIf="dependencyInstallPending"
               matSuffix
-              diameter="25"
+              diameter="18"
               mode="indeterminate"
             >
             </mat-progress-spinner>
@@ -301,8 +280,8 @@
     <button
       mat-button
       *matSave="$save | async; let state"
-      [disabled]="form.invalid || isHandlerDuplicated || !!state"
-      canInteract="function:update"
+      [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
+      [canInteract]="function._id ? 'function:update' : 'function:create'"
       (click)="save()"
       [ngSwitch]="state"
     >

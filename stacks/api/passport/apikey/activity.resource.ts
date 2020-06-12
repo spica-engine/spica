@@ -1,32 +1,19 @@
-import {Resource, Action} from "@spica-server/activity";
+import {Action, Activity, PreActivity} from "@spica-server/activity/services";
 
-export function createApikeyResource(action: Action, req: any, res: any): Resource {
-  let name = "APIKEY";
+export function createApikeyActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
+  let activities: Activity[] = [];
 
-  let documentId: string[] = [];
-  switch (action) {
+  switch (preActivity.action) {
     case Action.POST:
-      documentId.push(res._id.toString());
+      activities.push({...preActivity, resource: ["passport", "apikey", res._id.toString()]});
       break;
     case Action.PUT:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["passport", "apikey", req.params.id]});
       break;
     case Action.DELETE:
-      documentId.push(req.params.id);
+      activities.push({...preActivity, resource: ["passport", "apikey", req.params.id]});
       break;
   }
 
-  return {name, documentId};
-}
-
-export function createApikeyPolicyResource(action: Action, req: any, res: any): Resource {
-  let name = "APIKEY";
-  let documentId = [req.params.id];
-
-  let subResource: Resource = {
-    name: "POLICY",
-    documentId: req.body
-  };
-
-  return {name, documentId, subResource};
+  return activities;
 }

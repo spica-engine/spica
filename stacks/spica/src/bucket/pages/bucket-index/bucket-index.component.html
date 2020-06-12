@@ -1,17 +1,16 @@
 <mat-toolbar color="primary">
-  <h4 class="mat-h4">
-    <mat-icon>view_day</mat-icon>
-    <span>Buckets</span>
-  </h4>
+  <span>
+    <h4 class="mat-h4">
+      <mat-icon>view_day</mat-icon>
+      <span>Buckets</span>
+    </h4>
+  </span>
   <span class="space-between"></span>
-  <button canInteract="bucket:update" mat-icon-button routerLink="add">
+  <button canInteract="bucket:create" mat-icon-button routerLink="add">
     <mat-icon>add</mat-icon>
   </button>
   <button mat-icon-button routerLink="settings">
     <mat-icon>settings</mat-icon>
-  </button>
-  <button mat-button routerLink="import-export">
-    <mat-icon>import_export</mat-icon>
   </button>
 </mat-toolbar>
 
@@ -36,12 +35,11 @@
           mat-icon-button
           #clipboard="matClipboard"
           [matClipboard]="bucket._id"
-          [matTooltip]="'Copied!'"
           (mouseenter)="$event.stopImmediatePropagation()"
-          (click)="tooltip.toggle()"
-          #tooltip="matTooltip"
         >
-          <mat-icon>{{ clipboard.icon }}</mat-icon>
+          <mat-icon [matTooltip]="clipboard.icon == 'info' ? 'Copy to clipboard' : 'Copied!'">
+            {{ clipboard.icon }}
+          </mat-icon>
         </button>
       </mat-card-title>
       <mat-card-content>
@@ -52,7 +50,7 @@
           <mat-icon>edit</mat-icon>
         </button>
         <button
-          canInteract="bucket:update"
+          canInteract="bucket:delete"
           mat-icon-button
           color="warn"
           [matAwareDialog]="{

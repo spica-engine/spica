@@ -10,13 +10,14 @@ const routes: Routes = [
   {
     path: "dashboard",
     canActivate: [IdentityGuard, PolicyGuard],
-
     component: DashboardComponent
   },
 
   {
     path: "dashboard/:id",
-    component: DashboardViewComponent
+    component: DashboardViewComponent,
+    canActivate: [PolicyGuard],
+    data: {service: "dashboard", action: "show"}
   }
 ];
 

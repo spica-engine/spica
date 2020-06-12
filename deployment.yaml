@@ -1,11 +1,14 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: database
 spec:
   serviceName: mongo
   replicas: 3
+  selector:
+    matchLabels:
+        app: database
   template:
     metadata:
       labels:
@@ -14,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 10
       initContainers:
         - name: init
-          image: spicaengine/initcontainer:master
+          image: spicaengine/mongoreplicationcontroller:master
           imagePullPolicy: Always
       containers:
         - name: mongo
@@ -49,7 +52,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: mongo
 spec:
   publishNotReadyAddresses: true
@@ -60,14 +63,17 @@ spec:
   selector:
     app: database
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: spica
 spec:
   serviceName: spica
   replicas: 1
+  selector:
+    matchLabels:
+        app: spica
   template:
     metadata:
       labels:
@@ -101,27 +107,23 @@ spec:
               cpu: "150m"
           ports:
             - containerPort: 4300
-          env:
-            - name: PORT
-              value: "4300"
-            - name: DATABASE_URI
-              value: mongodb://database-0.mongo.master.svc.cluster.local,database-1.mongo.master.svc.cluster.local,database-2.mongo.master.svc.cluster.local
-            - name: REPLICA_SET
-              value: rs0
-            - name: DATABASE_NAME
-              value: spica
-            - name: SECRET
-              value: $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
-            - name: DEFAULT_PASSWORD
-              value: spica
-            - name: PUBLIC_HOST
-              value: "https://master.spicaengine.com/api"
-            - name: PERSISTENT_PATH
-              value: /data
-            - name: ENABLE_BUCKET_HOOKS
-              value: "true"
-            - name: ENABLE_ACTIVITY_STREAM
-              value: "true"
+          args:
+            - --port
+            - "4300"
+            - --database-uri
+            - mongodb://database-0.mongo.infrastructure-master-spicaengine-com.svc.cluster.local,database-1.mongo.infrastructure-master-spicaengine-com.svc.cluster.local,database-2.mongo.infrastructure-master-spicaengine-com.svc.cluster.local
+            - --database-name
+            - spica
+            - --database-replica-set
+            - rs0
+            - --passport-secret
+            - $2b$10$shOzfYpDCy.RMgsVlwdQeONKGGzaBTfTQAjmXQNpMp4aKlLXrfZ/C
+            - --passport-password
+            - spica
+            - --persistent-path
+            - /data
+            - --public-url
+            - https://master.spicaengine.com/api
           volumeMounts:
             - name: master-data
               mountPath: /data
@@ -138,7 +140,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: spica
 spec:
   type: NodePort
@@ -155,7 +157,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  namespace: master
+  namespace: infrastructure-master-spicaengine-com
   name: gateway
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 15M
@@ -165,9 +167,8 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
-    - hosts:
-        - master.spicaengine.com
-      secretName: master-spica
+    - hosts: [master.spicaengine.com]
+      secretName: spica
   rules:
     - host: master.spicaengine.com
       http:

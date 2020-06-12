@@ -5,7 +5,10 @@ export class FirehoseQueue {
   private client: any;
 
   constructor() {
-    this.client = new Firehose.QueueClient("0.0.0.0:5678", grpc.credentials.createInsecure());
+    this.client = new Firehose.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      grpc.credentials.createInsecure()
+    );
   }
 
   pop(e: Firehose.Message.Pop): Promise<Firehose.Message.Incoming> {

@@ -1,9 +1,8 @@
 import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Scheme, SchemeObserver} from "@spica-client/core";
 import {SavingState} from "@spica-client/material";
-import {merge, Observable, of, Subject, Subscription, throwError} from "rxjs";
+import {merge, Observable, of, Subject, throwError} from "rxjs";
 import {
   catchError,
   delay,
@@ -46,9 +45,10 @@ export class AddComponent implements OnInit, OnDestroy {
   isHandlerDuplicated = false;
   serverError: string;
 
-  private mediaMatchObserver: Subscription;
   private dispose = new EventEmitter();
-  editorOptions = {theme: "vs-light", language: "typescript", minimap: {enabled: false}};
+  editorOptions = {language: "typescript", minimap: {enabled: false}};
+
+  isIndexPending = false;
 
   index: string;
   $indexSave: Observable<Date | "inprogress">;
@@ -57,21 +57,13 @@ export class AddComponent implements OnInit, OnDestroy {
 
   $markers = new Subject<monaco.editor.IMarkerData[]>();
 
-  $run: Observable<{state: "failed" | "running" | "succeeded"; logs: any[]}>;
-
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private functionService: FunctionService,
     private http: HttpClient,
-    private ls: LanguageService,
-    schemeObserver: SchemeObserver
+    private ls: LanguageService
   ) {
-    this.mediaMatchObserver = schemeObserver
-      .observe(Scheme.Dark)
-      .pipe(takeUntil(this.dispose))
-      .subscribe(r => this.changeScheme(r));
-
     this.information = this.functionService.information();
   }
 
@@ -88,6 +80,8 @@ export class AddComponent implements OnInit, OnDestroy {
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
           this.dependencyInstallPending = false;
+          this.serverError = undefined;
+          this.isIndexPending = true;
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
           this.ls.request("open", this.function._id);
@@ -96,38 +90,18 @@ export class AddComponent implements OnInit, OnDestroy {
         switchMap(fn => this.functionService.getIndex(fn._id)),
         takeUntil(this.dispose)
       )
-      .subscribe(response => (this.index = response.index));
+      .subscribe(
+        response => {
+          this.isIndexPending = false;
+          this.index = response.index;
+        },
+        () => (this.isIndexPending = false)
+      );
   }
 
   ngOnDestroy() {
     this.dispose.emit();
     this.ls.close();
-    this.mediaMatchObserver.unsubscribe();
-  }
-
-  run(handler: string) {
-    // this.$run = this.http
-    //   .request(
-    //     new HttpRequest("GET", `api:/function/${this.function._id}/run/${handler}`, {
-    //       reportProgress: true,
-    //       responseType: "text"
-    //     })
-    //   )
-    //   .pipe(
-    //     scan((accumulator: any, event: HttpEvent<any>) => {
-    //       if (event.type == HttpEventType.Sent) {
-    //         accumulator.state = "running";
-    //       } else if (event.type == HttpEventType.DownloadProgress) {
-    //         accumulator.logs = String(event["partialText"] || "")
-    //           .split("\n")
-    //           .filter(line => !!line)
-    //           .map(line => JSON.parse(line));
-    //       } else if (event.type == HttpEventType.Response) {
-    //         accumulator.state = accumulator.logs.pop().state || "failed";
-    //       }
-    //       return accumulator;
-    //     }, {})
-    //   );
   }
 
   addTrigger() {
@@ -143,6 +117,8 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   updateIndex() {
+    if (this.isIndexPending) return;
+
     if (this.function._id) {
       this.$markers.next([]);
       this.$indexSave = this.functionService.updateIndex(this.function._id, this.index).pipe(
@@ -175,6 +151,8 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   save() {
+    if (this.isIndexPending) return;
+
     this.serverError = undefined;
     this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
@@ -207,10 +185,6 @@ export class AddComponent implements OnInit, OnDestroy {
         })
       )
     );
-  }
-
-  changeScheme(isDark: boolean) {
-    this.editorOptions = {...this.editorOptions, theme: isDark ? "vs-dark" : "vs-light"};
   }
 
   getDependencies() {

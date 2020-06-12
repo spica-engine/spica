@@ -1,12 +1,16 @@
+import {Inject, Injectable} from "@nestjs/common";
 import * as saml2 from "saml2-js";
 import * as uuid from "uuid/v4";
 import {SamlStrategy} from "./interface";
-import {Injectable} from "@nestjs/common";
+import {PassportOptions, PASSPORT_OPTIONS} from "./options";
 import {StrategyService} from "./strategies/strategy.service";
 
 @Injectable()
 export class SamlService {
-  constructor(private strategy: StrategyService) {}
+  constructor(
+    private strategy: StrategyService,
+    @Inject(PASSPORT_OPTIONS) private options: PassportOptions
+  ) {}
 
   async createMetadata(name: string): Promise<string | null> {
     const strategy = await this.getStrategy(name);
@@ -18,7 +22,7 @@ export class SamlService {
   }
 
   getStrategy(name: string): Promise<SamlStrategy | null> {
-    return this.strategy.findOne<SamlStrategy>({name, type: "saml"});
+    return this.strategy.findOne({name, type: "saml"}) as Promise<SamlStrategy>;
   }
 
   async getLoginUrl(name: string): Promise<{url: string; state: string}> {
@@ -64,15 +68,15 @@ export class SamlService {
     });
 
     const sp = new saml2.ServiceProvider({
-      entity_id: `${process.env.PUBLIC_HOST}/passport/strategy/${strategy.name}`,
+      entity_id: `${this.options.publicUrl}/passport/strategy/${strategy.name}`,
       assert_endpoint: state
-        ? `${process.env.PUBLIC_HOST}/passport/strategy/${strategy.name}/complete?state=${state}`
-        : `${process.env.PUBLIC_HOST}/passport/strategy/${strategy.name}/complete`,
-      allow_unencrypted_assertion: true,
+        ? `${this.options.publicUrl}/passport/strategy/${strategy.name}/complete?state=${state}`
+        : `${this.options.publicUrl}/passport/strategy/${strategy.name}/complete`,
       certificate: strategy.options.sp.certificate,
       private_key: strategy.options.sp.private_key,
       force_authn: true,
-      nameid_format: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+      nameid_format: "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+      allow_unencrypted_assertion: true
     });
 
     return {idp, sp};

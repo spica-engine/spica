@@ -11,6 +11,7 @@ ts_library(
         "//stacks/api/function/horizon",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
+        "//stacks/api/function/runtime",
         "//stacks/api/function/runtime/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/platform-express",
@@ -24,7 +25,4 @@ ts_library(
 jasmine_node_test(
     name = "horizon_test",
     srcs = [":horizon"],
-    tags = [
-        "flaky",
-    ],
 )

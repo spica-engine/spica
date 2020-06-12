@@ -28,10 +28,19 @@ import {MatSaveModule} from "@spica-client/material";
 
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
+import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
+
 import {of} from "rxjs";
 import {Bucket} from "src/bucket/interfaces/bucket";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+}
 
 describe("Bucket Add Component", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
@@ -44,6 +53,7 @@ describe("Bucket Add Component", () => {
     icon: "myIcon",
     required: ["prop1"],
     readOnly: false,
+    history: true,
     properties: {
       prop1: {
         type: "string",
@@ -121,9 +131,16 @@ describe("Bucket Add Component", () => {
             getBucket: jasmine.createSpy("getBucket").and.returnValue(of(myBucket)),
             replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket))
           }
+        },
+        {
+          provide: BucketHistoryService,
+          useValue: {
+            clearHistories: jasmine.createSpy("clearHistories").and.returnValue(of(undefined)),
+            historyList: jasmine.createSpy("historyList").and.returnValue(of(undefined))
+          }
         }
       ],
-      declarations: [BucketAddComponent, PropertyKvPipe]
+      declarations: [BucketAddComponent, PropertyKvPipe, CanInteractDirectiveTest]
     }).compileComponents();
 
     fixture = TestBed.createComponent(BucketAddComponent);
@@ -204,10 +221,13 @@ describe("Bucket Add Component", () => {
           .injector.get(NgModel).model
       ).toBe("description");
 
-      expect(form.query(By.css("mat-slide-toggle")).injector.get(NgModel).model).toBe(
-        false,
-        "should work if readonly value is false"
-      );
+      expect(
+        form.query(By.css(".toggles .read-only mat-slide-toggle")).injector.get(NgModel).model
+      ).toBe(false, "should work if readonly value is false");
+
+      expect(
+        form.query(By.css(".toggles .history mat-slide-toggle")).injector.get(NgModel).model
+      ).toBe(true, "should work if history value is true");
 
       const firstProperty = fixture.debugElement.query(
         By.css("mat-list-item.properties mat-expansion-panel:nth-child(1)")
@@ -303,6 +323,20 @@ describe("Bucket Add Component", () => {
         fixture.debugElement.query(By.css("mat-card mat-card-actions button mat-icon"))
           .nativeElement
       ).toBeDefined("should work if savingstate is false as default");
+    });
+
+    it("should render disabled history toggle and error", async () => {
+      fixture.componentInstance.isHistoryEndpointEnabled$ = of(false);
+
+      fixture.detectChanges();
+
+      expect(
+        fixture.debugElement.query(By.css(".history mat-slide-toggle")).componentInstance.disabled
+      ).toEqual(true);
+
+      expect(
+        fixture.debugElement.query(By.css(".toggles mat-error")).nativeElement.textContent
+      ).toEqual(" This feature is unavailable because we could not find a replica set. ");
     });
   });
 
@@ -483,7 +517,8 @@ describe("Bucket Add Component", () => {
       form.setValue({
         title: "new title",
         description: "new description",
-        readOnly: false
+        readOnly: false,
+        history: false
       });
       fixture.detectChanges();
       await fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
@@ -492,9 +527,17 @@ describe("Bucket Add Component", () => {
         ...myBucket,
         title: "new title",
         description: "new description",
-        readOnly: false
+        readOnly: false,
+        history: false
       } as Bucket);
     });
+
+    it("should clear histories of bucket", fakeAsync(() => {
+      let clearHistorySpy = fixture.componentInstance["historyService"].clearHistories;
+      fixture.componentInstance.clearHistories();
+      expect(clearHistorySpy).toHaveBeenCalledTimes(1);
+      expect(clearHistorySpy).toHaveBeenCalledWith("123");
+    }));
   });
 
   describe("errors", () => {

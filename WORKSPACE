@@ -9,8 +9,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 # Setup nodejs workspace
 http_archive(
     name = "build_bazel_rules_nodejs",
-    sha256 = "b6670f9f43faa66e3009488bbd909bc7bc46a5a9661a33f6bc578068d1837f37",
-    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/1.3.0/rules_nodejs-1.3.0.tar.gz"],
+    sha256 = "84abf7ac4234a70924628baa9a73a5a5cbad944c4358cf9abdb4aab29c9a5b77",
+    urls = ["https://github.com/bazelbuild/rules_nodejs/releases/download/1.7.0/rules_nodejs-1.7.0.tar.gz"],
 )
 
 load("@build_bazel_rules_nodejs//:index.bzl", "check_bazel_version", "node_repositories", "yarn_install")
@@ -93,11 +93,11 @@ container_pull(
 )
 
 container_pull(
-    name = "node_image",
-    digest = "sha256:c953b001ea2acf18a6ef99a90fc50630e70a7c0a6b49d774a7aee1f9c937b645",
+    name = "debian_image",
+    digest = "sha256:1ceec96ca567c40500a2745728f7c19c0801785c8b10187b1d66bcd538694fc2",
     registry = "index.docker.io",
-    repository = "library/node",
-    tag = "12.10.0",
+    repository = "library/debian",
+    tag = "buster-slim",
 )
 
 load(
@@ -107,12 +107,12 @@ load(
 
 nodejs_image_repos()
 
-# Prepare base image for initcontainer
+# Prepare base image for mongoreplicationcontroller
 load("@io_bazel_rules_docker//contrib:dockerfile_build.bzl", "dockerfile_image")
 
 dockerfile_image(
-    name = "initcontainer_base",
-    dockerfile = "//tools/initcontainer:Dockerfile",
+    name = "mongoreplicationcontroller_base",
+    dockerfile = "//tools/mongoreplicationcontroller:Dockerfile",
 )
 
 # Setup kubernetes workspace

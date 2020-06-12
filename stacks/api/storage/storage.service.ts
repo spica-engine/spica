@@ -1,29 +1,34 @@
 import {Injectable} from "@nestjs/common";
-import {Collection, DatabaseService, ObjectId, FilterQuery} from "@spica-server/database";
-import * as fs from "fs";
-import * as path from "path";
+import {Collection, DatabaseService, FilterQuery, ObjectId} from "@spica-server/database";
+import {Strategy} from "./strategy";
 
 @Injectable()
 export class Storage {
-  private readonly path: string;
   public readonly storageName: string = "storage";
 
   private _collection: Collection<StorageObject>;
 
-  constructor(database: DatabaseService, pPath: string) {
+  private service: Strategy;
+
+  constructor(database: DatabaseService, private strategy: Strategy) {
+    this.service = strategy;
     this._collection = database.collection("storage");
-    this.path = path.resolve(pPath, "storage");
-    if (!fs.existsSync(this.path)) {
-      fs.mkdirSync(this.path);
-    }
   }
 
-  getAll(limit: number, skip: number, order?: any): Promise<StorageResponse> {
+  getAll(limit: number, skip: number = 0, sort?: any): Promise<StorageResponse> {
+    let dataPipeline: object[] = [];
+
+    dataPipeline.push({$skip: skip});
+
+    if (limit) dataPipeline.push({$limit: limit});
+
+    if (sort) dataPipeline.push({$sort: sort});
+
     const aggregation = [
       {
         $facet: {
           meta: [{$count: "total"}],
-          data: [{$skip: skip}, {$limit: limit}, order && {$sort: order}].filter(Boolean)
+          data: dataPipeline
         }
       },
       {
@@ -37,53 +42,55 @@ export class Storage {
     return this._collection
       .aggregate(aggregation)
       .toArray()
-      .then(d => d[0] as any);
+      .then(async d => {
+        for (const obj of (d[0] as any).data) {
+          obj.url = await this.service.url(obj._id);
+        }
+        return d[0] as any;
+      });
   }
 
   async get(id: ObjectId): Promise<StorageObject> {
     const object = await this._collection.findOne({_id: new ObjectId(id)});
     if (!object) return null;
-    const path = this.buildPath(object);
-    if (fs.existsSync(path)) {
-      object.content.data = fs.readFileSync(path);
-    }
+    object.content.data = await this.service.read(id.toHexString());
     return object;
   }
 
   async deleteOne(id: ObjectId): Promise<void> {
-    const object = await this.get(id);
-    const path = this.buildPath(object);
-    if (fs.existsSync(path)) {
-      fs.unlinkSync(this.buildPath(object));
-    }
+    await this.service.delete(id.toHexString());
     return this._collection.deleteOne({_id: id}).then(() => undefined);
   }
 
-  updateOne(filter: FilterQuery<StorageObject>, object: StorageObject): Promise<StorageObject> {
+  async updateOne(
+    filter: FilterQuery<StorageObject>,
+    object: StorageObject
+  ): Promise<StorageObject> {
     if (object.content.data) {
-      fs.writeFileSync(this.buildPath({...object, _id: filter._id}), object.content.data);
+      await this.service.write(object._id.toString(), object.content.data);
     }
     delete object.content.data;
     delete object._id;
     return this._collection.updateOne(filter, {$set: object}, {upsert: true}).then(() => object);
   }
 
-  insertMany(object: StorageObject[]): Promise<StorageObject[]> {
+  async insertMany(object: StorageObject[]): Promise<StorageObject[]> {
     const data = Array.from(object);
 
-    Promise.all(
+    await Promise.all(
       data.map(d => {
         d._id = new ObjectId(d._id);
-        fs.writeFileSync(this.buildPath(d), d.content.data);
-        delete d.content.data;
+        return this.service.write(d._id.toHexString(), d.content.data).then(() => {
+          delete d.content.data;
+        });
       })
     );
 
     return this._collection.insertMany(data).then(() => object);
   }
 
-  buildPath(object: StorageObject): string {
-    return path.resolve(`${this.path}/${object._id}.storageobj`);
+  async getUrl(id: string) {
+    return this.service.url(id);
   }
 }
 

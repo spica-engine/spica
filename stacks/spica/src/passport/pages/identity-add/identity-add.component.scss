@@ -1,7 +1,10 @@
 :host {
   mat-card {
     mat-card-content {
-      padding-top: 10px;
+      form > button {
+        margin-bottom: 1.25em;
+      }
+
       form {
         ::ng-deep > div .input-placer-input {
           width: 100%;
@@ -9,6 +12,7 @@
         > * {
           width: 100%;
         }
+
         div.policies {
           flex: 1;
           display: flex;

@@ -19,7 +19,7 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {InputModule} from "@spica-client/common";
-import {MatAwareDialogModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {AngularCropperjsModule} from "angular-cropperjs";
 import {ngfModule} from "angular-file";
 
@@ -33,6 +33,8 @@ import {StorageComponent} from "./components/storage/storage.component";
 import {ImageEditorComponent} from "./pages/image-editor/image-editor.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
+import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {provideActivityFactory} from "@spica-client/storage/providers/activity";
 
 @NgModule({
   imports: [
@@ -57,6 +59,7 @@ import {StorageRoutingModule} from "./storage-routing.module";
     MatInputModule,
     AngularCropperjsModule,
     MatToolbarModule,
+    MatClipboardModule,
     MatMenuModule,
     InputModule.withPlacers([{origin: "string", type: "storage", placer: StorageComponent}]),
     PassportModule.forChild()
@@ -75,7 +78,16 @@ import {StorageRoutingModule} from "./storage-routing.module";
 })
 export class StorageModule {
   static forRoot(): ModuleWithProviders {
-    return {ngModule: StorageModule, providers: []};
+    return {
+      ngModule: StorageModule,
+      providers: [
+        {
+          provide: ACTIVITY_FACTORY,
+          useValue: provideActivityFactory,
+          multi: true
+        }
+      ]
+    };
   }
 
   static forChild(): ModuleWithProviders {

@@ -11,7 +11,13 @@ import {
   MatMenuModule,
   MatSidenavModule,
   MatToolbarModule,
-  MatTooltipModule
+  MatTooltipModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatSelectModule,
+  MatOptionModule,
+  MatExpansionPanel,
+  MatExpansionModule
 } from "@angular/material";
 import {BrowserModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
@@ -36,6 +42,10 @@ import {DocCardsComponent} from "./components/doc-cards/doc-cards.component";
 import {EnterpriseComponent} from "./pages/enterprise/enterprise.component";
 import {PartnersComponent} from "./pages/partners/partners.component";
 import {IntersectDirective} from "./directives/intersect.directive";
+import {SupportPolicyComponent} from "./pages/support-policy/support-policy.component";
+import {LimitPolicyComponent} from "./pages/limit-policy/limit-policy.component";
+import {FairusagePolicyComponent} from "./pages/fairusage-policy/fairusage-policy.component";
+import {CalendarComponent} from "./pages/calendar/calendar.component";
 @NgModule({
   imports: [
     BrowserModule,
@@ -56,7 +66,12 @@ import {IntersectDirective} from "./directives/intersect.directive";
     MatButtonModule,
     MatListModule,
     MatSidenavModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatExpansionModule
   ],
   declarations: [
     AppComponent,
@@ -75,7 +90,11 @@ import {IntersectDirective} from "./directives/intersect.directive";
     FooterComponent,
     EnterpriseComponent,
     PartnersComponent,
-    IntersectDirective
+    IntersectDirective,
+    SupportPolicyComponent,
+    LimitPolicyComponent,
+    FairusagePolicyComponent,
+    CalendarComponent
   ],
   entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
   providers: [],

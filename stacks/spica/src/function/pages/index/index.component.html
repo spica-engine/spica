@@ -33,36 +33,6 @@
         </mat-cell>
       </ng-container>
 
-      <ng-container matColumnDef="info">
-        <mat-header-cell class="info" *matHeaderCellDef>
-          Info
-        </mat-header-cell>
-        <mat-cell class="info" *matCellDef="let function">
-          <ng-container *ngFor="let infoKv of function.info | keyvalue">
-            <ng-container *ngFor="let info of infoKv.value">
-              <a
-                *ngIf="info.type == 'url'"
-                mat-icon-button
-                mat-flat-button
-                [attr.href]="info.url"
-                target="_blank"
-                [matTooltip]="info.text"
-              >
-                <mat-icon>{{ info.icon }}</mat-icon>
-              </a>
-              <button
-                *ngIf="info.type == 'label'"
-                mat-icon-button
-                mat-flat-button
-                [matTooltip]="info.text"
-              >
-                <mat-icon>{{ info.icon }}</mat-icon>
-              </button>
-            </ng-container>
-          </ng-container>
-        </mat-cell>
-      </ng-container>
-
       <ng-container matColumnDef="actions">
         <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell class="action" *matCellDef="let function">

@@ -1,0 +1,91 @@
+:host {
+  mat-toolbar {
+    min-height: 250px;
+    padding: 0 30px;
+    align-items: flex-start;
+    .space-between {
+      flex: 1 1 auto;
+    }
+    h4 {
+      mat-icon,
+      span {
+        vertical-align: middle;
+        margin-left: 5px;
+      }
+    }
+  }
+  mat-card {
+    margin: 30px;
+    margin-top: -110px;
+    // For proper border radius
+    overflow: hidden;
+  }
+
+  textarea {
+    height: 22px;
+  }
+
+  .mat-list-item-content {
+    height: 85px !important;
+  }
+
+  mat-card {
+    mat-card-header {
+      mat-card-title > * {
+        vertical-align: middle;
+      }
+    }
+  }
+
+  .full-width-table {
+    width: 100%;
+  }
+  .mat-cell {
+    text-align: center;
+  }
+  .mat-card-header {
+    width: 100%;
+  }
+  ::ng-deep .mat-card-header-text {
+    width: 100%;
+  }
+  .mat-header-cell {
+    text-align: left;
+  }
+  .mat-cell {
+    text-align: left;
+  }
+  button[mat-button] {
+    float: right;
+  }
+  ::ng-deep[centerHeader] {
+    display: grid;
+    text-align: center;
+  }
+  ::ng-deep[item] {
+    display: block;
+    text-align: center;
+  }
+
+  mat-card mat-card-content mat-table mat-header-cell:nth-child(1),
+  mat-cell:nth-child(1) {
+    word-break: break-word;
+    text-align: left;
+    flex: 2;
+  }
+
+  mat-card mat-card-content mat-table mat-header-cell:nth-child(2),
+  mat-cell:nth-child(2) {
+    word-break: break-word;
+    flex: 4;
+  }
+
+  mat-card mat-card-content mat-table mat-header-cell:nth-child(3),
+  mat-cell:nth-child(3) {
+    word-break: break-word;
+    justify-content: flex-end;
+    flex: 1;
+    max-width: 150px;
+    justify-content: flex-end;
+  }
+}

@@ -1,1 +1,1 @@
-export {RealtimeModule} from "./realtime.module";
+export * from "./src/index";

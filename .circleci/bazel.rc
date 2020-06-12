@@ -2,6 +2,9 @@
 # speeding up the analysis time significantly with Bazel managed node dependencies on the CI.
 build --repository_cache=/home/circleci/bazel_repository_cache
 
+build --noshow_loading_progress
+build --show_progress_rate_limit 5
+
 # These options are enabled when running on CI
 # We do this by copying this file to /etc/bazel.bazelrc at the start of the build.
 
@@ -12,7 +15,7 @@ build --noshow_progress
 # Bazel doesn't calculate the memory ceiling correctly when running under Docker.
 # Limit Bazel to consuming resources that fit in CircleCI "medium" class
 # https://circleci.com/docs/2.0/configuration-reference/#resource_class
-build --local_ram_resources=4096
+build --local_ram_resources=2024
 build --local_cpu_resources=2
 
 # Print all the options that apply to the build.
@@ -29,3 +32,7 @@ test --test_output=errors
 
 # Cache tests under CI
 test --cache_test_results
+
+
+# Do not run in worker mode
+build --strategy=TypeScriptCompile=standalone

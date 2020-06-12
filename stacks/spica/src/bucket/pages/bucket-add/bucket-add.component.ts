@@ -16,12 +16,14 @@ import {
   tap,
   ignoreElements,
   endWith,
-  catchError
+  catchError,
+  mapTo
 } from "rxjs/operators";
 import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
+import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
 
 @Component({
   selector: "bucket-add",
@@ -45,10 +47,15 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   basicPropertyTypes = ["string", "textarea", "boolean", "number"];
+  visibleTypes = ["string", "textarea", "boolean", "number", "relation", "date"];
 
   bucket: Bucket;
 
   $save: Observable<SavingState>;
+
+  $remove: Observable<SavingState>;
+
+  isHistoryEndpointEnabled$: Observable<boolean>;
 
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
@@ -62,12 +69,20 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     _inputResolver: InputResolver,
     private activatedRoute: ActivatedRoute,
     private router: Router,
-    private bs: BucketService
+    private bs: BucketService,
+    private historyService: BucketHistoryService
   ) {
     this.inputTypes = _inputResolver.entries();
   }
 
   ngOnInit(): void {
+    this.isHistoryEndpointEnabled$ = this.historyService
+      .historyList("000000000000000000000000", "000000000000000000000000")
+      .pipe(
+        mapTo(true),
+        catchError(() => of(false))
+      );
+
     this.activatedRoute.params
       .pipe(
         flatMap(params =>
@@ -84,6 +99,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         ),
         tap(params => {
           this.$save = of(SavingState.Pristine);
+          this.$remove = of(SavingState.Pristine);
           if (!params.id) {
             this.bucket = emptyBucket();
             this.updatePositionProperties();
@@ -95,6 +111,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
           this.bucket = deepCopy<Bucket>(scheme);
           this.immutableProperties = Object.keys(this.bucket.properties);
         }),
+
         takeUntil(this.onDestroy)
       )
       .subscribe(() => this.updatePositionProperties());
@@ -177,6 +194,18 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       of(SavingState.Saving),
       save.pipe(
         tap(bucket => isInsert && this.router.navigate([`buckets/${bucket._id}`])),
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
+    );
+  }
+
+  clearHistories() {
+    const remove = this.historyService.clearHistories(this.bucket._id);
+    this.$remove = merge(
+      of(SavingState.Saving),
+      remove.pipe(
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))

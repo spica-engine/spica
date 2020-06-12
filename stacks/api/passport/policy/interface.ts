@@ -17,3 +17,7 @@ export interface Service {
   title: string;
   actions: string[];
 }
+
+export interface PrepareUser {
+  (request: any): any;
+}

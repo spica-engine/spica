@@ -1,18 +1,24 @@
-import {Module, DynamicModule} from "@nestjs/common";
-import {Storage} from "./storage.service";
+import {DynamicModule, Module} from "@nestjs/common";
+import {StorageOptions, STORAGE_OPTIONS} from "./options";
 import {StorageController} from "./storage.controller";
-import {DatabaseService} from "@spica-server/database";
+import {Storage} from "./storage.service";
+import {Strategy, factoryProvider} from "./strategy";
 
 @Module({})
 export class StorageModule {
-  static forRoot(options: {path: string}): DynamicModule {
+  static forRoot(options: StorageOptions): DynamicModule {
     return {
       module: StorageModule,
       providers: [
         {
-          provide: Storage,
-          useFactory: db => new Storage(db, options.path),
-          inject: [DatabaseService]
+          provide: STORAGE_OPTIONS,
+          useValue: options
+        },
+        Storage,
+        {
+          provide: Strategy,
+          useFactory: factoryProvider,
+          inject: [STORAGE_OPTIONS]
         }
       ],
       controllers: [StorageController]

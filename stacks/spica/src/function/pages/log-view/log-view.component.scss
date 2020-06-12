@@ -4,6 +4,7 @@
     padding: 0 30px;
     align-items: flex-start;
     h4 > * {
+      margin-left: 5px;
       vertical-align: middle;
     }
     .space-between {
@@ -14,11 +15,15 @@
   mat-card {
     width: calc(100% - 60px);
     margin: 30px;
-    margin-top: -160px;
+    margin-top: -110px;
+    padding: 24px;
 
-    mat-form-field:not(:first-of-type) {
-      margin-left: 10px;
-      margin-top: 10px;
+    > *:first-child {
+      margin-right: 5px;
+    }
+
+    > *:not(:first-child):not(mat-table) {
+      margin: 0px 10px;
     }
 
     mat-table {
@@ -50,6 +55,9 @@
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+            mat-icon {
+              margin-right: 5px;
+            }
           }
         }
       }
@@ -61,6 +69,9 @@
           white-space: pre-wrap;
           line-height: 20px;
           opacity: 0.8;
+          &[channel="stderr"] {
+            color: var(--warn-500);
+          }
           div {
             padding-top: 10px;
             padding-bottom: 10px;

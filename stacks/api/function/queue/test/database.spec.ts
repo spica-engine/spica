@@ -1,4 +1,4 @@
-import {EventQueue, DatabaseQueue} from "@spica-server/function/queue";
+import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database} from "@spica-server/function/queue/proto";
 import {credentials} from "grpc";
 
@@ -8,11 +8,14 @@ describe("DatabaseQueue", () => {
   let databaseQueueClient: any;
 
   beforeEach(() => {
-    queue = new EventQueue(() => {});
+    queue = new EventQueue(() => {}, () => {});
     databaseQueue = new DatabaseQueue();
     queue.addQueue(databaseQueue);
     queue.listen();
-    databaseQueueClient = new Database.QueueClient("0.0.0.0:5678", credentials.createInsecure());
+    databaseQueueClient = new Database.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      credentials.createInsecure()
+    );
   });
 
   afterEach(() => {

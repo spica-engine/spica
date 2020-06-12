@@ -33,7 +33,9 @@
   --opacity: 0.5;
 
   mat-toolbar {
+    min-height: 250px;
     padding: 0 30px;
+    align-items: flex-start;
     .bucket-title {
       margin-left: -10px;
       display: flex;
@@ -58,6 +60,7 @@
 
   & > mat-card {
     margin: 30px;
+    margin-top: -110px;
 
     mat-list {
       > span {
@@ -94,9 +97,6 @@
             }
             mat-form-field:last-of-type {
               width: 40%;
-            }
-            mat-slide-toggle {
-              align-self: center;
             }
           }
         }
@@ -195,6 +195,33 @@
         display: inline-block;
         margin-right: 5px;
       }
+    }
+
+    .remove-history {
+      padding: 30px 0px;
+      display: block;
+      button {
+        float: right;
+        mat-progress-spinner {
+          display: inline-block;
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+
+  .toggles {
+    width: 200px;
+    padding: 0px 10px;
+
+    div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    mat-error {
+      font-size: 12px !important;
     }
   }
 }

@@ -1,0 +1,16 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+
+ts_library(
+    name = "websocket",
+    srcs = glob([
+        "src/*.ts",
+        "index.ts",
+    ]),
+    module_name = "@spica-server/core/websocket",
+    deps = [
+        "@npm//@nestjs/platform-ws",
+        "@npm//path-to-regexp",
+    ],
+)

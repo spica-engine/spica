@@ -1,41 +1,43 @@
 <mat-toolbar color="primary">
-  <h4 class="mat-h4 bucket-title">
-    <button
-      mat-icon-button
-      menu-icon
-      class="mat-elevation-z25"
-      matTooltip="You can select a icon by clicking here."
-      [matMenuTriggerFor]="iconSelector"
-    >
-      <mat-icon>{{ bucket?.icon }}</mat-icon>
-      <mat-menu #iconSelector="matMenu">
-        <ng-container matMenuContent>
-          <button
-            *ngFor="let icon of visibleIcons"
-            mat-icon-button
-            mat-flat-button
-            [matTooltip]="icon"
-            (click)="bucket.icon = icon"
-          >
-            <mat-icon>{{ icon }}</mat-icon>
-          </button>
-          <mat-paginator
-            (page)="
-              this.visibleIcons = this.icons.slice(
-                $event.pageIndex * $event.pageSize,
-                ($event.pageIndex + 1) * $event.pageSize
-              )
-            "
-            (click)="$event.stopPropagation()"
-            [length]="icons.length"
-            [pageSize]="iconPageSize"
-          >
-          </mat-paginator>
-        </ng-container>
-      </mat-menu>
-    </button>
-    <span>{{ bucket?.title }}</span>
-  </h4>
+  <span>
+    <h4 class="mat-h4 bucket-title">
+      <button
+        mat-icon-button
+        menu-icon
+        class="mat-elevation-z25"
+        matTooltip="You can select a icon by clicking here."
+        [matMenuTriggerFor]="iconSelector"
+      >
+        <mat-icon>{{ bucket?.icon }}</mat-icon>
+        <mat-menu #iconSelector="matMenu">
+          <ng-container matMenuContent>
+            <button
+              *ngFor="let icon of visibleIcons"
+              mat-icon-button
+              mat-flat-button
+              [matTooltip]="icon"
+              (click)="bucket.icon = icon"
+            >
+              <mat-icon>{{ icon }}</mat-icon>
+            </button>
+            <mat-paginator
+              (page)="
+                this.visibleIcons = this.icons.slice(
+                  $event.pageIndex * $event.pageSize,
+                  ($event.pageIndex + 1) * $event.pageSize
+                )
+              "
+              (click)="$event.stopPropagation()"
+              [length]="icons.length"
+              [pageSize]="iconPageSize"
+            >
+            </mat-paginator>
+          </ng-container>
+        </mat-menu>
+      </button>
+      <span>{{ bucket?.title }}</span>
+    </h4>
+  </span>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25" *ngIf="bucket" @smooth>
   <mat-card-content>
@@ -98,22 +100,48 @@
             </mat-error>
           </mat-form-field>
 
-          <mat-slide-toggle
-            matInput
-            name="readOnly"
-            placeholder="Read Only"
-            [(ngModel)]="bucket.readOnly"
-          >
-            Read Only
-          </mat-slide-toggle>
-          <button
-            mat-icon-button
-            color="accent"
-            disableRipple
-            matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
-          >
-            <mat-icon>info</mat-icon>
-          </button>
+          <div class="toggles">
+            <div class="read-only">
+              <mat-slide-toggle
+                matInput
+                name="readOnly"
+                placeholder="Read Only"
+                [(ngModel)]="bucket.readOnly"
+              >
+                Read Only
+              </mat-slide-toggle>
+              <button
+                mat-icon-button
+                color="accent"
+                disableRipple
+                matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+            <div class="history">
+              <mat-slide-toggle
+                [disabled]="!(isHistoryEndpointEnabled$ | async)"
+                matInput
+                name="history"
+                placeholder="History"
+                [(ngModel)]="bucket.history"
+              >
+                History
+              </mat-slide-toggle>
+              <button
+                mat-icon-button
+                color="accent"
+                disableRipple
+                matTooltip="To keep your bucket data histories, make enable this feature."
+              >
+                <mat-icon>info</mat-icon>
+              </button>
+            </div>
+            <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">
+              This feature is unavailable because we could not find a replica set.
+            </mat-error>
+          </div>
         </form>
       </mat-list-item>
       <span>
@@ -170,7 +198,7 @@
                       </div>
                       <div
                         mat-menu-item
-                        *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+                        *ngIf="visibleTypes.includes(propertyKv.value.type)"
                         role="menuitemcheckbox"
                         disableRipple
                         (click)="$event.stopImmediatePropagation()"
@@ -380,7 +408,7 @@
   <mat-card-actions>
     <button
       mat-button
-      canInteract="bucket:update"
+      [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
       form="describeForm"
       *matSave="$save | async; let state"
       [disabled]="
@@ -405,4 +433,42 @@
       <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
+  <mat-list-item *ngIf="bucket._id" class="remove-history">
+    <mat-divider></mat-divider>
+    <h3>
+      DANGER ZONE
+    </h3>
+    <button
+      (click)="clearHistories()"
+      mat-raised-button
+      color="warn"
+      *matSave="$remove | async; let state"
+      [disabled]="!!state"
+      [ngSwitch]="state"
+    >
+      <ng-container *ngSwitchDefault>
+        <mat-icon>delete</mat-icon>
+        <span>Remove</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="'saving'">
+        <mat-progress-spinner
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        ></mat-progress-spinner
+        ><span>Removing..</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="'saved'">
+        <mat-icon>done</mat-icon>
+        <span>Removed</span>
+      </ng-container>
+      <ng-container *ngSwitchCase="'failed'">
+        <mat-icon>clear</mat-icon>
+        <span>Failed</span>
+      </ng-container>
+    </button>
+    <p>
+      This action will remove all histories of this bucket
+    </p>
+  </mat-list-item>
 </mat-card>

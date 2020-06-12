@@ -19,8 +19,8 @@
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
-        <mat-list-item (click)="toggle()">
-          <mat-icon>menu_open</mat-icon>
+        <mat-list-item *ngIf="!(isHandset$ | async)" (click)="toggle()">
+          <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
       </mat-nav-list>
       <mat-nav-list>
@@ -41,17 +41,17 @@
     <mat-toolbar color="primary">
       <button
         type="button"
-        aria-label="Toggle sidenav"
         mat-icon-button
         (click)="drawer.toggle(); expanded = true"
         *ngIf="isHandset$ | async"
       >
-        <mat-icon aria-label="Side nav toggle icon">sort</mat-icon>
+        <mat-icon>sort</mat-icon>
       </button>
-      <span class="fill-between"></span>
-      <span class="custom-action" *ngFor="let component of components">
+      <span></span>
+      <toolbar-action></toolbar-action>
+      <ng-container *ngFor="let component of components">
         <ng-container *ngComponentOutlet="component"></ng-container>
-      </span>
+      </ng-container>
     </mat-toolbar>
     <div slot="content"></div>
   </mat-sidenav-content>

@@ -1,0 +1,41 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load(":index.bzl", "pickup_es5_sources")
+
+ts_library(
+    name = "mongoreplicationcontroller_sources",
+    srcs = ["init.ts"],
+    deps = [
+        "@npm//@types/node",
+        # Do not add anything
+    ],
+)
+
+pickup_es5_sources(
+    name = "mongoreplicationcontroller_es5_sources",
+    srcs = [
+        ":mongoreplicationcontroller_sources",
+    ],
+)
+
+container_image(
+    name = "mongoreplicationcontroller",
+    base = "@mongoreplicationcontroller_base//image:dockerfile_image.tar",
+    cmd = ["init.js"],
+    files = [":mongoreplicationcontroller_es5_sources"],
+    labels = {
+        "maintainer": "Spica maintainers <dev@spicanengine.com>",
+    },
+)
+
+container_push(
+    name = "push",
+    format = "Docker",
+    image = ":mongoreplicationcontroller",
+    registry = "index.docker.io",
+    repository = "spicaengine/mongoreplicationcontroller",
+    tag = "{BUILD_SCM_VERSION}",
+    tags = ["release-with-spica"],
+)

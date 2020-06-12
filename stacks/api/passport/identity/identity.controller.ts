@@ -1,4 +1,3 @@
-import {Schema} from "@spica-server/core/schema";
 import {
   BadRequestException,
   Body,
@@ -10,20 +9,21 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
   Req,
+  UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {PassportService} from "../passport.service";
-import {Identity} from "./interface";
-import {IdentityService} from "./identity.service";
-import {NUMBER} from "@spica-server/core";
+import {activity} from "@spica-server/activity/services";
+import {NUMBER, DEFAULT} from "@spica-server/core";
+import {Schema} from "@spica-server/core/schema";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {AuthGuard} from "../auth.guard";
+import {PassportService} from "../passport.service";
 import {ActionGuard, PolicyService} from "../policy";
-import {OBJECT_ID, ObjectId} from "@spica-server/database";
-import {activity} from "@spica-server/activity";
-
-import {createIdentityResource, createIdentityPolicyResource} from "./activity.resource";
+import {createIdentityActivity} from "./activity.resource";
+import {IdentityService} from "./identity.service";
+import {Identity} from "./interface";
+import {attachIdentityAccess} from "./utilities";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -47,12 +47,21 @@ export class IdentityController {
   }
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
-  find(@Query("limit", NUMBER) limit: number, @Query("skip", NUMBER) skip: number) {
+  find(
+    @Query("limit", DEFAULT(0), NUMBER) limit: number,
+    @Query("skip", DEFAULT(0), NUMBER) skip: number
+  ) {
+    let dataPipeline: object[] = [];
+
+    dataPipeline.push({$skip: skip});
+
+    if (limit) dataPipeline.push({$limit: limit});
+
     const aggregate = [
       {
         $facet: {
           meta: [{$count: "total"}],
-          data: [{$skip: skip}, {$limit: limit || 10}]
+          data: dataPipeline
         }
       },
       {
@@ -80,9 +89,9 @@ export class IdentityController {
     return identity;
   }
 
-  @UseInterceptors(activity(createIdentityResource))
+  @UseInterceptors(activity(createIdentityActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:create"))
   insertOne(
     @Body(Schema.validate("http://spica.internal/passport/create-identity-with-attributes"))
     identity: Identity
@@ -95,10 +104,9 @@ export class IdentityController {
     });
   }
 
-  @UseInterceptors(activity(createIdentityResource))
+  @UseInterceptors(activity(createIdentityActivity))
   @Put(":id")
-  // TODO(thesayyn): Check if user updates its own identity.
-  @UseGuards(AuthGuard() /*, ActionGuard('passport:identity:update')*/)
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:update", undefined, attachIdentityAccess))
   updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
@@ -107,7 +115,7 @@ export class IdentityController {
     return this.identity.updateOne(id, identity);
   }
 
-  @UseInterceptors(activity(createIdentityResource))
+  @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -116,7 +124,7 @@ export class IdentityController {
 
   // TODO(thesayyn): Strictly check policies before attaching them
 
-  @UseInterceptors(activity(createIdentityPolicyResource))
+  @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/attach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async attachPolicy(
@@ -135,7 +143,7 @@ export class IdentityController {
     return identity;
   }
 
-  @UseInterceptors(activity(createIdentityPolicyResource))
+  @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/detach-policy")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
   async detachPolicy(

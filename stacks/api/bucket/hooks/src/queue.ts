@@ -30,8 +30,22 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
       return callback(new Error(`Queue has no callback with id ${call.request.id}`), null);
     }
     this.callbacks.delete(call.request.id);
-    _callback(JSON.parse(call.request.result));
-    callback(null, new Action.Result.Response());
+
+    let result = true;
+
+    try {
+      result = JSON.parse(call.request.result);
+      callback(null, new Action.Result.Response());
+    } catch (error) {
+      callback(
+        new Error(
+          "Return value was not given or invalid type. Valid types for the actions are: \n - Insert, Update: Boolean \n - Get, Index: Array\n - Stream: Object"
+        ),
+        null
+      );
+    }
+
+    _callback(result);
   }
 
   enqueue(id: string, action: Action.Action, callback: Function) {

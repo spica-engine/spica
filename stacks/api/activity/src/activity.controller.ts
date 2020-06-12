@@ -1,17 +1,29 @@
-import {Controller, Get, Query, Delete, HttpStatus, HttpCode, Param} from "@nestjs/common";
-import {Activity, Resource, ActivityQuery, Action} from "./";
-import {ActivityService} from "./activity.service";
-import {JSONP, DATE, NUMBER} from "@spica-server/core";
-import {ObjectId, OBJECT_ID, FilterQuery} from "@spica-server/database";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Query,
+  UseGuards
+} from "@nestjs/common";
+import {Activity, ActivityService} from "@spica-server/activity/services";
+import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
+import {DatabaseService, FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard} from "@spica-server/passport";
 
 @Controller("activity")
 export class ActivityController {
-  constructor(private activityService: ActivityService) {}
+  constructor(private activityService: ActivityService, private database: DatabaseService) {}
+
   @Get()
+  @UseGuards(AuthGuard(), ActionGuard("activity:index"))
   find(
     @Query("identifier") identifier,
-    @Query("action", JSONP) action: number | number[],
-    @Query("resource", JSONP) resource: Resource,
+    @Query("action", DEFAULT([]), ARRAY(Number)) action: number[],
+    @Query("resource", JSONP) resource: object,
     @Query("begin", DATE) begin: Date,
     @Query("end", DATE) end: Date,
     @Query("skip", NUMBER) skip: number,
@@ -31,10 +43,17 @@ export class ActivityController {
         $set: {
           identifier: "$identifier.identifier"
         }
+      },
+      {
+        $addFields: {
+          date: {$toDate: "$_id"}
+        }
       }
     ];
 
-    let filter: FilterQuery<ActivityQuery> = {};
+    aggregation.push({$sort: {_id: -1}});
+
+    let filter: FilterQuery<Activity> = {};
 
     if (identifier) filter.identifier = identifier;
 
@@ -45,37 +64,14 @@ export class ActivityController {
       };
     }
 
-    if (action) {
-      if (Array.isArray(action) && action.length > 0) {
-        filter["$or"] = action.map(val => {
-          return {action: Number(val)};
-        });
-      } else if (!Array.isArray(action)) {
-        filter["$or"] = [{action: Number(action)}];
-      }
+    if (action.length > 0) {
+      filter["$or"] = action.map(act => {
+        return {action: act};
+      });
     }
 
     if (resource) {
-      if (resource.name) {
-        filter["resource.name"] = resource.name;
-      }
-      if (resource.documentId) {
-        filter["resource.documentId"] = {
-          $in: Array.isArray(resource.documentId) ? resource.documentId : [resource.documentId]
-        };
-      }
-      if (resource.subResource) {
-        if (resource.subResource.name) {
-          filter["resource.subResource.name"] = resource.subResource.name;
-        }
-        if (resource.subResource.documentId) {
-          filter["resource.subResource.documentId"] = {
-            $in: Array.isArray(resource.subResource.documentId)
-              ? resource.subResource.documentId
-              : [resource.subResource.documentId]
-          };
-        }
-      }
+      filter = {...filter, resource};
     }
 
     if (filter) aggregation.push({$match: filter});
@@ -88,8 +84,16 @@ export class ActivityController {
   }
 
   @Delete(":id")
+  @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.activityService.deleteOne({_id: id});
+  }
+
+  @Delete()
+  @UseGuards(AuthGuard(), ActionGuard("activity:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteMany(@Body() ids: ObjectId[]) {
+    return this.activityService.deleteMany({_id: {$in: ids.map(id => new ObjectId(id))}});
   }
 }

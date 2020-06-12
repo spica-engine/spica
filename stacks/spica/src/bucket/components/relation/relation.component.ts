@@ -2,13 +2,13 @@ import {Component, forwardRef, HostListener, Inject, OnInit, ViewChild} from "@a
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatPaginator} from "@angular/material/paginator";
 import {INPUT_SCHEMA} from "@spica-client/common";
-import {merge, Observable, of} from "rxjs";
+import {BehaviorSubject, merge, Observable} from "rxjs";
 import {map, switchMap, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData, BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
-import {RelationSchema} from "../relation";
+import {RelationSchema, RelationType} from "../relation";
 
 @Component({
   selector: "bucket-relation",
@@ -21,61 +21,91 @@ import {RelationSchema} from "../relation";
 export class RelationComponent implements ControlValueAccessor, OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
-  value: string;
+  value: string | string[];
 
-  onTouchedFn: Function = () => {};
-  onChangeFn: Function = () => {};
+  _oneToManyRelation = false;
 
-  $row: Observable<BucketRow>;
-  $meta: Observable<Bucket>;
-  $data: Observable<BucketData>;
+  onTouchedFn = () => {};
+  onChangeFn = (val: string | string[]) => {};
 
+  schema$: Observable<Bucket>;
+  selectedRows$: Observable<BucketRow[]>;
+
+  refresh = new BehaviorSubject(null);
+  filter: {[key: string]: any} = {};
+  data$: Observable<BucketData>;
   displayedProperties: Array<string> = [];
 
   constructor(
-    @Inject(INPUT_SCHEMA) public schema: RelationSchema,
+    @Inject(INPUT_SCHEMA) public _schema: RelationSchema,
     private bds: BucketDataService,
-    bs: BucketService
-  ) {
-    this.$meta = bs.getBucket(schema.bucketId).pipe(
-      tap(bSchema => {
-        if (bSchema) {
-          this.displayedProperties = Object.entries(bSchema.properties)
-            .filter(([, value]) => value.options.visible)
-            .map(([key]) => key)
-            .concat("actions");
-        }
-      })
-    );
-  }
+    private bs: BucketService
+  ) {}
 
   ngOnInit() {
-    this.$data = merge(this.paginator.page, of(null)).pipe(
+    this._oneToManyRelation = this._schema.relationType == RelationType.OneToMany;
+    this.schema$ = this.bs.getBucket(this._schema.bucketId).pipe(
+      tap(schema => {
+        this.displayedProperties = Object.entries(schema.properties)
+          .filter(([, value]) => value.options && value.options.visible)
+          .map(([key]) => key)
+          .concat("actions");
+      })
+    );
+    this.data$ = merge(this.paginator.page, this.refresh).pipe(
       switchMap(() =>
-        this.bds.find(this.schema.bucketId, {
-          limit: this.paginator.pageSize || 12,
+        this.bds.find(this._schema.bucketId, {
+          filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
+          limit: this.paginator.pageSize,
           skip: this.paginator.pageSize * this.paginator.pageIndex
         })
       ),
-      map(buckets => {
-        this.paginator.length = 0;
-        if (buckets.meta && buckets.meta.total) {
-          this.paginator.length = buckets.meta.total;
-        }
-        return buckets.data;
+      map(result => {
+        this.paginator.length = result.meta.total;
+        return result.data;
       })
     );
   }
 
-  _fetchRow(id: string): void {
-    this.$row = this.bds.findOne(this.schema.bucketId, id, false);
+  clear() {
+    this.value = this._oneToManyRelation ? [] : undefined;
+    this._fetchRows();
   }
 
   _selectRow(row: BucketRow): void {
-    this.value = row._id;
-    this._fetchRow(this.value);
+    if (this._oneToManyRelation) {
+      if (Array.isArray(this.value)) {
+        this.value.push(row._id);
+      } else {
+        this.value = [row._id];
+      }
+      this.value = Array.from(new Set(this.value));
+    } else {
+      this.value = row._id;
+    }
+    this._fetchRows();
     if (this.onChangeFn) {
       this.onChangeFn(this.value);
+    }
+  }
+
+  _removeRow(row: BucketRow) {
+    const index = this.value.indexOf(row._id);
+    if (index > -1) {
+      (<Array<string>>this.value).splice(index, 1);
+    }
+    this._fetchRows();
+  }
+
+  _fetchRows() {
+    const ids = this._oneToManyRelation ? this.value : [this.value];
+    if (ids.length == 0) {
+      this.selectedRows$ = undefined;
+    } else {
+      this.selectedRows$ = this.schema$.pipe(
+        switchMap(schema => this.bds.find(schema._id, {filter: {_id: {$in: ids}}})),
+        map(data => data.data)
+      );
     }
   }
 
@@ -84,10 +114,12 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
     this.onTouchedFn();
   }
 
-  writeValue(val: string): void {
+  writeValue(val: string | string[]): void {
+    if (!val) {
+      return;
+    }
     this.value = val;
-
-    this._fetchRow(this.value);
+    this._fetchRows();
   }
 
   registerOnChange(fn: any): void {

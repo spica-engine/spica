@@ -1,10 +1,10 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
+  <span>
     <h4>
       <mat-icon>vpn_key</mat-icon>
       <span>{{ apiKey._id ? apiKey.name : "Create API Key" }}</span>
     </h4>
-  </mat-toolbar-row>
+  </span>
 </ng-template>
 
 <mat-card>
@@ -83,9 +83,8 @@
 
       <button
         [disabled]="apiKeyForm.invalid"
-        canInteract="passport:apikey:update"
+        [canInteract]="apiKey._id ? 'passport:apikey:update' : 'passport:apikey:create'"
         mat-button
-        color="primary"
         type="submit"
         (click)="saveApiKey()"
       >

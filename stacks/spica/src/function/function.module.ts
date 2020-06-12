@@ -23,12 +23,17 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
-import {MatAwareDialogModule} from "@spica-client/material";
+import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
+import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
+import {provideActivityFactory} from "@spica-client/function/providers/activity";
+import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
+import {PassportService} from "@spica-client/passport";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {PassportModule} from "../passport/passport.module";
-import {EditorComponent} from "./components/editor/editor.component";
-import {LanguageDirective} from "./components/editor/language.directive";
+import {TypescriptLanguageDirective} from "./components/editor/typescript.language";
 import {FunctionRoutingModule} from "./function-routing.module";
+import {FunctionInitializer} from "./function.initializer";
+import {FunctionService} from "./function.service";
 import {FunctionOptions, FUNCTION_OPTIONS} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
@@ -36,12 +41,7 @@ import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
-import {SubscriptionModule} from "./subscription.module";
-import {FunctionService} from "./function.service";
-import {FunctionInitializer} from "./function.initializer";
-import {RouteService, LAYOUT_INITIALIZER} from "@spica-client/core";
-import {PassportService} from "@spica-client/passport";
-import {MatSaveModule} from "@spica-client/material";
+import {WebhookModule} from "./webhook.module";
 
 @NgModule({
   declarations: [
@@ -49,8 +49,7 @@ import {MatSaveModule} from "@spica-client/material";
     IndexComponent,
     LogViewComponent,
     WelcomeComponent,
-    EditorComponent,
-    LanguageDirective,
+    TypescriptLanguageDirective,
     EnqueuerPipe
   ],
   imports: [
@@ -84,7 +83,7 @@ import {MatSaveModule} from "@spica-client/material";
     MatTabsModule,
     StoreModule.forFeature("function", fromFunction.reducer),
     PassportModule.forChild(),
-    SubscriptionModule,
+    WebhookModule,
     MatSaveModule
   ]
 })
@@ -104,12 +103,16 @@ export class FunctionModule {
           useFactory: provideFunctionLoader,
           multi: true,
           deps: [FunctionInitializer]
+        },
+        {
+          provide: ACTIVITY_FACTORY,
+          useValue: provideActivityFactory,
+          multi: true
         }
       ]
     };
   }
 }
-
 export function provideFunctionLoader(l: FunctionInitializer) {
   return l.appInitializer.bind(l);
 }

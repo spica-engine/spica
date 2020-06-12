@@ -4,6 +4,8 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as fs from "fs";
 import * as path from "path";
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 describe("Node", () => {
   let node: Node;
 
@@ -31,7 +33,12 @@ describe("Node", () => {
     it("should compile entrypoint", async () => {
       compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
       await node.compile(compilation);
+
+      const files = fs.readdirSync(path.join(compilation.cwd, ".build"));
+      expect(files).toContain(".tsbuildinfo");
+
       const stat = await fs.promises.readFile(path.join(compilation.cwd, ".build", "index.js"));
+
       expect(stat.toString()).toContain("exports.default = default_1");
     });
 
@@ -79,6 +86,68 @@ export default function() {
           end: {line: 4, column: 10}
         }
       ]);
+    });
+
+    it("should report diagnostics for multiple functions", async () => {
+      const first: Compilation = {
+        cwd: FunctionTestBed.initialize(`const a;`),
+        entrypoint: "index.ts"
+      };
+      const second: Compilation = {
+        cwd: FunctionTestBed.initialize(`import {} from 'non-existent-module';`),
+        entrypoint: "index.ts"
+      };
+      const diagnostics = await Promise.all([
+        node.compile(first).catch(e => e),
+        node.compile(second).catch(e => e)
+      ]);
+
+      expect(diagnostics).toEqual([
+        [
+          {
+            code: 1155,
+            category: 1,
+            text: "'const' declarations must be initialized.",
+            start: {line: 1, column: 7},
+            end: {line: 1, column: 8}
+          }
+        ],
+        [
+          {
+            code: 2307,
+            category: 1,
+            text: "Cannot find module 'non-existent-module'.",
+            start: {line: 1, column: 16},
+            end: {line: 1, column: 37}
+          }
+        ]
+      ]);
+    });
+
+    it("should report diagnostics incrementally", async () => {
+      compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
+      const indexPath = path.join(compilation.cwd, "index.ts");
+      expect(await node.compile(compilation)).not.toBeTruthy();
+
+      setTimeout(() => {
+        fs.promises.writeFile(indexPath, `const a;`);
+      }, 1);
+      expect(await node.compile(compilation).catch(e => e)).toEqual([
+        {
+          code: 1155,
+          category: 1,
+          text: "'const' declarations must be initialized.",
+          start: {line: 1, column: 7},
+          end: {line: 1, column: 8}
+        }
+      ]);
+    }, 20000);
+
+    it("should kill the process", () => {
+      const worker = node.spawn({id: "test", env: {}});
+      expect(worker["_process"].killed).toEqual(false);
+      worker.kill();
+      expect(worker["_process"].killed).toEqual(true);
     });
   });
 });

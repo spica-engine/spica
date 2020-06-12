@@ -2,10 +2,10 @@ import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {Middlewares} from "@spica-server/core";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, DatabaseService} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
 import * as BSON from "bson";
 import {StorageModule} from "./storage.module";
-import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Storage acceptance test", () => {
   async function addRandomData(count: number) {
@@ -34,7 +34,7 @@ describe("Storage acceptance test", () => {
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.create(),
-        StorageModule.forRoot({path: "/tmp"})
+        StorageModule.forRoot({path: process.env.TEST_TMPDIR, publicUrl: "", strategy: "default"})
       ]
     }).compile();
     app = module.createNestApplication();
@@ -49,18 +49,6 @@ describe("Storage acceptance test", () => {
     });
     afterAll(async () => {
       await app.get(DatabaseService).dropCollection("storage");
-    });
-    it("should get 10 storage objects if there is no limit ", async () => {
-      const response = await req.get("/storage", {});
-      expect(response.body.meta.total).toEqual(20);
-
-      const objects = response.body.data;
-      expect(objects.length).toEqual(10);
-      objects.map((value, index) => {
-        expect(value._id).toBeDefined();
-        expect(value.name).toEqual(`name${objects.length - index}`);
-        expect(value.url).toBeDefined();
-      });
     });
     it("should work with limit query", async () => {
       const response = await req.get("/storage", {limit: "5"});
@@ -79,7 +67,7 @@ describe("Storage acceptance test", () => {
       expect(response.body.meta.total).toEqual(20);
 
       const objects = response.body.data;
-      expect(objects.length).toEqual(10, "should work because default limit number is 10");
+      expect(objects.length).toEqual(17);
       objects.map((value, index) => {
         expect(value._id).toBeDefined();
         expect(value.name).toEqual(`name${objects.length + 3 - index}`);
@@ -185,8 +173,8 @@ describe("Storage acceptance test", () => {
     it("should get storage object withMeta false", async () => {
       const selectedData = (await req.get("/storage", {})).body.data[5];
       const response = await req.get(`/storage/${selectedData._id}`, {withMeta: "false"});
-      expect(response.headers["content-type"]).toEqual("type5");
-      expect(response.body).toEqual(5);
+      expect(response.headers["content-type"]).toEqual("type15");
+      expect(response.body).toEqual(15);
     });
   });
 
@@ -219,7 +207,7 @@ describe("Storage acceptance test", () => {
       expect(response.statusCode).toEqual(400);
       expect(response.statusText).toEqual("Bad Request");
 
-      expect((await req.get(`/storage/${selectedData._id}`, {withMeta: "false"})).body).toEqual(7);
+      expect((await req.get(`/storage/${selectedData._id}`, {withMeta: "false"})).body).toEqual(17);
     });
   });
 

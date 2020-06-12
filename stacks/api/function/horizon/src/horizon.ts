@@ -1,4 +1,4 @@
-import {Inject, Injectable, OnModuleInit, Optional} from "@nestjs/common";
+import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
 import {
@@ -13,29 +13,34 @@ import {PackageManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import {Runtime} from "@spica-server/function/runtime";
-import {DatabaseOutput, StdOut} from "@spica-server/function/runtime/io";
+import {Runtime, Worker} from "@spica-server/function/runtime";
+import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
-import {SCHEDULER, Scheduler} from "./scheduler";
+import * as uniqid from "uniqid";
+import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
+import {HorizonOptions, HORIZON_OPTIONS} from "./options";
 
 @Injectable()
-export class Horizon implements OnModuleInit {
+export class Horizon implements OnModuleInit, OnModuleDestroy {
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
 
-  private output: StdOut;
+  private output: StandartStream;
   runtime: Node;
 
   readonly runtimes = new Set<Runtime>();
   readonly pkgmanagers = new Map<string, PackageManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
 
+  private readonly pool = new Map<string, Worker>();
+
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
-    @Optional() @Inject(SCHEDULER) private schedulerFactory: Scheduler<unknown, unknown>
+    @Inject(HORIZON_OPTIONS) private options: HorizonOptions,
+    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
     this.output = new DatabaseOutput(database);
 
@@ -44,7 +49,7 @@ export class Horizon implements OnModuleInit {
 
     this.pkgmanagers.set(this.runtime.description.name, new Npm());
 
-    this.queue = new EventQueue(this.enqueue.bind(this));
+    this.queue = new EventQueue(this.schedule.bind(this), this.scheduled.bind(this));
 
     this.httpQueue = new HttpQueue();
     this.queue.addQueue(this.httpQueue);
@@ -54,6 +59,10 @@ export class Horizon implements OnModuleInit {
 
     this.firehoseQueue = new FirehoseQueue();
     this.queue.addQueue(this.firehoseQueue);
+  }
+
+  onModuleDestroy() {
+    return this.queue.kill();
   }
 
   onModuleInit() {
@@ -71,26 +80,49 @@ export class Horizon implements OnModuleInit {
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
-    if (typeof this.schedulerFactory == "function") {
-      const scheduler = this.schedulerFactory(this.queue);
+    if (typeof this.enqueuerFactory == "function") {
+      const scheduler = this.enqueuerFactory(this.queue);
       this.queue.addQueue(scheduler.queue);
       this.enqueuers.add(scheduler.enqueuer);
     }
 
     this.queue.listen();
+
+    for (let i = 0; i < this.options.poolSize; i++) {
+      this.schedule();
+    }
   }
 
-  private enqueue(event: Event.Event) {
+  private schedule() {
+    const id: string = uniqid();
+    const worker = this.runtime.spawn({
+      id,
+      env: {
+        __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+        __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+        __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+        __INTERNAL__SPICA__PUBLIC_URL__: this.options.publicUrl
+      }
+    });
+    this.pool.set(id, worker);
+  }
+
+  private scheduled(event: Event.Event, workerId: string) {
+    const worker = this.pool.get(workerId);
     const path = event.target.cwd.split("/");
     const functionId = path[path.length - 1];
-    this.runtime.execute({
+
+    const [stdout, stderr] = this.output.create({
       eventId: event.id,
-      cwd: event.target.cwd,
-      stdout: this.output.create({
-        eventId: event.id,
-        functionId
-      })
+      functionId
     });
+    worker.attach(stdout, stderr);
+
+    this.pool.delete(workerId);
+
+    setTimeout(() => {
+      worker.kill();
+    }, this.options.timeout);
   }
 
   /**

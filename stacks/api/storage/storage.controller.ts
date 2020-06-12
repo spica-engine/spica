@@ -4,40 +4,35 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Post,
+  Put,
   Query,
   Res,
   UseGuards,
-  Put,
   UseInterceptors
 } from "@nestjs/common";
-import {BOOLEAN, NUMBER, JSONP, DEFAULT} from "@spica-server/core";
-import {OBJECT_ID} from "@spica-server/database";
+import {activity} from "@spica-server/activity/services";
+import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
-import {Binary, ObjectId} from "bson";
-
+import {Binary} from "bson";
+import {createStorageActivity} from "./activity.resource";
 import {Storage, StorageObject} from "./storage.service";
-import {activity} from "@spica-server/activity";
-import {createStorageResource} from "./activity.resource";
 
 @Controller("storage")
 export class StorageController {
-  constructor(public storage: Storage) {}
+  constructor(private storage: Storage) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
   async findAll(
-    @Query("limit", NUMBER) limit: number,
+    @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP, DEFAULT({_id: -1})) sort: object
   ) {
-    const object = await this.storage.getAll(limit || 10, skip, sort);
-    object.data = object.data.map(m => {
-      m.url = `${process.env.PUBLIC_HOST}/storage/${m._id}`;
-      return m;
-    });
-
+    const object = await this.storage.getAll(limit, skip, sort);
     return object;
   }
 
@@ -49,7 +44,7 @@ export class StorageController {
   ) {
     const object = await this.storage.get(id);
     if (withMeta) {
-      object.url = `${process.env.PUBLIC_HOST}/storage/${object._id}`;
+      object.url = await this.storage.getUrl(id.toHexString());
       res.json(object);
     } else {
       res.header("Content-type", object.content.type);
@@ -57,10 +52,10 @@ export class StorageController {
     }
   }
 
-  @UseInterceptors(activity(createStorageResource))
+  @UseInterceptors(activity(createStorageActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
-  async updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
+  updateOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() object: StorageObject) {
     if (!object.content.data) {
       throw new BadRequestException("No content specified.");
     }
@@ -68,13 +63,16 @@ export class StorageController {
     object.content.data = ((object.content.data as any) as Binary).buffer;
     object.content.size = object.content.data.byteLength;
 
-    return await this.storage.updateOne({_id: id}, object);
+    return this.storage.updateOne({_id: id}, object).then(async res => {
+      const url = await this.storage.getUrl(id.toHexString());
+      return {...res, url: url};
+    });
   }
 
-  @UseInterceptors(activity(createStorageResource))
+  @UseInterceptors(activity(createStorageActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard("storage:update"))
-  async insertMany(@Body() object: StorageObject[]) {
+  @UseGuards(AuthGuard(), ActionGuard("storage:create"))
+  insertMany(@Body() object: StorageObject[]) {
     const insertData = [];
 
     for (let obj of Object.keys(object)) {
@@ -94,10 +92,15 @@ export class StorageController {
         }
       });
     }
-    return await this.storage.insertMany(insertData);
+    return this.storage.insertMany(insertData).then(async storages => {
+      for (const obj of storages) {
+        obj.url = await this.storage.getUrl(obj._id.toString());
+      }
+      return storages;
+    });
   }
 
-  @UseInterceptors(activity(createStorageResource))
+  @UseInterceptors(activity(createStorageActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {

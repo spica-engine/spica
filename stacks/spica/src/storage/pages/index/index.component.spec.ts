@@ -23,11 +23,9 @@ import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 import {Location} from "@angular/common";
-import {MatAwareDialogModule} from "../../../../packages/material/aware-dialog";
+import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {HttpEvent, HttpEventType, HttpResponse} from "@angular/common/http";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
-
-//@TODO: sorting parameters send correctly but service doesn't return data as sorted by parameter
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -86,6 +84,7 @@ describe("Storage/IndexComponent", () => {
         RouterTestingModule.withRoutes([{path: "1", component: IndexComponent}]),
         MatPaginatorModule,
         MatAwareDialogModule,
+        MatClipboardModule,
         HttpClientTestingModule,
         NoopAnimationsModule
       ],
@@ -106,11 +105,14 @@ describe("Storage/IndexComponent", () => {
               })
               .and.callThrough()
           }
+        },
+        {
+          provide: StorageService,
+          useValue: storageService
         }
       ],
       declarations: [IndexComponent, StorageViewComponent]
     });
-    TestBed.overrideProvider(StorageService, {useValue: storageService});
 
     fixture = TestBed.createComponent(IndexComponent);
     location = TestBed.get(Location);
@@ -144,9 +146,9 @@ describe("Storage/IndexComponent", () => {
         .nativeElement.click();
       fixture.detectChanges(false);
 
-      const editButton = document.body.querySelector("div.mat-menu-content button:first-of-type");
+      const editButton = document.body.querySelector("div.mat-menu-content button:nth-of-type(2)");
       expect(
-        document.body.querySelector("div.mat-menu-content button:first-of-type").textContent
+        document.body.querySelector("div.mat-menu-content button:nth-of-type(2)").textContent
       ).toContain("Edit", "should show edit button if this data content type is image");
 
       (editButton as HTMLElement).click();

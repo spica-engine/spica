@@ -2,8 +2,19 @@ import {animate, style, transition, trigger} from "@angular/animations";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, of, merge} from "rxjs";
-import {delay, flatMap, map, share, tap, ignoreElements, endWith, catchError} from "rxjs/operators";
+import {Observable, of, merge, throwError, BehaviorSubject, Subject} from "rxjs";
+import {
+  delay,
+  flatMap,
+  map,
+  share,
+  tap,
+  ignoreElements,
+  endWith,
+  catchError,
+  switchMap,
+  switchMapTo
+} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketHistory} from "../../interfaces/bucket-history";
@@ -33,6 +44,8 @@ export class AddComponent implements OnInit {
 
   $save: Observable<SavingState>;
 
+  private refreshHistory = new BehaviorSubject(undefined);
+
   savingBucketState: Boolean = false;
 
   readonly layouts = ["left", "right", "bottom"];
@@ -57,9 +70,6 @@ export class AddComponent implements OnInit {
       tap(params => {
         this.$save = of(SavingState.Pristine);
         this.bucketId = params.id;
-        if (params.rid) {
-          this.histories$ = this.bhs.historyList(params.id, params.rid);
-        }
       }),
       flatMap(params => {
         if (params.rid) {
@@ -73,8 +83,23 @@ export class AddComponent implements OnInit {
         return this.bs.getBucket(params.id);
       }),
       map(schema => {
+        if (schema.history && this.data._id) {
+          this.histories$ = this.refreshHistory.pipe(
+            switchMapTo(
+              this.bhs.historyList(this.bucketId, this.data._id).pipe(
+                catchError(err => {
+                  if (err.status == 404) {
+                    this.histories$ = undefined;
+                    return of(undefined);
+                  } else {
+                    return throwError(err);
+                  }
+                })
+              )
+            )
+          );
+        }
         this.data._schedule = this.data._schedule && new Date(this.data._schedule);
-
         // What we do here is simply coercing the translated data
         Object.keys(schema.properties).forEach(key => {
           const property = schema.properties[key];
@@ -128,7 +153,7 @@ export class AddComponent implements OnInit {
       of(SavingState.Saving),
       save.pipe(
         tap(bucketDocument => {
-          this.histories$ = this.bhs.historyList(this.bucketId, bucketDocument._id);
+          this.refreshHistory.next(undefined);
           if (isInsert) return this.router.navigate([`bucket/${this.bucketId}`]);
         }),
         ignoreElements(),

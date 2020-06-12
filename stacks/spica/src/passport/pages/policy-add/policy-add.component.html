@@ -1,11 +1,10 @@
 <ng-template #toolbar>
-  <mat-toolbar color="primary">
-    <h4 class="mat-h4">
+  <span>
+    <h4>
       <mat-icon>layers</mat-icon>
-      <span>{{ policy.name || "Add Policy" }}</span>
+      <span>{{ policy._id ? policy.name : "Add Policy" }}</span>
     </h4>
-    <span class="space-between"></span>
-  </mat-toolbar>
+  </span>
 </ng-template>
 
 <mat-card>
@@ -28,43 +27,41 @@
           <mat-expansion-panel-header>
             <mat-panel-title>Statement: {{ i + 1 }}</mat-panel-title>
           </mat-expansion-panel-header>
-          <div class="resource-input">
-            <mat-form-field>
-              <mat-select placeholder="Effect" [(ngModel)]="statement.effect">
-                <mat-option value="allow">Allow</mat-option>
-                <mat-option value="deny">Deny</mat-option>
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-              <mat-select
-                placeholder="Service"
-                [(ngModel)]="statement.service"
-                [(value)]="statement.service"
-                (selectionChange)="recheckArgs($event.value, i)"
-                #servicePicker
+          <mat-form-field>
+            <mat-select placeholder="Effect" [(ngModel)]="statement.effect">
+              <mat-option value="allow">Allow</mat-option>
+              <mat-option value="deny">Deny</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select
+              placeholder="Service"
+              [(ngModel)]="statement.service"
+              [(value)]="statement.service"
+              (selectionChange)="recheckArgs($event.value, i)"
+              #servicePicker
+            >
+              <mat-option *ngFor="let service of services | keyvalue" [value]="service.key">
+                {{ service.value.title }}</mat-option
               >
-                <mat-option *ngFor="let service of services | keyvalue" [value]="service.key">
-                  {{ service.value.title }}</mat-option
-                >
-              </mat-select>
-            </mat-form-field>
-            <mat-form-field *ngIf="servicePicker.value">
-              <mat-select placeholder="Actions" multiple [(ngModel)]="statement.action">
-                <mat-option
-                  *ngFor="let action of services[servicePicker.value]?.actions"
-                  [value]="action"
-                  >{{ action }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-          <ng-container
-            *ngFor="let resource of statement.resource; let index = index; trackBy: _trackBy"
-          >
-            <div class="resource">
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field *ngIf="servicePicker.value">
+            <mat-select placeholder="Actions" multiple [(ngModel)]="statement.action">
+              <mat-option
+                class="mat-accent"
+                *ngFor="let action of services[servicePicker.value]?.actions"
+                [value]="action"
+                >{{ action }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div class="resource">
+            <ng-container
+              *ngFor="let resource of statement.resource; let index = index; trackBy: _trackBy"
+            >
               <mat-form-field
                 *ngFor="let resourceInput of services[servicePicker.value]?.parsedArguments"
-                style="width: 500px"
               >
                 <input
                   matInput
@@ -78,13 +75,12 @@
               <button mat-button (click)="removeResource(statement.resource, index)">
                 <mat-icon>delete</mat-icon>
               </button>
-            </div>
-          </ng-container>
-          <div
-            class="resource"
-            *ngIf="servicePicker.value != null && services[servicePicker.value]?.parsedArguments"
-          >
-            <button mat-button (click)="addResource(statement)">
+            </ng-container>
+            <button
+              *ngIf="servicePicker.value != null && services[servicePicker.value]?.parsedArguments"
+              mat-button
+              (click)="addResource(statement)"
+            >
               Add Resource
             </button>
           </div>
@@ -94,7 +90,12 @@
         </mat-expansion-panel>
       </mat-accordion>
     </div>
-    <button mat-button color="primary" type="submit" (click)="submitForm()">
+    <button
+      mat-button
+      type="submit"
+      [canInteract]="policy._id ? 'passport:policy:update' : 'passport:policy:create'"
+      (click)="submitForm()"
+    >
       Save Policy
     </button>
   </mat-card-content>

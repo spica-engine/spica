@@ -16,6 +16,7 @@ ts_library(
         "cache.ts",
         "index.ts",
         "scheduler.ts",
+        "utilities.ts",
     ],
     data = glob(["schemas/*.json"]),
     module_name = "@spica-server/bucket",
@@ -23,7 +24,7 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",
@@ -31,7 +32,7 @@ ts_library(
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
         "//stacks/api/preference",
-        "//stacks/api/preference/service",
+        "//stacks/api/preference/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@types/archiver",
@@ -87,18 +88,15 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/core/testing",
-        "//packages/database",
+        "//packages/core/websocket",
         "//packages/database/testing",
         "//stacks/api/bucket/services",
         "//stacks/api/passport/testing",
-        "//stacks/api/preference",
+        "//stacks/api/preference/testing",
         "@npm//@nestjs/common",
-        "@npm//@nestjs/platform-socket.io",
         "@npm//@nestjs/testing",
-        "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
-        "@npm//bson",
     ],
 )
 
@@ -120,15 +118,12 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/core/testing",
-        "//packages/database",
+        "//packages/core/websocket",
         "//packages/database/testing",
-        "//stacks/api/bucket/services",
         "//stacks/api/passport/testing",
-        "//stacks/api/preference",
+        "//stacks/api/preference/testing",
         "@npm//@nestjs/common",
-        "@npm//@nestjs/platform-socket.io",
         "@npm//@nestjs/testing",
-        "@npm//@types/bson",
         "@npm//@types/jasmine",
         "@npm//@types/node",
     ],
@@ -154,7 +149,7 @@ ts_library(
         "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/bucket/services",
-        "//stacks/api/preference",
+        "//stacks/api/preference/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
@@ -179,6 +174,8 @@ ts_library(
         ":bucket",
         "//packages/database/testing",
         "//stacks/api/bucket/services",
+        "//stacks/api/passport/testing",
+        "//stacks/api/preference/testing",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",
@@ -193,30 +190,26 @@ jasmine_node_test(
 )
 
 ts_library(
-    name = "bucket_module_test",
+    name = "bucket_module_test_lib",
     testonly = True,
     srcs = ["bucket.module.spec.ts"],
     deps = [
         ":bucket",
         "//packages/core/schema",
-        "//packages/database",
         "//packages/database/testing",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
-        "//stacks/api/bucket/services",
-        "//stacks/api/passport",
         "//stacks/api/passport/testing",
-        "//stacks/api/preference",
-        "@npm//@nestjs/common",
+        "//stacks/api/preference/testing",
         "@npm//@nestjs/testing",
         "@npm//@types/jasmine",
     ],
 )
 
 jasmine_node_test(
-    name = "bucket_test",
+    name = "bucket_module_test",
     deps = [
-        ":bucket_module_test",
+        ":bucket_module_test_lib",
     ],
 )
 
@@ -227,7 +220,7 @@ ts_library(
         "activity.resource.spec.ts",
     ],
     deps = [
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/bucket",
         "@npm//@types/jasmine",
     ],
@@ -237,6 +230,25 @@ jasmine_node_test(
     name = "activity_test",
     deps = [
         "activity_test_lib",
+    ],
+)
+
+ts_library(
+    name = "utilities_test_lib",
+    testonly = True,
+    srcs = [
+        "utilities.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/bucket",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "utilities_test",
+    deps = [
+        "utilities_test_lib",
     ],
 )
 

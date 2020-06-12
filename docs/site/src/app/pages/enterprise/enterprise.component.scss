@@ -1,37 +1,221 @@
 :host {
-  app-header {
-    min-height: 200px;
+  p {
+    color: #1c1c50;
+    font-size: 1rem;
+    font-weight: 100;
+    line-height: 1.7;
+    padding-top: 12px;
   }
 
-  home-section.enterprise {
-    ul {
+  a {
+    text-decoration: none;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  hr {
+    border: 0.1px solid #cfd8dc;
+    width: 100%;
+    margin: 70px 0px;
+  }
+
+  app-header {
+    min-height: 200px;
+    line-height: 30px;
+  }
+
+  section {
+    max-width: 80%;
+    margin: auto;
+    flex-flow: row wrap;
+    color: #1c1c50;
+  }
+
+  section:nth-of-type(1) {
+    > div h3 {
+      margin-bottom: 0px;
+    }
+
+    > h4 {
+      color: #78909c;
+      font-weight: 400;
+    }
+
+    .features li {
+      margin: 20px 0px;
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        vertical-align: middle;
+      }
+      span {
+        margin-left: 10px;
+      }
+    }
+
+    .includes ul li {
+      font-size: 16px;
+      color: #78909c;
+      font-weight: 400;
+      margin: 10px 0px;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      padding-left: 0;
-      list-style-type: none;
-      li {
-        flex-basis: 40%;
-        h1 {
-          vertical-align: middle;
-          &::before {
-            display: inline-block;
-            content: "";
-            height: 20px;
-            width: 20px;
-            padding-right: 8px;
-            background-image: url("../../../assets/images/star.svg");
-            background-repeat: no-repeat;
+      align-items: center;
+
+      mat-icon {
+        color: #1abde7;
+        margin-right: 5px;
+      }
+    }
+
+    mat-card {
+      padding: 0px;
+      margin: 10px;
+
+      border-radius: 15px;
+      height: 410px;
+      box-shadow: 0px 5px 25px rgba(0, 0, 0, 0.2);
+
+      mat-toolbar {
+        background-color: #1abde7;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        p {
+          width: 100%;
+          text-align: center;
+          color: white;
+          font-size: 18px;
+          font-weight: 500;
+        }
+      }
+
+      mat-card-content {
+        ul {
+          margin-top: 15px;
+          li {
+            font-size: 16px;
+            padding: 12px 0px;
+            color: #78909c;
+            font-weight: 400;
+            text-align: center;
           }
         }
-        p {
-          font-weight: 100;
-          line-height: 2;
+        a {
+          text-decoration: none;
+          display: flex;
+          justify-content: center;
+        }
+      }
+    }
+
+    mat-card:first-of-type,
+    mat-card:last-of-type {
+      mat-toolbar {
+        background-color: #1c1c50;
+      }
+    }
+
+    mat-card:not(:last-of-type) mat-card-content ul li:last-of-type {
+      padding: 10px 0px;
+      color: #1c1c50;
+      font-size: 36px;
+      margin: 5px 0px;
+      height: 50px;
+      span {
+        font-size: 14px;
+        display: block;
+        color: #aeaeae;
+      }
+    }
+
+    > p:last-of-type span a {
+      text-decoration: underline;
+    }
+  }
+
+  section:nth-of-type(2) {
+    > div {
+      border-radius: 15px;
+      box-shadow: 0px 5px 25px rgba(0, 0, 0, 0.2);
+      margin: 20px 0px;
+      padding: 50px;
+      min-height: 150px;
+      background: #fff;
+
+      > div:nth-of-type(2) {
+        border-left: 1px solid #eee;
+        margin: 20px;
+        padding: 20px;
+        span {
+          color: #78909c;
+        }
+      }
+
+      h3 {
+        font-size: 150%;
+        margin: 0;
+        padding-bottom: 12px;
+        font-weight: normal;
+        display: flex;
+        align-items: center;
+
+        mat-icon {
+          margin-right: 5px;
         }
       }
     }
   }
-  .mobile-img {
-    max-width: 100% !important;
+
+  section:nth-of-type(3) {
+    max-width: 100%;
+    div {
+      margin: 12vh 0;
+      background-color: rgb(50, 50, 93);
+      padding: 12vh 0;
+
+      h1 {
+        color: #fff;
+        font-weight: normal;
+        margin: 20px auto;
+        max-width: 80%;
+      }
+
+      p {
+        color: #fff;
+        max-width: 80%;
+        margin: 20px auto;
+        padding: 0px;
+        text-align: center;
+        font-weight: 400;
+      }
+
+      a {
+        margin: 20px auto;
+        button {
+          color: rgb(50, 50, 93);
+        }
+      }
+    }
+  }
+
+  section:nth-of-type(4) {
+    div:first-of-type a {
+      text-decoration: underline;
+    }
+
+    div:last-of-type {
+      margin: 22px 0px;
+      a {
+        margin: 0px 10px;
+        button {
+          height: 50px;
+          width: 100%;
+          font-size: calc(12px + 0.6vw);
+        }
+      }
+    }
   }
 }

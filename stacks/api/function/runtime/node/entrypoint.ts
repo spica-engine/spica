@@ -16,20 +16,24 @@ import {
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
 
+if (!process.env.FUNCTION_GRPC_ADDRESS) {
+  exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
+}
+
 if (!process.env.ENTRYPOINT) {
   exitAbnormally("Environment variable ENTRYPOINT was not set.");
 }
 
-if (!process.env.EVENT_ID) {
-  exitAbnormally("Environment variable EVENT_ID was not set.");
+if (!process.env.WORKER_ID) {
+  exitAbnormally("Environment variable WORKER_ID was not set.");
 }
 
 (async () => {
   const queue = new EventQueue();
   const pop = new Event.Pop({
-    id: process.env.EVENT_ID
+    id: process.env.WORKER_ID
   });
-  const event = await queue.pop(pop).catch(e => {
+  const event: Event.Event | undefined = await queue.pop(pop).catch(e => {
     console.log(e);
     return undefined;
   });
@@ -37,6 +41,8 @@ if (!process.env.EVENT_ID) {
   if (!event) {
     exitAbnormally("There is no event in the queue.");
   }
+
+  process.chdir(path.join(event.target.cwd, ".build"));
 
   const callArguments = [];
   let callback = (r: unknown) => {};

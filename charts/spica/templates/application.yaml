@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: {{.Release.Namespace}}
+  name: {{ .Release.Name }}-application
+spec:
+  serviceName: {{ .Release.Name }}-application
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-application
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-application
+    spec:
+      containers:
+        - name: web
+          image: spicaengine/spica:{{ $.Chart.AppVersion }}
+          resources:
+{{ toYaml .Values.application.webResources | indent 12 }}
+          ports:
+            - containerPort: 80
+          env:
+            - name: BASE_URL
+              value: {{.Values.application.webBaseUrl}}
+        - name: api
+          image: spicaengine/api:{{ $.Chart.AppVersion }}
+          resources:
+{{ toYaml .Values.application.apiResources | indent 12 }}
+          ports:
+            - containerPort: 4300
+          args: [
+            --port, "4300", 
+            --database-uri, {{ template "database.connection-uri" . }},
+            --database-replica-set,  {{ .Values.database.replicaSetName }},
+            --database-name,  {{ .Values.database.name }},
+            --passport-secret, {{ required "A valid .Values.application.secret is required!" .Values.application.secret }},
+            --passport-password,  {{ .Values.application.defaultPassword }},
+            --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
+            --persistent-path, /data
+          ]
+          volumeMounts:
+            - name: {{ .Release.Name }}-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Release.Name }}-data
+      spec:
+        storageClassName: {{ .Values.application.storageClass }}
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.application.storageSize }}

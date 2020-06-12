@@ -2,7 +2,7 @@ import {Inject, Injectable} from "@nestjs/common";
 import {JwtService} from "@nestjs/jwt";
 import {Collection, DatabaseService} from "@spica-server/database";
 import {Identity} from "./identity";
-import {PassportOptions, PASSPORT_OPTIONS} from "./interface";
+import {PassportOptions, PASSPORT_OPTIONS} from "./options";
 import {compare, hash} from "./utils/hash";
 
 @Injectable()
@@ -22,14 +22,16 @@ export class PassportService {
         password: this.options.defaultPassword,
         policies: [
           "ApiKeyFullAccess",
-          "PassportFullAccess",
           "IdentityFullAccess",
-          "StorageFullAccess",
+          "StrategyFullAccess",
           "PolicyFullAccess",
+          "PassportFullAccess",
+          "ActivityFullAccess",
+          "StorageFullAccess",
           "FunctionFullAccess",
-          "SubscriptionFullAccess",
           "BucketFullAccess",
-          "DashboardFullAccess"
+          "DashboardFullAccess",
+          "WebhookFullAccess"
         ]
       });
     }

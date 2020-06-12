@@ -28,7 +28,7 @@ const routes: Routes = [
         data: {service: "passport:identity"},
         children: [
           {path: "", component: IdentityIndexComponent, data: {action: "index"}},
-          {path: "add", component: IdentityAddComponent, data: {action: "update"}},
+          {path: "add", component: IdentityAddComponent, data: {action: "create"}},
           {path: ":id/edit", component: IdentityAddComponent, data: {action: "show"}}
         ]
       },
@@ -38,7 +38,7 @@ const routes: Routes = [
         data: {service: "passport:policy"},
         children: [
           {path: "", component: PolicyIndexComponent, data: {action: "index"}},
-          {path: "add", component: PolicyAddComponent, data: {action: "update"}},
+          {path: "add", component: PolicyAddComponent, data: {action: "create"}},
           {path: ":id/edit", component: PolicyAddComponent, data: {action: "show"}}
         ]
       },
@@ -59,7 +59,7 @@ const routes: Routes = [
         data: {service: "passport:apikey"},
         children: [
           {path: "", component: ApiKeyIndexComponent, data: {action: "index"}},
-          {path: "add", component: ApiKeyAddComponent, data: {action: "insert"}},
+          {path: "add", component: ApiKeyAddComponent, data: {action: "create"}},
           {path: ":id/edit", component: ApiKeyAddComponent, data: {action: "show"}}
         ]
       }
@@ -99,6 +99,13 @@ const route: Route[] = [
     path: "/passport/apikey",
     icon: "vpn_key",
     data: {action: "passport:apikey:index"}
+  },
+  {
+    id: "passport.settings",
+    category: RouteCategory.System,
+    display: "Settings",
+    path: "/passport/settings",
+    icon: "settings"
   }
 ];
 

@@ -3,23 +3,24 @@ import {JwtModule} from "@nestjs/jwt";
 import {PassportModule as CorePassportModule} from "@nestjs/passport";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference/service";
+import {PreferenceService} from "@spica-server/preference/services";
 import {readdirSync} from "fs";
+import {ApiKeyStrategy} from "./apikey.strategy";
 import {ApiKeyController} from "./apikey/apikey.controller";
 import {ApiKeyService} from "./apikey/apikey.service";
+import {AuthGuardService} from "./auth.guard";
 import {IdentityService} from "./identity";
 import {IdentityController} from "./identity/identity.controller";
-import {PassportOptions, PASSPORT_OPTIONS} from "./interface";
 import {JwtStrategy} from "./jwt.strategy";
+import {PassportOptions, PASSPORT_OPTIONS} from "./options";
 import {PassportController} from "./passport.controller";
 import {PassportService} from "./passport.service";
-import {PolicyService} from "./policy";
+import {ActionGuardService, PolicyService} from "./policy";
 import {PolicyController} from "./policy/policy.controller";
 import {SamlService} from "./saml.service";
 import {provideSchemaResolver, SchemaResolver} from "./schema.resolver";
 import {StrategyController} from "./strategies/strategy.controller";
 import {StrategyService} from "./strategies/strategy.service";
-import {ApiKeyStrategy} from "./apikey.strategy";
 
 @Global()
 @Module({})
@@ -38,8 +39,17 @@ class PassportCoreModule {
         }),
         SchemaModule.forChild()
       ],
-      exports: [PolicyService, IdentityService, JwtModule, CorePassportModule],
+      exports: [
+        PolicyService,
+        IdentityService,
+        AuthGuardService,
+        ActionGuardService,
+        JwtModule,
+        CorePassportModule
+      ],
       providers: [
+        AuthGuardService,
+        ActionGuardService,
         {
           provide: PolicyService,
           useFactory: db => {

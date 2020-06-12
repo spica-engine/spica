@@ -1,4 +1,4 @@
-import {TestBed, ComponentFixture, tick, fakeAsync, flushMicrotasks} from "@angular/core/testing";
+import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
 import {PolicyAddComponent} from "./policy-add.component";
 import {PolicyService} from "../../services/policy.service";
 import {of} from "rxjs";
@@ -15,6 +15,13 @@ import {
 import {FormsModule, NgModel} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+}
 
 describe("Policy Add Component", () => {
   let fixture: ComponentFixture<PolicyAddComponent>;
@@ -109,7 +116,7 @@ describe("Policy Add Component", () => {
           }
         }
       ],
-      declarations: [PolicyAddComponent]
+      declarations: [PolicyAddComponent, CanInteractDirectiveTest]
     });
     TestBed.overrideProvider(PolicyService, {useValue: policyService});
 
@@ -143,7 +150,7 @@ describe("Policy Add Component", () => {
         fixture.debugElement
           .query(
             By.css(
-              "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(1) mat-select"
+              "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(1) mat-select"
             )
           )
           .injector.get(NgModel).value
@@ -153,7 +160,7 @@ describe("Policy Add Component", () => {
         fixture.debugElement
           .query(
             By.css(
-              "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(2) mat-select"
+              "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(2) mat-select"
             )
           )
           .injector.get(NgModel).value
@@ -163,7 +170,7 @@ describe("Policy Add Component", () => {
         fixture.debugElement
           .query(
             By.css(
-              "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(3) mat-select"
+              "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(3) mat-select"
             )
           )
           .injector.get(NgModel).value
@@ -218,7 +225,7 @@ describe("Policy Add Component", () => {
     it("should change effect value from allow to deny of first policy", () => {
       const select = fixture.debugElement.query(
         By.css(
-          "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(1) mat-select"
+          "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(1) mat-select"
         )
       );
       select.nativeElement.click();
@@ -236,7 +243,7 @@ describe("Policy Add Component", () => {
       fixture.debugElement
         .query(
           By.css(
-            "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(2) mat-select"
+            "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(2) mat-select"
           )
         )
         .nativeElement.click();
@@ -257,7 +264,7 @@ describe("Policy Add Component", () => {
       fixture.debugElement
         .query(
           By.css(
-            "mat-card-content div:nth-child(1) div.resource-input mat-form-field:nth-child(3) mat-select"
+            "mat-card mat-card-content > div:first-of-type mat-accordion mat-expansion-panel mat-form-field:nth-child(3) mat-select"
           )
         )
         .nativeElement.click();
@@ -282,7 +289,7 @@ describe("Policy Add Component", () => {
     });
 
     it("should add resource to first statement", () => {
-      fixture.debugElement.query(By.css("div.resource:last-of-type button")).nativeElement.click();
+      fixture.debugElement.query(By.css("div.resource button:last-of-type")).nativeElement.click();
       fixture.detectChanges();
 
       expect(fixture.componentInstance.policy.statement[0].resource).toEqual(["*", undefined]);

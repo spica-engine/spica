@@ -2,9 +2,20 @@ import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "grpc";
 export namespace Http {
   export class Header extends pb_1.Message {
-    constructor(data?: any[]) {
+    constructor(
+      data?:
+        | any[]
+        | {
+            key?: string;
+            value?: string;
+          }
+    ) {
       super();
-      pb_1.Message.initialize(this, data, 0, -1, [], null);
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.key = data.key;
+        this.value = data.value;
+      }
     }
     get key(): string | undefined {
       return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -26,8 +37,8 @@ export namespace Http {
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.key) writer.writeString(1, this.key);
-      if (this.value) writer.writeString(2, this.value);
+      if (this.key !== undefined) writer.writeString(1, this.key);
+      if (this.value !== undefined) writer.writeString(2, this.value);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Header {
@@ -50,9 +61,20 @@ export namespace Http {
     }
   }
   export class Param extends pb_1.Message {
-    constructor(data?: any[]) {
+    constructor(
+      data?:
+        | any[]
+        | {
+            key?: string;
+            value?: string;
+          }
+    ) {
       super();
-      pb_1.Message.initialize(this, data, 0, -1, [], null);
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.key = data.key;
+        this.value = data.value;
+      }
     }
     get key(): string | undefined {
       return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -74,8 +96,8 @@ export namespace Http {
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.key) writer.writeString(1, this.key);
-      if (this.value) writer.writeString(2, this.value);
+      if (this.key !== undefined) writer.writeString(1, this.key);
+      if (this.value !== undefined) writer.writeString(2, this.value);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Param {
@@ -98,9 +120,24 @@ export namespace Http {
     }
   }
   export class WriteHead extends pb_1.Message {
-    constructor(data?: any[]) {
+    constructor(
+      data?:
+        | any[]
+        | {
+            id?: string;
+            statusCode?: number;
+            statusMessage?: string;
+            headers?: Header[];
+          }
+    ) {
       super();
-      pb_1.Message.initialize(this, data, 0, -1, [4], null);
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [4], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.id = data.id;
+        this.statusCode = data.statusCode;
+        this.statusMessage = data.statusMessage;
+        this.headers = data.headers;
+      }
     }
     get id(): string | undefined {
       return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -131,15 +168,15 @@ export namespace Http {
         id: this.id,
         statusCode: this.statusCode,
         statusMessage: this.statusMessage,
-        headers: this.headers
+        headers: this.headers.map((item: Header) => item.toObject())
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.id) writer.writeString(1, this.id);
-      if (this.statusCode) writer.writeInt32(2, this.statusCode);
-      if (this.statusMessage) writer.writeString(3, this.statusMessage);
-      if (this.headers)
+      if (this.id !== undefined) writer.writeString(1, this.id);
+      if (this.statusCode !== undefined) writer.writeInt32(2, this.statusCode);
+      if (this.statusMessage !== undefined) writer.writeString(3, this.statusMessage);
+      if (this.headers !== undefined)
         writer.writeRepeatedMessage(4, this.headers, (item: Header) => item.serialize(writer));
       if (!w) return writer.getResultBuffer();
     }
@@ -172,9 +209,11 @@ export namespace Http {
   }
   export namespace WriteHead {
     export class Result extends pb_1.Message {
-      constructor(data?: any[]) {
+      constructor(data?: any[] | {}) {
         super();
-        pb_1.Message.initialize(this, data, 0, -1, [], null);
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+        }
       }
       toObject() {
         return {};
@@ -198,9 +237,22 @@ export namespace Http {
     }
   }
   export class Write extends pb_1.Message {
-    constructor(data?: any[]) {
+    constructor(
+      data?:
+        | any[]
+        | {
+            id?: string;
+            data?: Uint8Array;
+            encoding?: string;
+          }
+    ) {
       super();
-      pb_1.Message.initialize(this, data, 0, -1, [], null);
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.id = data.id;
+        this.data = data.data;
+        this.encoding = data.encoding;
+      }
     }
     get id(): string | undefined {
       return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -229,9 +281,9 @@ export namespace Http {
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.id) writer.writeString(1, this.id);
-      if (this.data) writer.writeBytes(2, this.data);
-      if (this.encoding) writer.writeString(3, this.encoding);
+      if (this.id !== undefined) writer.writeString(1, this.id);
+      if (this.data !== undefined) writer.writeBytes(2, this.data);
+      if (this.encoding !== undefined) writer.writeString(3, this.encoding);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Write {
@@ -258,9 +310,11 @@ export namespace Http {
   }
   export namespace Write {
     export class Result extends pb_1.Message {
-      constructor(data?: any[]) {
+      constructor(data?: any[] | {}) {
         super();
-        pb_1.Message.initialize(this, data, 0, -1, [], null);
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+        }
       }
       toObject() {
         return {};
@@ -284,9 +338,34 @@ export namespace Http {
     }
   }
   export class Request extends pb_1.Message {
-    constructor(data?: any[]) {
+    constructor(
+      data?:
+        | any[]
+        | {
+            statusCode?: number;
+            statusMessage?: string;
+            method?: string;
+            url?: string;
+            path?: string;
+            query?: string;
+            headers?: Header[];
+            params?: Param[];
+            body?: Uint8Array;
+          }
+    ) {
       super();
-      pb_1.Message.initialize(this, data, 0, -1, [7, 8], null);
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [7, 8], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.statusCode = data.statusCode;
+        this.statusMessage = data.statusMessage;
+        this.method = data.method;
+        this.url = data.url;
+        this.path = data.path;
+        this.query = data.query;
+        this.headers = data.headers;
+        this.params = data.params;
+        this.body = data.body;
+      }
     }
     get statusCode(): number | undefined {
       return pb_1.Message.getFieldWithDefault(this, 1, undefined) as number | undefined;
@@ -350,24 +429,24 @@ export namespace Http {
         url: this.url,
         path: this.path,
         query: this.query,
-        headers: this.headers,
-        params: this.params,
+        headers: this.headers.map((item: Header) => item.toObject()),
+        params: this.params.map((item: Param) => item.toObject()),
         body: this.body
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.statusCode) writer.writeInt32(1, this.statusCode);
-      if (this.statusMessage) writer.writeString(2, this.statusMessage);
-      if (this.method) writer.writeString(3, this.method);
-      if (this.url) writer.writeString(4, this.url);
-      if (this.path) writer.writeString(5, this.path);
-      if (this.query) writer.writeString(6, this.query);
-      if (this.headers)
+      if (this.statusCode !== undefined) writer.writeInt32(1, this.statusCode);
+      if (this.statusMessage !== undefined) writer.writeString(2, this.statusMessage);
+      if (this.method !== undefined) writer.writeString(3, this.method);
+      if (this.url !== undefined) writer.writeString(4, this.url);
+      if (this.path !== undefined) writer.writeString(5, this.path);
+      if (this.query !== undefined) writer.writeString(6, this.query);
+      if (this.headers !== undefined)
         writer.writeRepeatedMessage(7, this.headers, (item: Header) => item.serialize(writer));
-      if (this.params)
+      if (this.params !== undefined)
         writer.writeRepeatedMessage(8, this.params, (item: Param) => item.serialize(writer));
-      if (this.body) writer.writeBytes(9, this.body);
+      if (this.body !== undefined) writer.writeBytes(9, this.body);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Request {
@@ -416,9 +495,18 @@ export namespace Http {
   }
   export namespace Request {
     export class Pop extends pb_1.Message {
-      constructor(data?: any[]) {
+      constructor(
+        data?:
+          | any[]
+          | {
+              id?: string;
+            }
+      ) {
         super();
-        pb_1.Message.initialize(this, data, 0, -1, [], null);
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+          this.id = data.id;
+        }
       }
       get id(): string | undefined {
         return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -433,7 +521,7 @@ export namespace Http {
       }
       serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
         const writer = w || new pb_1.BinaryWriter();
-        if (this.id) writer.writeString(1, this.id);
+        if (this.id !== undefined) writer.writeString(1, this.id);
         if (!w) return writer.getResultBuffer();
       }
       static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Pop {
@@ -454,9 +542,22 @@ export namespace Http {
     }
   }
   export class End extends pb_1.Message {
-    constructor(data?: any[]) {
+    constructor(
+      data?:
+        | any[]
+        | {
+            id?: string;
+            data?: Uint8Array;
+            encoding?: string;
+          }
+    ) {
       super();
-      pb_1.Message.initialize(this, data, 0, -1, [], null);
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.id = data.id;
+        this.data = data.data;
+        this.encoding = data.encoding;
+      }
     }
     get id(): string | undefined {
       return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string | undefined;
@@ -485,9 +586,9 @@ export namespace Http {
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.id) writer.writeString(1, this.id);
-      if (this.data) writer.writeBytes(2, this.data);
-      if (this.encoding) writer.writeString(3, this.encoding);
+      if (this.id !== undefined) writer.writeString(1, this.id);
+      if (this.data !== undefined) writer.writeBytes(2, this.data);
+      if (this.encoding !== undefined) writer.writeString(3, this.encoding);
       if (!w) return writer.getResultBuffer();
     }
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): End {
@@ -514,9 +615,11 @@ export namespace Http {
   }
   export namespace End {
     export class Result extends pb_1.Message {
-      constructor(data?: any[]) {
+      constructor(data?: any[] | {}) {
         super();
-        pb_1.Message.initialize(this, data, 0, -1, [], null);
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+        }
       }
       toObject() {
         return {};
@@ -539,9 +642,9 @@ export namespace Http {
       }
     }
   }
-  export const Queue = {
+  export var Queue = {
     pop: {
-      path: "/Http/Queue/pop",
+      path: "/Http.Queue/pop",
       requestStream: false,
       responseStream: false,
       requestType: Http.Request.Pop,
@@ -552,7 +655,7 @@ export namespace Http {
       responseDeserialize: (bytes: Buffer) => Request.deserialize(new Uint8Array(bytes))
     },
     writeHead: {
-      path: "/Http/Queue/writeHead",
+      path: "/Http.Queue/writeHead",
       requestStream: false,
       responseStream: false,
       requestType: Http.WriteHead,
@@ -563,7 +666,7 @@ export namespace Http {
       responseDeserialize: (bytes: Buffer) => WriteHead.Result.deserialize(new Uint8Array(bytes))
     },
     write: {
-      path: "/Http/Queue/write",
+      path: "/Http.Queue/write",
       requestStream: false,
       responseStream: false,
       requestType: Http.Write,
@@ -574,7 +677,7 @@ export namespace Http {
       responseDeserialize: (bytes: Buffer) => Write.Result.deserialize(new Uint8Array(bytes))
     },
     end: {
-      path: "/Http/Queue/end",
+      path: "/Http.Queue/end",
       requestStream: false,
       responseStream: false,
       requestType: Http.End,
@@ -585,5 +688,9 @@ export namespace Http {
       responseDeserialize: (bytes: Buffer) => End.Result.deserialize(new Uint8Array(bytes))
     }
   };
-  export const QueueClient = grpc_1.makeGenericClientConstructor(Queue, "Queue", {});
+  export class QueueClient extends grpc_1.makeGenericClientConstructor(Queue, "Queue", {}) {
+    constructor(address: string, credentials: grpc_1.ChannelCredentials) {
+      super(address, credentials);
+    }
+  }
 }

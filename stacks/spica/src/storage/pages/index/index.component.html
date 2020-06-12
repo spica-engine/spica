@@ -1,11 +1,20 @@
 <mat-toolbar color="primary">
-  <h4 class="mat-h4">
-    <mat-icon>filter_drama</mat-icon>
-    <span>Storage</span>
-  </h4>
+  <div>
+    <h4 class="mat-h4">
+      <mat-icon>filter_drama</mat-icon>
+      <span>Storage</span>
+    </h4>
+    <p>
+      Upload any kind of document into public storage.
+    </p>
+  </div>
   <span class="space-between"></span>
 
-  <button mat-icon-button [matMenuTriggerFor]="menu">
+  <button
+    [style.visibility]="isEmpty ? 'hidden' : 'visible'"
+    mat-icon-button
+    [matMenuTriggerFor]="menu"
+  >
     <mat-icon>filter_list</mat-icon>
     <mat-menu #menu="matMenu" class="storage-filter-menu">
       <button mat-menu-item (click)="sortStorage({direction: 'desc', name: 'name'})">
@@ -29,6 +38,7 @@
 
   <button
     mat-icon-button
+    canInteract="storage:create"
     [disabled]="progress"
     (click)="!progress ? fileSelector?.click() : undefined"
   >
@@ -69,7 +79,12 @@
         <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Actions">
           <mat-icon>more_vert</mat-icon>
           <mat-menu class="actions-menu" #menu="matMenu" yPosition="above">
+            <button mat-menu-item [matClipboard]="storage.url">
+              <mat-icon>file_copy</mat-icon>
+              Copy
+            </button>
             <button
+              canInteract="storage:update"
               *ngIf="storage.content?.type?.startsWith('image/')"
               mat-menu-item
               [routerLink]="storage._id"
@@ -78,6 +93,7 @@
               Edit
             </button>
             <button
+              canInteract="storage:delete"
               mat-menu-item
               color="warn"
               [matAwareDialog]="{
@@ -96,8 +112,11 @@
     </mat-card>
   </mat-grid-tile>
 </mat-grid-list>
-
-<mat-paginator [pageSize]="12" [pageSizeOptions]="[12, 24, 46]"></mat-paginator>
+<mat-paginator
+  [style.visibility]="isEmpty ? 'hidden' : 'visible'"
+  [pageSize]="12"
+  [pageSizeOptions]="[12, 24, 46]"
+></mat-paginator>
 
 <ng-template #dialogTemplate let-answer="answer">
   <p>This action cannot be undone.</p>

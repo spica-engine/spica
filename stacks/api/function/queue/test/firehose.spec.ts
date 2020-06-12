@@ -8,11 +8,14 @@ describe("FirehoseQueue", () => {
   let firehoseQueueClient: any;
 
   beforeEach(() => {
-    queue = new EventQueue(() => {});
+    queue = new EventQueue(() => {}, () => {});
     firehoseQueue = new FirehoseQueue();
     queue.addQueue(firehoseQueue);
     queue.listen();
-    firehoseQueueClient = new Firehose.QueueClient("0.0.0.0:5678", credentials.createInsecure());
+    firehoseQueueClient = new Firehose.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      credentials.createInsecure()
+    );
   });
 
   afterEach(() => {

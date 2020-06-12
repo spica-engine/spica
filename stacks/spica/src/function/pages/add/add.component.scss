@@ -25,7 +25,6 @@
   }
 
   mat-card {
-    margin: 5%;
     margin: 30px;
     margin-top: -110px;
     // For proper border radius
@@ -39,22 +38,28 @@
     mat-card-content {
       mat-form-field[description],
       mat-form-field[name] {
-        margin: 10px 0 10px 0;
         width: 100%;
       }
 
       mat-list {
+        padding-top: 0px;
+        mat-list-item:not(:first-of-type) {
+          mat-form-field:not(:first-of-type) {
+            margin: 0px 5px !important;
+          }
+          mat-form-field:first-of-type {
+            margin-right: 5px !important;
+          }
+        }
+
         .mat-list-item {
           height: auto;
           .mat-list-item-content {
             display: contents;
           }
 
-          &.triggers {
-            mat-form-field.trigger,
-            span {
-              margin: 10px 10px 0 0;
-            }
+          &.triggers .mat-list-item-content > *:not(mat-form-field) {
+            margin: 0px 5px;
           }
 
           &.dependency {
@@ -78,6 +83,9 @@
           &.add-dependency {
             margin-top: 25px;
           }
+        }
+        code-editor {
+          height: calc(100vh - 100px);
         }
         .editor {
           .decorationsOverviewRuler {
@@ -132,7 +140,6 @@
           padding-bottom: 20px;
           height: 80px;
           mat-form-field {
-            margin-right: 20px;
             mat-select {
               mat-select-trigger {
                 & > * {

@@ -1,6 +1,6 @@
 <ng-template #toolbar>
-  <mat-toolbar color="primary">
-    <h4 class="mat-h4">
+  <span>
+    <h4>
       <button
         mat-icon-button
         menu-icon
@@ -35,8 +35,8 @@
       </button>
       <span>{{ strategy.name || "Add Strategy" }}</span>
     </h4>
-    <span class="space-between"></span>
-  </mat-toolbar>
+  </span>
+  <span class="space-between"></span>
 </ng-template>
 <mat-card>
   <mat-card-content>
@@ -111,7 +111,6 @@
     <button
       canInteract="passport:strategy:update"
       mat-button
-      color="primary"
       type="submit"
       (click)="submitForm(certificateModel)"
     >

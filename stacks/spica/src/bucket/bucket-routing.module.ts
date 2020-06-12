@@ -30,7 +30,7 @@ const routes: Routes = [
         path: ":id/add",
         component: AddComponent,
         data: {
-          action: "update"
+          action: "create"
         }
       },
       {
@@ -73,7 +73,7 @@ const routes: Routes = [
         path: "add",
         component: BucketAddComponent,
         data: {
-          action: "update"
+          action: "create"
         }
       },
       {

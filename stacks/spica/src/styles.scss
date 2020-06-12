@@ -2,10 +2,11 @@
 @include mat-core();
 
 $primary: mat-palette($mat-gray, 900, 500, 700);
+$primary-for-dark: mat-palette($mat-gray, 900, 100, 700, 100);
 $accent: mat-palette($mat-amber, A200, A100, A400);
 
 $app-light-theme: mat-light-theme($primary, $accent);
-$app-dark-theme: mat-dark-theme($primary, $accent);
+$app-dark-theme: mat-dark-theme($primary-for-dark, $accent);
 
 @mixin vars($theme, $tone) {
   --tone-diff: #{$tone};
@@ -62,7 +63,13 @@ body {
   box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
 }
 
+.mat-card-actions {
+  margin: 0px !important;
+  padding: 0px !important;
+}
+
 .mat-form-field {
+  padding-top: 1em !important;
   &.mat-focused {
     .mat-form-field-infix {
       box-shadow: 3px 3px 5px var(--foreground-base-rgb) !important;
@@ -81,7 +88,6 @@ body {
       transform: translate(0.75em, 0.4375em) scale(1);
     }
   }
-
   &.mat-form-field-should-float {
     .mat-form-field-infix {
       .mat-form-field-label {
@@ -89,7 +95,6 @@ body {
       }
     }
   }
-
   .mat-form-field-underline {
     opacity: 0 !important;
   }

@@ -1,17 +1,25 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
+  <span>
     <h4>
-      <mat-icon>layers</mat-icon>
+      <mat-icon>account_circle</mat-icon>
       <span>Identities</span>
     </h4>
-    <span class="space-between"></span>
-    <button mat-icon-button (click)="refresh$.next()">
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button mat-icon-button routerLink="/passport/identity/add">
-      <mat-icon>add</mat-icon>
-    </button>
-  </mat-toolbar-row>
+    <h6>
+      Add your team members to collaborate. Control who is authenticated and authorized to use
+      resources on Spica
+    </h6>
+  </span>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="refresh$.next()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    canInteract="passport:identity:create"
+    routerLink="/passport/identity/add"
+  >
+    <mat-icon>add</mat-icon>
+  </button>
 </ng-template>
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
@@ -29,7 +37,11 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell *matCellDef="let identity">
-          <button mat-icon-button [routerLink]="identity._id + '/edit'">
+          <button
+            mat-icon-button
+            canInteract="passport:identity:update"
+            [routerLink]="identity._id + '/edit'"
+          >
             <mat-icon>edit</mat-icon>
           </button>
           <button

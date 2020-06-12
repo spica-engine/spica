@@ -13,6 +13,7 @@ import {DashboardModule} from "./dashboard/dashboard.module";
 import {FunctionModule} from "./function/function.module";
 import {PassportModule} from "./passport";
 import {StorageModule} from "./storage/storage.module";
+import {ActivityModule} from "./activity/activity.module";
 
 @NgModule({
   imports: [
@@ -32,6 +33,7 @@ import {StorageModule} from "./storage/storage.module";
      * Core Feature Modules
      */
     DashboardModule,
+    ActivityModule,
     PassportModule.forRoot(),
     BucketModule.forRoot(),
     StorageModule.forRoot(),

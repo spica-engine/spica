@@ -1,5 +1,6 @@
-html:not(.dark) :host ::ng-deep {
-  .mtk20 {
+:root:not(.dark) :host ::ng-deep {
+  .mtk20,
+  .mtk23 {
     color: #dd6546;
   }
 
@@ -15,9 +16,13 @@ html:not(.dark) :host ::ng-deep {
 }
 
 :host ::ng-deep {
-  @import url(https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css);
+  @import url(https://cdn.jsdelivr.net/npm/firacode@3.1.0/distr/fira_code.min.css);
   display: block;
   min-height: 400px;
+  width: 100%;
+  .overflow-guard {
+    border-radius: 5px;
+  }
 
   .line-numbers {
     color: --primary-50;

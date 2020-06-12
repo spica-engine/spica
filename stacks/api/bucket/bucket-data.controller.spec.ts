@@ -4,11 +4,18 @@ import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {CREATED_AT, DATE_TIME, OBJECT_ID, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {
+  CREATED_AT,
+  DATE_TIME,
+  OBJECTID_STRING,
+  OBJECT_ID,
+  UPDATED_AT
+} from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {ObjectId} from "@spica-server/database";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {WsAdapter} from "@spica-server/core/websocket";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
@@ -22,17 +29,19 @@ describe("BucketDataController", () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID, DATE_TIME],
+          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
         BucketModule.forRoot({hooks: false, history: false, realtime: false})
       ]
     }).compile();
     db = module.get(DatabaseService);
     app = module.createNestApplication();
+    app.useWebSocketAdapter(new WsAdapter(app));
     app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
@@ -66,6 +75,11 @@ describe("BucketDataController", () => {
           type: "number",
           title: "Age of the person",
           options: {position: "right"}
+        },
+        created_at: {
+          type: "date",
+          title: "Creation Timestamp",
+          options: {position: "bottom"}
         }
       }
     };
@@ -321,6 +335,77 @@ describe("BucketDataController", () => {
           {_id: "__skip__", name: "Michael", age: 22}
         ]);
       });
+
+      describe("advanced filter", () => {
+        let rows;
+        beforeAll(async () => {
+          rows = [
+            await req.post(`/bucket/${bucket._id}/data`, {
+              name: "Sherlock",
+              age: 28,
+              created_at: new Date("2020-04-20T10:00:00.000Z")
+            }),
+            await req.post(`/bucket/${bucket._id}/data`, {
+              name: "Doctor Who",
+              age: 25,
+              created_at: new Date("2020-05-20T10:00:00.000Z")
+            })
+          ].map(r => r.body);
+        });
+
+        it("should get documents between dates", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+            filter: JSON.stringify({
+              created_at: {
+                $gte: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`,
+                $lt: `Date(${new Date("2020-05-20T10:00:00.000Z").toISOString()})`
+              }
+            })
+          });
+
+          expect(documents).toEqual([
+            {_id: "__skip__", name: "Sherlock", age: 28, created_at: "2020-04-20T10:00:00.000Z"}
+          ]);
+        });
+
+        it("should get documents whose creation date is the greatest", async () => {
+          const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+            filter: JSON.stringify({
+              created_at: {
+                $gt: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`
+              }
+            })
+          });
+
+          expect(documents).toEqual([
+            {_id: "__skip__", name: "Doctor Who", age: 25, created_at: "2020-05-20T10:00:00.000Z"}
+          ]);
+        });
+
+        it("should throw error if the advanced filter constructor does not exist", async () => {
+          const {body: error} = await req
+            .get(`/bucket/${bucket._id}/data`, {
+              filter: JSON.stringify({
+                created_at: {
+                  $gt: `Throw(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`
+                }
+              })
+            })
+            .catch(e => e);
+
+          expect(error).toEqual({
+            statusCode: 400,
+            message:
+              'Could not find the constructor Throw in {"$gt":"Throw(2020-04-20T10:00:00.000Z)"}'
+          });
+        });
+
+        afterAll(async () => {
+          for (const row of rows) {
+            await req.delete(`/bucket/${bucket._id}/data/${row._id}`);
+          }
+        });
+      });
     });
 
     describe("localize", () => {
@@ -490,9 +575,13 @@ describe("BucketDataController", () => {
       let statisticsBucket: Bucket;
       let usersBucket: Bucket;
       let achievementsBucket: Bucket;
+      let walletBucket: Bucket;
 
       let user: BucketDocument;
+      let anotherUser: BucketDocument;
+      let userWithWallet: BucketDocument;
       let achievement: BucketDocument;
+      let wallets: BucketDocument[];
 
       beforeEach(async () => {
         achievementsBucket = await req
@@ -501,10 +590,19 @@ describe("BucketDataController", () => {
             description: "Achievement",
             properties: {
               name: {
-                type: "string",
-                title: "achievement",
-                description: "Title of the row",
-                options: {position: "left"}
+                type: "string"
+              }
+            }
+          })
+          .then(r => r.body);
+
+        walletBucket = await req
+          .post("/bucket", {
+            title: "Wallet",
+            description: "Wallet",
+            properties: {
+              name: {
+                type: "string"
               }
             }
           })
@@ -516,10 +614,12 @@ describe("BucketDataController", () => {
             description: "Users",
             properties: {
               name: {
-                type: "string",
-                title: "username",
-                description: "Title of the row",
-                options: {position: "left"}
+                type: "string"
+              },
+              wallet: {
+                type: "relation",
+                bucketId: walletBucket._id,
+                relationType: "onetomany"
               }
             }
           })
@@ -549,9 +649,32 @@ describe("BucketDataController", () => {
             name: "user66"
           })
           .then(r => r.body);
+
         achievement = await req
           .post(`/bucket/${achievementsBucket._id}/data`, {
             name: "do something until something else happens"
+          })
+          .then(r => r.body);
+
+        anotherUser = await req
+          .post(`/bucket/${usersBucket._id}/data`, {
+            name: "user33"
+          })
+          .then(r => r.body);
+
+        wallets = [
+          await req.post(`/bucket/${walletBucket._id}/data`, {
+            name: "GNB"
+          }),
+          await req.post(`/bucket/${walletBucket._id}/data`, {
+            name: "FNB"
+          })
+        ].map(r => r.body);
+
+        userWithWallet = await req
+          .post(`/bucket/${usersBucket._id}/data`, {
+            name: "wealthy user",
+            wallet: wallets.map(wallet => wallet._id)
           })
           .then(r => r.body);
 
@@ -559,21 +682,48 @@ describe("BucketDataController", () => {
           user: user._id,
           achievement: achievement._id
         });
+
+        await req.post(`/bucket/${statisticsBucket._id}/data`, {
+          user: anotherUser._id,
+          achievement: achievement._id
+        });
       });
 
       afterEach(async () => {
-        const db = app.get(DatabaseService);
-
-        await db.collection("buckets").deleteMany({
-          _id: {$in: [statisticsBucket._id, usersBucket._id, achievementsBucket._id]}
-        });
-        // TODO: This should be handled by bucket controller
-        await db.collection(`bucket_${statisticsBucket._id}`).drop();
-        await db.collection(`bucket_${usersBucket._id}`).drop();
-        await db.collection(`bucket_${achievementsBucket._id}`).drop();
+        await req.delete(`/bucket/${statisticsBucket._id}`);
+        await req.delete(`/bucket/${usersBucket._id}`);
+        await req.delete(`/bucket/${achievementsBucket._id}`);
+        await req.delete(`/bucket/${walletBucket._id}`);
       });
 
-      it("should get statics with username and achievement name", async () => {
+      it("should return users with wallets", async () => {
+        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {relation: true});
+        expect(users).toEqual([
+          {_id: "__skip__", name: "user66", wallet: []},
+          {_id: "__skip__", name: "user33", wallet: []},
+          {
+            _id: "__skip__",
+            name: "wealthy user",
+            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+          }
+        ]);
+      });
+
+      it("should return users by their wallet name", async () => {
+        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {
+          relation: true,
+          filter: JSON.stringify({"wallet.name": "GNB"})
+        });
+        expect(users).toEqual([
+          {
+            _id: "__skip__",
+            name: "wealthy user",
+            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+          }
+        ]);
+      });
+
+      it("should get statistics with username and achievement name", async () => {
         const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
           relation: true
         });
@@ -588,11 +738,22 @@ describe("BucketDataController", () => {
               _id: "__skip__",
               name: "do something until something else happens"
             }
+          },
+          {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user33"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
           }
         ]);
       });
 
-      it("should get statics with only id", async () => {
+      it("should get statistics with only id", async () => {
         const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
           relation: false
         });
@@ -601,6 +762,11 @@ describe("BucketDataController", () => {
           {
             _id: "__skip__",
             user: user._id,
+            achievement: achievement._id
+          },
+          {
+            _id: "__skip__",
+            user: anotherUser._id,
             achievement: achievement._id
           }
         ]);
@@ -624,7 +790,39 @@ describe("BucketDataController", () => {
             }
           },
           {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user33"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
+          },
+          {
             _id: newRow._id
+          }
+        ]);
+      });
+
+      it("should filter by relation", async () => {
+        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+          relation: true,
+          filter: JSON.stringify({"user._id": anotherUser._id})
+        });
+
+        expect(documents).toEqual([
+          {
+            _id: "__skip__",
+            user: {
+              _id: "__skip__",
+              name: "user33"
+            },
+            achievement: {
+              _id: "__skip__",
+              name: "do something until something else happens"
+            }
           }
         ]);
       });
@@ -829,9 +1027,10 @@ describe("BucketDataController", () => {
         .catch();
     });
 
-    it("should delete last data and return deletedCount as 1", async () => {
+    it("should delete document", async () => {
       const response = await req.delete(`/bucket/${myBucketId}/data/${myBucketData[1]._id}`);
-      expect(response.body.deletedCount).toBe(1);
+      expect(response.statusCode).toBe(204);
+      expect(response.body).toBe(undefined);
 
       const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
 
@@ -840,16 +1039,196 @@ describe("BucketDataController", () => {
       expect(bucketData[0].description).toBe("first description");
     });
 
-    it("should delete multiple data and return deletedCount as 2", async () => {
+    it("should delete multiple document", async () => {
       const response = await req.delete(`/bucket/${myBucketId}/data`, [
         myBucketData[0]._id.toHexString(),
         myBucketData[1]._id.toHexString()
       ]);
-      expect(response.body.deletedCount).toBe(2);
+
+      expect(response.statusCode).toBe(204);
+      expect(response.body).toBe(undefined);
 
       const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
 
       expect(bucketData).toEqual([]);
+    });
+  });
+
+  describe("clear relations", () => {
+    let relationBucketId: ObjectId;
+    let usersBucketId: ObjectId;
+    let otherBucketId: ObjectId;
+
+    let documentOneId: ObjectId;
+    let documentTwoId: ObjectId;
+
+    let userOneId: ObjectId;
+    let userTwoId: ObjectId;
+    let otherBucketDocumentId: ObjectId;
+
+    beforeAll(async () => {
+      usersBucketId = await req
+        .post("/bucket", {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            name: {
+              type: "string",
+              title: "name",
+              description: "Title of the name",
+              options: {position: "left"}
+            }
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      otherBucketId = await req
+        .post("/bucket", {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the title",
+              options: {position: "left"}
+            }
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      relationBucketId = await req
+        .post("/bucket", {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left", visible: true}
+            },
+            nested_relation: {
+              type: "object",
+              options: {position: "left", visible: true},
+              properties: {
+                user_relation: {
+                  type: "relation",
+                  bucketId: usersBucketId
+                },
+                other_relation: {
+                  type: "relation",
+                  bucketId: otherBucketId
+                }
+              }
+            }
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+    });
+
+    beforeEach(async () => {
+      userOneId = await req
+        .post(`/bucket/${usersBucketId}/data`, {
+          name: "user_one"
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      userTwoId = await req
+        .post(`/bucket/${usersBucketId}/data`, {
+          name: "user_two"
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      otherBucketDocumentId = await req
+        .post(`/bucket/${otherBucketId}/data`, {
+          title: "test_title"
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      documentOneId = await req
+        .post(`/bucket/${relationBucketId}/data`, {
+          title: "document_one",
+          nested_relation: {
+            user_relation: userOneId,
+            other_relation: otherBucketDocumentId
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+
+      documentTwoId = await req
+        .post(`/bucket/${relationBucketId}/data`, {
+          title: "document_two",
+          nested_relation: {
+            user_relation: userTwoId,
+            other_relation: otherBucketDocumentId
+          }
+        })
+        .then(r => new ObjectId(r.body._id));
+    });
+
+    afterEach(async () => {
+      await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+      await req.delete(`/bucket/${relationBucketId}/data`, [documentOneId, documentTwoId]);
+      await req.delete(`/bucket/${otherBucketId}/data/${otherBucketDocumentId}`);
+    });
+
+    it("should clear relations of documentOne when userOne deleted", async () => {
+      let response = await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+      expect(response.statusCode).toEqual(204);
+      expect(response.body).toEqual(undefined);
+
+      let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+      expect(relationDocuments).toEqual([
+        {
+          _id: "__skip__",
+          title: "document_one",
+          nested_relation: {
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        },
+        {
+          _id: "__skip__",
+          title: "document_two",
+          nested_relation: {
+            user_relation: userTwoId.toHexString(),
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        }
+      ]);
+    });
+
+    it("should clear relations for both documents when userOne and userTwo deleted", async () => {
+      let response = await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+      expect(response.statusCode).toEqual(204);
+      expect(response.body).toEqual(undefined);
+
+      let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+      expect(relationDocuments).toEqual([
+        {
+          _id: "__skip__",
+          title: "document_one",
+          nested_relation: {
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        },
+        {
+          _id: "__skip__",
+          title: "document_two",
+          nested_relation: {
+            other_relation: otherBucketDocumentId.toHexString()
+          }
+        }
+      ]);
     });
   });
 });

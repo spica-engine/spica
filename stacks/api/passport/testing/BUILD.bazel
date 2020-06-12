@@ -6,36 +6,14 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 ts_library(
     name = "testing",
     testonly = True,
-    srcs = [
+    srcs = glob([
         "index.ts",
-        "module.ts",
-        "noop.strategy.ts",
-    ],
+        "src/*.ts",
+    ]),
+    module_name = "@spica-server/passport/testing",
     deps = [
-        "@npm//@nestjs/common",
-        "@npm//@nestjs/passport",
-    ],
-)
-
-ts_library(
-    name = "test_lib",
-    testonly = True,
-    srcs = [
-        "module.spec.ts",
-    ],
-    deps = [
-        ":testing",
-        "//packages/core/testing",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-    ],
-)
-
-jasmine_node_test(
-    name = "test",
-    deps = [
-        ":test_lib",
+        "@npm//@nestjs/passport",
     ],
 )

@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {DatabaseService} from "@spica-server/database";
+import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Horizon} from "@spica-server/function/horizon";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {Event} from "@spica-server/function/queue/proto";
@@ -21,13 +21,14 @@ export class FunctionEngine {
     ["schedule", require("./schema/schedule.json")],
     ["firehose", require("./schema/firehose.json")],
     ["system", require("./schema/system.json")],
-    ["database", () => getDatabaseSchema(this.db)]
+    ["database", () => getDatabaseSchema(this.db, this.mongo)]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
 
   constructor(
     private fs: FunctionService,
     private db: DatabaseService,
+    private mongo: MongoClient,
     private horizon: Horizon,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) private schema: SchemaWithName
@@ -71,9 +72,9 @@ export class FunctionEngine {
     return this.getDefaultPackageManager().ls(functionRoot);
   }
 
-  addPackage(fn: Function, qualifiedName: string): Observable<number> {
+  addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().install(functionRoot, qualifiedName);
+    return this.getDefaultPackageManager().install(functionRoot, qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
@@ -124,7 +125,7 @@ export class FunctionEngine {
     return fs.promises.readFile(path.join(functionRoot, "index.ts")).then(b => b.toString());
   }
 
-  getSchema(name: string): Promise<JSONSchema7 | null> {
+  getSchema(name: string): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {
     const schema = this.schemas.get(name);
     if (schema) {
       if (typeof schema == "function") {
@@ -162,12 +163,15 @@ export class FunctionEngine {
   }
 }
 
-export function getDatabaseSchema(db: DatabaseService): Promise<JSONSchema7> {
-  return db
-    .listCollections()
-    .toArray()
-    .then(collections => {
-      const scheme: JSONSchema7 = {
+export function getDatabaseSchema(
+  db: DatabaseService,
+  mongo: MongoClient
+): Observable<JSONSchema7> {
+  return new Observable(observer => {
+    const collectionNames = new Set<string>();
+
+    const notifyChanges = () => {
+      const schema: JSONSchema7 = {
         $id: "http://spica.internal/function/enqueuer/database",
         type: "object",
         required: ["collection", "type"],
@@ -175,7 +179,7 @@ export function getDatabaseSchema(db: DatabaseService): Promise<JSONSchema7> {
           collection: {
             title: "Collection Name",
             type: "string",
-            enum: collections.map(c => c.name).sort((a, b) => a.localeCompare(b))
+            enum: Array.from(collectionNames)
           },
           type: {
             title: "Operation type",
@@ -186,6 +190,44 @@ export function getDatabaseSchema(db: DatabaseService): Promise<JSONSchema7> {
         },
         additionalProperties: false
       };
-      return scheme;
+      observer.next(schema);
+    };
+
+    const stream = mongo.watch([
+      {
+        $match: {
+          $or: [{operationType: "insert"}, {operationType: "drop"}],
+          "ns.db": db.databaseName
+        }
+      }
+    ]);
+
+    stream.on("change", change => {
+      switch (change.operationType) {
+        case "drop":
+          collectionNames.delete(change.ns.coll);
+          notifyChanges();
+          break;
+        case "insert":
+          if (!collectionNames.has(change.ns.coll)) {
+            collectionNames.add(change.ns.coll);
+            notifyChanges();
+          }
+          break;
+      }
     });
+
+    stream.on("close", () => observer.complete());
+
+    db.collections().then(collections => {
+      for (const collection of collections) {
+        collectionNames.add(collection.collectionName);
+      }
+      notifyChanges();
+    });
+
+    return () => {
+      stream.close();
+    };
+  });
 }

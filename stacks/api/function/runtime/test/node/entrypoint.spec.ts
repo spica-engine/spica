@@ -3,26 +3,59 @@ import {Database, Event, Firehose, Http} from "@spica-server/function/queue/prot
 import {Compilation} from "@spica-server/function/runtime";
 import {Node} from "@spica-server/function/runtime/node";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
-import {PassThrough} from "stream";
+import * as os from "os";
+import {PassThrough, Writable} from "stream";
+
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24075";
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("Entrypoint", () => {
   let queue: EventQueue;
 
   let runtime: Node;
   let enqueueSpy: jasmine.Spy;
+  let popSpy: jasmine.Spy;
   let compilation: Compilation = {
     cwd: undefined,
     entrypoint: "index.ts"
   };
+  let id = 0;
 
   function initializeFn(index: string) {
     compilation.cwd = FunctionTestBed.initialize(index);
     return runtime.compile(compilation);
   }
 
+  function spawn(stdout?: Writable, idOverride?: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const worker = runtime.spawn({
+        id: idOverride != undefined ? idOverride : String(++id),
+        env: {
+          __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
+          __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
+          __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+        }
+      });
+      worker.attach(stdout || process.stdout, stdout || process.stderr);
+
+      worker.once("error", e => {
+        reject(e);
+      });
+
+      worker.once("exit", (code, signal) => {
+        if (code == 0) {
+          resolve(code);
+        } else {
+          reject(code);
+        }
+      });
+    });
+  }
+
   beforeEach(() => {
     enqueueSpy = jasmine.createSpy("enqueue");
-    queue = new EventQueue(enqueueSpy);
+    popSpy = jasmine.createSpy("pop");
+    queue = new EventQueue(enqueueSpy, popSpy);
     queue.listen();
     runtime = new Node();
   });
@@ -44,29 +77,35 @@ describe("Entrypoint", () => {
     queue.enqueue(event);
     expect(queue.size).toBe(1);
 
-    await runtime.execute({
-      cwd: compilation.cwd,
-      eventId: event.id,
-      stdout: "inherit"
-    });
+    await spawn();
+
     expect(queue.size).toBe(0);
   });
 
-  it("should should exit abnormally if it can not find the message", async () => {
-    await initializeFn(`export default function() {}`);
-
-    expect(
-      await runtime
-        .execute({
-          cwd: compilation.cwd,
-          eventId: "1",
-          stdout: "inherit"
-        })
-        .catch(e => e)
-    ).toBe(126);
+  it("should exit abnormally when worker id was not set", async () => {
+    const stream = new PassThrough();
+    const writeSpy = spyOn(stream, "write").and.callThrough();
+    expect(await spawn(stream, "").catch(e => e)).toBe(126);
+    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+      "Environment variable WORKER_ID was not set.\n"
+    ]);
   });
 
-  it("should should exit abnormally if it can not find the exported handler", async () => {
+  it("should exit abnormally when grpc address was not set", async () => {
+    const address = process.env.FUNCTION_GRPC_ADDRESS;
+    delete process.env.FUNCTION_GRPC_ADDRESS;
+
+    const stream = new PassThrough();
+    const writeSpy = spyOn(stream, "write").and.callThrough();
+    expect(await spawn(stream, "").catch(e => e)).toBe(126);
+    expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
+      "Environment variable FUNCTION_GRPC_ADDRESS was not set.\n"
+    ]);
+
+    process.env.FUNCTION_GRPC_ADDRESS = address;
+  });
+
+  it("should exit abnormally if it can not find the exported handler", async () => {
     await initializeFn(`export const exists = ''`);
 
     const event = new Event.Event({
@@ -81,19 +120,13 @@ describe("Entrypoint", () => {
     const stream = new PassThrough();
     const writeSpy = spyOn(stream, "write").and.callThrough();
 
-    await expectAsync(
-      runtime.execute({
-        cwd: compilation.cwd,
-        eventId: event.id,
-        stdout: stream
-      })
-    ).toBeRejectedWith(126);
+    await expectAsync(spawn(stream)).toBeRejectedWith(126);
     expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
       "This function does not export any symbol named 'shouldhaveexisted'.\n"
     ]);
   });
 
-  it("should should exit abnormally if the exported symbol is not a function", async () => {
+  it("should exit abnormally if the exported symbol is not a function", async () => {
     await initializeFn(`export const notafunction = ''`);
 
     const event = new Event.Event({
@@ -108,13 +141,7 @@ describe("Entrypoint", () => {
     const stream = new PassThrough();
     const writeSpy = spyOn(stream, "write").and.callThrough();
 
-    await expectAsync(
-      runtime.execute({
-        cwd: compilation.cwd,
-        eventId: event.id,
-        stdout: stream
-      })
-    ).toBeRejectedWith(126);
+    await expectAsync(spawn(stream)).toBeRejectedWith(126);
     expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
       "This function does export a symbol named 'notafunction' yet it is not a function.\n"
     ]);
@@ -139,11 +166,7 @@ describe("Entrypoint", () => {
 
     const writeSpy = spyOn(stream, "write").and.callThrough();
 
-    await runtime.execute({
-      cwd: compilation.cwd,
-      eventId: event.id,
-      stdout: stream
-    });
+    await spawn(stream);
 
     expect(writeSpy).toHaveBeenCalledTimes(2);
     expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
@@ -156,12 +179,13 @@ describe("Entrypoint", () => {
     process.env.DATABASE_URI = "mongodb://test";
     process.env.DATABASE_NAME = "testingdb";
     process.env.REPLICA_SET = "repl";
-
+    process.env.HOME = os.homedir();
     await initializeFn(`
     declare var process;
     export default function() {
       const {
         ENTRYPOINT,
+        HOME,
         RUNTIME,
         __INTERNAL__SPICA__MONGOURL__: url,
         __INTERNAL__SPICA__MONGODBNAME__: dbName,
@@ -169,6 +193,7 @@ describe("Entrypoint", () => {
       } = process.env;
       if (
         ENTRYPOINT == "index.js" &&
+        HOME &&
         RUNTIME == "node" &&
         url == "mongodb://test" &&
         dbName == "testingdb" &&
@@ -186,13 +211,7 @@ describe("Entrypoint", () => {
 
     queue.enqueue(event);
 
-    const exitCode = await runtime
-      .execute({
-        cwd: compilation.cwd,
-        eventId: event.id,
-        stdout: "inherit"
-      })
-      .catch(e => e);
+    const exitCode = await spawn().catch(e => e);
 
     expect(exitCode).toBe(4);
   });
@@ -225,11 +244,7 @@ describe("Entrypoint", () => {
       expect(httpQueue.size).toBe(1);
       expect(queue.size).toBe(1);
 
-      await runtime.execute({
-        eventId: event.id,
-        cwd: event.target.cwd,
-        stdout: "inherit"
-      });
+      await spawn();
 
       // It gets deleted after the response is completed
       expect(httpQueue.size).toBe(0);
@@ -259,13 +274,7 @@ describe("Entrypoint", () => {
       request.headers = [header];
       httpQueue.enqueue(event.id, request, undefined);
 
-      const exitCode = await runtime
-        .execute({
-          eventId: event.id,
-          cwd: event.target.cwd,
-          stdout: "inherit"
-        })
-        .catch(e => e);
+      const exitCode = await spawn().catch(e => e);
 
       expect(exitCode).toBe(4);
     });
@@ -290,13 +299,7 @@ describe("Entrypoint", () => {
       const request = new Http.Request();
       httpQueue.enqueue(event.id, request, undefined);
 
-      const exitCode = await runtime
-        .execute({
-          eventId: event.id,
-          cwd: event.target.cwd,
-          stdout: "inherit"
-        })
-        .catch(e => e);
+      const exitCode = await spawn().catch(e => e);
 
       expect(exitCode).toBe(4);
     });
@@ -325,11 +328,7 @@ describe("Entrypoint", () => {
       expect(httpQueue.size).toBe(1);
       expect(queue.size).toBe(1);
 
-      await runtime.execute({
-        eventId: event.id,
-        cwd: event.target.cwd,
-        stdout: "inherit"
-      });
+      await spawn();
 
       expect(httpQueue.size).toBe(0);
       expect(serverResponse.writeHead).toHaveBeenCalledTimes(1);
@@ -365,11 +364,7 @@ describe("Entrypoint", () => {
 
       expect(databaseQueue.size).toBe(1);
 
-      await runtime.execute({
-        eventId: event.id,
-        cwd: event.target.cwd,
-        stdout: "inherit"
-      });
+      await spawn();
 
       expect(databaseQueue.size).toBe(0);
     });
@@ -398,13 +393,7 @@ describe("Entrypoint", () => {
 
       databaseQueue.enqueue(event.id, change);
 
-      const exitCode = await runtime
-        .execute({
-          eventId: event.id,
-          cwd: event.target.cwd,
-          stdout: "inherit"
-        })
-        .catch(e => e);
+      const exitCode = await spawn().catch(e => e);
 
       expect(exitCode).toBe(4);
     });
@@ -457,13 +446,7 @@ describe("Entrypoint", () => {
         undefined
       );
 
-      const exitCode = await runtime
-        .execute({
-          eventId: event.id,
-          cwd: event.target.cwd,
-          stdout: "inherit"
-        })
-        .catch(r => r);
+      const exitCode = await spawn().catch(r => r);
       expect(exitCode).toBe(4, "Assertion failed.");
     });
 
@@ -496,11 +479,7 @@ describe("Entrypoint", () => {
         socketSpy
       );
 
-      await runtime.execute({
-        eventId: event.id,
-        cwd: event.target.cwd,
-        stdout: "inherit"
-      });
+      await spawn();
       expect(socketSpy.send).toHaveBeenCalledTimes(1);
       expect(socketSpy.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
     });
@@ -535,11 +514,8 @@ describe("Entrypoint", () => {
         socketSpy
       );
 
-      await runtime.execute({
-        eventId: event.id,
-        cwd: event.target.cwd,
-        stdout: "inherit"
-      });
+      await spawn();
+
       expect(socketSpy.close).toHaveBeenCalledTimes(1);
     });
 
@@ -592,11 +568,7 @@ describe("Entrypoint", () => {
         secondSocket
       );
 
-      await runtime.execute({
-        eventId: event.id,
-        cwd: event.target.cwd,
-        stdout: "inherit"
-      });
+      await spawn();
       expect(firstSocket.send).toHaveBeenCalledTimes(1);
       expect(firstSocket.send.calls.argsFor(0)[0]).toBe(`{"name":"test","data":"thisisthedata"}`);
       expect(secondSocket.send).toHaveBeenCalledTimes(1);

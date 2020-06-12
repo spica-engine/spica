@@ -62,11 +62,11 @@ executors:
     working_directory: ~/spica
     docker:
       - image: circleci/node:11
-   
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
   gcp-cli: circleci/gcp-cli@1.8.3
+  helm: circleci/helm@0.2.3
 
 jobs:
   setup:
@@ -98,7 +98,9 @@ jobs:
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e --jobs 4
+      - custom_save_cache
+
   test_api_flaky:
     executor: api-executor
     steps:
@@ -108,6 +110,16 @@ jobs:
       - run:
           name: "Running tests"
           command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5
+
+  test_api_e2e:
+    executor: api-executor
+    steps:
+      - custom_attach_workspace
+      - install_mongodb
+      - setup_circleci_bazel_config
+      - run:
+          name: "Running tests"
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5
 
   test_spica:
     executor: default-executor
@@ -136,16 +148,43 @@ jobs:
           command: |
             (cd stacks/spica && yarn ng build --prod --progress=false)
             yarn bazel run deploy.replace -- --config=release -- --force
+  release:
+    executor: default-executor
+    steps:
+      - setup_remote_docker
+      - custom_attach_workspace
+      - setup_circleci_bazel_config
+      # We depend on these utilies cause scripts/publish.sh depends on scripts/sync_charts.sh 
+      # which depends on these utilies (gsutil, helm)
+      - gcp-cli/install
+      - gcp-cli/initialize
+      - helm/install-helm-client:
+          version: v3.2.0
+      - run:
+          name: "Authenticate with the registries"
+          command: |
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
+          name: "Publishing artifacts (latest)"
+          command: ./scripts/publish.sh latest
 
 workflows:
   version: 2
-  main:
+  default:
     jobs:
       - setup
       - lint:
           requires:
             - setup
+          filters:
+            # Do not run on release branches
+            branches:
+              ignore: /^\d\.\d\.x$/
       - test_api:
+          requires:
+            - setup
+      - test_api_e2e:
           requires:
             - setup
       - test_api_flaky:
@@ -156,9 +195,20 @@ workflows:
             - setup
       - deploy:
           requires:
-            - setup
-            # - test_api
+            - test_api_flaky
+            - test_api_e2e
+            - test_api
             - test_spica
           filters:
             branches:
               only: master
+      - release:
+          requires:
+            - test_api_flaky
+            - test_api_e2e
+            - test_api
+            - test_spica
+          filters:
+            branches:
+              # Run only on branches whose name match 0.0.x pattern
+              only: /^\d\.\d\.x$/

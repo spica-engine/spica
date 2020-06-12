@@ -7,6 +7,10 @@
   "$comment": "This schema still in draft state. Probably there is a lot optimization that we can make on this schema.",
   "required": ["title", "description", "properties"],
   "properties": {
+    "history": {
+      "type": "boolean",
+      "default": false
+    },
     "title": {
       "type": "string",
       "title": "Title of the bucket",

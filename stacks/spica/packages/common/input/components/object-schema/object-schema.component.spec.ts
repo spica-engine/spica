@@ -134,4 +134,25 @@ describe("Common#object-schema", () => {
     tick(10);
     expect(component.schema.properties.test).toBeUndefined();
   }));
+
+  it("should remove field from required fields when its removed from schema", () => {
+    fixture.componentInstance.schema = {
+      type: "some_type",
+      properties: {
+        removed_field: {},
+        unRemoved_field: {}
+      },
+      required: ["removed_field", "unRemoved_field"]
+    };
+    fixture.detectChanges();
+
+    fixture.componentInstance.removeProperty("removed_field");
+    expect(fixture.componentInstance.schema).toEqual({
+      type: "some_type",
+      properties: {
+        unRemoved_field: {}
+      },
+      required: ["unRemoved_field"]
+    });
+  });
 });

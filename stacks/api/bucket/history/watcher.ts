@@ -62,6 +62,9 @@ export class BucketWatcher {
           case "update":
           case "replace":
             const bucketId = new ObjectId(rawChange.ns.coll.replace(/^bucket_/, ""));
+            const bucket = await this.historyService.getSchema(bucketId);
+            if (!bucket || !bucket.history) return;
+
             const documentId = new ObjectId(rawChange.documentKey._id);
             const currentDocument = rawChange.fullDocument as BucketDocument;
             const previousDocument = await this.historyService.getPreviousDocument(

@@ -6,7 +6,7 @@ export interface Dashboard {
 }
 
 export interface Component {
-  target: string;
+  url: string;
   type: string;
   key: string;
 }

@@ -16,8 +16,8 @@ ts_library(
         "//packages/core",
         "//packages/core/schema",
         "//packages/database",
-        "//stacks/api/activity",
-        "//stacks/api/preference/service",
+        "//stacks/api/activity/services",
+        "//stacks/api/preference/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/jwt",
@@ -25,13 +25,14 @@ ts_library(
         "@npm//@types/matcher",
         "@npm//@types/mongodb",
         "@npm//@types/node",
+        "@npm//@types/node-forge",
         "@npm//@types/saml2-js",
         "@npm//bcryptjs",
         "@npm//matcher",
+        "@npm//node-forge",
         "@npm//passport-jwt",
         "@npm//passport-saml",
         "@npm//path-to-regexp",
-        "@npm//pem",
         "@npm//rxjs",
         "@npm//saml2-js",
         "@npm//uniqid",
@@ -43,7 +44,10 @@ ts_library(
     testonly = True,
     srcs = glob(
         include = ["**/*.spec.ts"],
-        exclude = ["**/activity.resource.spec.ts"],
+        exclude = [
+            "**/activity.resource.spec.ts",
+            "**/utilities.spec.ts",
+        ],
     ),
     deps = [
         ":passport",
@@ -71,7 +75,7 @@ ts_library(
         "**/activity.resource.spec.ts",
     ]),
     deps = [
-        "//stacks/api/activity",
+        "//stacks/api/activity/services",
         "//stacks/api/passport",
         "@npm//@types/jasmine",
     ],
@@ -81,6 +85,25 @@ jasmine_node_test(
     name = "activity_test",
     deps = [
         "activity_test_lib",
+    ],
+)
+
+ts_library(
+    name = "identity_utilities_test_lib",
+    testonly = True,
+    srcs = glob([
+        "**/utilities.spec.ts",
+    ]),
+    deps = [
+        "//stacks/api/passport",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "identity_utilities_test",
+    deps = [
+        "identity_utilities_test_lib",
     ],
 )
 

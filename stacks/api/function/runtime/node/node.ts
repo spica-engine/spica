@@ -1,15 +1,15 @@
 import {
   Compilation,
   Description,
-  Diagnostic,
-  Execution,
-  Runtime
+  Runtime,
+  SpawnOptions,
+  Worker
 } from "@spica-server/function/runtime";
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import {Transform} from "stream";
-import * as ts from "typescript";
+import {Transform, Writable} from "stream";
+import * as worker_threads from "worker_threads";
 
 class FilterExperimentalWarnings extends Transform {
   _transform(rawChunk: Buffer, encoding: string, cb: Function) {
@@ -28,6 +28,45 @@ class FilterExperimentalWarnings extends Transform {
   }
 }
 
+class NodeWorker extends Worker {
+  private _process: child_process.ChildProcess;
+
+  constructor(options: SpawnOptions) {
+    super();
+    this._process = child_process.spawn(
+      `node`,
+      [
+        "--experimental-modules",
+        "--enable-source-maps",
+        "--unhandled-rejections=strict",
+        `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap.js")}`
+      ],
+      {
+        stdio: ["ignore", "pipe", "pipe"],
+        env: {
+          PATH: process.env.PATH,
+          HOME: process.env.HOME,
+          FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
+          ENTRYPOINT: "index.js",
+          RUNTIME: "node",
+          WORKER_ID: options.id,
+          ...options.env
+        }
+      }
+    );
+    Object.assign(this, this._process);
+  }
+
+  attach(stdout?: Writable, stderr?: Writable): void {
+    this._process.stdout.pipe(stdout);
+    this._process.stderr.pipe(new FilterExperimentalWarnings()).pipe(stderr);
+  }
+
+  kill() {
+    this._process.kill("SIGKILL");
+  }
+}
+
 export class Node extends Runtime {
   description: Description = {
     name: "node",
@@ -35,9 +74,15 @@ export class Node extends Runtime {
     description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
   };
 
+  private compilationWorker: worker_threads.Worker;
+
+  constructor() {
+    super();
+    this.compilationWorker = new worker_threads.Worker(__dirname + "/compiler_worker.js");
+  }
+
   async compile(compilation: Compilation): Promise<void> {
     await super.prepare(compilation);
-
     const hasSpicaDevkitDatabasePackage = await fs.promises
       .access(path.join(compilation.cwd, "node_modules", "@spica-devkit"), fs.constants.F_OK)
       .then(() => true)
@@ -74,102 +119,24 @@ export class Node extends Runtime {
         }
         return Promise.reject(e);
       });
-
-    const entrypoint = path.resolve(compilation.cwd, compilation.entrypoint);
-
-    const options: ts.CompilerOptions = {
-      moduleResolution: ts.ModuleResolutionKind.NodeJs,
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2018,
-      outDir: path.resolve(compilation.cwd, ".build"),
-      sourceMap: true,
-      allowJs: true,
-      skipDefaultLibCheck: true,
-      alwaysStrict: true,
-      preserveSymlinks: true
-    };
-
-    const program = ts.createProgram({
-      rootNames: [entrypoint],
-      options
+    return new Promise((resolve, reject) => {
+      const handleMessage = message => {
+        if (message.baseUrl == compilation.cwd) {
+          this.compilationWorker.off("message", handleMessage);
+          if (message.diagnostics.length) {
+            reject(message.diagnostics);
+          } else {
+            resolve();
+          }
+        }
+      };
+      this.compilationWorker.on("message", handleMessage);
+      this.compilationWorker.postMessage(compilation);
     });
-
-    program.emit();
-
-    const semanticDiagnostics = program.getSemanticDiagnostics();
-
-    if (semanticDiagnostics.length) {
-      return Promise.reject(
-        semanticDiagnostics.map(diagnostic => {
-          const start = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
-          const end = ts.getLineAndCharacterOfPosition(
-            diagnostic.file,
-            diagnostic.start + diagnostic.length
-          );
-          return <Diagnostic>{
-            code: diagnostic.code,
-            category: diagnostic.category,
-            text: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
-            start: {
-              line: start.line + 1,
-              column: start.character + 1
-            },
-            end: {
-              line: end.line + 1,
-              column: end.character + 1
-            }
-          };
-        })
-      );
-    }
   }
 
-  async execute(execution: Execution): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const worker = child_process.spawn(
-        `node`,
-        [
-          "--experimental-modules",
-          "--enable-source-maps",
-          "--unhandled-rejections=strict",
-          `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap.js")}`
-        ],
-        {
-          stdio: [
-            "ignore",
-            typeof execution.stdout == "string" ? execution.stdout : "pipe",
-            typeof execution.stdout == "string" ? execution.stdout : "pipe"
-          ],
-          env: {
-            PATH: process.env.PATH,
-            EVENT_ID: execution.eventId,
-            ENTRYPOINT: "index.js",
-            RUNTIME: "node",
-            __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
-            __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
-            __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
-          },
-          cwd: path.join(execution.cwd, ".build")
-        }
-      );
-
-      if (typeof execution.stdout == "object") {
-        worker.stdout.pipe(execution.stdout);
-        worker.stderr.pipe(new FilterExperimentalWarnings()).pipe(execution.stdout);
-      }
-
-      worker.once("error", e => {
-        reject(e);
-      });
-
-      worker.once("exit", (code, signal) => {
-        if (code == 0) {
-          resolve(code);
-        } else {
-          reject(code);
-        }
-      });
-    });
+  spawn(options: SpawnOptions): Worker {
+    return new NodeWorker(options);
   }
 
   clear(compilation: Compilation) {

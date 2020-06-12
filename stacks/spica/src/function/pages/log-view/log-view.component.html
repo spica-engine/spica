@@ -38,16 +38,23 @@
       [(ngModel)]="filter$.value.functions"
       (ngModelChange)="filter$.next(filter$.value)"
     >
-      <mat-option *ngFor="let function of functions$ | async" [value]="function._id">
+      <mat-option
+        class="mat-accent"
+        *ngFor="let function of functions$ | async"
+        [value]="function._id"
+      >
         {{ function.name }}
       </mat-option>
     </mat-select>
   </mat-form-field>
+  <mat-slide-toggle [(ngModel)]="showErrors" (ngModelChange)="filter$.next(filter$.value)">
+    {{ showErrors ? "Show Errors" : "Hide Errors" }}
+  </mat-slide-toggle>
   <mat-table multiTemplateDataRows [dataSource]="logs$">
     <ng-container matColumnDef="timestamp">
       <mat-header-cell mat-header-cell *matHeaderCellDef>TIMESTAMP</mat-header-cell>
       <mat-cell *matCellDef="let log">{{
-        log.created_at | date: "yyyy-MM-dd HH:MM:ss.ms"
+        log.created_at | date: "yyyy-MM-dd HH:mm:ss.SSS"
       }}</mat-cell>
     </ng-container>
 
@@ -58,11 +65,17 @@
 
     <ng-container matColumnDef="content">
       <mat-header-cell mat-header-cell *matHeaderCellDef>CONTENT</mat-header-cell>
-      <mat-cell mat-cell *matCellDef="let log">{{ log.content }}</mat-cell>
+      <mat-cell mat-cell *matCellDef="let log">
+        <mat-icon *ngIf="log.channel == 'stderr'">error</mat-icon>{{ log.content }}
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="detail">
-      <mat-cell *matCellDef="let log" [@detail]="log == expandedLog ? 'expanded' : 'collapsed'">
+      <mat-cell
+        *matCellDef="let log"
+        [@detail]="log == expandedLog ? 'expanded' : 'collapsed'"
+        [attr.channel]="log.channel"
+      >
         {{ log.content }}
       </mat-cell>
     </ng-container>

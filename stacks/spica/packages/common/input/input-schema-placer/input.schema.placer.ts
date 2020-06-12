@@ -26,14 +26,23 @@ import {InputResolver} from "../input.resolver";
       :host {
         display: block;
       }
-      mat-form-field:not(:first-child-of-type) {
-        margin-left: 5px;
+    `,
+    `
+      :host > mat-form-field:not(:first-of-type) {
+        margin: 0px 5px !important;
+      }
+    `,
+    `
+      :host > mat-form-field:first-of-type {
+        margin-right: 5px !important;
       }
     `
   ]
 })
 export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   @Input("inputSchemaPlacer") type: string;
+
+  @Input() forbiddenTypes: string[];
 
   public placer: Type<any>;
   public injector: Injector;
@@ -68,12 +77,15 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.type && this.type) {
       for (const key of Object.keys(this.schema)) {
-        if (key === "type" || key === "description" || key === "options") {
+        if (key === "type" || key === "title" || key === "description" || key === "options") {
           continue;
         }
         delete this.schema[key];
       }
       this.updatePlacer();
+    }
+    if (changes.forbiddenTypes) {
+      this.inputTypes = this.inputTypes.filter(type => this.forbiddenTypes.indexOf(type) == -1);
     }
   }
 

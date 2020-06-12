@@ -5,7 +5,10 @@ export class HttpQueue {
   private client: any;
 
   constructor() {
-    this.client = new Http.QueueClient("0.0.0.0:5678", grpc.credentials.createInsecure());
+    this.client = new Http.QueueClient(
+      process.env.FUNCTION_GRPC_ADDRESS,
+      grpc.credentials.createInsecure()
+    );
   }
 
   end(e: Http.End): Promise<Http.End.Result> {
@@ -64,7 +67,7 @@ export class Request {
   url: string;
   path: string;
   headers = new Map<string, string | string[]>();
-  query = new Map<string, string>();
+  query: unknown = {};
   params = new Map<string, string>();
   cookies = new Map<string, string>();
   body: Array<unknown> | object | Uint8Array | undefined;
@@ -84,6 +87,10 @@ export class Request {
       this.params = new Map(req.params.map(h => [h.key, h.value]));
     }
 
+    if (req.query) {
+      this.query = JSON.parse(req.query);
+    }
+
     if (req.body) {
       this.body = req.body;
       if (this.headers.get("content-type") == "application/json") {
@@ -93,11 +100,29 @@ export class Request {
   }
 }
 
+export class ResponseHeaders extends Map<string, string | string[]> {
+  append(key: string, value: string) {
+    let values: string[] = [];
+    if (this.has(key)) {
+      const prevValues = this.get(key);
+      if (!Array.isArray(prevValues)) {
+        values.push(prevValues);
+      } else {
+        values.push(...prevValues);
+      }
+    }
+    values.push(value);
+    this.set(key, values);
+  }
+}
+
 export class Response {
   statusCode: number;
   statusMessage: string;
 
   headersSent: boolean = false;
+
+  headers = new ResponseHeaders();
 
   constructor(
     private _writeHead: (e: Http.WriteHead) => void,
@@ -146,13 +171,32 @@ export class Response {
     writeHead.statusCode = statusCode;
     writeHead.statusMessage = statusMessage;
     if (headers) {
-      writeHead.headers = Object.entries(headers).map(([k, v]) => {
-        const header = new Http.Header();
-        header.key = k;
-        header.value = v;
-        return header;
-      });
+      for (const key in headers) {
+        this.headers.set(key, headers[key]);
+      }
     }
+    writeHead.headers = Array.from(this.headers.entries()).reduce((headers, [key, v]) => {
+      if (Array.isArray(v)) {
+        for (const value of v) {
+          headers.push(
+            new Http.Header({
+              key,
+              value
+            })
+          );
+        }
+      } else {
+        headers.push(
+          new Http.Header({
+            key,
+            value: v
+          })
+        );
+      }
+
+      return headers;
+    }, []);
+
     this._writeHead(writeHead);
     this.headersSent = true;
   }

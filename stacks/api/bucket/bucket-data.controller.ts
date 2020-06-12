@@ -2,29 +2,49 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Headers,
+  HttpCode,
+  HttpStatus,
   InternalServerErrorException,
   NotFoundException,
+  Optional,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
-  ForbiddenException,
-  Optional,
-  Put,
   UseInterceptors
 } from "@nestjs/common";
+import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
+import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {activity} from "@spica-server/activity";
-import {createBucketDataResource} from "./activity.resource";
+import {findRelations} from "./utilities";
+
+function filterReviver(k: string, v: string) {
+  const availableConstructors = {
+    Date: v => new Date(v),
+    ObjectId: v => new ObjectId(v)
+  };
+  const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
+  if (typeof v == "string" && ctr.test(v)) {
+    const [, desiredCtr, arg] = v.match(ctr);
+    if (availableConstructors[desiredCtr]) {
+      return availableConstructors[desiredCtr](arg);
+    } else {
+      throw new Error(`Could not find the constructor ${desiredCtr} in {"${k}":"${v}"}`);
+    }
+  }
+  return v;
+}
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -91,34 +111,64 @@ export class BucketDataController {
     };
   }
 
-  private buildRelationAggreation(
+  private buildRelationAggregation(
     property: string,
     bucketId: string,
+    type: "onetomany" | "onetoone",
     locale: {best: string; fallback: string}
   ) {
-    return [
-      {
-        $lookup: {
-          from: getBucketDataCollection(bucketId),
-          let: {
-            documentId: {
-              $toObjectId: `$${property}`
-            }
-          },
-          pipeline: [
-            {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
-            {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
-            {$set: {_id: {$toString: "$_id"}}}
-          ],
-          as: property
+    if (type == "onetomany") {
+      return [
+        {
+          $lookup: {
+            from: getBucketDataCollection(bucketId),
+            let: {
+              documentIds: {
+                $ifNull: [
+                  {
+                    $map: {
+                      input: `$${property}`,
+                      in: {$toObjectId: "$$this"}
+                    }
+                  },
+                  []
+                ]
+              }
+            },
+            pipeline: [
+              {$match: {$expr: {$in: ["$_id", "$$documentIds"]}}},
+              {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+              {$set: {_id: {$toString: "$_id"}}}
+            ],
+            as: property
+          }
         }
-      },
-      {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
-    ];
+      ];
+    } else {
+      return [
+        {
+          $lookup: {
+            from: getBucketDataCollection(bucketId),
+            let: {
+              documentId: {
+                $toObjectId: `$${property}`
+              }
+            },
+            pipeline: [
+              {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
+              {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+              {$set: {_id: {$toString: "$_id"}}}
+            ],
+            as: property
+          }
+        },
+        {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
+      ];
+    }
   }
 
   @Get()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -128,12 +178,12 @@ export class BucketDataController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule: boolean = false,
     @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
-    @Query("filter", JSONP) filter: FilterQuery<BucketDocument>,
+    @Query("filter", JSONPR(filterReviver)) filter: FilterQuery<BucketDocument>,
     @Query("limit", NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object
   ) {
-    let aggregation: any[] = [
+    let aggregation: unknown[] = [
       {
         $match: {
           _schedule: {
@@ -143,7 +193,13 @@ export class BucketDataController {
       }
     ];
 
-    const schema = relation || localize ? await this.bs.findOne({_id: bucketId}) : null;
+    const bucket = await this.bs.findOne({_id: bucketId});
+
+    if (!bucket) {
+      throw new NotFoundException(`Could not find the bucket with id ${bucketId}`);
+    }
+
+    const schema = relation || localize ? bucket : null;
 
     if (
       localize &&
@@ -169,7 +225,12 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
+            ...this.buildRelationAggregation(
+              propertyKey,
+              property["bucketId"],
+              property["relationType"],
+              locale
+            )
           );
         }
       }
@@ -197,13 +258,12 @@ export class BucketDataController {
       }
     }
 
+    let data: Promise<unknown>;
+
     if (paginate && !skip && !limit) {
-      const data = await this.bds
+      data = this.bds
         .find(bucketId, aggregation)
-        .catch((error: MongoError) =>
-          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
-        );
-      return {meta: {total: data.length}, data};
+        .then(data => ({meta: {total: data.length}, data}));
     } else if (paginate && (skip || limit)) {
       const subAggregation = [];
       if (skip) {
@@ -222,12 +282,9 @@ export class BucketDataController {
         },
         {$unwind: "$meta"}
       );
-      return this.bds
+      data = this.bds
         .find(bucketId, aggregation)
-        .then(r => r[0] || {meta: {total: 0}, data: []})
-        .catch((error: MongoError) =>
-          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
-        );
+        .then(([result]) => (result ? result : {meta: {total: 0}, data: []}));
     } else {
       if (skip) {
         aggregation.push({$skip: skip});
@@ -237,16 +294,15 @@ export class BucketDataController {
         aggregation.push({$limit: limit});
       }
 
-      return this.bds
-        .find(bucketId, aggregation)
-        .catch((error: MongoError) =>
-          Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
-        );
+      data = this.bds.find(bucketId, aggregation);
     }
+    return data.catch((error: MongoError) =>
+      Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
+    );
   }
 
   @Get(":documentId")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show"))
   async findOne(
     @Headers("strategy-type") strategyType: string,
     @Headers("accept-language") acceptedLanguage: string,
@@ -278,7 +334,12 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggreation(propertyKey, property["bucketId"], locale)
+            ...this.buildRelationAggregation(
+              propertyKey,
+              property["bucketId"],
+              property["relationType"],
+              locale
+            )
           );
         }
       }
@@ -303,9 +364,9 @@ export class BucketDataController {
     return document;
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Post()
-  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async replaceOne(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -313,20 +374,20 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (this.dispatcher && strategyType == "APIKEY") {
-      const result = await this.dispatcher.dispatch(
+      const allowed = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INSERT"},
         headers
       );
-      if (!result) {
+      if (!allowed) {
         throw new ForbiddenException("Forbidden action.");
       }
     }
     return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Put(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard(["bucket:data:add"]))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
   async update(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -335,32 +396,64 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
     if (this.dispatcher && strategyType == "APIKEY") {
-      const result = await this.dispatcher.dispatch(
+      const allowed = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "UPDATE"},
         headers,
         documentId.toHexString()
       );
-      if (!result) {
+      if (!allowed) {
         throw new ForbiddenException("Forbidden action.");
       }
     }
     return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Delete(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteOne(
+  async deleteOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    return this.bds.deleteOne(bucketId, {_id: documentId});
+    let deletedCount = await this.bds
+      .deleteOne(bucketId, {_id: documentId})
+      .then(result => result.deletedCount);
+    if (deletedCount < 1) return;
+
+    return this.clearRelations(this.bs, bucketId, documentId);
   }
 
-  @UseInterceptors(activity(createBucketDataResource))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
-    return this.bds.deleteMany(bucketId, body);
+  async deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
+    let deletedCount = await this.bds
+      .deleteMany(bucketId, body)
+      .then(result => result.deletedCount);
+    if (deletedCount < 1) return;
+
+    return Promise.all(
+      body.map(id => {
+        this.clearRelations(this.bs, bucketId, new ObjectId(id)).catch(err => err);
+      })
+    );
+  }
+
+  async clearRelations(bucketService: BucketService, bucketId: ObjectId, documentId: ObjectId) {
+    let buckets = await bucketService.find({_id: {$ne: bucketId}});
+    if (buckets.length < 1) return;
+
+    for (const bucket of buckets) {
+      let targets = findRelations(bucket.properties, bucketId.toHexString(), "", []);
+      if (targets.length < 1) continue;
+
+      for (const target of targets) {
+        await bucketService
+          .collection(`bucket_${bucket._id.toHexString()}`)
+          .updateMany({[target]: documentId.toHexString()}, {$unset: {[target]: ""}});
+      }
+    }
   }
 }

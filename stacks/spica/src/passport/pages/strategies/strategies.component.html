@@ -1,21 +1,25 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
+  <span>
     <h4>
       <mat-icon>linear_scale</mat-icon>
       <span>Strategies</span>
     </h4>
-    <span class="space-between"></span>
-    <button mat-icon-button (click)="refresh$.next()">
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button
-      mat-icon-button
-      canInteract="passport:strategy:update"
-      routerLink="/passport/strategies/add"
-    >
-      <mat-icon>add</mat-icon>
-    </button>
-  </mat-toolbar-row>
+    <h6>
+      A strategy helps you to enable a single-sign on authentication to Spica. Once you create a
+      strategy, your users will be able to login via a 3rd party service.
+    </h6>
+  </span>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="refresh$.next()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    canInteract="passport:strategy:update"
+    routerLink="/passport/strategies/add"
+  >
+    <mat-icon>add</mat-icon>
+  </button>
 </ng-template>
 
 <mat-card class="mat-elevation-z25">

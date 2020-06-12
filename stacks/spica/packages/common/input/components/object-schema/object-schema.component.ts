@@ -30,5 +30,8 @@ export class ObjectSchemaComponent {
 
   removeProperty(name: string) {
     delete this.schema.properties[name];
+    if (this.schema.required && this.schema.required.includes(name)) {
+      this.schema.required = this.schema.required.filter(req => req != name);
+    }
   }
 }

@@ -7,6 +7,7 @@
 		"passport:policy:show",
 		"passport:policy:update",
 		"passport:policy:delete",
-		"passport:policy:index"
+		"passport:policy:index",
+		"passport:policy:create"
 	]
 }

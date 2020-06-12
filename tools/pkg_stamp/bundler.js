@@ -49,13 +49,13 @@ function relative(execPath) {
 function copyWithReplace(f, outDir, substitutions) {
   if (fs.statSync(f).isDirectory()) {
     for (const file of fs.readdirSync(f)) {
-      copyWithReplace(path.join(f, file));
+      copyWithReplace(path.join(f, file), outDir, substitutions);
     }
   } else if (!isBinary(f)) {
     const dest = path.join(outDir, relative(f));
     let content = fs.readFileSync(f, {encoding: "utf-8"});
     substitutions.forEach(([occurrence, replaceWith]) => {
-      content = content.replace(occurrence, replaceWith);
+      content = content.replace(new RegExp(occurrence, 'g'), replaceWith);
     });
     fs.mkdirSync(path.dirname(dest), {recursive: true});
     fs.writeFileSync(dest, content);

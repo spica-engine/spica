@@ -19,7 +19,9 @@ describe("ApiKey", () => {
         PassportModule.forRoot({
           issuer: "spica.internal",
           secretOrKey: "test",
-          defaultStrategy: "noop"
+          defaultStrategy: "noop",
+          publicUrl: undefined,
+          samlCertificateTTL: 1
         }),
         PassportTestingModule.initialize()
       ]
@@ -212,8 +214,9 @@ describe("ApiKey", () => {
     });
 
     it("should throw NotFoundExpection", async () => {
-      const responseBody = (await req.delete(`/passport/apikey/${new ObjectId()}`)).body;
-      expect([responseBody.statusCode, responseBody.error]).toEqual([404, "Not Found"]);
+      const {body} = await req.delete(`/passport/apikey/${new ObjectId()}`);
+      console.log(body);
+      expect([body.statusCode, body.message]).toEqual([404, "Not Found"]);
 
       const apiKeys = (await req.get("/passport/apikey", {})).body;
       expect(apiKeys).toEqual({
@@ -313,7 +316,7 @@ describe("ApiKey", () => {
         "another policy"
       ])).body;
 
-      expect([responseBody.statusCode, responseBody.error]).toEqual([404, "Not Found"]);
+      expect([responseBody.statusCode, responseBody.message]).toEqual([404, "Not Found"]);
     });
 
     it("should throw error if apikey id on detach request is nonexist", async () => {
@@ -326,7 +329,7 @@ describe("ApiKey", () => {
         "another policy"
       ])).body;
 
-      expect([responseBody.statusCode, responseBody.error]).toEqual([404, "Not Found"]);
+      expect([responseBody.statusCode, responseBody.message]).toEqual([404, "Not Found"]);
     });
   });
 });

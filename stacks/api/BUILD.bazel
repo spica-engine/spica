@@ -8,12 +8,12 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 ts_library(
     name = "api",
     srcs = [
-        "app.module.ts",
         "main.ts",
     ],
     deps = [
         "//packages/core",
         "//packages/core/schema",
+        "//packages/core/websocket",
         "//packages/database",
         "//stacks/api/activity",
         "//stacks/api/bucket",
@@ -25,8 +25,10 @@ ts_library(
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
         "@npm//@nestjs/platform-express",
-        "@npm//@nestjs/platform-socket.io",
+        "@npm//@types/express",
         "@npm//@types/node",
+        "@npm//@types/yargs",
+        "@npm//yargs",
     ],
 )
 
@@ -39,29 +41,40 @@ nodejs_binary(
         "PUBLIC_HOST",
         "PERSISTENT_PATH",
         "PORT",
+        "FUNCTION_GRPC_ADDRESS",
         "SECRET",
         "DEFAULT_PASSWORD",
         "ENABLE_BUCKET_HOOKS",
+        "ENABLE_BUCKET_HISTORY",
         "ENABLE_ACTIVITY_STREAM",
     ],
     data = [":api"],
     entry_point = "//stacks/api:main.ts",
 )
 
-container_image(
-    name = "api_image_base",
-    base = "@node_image//image",
-    env = {
-        "DEFAULT_PASSWORD": "spica",
-    },
+nodejs_image(
+    name = "image_base",
+    base = "@debian_image//image",
+    data = ["//stacks/api"],
+    entry_point = "//stacks/api:main.ts",
+    layers = [
+        "@nodejs_linux_amd64//:bin/npm",
+        "@nodejs_linux_amd64//:npm_files",
+    ],
     visibility = ["//visibility:private"],
 )
 
-nodejs_image(
+container_image(
     name = "image",
-    base = ":api_image_base",
-    data = ["//stacks/api"],
-    entry_point = "//stacks/api:main.ts",
+    base = ":image_base",
+    env = {
+        "DEFAULT_PASSWORD": "spica",
+        "FUNCTION_GRPC_ADDRESS": "0.0.0.0:5688",
+    },
+    legacy_run_behavior = False,
+    symlinks = {
+        "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/nodejs/bin/npm": "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/npm",
+    },
 )
 
 container_push(

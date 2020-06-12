@@ -15,6 +15,24 @@
     margin-top: -150px;
     // For proper border radius
     overflow: hidden;
+    > h4 {
+      margin-bottom: 10px;
+    }
+    mat-card-content {
+      margin-bottom: 10px;
+      mat-list {
+        padding-top: 0px;
+        mat-list-item  {
+          ::ng-deep .mat-list-item-content {
+            padding: 0px;
+          }
+        }
+      }
+
+      form > * {
+        margin-top: 10px;
+      }
+    }
   }
   .hint-message {
     margin-left: 10px;

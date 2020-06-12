@@ -1,17 +1,20 @@
 <ng-template #toolbar>
-  <mat-toolbar-row>
+  <span>
     <h4>
       <mat-icon>vpn_key</mat-icon>
       <span>API Keys</span>
     </h4>
-    <span class="space-between"></span>
-    <button mat-icon-button (click)="refresh$.next()">
-      <mat-icon>refresh</mat-icon>
-    </button>
-    <button mat-icon-button canInteract="passport:apikey:insert" routerLink="/passport/apikey/add">
-      <mat-icon>add</mat-icon>
-    </button>
-  </mat-toolbar-row>
+    <h6>
+      Enable machine to machine communication with an API key
+    </h6>
+  </span>
+  <span class="space-between"></span>
+  <button mat-icon-button (click)="refresh$.next()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <button mat-icon-button canInteract="passport:apikey:create" routerLink="/passport/apikey/add">
+    <mat-icon>add</mat-icon>
+  </button>
 </ng-template>
 
 <mat-card class="mat-elevation-z25">

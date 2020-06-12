@@ -28,6 +28,14 @@ export const OBJECT_ID: Format = {
   }
 };
 
+export const OBJECTID_STRING: Format = {
+  name: "objectid-string",
+  type: "string",
+  validate: objectId => {
+    return ObjectId.isValid(objectId);
+  }
+};
+
 export const DATE_TIME: Format = {
   name: "date-time",
   type: "string",
