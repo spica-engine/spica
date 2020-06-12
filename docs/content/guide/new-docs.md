@@ -35,7 +35,7 @@ $ npm install @spica/cli -g
 To create and serve a new Spica instance on your computer, simply run:
 
 ```sh
-$ spica server my-spica-instance
+$ spica serve my-spica-instance
 ```
 
 By default, Spica is served under 4500 port. It can be changed by using `--port` parameter
@@ -599,9 +599,17 @@ You can drag and drop the Bucket Properties to the desired division.
 
 > Remember: You can't save a Bucket if you left one or more Properties on No Position list.
 
-### Creating a new Bucket Entry
+##### Property Options
 
-// TODO: explain
+`Primary field`: Primary field is mainly used for building relations between data.
+
+`Visible on list`: Effects the list view on Spica Client. Defines wether the field will be shown on list view by default.
+
+`Translate`: Marks the field as translatable. For more information please check [Translation and Localization](###translation-and-localization) section.
+
+`Read-only`: This one is used to prevent value changes on entry create and update.
+
+`Required`: Makes the field required on entry create and update.
 
 ### Translation and Localization
 
@@ -653,6 +661,10 @@ To edit image typed storage item, click the `three dots` next to the item to ope
 
 On that page you crop the image, scale by percentage and rotate the image as you wish. Click on the `tick` icon to save the image after editing.
 
+### Google Cloud Storage Integaration
+
+Spica supports Google Cloud Storage out-of-the-box.
+
 ## Function
 
 Functions are an event-driven execution context for your spica. Simply, you can attach an event to your function from other modules and services. Your function will be triggered _when the event occurs_.
@@ -682,6 +694,9 @@ Currently, the Functions supports following triggers:
 - [HTTP](#http)
 - [Database](#database)
 - [Schedule](#schedule)
+- [Bucket](#bucket)
+- [System](#system)
+- [Firehose](#firehose)
 
 #### Event Data
 
@@ -1195,7 +1210,7 @@ You can invoke a function in real-time from yout client application. Firehose tr
 As an example, if you are making a game and run a real-time serverside logic which will communicate with the client application such as real-time point calculating, you can calculate score and return via websocket using firehose trigger.
 
 ```typescript
-export default function (message, { socket, pool }) {
+export default function(message, {socket, pool}) {
   console.log(message.name); // Outputs: connection
   console.log(message.data.url); // Outputs: /firehose
 
@@ -1203,15 +1218,15 @@ export default function (message, { socket, pool }) {
 
   if (isAuthorized) {
     // Write back to incoming socket that authorization has been successful.
-    socket.send("authorization", { state: true });
+    socket.send("authorization", {state: true});
 
     // Announce the new connection to firehose pool (aka all connected sockets)
     pool.send("connection", {
       id: socket.id,
-      ip_address: socket.remoteAddress,
+      ip_address: socket.remoteAddress
     });
   } else {
-    socket.send("authorization", { state: false, error: 'Authorization has failed.' });
+    socket.send("authorization", {state: false, error: "Authorization has failed."});
     socket.close();
   }
 }
@@ -1245,7 +1260,8 @@ Webhook module is designed for the automation of flow. It listens events in Spic
 
 As an example, to automate your marketing campaign you can use 3rd party email services with using webhook module. Once you attach an `INSERT` hook to registration bucket, the system will send a webhook call whenever you insert a data to your registration bucket via API or control panel.
 
-To set up a webhook, you have to define a name, body and a trigger. 
+To set up a webhook, you have to define a name, body and a trigger.
+
 - Webhook name can be any string value
 - Webhook body should be in JSON format. To take a value from your bucket, you can use three curly braces. So as an example you can set your webhook body like `{“text”: “{{{document.title}}}“}`
 - Webhook trigger can be any of `INSERT`, `UPDATE`, `DELETE`, `REPLACE` values.
@@ -1253,13 +1269,15 @@ To set up a webhook, you have to define a name, body and a trigger.
 > IMPORTANT: Each webhook trigger works after the action happens. So, if you use `DELETE` trigger for a webhook, you can not reach `document` fields because `document` will be removed when the Spica sends webhook call.
 
 Example webhook body:
+
 ```
-{ 
+{
   "title": “{{{document.title}}}“,
   "description": “Lorem ipsum“,
   "avatar": “{{{document.thumbnail}}}“
 }
 ```
+
 ### Webhook Logs
 
 You can see all webhook acitivites in `Webhook Logs` section. You can filter the logs by webhook ID, date or result (success/fail). In a standart build of Spica, there is no time limitation on webhook logs. So you can store all webhook logs forever.
@@ -1462,4 +1480,89 @@ To see your custom dashboards, please navigate to **Primary** section on the men
 
 ## Spica CLI
 
-// TODO: Function push pull, dependancy update
+Spica prodivdes CLI to manage your instances. To use CLI, simply enter the following command to your terminal:
+
+```shell
+npm install @spica/cli -g
+```
+
+Usage:
+
+```shell
+$ spica <command> [<args>] [--help] [options]
+```
+
+Commands:
+
+### Run / List / Remove Local Spica Instance
+
+Run a Spica instance on your local machine:
+
+```shell
+$ spica serve <instance name>
+```
+
+Stop and remove a spica instance:
+
+```shell
+$ spica rm
+```
+
+Shows a list of spica instances running on this machine:
+
+```shell
+$ spica ls
+```
+
+### Dependancy Install
+
+Installs desired package to all available functions:
+
+```shell
+$ spica function dependency install <package name> --all
+```
+
+### Login
+
+To login desired Spica instance:
+
+```shell
+$ spica login <username> <password> --server=<server url>
+```
+
+### Pull / Push Spica Functions
+
+To pull functions to your directory from logged in Spica instance:
+
+```shell
+$ spica pull <directory>
+```
+
+After run `spica pull <directory>` command, Spica CLI will create a `package.yaml` file which contains all the assets you pull.
+
+```yaml
+- kind: Function
+  spec:
+    name: Example Function
+    description: Example Function, created via CLI
+    triggers:
+      default:
+        options:
+          collection: bucket_5ed0c8eb10ee2e1f048fd397
+          type: UPDATE
+        type: database
+        active: true
+    env: {}
+    memoryLimit: 100
+    timeout: 100
+    indexPath: 5ee3653c7072c581afb51b12/index.ts
+    dependencies: []
+```
+
+Pushes functions from your directory to logged in Spica instance:
+
+```shell
+$ spica push <directory>
+```
+
+To push functions to logged in Spica instance, you have to provide `package.yaml` file under the directory
