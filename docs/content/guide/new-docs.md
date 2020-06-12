@@ -1217,13 +1217,13 @@ export default function (message, { socket, pool }) {
 }
 ```
 
-##### Environment Variables
+### Environment Variables
 
 You can define custom environment variables for your functions. If your team is a multi-disciplined team, you may need some roles to change just function variables. For this situtation, you can define environment variables which will be passed to function as a parameter. You can see an example of how environment variable works below:
 
 // TODO: Example Code
 
-##### 3rd Party Dependencies
+### 3rd Party Dependencies
 
 This feature allows you to import 3rd party dependiencies to your functions. Spica downloads 3rd party libraries from NPM (node package manager). To use a 3rd party library, you just need to import the library into your function after you download to you Spica environment. 
 
