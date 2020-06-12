@@ -484,26 +484,6 @@ Our newly created User Bucket is ready with an entry. The list of **Users** is a
 **Congratulations**
 You have created your first Bucket and your first bucket entry on Spica and have accessed it both via Spica Client and the API.
 
-<!-- ## Glossary
-Explain the common terms of Spica eg. buckets, bucket data, functions, passport, etc.
-
-### Bucket
-A bucket is a data collection. They include all the metadata such as data structure, validations, customization.
-
-### Passport
-Passport is the user management module of Spica. It contains Identities, Policies, Strategies and API Keys. (see below for the detailed explanation)
-
-#### Identities
-
-#### Policies
-A Policy is a collection of statements. A statement is an access level for an action.
-
-#### Strategies
-A strategy helps you to enable a single-sign on authentication to Spica. Once you create a strategy, your users will be able to login via a 3rd party service.
-
-#### API Keys
-A API key enables machine to machine communication. -->
-
 # Guides
 
 ## Passport
@@ -670,9 +650,24 @@ On that page you crop the image, scale by percentage and rotate the image as you
 
 ### Google Cloud Storage Integaration
 
-Spica supports Google Cloud Storage out-of-the-box. To integrate your Cloud Storage account follow these steps:
+Spica supports Google Cloud Storage out-of-the-box.
 
-// TODO: steps?
+First you have to download your service account. To download follow these steps:
+
+- In the Cloud Console, go to the Service Accounts page.
+- Click Select a project, choose a project, and click Open.
+- Find the row of the service account that you want to create a key for. In that row, click the More more_vert button, and then click Create key.
+- Select the Key type as JSON and click Create.
+
+Clicking Create downloads a service account key file. Make sure to store this file securely, because it can be used to authenticate as your service account.
+
+To integrate your Cloud Storage account, you have to either restart or create a new instance with the following parameters:
+
+```shell
+  $ spica serve <docker machine name> --storage-strategy="gcloud" --gcloud-service-account-path=<where you download the service account file> --gcloud-bucket-name=<GCloud bucket name>
+```
+
+> IMPORTANT: GCloud bucket should be allowed public access.
 
 ## Function
 
