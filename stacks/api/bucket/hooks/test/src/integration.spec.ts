@@ -13,6 +13,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
 describe("Hooks Integration", () => {
   let app: INestApplication;
@@ -130,6 +131,14 @@ describe("Hooks Integration", () => {
               options: {
                 bucket: bucket._id,
                 type: "INSERT"
+              },
+              type: "bucket",
+              active: true
+            },
+            delete: {
+              options: {
+                bucket: bucket._id,
+                type: "DELETE"
               },
               type: "bucket",
               active: true
@@ -287,6 +296,30 @@ describe("Hooks Integration", () => {
       );
       expect(user3).toEqual({_id: "__skip__", username: "user3", password: "password3", age: 36});
       await req.delete(`/bucket/${bucket._id}/data/${user3._id}`, {}, headers);
+    });
+  });
+
+  describe("DELETE", () => {
+    beforeAll(async () => {
+      await updateIndex(
+        `export const delete = (req) => req.headers.authorization.document != '${user1._id}';`
+      );
+    });
+    fit("should not allow to delete the user1 document", async () => {
+      const response = await req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers);
+      expect([response.statusCode, response.statusText]).toEqual([403, "Forbidden"]);
+    });
+
+    it("should allow to delete the user2 document", async () => {
+      const response = await req.delete(`/bucket/${bucket._id}/data/${user2._id}`, {}, headers);
+      expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
+      user2 = await req
+        .post(
+          `/bucket/${bucket._id}/data`,
+          {username: "test_user2", password: "test_password2", age: 19},
+          headers
+        )
+        .then(res => res.body);
     });
   });
 
