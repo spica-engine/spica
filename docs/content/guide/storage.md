@@ -8,7 +8,7 @@ To edit image typed storage item, click the `three dots` next to the item to ope
 
 On that page you crop the image, scale by percentage and rotate the image as you wish. Click on the `tick` icon to save the image after editing.
 
-### Google Cloud Storage Integaration
+### Google Cloud Storage Integration
 
 Spica supports Google Cloud Storage out-of-the-box.
 
