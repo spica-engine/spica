@@ -530,7 +530,7 @@ export default function(request) {
 
 #### System
 
-System trigger includes system related event data and invokes a function whenever the choosen event happens. System trigger is the best choice for using dashboard module, configurating the project or setting up a starting state of you data. `READY` event will be triggered when a server restarts and ready to use. For the current version system trigger is listening only `READY` event.
+System trigger includes system related event data and invokes a function whenever the chosen event happens. The system trigger is the best choice for using the dashboard module, configuring the instance, or setting up a starting state for your data. `READY` event will be triggered when a server restarts and ready to use. For the current version, the system trigger supports  the `READY` event only.
 
 ```typescript
 export default function() {
