@@ -487,9 +487,9 @@ GET example:
 ```typescript
 export default function(req) {
   const aggregation = [];
-  if (req.headers.authorization == "MY_SECRET_TOKEN") {
+  // If the authorization header does not contain the "MY_SECRET_TOKEN" string literally, then strip out password field to prevent the user from fetching it.
+  if (req.headers.authorization != "MY_SECRET_TOKEN") {
     aggregation.push({$unset: ["password"]});
-    //which means hide password field
   }
   return aggregation;
 }
