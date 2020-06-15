@@ -4,7 +4,7 @@ Fundamentally, this module is used for authentication and authorization on Spica
 
 ### Authentication
 
-Out of the box, Spica supports two different authentication stretagies. This document will explain the fundemantals of those stretegies.
+Out of the box, Spica supports two different authentication strategies. This document will explain the fundemantals of those stretegies.
 
 #### Identity
 
