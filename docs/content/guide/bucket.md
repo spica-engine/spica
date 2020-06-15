@@ -46,7 +46,7 @@ You can drag and drop the Bucket Properties to the desired division.
 
 **Bucket entries**, in Spica are translatable and localizable out-of-the-box.
 
-To setup the suppoted language of the Spica instance, navigate to **Developer** -> **Bucket** and find the Bucket Settings button represented by a **cog** icon on the top right toolbar. Click on it and you will see the available languages of the Spica instance. To add a new one, select the language from the Language Selection menu and press **"+ Add new language"** button. And click **Save**.
+To set up the supported language of the Spica instance, navigate to **Developer** -> **Bucket** and find the Bucket Settings button represented by a **cog** icon on the top right toolbar. Click on it and you will see the available languages of the Spica instance. To add a new one, select the language from the Language Selection menu and press **"+ Add new language"** button and click to  **Save**.
 
 To add translation and localization feature to a Bucket:
 
