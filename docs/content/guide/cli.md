@@ -34,7 +34,7 @@ Shows a list of spica instances running on this machine:
 $ spica ls
 ```
 
-### Dependancy Install
+### Dependency Install
 
 Installs desired package to all available functions:
 
