@@ -19,7 +19,7 @@ First you have to download your service account. To download follow these steps:
 - Find the row of the service account that you want to create a key for. In that row, click to the More button, and then click to the Create key button.
 - Select the Key type as JSON and click Create.
 
-Clicking Create downloads a service account key file. Make sure to store this file securely, because it can be used to authenticate as your service account.
+Clicking to the Create button, downloads a service account key file. Make sure that you store this file securely because it can be used to authenticate as your service account.
 
 To integrate your Cloud Storage account, you have to either restart or create a new instance with the following parameters:
 
