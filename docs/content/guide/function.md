@@ -66,7 +66,7 @@ The database module is an in-memory module that has public API for basic databas
 
 ##### Connecting to the database
 
-You can get database instance with `database()` function exported from `@spica-devkit/database` module.
+You can get the database instance with the `database()` function exported from `@spica-devkit/database` module.
 
 ```typescript
 import {database, Database} from "@spica-devkit/database";
