@@ -71,7 +71,7 @@ You can get database instance with `database()` function exported from `@spica-d
 ```typescript
 import {database, Database} from "@spica-devkit/database";
 
-const db: Database = database();
+const db: Database = await database();
 // Type of db variable is  Database which exported from `@spica-devkit/database`
 ```
 
