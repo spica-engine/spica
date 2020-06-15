@@ -80,4 +80,4 @@ Spica, optionally can track down the change history of bucket entries. To enable
 
 Once it is toggled on, the changes made on the bucket's entries will be stored.
 
-Navigate to one of the Bucket's entries, look for the **History** button on the top left toolbar. Clicking on it will reveal the last 10 versions of the entry. Clicking the version numbers will revert the data to that version.
+Navigate to one of the Bucket's entries, look for the **History** button on the top right toolbar. Clicking on it will reveal the last 10 versions of the entry. Clicking the version numbers will only show that version of the data. If you intend to revert the entry to a certain point, just click on the revision number then hit the save button.
