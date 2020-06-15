@@ -52,7 +52,7 @@ See [triggers](#triggers) section for parameter types.
 
 Spica provides modules to your function in runtime. Modules work like a module in node_modules but not placed in node_modules directory.
 
-In order to use these modules in a **function**, they need to be added to **dependencies** section on **Function Edit page**.
+In order to use these modules in a **function**, they need to be added as **dependency** on **Function Edit page**.
 
 | Module                   | Description                                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
