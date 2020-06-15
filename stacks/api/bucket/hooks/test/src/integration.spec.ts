@@ -180,7 +180,7 @@ describe("Hooks Integration", () => {
       .then(res => res.body);
   }, 20000);
 
-  afterEach(() => app.close());
+  afterEach(async () => await app.close());
 
   describe("GET", () => {
     it("should not change the behaviour of bucket-data endpoint", async () => {
