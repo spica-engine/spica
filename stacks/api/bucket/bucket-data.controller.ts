@@ -29,7 +29,6 @@ import * as locale from "locale";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {findRelations} from "./utilities";
-import {createAuthGuard} from "@spica-server/passport/auth.guard";
 
 function filterReviver(k: string, v: string) {
   const availableConstructors = {
