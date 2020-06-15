@@ -58,7 +58,7 @@ To pull functions to your directory from logged in Spica instance:
 $ spica pull <directory>
 ```
 
-After run `spica pull <directory>` command, Spica CLI will create a `package.yaml` file which contains all the assets you pull.
+After a successful `spica pull <directory>` command, Spica CLI will create a `package.yaml` along with a directory that contains all the assets you have pulled.
 
 ```yaml
 - kind: Function
