@@ -40,7 +40,7 @@ Once the saving completed, you can use the **API Key** value on your API calls o
 
 ### Policies
 
-Policies are basically a set of rules which can be attached to your **Identities** and **API Keys** to encapsulate their behavior.
+Policies are basically a set of rules which can be attached to your **Identities** and **API Keys** to encapsulate and control their capabilities.
 
 #### Using the Policies
 
