@@ -393,7 +393,7 @@ All required fields for a bucket trigger are listed below;
 - **Bucket:** Bucket ID of the desired bucket
 - **Event Type:** Type of the event that happens in the collection.
 
-> IMPORTANT: `STREAM` operations are used for real-time bucket connections. If your client uses real-time data transfer, you can use `STREAM` operation to trigger a function before each websocket data transfer from client application to your Spica instance.
+> IMPORTANT: `STREAM` operations are used for real-time bucket connections. If your client uses real-time data transfer, you can use `STREAM` operation to trigger a function at the beginning of a real-time data transfer.
 
 INSERT request object:
 
