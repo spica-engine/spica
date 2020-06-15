@@ -20,7 +20,7 @@ To create an Identitiy, navigate to **System** -> **Identities** in the left-han
 
 ##### Adding Additional Properties
 
-If you want to store additional informations on **Identities**, you can create custom fields. To create a custom field on Identities, navigate to **System** -> **Settings** in the left-hand menu.
+If you want to store additional information on **Identities**, you can create custom fields. To create a custom field on Identities, navigate to **System** -> **Settings** in the left-hand menu.
 
 #### API Key
 
