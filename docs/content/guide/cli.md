@@ -25,7 +25,7 @@ $ spica serve <instance name>
 Stop and remove a spica instance:
 
 ```shell
-$ spica rm
+$ spica rm <instance name>
 ```
 
 Shows a list of spica instances running on this machine:
