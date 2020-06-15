@@ -55,7 +55,7 @@ To add translation and localization feature to a Bucket:
 - Click on the **cog** icon to open field options
 - Check **Translate** option and save the Bucket
 
-> Warning: Once you add localization, you can't revert that change.
+> Warning: This action is irreversible which means, once you make a field to have translations, you can't take it back. 
 
 > Note: Only the following type of properties can have localization; `string`, `textarea` and `richtext`
 
