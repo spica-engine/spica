@@ -522,7 +522,9 @@ INDEX example:
 
 ```typescript
 export default function(request) {
-  return [{$match: {age: {$lt: 20}}}];
+  // Allow the user to only fetch those entries which belong to the user.
+  // HINT: For security purposes, DO NOT get identifier of the user via plain HTTP header. At least extract it from a signed token and such.
+  return [{$match: {"user_id": request.headers["X-Authorized-User"]}}];
 }
 ```
 
