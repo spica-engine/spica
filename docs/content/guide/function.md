@@ -590,5 +590,3 @@ An unhandled error will crash your function, when the error happens it will be l
 #### Logging
 
 A function code can have statements like `console.log`, `console.error`, when a code calls a console function the output of log will be written to function's log file.
-
-You can see the logs in Logs tab in code edit page.
