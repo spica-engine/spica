@@ -1,6 +1,6 @@
 ## Webhook
 
-Webhook module is designed for the automation of flow. It listens events in Spica environment and send a hook call when a specific event happens. You can set a post-action trigger which will be one of the following collection triggers; `INSERT`, `UPDATE`, `DELETE`, `REPLACE`
+Webhook module is designed for the automation of flow. It listens to the events in the Spica environment and sends an HTTP/POST call when a specific event occurs. You can set a post-action trigger which will be one of the following collection triggers; `INSERT`, `UPDATE`, `DELETE`, `REPLACE`
 
 As an example, to automate your marketing campaign you can use 3rd party email services with using webhook module. Once you attach an `INSERT` hook to registration bucket, the system will send a webhook call whenever you insert a data to your registration bucket via API or control panel.
 
