@@ -16,7 +16,7 @@ First you have to download your service account. To download follow these steps:
 
 - In the Cloud Console, go to the Service Accounts page.
 - Click Select a project, choose a project, and click Open.
-- Find the row of the service account that you want to create a key for. In that row, click the More more_vert button, and then click Create key.
+- Find the row of the service account that you want to create a key for. In that row, click to the More button, and then click to the Create key button.
 - Select the Key type as JSON and click Create.
 
 Clicking Create downloads a service account key file. Make sure to store this file securely, because it can be used to authenticate as your service account.
