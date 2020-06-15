@@ -1,6 +1,6 @@
 ## Dashboard
 
-Dashboard module allows you to create a new custome dashboard including custom data charts or table. The only way to creating a custom dashboard is writing a function in your Spica instance. You have to import and use dashboard library provided by Spica instance in your function. You can seed the dashboard module with any data. So you can take data from buckets, database or even other 3rd party integration. You can create multiple dashboards and once you activated a new dashboard, you can see your dashboard on the left hand menu.
+The dashboard module allows you to create a new custom dashboard including custom data charts or tables. The only way to create a custom dashboard is to write a function in your Spica instance. You have to import and use the dashboard library `@spica-devkit/dashboard` in your function. You can seed the dashboard module with any data. You can fetch data from buckets, databases, or even from other 3rd party services. You can create multiple dashboards and once you activated a new dashboard, you can see your dashboard on the left menu.
 
 > IMPORTANT: The best way to initiate a dashboard is through an `HTTP` trigger or `SYSTEM:READY` trigger. Otherwise, your custom dashboard may be initiated multiple times. thus may see duplicated dashboards on the left side menu. The dashboard module does not control how many times you registered a dashboard.
 
