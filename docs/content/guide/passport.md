@@ -24,7 +24,7 @@ If you want to store additional information on **Identities**, you can create cu
 
 #### API Key
 
-Instead of Identity, API key is allows the machine to machine communication. The token, it provides doesn't have an expiration date so it can be used as long as it's intentionally deleted from Spica.
+Instead of Identity, the API key allows the machine to machine communication. The token, it provides doesn't have an expiration date so it can be used as long as it is not intentionally deleted from Spica.
 
 To create an API Key, navigate to **System** -> **API Keys** in the left-hand menu.
 
