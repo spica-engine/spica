@@ -18,6 +18,8 @@ import {HomeLayoutComponent} from "./home/home.layout";
 import {LayoutRouterOutlet} from "./router_outlet";
 import {SchemeSwitcherComponent} from "./scheme-switcher/scheme-switcher.component";
 import {SchemeObserver} from "./scheme.observer";
+import {SnackbarComponent} from "./snackbar/snackbar.component";
+import {MatSnackBarModule} from "@angular/material";
 import {ToolbarActionDirective} from "./toolbar-action";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
@@ -35,7 +37,8 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     MatListModule,
     MatSlideToggleModule,
     CdkLayoutModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    MatSnackBarModule
   ],
   providers: [SchemeObserver],
   declarations: [
@@ -43,10 +46,11 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     LayoutRouterOutlet,
     ErrorPageComponent,
     SchemeSwitcherComponent,
+    SnackbarComponent,
     ToolbarActionDirective
   ],
   exports: [LayoutRouterOutlet, RouterModule],
-  entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent]
+  entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent, SnackbarComponent]
 })
 export class LayoutModule {
   static forRoot(config: LayoutConfig = {}): ModuleWithProviders {

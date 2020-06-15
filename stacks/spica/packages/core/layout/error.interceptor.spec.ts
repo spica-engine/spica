@@ -3,12 +3,15 @@ import {HttpClientTestingModule, HttpTestingController} from "@angular/common/ht
 import {HTTP_INTERCEPTORS, HttpClient} from "@angular/common/http";
 import {ErrorInterceptor} from "./error.interceptor";
 import {Router} from "@angular/router";
+import {MatSnackBar} from "@angular/material";
+import {SnackbarComponent} from "./snackbar/snackbar.component";
 
 describe("Error Interceptor", () => {
   let service: HttpClient;
   let httpTesting: HttpTestingController;
 
   let mockRouter = jasmine.createSpyObj("Router", ["navigate"]);
+  let mockSnackbar = jasmine.createSpyObj("MatSnackBar", ["openFromComponent"]);
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -23,6 +26,10 @@ describe("Error Interceptor", () => {
         {
           provide: Router,
           useValue: mockRouter
+        },
+        {
+          provide: MatSnackBar,
+          useValue: mockSnackbar
         }
       ]
     });
@@ -52,7 +59,7 @@ describe("Error Interceptor", () => {
     };
   }));
 
-  it("shouldn't navigate to error page if status code isn't 403", fakeAsync(() => {
+  it("should open the snackbar if status code is 500", fakeAsync(() => {
     service
       .get("testurl")
       .toPromise()
@@ -61,6 +68,15 @@ describe("Error Interceptor", () => {
       .expectOne("testurl")
       .flush({message: "error message"}, {status: 500, statusText: "status text"});
     expect(mockRouter.navigate).toHaveBeenCalledTimes(0);
+    expect(mockSnackbar.openFromComponent).toHaveBeenCalledTimes(1);
+    expect(mockSnackbar.openFromComponent).toHaveBeenCalledWith(SnackbarComponent, {
+      data: {
+        status: 500,
+        statusText: "status text",
+        message: "error message"
+      },
+      duration: 3000
+    });
     mockRouter.navigate.calls.reset();
   }));
 });
