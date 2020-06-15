@@ -51,7 +51,7 @@ To set up the supported language of the Spica instance, navigate to **Developer*
 To add translation and localization feature to a Bucket:
 
 - Open the **Bucket schema edit page**.
-- Find the field you would like to make translatable
+- Find the field you would like to have translations
 - Click on the **cog** icon to open field options
 - Check **Translate** option and save the Bucket
 
