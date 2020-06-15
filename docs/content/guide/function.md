@@ -64,7 +64,7 @@ The database module is an in-memory module that has public API for basic databas
 
 > Database module imported from `@spica-devkit/database`.
 
-##### Getting Database Service
+##### Connecting to the database
 
 You can get database instance with `database()` function exported from `@spica-devkit/database` module.
 
