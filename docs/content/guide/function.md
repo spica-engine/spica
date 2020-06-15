@@ -138,7 +138,7 @@ export default async function() {
 import {database, Database, Collection} from "@spica-devkit/database";
 
 export default async function() {
-  const db: Database = database();
+  const db: Database = await database();
   const books: Collection = db.collection("books");
 
   // Find the book named The Fall Of Leaves
