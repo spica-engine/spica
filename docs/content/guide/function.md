@@ -96,7 +96,7 @@ Here is some fundamental examples;
 import {database, Database, Collection} from "@spica-devkit/database";
 
 export default async function() {
-  const db: Database = database();
+  const db: Database = await database();
   const books: Collection = db.collection("books");
 
   // insertOne will return Promise<void>
