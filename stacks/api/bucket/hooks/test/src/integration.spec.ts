@@ -33,7 +33,7 @@ describe("Hooks Integration", () => {
     return req.post(`/function/${fn._id}/index`, {index}, headers);
   }
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     jasmine.addCustomEqualityTester((actual, expected) => {
       if (expected == "__skip__" && typeof actual == typeof expected) {
         return true;
@@ -163,6 +163,9 @@ describe("Hooks Integration", () => {
       return true;
     }
     `);
+  }, 20000);
+
+  beforeEach(async () => {
     user1 = await req
       .post(
         `/bucket/${bucket._id}/data`,
@@ -178,9 +181,14 @@ describe("Hooks Integration", () => {
         headers
       )
       .then(res => res.body);
-  }, 20000);
+  });
 
-  afterEach(async () => await app.close());
+  afterEach(async () => {
+    await req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers).catch(console.log);
+    await req.delete(`/bucket/${bucket._id}/data/${user2._id}`, {}, headers).catch(console.log);
+  });
+
+  afterAll(() => app.close());
 
   describe("GET", () => {
     it("should not change the behaviour of bucket-data endpoint", async () => {
@@ -243,7 +251,7 @@ describe("Hooks Integration", () => {
   });
 
   describe("UPDATE", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       await updateIndex(`export function update(req){ return req.document != '${user1._id}' }`);
     });
     it("should not allow to update to the user1's data", async () => {
@@ -296,7 +304,7 @@ describe("Hooks Integration", () => {
   });
 
   describe("DELETE", () => {
-    beforeEach(async () => {
+    beforeAll(async () => {
       await updateIndex(
         `export const delete = (req) => req.headers.authorization.document != '${user1._id}';`
       );
