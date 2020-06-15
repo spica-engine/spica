@@ -38,7 +38,10 @@ spec:
             --passport-secret, {{ required "A valid .Values.application.secret is required!" .Values.application.secret }},
             --passport-password,  {{ .Values.application.defaultPassword }},
             --public-url, {{ required "A valid .Values.application.publicHost is required!" .Values.application.publicHost }}{{.Values.application.apiBaseUrl | trimSuffix "/"}},
-            --persistent-path, /data
+            --persistent-path, /data,
+            --storage-strategy, {{ .Values.application.storageStrategy }},
+            --gcloud-service-account, {{ .Values.application.gcloudServiceAccountPath }},
+            --gcloud-bucket-name, {{ .Values.application.gcloudBucketName }}
           ]
           volumeMounts:
             - name: {{ .Release.Name }}-data
