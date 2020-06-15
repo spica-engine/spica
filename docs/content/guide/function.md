@@ -422,8 +422,8 @@ INSERT example:
 
 ```typescript
 export default function(req) {
-  if (req.headers.authorization == "FORBIDDEN_APIKEY") return false;
-  else true;
+   // Allow the ongoing insert operation if the authorization header does not contain this special string.
+  return req.headers.authorization != "FORBIDDEN_APIKEY";
 }
 ```
 
