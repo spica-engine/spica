@@ -34,7 +34,7 @@ You can drag and drop the Bucket Properties to the desired division.
 
 `Primary field`: Primary field is mainly used for building relations between data.
 
-`Visible on list`: Effects the list view on Spica Client. Defines wether the field will be shown on list view by default.
+`Visible on the list`: Effects the list view on Spica Client. Defines whether the field will be shown on list view by default.
 
 `Translate`: Marks the field as translatable. For more information please check [Translation and Localization](###translation-and-localization) section.
 
