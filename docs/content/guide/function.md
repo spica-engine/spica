@@ -82,7 +82,7 @@ To make changes in a collection you need to get it reference first. You can get 
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
 
-const db: Database = database();
+const db: Database = await database();
 const collection: Collection = db.collection("persistent_collection");
 ```
 
