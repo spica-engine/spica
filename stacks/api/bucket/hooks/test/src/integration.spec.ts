@@ -33,7 +33,7 @@ describe("Hooks Integration", () => {
     return req.post(`/function/${fn._id}/index`, {index}, headers);
   }
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     jasmine.addCustomEqualityTester((actual, expected) => {
       if (expected == "__skip__" && typeof actual == typeof expected) {
         return true;
@@ -157,11 +157,7 @@ describe("Hooks Integration", () => {
         headers
       )
       .then(res => res.body);
-  }, 20000);
 
-  afterAll(() => app.close());
-
-  beforeEach(async () => {
     await updateIndex(`
     export function insert(){
       return true;
@@ -182,12 +178,9 @@ describe("Hooks Integration", () => {
         headers
       )
       .then(res => res.body);
-  });
+  }, 20000);
 
-  afterEach(async () => {
-    await req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers).catch(() => {});
-    await req.delete(`/bucket/${bucket._id}/data/${user2._id}`, {}, headers).catch(() => {});
-  });
+  afterEach(() => app.close());
 
   describe("GET", () => {
     it("should not change the behaviour of bucket-data endpoint", async () => {
@@ -303,7 +296,7 @@ describe("Hooks Integration", () => {
   });
 
   describe("DELETE", () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       await updateIndex(
         `export const delete = (req) => req.headers.authorization.document != '${user1._id}';`
       );
