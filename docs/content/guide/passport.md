@@ -8,7 +8,7 @@ Out of the box, Spica supports two different authentication strategies. This doc
 
 #### Identity
 
-Fundemantally, Identities are the users of a Spica instance. It contains **identified** and **password** informations for login.
+Fundamentally, Identities are the users of a Spica instance. It contains **identifier** and **password** informations for authorization.
 
 > Right after the installation, Spica creates a default identitiy to get you started. We suggest you to change at least its password before going live.
 
