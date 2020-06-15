@@ -2,7 +2,7 @@
 
 ## Introduction
 
-These documents will take you from 0 to hero and helps you to discover advanced features of Spica Development Engine.
+These documents will take you from zero to hero and helps you to discover advanced features of the Spica Development Engine.
 
 ### What is Spica?
 
