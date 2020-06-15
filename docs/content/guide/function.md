@@ -454,8 +454,8 @@ UPDATE example:
 
 ```typescript
 export default function(req) {
-  if (req.document == "MY_SECRET_DOCUMENT") return false;
-  else true;
+  // Allow the ongoing update operation only if the id of the target document is not this special string
+  return req.document != "MY_SECRET_DOCUMENT";
 }
 ```
 
