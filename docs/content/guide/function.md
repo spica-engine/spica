@@ -540,7 +540,7 @@ export default function() {
 
 #### Firehose
 
-You can invoke a function in real-time from yout client application. Firehose trigger does not interact with bucket or database. Instead, it listens the real-time port so you can interact with the function directly from your client application. Firehose trigger can listen a specific event, connection start or connection closed events.
+You can invoke a function in real-time from your client application. It is a great tool for low latency operations since it keeps the connection always open *unlike the HTTP trigger*.  Keep in mind that the firehose trigger does not interact with the bucket or database directly. However, that does not mean you can not perform database operations within your function. Instead, it listens to the real-time events so you can interact with the functions on the server directly from your client application. The firehose trigger can listen to a *user-defined event*, *connection* and *disconnect* event and let you act on behalf of those events.
 
 As an example, if you are making a game and run a real-time server-side logic that will communicate with the client application such as real-time point calculating, you can calculate score and deliver the result in real-time using the firehose trigger.
 
