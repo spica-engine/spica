@@ -183,9 +183,9 @@ describe("Hooks Integration", () => {
       .then(res => res.body);
   });
 
-  afterEach(() => {
-    req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers).catch(() => {});
-    req.delete(`/bucket/${bucket._id}/data/${user2._id}`, {}, headers).catch(() => {});
+  afterEach(async () => {
+    await req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers).catch(() => {});
+    await req.delete(`/bucket/${bucket._id}/data/${user2._id}`, {}, headers).catch(() => {});
   });
 
   describe("GET", () => {
