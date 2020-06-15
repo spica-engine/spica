@@ -13,6 +13,7 @@ import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import * as os from "os";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe("Hooks Integration", () => {
   let app: INestApplication;
