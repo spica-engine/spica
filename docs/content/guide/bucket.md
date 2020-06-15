@@ -76,7 +76,7 @@ The final form of a multilingual property will be like this:
 
 > To listen bucket changes and use the **History** feature, Spica instance must have three MongoDB replica set. See the Installation section for more information.
 
-Spica, optionally can track down the change history of bucket entries. To enable the history feature for the spesific bucket, simple go to the Bucket Schema edit page and toggle on the History option.
+Spica, optionally can track down the change history of bucket entries. To enable the history feature for the specific bucket, simply go to a Bucket Schema edit page and toggle the History option.
 
 Once it is toggled on, the changes made on the bucket's entries will be stored.
 
