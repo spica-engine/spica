@@ -34,6 +34,11 @@ export class ServeCommand extends Command {
           default: "4500"
         },
         {
+          name: "public-host",
+          type: String,
+          summary: "Public host"
+        },
+        {
           name: "version",
           type: String,
           aliases: ["v"],
@@ -70,13 +75,40 @@ export class ServeCommand extends Command {
     const networkName = `${namespace}-network`,
       databaseName = `${namespace}-db`,
       port = await getport({port: parseInt(options.port.toString())}),
-      publicHost = `http://localhost:${port}`;
+      publicHost = options["public-host"]
+        ? options["public-host"].toString()
+        : `http://localhost:${port}`;
 
-    if (options.port.toString() != port.toString() && options.port != "4500") {
+    if (
+      !options["public-host"] &&
+      options.port.toString() != port.toString() &&
+      options.port != "4500"
+    ) {
       this.namespace.logger.info(
         `Port ${options.port} already in use, the port ${port} will be used instead.`
       );
     }
+
+    const defaultArgs = [
+      `--database-name=${namespace}`,
+      `--database-replica-set=${namespace}`,
+      `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
+      `--public-url=${publicHost}/api`,
+      `--passport-password=${namespace}`,
+      `--passport-secret=${namespace}`,
+      `--persistent-path=/tmp`
+    ];
+
+    //filter the args which is not default
+    let args = (options["--"] as string[]).filter(
+      arg =>
+        !defaultArgs.find(
+          defaultArg =>
+            defaultArg.substring(0, defaultArg.indexOf("=")) == arg.substring(0, arg.indexOf("="))
+        )
+    );
+
+    args = args.concat(defaultArgs);
 
     const foundNetworks = await machine.listNetworks({
       filters: JSON.stringify({label: [`namespace=${namespace}`]})
@@ -245,6 +277,7 @@ export class ServeCommand extends Command {
         const client = await machine.createContainer({
           Image: `spicaengine/spica:${options.version}`,
           name: `${namespace}-spica`,
+          Env: ["BASE_URL=/spica/"],
           Labels: {namespace},
           HostConfig: {
             RestartPolicy: {
@@ -260,15 +293,15 @@ export class ServeCommand extends Command {
         const api = await machine.createContainer({
           Image: `spicaengine/api:${options.version}`,
           name: `${namespace}-api`,
+          Cmd: args,
           Env: [
-            "PORT=80",
-            `DATABASE_NAME=${namespace}`,
-            `REPLICA_SET=${namespace}`,
-            `PUBLIC_HOST=${publicHost}/api`,
-            `DEFAULT_PASSWORD=${namespace}`,
-            `PERSISTENT_PATH=/tmp`,
-            `SECRET="${namespace}"`,
-            `DATABASE_URI="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`
+            //`DATABASE_NAME=${namespace}`,
+            //`REPLICA_SET=${namespace}`,
+            //`PUBLIC_HOST=${publicHost}/api`,
+            //`DEFAULT_PASSWORD=${namespace}`,
+            //`PERSISTENT_PATH=/tmp`,
+            //`SECRET="${namespace}"`,
+            //`DATABASE_URI="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`
           ],
           Labels: {namespace},
           HostConfig: {
@@ -279,6 +312,8 @@ export class ServeCommand extends Command {
         });
         await network.connect({Container: api.id});
         await api.start();
+        //wait until api initialized
+        await new Promise(resolve => setTimeout(resolve, 2000));
         spinner.text = `Creating spica containers (2/2)`;
       }
     });
