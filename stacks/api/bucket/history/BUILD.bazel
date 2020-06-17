@@ -62,7 +62,6 @@ jasmine_node_test(
     ],
 )
 
-
 ts_library(
     name = "history_service_test_lib",
     testonly = True,
@@ -84,6 +83,5 @@ jasmine_node_test(
     name = "history_service_test",
     srcs = [":history_service_test_lib"],
 )
-
 
 # Put the rest of history module unit tests here
