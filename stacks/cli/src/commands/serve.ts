@@ -36,7 +36,7 @@ export class ServeCommand extends Command {
         {
           name: "public-host",
           type: String,
-          summary: "Public host"
+          summary: "Publicly accessible url of the spica instance."
         },
         {
           name: "version",
@@ -57,6 +57,12 @@ export class ServeCommand extends Command {
           name: "force",
           type: Boolean,
           summary: "Existing instances with this name will be deleted.",
+          default: false
+        },
+        {
+          name: "clear-volumes",
+          type: Boolean,
+          summary: "When true, the existing data will be removed.",
           default: false
         },
         {
@@ -89,26 +95,18 @@ export class ServeCommand extends Command {
       );
     }
 
-    const defaultArgs = [
-      `--database-name=${namespace}`,
-      `--database-replica-set=${namespace}`,
-      `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
-      `--public-url=${publicHost}/api`,
-      `--passport-password=${namespace}`,
-      `--passport-secret=${namespace}`,
-      `--persistent-path=/tmp`
-    ];
-
-    //filter the args which is not default
-    let args = (options["--"] as string[]).filter(
-      arg =>
-        !defaultArgs.find(
-          defaultArg =>
-            defaultArg.substring(0, defaultArg.indexOf("=")) == arg.substring(0, arg.indexOf("="))
-        )
+    let args = this.buildArgs(
+      [
+        `--database-name=${namespace}`,
+        `--database-replica-set=${namespace}`,
+        `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
+        `--public-url=${publicHost}/api`,
+        `--passport-password=${namespace}`,
+        `--passport-secret=${namespace}`,
+        `--persistent-path=/var/data`
+      ],
+      options["--"] as string[]
     );
-
-    args = args.concat(defaultArgs);
 
     const foundNetworks = await machine.listNetworks({
       filters: JSON.stringify({label: [`namespace=${namespace}`]})
@@ -128,7 +126,7 @@ export class ServeCommand extends Command {
 
     if (options.force && (foundNetworks.length || foundContainers.length)) {
       await this.namespace.logger.spin({
-        text: "Shutting down and removing the previous containers and networks.",
+        text: "Shutting down and removing the previous containers, networks, and volumes.",
         op: async () => {
           await Promise.all(
             foundContainers.map(async containerInfo => {
@@ -141,6 +139,12 @@ export class ServeCommand extends Command {
             })
           );
           await Promise.all(foundNetworks.map(network => machine.getNetwork(network.Id).remove()));
+          if (options["clear-volumes"]) {
+            const foundVolumes = (await machine.listVolumes({
+              filters: JSON.stringify({label: [`namespace=${namespace}`]})
+            })).Volumes;
+            await Promise.all(foundVolumes.map(volume => machine.getVolume(volume.Name).remove()));
+          }
         }
       });
     }
@@ -199,7 +203,22 @@ export class ServeCommand extends Command {
         HostConfig: {
           RestartPolicy: {
             Name: options.restart ? "unless-stopped" : "no"
-          }
+          },
+          Mounts: [
+            {
+              Source: `${namespace}-db-${instanceIndex}`,
+              Type: "volume",
+              Target: "/data/db",
+              VolumeOptions: {
+                DriverConfig: {
+                  Name: "local",
+                  Options: {}
+                },
+                NoCopy: false,
+                Labels: {namespace}
+              }
+            }
+          ]
         }
       });
       await network.connect({Container: container.id});
@@ -236,9 +255,9 @@ export class ServeCommand extends Command {
           AttachStderr: true,
           AttachStdout: true
         });
-
-        const output = await this.streamToBuffer((await exec.start()).output);
-        if (output.toString().indexOf('"ok" : 1') == -1) {
+        const result = await exec.start().catch(e => e);
+        const output = (await this.streamToBuffer(result.output)).toString();
+        if (output.indexOf('"ok" : 1') == -1 && output.indexOf('"already initialized"') == -1) {
           return Promise.reject(output);
         }
       }
@@ -294,26 +313,33 @@ export class ServeCommand extends Command {
           Image: `spicaengine/api:${options.version}`,
           name: `${namespace}-api`,
           Cmd: args,
-          Env: [
-            //`DATABASE_NAME=${namespace}`,
-            //`REPLICA_SET=${namespace}`,
-            //`PUBLIC_HOST=${publicHost}/api`,
-            //`DEFAULT_PASSWORD=${namespace}`,
-            //`PERSISTENT_PATH=/tmp`,
-            //`SECRET="${namespace}"`,
-            //`DATABASE_URI="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`
-          ],
           Labels: {namespace},
           HostConfig: {
             RestartPolicy: {
               Name: options.restart ? "unless-stopped" : "no"
-            }
+            },
+            Mounts: [
+              {
+                Target: "/var/data",
+                Source: `${namespace}-api`,
+                Type: "volume",
+                VolumeOptions: {
+                  NoCopy: false,
+                  Labels: {namespace},
+                  DriverConfig: {
+                    Name: "local",
+                    Options: {}
+                  }
+                }
+              }
+            ]
           }
         });
         await network.connect({Container: api.id});
         await api.start();
-        //wait until api initialized
+        //wait for the api initialization
         await new Promise(resolve => setTimeout(resolve, 2000));
+
         spinner.text = `Creating spica containers (2/2)`;
       }
     });
@@ -381,5 +407,18 @@ Password: ${namespace}
       stream.on("data", chunk => response.push(chunk));
       stream.on("end", () => resolve(Buffer.concat(response)));
     });
+  }
+
+  private buildArgs(defaults: string[], inputs: string[]): string[] {
+    //filter the args which won't override the default ones.
+    let args = inputs.filter(
+      arg =>
+        !defaults.find(
+          defaultArg =>
+            defaultArg.substring(0, defaultArg.indexOf("=")) == arg.substring(0, arg.indexOf("="))
+        )
+    );
+
+    return args.concat(defaults);
   }
 }
