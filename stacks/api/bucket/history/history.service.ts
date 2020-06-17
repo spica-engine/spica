@@ -6,8 +6,7 @@ import {
   DeleteWriteOpResultObject,
   FilterQuery,
   InsertOneWriteOpResult,
-  ObjectId,
-  ReadPreference
+  ObjectId
 } from "@spica-server/database";
 import {ChangePaths} from "./differ";
 import {History} from "./interfaces";
@@ -19,39 +18,9 @@ export class HistoryService {
     this.collection = this.db.collection<History>("history");
   }
 
-  getSchema(bucketId: ObjectId) {
-    return this.db.collection<any>("buckets").findOne({_id: bucketId});
-  }
-
-  getPreviousSchema(bucketId: ObjectId) {
-    return this.db.collection<any>("buckets").findOne(
-      {_id: bucketId},
-      {
-        readPreference: new ReadPreference(ReadPreference.SECONDARY_PREFERRED, [
-          {
-            slaveDelay: "true"
-          }
-        ])
-      }
-    );
-  }
-
   // We can not use BucketDataService as a direct dependency
   getDocument(bucketId: ObjectId, documentId: ObjectId) {
     return this.db.collection<BucketDocument>(`bucket_${bucketId}`).findOne({_id: documentId});
-  }
-
-  getPreviousDocument(bucketId: ObjectId, documentId: ObjectId) {
-    return this.db.collection(`bucket_${bucketId}`).findOne<BucketDocument>(
-      {_id: documentId},
-      {
-        readPreference: new ReadPreference(ReadPreference.SECONDARY_PREFERRED, [
-          {
-            slaveDelay: "true"
-          }
-        ])
-      }
-    );
   }
 
   findBetweenNow(bucketId: ObjectId, documentId: ObjectId, id: ObjectId) {

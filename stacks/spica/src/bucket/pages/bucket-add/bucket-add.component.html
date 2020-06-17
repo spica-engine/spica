@@ -133,13 +133,13 @@
                 mat-icon-button
                 color="accent"
                 disableRipple
-                matTooltip="To keep your bucket data histories, make enable this feature."
+                matTooltip="To keep your bucket data histories, enable this feature."
               >
                 <mat-icon>info</mat-icon>
               </button>
             </div>
             <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">
-              This feature is unavailable because we could not find a replica set.
+              This feature is unavailable.
             </mat-error>
           </div>
         </form>

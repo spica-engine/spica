@@ -5,10 +5,7 @@ import {HistoryService} from "./history.service";
 
 @Module({
   controllers: [HistoryController],
-  providers: [BucketWatcher, HistoryService]
+  providers: [BucketWatcher, HistoryService],
+  exports: [BucketWatcher]
 })
-export class HistoryModule {
-  constructor(bw: BucketWatcher) {
-    bw.watch();
-  }
-}
+export class HistoryModule {}

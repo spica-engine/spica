@@ -28,6 +28,7 @@ import * as locale from "locale";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {findRelations} from "./utilities";
+import {BucketWatcher} from "./history/watcher";
 
 function filterReviver(k: string, v: string) {
   const availableConstructors = {
@@ -51,7 +52,8 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    @Optional() private dispatcher: ActionDispatcher
+    @Optional() private dispatcher: ActionDispatcher,
+    @Optional() private history: BucketWatcher
   ) {}
 
   private async getLanguage(language: string) {
@@ -405,7 +407,22 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-    return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
+
+    let previousDocument;
+
+    if (this.history) {
+      const bucket = await this.bs.findOne({_id: bucketId});
+      if (bucket && bucket.history) {
+        previousDocument = await this.bds.findOne(bucketId, {_id: documentId});
+      }
+    }
+
+    return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(async result => {
+      if (result.ok == 1 && previousDocument) {
+        await this.history.createHistory(bucketId, previousDocument, result.value);
+      }
+      return result.value;
+    });
   }
 
   @UseInterceptors(activity(createBucketDataActivity))
@@ -421,6 +438,9 @@ export class BucketDataController {
       .then(result => result.deletedCount);
     if (deletedCount < 1) return;
 
+    await this.history.clearHistories({
+      document_id: documentId
+    });
     return this.clearRelations(this.bs, bucketId, documentId);
   }
 
@@ -433,6 +453,18 @@ export class BucketDataController {
       .deleteMany(bucketId, body)
       .then(result => result.deletedCount);
     if (deletedCount < 1) return;
+
+    if (this.history) {
+      await Promise.all(
+        body.map(id => {
+          this.history
+            .clearHistories({
+              document_id: new ObjectId(id)
+            })
+            .catch(err => err);
+        })
+      );
+    }
 
     return Promise.all(
       body.map(id => {
