@@ -15,7 +15,8 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  BadRequestException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
@@ -28,7 +29,7 @@ import * as locale from "locale";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {findRelations} from "./utilities";
-import {BucketWatcher} from "./history/watcher";
+import {HistoryService} from "./history/history.service";
 
 function filterReviver(k: string, v: string) {
   const availableConstructors = {
@@ -53,7 +54,7 @@ export class BucketDataController {
     private bs: BucketService,
     private bds: BucketDataService,
     @Optional() private dispatcher: ActionDispatcher,
-    @Optional() private history: BucketWatcher
+    @Optional() private history: HistoryService
   ) {}
 
   private async getLanguage(language: string) {
@@ -408,21 +409,17 @@ export class BucketDataController {
       }
     }
 
-    let previousDocument;
-
-    if (this.history) {
-      const bucket = await this.bs.findOne({_id: bucketId});
-      if (bucket && bucket.history) {
-        previousDocument = await this.bds.findOne(bucketId, {_id: documentId});
-      }
-    }
-
-    return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(async result => {
-      if (result.ok == 1 && previousDocument) {
-        await this.history.createHistory(bucketId, previousDocument, result.value);
-      }
-      return result.value;
-    });
+    return this.bds
+      .replaceOne(bucketId, {_id: documentId}, body, {returnOriginal: true})
+      .then(result => {
+        if (result.ok == 1 && result.value) {
+          const currentDocument = {...body, _id: documentId};
+          const _ = this.createHistory(bucketId, result.value, currentDocument);
+          return currentDocument;
+        } else {
+          throw new BadRequestException();
+        }
+      });
   }
 
   @UseInterceptors(activity(createBucketDataActivity))
@@ -439,7 +436,7 @@ export class BucketDataController {
     if (deletedCount < 1) return;
 
     if (this.history) {
-      await this.history.clearHistories({
+      await this.history.deleteMany({
         document_id: documentId
       });
     }
@@ -461,7 +458,7 @@ export class BucketDataController {
       await Promise.all(
         body.map(id => {
           this.history
-            .clearHistories({
+            .deleteMany({
               document_id: new ObjectId(id)
             })
             .catch(err => err);
@@ -490,5 +487,17 @@ export class BucketDataController {
           .updateMany({[target]: documentId.toHexString()}, {$unset: {[target]: ""}});
       }
     }
+  }
+
+  createHistory(
+    bucketId: ObjectId,
+    previousDocument: BucketDocument,
+    currentDocument: BucketDocument
+  ) {
+    return this.bs.findOne({_id: bucketId}).then(bucket => {
+      if (bucket && bucket.history) {
+        return this.history.createHistory(bucketId, previousDocument, currentDocument);
+      }
+    });
   }
 }

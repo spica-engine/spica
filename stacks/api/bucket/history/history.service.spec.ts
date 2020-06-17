@@ -19,126 +19,54 @@ describe("History Service", () => {
       providers: [HistoryService]
     }).compile();
     historyService = module.get(HistoryService);
+
+    //insert bucket and document
+    await module
+      .get(DatabaseService)
+      .collection("buckets")
+      .insertOne(bucket);
+    await module
+      .get(DatabaseService)
+      .collection(`bucket_${bucket._id}`)
+      .insertOne(bucketDocument);
+
+    //update bucket
+    let updatedBucket = bucket;
+    updatedBucket.properties.description.type = "number";
+    await module
+      .get(DatabaseService)
+      .collection("buckets")
+      .replaceOne({_id: bucket._id}, updatedBucket);
+
+    //update document
+    const updatedDocument = {...bucketDocument, description: 333};
+    await module
+      .get(DatabaseService)
+      .collection(`bucket_${bucket._id}`)
+      .replaceOne({_id: bucketDocument._id}, updatedDocument);
   }, 30000);
 
-  afterAll(async () => {
-    await module.close();
+  afterAll(() => {
+    module.close();
   });
 
-  describe("previous methods", () => {
-    const bucket = {
-      _id: new ObjectId(),
-      primary: "title",
-      properties: {
-        title: {
-          type: "string"
-        },
-        description: {
-          type: "string"
-        }
+  const bucket = {
+    _id: new ObjectId(),
+    primary: "title",
+    properties: {
+      title: {
+        type: "string"
+      },
+      description: {
+        type: "string"
       }
-    };
-    const bucketDocument = {
-      _id: new ObjectId(),
-      title: "test title",
-      description: "test description"
-    };
-    beforeAll(async () => {
-      //insert bucket and document
-      await module
-        .get(DatabaseService)
-        .collection("buckets")
-        .insertOne(bucket);
-      await module
-        .get(DatabaseService)
-        .collection(`bucket_${bucket._id}`)
-        .insertOne(bucketDocument);
-
-      //delay settings for replicaset
-      await DatabaseTestingModule.setDelayedReplica(await module.get(DatabaseService));
-
-      //update bucket
-      let updatedBucket = bucket;
-      updatedBucket.properties.description.type = "number";
-      await module
-        .get(DatabaseService)
-        .collection("buckets")
-        .replaceOne({_id: bucket._id}, updatedBucket);
-
-      //update document
-      const updatedDocument = {...bucketDocument, description: 333};
-      await module
-        .get(DatabaseService)
-        .collection(`bucket_${bucket._id}`)
-        .replaceOne({_id: bucketDocument._id}, updatedDocument);
-    }, 60000);
-
-    afterAll(async () => {
-      await module
-        .get(DatabaseService)
-        .collection("buckets")
-        .deleteMany({})
-        .catch();
-      await module
-        .get(DatabaseService)
-        .collection(`bucket_${bucket._id}`)
-        .deleteMany({})
-        .catch();
-    });
-
-    it("should get previous bucket schema", async () => {
-      //be sure schema is updated
-      const currentSchema = await historyService.getSchema(bucket._id);
-      expect(currentSchema).toEqual({
-        _id: bucket._id,
-        primary: "title",
-        properties: {
-          title: {
-            type: "string"
-          },
-          description: {
-            type: "number"
-          }
-        }
-      });
-
-      //now we can check previous schema
-      const previousSchema = await historyService.getPreviousSchema(bucket._id);
-      expect(previousSchema).toEqual({
-        _id: bucket._id,
-        primary: "title",
-        properties: {
-          title: {
-            type: "string"
-          },
-          description: {
-            type: "string"
-          }
-        }
-      });
-    });
-
-    it("should get previous document", async () => {
-      //be sure document is updated
-      const currentDocument = await historyService.getDocument(bucket._id, bucketDocument._id);
-      expect(currentDocument).toEqual({
-        _id: bucketDocument._id,
-        title: "test title",
-        description: 333
-      });
-
-      //now we can check previous document
-      const previousDocument = await historyService.getPreviousDocument(
-        bucket._id,
-        bucketDocument._id
-      );
-      expect(previousDocument).toEqual({
-        _id: bucketDocument._id,
-        title: "test title",
-        description: "test description"
-      });
-    });
-  });
+    }
+  };
+  const bucketDocument = {
+    _id: new ObjectId(),
+    title: "test title",
+    description: "test description"
+  };
 
   describe("bucket methods", () => {
     const bucket = {
@@ -181,22 +109,6 @@ describe("History Service", () => {
         .collection(`bucket_${bucket._id}`)
         .deleteMany({})
         .catch();
-    });
-
-    it("should get bucket schema", async () => {
-      const schema = await historyService.getSchema(bucket._id);
-      expect(schema).toEqual({
-        _id: bucket._id,
-        primary: "title",
-        properties: {
-          title: {
-            type: "string"
-          },
-          description: {
-            type: "string"
-          }
-        }
-      });
     });
 
     it("should get bucket document", async () => {
@@ -278,16 +190,20 @@ describe("History Service", () => {
           title: "third history",
           changes: diff(
             {},
-            {title: "new added title", description: "new added description", name: "new added name"}
+            {
+              title: "new added title",
+              description: "new added description",
+              name: "new added name"
+            }
           )
         });
       });
 
-      it("should get histories from spesific history to now for spesific bucket document", async () => {
+      it("should get histories from specific history to now for specific bucket document", async () => {
         //first we need to get story which we want
         const limitHistoryId = secondHistoryId;
 
-        //then we will get histories from spesific history to now
+        //then we will get histories from specific history to now
         const histories = await historyService.findBetweenNow(bucketId, documentId, limitHistoryId);
         expect(histories).toEqual([
           {
@@ -314,7 +230,7 @@ describe("History Service", () => {
         ]);
       });
 
-      it("should get all histories of spesific bucket document", async () => {
+      it("should get all histories of specific bucket document", async () => {
         const histories = await historyService.find({document_id: documentId});
         expect(histories).toEqual([
           {
@@ -375,7 +291,7 @@ describe("History Service", () => {
         await historyService.collection.deleteMany({});
       });
 
-      it("should delete spesific bucket document histories", async () => {
+      it("should delete specific bucket document histories", async () => {
         const response: DeleteWriteOpResultObject = await historyService.deleteMany({
           $and: [{bucket_id: bucketId}, {document_id: documentId}]
         });
@@ -477,31 +393,106 @@ describe("History Service", () => {
         ]);
       });
 
-      it("should add new history without delete any", async () => {
-        await historyService.collection.insertOne({
-          bucket_id: bucketId,
-          document_id: documentId,
-          title: "first title"
-        });
-
-        const response: InsertOneWriteOpResult = await historyService.insertOne({
-          bucket_id: bucketId,
-          document_id: documentId,
-          title: "new title"
-        });
-        expect(response.insertedCount).toBe(1);
-
-        const histories = await historyService.collection.find({}).toArray();
-        expect(histories.filter(history => delete history._id)).toEqual([
+      it("should add new history", async () => {
+        const response: InsertOneWriteOpResult = await historyService.createHistory(
+          bucketId,
           {
-            bucket_id: bucketId,
-            document_id: documentId,
-            title: "first title"
+            _id: documentId,
+            name: "first name"
           },
           {
+            _id: documentId,
+            name: "updated name"
+          }
+        );
+        expect(response.insertedCount).toBe(1);
+
+        const histories = await historyService.find({_id: response.insertedId});
+        expect(histories).toEqual([
+          {
+            _id: response.insertedId,
+            date: new Date(response.insertedId.generationTime),
+            changes: diff(
+              {
+                _id: documentId,
+                name: "updated name"
+              },
+              {
+                _id: documentId,
+                name: "first name"
+              }
+            ),
             bucket_id: bucketId,
-            document_id: documentId,
-            title: "new title"
+            document_id: documentId
+          }
+        ]);
+      });
+
+      it("should update histories", async () => {
+        const response: InsertOneWriteOpResult = await historyService.createHistory(
+          bucketId,
+          {
+            _id: documentId,
+            name: "first name",
+            age: 22
+          },
+          {
+            _id: documentId,
+            name: "updated name",
+            age: 33
+          }
+        );
+
+        await historyService.updateHistories(
+          {
+            primary: "",
+            properties: {
+              name: {
+                type: "string",
+                options: {
+                  position: "left"
+                }
+              },
+              age: {
+                type: "number",
+                options: {
+                  position: "left"
+                }
+              }
+            }
+          },
+          {
+            primary: "",
+            properties: {
+              name: {
+                type: "string",
+                options: {
+                  position: "left"
+                }
+              }
+            }
+          }
+        );
+
+        const history = await historyService.find({_id: response.insertedId});
+        expect(history).toEqual([
+          {
+            _id: response.insertedId,
+            date: new Date(response.insertedId.generationTime),
+            changes: diff(
+              {
+                _id: documentId,
+                name: "updated name",
+                age: 33
+              },
+              {
+                _id: documentId,
+                name: "first name",
+                age: 22
+              }
+            ),
+            bucket_id: bucketId,
+            document_id: documentId
           }
         ]);
       });

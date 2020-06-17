@@ -29,14 +29,14 @@ import * as request from "request";
 import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {findRelations, findRemovedKeys} from "./utilities";
-import {BucketWatcher} from "./history/watcher";
+import {HistoryService} from "./history/history.service";
 
 @Controller("bucket")
 export class BucketController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    @Optional() private history: BucketWatcher
+    @Optional() private history: HistoryService
   ) {}
 
   @Get("templates")
@@ -125,7 +125,7 @@ export class BucketController {
     await this.clearRelations(this.bs, this.bds, id);
 
     if (this.history) {
-      await this.history.clearHistories({bucket_id: id});
+      await this.history.deleteMany({bucket_id: id});
     }
     return;
   }
