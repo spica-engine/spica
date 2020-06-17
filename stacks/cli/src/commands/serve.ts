@@ -34,7 +34,7 @@ export class ServeCommand extends Command {
           default: "4500"
         },
         {
-          name: "public-host",
+          name: "public-url",
           type: String,
           summary: "Publicly accessible url of the spica instance."
         },
@@ -81,12 +81,12 @@ export class ServeCommand extends Command {
     const networkName = `${namespace}-network`,
       databaseName = `${namespace}-db`,
       port = await getport({port: parseInt(options.port.toString())}),
-      publicHost = options["public-host"]
-        ? options["public-host"].toString()
+      publicHost = options["public-url"]
+        ? options["public-url"].toString()
         : `http://localhost:${port}`;
 
     if (
-      !options["public-host"] &&
+      !options["public-url"] &&
       options.port.toString() != port.toString() &&
       options.port != "4500"
     ) {
