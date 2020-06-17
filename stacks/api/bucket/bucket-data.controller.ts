@@ -438,9 +438,12 @@ export class BucketDataController {
       .then(result => result.deletedCount);
     if (deletedCount < 1) return;
 
-    await this.history.clearHistories({
-      document_id: documentId
-    });
+    if (this.history) {
+      await this.history.clearHistories({
+        document_id: documentId
+      });
+    }
+
     return this.clearRelations(this.bs, bucketId, documentId);
   }
 
