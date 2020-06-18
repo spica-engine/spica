@@ -18,10 +18,10 @@ import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io"
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
-import {HorizonOptions, HORIZON_OPTIONS} from "./options";
+import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 
 @Injectable()
-export class Horizon implements OnModuleInit, OnModuleDestroy {
+export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
@@ -39,7 +39,7 @@ export class Horizon implements OnModuleInit, OnModuleDestroy {
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
-    @Inject(HORIZON_OPTIONS) private options: HorizonOptions,
+    @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
     this.output = new DatabaseOutput(database);

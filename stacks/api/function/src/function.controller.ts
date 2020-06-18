@@ -8,14 +8,6 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
-
-
-
-
-
-
-
-
   Inject, NotFoundException,
   Param,
   Post,
@@ -29,7 +21,7 @@ import { activity } from "@spica-server/activity/services";
 import { ARRAY, BOOLEAN, DEFAULT } from "@spica-server/core";
 import { Schema } from "@spica-server/core/schema";
 import { ObjectId, OBJECT_ID } from "@spica-server/database";
-import { Horizon } from "@spica-server/function/horizon";
+import { Scheduler } from "@spica-server/function/scheduler";
 import { ActionGuard, AuthGuard } from "@spica-server/passport";
 import * as os from "os";
 import { from, of, OperatorFunction } from "rxjs";
@@ -46,7 +38,7 @@ export class FunctionController {
   constructor(
     private fs: FunctionService,
     private engine: FunctionEngine,
-    private horizon: Horizon,
+    private scheduler: Scheduler,
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) { }
 
@@ -55,7 +47,7 @@ export class FunctionController {
   async information() {
     const enqueuers = [];
 
-    for (const enqueuer of this.horizon.enqueuers) {
+    for (const enqueuer of this.scheduler.enqueuers) {
       enqueuers.push({
         description: enqueuer.description,
         options: await from(this.engine.getSchema(enqueuer.description.name))
@@ -65,7 +57,7 @@ export class FunctionController {
     }
 
     const runtimes = [];
-    for (const runtime of this.horizon.runtimes) {
+    for (const runtime of this.scheduler.runtimes) {
       runtimes.push({
         description: runtime.description
       });
@@ -179,16 +171,6 @@ export class FunctionController {
     const index = await this.engine.read(fn);
     return { index };
   }
-
-  // @Get(":id/run/:target")
-  // @Header("X-Content-Type-Options", "nosniff")
-  // @UseGuards(AuthGuard(), ActionGuard("function:run", "function/:id"))
-  // async run(@Param("id", OBJECT_ID) id: ObjectId, @Param("target") target: string, @Res() res) {
-  //   const fn = await this.fs.findOne({_id: id});
-  //   const logStream = new stream.PassThrough();
-  //   logStream.pipe(res);
-  //   return this.engine.run(fn, {id: fn._id, handler: target}, logStream);
-  // }
 
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))

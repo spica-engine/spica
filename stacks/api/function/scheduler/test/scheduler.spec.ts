@@ -1,7 +1,7 @@
 import {Global, INestApplication, Module} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {ENQUEUER, Horizon, HorizonModule} from "@spica-server/function/horizon";
+import {ENQUEUER, Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {Event} from "@spica-server/function/queue/proto";
 import {Worker} from "@spica-server/function/runtime";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
@@ -25,9 +25,9 @@ const spyScheduler = jasmine
 })
 export class SpySchedulerModule {}
 
-describe("horizon enqueuer factory", () => {
+describe("scheduler enqueuer factory", () => {
   let module: TestingModule;
-  let horizon: Horizon;
+  let scheduler: Scheduler;
   let app: INestApplication;
 
   let addQueueSpy: jasmine.Spy;
@@ -37,7 +37,7 @@ describe("horizon enqueuer factory", () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.create(),
-        HorizonModule.forRoot({
+        SchedulerModule.forRoot({
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
@@ -49,26 +49,26 @@ describe("horizon enqueuer factory", () => {
       ]
     }).compile();
     app = module.createNestApplication();
-    horizon = module.get(Horizon);
-    addQueueSpy = spyOn(horizon["queue"], "addQueue");
-    addEnqueuerSpy = spyOn(horizon.enqueuers, "add");
+    scheduler = module.get(Scheduler);
+    addQueueSpy = spyOn(scheduler["queue"], "addQueue");
+    addEnqueuerSpy = spyOn(scheduler.enqueuers, "add");
     await app.init();
   });
 
   it("should inject the provided enqueuer and queue", async () => {
     expect(spyScheduler).toHaveBeenCalledTimes(1);
-    expect(spyScheduler).toHaveBeenCalledWith(horizon["queue"]);
+    expect(spyScheduler).toHaveBeenCalledWith(scheduler["queue"]);
 
     expect(addQueueSpy).toHaveBeenCalledTimes(1);
     expect(addQueueSpy).toHaveBeenCalledWith(null);
   });
 });
 
-describe("horizon", () => {
-  let horizon: Horizon;
+describe("scheduler", () => {
+  let scheduler: Scheduler;
   let app: INestApplication;
   let spawnSpy: jasmine.Spy;
-  let horizonOptions = {
+  let schedulerOptions = {
     databaseUri: undefined,
     databaseName: undefined,
     databaseReplicaSet: undefined,
@@ -81,12 +81,12 @@ describe("horizon", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create(), HorizonModule.forRoot(horizonOptions)]
+      imports: [DatabaseTestingModule.create(), SchedulerModule.forRoot(schedulerOptions)]
     }).compile();
 
-    horizon = module.get(Horizon);
+    scheduler = module.get(Scheduler);
 
-    spawnSpy = spyOn(horizon.runtime, "spawn").and.callThrough();
+    spawnSpy = spyOn(scheduler.runtime, "spawn").and.callThrough();
 
     app = module.createNestApplication();
 
@@ -104,11 +104,11 @@ describe("horizon", () => {
 
   beforeEach(async () => {
     compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
-    await horizon.runtime.compile(compilation);
+    await scheduler.runtime.compile(compilation);
   });
 
   afterEach(() => {
-    horizon.kill();
+    scheduler.kill();
     app.close();
     clock.uninstall();
   });
@@ -126,15 +126,15 @@ describe("horizon", () => {
       type: -1
     });
 
-    const [id, worker] = Array.from(horizon["pool"]).pop() as [string, Worker];
+    const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
     const attachSpy = spyOn(worker, "attach");
-    horizon["scheduled"](event, id);
+    scheduler["scheduled"](event, id);
     expect(attachSpy).toHaveBeenCalled();
   });
 
   it("should spawn a new worker when a new message queued", () => {
     expect(spawnSpy).toHaveBeenCalledTimes(10);
-    horizon["schedule"]();
+    scheduler["schedule"]();
     expect(spawnSpy).toHaveBeenCalledTimes(11);
   });
 
@@ -147,13 +147,13 @@ describe("horizon", () => {
       type: -1
     });
 
-    const [id, worker] = Array.from(horizon["pool"]).pop() as [string, Worker];
+    const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
     const killSpy = spyOn(worker, "kill");
-    horizon["scheduled"](event, id);
+    scheduler["scheduled"](event, id);
 
     expect(killSpy).not.toHaveBeenCalled();
 
-    clock.tick(horizonOptions.timeout);
+    clock.tick(schedulerOptions.timeout);
 
     expect(killSpy).toHaveBeenCalledTimes(1);
   });

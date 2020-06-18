@@ -16,7 +16,7 @@ ts_library(
         "//stacks/api/bucket/services",
         "//stacks/api/function",
         "//stacks/api/function/enqueuer",
-        "//stacks/api/function/horizon",
+        "//stacks/api/function/scheduler",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/preference",

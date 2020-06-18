@@ -1,6 +1,6 @@
 import { Inject, Injectable, Optional } from "@nestjs/common";
 import { DatabaseService, MongoClient } from "@spica-server/database";
-import { Horizon } from "@spica-server/function/horizon";
+import { Scheduler } from "@spica-server/function/scheduler";
 import { Package, PackageManager } from "@spica-server/function/pkgmanager";
 import { Event } from "@spica-server/function/queue/proto";
 import * as fs from "fs";
@@ -30,7 +30,7 @@ export class FunctionEngine {
     private fs: FunctionService,
     private db: DatabaseService,
     private mongo: MongoClient,
-    private horizon: Horizon,
+    private scheduler: Scheduler,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) private schema: SchemaWithName
   ) {
@@ -65,7 +65,7 @@ export class FunctionEngine {
   }
 
   private getDefaultPackageManager(): PackageManager {
-    return this.horizon.pkgmanagers.get(this.horizon.runtime.description.name);
+    return this.scheduler.pkgmanagers.get(this.scheduler.runtime.description.name);
   }
 
   getPackages(fn: Function): Promise<Package[]> {
@@ -110,7 +110,7 @@ export class FunctionEngine {
 
   compile(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.horizon.runtime.compile({
+    return this.scheduler.runtime.compile({
       cwd: functionRoot,
       entrypoint: "index.ts"
     });
@@ -139,7 +139,7 @@ export class FunctionEngine {
   }
 
   getEnqueuer(name: string) {
-    const enq = Array.from(this.horizon.enqueuers);
+    const enq = Array.from(this.scheduler.enqueuers);
     return enq.find(e => e.description.name == name);
   }
 
@@ -156,7 +156,7 @@ export class FunctionEngine {
   }
 
   private unsubscribe(cwd: string) {
-    for (const enqueuer of this.horizon.enqueuers) {
+    for (const enqueuer of this.scheduler.enqueuers) {
       const target = new Event.Target();
       target.cwd = cwd;
       enqueuer.unsubscribe(target);

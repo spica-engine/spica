@@ -1,4 +1,4 @@
-import {HorizonOptions} from "@spica-server/function/horizon";
+import {SchedulingOptions} from "@spica-server/function/scheduler";
 
 export const FUNCTION_OPTIONS = Symbol.for("FUNCTION_OPTIONS");
 
@@ -7,7 +7,7 @@ export interface Options {
   root: string;
 } 
 
-export interface FunctionOptions extends HorizonOptions {
+export interface FunctionOptions extends SchedulingOptions {
   path: string;
 }
 

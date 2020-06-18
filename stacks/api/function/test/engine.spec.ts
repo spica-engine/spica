@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {Horizon, HorizonModule} from "@spica-server/function/horizon";
+import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
@@ -12,7 +12,7 @@ describe("engine", () => {
   let subscribeSpy: jasmine.Spy;
   let unsubscribeSpy: jasmine.Spy;
 
-  let horizon: Horizon;
+  let scheduler: Scheduler;
   let database: DatabaseService;
   let mongo: MongoClient;
 
@@ -21,7 +21,7 @@ describe("engine", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        HorizonModule.forRoot({
+        SchedulerModule.forRoot({
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
@@ -33,7 +33,7 @@ describe("engine", () => {
       ]
     }).compile();
 
-    horizon = module.get(Horizon);
+    scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
     mongo = module.get(MongoClient);
 
@@ -41,8 +41,8 @@ describe("engine", () => {
       new FunctionService(database),
       database,
       mongo,
-      horizon,
-      {root: "test_root"},
+      scheduler,
+      {root: "test_root", timeout: 1},
       null
     );
 

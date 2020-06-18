@@ -1,6 +1,6 @@
 import { DynamicModule, Module } from "@nestjs/common";
 import { SchemaModule, Validator } from "@spica-server/core/schema";
-import { HorizonModule } from "@spica-server/function/horizon";
+import { SchedulerModule } from "@spica-server/function/scheduler";
 import { WebhookModule } from "@spica-server/function/webhook";
 import * as path from "path";
 import { FunctionEngine } from "./engine";
@@ -22,7 +22,7 @@ export class FunctionModule {
           schemas: [require("./schema/function.json")]
         }),
         WebhookModule.forRoot(),
-        HorizonModule.forRoot({
+        SchedulerModule.forRoot({
           databaseName: options.databaseName,
           databaseReplicaSet: options.databaseReplicaSet,
           databaseUri: options.databaseUri,

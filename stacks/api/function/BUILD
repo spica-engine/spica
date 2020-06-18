@@ -17,7 +17,7 @@ ts_library(
         "//packages/database",
         "//stacks/api/activity/services",
         "//stacks/api/function/enqueuer",
-        "//stacks/api/function/horizon",
+        "//stacks/api/function/scheduler",
         "//stacks/api/function/pkgmanager",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/webhook",

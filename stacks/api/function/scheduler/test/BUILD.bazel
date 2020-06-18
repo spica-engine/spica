@@ -4,11 +4,11 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "horizon",
+    name = "scheduler",
     srcs = glob(["*.ts"]),
     deps = [
         "//packages/database/testing",
-        "//stacks/api/function/horizon",
+        "//stacks/api/function/scheduler",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/runtime",
@@ -23,6 +23,6 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "horizon_test",
-    srcs = [":horizon"],
+    name = "scheduler_test",
+    srcs = [":scheduler"],
 )
