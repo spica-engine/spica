@@ -3,6 +3,13 @@ kind: StatefulSet
 metadata:
   namespace: {{.Release.Namespace}}
   name: {{ .Release.Name }}-application
+  labels:
+    app.kubernetes.io/name: spica
+    app.kubernetes.io/component: application
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
 spec:
   serviceName: {{ .Release.Name }}-application
   replicas: 1
@@ -13,6 +20,12 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-application
+        app.kubernetes.io/name: spica
+        app.kubernetes.io/component: application
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+        app.kubernetes.io/managed-by: helm
     spec:
       containers:
         - name: web
