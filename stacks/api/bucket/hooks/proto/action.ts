@@ -198,7 +198,8 @@ export namespace Action {
     INSERT = 0,
     UPDATE = 1,
     INDEX = 2,
-    GET = 3
+    GET = 3,
+    DELETE = 4
   }
 }
 export class Result extends pb_1.Message {

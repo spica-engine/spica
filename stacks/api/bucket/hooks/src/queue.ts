@@ -39,7 +39,7 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
     } catch (error) {
       callback(
         new Error(
-          "Return value was not given or invalid type. Valid types for the actions are: \n - Insert, Update: Boolean \n - Get, Index: Array\n - Stream: Object"
+          "Return value was not given or invalid type. Valid types for the actions are: \n - Insert, Update, Delete: Boolean \n - Get, Index: Array\n - Stream: Object"
         ),
         null
       );
