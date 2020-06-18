@@ -5,15 +5,15 @@ load("//tools/dgeni:index.bzl", "docs")
 docs(
     name = "guide",
     srcs = [
-        "index.md",
-        "getting-started.md",
-        "passport.md",
         "bucket.md",
-        "storage.md",
-        "function.md",
-        "webhook.md",
-        "user-activities.md",
+        "cli.md",
         "dashboard.md",
-        "cli.md"
+        "function.md",
+        "getting-started.md",
+        "index.md",
+        "passport.md",
+        "storage.md",
+        "user-activities.md",
+        "webhook.md",
     ],
 )
