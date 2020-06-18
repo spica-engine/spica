@@ -21,7 +21,6 @@ import {StorageModule} from "@spica-server/storage";
 import * as fs from "fs";
 import * as https from "https";
 import * as yargs from "yargs";
-import * as os from "os";
 
 const args = yargs
   /* TLS Options */
@@ -140,7 +139,7 @@ const args = yargs
   })
   .option("persistent-path", {
     string: true,
-    default: "/var/data",
+    default: "/tmp",
     normalize: true,
     description: "A path that will be used by API to store persistent data."
   })
