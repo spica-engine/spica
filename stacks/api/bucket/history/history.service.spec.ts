@@ -15,7 +15,7 @@ describe("History Service", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.replicaSet()],
+      imports: [DatabaseTestingModule.create()],
       providers: [HistoryService]
     }).compile();
     historyService = module.get(HistoryService);
@@ -49,6 +49,10 @@ describe("History Service", () => {
   afterAll(() => {
     module.close();
   });
+
+  function objectIdToDate(id: ObjectId): Date {
+    return new Date(parseInt(id.toHexString().substring(0, 8), 16) * 1000);
+  }
 
   const bucket = {
     _id: new ObjectId(),
@@ -407,25 +411,22 @@ describe("History Service", () => {
         );
         expect(response.insertedCount).toBe(1);
 
-        const histories = await historyService.find({_id: response.insertedId});
-        expect(histories).toEqual([
-          {
-            _id: response.insertedId,
-            date: new Date(response.insertedId.generationTime),
-            changes: diff(
-              {
-                _id: documentId,
-                name: "updated name"
-              },
-              {
-                _id: documentId,
-                name: "first name"
-              }
-            ),
-            bucket_id: bucketId,
-            document_id: documentId
-          }
-        ]);
+        const histories = await historyService.getHistory({_id: response.insertedId});
+        expect(histories).toEqual({
+          _id: response.insertedId,
+          bucket_id: bucketId,
+          document_id: documentId,
+          changes: diff(
+            {
+              _id: documentId,
+              name: "updated name"
+            },
+            {
+              _id: documentId,
+              name: "first name"
+            }
+          )
+        });
       });
 
       it("should update histories", async () => {
@@ -445,6 +446,7 @@ describe("History Service", () => {
 
         await historyService.updateHistories(
           {
+            _id: bucketId,
             primary: "",
             properties: {
               name: {
@@ -462,6 +464,7 @@ describe("History Service", () => {
             }
           },
           {
+            _id: bucketId,
             primary: "",
             properties: {
               name: {
@@ -474,27 +477,24 @@ describe("History Service", () => {
           }
         );
 
-        const history = await historyService.find({_id: response.insertedId});
-        expect(history).toEqual([
-          {
-            _id: response.insertedId,
-            date: new Date(response.insertedId.generationTime),
-            changes: diff(
-              {
-                _id: documentId,
-                name: "updated name",
-                age: 33
-              },
-              {
-                _id: documentId,
-                name: "first name",
-                age: 22
-              }
-            ),
-            bucket_id: bucketId,
-            document_id: documentId
-          }
-        ]);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        const history = await historyService.getHistory({_id: response.insertedId});
+        expect(history).toEqual({
+          _id: response.insertedId,
+          bucket_id: bucketId,
+          document_id: documentId,
+          changes: diff(
+            {
+              _id: documentId,
+              name: "updated name"
+            },
+            {
+              _id: documentId,
+              name: "first name"
+            }
+          )
+        });
       });
     });
   });

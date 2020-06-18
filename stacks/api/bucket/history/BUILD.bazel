@@ -95,6 +95,7 @@ ts_library(
     deps = [
         ":history",
         "@npm//@types/jasmine",
+        "@npm//@types/json-schema",
     ],
 )
 
