@@ -15,7 +15,8 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  BadRequestException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
@@ -413,9 +414,21 @@ export class BucketDataController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
+    @Headers("strategy-type") strategyType: string,
+    @Headers() headers: object,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
+    if (this.dispatcher && strategyType == "APIKEY") {
+      const allowed = await this.dispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "DELETE"},
+        headers,
+        documentId.toHexString()
+      );
+      if (!allowed) {
+        throw new ForbiddenException("Forbidden action.");
+      }
+    }
     let deletedCount = await this.bds
       .deleteOne(bucketId, {_id: documentId})
       .then(result => result.deletedCount);
@@ -428,7 +441,16 @@ export class BucketDataController {
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  async deleteMany(@Param("bucketId", OBJECT_ID) bucketId: ObjectId, @Body() body) {
+  async deleteMany(
+    @Headers("strategy-type") strategyType: string,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Body() body
+  ) {
+    if (strategyType == "APIKEY") {
+      throw new BadRequestException(
+        "Apikey strategy doesn't support to delete multiple resource at once."
+      );
+    }
     let deletedCount = await this.bds
       .deleteMany(bucketId, body)
       .then(result => result.deletedCount);
