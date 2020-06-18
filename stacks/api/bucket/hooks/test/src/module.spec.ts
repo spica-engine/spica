@@ -48,7 +48,7 @@ describe("hook module", () => {
             title: "Operation type",
             description: "Event Type",
             type: "string",
-            enum: ["INSERT", "INDEX", "GET", "UPDATE", "STREAM"]
+            enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
           }
         },
         additionalProperties: false
