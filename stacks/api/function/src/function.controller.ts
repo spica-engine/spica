@@ -8,7 +8,15 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
-  NotFoundException,
+
+
+
+
+
+
+
+
+  Inject, NotFoundException,
   Param,
   Post,
   Put,
@@ -17,28 +25,30 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, DEFAULT, ARRAY} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {Horizon} from "@spica-server/function/horizon";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import { activity } from "@spica-server/activity/services";
+import { ARRAY, BOOLEAN, DEFAULT } from "@spica-server/core";
+import { Schema } from "@spica-server/core/schema";
+import { ObjectId, OBJECT_ID } from "@spica-server/database";
+import { Horizon } from "@spica-server/function/horizon";
+import { ActionGuard, AuthGuard } from "@spica-server/passport";
 import * as os from "os";
-import {of, OperatorFunction, from} from "rxjs";
-import {catchError, finalize, last, map, switchMap, tap, take} from "rxjs/operators";
-import {createFunctionActivity} from "./activity.resource";
-import {FunctionEngine} from "./engine";
-import {FunctionService} from "./function.service";
-import {Function, Trigger} from "./interface";
-import {generate} from "./schema/enqueuer.resolver";
+import { from, of, OperatorFunction } from "rxjs";
+import { catchError, finalize, last, map, take, tap } from "rxjs/operators";
+import { createFunctionActivity } from "./activity.resource";
+import { FunctionEngine } from "./engine";
+import { FunctionService } from "./function.service";
+import { Function, Trigger } from "./interface";
+import { FUNCTION_OPTIONS, Options } from "./options";
+import { generate } from "./schema/enqueuer.resolver";
 
 @Controller("function")
 export class FunctionController {
   constructor(
     private fs: FunctionService,
     private engine: FunctionEngine,
-    private horizon: Horizon
-  ) {}
+    private horizon: Horizon,
+    @Inject(FUNCTION_OPTIONS) private options: Options
+  ) { }
 
   @Get("information")
   @UseGuards(AuthGuard())
@@ -61,7 +71,7 @@ export class FunctionController {
       });
     }
 
-    return {enqueuers, runtimes, timeout: this.horizon["options"].timeout};
+    return { enqueuers, runtimes, timeout: this.options.timeout };
   }
 
   @Get()
@@ -73,7 +83,7 @@ export class FunctionController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.fs.findOne({_id: id});
+    return this.fs.findOne({ _id: id });
   }
 
   @UseInterceptors(activity(createFunctionActivity))
@@ -81,7 +91,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOneAndDelete({_id: id}, {});
+    const fn = await this.fs.findOneAndDelete({ _id: id }, {});
     if (!fn) {
       throw new NotFoundException("Couldn't find the function.");
     }
@@ -89,7 +99,7 @@ export class FunctionController {
   }
 
   private async hasDuplicatedBucketHandlers(fn: Function): Promise<boolean> {
-    const functions = (await this.fs.find({_id: {$ne: fn._id}})).concat(fn);
+    const functions = (await this.fs.find({ _id: { $ne: fn._id } })).concat(fn);
     const triggers = functions.reduce((acc, fn) => {
       for (const handler in fn.triggers) {
         if (fn.triggers.hasOwnProperty(handler)) {
@@ -127,7 +137,7 @@ export class FunctionController {
       );
     }
     delete fn._id;
-    return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
+    return this.fs.findOneAndUpdate({ _id: id }, { $set: fn }, { returnOriginal: false });
   }
 
   @UseInterceptors(activity(createFunctionActivity))
@@ -149,7 +159,7 @@ export class FunctionController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   async updateIndex(@Param("id", OBJECT_ID) id: ObjectId, @Body("index") index: string) {
-    const fn = await this.fs.findOne({_id: id});
+    const fn = await this.fs.findOne({ _id: id });
     if (!fn) {
       throw new NotFoundException("Cannot find function.");
     }
@@ -162,12 +172,12 @@ export class FunctionController {
   @Get(":id/index")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOne({_id: id});
+    const fn = await this.fs.findOne({ _id: id });
     if (!fn) {
       throw new NotFoundException("Can not find function.");
     }
     const index = await this.engine.read(fn);
-    return {index};
+    return { index };
   }
 
   // @Get(":id/run/:target")
@@ -183,7 +193,7 @@ export class FunctionController {
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
-    const fn = await this.fs.findOne({_id: id});
+    const fn = await this.fs.findOne({ _id: id });
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
@@ -202,7 +212,7 @@ export class FunctionController {
     if (!name) {
       throw new BadRequestException("Dependency name is required.");
     }
-    const fn = await this.fs.findOne({_id: id});
+    const fn = await this.fs.findOne({ _id: id });
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
@@ -229,7 +239,7 @@ export class FunctionController {
     operators.push(
       last(),
       tap(() => {
-        this.engine.compile(fn).catch(() => {});
+        this.engine.compile(fn).catch(() => { });
       }),
       finalize(() => res.end())
     );
@@ -241,7 +251,7 @@ export class FunctionController {
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDependency(@Param("id", OBJECT_ID) id: ObjectId, @Param("name") name: string) {
-    const fn = await this.fs.findOne({_id: id});
+    const fn = await this.fs.findOne({ _id: id });
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }

@@ -1,18 +1,19 @@
-import {Inject, Injectable, Optional} from "@nestjs/common";
-import {DatabaseService, MongoClient} from "@spica-server/database";
-import {Horizon} from "@spica-server/function/horizon";
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
-import {Event} from "@spica-server/function/queue/proto";
+import { Inject, Injectable, Optional } from "@nestjs/common";
+import { DatabaseService, MongoClient } from "@spica-server/database";
+import { Horizon } from "@spica-server/function/horizon";
+import { Package, PackageManager } from "@spica-server/function/pkgmanager";
+import { Event } from "@spica-server/function/queue/proto";
 import * as fs from "fs";
-import {JSONSchema7} from "json-schema";
+import { JSONSchema7 } from "json-schema";
 import * as path from "path";
 import * as rimraf from "rimraf";
-import {Observable} from "rxjs";
-import {bufferTime} from "rxjs/operators";
+import { Observable } from "rxjs";
+import { bufferTime } from "rxjs/operators";
 import * as util from "util";
-import {ChangeKind, FunctionService, TargetChange} from "./function.service";
-import {Function, FUNCTION_OPTIONS, Options} from "./interface";
-import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
+import { ChangeKind, FunctionService, TargetChange } from "./function.service";
+import { Function } from "./interface";
+import { FUNCTION_OPTIONS, Options } from "./options";
+import { Schema, SCHEMA, SchemaWithName } from "./schema/schema";
 
 @Injectable()
 export class FunctionEngine {
@@ -84,7 +85,7 @@ export class FunctionEngine {
 
   async createFunction(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    await fs.promises.mkdir(functionRoot, {recursive: true});
+    await fs.promises.mkdir(functionRoot, { recursive: true });
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
       name: fn.name,
@@ -196,7 +197,7 @@ export function getDatabaseSchema(
     const stream = mongo.watch([
       {
         $match: {
-          $or: [{operationType: "insert"}, {operationType: "drop"}],
+          $or: [{ operationType: "insert" }, { operationType: "drop" }],
           "ns.db": db.databaseName
         }
       }

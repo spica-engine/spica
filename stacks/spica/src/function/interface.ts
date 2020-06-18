@@ -62,7 +62,7 @@ export function emptyTrigger(handler?: string): Trigger {
   return {
     handler: handler,
     options: {},
-    type: undefined,
+    type: "http",
     active: true
   };
 }

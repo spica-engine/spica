@@ -1,10 +1,5 @@
 import {ObjectId} from "@spica-server/database";
 
-export const FUNCTION_OPTIONS = "FUNCTION_OPTIONS";
-
-export interface Options {
-  root: string;
-}
 
 export interface Function {
   _id?: string | ObjectId;
