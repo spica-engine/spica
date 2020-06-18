@@ -63,7 +63,7 @@ describe("Node", () => {
       expect(stat.isSymbolicLink()).toBe(true);
     });
 
-    it("should report diagnostics", async () => {
+    xit("should report diagnostics", async () => {
       compilation.cwd = FunctionTestBed.initialize(`
 import {database} from '@spica-server/database';
 export default function() {
@@ -88,7 +88,7 @@ export default function() {
       ]);
     });
 
-    it("should report diagnostics for multiple functions", async () => {
+    xit("should report diagnostics for multiple functions", async () => {
       const first: Compilation = {
         cwd: FunctionTestBed.initialize(`const a;`),
         entrypoint: "index.ts"
@@ -124,7 +124,7 @@ export default function() {
       ]);
     });
 
-    it("should report diagnostics incrementally", async () => {
+    xit("should report diagnostics incrementally", async () => {
       compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
       const indexPath = path.join(compilation.cwd, "index.ts");
       expect(await node.compile(compilation)).not.toBeTruthy();

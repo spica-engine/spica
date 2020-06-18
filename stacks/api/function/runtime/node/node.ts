@@ -119,20 +119,26 @@ export class Node extends Runtime {
         }
         return Promise.reject(e);
       });
-    return new Promise((resolve, reject) => {
-      const handleMessage = message => {
-        if (message.baseUrl == compilation.cwd) {
-          this.compilationWorker.off("message", handleMessage);
-          if (message.diagnostics.length) {
-            reject(message.diagnostics);
-          } else {
-            resolve();
-          }
-        }
-      };
-      this.compilationWorker.on("message", handleMessage);
-      this.compilationWorker.postMessage(compilation);
-    });
+
+    this.compilationWorker.postMessage(compilation);
+    return new Promise(resolve => resolve());
+
+    // Waiting for the diagnostics might be enable for better machines in the future.
+
+    // return new Promise((resolve, reject) => {
+    //   const handleMessage = message => {
+    //     if (message.baseUrl == compilation.cwd) {
+    //       this.compilationWorker.off("message", handleMessage);
+    //       if (message.diagnostics.length) {
+    //         reject(message.diagnostics);
+    //       } else {
+    //         resolve();
+    //       }
+    //     }
+    //   };
+    //   this.compilationWorker.on("message", handleMessage);
+    //   this.compilationWorker.postMessage(compilation);
+    // });
   }
 
   spawn(options: SpawnOptions): Worker {
