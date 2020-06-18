@@ -48,7 +48,7 @@ export class PassportService {
 
   identify(identifier: string, password: string): Promise<Identity | null> {
     if (password == undefined || password == null || password == "") {
-      return new Promise(resolve => resolve(null));
+      return Promise.resolve(null);
     }
     return this.identityCollection.findOne({identifier}).then(identity => {
       if (identity) {
