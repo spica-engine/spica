@@ -94,7 +94,12 @@ describe("bucket data service", () => {
   it("should update the entry with data._id", async () => {
     const insertedDocument = (await bds.insertOne(bucketId, {platform: "android"})).ops[0];
     await expectAsync(
-      bds.replaceOne(bucketId, {_id: insertedDocument._id}, {...insertedDocument, platform: "ios"})
+      bds.replaceOne(
+        bucketId,
+        {_id: insertedDocument._id},
+        {...insertedDocument, platform: "ios"},
+        {returnOriginal: false}
+      )
     ).toBeResolved();
     return expectAsync(
       bds.findOne(bucketId, {_id: insertedDocument._id}).then(r => {

@@ -56,7 +56,7 @@ ts_library(
 
 jasmine_node_test(
     name = "history_test_e2e",
-    srcs = [":history_test_lib"],
+    srcs = [":history_e2e_test_lib"],
     tags = [
         "e2e",
     ],
@@ -84,4 +84,21 @@ jasmine_node_test(
     srcs = [":history_service_test_lib"],
 )
 
-# Put the rest of history module unit tests here
+ts_library(
+    name = "history_unit_test_lib",
+    testonly = True,
+    srcs = [
+        "differ.spec.ts",
+        "path.spec.ts",
+        "schema.spec.ts",
+    ],
+    deps = [
+        ":history",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "history_unit_test",
+    srcs = [":history_unit_test_lib"],
+)

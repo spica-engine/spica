@@ -138,9 +138,9 @@
                 <mat-icon>info</mat-icon>
               </button>
             </div>
-            <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">
-              This feature is unavailable.
-            </mat-error>
+            <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)"
+              >This feature is unavailable.</mat-error
+            >
           </div>
         </form>
       </mat-list-item>
