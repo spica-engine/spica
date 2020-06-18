@@ -100,7 +100,7 @@ export class PassportController {
   }
 
   @Get("strategy/:name/url")
-  async getUrl(@Query("strategy") name: string) {
+  async getUrl(@Param("name") name: string) {
     const login = await this.saml.getLoginUrl(name);
 
     if (!name) {

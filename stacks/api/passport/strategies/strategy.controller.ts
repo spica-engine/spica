@@ -62,12 +62,8 @@ export class StrategyController {
       const keys = forge.pki.rsa.generateKeyPair(2048);
       const cert = forge.pki.createCertificate();
       const attrs: forge.pki.CertificateField[] = [
-        {name: "commonName", value: "example.org"},
-        {name: "countryName", value: "US"},
-        {shortName: "ST", value: "Virginia"},
-        {name: "localityName", value: "Blacksburg"},
-        {name: "organizationName", value: "Test"},
-        {shortName: "OU", value: "Test"}
+        {name: "commonName", value: "spica.io"},
+        {name: "organizationName", value: "spica"}
       ];
 
       cert.publicKey = keys.publicKey;
