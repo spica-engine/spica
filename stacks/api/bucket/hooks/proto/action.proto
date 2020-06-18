@@ -19,6 +19,7 @@ message Action {
       UPDATE = 1;
       INDEX = 2;
       GET = 3;
+      DELETE = 4;
    }
 }
 
