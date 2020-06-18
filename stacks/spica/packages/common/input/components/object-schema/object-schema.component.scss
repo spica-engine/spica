@@ -20,5 +20,9 @@
   margin-left: 10px;
   .property {
     padding: 20px;
+    border-radius: 4px;
+    margin: 10px 0px;
+    background: rgba(var(--foreground-base-rgb), 0.04);
+    border-left: 3px solid rgba(var(--foreground-base-rgb), 0.3);
   }
 }
