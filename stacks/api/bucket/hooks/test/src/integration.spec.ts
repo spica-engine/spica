@@ -39,14 +39,16 @@ describe("Hooks Integration", () => {
         return true;
       }
     });
+  });
 
+  beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
+        DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize({
           overriddenStrategyType: "APIKEY"
         }),
         CoreTestingModule,
-        DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
         BucketModule.forRoot({hooks: true, history: false, realtime: true}),
         FunctionModule.forRoot({
@@ -96,99 +98,87 @@ describe("Hooks Integration", () => {
       )
       .then(res => res.body);
 
-    fn = await req
-      .post(
-        "/function",
-        {
-          name: "test",
-          description: "test",
-          triggers: {
-            get: {
-              options: {
-                bucket: bucket._id,
-                type: "GET"
-              },
-              type: "bucket",
-              active: true
-            },
-            index: {
-              options: {
-                bucket: bucket._id,
-                type: "INDEX"
-              },
-              type: "bucket",
-              active: true
-            },
-            update: {
-              options: {
-                bucket: bucket._id,
-                type: "UPDATE"
-              },
-              type: "bucket",
-              active: true
-            },
-            insert: {
-              options: {
-                bucket: bucket._id,
-                type: "INSERT"
-              },
-              type: "bucket",
-              active: true
-            },
-            delete: {
-              options: {
-                bucket: bucket._id,
-                type: "DELETE"
-              },
-              type: "bucket",
-              active: true
-            },
-            stream: {
-              options: {
-                bucket: bucket._id,
-                type: "STREAM"
-              },
-              type: "bucket",
-              active: true
-            }
-          },
-          env: {}
-        },
-        headers
-      )
-      .then(res => res.body);
-
-    await updateIndex(`
-    export function insert(){
-      return true;
-    }
-    `);
-  }, 20000);
-
-  beforeEach(async () => {
     user1 = await req
-      .post(
-        `/bucket/${bucket._id}/data`,
-        {username: "test_user1", password: "test_password1", age: 30},
-        headers
-      )
+      .post(`/bucket/${bucket._id}/data`, {
+        username: "test_user1",
+        password: "test_password1",
+        age: 30
+      })
       .then(res => res.body);
 
     user2 = await req
-      .post(
-        `/bucket/${bucket._id}/data`,
-        {username: "test_user2", password: "test_password2", age: 19},
-        headers
-      )
+      .post(`/bucket/${bucket._id}/data`, {
+        username: "test_user2",
+        password: "test_password2",
+        age: 19
+      })
       .then(res => res.body);
+
+    fn = await req
+      .post("/function", {
+        name: "test",
+        description: "test",
+        triggers: {
+          get: {
+            options: {
+              bucket: bucket._id,
+              type: "GET"
+            },
+            type: "bucket",
+            active: true
+          },
+          index: {
+            options: {
+              bucket: bucket._id,
+              type: "INDEX"
+            },
+            type: "bucket",
+            active: true
+          },
+          update: {
+            options: {
+              bucket: bucket._id,
+              type: "UPDATE"
+            },
+            type: "bucket",
+            active: true
+          },
+          insert: {
+            options: {
+              bucket: bucket._id,
+              type: "INSERT"
+            },
+            type: "bucket",
+            active: true
+          },
+          del: {
+            options: {
+              bucket: bucket._id,
+              type: "DELETE"
+            },
+            type: "bucket",
+            active: true
+          },
+          stream: {
+            options: {
+              bucket: bucket._id,
+              type: "STREAM"
+            },
+            type: "bucket",
+            active: true
+          }
+        },
+        env: {}
+      })
+      .then(res => res.body);
+    await updateIndex(`
+      export function insert(){
+        return true;
+      }
+      `);
   });
 
-  afterEach(async () => {
-    await req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers).catch(console.log);
-    await req.delete(`/bucket/${bucket._id}/data/${user2._id}`, {}, headers).catch(console.log);
-  });
-
-  afterAll(() => app.close());
+  afterEach(() => app.close());
 
   describe("GET", () => {
     it("should not change the behaviour of bucket-data endpoint", async () => {
@@ -251,7 +241,7 @@ describe("Hooks Integration", () => {
   });
 
   describe("UPDATE", () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       await updateIndex(`export function update(req){ return req.document != '${user1._id}' }`);
     });
     it("should not allow to update to the user1's data", async () => {
@@ -299,15 +289,17 @@ describe("Hooks Integration", () => {
         headers
       );
       expect(user3).toEqual({_id: "__skip__", username: "user3", password: "password3", age: 36});
-      await req.delete(`/bucket/${bucket._id}/data/${user3._id}`, {}, headers);
     });
   });
 
   describe("DELETE", () => {
-    beforeAll(async () => {
+    beforeEach(async () => {
       await updateIndex(
-        `export const delete = (req) => req.headers.authorization.document != '${user1._id}';`
+        `export function del(action) {
+          return action.document == action.headers["x-authorized-user-to-delete"];
+        }`
       );
+      headers["X-Authorized-User-To-Delete"] = user2._id;
     });
     it("should not allow to delete the user1 document", async () => {
       const response = await req.delete(`/bucket/${bucket._id}/data/${user1._id}`, {}, headers);
@@ -328,7 +320,6 @@ describe("Hooks Integration", () => {
       const message = jasmine.createSpy();
       ws.onmessage = e => {
         const data = JSON.parse(e.data as string);
-        console.log(data);
         if (data.kind == 1) {
           expect(message).not.toHaveBeenCalled();
           ws.close();
