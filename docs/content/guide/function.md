@@ -1,16 +1,8 @@
-# Function
+## Function
 
-## Table of contents
-
-## Overview
-
-### What is the "function"
-
-Functions is an event-driven execution context for your spica. Simply, you can attach an event to your function from other modules and services. Your function will be triggered _when the event occurs_.
+Functions are an event-driven execution context for your spica. Simply, you can attach an event to your function from other modules and services. Your function will be triggered _when the event occurs_.
 
 Within a function, you can do almost everything you want to do.
-
-> IMPORTANT: Currently the functions, run under the spica and not isolated from it. Which means your function may have stated from the previous execution.
 
 ### Use cases
 
@@ -35,8 +27,11 @@ Currently, the Functions supports following triggers:
 - [HTTP](#http)
 - [Database](#database)
 - [Schedule](#schedule)
+- [Bucket](#bucket)
+- [System](#system)
+- [Firehose](#firehose)
 
-### Event Data
+#### Event Data
 
 Event trigger will pass the data as parameters to the function when the event raised. The parameters will be different related to the type of event.
 
@@ -57,19 +52,126 @@ See [triggers](#triggers) section for parameter types.
 
 Spica provides modules to your function in runtime. Modules work like a module in node_modules but not placed in node_modules directory.
 
-> NOTE: Modules are not published in a registry like npmjs.com, so you can not install or use outside of a spica.
+In order to use these modules in a **function**, they need to be added as **dependency** on **Function Edit page**.
 
-Currently, there are few modules helps you to get information about your spica.
+| Module                   | Description                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `@spica-devkit/database` | This module has a public API for making database operations like **update**, **delete**, **create**, **get** |
 
-| Module               | Description                                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `@internal/database` | This module has a public API for making database operations like **update**, **delete**, **create**, **get** |
+#### Database
 
-## Triggers
+The database module is an in-memory module that has public API for basic database operations like `FIND`, `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 
-### Http
+> Database module imported from `@spica-devkit/database`.
 
-#### Overview
+##### Connecting to the database
+
+You can get the database instance with the `database()` function exported from `@spica-devkit/database` module.
+
+```typescript
+import {database, Database} from "@spica-devkit/database";
+
+const db: Database = await database();
+// Type of db variable is  Database which exported from `@spica-devkit/database`
+```
+
+##### Getting the reference to a Collection
+
+To make changes in a collection you need to get it reference first. You can get reference for a specific collection with `Database.collection()` function exported by your database instance. For more information check [mongoDB API](https://mongodb.github.io/node-mongodb-native/3.2/api/Collection.html)
+
+```typescript
+import {database, Database, Collection} from "@spica-devkit/database";
+
+const db: Database = await database();
+const collection: Collection = db.collection("persistent_collection");
+```
+
+##### Operations
+
+Here is some fundamental examples;
+
+###### Insert
+
+```typescript
+import {database, Database, Collection} from "@spica-devkit/database";
+
+export default async function() {
+  const db: Database = await database();
+  const books: Collection = db.collection("books");
+
+  // insertOne will return Promise<void>
+  await books.insertOne({
+    name: "The Fall Of Leaves",
+    translator: "W. D. Halsey",
+    available_in: ["English", "Turkish"]
+    author: "Resat Nuri Guntekin",
+    year: 1930
+  });
+}
+```
+
+###### Find
+
+```typescript
+import {database, Database, Collection} from "@spica-devkit/database";
+
+export default async function() {
+  const db: Database = await database();
+  const books: Collection = db.collection("books");
+
+  // Get all books
+  const allBooks = await books.find().toArray();
+  console.dir(allBooks);
+  // Above code will print [{ name: "The Fall Of Leaves", ... }]
+
+  const writtenAfter19StCentury = await books.find({year: {$gte: 2000}}).toArray();
+  console.dir(writtenAfter19StCentury);
+  // Result will be empty array.
+}
+```
+
+> NOTE: `find` method accepts [Query and Projection Operators](https://docs.mongodb.com/manual/reference/operator/query/)
+
+###### Find One
+
+```typescript
+import {database, Database, Collection} from "@spica-devkit/database";
+
+export default async function() {
+  const db: Database = await database();
+  const books: Collection = db.collection("books");
+
+  // Find the book named The Fall Of Leaves
+  const book = await books.findOne({name: "The Fall Of Leaves"});
+  console.dir(book);
+  // Result will be { name: "The Fall Of Leaves", ... }
+}
+```
+
+###### Update
+
+```typescript
+import {database, Database, Collection} from "@spica-devkit/database";
+
+export default async function() {
+  const db: Database = await database();
+  const books: Collection = db.collection("books");
+
+  // Find the book named The Fall Of Leaves
+  const book = await books.findOne({name: "The Fall Of Leaves"});
+
+  // If the book found then update it's published year
+  if (book) {
+    book.year = 2000;
+    // Update whole document with $set
+    await books.update({name: book.name}, {$set: book});
+  }
+}
+```
+
+### Triggers
+
+#### Http
 
 You can invoke your function with an HTTP request using the `POST`, `PUT`, `GET`, `DELETE`, `PATCH`, `HEAD` and `OPTIONS` HTTP methods along with a path like `/books` or `/books/:id`.
 
@@ -80,7 +182,7 @@ Path and Method, the method must be one of the specified HTTP methods above also
 
 > **IMPORTANT:** The path and method are not validated for any collision with another function's path and method. So make sure that the path and method not used by other functions otherwise you function may override other function's path.
 
-#### Method
+##### Method
 
 Http trigger needs an HTTP method to be able to triage requests properly. For more info check out [Http Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
 
@@ -96,7 +198,7 @@ Currently, these methods are valid for use;
 
 Also, you can use `ANY` method that covers all methods above which means your function will be executed regardless of the HTTP method of request that bein received.
 
-#### Path
+##### Path
 
 Spica will use the path will use when reserve a trigger URL for your function. When you save your function, the trigger URL will be attached to **`{API_URL}/fn-execute`** as suffix URL.
 
@@ -146,7 +248,7 @@ When you execute this function on **`/fn-execute/books/1`** URL, the response wi
 }
 ```
 
-#### Request Body
+##### Request Body
 
 Usually, every request contains a payload (body) along with the request. It can be either `Raw` or `Text` payload. You can access to the payload of the request with `request.body` property.
 
@@ -186,7 +288,7 @@ You need to parse payload to be able to use it in a function.
 | Text   | application/xml                   | No        | You need to install an appropriate module to handle request payload.                      |
 | Text   | application/yaml                  | No        | You need to install an appropriate module to handle request payload.                      |
 
-### Database
+#### Database
 
 Database trigger, invokes your function when a specific database event raised in a collection of database. The database trigger can invoke your function with `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP` events in a specific database collection. When the event raised, your function will be invoked with the changes in the collection.
 
@@ -196,7 +298,7 @@ To be able to create a function that triggered by database event, you need two r
 - **Event Type:** Type of the event that happens in the collection. It can be `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 - **Full Document:** Whether you want only full document or changes on passed data.
 
-> IMPORTANT: When a REPLACE/UPDATE event immediately followed by DELETE/DROP event, `fullDocument` property in the event will be `null`. 
+> IMPORTANT: When a REPLACE/UPDATE event immediately followed by DELETE/DROP event, `fullDocument` property in the event will be `null`.
 
 A basic database function looks like this:
 
@@ -233,7 +335,7 @@ Content of `changes` variable with the `INSERT` event and `full document` option
 }
 ```
 
-### Schedule
+#### Schedule
 
 Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked at next tick.
 
@@ -254,7 +356,7 @@ export default function(stop: triggers.schedule.Stop) {
 
 In the example, we have stopped scheduler so our function won't be invoked next time when scheduler ticks.
 
-#### Cron Time expression
+##### Cron Time expression
 
 Cron expression made of five-string separated with a whitespace character.
 
@@ -282,133 +384,209 @@ Here is some example of CRON expressions
 | `0 * * * *` | Run once an hour at the beginning of the hour              |
 | `* * * * *` | Run every minute                                           |
 
-## Modules
+#### Bucket
 
-### Database
+Bucket trigger invokes your function before the selected operation for a specific bucket. For bucket trigger, all `INSERT`, `UPDATE`, `INDEX`, `GET`, `DELETE`, `STREAM` operations are available.
 
-The database module is an in-memory module that has public API for basic database operations like `FIND`, `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
+All required fields for a bucket trigger are listed below;
 
-> Database module imported from `@internal/database`.
+- **Bucket:** Bucket ID of the desired bucket
+- **Event Type:** Type of the event that happens in the collection.
 
-#### Getting Database Service
+> IMPORTANT: `STREAM` operations are used for real-time bucket connections. If your client uses real-time data transfer, you can use `STREAM` operation to trigger a function at the beginning of a real-time data transfer.
 
-You can get database instance with `database()` function exported from `@internal/database` module.
-
-```typescript
-import {database, Database} from "@internal/database";
-
-const db: Database = database();
-// Type of db variable is  Database which exported from `@internal/database`
-```
-
-#### Getting the reference to a Collection
-
-To make changes in a collection you need to get it reference first. You can get reference for a specific collection with `Database.collection()` function exported by your database instance. For more information check [mongoDB API](https://mongodb.github.io/node-mongodb-native/3.2/api/Collection.html)
+INSERT request object:
 
 ```typescript
-import {database, Database, Collection} from "@internal/database";
-
-const db: Database = database();
-const collection: Collection = db.collection("persistent_collection");
-```
-
-#### Operations
-
-Here is some fundamental examples;
-
-#### Insert
-
-```typescript
-import {database, Database, Collection} from "@internal/database";
-
-export default async function() {
-  const db: Database = database();
-  const books: Collection = db.collection("books");
-
-  // insertOne will return Promise<void>
-  await books.insertOne({
-    name: "The Fall Of Leaves",
-    translator: "W. D. Halsey",
-    available_in: ["English", "Turkish"]
-    author: "Resat Nuri Guntekin",
-    year: 1930
-  });
-}
-```
-
-#### Find
-
-```typescript
-import {database, Database, Collection} from "@internal/database";
-
-export default async function() {
-  const db: Database = database();
-  const books: Collection = db.collection("books");
-
-  // Get all books
-  const allBooks = await books.find().toArray();
-  console.dir(allBooks);
-  // Above code will print [{ name: "The Fall Of Leaves", ... }]
-
-  const writtenAfter19StCentury = await books.find({year: {$gte: 2000}}).toArray();
-  console.dir(writtenAfter19StCentury);
-  // Result will be empty array.
-}
-```
-
-> NOTE: `find` method accepts [Query and Projection Operators](https://docs.mongodb.com/manual/reference/operator/query/)
-
-#### Find One
-
-```typescript
-import {database, Database, Collection} from "@internal/database";
-
-export default async function() {
-  const db: Database = database();
-  const books: Collection = db.collection("books");
-
-  // Find the book named The Fall Of Leaves
-  const book = await books.findOne({name: "The Fall Of Leaves"});
-  console.dir(book);
-  // Result will be { name: "The Fall Of Leaves", ... }
-}
-```
-
-#### Update
-
-```typescript
-import {database, Database, Collection} from "@internal/database";
-
-export default async function() {
-  const db: Database = database();
-  const books: Collection = db.collection("books");
-
-  // Find the book named The Fall Of Leaves
-  const book = await books.findOne({name: "The Fall Of Leaves"});
-
-  // If the book found then update it's published year
-  if (book) {
-    book.year = 2000;
-    // Update whole document with $set
-    await books.update({name: book.name}, {$set: book});
+ ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: undefined,
+  type: 'INSERT',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': '546e8120-9ca2-4982-b0e2-ecb91ae64367',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
   }
 }
 ```
 
-## Debugging
+INSERT example:
+
+```typescript
+export default function(req) {
+   // Allow the ongoing insert operation if the authorization header does not contain this special string.
+  return req.headers.authorization != "FORBIDDEN_APIKEY";
+}
+```
+
+UPDATE request object:
+
+```typescript
+ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: '5ec7b39aa33b5f160008934f',
+  type: 'UPDATE',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': 'b48d6195-c9ae-4cc5-bf63-25ee2728e1d6',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
+  }
+}
+```
+
+UPDATE example:
+
+```typescript
+export default function(req) {
+  // Allow the ongoing update operation only if the id of the target document is not this special string
+  return req.document != "MY_SECRET_DOCUMENT";
+}
+```
+
+GET request object:
+
+```typescript
+ ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: '5ec7b39aa33b5f160008934f',
+  type: 'GET',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': '296f149c-1d77-4ba7-83b9-b84cffca41a4',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
+  }
+}
+```
+
+GET example:
+
+```typescript
+export default function(req) {
+  const aggregation = [];
+  // If the authorization header does not contain the "MY_SECRET_TOKEN" string literally, then strip out password field to prevent the user from fetching it.
+  if (req.headers.authorization != "MY_SECRET_TOKEN") {
+    aggregation.push({$unset: ["password"]});
+  }
+  return aggregation;
+}
+```
+
+INDEX request object:
+
+```typescript
+ ActionParameters {
+  bucket: '5ec7b22ea33b5f160008933f',
+  document: undefined,
+  type: 'INDEX',
+  headers: {
+    authorization: 'APIKEY 11bub47ka8al97p',
+    'content-type': 'application/json',
+    'user-agent': 'PostmanRuntime/7.24.1',
+    accept: '*/*',
+    'cache-control': 'no-cache',
+    'postman-token': '83bba0bf-85d4-43ef-ae39-9f0300c92115',
+    host: 'localhost:4300',
+    'accept-encoding': 'gzip, deflate, br',
+    connection: 'keep-alive',
+    'content-length': '5',
+    'strategy-type': 'APIKEY'
+  }
+}
+```
+
+INDEX example:
+
+```typescript
+export default function(request) {
+  // Allow the user to only fetch those entries which belong to the user.
+  // HINT: For security purposes, DO NOT get identifier of the user via plain HTTP header. At least extract it from a signed token and such.
+  return [{$match: {"user_id": request.headers["X-Authorized-User"]}}];
+}
+```
+
+#### System
+
+System trigger includes system related event data and invokes a function whenever the chosen event happens. The system trigger is the best choice for using the dashboard module, configuring the instance, or setting up a starting state for your data. `READY` event will be triggered when a server restarts and ready to use. For the current version, the system trigger supports  the `READY` event only.
+
+```typescript
+export default function() {
+  console.log("Spica is ready");
+}
+```
+
+#### Firehose
+
+You can invoke a function in real-time from your client application. It is a great tool for low latency operations since it keeps the connection always open *unlike the HTTP trigger*.  Keep in mind that the firehose trigger does not interact with the bucket or database directly. However, that does not mean you can not perform database operations within your function. Instead, it listens to the real-time events so you can interact with the functions on the server directly from your client application. The firehose trigger can listen to a *user-defined event*, *connection* and *disconnect* event and let you act on behalf of those events.
+
+As an example, if you are making a game and run a real-time server-side logic that will communicate with the client application such as real-time point calculating, you can calculate score and deliver the result in real-time using the firehose trigger.
+
+```typescript
+export default function(message, {socket, pool}) {
+  console.log(message.name); // Outputs: connection
+  console.log(message.data.url); // Outputs: /firehose
+
+  const isAuthorized = false; // Decide if the user has been authorized.
+
+  if (isAuthorized) {
+    // Write back to incoming socket that authorization has been successful.
+    socket.send("authorization", {state: true});
+
+    // Announce the new connection to firehose pool (aka all connected sockets)
+    pool.send("connection", {
+      id: socket.id,
+      ip_address: socket.remoteAddress
+    });
+  } else {
+    socket.send("authorization", {state: false, error: "Authorization has failed."});
+    socket.close();
+  }
+}
+```
+
+### Environment Variables
+
+You can define custom environment variables for your functions. If your team is a multi-disciplined team, you may need some roles to change just function variables. For this situtation, you can define environment variables which will be passed to function as a parameter. You can see an example of how environment variable works below:
+
+```typescript
+export default function() {
+  return process.env.exampleVariable;
+}
+```
+
+### 3rd Party Dependencies
+
+This feature allows you to use 3rd party dependencies in your functions. Spica installs 3rd party libraries from NPM (node package manager). To use a 3rd party library, you just need to add it as a dependency to one of your functions by going to the particular function's edit page.
+
+> IMPORTANT: Each functions are decoupled from the Spica environment. So, if you will use the same library for different functions, you need to download the library for each function.
+
+### Debugging
 
 An unhandled error will crash your function, when the error happens it will be logged to function logs.
 
-### Executing
+#### Logging
 
-A function can be executed standalone for testing. If your function saved, a button will appear above your function's code.
-
-The Run button executes your function with stub parameters. Stub parameters contains all common properties and functions from trigger.
-
-When you run a function, you will see whether the execution succeeded or failed. Also you will see all the logs from execution above your function editor.
-
-### Logging
-
-A function code can have statements like `console.log`, `console.warn`, `console.dir`, when a code calls a console function the output of log will be written to function's log file.
-
-You can see the logs in Logs tab in code edit page.
+A function code can have statements like `console.log`, `console.error`, when code calls a console function the output of log will be written to function's log.
