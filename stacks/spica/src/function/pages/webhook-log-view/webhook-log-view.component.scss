@@ -63,10 +63,13 @@
 
       ::ng-deep .mat-expansion-panel {
         box-shadow: none;
-        border-bottom: 1px solid #efefef !important;
+        border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1) !important;
       }
 
       .mat-expansion-panel  {
+        pre {
+          white-space: pre-wrap;
+        }
         .mat-expansion-panel-header {
           min-height: 64px !important;
           height: auto !important;

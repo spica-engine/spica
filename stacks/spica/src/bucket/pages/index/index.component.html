@@ -30,9 +30,9 @@
     mat-raised-button
     color="warn"
     [disabled]="readOnly"
-    [matTooltip]="'Delete ' + selectedItems.length + ' item.'"
+    [matTooltip]="'Delete ' + selectedItems.length + ' entries.'"
     [matAwareDialog]="{
-      title: 'Attention',
+      title: 'Confirmation',
       templateOrDescription: deleteRowsDialog,
       answer: 'agree'
     }"
@@ -114,7 +114,11 @@
       ></bucket-filter>
     </mat-menu>
   </button>
-  <button mat-icon-button (click)="guide = !guide">
+  <button
+    mat-icon-button
+    [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'"
+    (click)="guide = !guide"
+  >
     <mat-icon>contact_support</mat-icon>
   </button>
   <button mat-icon-button matTooltip="Refresh data" (click)="refresh.next()">
@@ -170,22 +174,23 @@
             {{ row._schedule | date: "MMM d, y, h:mm:ss a" }}
           </td>
         </ng-container>
-        <ng-container matColumnDef="$$spicainternal_actions">
+        <ng-container matColumnDef="$$spicainternal_actions" *ngIf="schema$ | async; let schema">
           <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
           <td mat-cell class="action" *matCellDef="let row">
             <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
               <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
             </button>
-
             <button
               mat-icon-button
               [disabled]="readOnly"
               canInteract="bucket:data:delete"
               color="warn"
               [matAwareDialog]="{
-                title: 'Attention',
+                title: 'Confirmation',
                 templateOrDescription: dialogTemplate,
-                answer: 'agree'
+                answer: row.hasOwnProperty(schema.primary)
+                  ? row[schema.primary].toString()
+                  : 'agree'
               }"
               (confirm)="delete(row._id)"
             >
@@ -209,16 +214,22 @@
               {{ property.value.title }}
             </th>
 
-            <td mat-cell *matCellDef="let row">
-              {{
+            <td
+              mat-cell
+              [innerHTML]="showMe(property.value.type, row[property.key])"
+              *matCellDef="let row"
+            >
+              <!-- {{
                 row[property.key] && row[property.key].hasOwnProperty(property.value.primary)
                   ? row[property.key][property.value.primary]
                   : property.value.type == "object"
                   ? (row[property.key] | json)
                   : property.value.type == "date"
                   ? (row[property.key] | date: "d/M/yy, h:mm a")
+                  : property.value.type == "color"
+                  ? showMe(test,row[property.key])
                   : row[property.key]
-              }}
+              }} -->
             </td>
           </ng-container>
         </ng-container>
@@ -241,21 +252,25 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
 
-        <a (click)="guideRequest(guideUrls?.getAllWithLimit, 'getAllWithLimit')" class="guide-link">
+        <p class="guide-link">
           {{ guideUrls?.getAllWithLimit }}
-        </a>
-        <mat-chip *ngIf="guideResponse?.getAllWithLimit" color="warn" selected
-          >Return Data</mat-chip
+        </p>
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="guideRequest(guideUrls?.getAllWithLimit, 'getAllWithLimit')"
         >
-        <p
+          {{ guideResponse?.getAllWithLimit ? "Hide Response" : "Send Request" }}
+        </button>
+        <pre
           *ngIf="guideResponse?.getAllWithLimit"
+          class="guide-response"
           [innerHtml]="
             guideResponse?.getAllWithLimit
-              ? (guideResponse?.getAllWithLimit | highlight | async)
-              : 'Data is not found'
+              ? (guideResponse.getAllWithLimit | json)
+              : 'Data does not exist'
           "
-          class="guide-response"
-        ></p>
+        ></pre>
       </mat-expansion-panel>
     </mat-accordion>
     <mat-accordion>
@@ -265,19 +280,25 @@
             Get All Data With Sort
           </mat-panel-description>
         </mat-expansion-panel-header>
-        <a (click)="guideRequest(guideUrls?.getAllWithSort, 'getAllWithSort')" class="guide-link">
+        <p class="guide-link">
           {{ guideUrls?.getAllWithSort }}
-        </a>
-        <mat-chip *ngIf="guideResponse?.getAllWithSort" color="warn" selected>Return Data</mat-chip>
-        <p
+        </p>
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="guideRequest(guideUrls?.getAllWithSort, 'getAllWithSort')"
+        >
+          {{ guideResponse?.getAllWithSort ? "Hide Response" : "Send Request" }}
+        </button>
+        <pre
           *ngIf="guideResponse?.getAllWithSort"
           class="guide-response"
           [innerHtml]="
             guideResponse?.getAllWithSort
-              ? (guideResponse?.getAllWithSort | highlight | async)
-              : 'Data is not found'
+              ? (guideResponse.getAllWithSort | json)
+              : 'Data does not exist'
           "
-        ></p>
+        ></pre>
       </mat-expansion-panel>
     </mat-accordion>
     <mat-accordion>
@@ -288,19 +309,25 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
 
-        <a (click)="guideRequest(guideUrls?.getWithFilter, 'getWithFilter')" class="guide-link">
+        <p class="guide-link">
           {{ guideUrls?.getWithFilter }}
-        </a>
-        <mat-chip *ngIf="guideResponse?.getWithFilter" color="warn" selected>Return Data</mat-chip>
-        <p
+        </p>
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="guideRequest(guideUrls?.getWithFilter, 'getWithFilter')"
+        >
+          {{ guideResponse?.getWithFilter ? "Hide Response" : "Send Request" }}
+        </button>
+        <pre
           *ngIf="guideResponse?.getWithFilter"
           class="guide-response"
           [innerHtml]="
             guideResponse?.getWithFilter.length > 0
-              ? (guideResponse?.getWithFilter | highlight | async)
-              : 'Data is not found'
+              ? (guideResponse?.getWithFilter | json)
+              : 'Data does not exist'
           "
-        ></p>
+        ></pre>
       </mat-expansion-panel>
     </mat-accordion>
     <mat-accordion>
@@ -311,19 +338,25 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
 
-        <a (click)="guideRequest(guideUrls?.getWithLike, 'getWithLike')" class="guide-link">
+        <p class="guide-link">
           {{ guideUrls?.getWithLike }}
-        </a>
-        <mat-chip *ngIf="guideResponse?.getWithLike" color="warn" selected>Return Data</mat-chip>
-        <p
+        </p>
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="guideRequest(guideUrls?.getWithLike, 'getWithLike')"
+        >
+          {{ guideResponse?.getWithLike ? "Hide Response" : "Send Request" }}
+        </button>
+        <pre
           *ngIf="guideResponse?.getWithLike"
           class="guide-response"
           [innerHtml]="
             guideResponse?.getWithLike.length > 0
-              ? (guideResponse?.getWithLike | highlight | async)
-              : 'Data is not found'
+              ? (guideResponse?.getWithLike | json)
+              : 'Data does not exist'
           "
-        ></p>
+        ></pre>
       </mat-expansion-panel>
     </mat-accordion>
     <mat-accordion>
@@ -334,24 +367,25 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
 
-        <a
-          (click)="guideRequest(guideUrls?.getWithDoubleFilter, 'getWithDoubleFilter')"
-          class="guide-link"
-        >
+        <p class="guide-link">
           {{ guideUrls?.getWithDoubleFilter }}
-        </a>
-        <mat-chip *ngIf="guideResponse?.getWithDoubleFilter" color="warn" selected
-          >Return Data</mat-chip
+        </p>
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="guideRequest(guideUrls?.getWithDoubleFilter, 'getWithDoubleFilter')"
         >
-        <p
+          {{ guideResponse?.getWithDoubleFilter ? "Hide Response" : "Send Request" }}
+        </button>
+        <pre
           *ngIf="guideResponse?.getWithDoubleFilter"
           class="guide-response"
           [innerHtml]="
             guideResponse?.getWithDoubleFilter.length > 0
-              ? (guideResponse?.getWithDoubleFilter | highlight | async)
-              : 'Data is not found'
+              ? (guideResponse?.getWithDoubleFilter | json)
+              : 'Data does not exist'
           "
-        ></p>
+        ></pre>
       </mat-expansion-panel>
     </mat-accordion>
     <mat-accordion>
@@ -362,24 +396,25 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
 
-        <a
-          (click)="guideRequest(guideUrls?.getOnlyScheduled, 'getOnlyScheduled')"
-          class="guide-link"
-        >
+        <p class="guide-link">
           {{ guideUrls?.getOnlyScheduled }}
-        </a>
-        <mat-chip *ngIf="guideResponse?.getOnlyScheduled" color="warn" selected
-          >Return Data</mat-chip
+        </p>
+        <button
+          mat-raised-button
+          color="warn"
+          (click)="guideRequest(guideUrls?.getOnlyScheduled, 'getOnlyScheduled')"
         >
-        <p
+          {{ guideResponse?.getOnlyScheduled ? "Hide Response" : "Send Request" }}
+        </button>
+        <pre
           *ngIf="guideResponse?.getOnlyScheduled"
           class="guide-response"
           [innerHtml]="
             guideResponse?.getOnlyScheduled.length > 0
-              ? (guideResponse?.getOnlyScheduled | highlight | async)
-              : 'Data is not found'
+              ? (guideResponse?.getOnlyScheduled | json)
+              : 'Data does not exist'
           "
-        ></p>
+        ></pre>
       </mat-expansion-panel>
     </mat-accordion>
     <mat-accordion>
@@ -390,32 +425,34 @@
           </mat-panel-description>
         </mat-expansion-panel-header>
 
-        <a (click)="guideRequest(guideUrls?.getDataWithLang, 'getDataWithLang')" class="guide-link">
+        <p class="guide-link">
           {{ guideUrls?.getDataWithLang }}
-          <p>headers: "Accept-Language": "tr-TR"</p>
-        </a>
-        <mat-chip *ngIf="guideResponse?.getDataWithLang" color="warn" selected
-          >Return Data</mat-chip
+          <br />headers: "Accept-Language": "tr-TR"
+        </p>
+        <button
+          (click)="guideRequest(guideUrls?.getDataWithLang, 'getDataWithLang')"
+          mat-raised-button
+          color="warn"
         >
-        <p
+          {{ guideResponse?.getDataWithLang ? "Hide Response" : "Send Request" }}
+        </button>
+        <pre
           *ngIf="guideResponse?.getDataWithLang"
           class="guide-response"
           [innerHtml]="
             guideResponse?.getDataWithLang.length > 0
-              ? (guideResponse?.getDataWithLang | highlight | async)
-              : 'Data is not found'
+              ? (guideResponse?.getDataWithLang | json)
+              : 'Data does not exist'
           "
-        ></p>
+        ></pre>
       </mat-expansion-panel>
     </mat-accordion>
   </mat-card>
 </div>
-<ng-template #deleteRowsDialog let-answer="answer"
-  >Î
-  <p>This action cannot be undone.</p>
+<ng-template #deleteRowsDialog let-answer="answer">
   <p>
-    This action will permanently delete selected <code>{{ selectedItems.length }}</code> rows and
-    break the all relations.
+    This action will <b>permanently</b> delete these selected
+    <code>{{ selectedItems.length }}</code> entries and break the all relations.
   </p>
   <p>
     Please type in <code>{{ answer }}</code> to confirm.
@@ -423,10 +460,7 @@
 </ng-template>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action cannot be undone.</p>
-  <p>
-    This action will permanently delete the row and break the all relations.
-  </p>
+  <p>This action will <b>permanently</b> delete this entry and break the all relations.</p>
   <p>
     Please type in <code>{{ answer }}</code> to confirm.
   </p>

@@ -56,7 +56,7 @@
           [matAwareDialog]="{
             title: 'Confirmation',
             templateOrDescription: dialogTemplate,
-            answer: bucket.title?.toLowerCase()
+            answer: bucket.title
           }"
           (confirm)="delete(bucket)"
         >
@@ -68,10 +68,8 @@
 </div>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action cannot be undone.</p>
+  <p>This action will <b>permanently</b> delete this bucket and break the all relations.</p>
   <p>
-    This action will permanently delete the <code>{{ answer }}</code> and
-    <b>break the all relations</b>.
+    Please type in <code>{{ answer }}</code> to confirm.
   </p>
-  <p>Please type in the name of the bucket to confirm.</p>
 </ng-template>

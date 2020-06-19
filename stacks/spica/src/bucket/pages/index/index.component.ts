@@ -3,13 +3,14 @@ import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
-import {merge, Observable} from "rxjs";
+import {merge, Observable, pipe} from "rxjs";
 import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
+import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
 
 @Component({
   selector: "bucket-index",
@@ -52,7 +53,8 @@ export class IndexComponent implements OnInit {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -83,9 +85,19 @@ export class IndexComponent implements OnInit {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
         }
 
+        //eliminate the properties which are not included by schema
         const cachedDisplayedProperties = JSON.parse(
           localStorage.getItem(`${this.bucketId}-displayedProperties`)
+        ).filter(dispProps =>
+          Object.keys(schema.properties)
+            .concat([
+              "$$spicainternal_schedule",
+              "$$spicainternal_actions",
+              "$$spicainternal_select"
+            ])
+            .some(schemaProps => schemaProps == dispProps)
         );
+
         this.displayedProperties = cachedDisplayedProperties
           ? cachedDisplayedProperties
           : [
@@ -235,10 +247,106 @@ export class IndexComponent implements OnInit {
       .then(() => this.refresh.emit());
   }
   guideRequest(url: string, key: string) {
-    this.bs
-      .guideRequest(url, key == "getDataWithLang" ? {headers: {"Accept-Language": "tr-TR"}} : {})
-      .subscribe(returnData => {
-        this.guideResponse[key] = returnData;
-      });
+    if (!this.guideResponse[key]) {
+      this.bs
+        .guideRequest(url, key == "getDataWithLang" ? {headers: {"Accept-Language": "tr-TR"}} : {})
+        .pipe(take(1))
+        .subscribe(returnedData => {
+          this.guideResponse[key] = returnedData;
+        });
+    } else {
+      this.guideResponse[key] = undefined;
+    }
+  }
+
+  showMe(type, value) {
+    // let input: ListInput;
+    // switch (type) {
+    //   case "object":
+    //     input = new ObjectInput(value);
+    //     break;
+    //   case "date":
+    //     input = new DateInput(value);
+    //     break;
+    //   case "color":
+    //     input = new ColorInput(value, this.sanitizer);
+    //     break;
+    //   case "relation":
+    //     input = new RelationInput(value);
+    //     break;
+    //   case "storage":
+    //     input = new StorageInput(value);
+    //     break;
+    //   default:
+    //     input = new ListInput(value);
+    //     break;
+    // }
+
+    //return input.show();
+
+    let input2: Object = {
+      object: () =>  JSON.stringify(value),
+      date: new Date(value).toUTCString(),
+      color: new ColorInput(value, this.sanitizer),
+      relation: new RelationInput(value),
+      storage: new StorageInput(value)
+    };
+
+    if (input2.hasOwnProperty(type)) {
+      return input2[type].show();
+    } else {
+      return new ListInput(value).show();
+    }
   }
 }
+
+class ListInput {
+  value;
+  constructor(displayed: SafeHtml) {
+    this.value = displayed;
+  }
+  show() {
+    return this.value;
+  }
+}
+
+class ObjectInput extends ListInput {
+  constructor(displayed: object) {
+    super(JSON.stringify(displayed));
+  }
+}
+
+class DateInput extends ListInput {
+  constructor(displayed: string) {
+    super(new Date(displayed));
+  }
+}
+
+class ColorInput extends ListInput {
+  constructor(displayed: string, private sanitizer: DomSanitizer) {
+    super(
+      sanitizer.bypassSecurityTrustHtml(
+        `<div style='width:20px; height:20px; background-color:${displayed}; border-radius:3px'></div>`
+      )
+    );
+  }
+}
+
+class RelationInput extends ListInput {
+  constructor(displayed: string) {
+    console.log(displayed);
+    super(displayed);
+  }
+}
+
+class StorageInput extends ListInput {
+  constructor(displayed: string) {
+    super(`<a target="_blank">${displayed}</a>`);
+  }
+}
+
+// class Displayer {
+//   constructor(){
+//     return new ListInput()
+//   }
+// }

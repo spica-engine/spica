@@ -53,7 +53,7 @@
             [matAwareDialog]="{
               title: 'Confirmation',
               templateOrDescription: dialogTemplate,
-              answer: 'yes'
+              answer: apiKey.name
             }"
           >
             <mat-icon>delete</mat-icon>
@@ -72,6 +72,8 @@
 </mat-card>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action will delete the API key.</p>
-  <p>Please type {{ answer }} to confirm.</p>
+  <p>This action will <b>permanently</b> delete this API key.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
 </ng-template>

@@ -53,7 +53,7 @@
             [matAwareDialog]="{
               title: 'Confirmation',
               templateOrDescription: dialogTemplate,
-              answer: 'yes'
+              answer: policy.name
             }"
             (confirm)="delete(policy._id)"
             *ngIf="policy.system !== true"
@@ -90,9 +90,8 @@
 </mat-card>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action cannot be undone.</p>
+  <p>This action will <b>permanently</b> delete this policy.</p>
   <p>
-    This action will permanently delete policy.
+    Please type in <code>{{ answer }}</code> to confirm.
   </p>
-  <p>Please type in <b>"yes"</b> to confirm.</p>
 </ng-template>

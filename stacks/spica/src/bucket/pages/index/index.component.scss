@@ -87,13 +87,12 @@
           display: block;
           font-size: 13px;
           margin-bottom: 10px;
-          cursor: pointer;
         }
         mat-chip {
           padding: 3px 10px;
           border-radius: 5px;
         }
-        p.guide-response {
+        pre.guide-response {
           padding: 7px 10px;
           border-radius: 5px;
           background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));

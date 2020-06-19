@@ -54,7 +54,7 @@
             [matAwareDialog]="{
               title: 'Confirmation',
               templateOrDescription: dialogTemplate,
-              answer: 'yes'
+              answer: strategy.name
             }"
             (confirm)="delete(strategy._id)"
           >
@@ -70,9 +70,8 @@
 </mat-card>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action cannot be undone.</p>
+  <p>This action will <b>permanently</b> delete this strategy.</p>
   <p>
-    This action will permanently delete strategy.
+    Please type in <code>{{ answer }}</code> to confirm.
   </p>
-  <p>Please type in <b>"yes"</b> to confirm.</p>
 </ng-template>
