@@ -131,8 +131,6 @@ describe("Scheduler", () => {
     });
 
     const id = scheduler["pool"].keys().next().value;
-    console.log(id);
-    console.log(scheduler["pool"].keys());
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
     scheduler["scheduled"](event, id);
@@ -143,5 +141,26 @@ describe("Scheduler", () => {
     expect(write).toHaveBeenCalledWith(
       "Function (default) did not finish within 60000 seconds. Aborting."
     );
+  });
+
+  it("should not write to stderr when the function quits within the timeout frame", () => {
+    const event = new Event.Event({
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new Event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+      }),
+      type: -1
+    });
+
+    const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
+    const stream = new PassThrough();
+    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
+    scheduler["scheduled"](event, id);
+    const write = spyOn(stream, "write");
+    expect(write).not.toHaveBeenCalled();
+    worker.emit("exit"); /* simulate exit */
+    clock.tick(schedulerOptions.timeout * 1000);
+    expect(write).not.toHaveBeenCalled();
   });
 });
