@@ -43,12 +43,13 @@ export class IdentifyComponent implements OnInit {
           .pipe(finalize(() => dialog.close()))
           .toPromise()
           .then(() => this.router.navigate(["/dashboard"]));
-      }
-      if (params.token) {
-        this.passport.token = params.token;
-      }
-      if (this.passport.identified) {
-        this.router.navigate([""]);
+      } else {
+        if (params.token) {
+          this.passport.token = params.token;
+        }
+        if (this.passport.identified) {
+          this.router.navigate([""]);
+        }
       }
     });
   }

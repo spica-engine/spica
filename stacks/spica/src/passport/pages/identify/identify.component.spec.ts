@@ -1,20 +1,23 @@
-import {ComponentFixture, TestBed, fakeAsync, tick} from "@angular/core/testing";
-import {IdentifyComponent} from "./identify.component";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {FormsModule, NgModel, NgForm} from "@angular/forms";
-import {MatIconModule} from "@angular/material/icon";
-import {MatCardModule} from "@angular/material/card";
-import {MatTooltipModule} from "@angular/material/tooltip";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {RouterModule, ActivatedRoute} from "@angular/router";
-import {Subject, of, throwError} from "rxjs";
-import {MatInputModule} from "@angular/material";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule, NgForm, NgModel} from "@angular/forms";
+import {MatCardModule} from "@angular/material/card";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {ActivatedRoute} from "@angular/router";
+import {RouterTestingModule} from "@angular/router/testing";
+import {of, Subject, throwError} from "rxjs";
+import {IdentifyComponent} from "./identify.component";
 
 describe("Identify Component", () => {
   let fixture: ComponentFixture<IdentifyComponent>;
   let routerSpy;
+  let identifyWithSpy: jasmine.Spy<typeof fixture.componentInstance.passport.identifyWith>;
 
   const strategies = [
     {
@@ -42,12 +45,13 @@ describe("Identify Component", () => {
 
     TestBed.configureTestingModule({
       imports: [
-        RouterModule.forRoot([]),
+        RouterTestingModule.withRoutes([]),
         FormsModule,
         MatFormFieldModule,
         MatIconModule,
         MatCardModule,
         MatTooltipModule,
+        MatDialogModule,
         MatInputModule,
         HttpClientTestingModule,
         NoopAnimationsModule
@@ -64,9 +68,11 @@ describe("Identify Component", () => {
     fixture = TestBed.createComponent(IdentifyComponent);
 
     spyOn(fixture.componentInstance.passport, "getStrategies").and.returnValue(of(strategies));
-    spyOn(fixture.componentInstance.passport, "identifyWith").and.callFake((name: string) => {
-      return name == "name2" ? throwError({error: {message: "Here is the error."}}) : of(null);
-    });
+    identifyWithSpy = spyOn(fixture.componentInstance.passport, "identifyWith").and.callFake(
+      (name: string) => {
+        return name == "name2" ? throwError({error: {message: "Here is the error."}}) : of(null);
+      }
+    );
     spyOn(fixture.componentInstance.passport, "identify").and.returnValue(of({}));
 
     routerSpy = spyOn(fixture.componentInstance.router, "navigate");
@@ -194,6 +200,16 @@ describe("Identify Component", () => {
         "Here is the error."
       );
       expect(routerSpy).toHaveBeenCalledTimes(0);
+    }));
+  });
+
+  describe("strategy", () => {
+    it("should initiate login via strategy in a modal", fakeAsync(() => {
+      activatedRoute.queryParams.next({strategy: "name"});
+      tick();
+      expect(identifyWithSpy).toHaveBeenCalled();
+      expect(identifyWithSpy.calls.mostRecent().args[0]).toBe("name");
+      expect(typeof identifyWithSpy.calls.mostRecent().args[1]).toBe("function");
     }));
   });
 });
