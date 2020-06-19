@@ -6,12 +6,14 @@ docs(
     name = "guide",
     srcs = [
         "bucket.md",
+        "cli.md",
+        "dashboard.md",
         "function.md",
         "getting-started.md",
         "index.md",
-        "introduction.md",
         "passport.md",
         "storage.md",
-        "subscription.md",
+        "user-activities.md",
+        "webhook.md",
     ],
 )
