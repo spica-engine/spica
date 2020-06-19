@@ -112,20 +112,22 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private scheduled(event: Event.Event, workerId: string) {
     const worker = this.pool.get(workerId);
-    const path = event.target.cwd.split("/");
-    const functionId = path[path.length - 1];
-
+    this.pool.delete(workerId);
     const [stdout, stderr] = this.output.create({
       eventId: event.id,
-      functionId
+      functionId: event.target.id
     });
-    worker.attach(stdout, stderr);
-
-    this.pool.delete(workerId);
-
-    setTimeout(() => {
+    const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
+    const timeout = setTimeout(() => {
+      stderr.write(
+        `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
+      );
       worker.kill();
-    }, this.options.timeout);
+    }, timeoutInSeconds * 1000);
+    worker.attach(stdout, stderr);
+    worker.once("exit", () => {
+      clearTimeout(timeout);
+    });
   }
 
   /**

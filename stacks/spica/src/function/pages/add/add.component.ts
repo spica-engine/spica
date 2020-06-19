@@ -1,8 +1,8 @@
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { Component, EventEmitter, OnDestroy, OnInit, ViewChild } from "@angular/core";
-import { ActivatedRoute, Router } from "@angular/router";
-import { SavingState } from "@spica-client/material";
-import { merge, Observable, of, Subject, throwError } from "rxjs";
+import {HttpClient, HttpErrorResponse} from "@angular/common/http";
+import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
+import {ActivatedRoute, Router} from "@angular/router";
+import {SavingState} from "@spica-client/material";
+import {merge, Observable, of, Subject, throwError} from "rxjs";
 import {
   catchError,
   delay,
@@ -10,19 +10,15 @@ import {
   filter,
   flatMap,
   ignoreElements,
-
-
-
-
-
-  share, startWith,
+  share,
+  startWith,
   switchMap,
   take,
   takeUntil,
   tap
 } from "rxjs/operators";
-import { LanguageService } from "../../components/editor/language.service";
-import { FunctionService } from "../../function.service";
+import {LanguageService} from "../../components/editor/language.service";
+import {FunctionService} from "../../function.service";
 import {
   denormalizeFunction,
   emptyFunction,
@@ -38,7 +34,7 @@ import {
   styleUrls: ["./add.component.scss"]
 })
 export class AddComponent implements OnInit, OnDestroy {
-  @ViewChild("toolbar", { static: true }) toolbar;
+  @ViewChild("toolbar", {static: true}) toolbar;
 
   function: NormalizedFunction = emptyFunction();
 
@@ -51,7 +47,7 @@ export class AddComponent implements OnInit, OnDestroy {
   serverError: string;
 
   private dispose = new EventEmitter();
-  editorOptions = { language: "typescript", minimap: { enabled: false } };
+  editorOptions = {language: "typescript", minimap: {enabled: false}};
 
   isIndexPending = false;
 
@@ -111,7 +107,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   formatTimeout(value: number) {
     if (value >= 60) {
-      return Math.floor(value / 60) + 'm';
+      return Math.floor(value / 60) + "m";
     }
 
     return `${value}s`;
@@ -127,7 +123,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   addVariable() {
-    this.function.env.push({ value: undefined, name: undefined });
+    this.function.env.push({value: undefined, key: undefined});
   }
 
   removeVariable(index: number) {
@@ -164,15 +160,10 @@ export class AddComponent implements OnInit, OnDestroy {
     }
   }
 
-  clearEmptyEnvVars() {
-    this.function.env = this.function.env.filter(variable => variable.name && variable.value);
-  }
-
   save() {
     if (this.isIndexPending) return;
 
     this.serverError = undefined;
-    this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
 
     const isInsert = !this.function._id;
@@ -212,7 +203,7 @@ export class AddComponent implements OnInit, OnDestroy {
   addDependency(name: string) {
     this.dependencyInstallPending = true;
     this.http
-      .post(`api:/function/${this.function._id}/dependencies`, { name })
+      .post(`api:/function/${this.function._id}/dependencies`, {name})
       .toPromise()
       .then(() => {
         this.getDependencies();
@@ -248,6 +239,4 @@ export class AddComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-
 }

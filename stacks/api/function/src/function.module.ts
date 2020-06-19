@@ -1,16 +1,16 @@
-import { DynamicModule, Module } from "@nestjs/common";
-import { SchemaModule, Validator } from "@spica-server/core/schema";
-import { SchedulerModule } from "@spica-server/function/scheduler";
-import { WebhookModule } from "@spica-server/function/webhook";
+import {DynamicModule, Module} from "@nestjs/common";
+import {SchemaModule, Validator} from "@spica-server/core/schema";
+import {SchedulerModule} from "@spica-server/function/scheduler";
+import {WebhookModule} from "@spica-server/function/webhook";
 import * as path from "path";
-import { FunctionEngine } from "./engine";
-import { FunctionController } from "./function.controller";
-import { FunctionService } from "./function.service";
-import { FUNCTION_OPTIONS } from "./options";
-import { LogController } from "./log.controller";
-import { LogService } from "./log.service";
-import { FunctionOptions } from "./options";
-import { EnqueuerSchemaResolver, provideEnqueuerSchemaResolver } from "./schema/enqueuer.resolver";
+import {FunctionEngine} from "./engine";
+import {FunctionController} from "./function.controller";
+import {FunctionService} from "./function.service";
+import {FUNCTION_OPTIONS} from "./options";
+import {LogController} from "./log.controller";
+import {LogService} from "./log.service";
+import {FunctionOptions} from "./options";
+import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 
 @Module({})
 export class FunctionModule {
@@ -36,7 +36,10 @@ export class FunctionModule {
         FunctionEngine,
         FunctionService,
         LogService,
-        { provide: FUNCTION_OPTIONS, useValue: { root: path.join(options.path, "functions"), timeout: options.timeout } },
+        {
+          provide: FUNCTION_OPTIONS,
+          useValue: {root: path.join(options.path, "functions"), timeout: options.timeout}
+        },
         {
           provide: EnqueuerSchemaResolver,
           useFactory: provideEnqueuerSchemaResolver,

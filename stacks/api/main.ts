@@ -109,7 +109,7 @@ const args = yargs
     "function-timeout": {
       number: true,
       description: "Amount of time in seconds that has to elapse before aborting a function.",
-      default: 60
+      default: 120
     }
   })
   /* Storage Options */

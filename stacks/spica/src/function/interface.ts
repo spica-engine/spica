@@ -40,7 +40,7 @@ export interface TriggerDescription<T = any> {
 }
 
 export interface Environment {
-  name: string;
+  key: string;
   value: string;
 }
 
@@ -75,8 +75,8 @@ export function normalizeFunction(fn: Function): NormalizedFunction {
       acc.push({...triggers[handler], handler});
       return acc;
     }, new Array<Trigger>()),
-    env: Object.keys(env).reduce((acc, name) => {
-      acc.push({name, value: env[name]});
+    env: Object.keys(env).reduce((acc, key) => {
+      acc.push({key, value: env[key]});
       return acc;
     }, new Array<Environment>())
   };
@@ -94,10 +94,13 @@ export function denormalizeFunction(fn: NormalizedFunction): Function {
       },
       {default: undefined}
     ),
-    env: env.reduce((acc, env) => {
-      acc[env.name] = env.value;
-      return acc;
-    }, {})
+    env: env
+      .filter(variable => variable.key && variable.value)
+      .reduce((acc, env) => {
+        acc[env.key] = env.value;
+        console.log(env);
+        return acc;
+      }, {})
   };
 }
 
@@ -163,6 +166,12 @@ export interface WebhookLogFilter {
   skip: number;
 }
 
+export interface Runtime {
+  name: string;
+  title: string;
+  description: string;
+}
+
 export interface Enqueuer {
   description: {
     icon: string;
@@ -175,5 +184,6 @@ export interface Enqueuer {
 
 export interface Information {
   enqueuers: Enqueuer[];
+  runtimes: Runtime[];
   timeout: number;
 }

@@ -2,9 +2,21 @@ syntax = "proto3";
 
 package Event;
 
+message SchedulingContext {
+   repeated Env env = 2;
+   int32 timeout = 3;
+
+   message Env {
+      string key = 1;
+      string value = 2;
+   }
+}
+
 message Target {
-   string cwd = 1;
-   string handler = 2;
+   string id = 1;
+   string cwd = 2;
+   string handler = 3;
+   SchedulingContext context = 4;
 }
 
 enum Type {

@@ -1,7 +1,7 @@
 import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Observable} from "rxjs";
-import {Function} from "./interface";
+import {Function, Environment} from "./interface";
 
 @Injectable()
 export class FunctionService extends BaseCollection<Function>("function") {
@@ -20,7 +20,11 @@ export class FunctionService extends BaseCollection<Function>("function") {
             type: trigger.type,
             target: {
               id: fn._id.toString(),
-              handler
+              handler,
+              context: {
+                env: fn.env,
+                timeout: fn.timeout
+              }
             }
           });
         }
@@ -66,6 +70,11 @@ export enum ChangeKind {
   Updated = 2
 }
 
+export interface Context {
+  timeout: number;
+  env: Environment;
+}
+
 export interface TargetChange {
   kind: ChangeKind;
   type?: string;
@@ -73,5 +82,6 @@ export interface TargetChange {
   target: {
     id: string;
     handler?: string;
+    context?: Context;
   };
 }

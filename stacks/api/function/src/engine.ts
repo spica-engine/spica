@@ -1,19 +1,19 @@
-import { Inject, Injectable, Optional } from "@nestjs/common";
-import { DatabaseService, MongoClient } from "@spica-server/database";
-import { Scheduler } from "@spica-server/function/scheduler";
-import { Package, PackageManager } from "@spica-server/function/pkgmanager";
-import { Event } from "@spica-server/function/queue/proto";
+import {Inject, Injectable, Optional} from "@nestjs/common";
+import {DatabaseService, MongoClient} from "@spica-server/database";
+import {Scheduler} from "@spica-server/function/scheduler";
+import {Package, PackageManager} from "@spica-server/function/pkgmanager";
+import {Event} from "@spica-server/function/queue/proto";
 import * as fs from "fs";
-import { JSONSchema7 } from "json-schema";
+import {JSONSchema7} from "json-schema";
 import * as path from "path";
 import * as rimraf from "rimraf";
-import { Observable } from "rxjs";
-import { bufferTime } from "rxjs/operators";
+import {Observable} from "rxjs";
+import {bufferTime} from "rxjs/operators";
 import * as util from "util";
-import { ChangeKind, FunctionService, TargetChange } from "./function.service";
-import { Function } from "./interface";
-import { FUNCTION_OPTIONS, Options } from "./options";
-import { Schema, SCHEMA, SchemaWithName } from "./schema/schema";
+import {ChangeKind, FunctionService, TargetChange} from "./function.service";
+import {Function} from "./interface";
+import {FUNCTION_OPTIONS, Options} from "./options";
+import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
 
 @Injectable()
 export class FunctionEngine {
@@ -46,7 +46,7 @@ export class FunctionEngine {
   }
 
   private categorizeChanges(changes: TargetChange[]) {
-    changes.forEach((change, index) => {
+    for (const [index, change] of changes.entries()) {
       switch (change.kind) {
         case ChangeKind.Added:
           this.subscribe(change);
@@ -61,7 +61,7 @@ export class FunctionEngine {
           this.unsubscribe(path.join(this.options.root, change.target.id));
           break;
       }
-    });
+    }
   }
 
   private getDefaultPackageManager(): PackageManager {
@@ -85,7 +85,7 @@ export class FunctionEngine {
 
   async createFunction(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    await fs.promises.mkdir(functionRoot, { recursive: true });
+    await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
       name: fn.name,
@@ -146,9 +146,23 @@ export class FunctionEngine {
   private subscribe(change: TargetChange) {
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
-      const target = new Event.Target();
-      target.cwd = path.join(this.options.root, change.target.id);
-      target.handler = change.target.handler;
+      const target = new Event.Target({
+        id: change.target.id,
+        cwd: path.join(this.options.root, change.target.id),
+        handler: change.target.handler,
+        context: new Event.SchedulingContext({
+          env: Object.keys(change.target.context.env).reduce((envs, key) => {
+            envs.push(
+              new Event.SchedulingContext.Env({
+                key,
+                value: change.target.context.env[key]
+              })
+            );
+            return envs;
+          }, []),
+          timeout: change.target.context.timeout
+        })
+      });
       enqueuer.subscribe(target, change.options);
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);
@@ -157,8 +171,9 @@ export class FunctionEngine {
 
   private unsubscribe(cwd: string) {
     for (const enqueuer of this.scheduler.enqueuers) {
-      const target = new Event.Target();
-      target.cwd = cwd;
+      const target = new Event.Target({
+        cwd
+      });
       enqueuer.unsubscribe(target);
     }
   }
@@ -197,7 +212,7 @@ export function getDatabaseSchema(
     const stream = mongo.watch([
       {
         $match: {
-          $or: [{ operationType: "insert" }, { operationType: "drop" }],
+          $or: [{operationType: "insert"}, {operationType: "drop"}],
           "ns.db": db.databaseName
         }
       }

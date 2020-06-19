@@ -44,6 +44,12 @@ if (!process.env.WORKER_ID) {
 
   process.chdir(path.join(event.target.cwd, ".build"));
 
+  process.env.TIMEOUT = String(event.target.context.timeout);
+
+  for (const env of event.target.context.env) {
+    process.env[env.key] = env.value;
+  }
+
   const callArguments = [];
   let callback = (r: unknown) => {};
 
@@ -54,7 +60,7 @@ if (!process.env.WORKER_ID) {
       httpPop.id = event.id;
       const request = await httpQueue.pop(httpPop);
       callArguments[0] = new Request(request);
-      callArguments[1] = new Response(
+      const response = (callArguments[1] = new Response(
         async e => {
           e.id = event.id;
           await httpQueue.writeHead(e);
@@ -67,7 +73,14 @@ if (!process.env.WORKER_ID) {
           e.id = event.id;
           await httpQueue.end(e);
         }
-      );
+      ));
+      callback = async result => {
+        if (!response.headersSent && result != undefined) {
+          result = await result;
+          console.log(result);
+          response.send(result as any);
+        }
+      };
       break;
     case Event.Type.DATABASE:
       const database = new DatabaseQueue();

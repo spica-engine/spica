@@ -34,7 +34,7 @@
           </mat-form-field>
           <span timeout *ngIf="(information | async)?.timeout; let timeout">
             <mat-label>
-              Timeout (seconds)
+              Timeout in seconds <b>({{ formatTimeout(function.timeout || timeout) }})</b>
             </mat-label>
             <mat-slider
               thumbLabel
@@ -42,12 +42,11 @@
               tickInterval="auto"
               min="1"
               [max]="timeout"
-              [value]="function.timeout ? function.timeout : timeout"
-              [(ngModel)]="function.timeout"
+              [ngModel]="function.timeout || timeout"
+              (ngModelChange)="function.timeout = $event"
               name="timeout"
               #timeoutModel="ngModel"
             >
-      
             </mat-slider>
             <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
             <mat-error *ngIf="timeoutModel?.errors?.min">Timeout value must be positive.</mat-error>
@@ -76,7 +75,6 @@
           </mat-form-field>
         </mat-list-item>
         <mat-divider></mat-divider>
-
         <mat-list-item class="editor">
           <div class="last-saved" *ngIf="$indexSave | async; let lastSaved">
             <mat-hint *ngIf="lastSaved != 'inprogress'">
@@ -282,12 +280,12 @@
           </button>
         </h4>
 
-        <mat-list-item *ngFor="let env of function.env; let index = index">
+        <mat-list-item *ngFor="let env of function.env; let index = index" [ngModelGroup]="index">
           <mat-form-field>
-            <input matInput placeholder="Name" [(ngModel)]="env.name" />
+            <input matInput placeholder="Name" [(ngModel)]="env.key" name="key" />
           </mat-form-field>
           <mat-form-field>
-            <input matInput placeholder="Value" [(ngModel)]="env.value" />
+            <input matInput placeholder="Value" [(ngModel)]="env.value" name="value" />
           </mat-form-field>
           <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
             <mat-icon>remove</mat-icon>
@@ -311,7 +309,8 @@
         [diameter]="18"
         color="primary"
         mode="indeterminate"
-      ></mat-progress-spinner>
+      >
+      </mat-progress-spinner>
       <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
       <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
       <span>{{ (!state ? "save" : state) | titlecase }}</span>
