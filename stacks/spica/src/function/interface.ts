@@ -98,7 +98,6 @@ export function denormalizeFunction(fn: NormalizedFunction): Function {
       .filter(variable => variable.key && variable.value)
       .reduce((acc, env) => {
         acc[env.key] = env.value;
-        console.log(env);
         return acc;
       }, {})
   };

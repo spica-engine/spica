@@ -77,7 +77,6 @@ if (!process.env.WORKER_ID) {
       callback = async result => {
         if (!response.headersSent && result != undefined) {
           result = await result;
-          console.log(result);
           response.send(result as any);
         }
       };
