@@ -50,14 +50,18 @@ export class PassportService {
     );
   }
 
-  identifyWith(strategy: string): Observable<any> {
+  identifyWith(strategy: string, openCallback?: (url: string) => void): Observable<any> {
     return this.http
       .get<any>(`api:/passport/strategy/${strategy}/url`, {
         params: {strategy}
       })
       .pipe(
         concatMap(res => {
-          window.open(res.url, "_blank");
+          if (openCallback) {
+            openCallback(res.url);
+          } else {
+            window.open(res.url);
+          }
           return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
         }),
         tap(response => {
