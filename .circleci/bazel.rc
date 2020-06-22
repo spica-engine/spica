@@ -1,5 +1,3 @@
-
-
 # Save downloaded repositories in a location that can be cached by CircleCI. This helps us
 # speeding up the analysis time significantly with Bazel managed node dependencies on the CI.
 build --repository_cache=/home/circleci/bazel_repository_cache
