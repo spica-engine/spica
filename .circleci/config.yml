@@ -6,7 +6,7 @@ commands:
     steps:
       - run:
           name: Setting up CircleCI bazel configuration
-          command: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
+          command: sudo cat .circleci/bazel.rc >> .bazelrc
   custom_attach_workspace:
     description: Attach workspace at a predefined location
     steps:
@@ -98,7 +98,7 @@ jobs:
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e --jobs 4
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
       - custom_save_cache
 
   test_api_flaky:
