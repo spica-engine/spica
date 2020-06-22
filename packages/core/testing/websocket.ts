@@ -10,6 +10,7 @@ export class Websocket {
 
   get(path: string, options?: WebsocketOptions): Client {
     const url = new URL(`ws+unix://${this.socket}:${path}`);
+    url.search = "";
     Object.defineProperty(url, "pathname", {value: `${this.socket}:${path}`});
     return new Client(url as any, options);
   }

@@ -1,5 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import got, {Headers, Method} from "got";
+import * as querystring from "querystring";
 
 @Injectable()
 export class Request {
@@ -43,7 +44,7 @@ export class Request {
     };
 
     if (options.query) {
-      req.searchParams = options.query;
+      req.search = querystring.stringify(options.query);
     }
     if (options.body instanceof Buffer) {
       req.body = options.body;
@@ -52,26 +53,36 @@ export class Request {
     }
 
     return got(req)
-      .then(r => {
-        if (r && typeof r.body == "string" && r.body) {
+      .then(response => {
+        if (response && typeof response.body == "string" && response.body) {
           try {
-            r.body = JSON.parse(r.body);
+            response.body = JSON.parse(response.body);
           } catch (e) {
             console.error(e);
           }
         }
         return {
-          headers: r.headers as any,
-          body: r.body,
-          statusCode: r.statusCode,
-          statusText: r.statusMessage
+          headers: response.headers as any,
+          body: response.body ? response.body : undefined,
+          statusCode: response.statusCode,
+          statusText: response.statusMessage
         };
       })
       .catch(error => {
         let {response} = error;
+        if (!response) {
+          return Promise.reject(error);
+        }
+        if (response && typeof response.body == "string" && response.body) {
+          try {
+            response.body = JSON.parse(response.body);
+          } catch (e) {
+            console.error(e);
+          }
+        }
         response = {
           headers: response.headers as any,
-          body: response.body,
+          body: response.body ? response.body : undefined,
           statusCode: response.statusCode,
           statusText: response.statusMessage
         };
@@ -104,7 +115,7 @@ export interface RequestOptions {
   method: Method;
   path: string;
   body?: any;
-  query?: object;
+  query?: any;
   headers?: Headers;
 }
 
