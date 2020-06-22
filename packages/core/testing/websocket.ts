@@ -1,16 +1,17 @@
-import {Injectable} from "@nestjs/common";
+import {Inject, Injectable} from "@nestjs/common";
 import * as CL from "ws";
+import * as url from "url";
 
 export type WebsocketOptions = CL.ClientOptions;
 
 @Injectable()
 export class Websocket {
-  get socket() {
-    return `/tmp/${process.env.BAZEL_TARGET.replace(/\/|:/g, "_")}.sock`;
-  }
+  constructor(@Inject("SOCKET") readonly socket: string) {}
 
   get(path: string, options?: WebsocketOptions): Client {
-    return new Client(`ws+unix://${this.socket}:${path}`, options);
+    const url = new URL(`ws+unix://${this.socket}:${path}`);
+    Object.defineProperty(url, "pathname", {value: `${this.socket}:${path}`});
+    return new Client(url as any, options);
   }
 }
 
