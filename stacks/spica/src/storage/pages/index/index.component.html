@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar *ngIf="storages$ | async" color="primary">
   <div>
     <h4 class="mat-h4">
       <mat-icon>filter_drama</mat-icon>

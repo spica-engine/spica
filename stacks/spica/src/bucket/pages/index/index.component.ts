@@ -3,7 +3,7 @@ import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute} from "@angular/router";
-import {merge, Observable, pipe} from "rxjs";
+import {merge, Observable} from "rxjs";
 import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData} from "../../interfaces/bucket-entry";
@@ -85,21 +85,21 @@ export class IndexComponent implements OnInit {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
         }
 
-        //eliminate the properties which are not included by schema
         const cachedDisplayedProperties = JSON.parse(
           localStorage.getItem(`${this.bucketId}-displayedProperties`)
-        ).filter(dispProps =>
-          Object.keys(schema.properties)
-            .concat([
-              "$$spicainternal_schedule",
-              "$$spicainternal_actions",
-              "$$spicainternal_select"
-            ])
-            .some(schemaProps => schemaProps == dispProps)
         );
 
+        //eliminate the properties which are not included by schema
         this.displayedProperties = cachedDisplayedProperties
-          ? cachedDisplayedProperties
+          ? cachedDisplayedProperties.filter(dispProps =>
+              Object.keys(schema.properties)
+                .concat([
+                  "$$spicainternal_schedule",
+                  "$$spicainternal_actions",
+                  "$$spicainternal_select"
+                ])
+                .some(schemaProps => schemaProps == dispProps)
+            )
           : [
               ...Object.entries(schema.properties)
                 .filter(([, value]) => value.options.visible)
@@ -259,94 +259,33 @@ export class IndexComponent implements OnInit {
     }
   }
 
-  showMe(type, value) {
-    // let input: ListInput;
-    // switch (type) {
-    //   case "object":
-    //     input = new ObjectInput(value);
-    //     break;
-    //   case "date":
-    //     input = new DateInput(value);
-    //     break;
-    //   case "color":
-    //     input = new ColorInput(value, this.sanitizer);
-    //     break;
-    //   case "relation":
-    //     input = new RelationInput(value);
-    //     break;
-    //   case "storage":
-    //     input = new StorageInput(value);
-    //     break;
-    //   default:
-    //     input = new ListInput(value);
-    //     break;
-    // }
-
-    //return input.show();
-
-    let input2: Object = {
-      object: () =>  JSON.stringify(value),
-      date: new Date(value).toUTCString(),
-      color: new ColorInput(value, this.sanitizer),
-      relation: new RelationInput(value),
-      storage: new StorageInput(value)
-    };
-
-    if (input2.hasOwnProperty(type)) {
-      return input2[type].show();
-    } else {
-      return new ListInput(value).show();
+  buildTemplate(value, property) {
+    if (value == undefined || value == null) {
+      return value;
+    }
+    switch (property.type) {
+      case "object":
+        return JSON.stringify(value);
+      case "date":
+        return new Date(value).toLocaleString();
+      case "color":
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<div style='width:20px; height:20px; background-color:${value}; border-radius:3px'></div>`
+        );
+      case "relation":
+        if (property["relationType"] == "onetomany") {
+          return value.map(val =>
+            val.hasOwnProperty(property.primary) ? val[property.primary] : val
+          );
+        } else {
+          return value.hasOwnProperty(property.primary) ? value[property.primary] : value;
+        }
+      case "storage":
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<img style='width:40px; height:40px;' src=${value} alt=${value}>`
+        );
+      default:
+        return value;
     }
   }
 }
-
-class ListInput {
-  value;
-  constructor(displayed: SafeHtml) {
-    this.value = displayed;
-  }
-  show() {
-    return this.value;
-  }
-}
-
-class ObjectInput extends ListInput {
-  constructor(displayed: object) {
-    super(JSON.stringify(displayed));
-  }
-}
-
-class DateInput extends ListInput {
-  constructor(displayed: string) {
-    super(new Date(displayed));
-  }
-}
-
-class ColorInput extends ListInput {
-  constructor(displayed: string, private sanitizer: DomSanitizer) {
-    super(
-      sanitizer.bypassSecurityTrustHtml(
-        `<div style='width:20px; height:20px; background-color:${displayed}; border-radius:3px'></div>`
-      )
-    );
-  }
-}
-
-class RelationInput extends ListInput {
-  constructor(displayed: string) {
-    console.log(displayed);
-    super(displayed);
-  }
-}
-
-class StorageInput extends ListInput {
-  constructor(displayed: string) {
-    super(`<a target="_blank">${displayed}</a>`);
-  }
-}
-
-// class Displayer {
-//   constructor(){
-//     return new ListInput()
-//   }
-// }

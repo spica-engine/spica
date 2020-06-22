@@ -216,21 +216,9 @@
 
             <td
               mat-cell
-              [innerHTML]="showMe(property.value.type, row[property.key])"
+              [innerHTML]="buildTemplate(row[property.key], property.value)"
               *matCellDef="let row"
-            >
-              <!-- {{
-                row[property.key] && row[property.key].hasOwnProperty(property.value.primary)
-                  ? row[property.key][property.value.primary]
-                  : property.value.type == "object"
-                  ? (row[property.key] | json)
-                  : property.value.type == "date"
-                  ? (row[property.key] | date: "d/M/yy, h:mm a")
-                  : property.value.type == "color"
-                  ? showMe(test,row[property.key])
-                  : row[property.key]
-              }} -->
-            </td>
+            ></td>
           </ng-container>
         </ng-container>
 
