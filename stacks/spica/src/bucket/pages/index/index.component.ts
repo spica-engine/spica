@@ -282,7 +282,7 @@ export class IndexComponent implements OnInit {
         }
       case "storage":
         return this.sanitizer.bypassSecurityTrustHtml(
-          `<img style='width:40px; height:40px;' src=${value} alt=${value}>`
+          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=${value} alt=${value}>`
         );
       default:
         return value;
