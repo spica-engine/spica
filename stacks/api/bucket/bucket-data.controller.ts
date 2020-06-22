@@ -478,11 +478,9 @@ export class BucketDataController {
     if (this.history) {
       await Promise.all(
         body.map(id => {
-          this.history
-            .deleteMany({
-              document_id: new ObjectId(id)
-            })
-            .catch(err => err);
+          this.history.deleteMany({
+            document_id: new ObjectId(id)
+          });
         })
       );
     }
