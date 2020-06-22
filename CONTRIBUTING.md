@@ -263,3 +263,4 @@ changes to be accepted, the CLA must be read and accepted.
 [github]: https://github.com/spica-engine/spica
 [individual-cla]: https://github.com/spica-engine/spica/blob/master/CLA.md
 [stackoverflow]: http://stackoverflow.com/questions/tagged/spica
+[slack]: https://join.slack.com/t/spica-engine/shared_invite/zt-9qix07sg-BxiOW9tBi8elYRQWcMTOKg

@@ -3,6 +3,13 @@ kind: StatefulSet
 metadata:
   namespace: {{.Release.Namespace}}
   name: {{ .Release.Name }}-database
+  labels:
+    app.kubernetes.io/name: mongo
+    app.kubernetes.io/component: database
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
 spec:
   serviceName: {{ .Release.Name }}-database
   replicas: {{ .Values.database.replicas }}
@@ -13,6 +20,12 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-database
+        app.kubernetes.io/name: mongo
+        app.kubernetes.io/component: database
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion }}
+        app.kubernetes.io/part-of: {{ .Chart.Name }}
+        app.kubernetes.io/managed-by: helm
     spec:
       initContainers:
         - name: replication-controller

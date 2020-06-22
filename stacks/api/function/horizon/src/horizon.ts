@@ -61,10 +61,6 @@ export class Horizon implements OnModuleInit, OnModuleDestroy {
     this.queue.addQueue(this.firehoseQueue);
   }
 
-  onModuleDestroy() {
-    return this.queue.kill();
-  }
-
   onModuleInit() {
     this.enqueuers.add(
       new HttpEnqueuer(this.queue, this.httpQueue, this.http.httpAdapter.getInstance())
@@ -91,6 +87,13 @@ export class Horizon implements OnModuleInit, OnModuleDestroy {
     for (let i = 0; i < this.options.poolSize; i++) {
       this.schedule();
     }
+  }
+
+  onModuleDestroy() {
+    for (const worker of this.pool.values()) {
+      worker.kill();
+    }
+    this.queue.kill();
   }
 
   private schedule() {
