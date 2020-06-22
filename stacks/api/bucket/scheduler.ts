@@ -21,7 +21,7 @@ export class DocumentScheduler {
           "ns.coll": {
             $regex: /^bucket_/
           },
-          "fullDocument._schedule": {$type: "string"}
+          "fullDocument._schedule": {$type: "date"}
         }
       }
     ]);
