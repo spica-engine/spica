@@ -36,11 +36,6 @@
     }
 
     mat-card-content {
-      mat-form-field[description],
-      mat-form-field[name] {
-        width: 100%;
-      }
-
       mat-list {
         padding-top: 0px;
         mat-list-item:not(:first-of-type) {
@@ -49,6 +44,24 @@
           }
           mat-form-field:first-of-type {
             margin-right: 5px !important;
+          }
+        }
+
+        mat-list-item:first-of-type {
+          mat-form-field[description] {
+            width: 100%;
+          }
+
+          mat-form-field[name] {
+            width: 65%;
+          }
+
+          span[timeout] {
+            vertical-align: middle;
+            display: inline-flex;
+            flex-flow: column;
+            width: 30%;
+            margin-left: 10px;
           }
         }
 

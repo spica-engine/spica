@@ -1,16 +1,16 @@
 import {Injectable} from "@nestjs/common";
-import {BucketDocument} from "@spica-server/bucket/services";
+import {BucketDocument, Bucket} from "@spica-server/bucket/services";
 import {
   Collection,
   DatabaseService,
   DeleteWriteOpResultObject,
   FilterQuery,
   InsertOneWriteOpResult,
-  ObjectId,
-  ReadPreference
+  ObjectId
 } from "@spica-server/database";
-import {ChangePaths} from "./differ";
+import {ChangePaths, ChangeKind, diff} from "./differ";
 import {History} from "./interfaces";
+import {schemaDiff} from "./schema";
 
 @Injectable()
 export class HistoryService {
@@ -19,39 +19,41 @@ export class HistoryService {
     this.collection = this.db.collection<History>("history");
   }
 
-  getSchema(bucketId: ObjectId) {
-    return this.db.collection<any>("buckets").findOne({_id: bucketId});
+  updateHistories(previousSchema: Bucket, currentSchema: Bucket) {
+    const changes = schemaDiff(previousSchema, currentSchema).filter(
+      ({lastPath, path, kind}) =>
+        path.length > 0 &&
+        (kind == ChangeKind.Delete ||
+          (kind == ChangeKind.Edit &&
+            (lastPath[0] == "bucket" ||
+              lastPath[0] == "relationType" ||
+              lastPath[0] == "type" ||
+              (lastPath[0] == "options" && lastPath[1] == "translate"))))
+    );
+    return Promise.all(
+      changes.map(change => this.deleteHistoryAtPath(currentSchema._id, change.path))
+    );
   }
 
-  getPreviousSchema(bucketId: ObjectId) {
-    return this.db.collection<any>("buckets").findOne(
-      {_id: bucketId},
-      {
-        readPreference: new ReadPreference(ReadPreference.SECONDARY_PREFERRED, [
-          {
-            slaveDelay: "true"
-          }
-        ])
-      }
-    );
+  createHistory(
+    bucketId: ObjectId,
+    previousDocument: BucketDocument,
+    currentDocument: BucketDocument
+  ) {
+    const changes = diff(currentDocument, previousDocument);
+    if (changes.length > 0) {
+      const history: History = {
+        bucket_id: bucketId,
+        document_id: currentDocument._id,
+        changes
+      };
+      return this.insertOne(history);
+    }
   }
 
   // We can not use BucketDataService as a direct dependency
   getDocument(bucketId: ObjectId, documentId: ObjectId) {
     return this.db.collection<BucketDocument>(`bucket_${bucketId}`).findOne({_id: documentId});
-  }
-
-  getPreviousDocument(bucketId: ObjectId, documentId: ObjectId) {
-    return this.db.collection(`bucket_${bucketId}`).findOne<BucketDocument>(
-      {_id: documentId},
-      {
-        readPreference: new ReadPreference(ReadPreference.SECONDARY_PREFERRED, [
-          {
-            slaveDelay: "true"
-          }
-        ])
-      }
-    );
   }
 
   findBetweenNow(bucketId: ObjectId, documentId: ObjectId, id: ObjectId) {

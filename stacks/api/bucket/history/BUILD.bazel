@@ -35,30 +35,7 @@ docs(
 )
 
 ts_library(
-    name = "watcher_test_lib",
-    testonly = True,
-    srcs = [
-        "watcher.spec.ts",
-    ],
-    deps = [
-        ":history",
-        "//packages/database/testing",
-        "//stacks/api/bucket/services",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-    ],
-)
-
-jasmine_node_test(
-    name = "watcher_test",
-    srcs = [":watcher_test_lib"],
-    tags = [
-        "flaky",
-    ],
-)
-
-ts_library(
-    name = "history_test_lib",
+    name = "history_e2e_test_lib",
     testonly = True,
     srcs = [
         "history.controller.spec.ts",
@@ -78,6 +55,51 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "history_test",
-    srcs = [":history_test_lib"],
+    name = "history_test_e2e",
+    srcs = [":history_e2e_test_lib"],
+    tags = [
+        "e2e",
+    ],
+)
+
+ts_library(
+    name = "history_service_test_lib",
+    testonly = True,
+    srcs = [
+        "history.service.spec.ts",
+    ],
+    deps = [
+        ":history",
+        "//packages/core",
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/bucket/services",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "history_service_test",
+    srcs = [":history_service_test_lib"],
+)
+
+ts_library(
+    name = "history_unit_test_lib",
+    testonly = True,
+    srcs = [
+        "differ.spec.ts",
+        "path.spec.ts",
+        "schema.spec.ts",
+    ],
+    deps = [
+        ":history",
+        "@npm//@types/jasmine",
+        "@npm//@types/json-schema",
+    ],
+)
+
+jasmine_node_test(
+    name = "history_unit_test",
+    srcs = [":history_unit_test_lib"],
 )

@@ -14,7 +14,8 @@ import {
   Put,
   Res,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Optional
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {Bucket, BucketDocument, BucketService, ImportFile} from "@spica-server/bucket/services";
@@ -28,10 +29,15 @@ import * as request from "request";
 import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {findRelations, findRemovedKeys} from "./utilities";
+import {HistoryService} from "./history/history.service";
 
 @Controller("bucket")
 export class BucketController {
-  constructor(private bs: BucketService, private bds: BucketDataService) {}
+  constructor(
+    private bs: BucketService,
+    private bds: BucketDataService,
+    @Optional() private history: HistoryService
+  ) {}
 
   @Get("templates")
   getTemplates() {
@@ -79,12 +85,17 @@ export class BucketController {
 
     let currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
     await this.clearRemovedFields(this.bds, previousSchema, currentSchema);
+
+    if (this.history) {
+      await this.history.updateHistories(previousSchema, currentSchema);
+    }
+
     return currentSchema;
   }
 
   @Patch(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
-  updateOne(
+  async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Headers("content-type") contentType: string,
     @Body() changes: object
@@ -113,6 +124,9 @@ export class BucketController {
 
     await this.clearRelations(this.bs, this.bds, id);
 
+    if (this.history) {
+      await this.history.deleteMany({bucket_id: id});
+    }
     return;
   }
 
