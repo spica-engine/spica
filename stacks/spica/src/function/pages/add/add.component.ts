@@ -10,6 +10,7 @@ import {
   filter,
   flatMap,
   ignoreElements,
+  share,
   startWith,
   switchMap,
   take,
@@ -64,7 +65,7 @@ export class AddComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private ls: LanguageService
   ) {
-    this.information = this.functionService.information();
+    this.information = this.functionService.information().pipe(share());
   }
 
   ngOnInit() {
@@ -104,12 +105,25 @@ export class AddComponent implements OnInit, OnDestroy {
     this.ls.close();
   }
 
+  formatTimeout(value: number) {
+    if (value >= 60) {
+      return Math.floor(value / 60) + "m";
+    }
+
+    return `${value}s`;
+  }
+
   addTrigger() {
     this.function.triggers.push(emptyTrigger());
   }
 
+  deleteTrigger(i: number) {
+    this.function.triggers.splice(i, 1);
+    this.checkHandlers();
+  }
+
   addVariable() {
-    this.function.env.push({value: undefined, name: undefined});
+    this.function.env.push({value: undefined, key: undefined});
   }
 
   removeVariable(index: number) {
@@ -146,15 +160,10 @@ export class AddComponent implements OnInit, OnDestroy {
     }
   }
 
-  clearEmptyEnvVars() {
-    this.function.env = this.function.env.filter(variable => variable.name && variable.value);
-  }
-
   save() {
     if (this.isIndexPending) return;
 
     this.serverError = undefined;
-    this.clearEmptyEnvVars();
     const fn = denormalizeFunction(this.function);
 
     const isInsert = !this.function._id;
@@ -229,10 +238,5 @@ export class AddComponent implements OnInit, OnDestroy {
         this.isHandlerDuplicated = true;
       }
     });
-  }
-
-  deleteTrigger(i: number) {
-    this.function.triggers = this.function.triggers.filter((val, index) => index != i);
-    this.checkHandlers();
   }
 }

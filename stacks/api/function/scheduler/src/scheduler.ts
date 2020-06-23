@@ -18,10 +18,10 @@ import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io"
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
-import {HorizonOptions, HORIZON_OPTIONS} from "./options";
+import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 
 @Injectable()
-export class Horizon implements OnModuleInit, OnModuleDestroy {
+export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private queue: EventQueue;
   private httpQueue: HttpQueue;
   private databaseQueue: DatabaseQueue;
@@ -39,7 +39,7 @@ export class Horizon implements OnModuleInit, OnModuleDestroy {
   constructor(
     private http: HttpAdapterHost,
     private database: DatabaseService,
-    @Inject(HORIZON_OPTIONS) private options: HorizonOptions,
+    @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
     this.output = new DatabaseOutput(database);
@@ -112,20 +112,22 @@ export class Horizon implements OnModuleInit, OnModuleDestroy {
 
   private scheduled(event: Event.Event, workerId: string) {
     const worker = this.pool.get(workerId);
-    const path = event.target.cwd.split("/");
-    const functionId = path[path.length - 1];
-
+    this.pool.delete(workerId);
     const [stdout, stderr] = this.output.create({
       eventId: event.id,
-      functionId
+      functionId: event.target.id
     });
-    worker.attach(stdout, stderr);
-
-    this.pool.delete(workerId);
-
-    setTimeout(() => {
+    const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
+    const timeout = setTimeout(() => {
+      stderr.write(
+        `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
+      );
       worker.kill();
-    }, this.options.timeout);
+    }, timeoutInSeconds * 1000);
+    worker.attach(stdout, stderr);
+    worker.once("exit", () => {
+      clearTimeout(timeout);
+    });
   }
 
   /**

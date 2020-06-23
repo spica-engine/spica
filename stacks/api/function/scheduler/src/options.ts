@@ -1,4 +1,4 @@
-export interface HorizonOptions {
+export interface SchedulingOptions {
   poolSize: number;
   databaseUri: string;
   databaseName: string;
@@ -7,4 +7,4 @@ export interface HorizonOptions {
   timeout: number;
 }
 
-export const HORIZON_OPTIONS = Symbol.for("HORIZON_OPTIONS");
+export const SCHEDULING_OPTIONS = Symbol.for("SCHEDULING_OPTIONS");

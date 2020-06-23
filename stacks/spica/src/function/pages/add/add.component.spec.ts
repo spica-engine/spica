@@ -11,6 +11,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatSliderModule} from "@angular/material/slider";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {MatSaveModule} from "@spica/client/packages/material";
@@ -53,6 +54,7 @@ describe("Function Add", () => {
         MatSlideToggleModule,
         MatCardModule,
         MatSaveModule,
+        MatSliderModule,
         LayoutModule
       ],
       providers: [
@@ -124,11 +126,11 @@ describe("Function Add", () => {
     fixture.componentInstance.deleteTrigger(2);
 
     expect(func.triggers).toEqual([
-      {handler: "handler1", options: {}, type: undefined, active: true},
+      {handler: "handler1", options: {}, type: "http", active: true},
       {
         handler: "handler2",
         options: {},
-        type: undefined,
+        type: "http",
         active: true
       }
     ]);

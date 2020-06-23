@@ -220,8 +220,8 @@ describe("Activity Controller", () => {
     let end = new Date(today.setHours(23, 59, 59, 999));
 
     const response = await request.get("/webhook/logs", {
-      begin: begin,
-      end: end
+      begin: begin.toISOString(),
+      end: end.toISOString()
     });
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);

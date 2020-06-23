@@ -56,10 +56,12 @@ commands:
 executors:
   default-executor:
     working_directory: ~/spica
+    resource_class: xlarge
     docker:
       - image: circleci/node:11-browsers
   api-executor:
     working_directory: ~/spica
+    resource_class: xlarge
     docker:
       - image: circleci/node:11
 
@@ -98,7 +100,7 @@ jobs:
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e --jobs 4
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
       - custom_save_cache
 
   test_api_flaky:
