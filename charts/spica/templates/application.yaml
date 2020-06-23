@@ -44,6 +44,11 @@ spec:
           ports:
             - containerPort: 4300
           args: [
+{{if len .Values.application.args}}
+{{- range .Values.application.args }}
+            {{ . | quote }},
+{{- end }}
+{{end}}
             --port, "4300", 
             --database-uri, {{ template "database.connection-uri" . }},
             --database-replica-set,  {{ .Values.database.replicaSetName }},
