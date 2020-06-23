@@ -6,7 +6,7 @@ commands:
     steps:
       - run:
           name: Setting up CircleCI bazel configuration
-          command: sudo cat .circleci/bazel.rc >> .bazelrc
+          command: sudo cp .circleci/bazel.rc /etc/bazel.bazelrc
   custom_attach_workspace:
     description: Attach workspace at a predefined location
     steps:
@@ -56,10 +56,12 @@ commands:
 executors:
   default-executor:
     working_directory: ~/spica
+    resource_class: xlarge
     docker:
       - image: circleci/node:11-browsers
   api-executor:
     working_directory: ~/spica
+    resource_class: xlarge
     docker:
       - image: circleci/node:11
 
