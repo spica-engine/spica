@@ -553,7 +553,7 @@ describe("IndexComponent", () => {
       let template = fixture.componentInstance.buildTemplate("test_url", {type: "storage"});
       expect(template).toEqual(
         fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
-          `<img style='width:40px; height:40px;' src=test_url alt=test_url>`
+          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=test_url alt=test_url>`
         )
       );
     });
