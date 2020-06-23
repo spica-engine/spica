@@ -208,6 +208,8 @@ workflows:
             branches:
               ignore: master
       - deploy:
+          requires:
+            - setup
           filters:
             branches:
               only: master
