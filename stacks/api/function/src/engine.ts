@@ -1,6 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
-import {Horizon} from "@spica-server/function/horizon";
+import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {Event} from "@spica-server/function/queue/proto";
 import * as fs from "fs";
@@ -11,7 +11,8 @@ import {Observable} from "rxjs";
 import {bufferTime} from "rxjs/operators";
 import * as util from "util";
 import {ChangeKind, FunctionService, TargetChange} from "./function.service";
-import {Function, FUNCTION_OPTIONS, Options} from "./interface";
+import {Function} from "./interface";
+import {FUNCTION_OPTIONS, Options} from "./options";
 import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
 
 @Injectable()
@@ -29,7 +30,7 @@ export class FunctionEngine {
     private fs: FunctionService,
     private db: DatabaseService,
     private mongo: MongoClient,
-    private horizon: Horizon,
+    private scheduler: Scheduler,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) private schema: SchemaWithName
   ) {
@@ -45,7 +46,7 @@ export class FunctionEngine {
   }
 
   private categorizeChanges(changes: TargetChange[]) {
-    changes.forEach((change, index) => {
+    for (const [index, change] of changes.entries()) {
       switch (change.kind) {
         case ChangeKind.Added:
           this.subscribe(change);
@@ -60,11 +61,11 @@ export class FunctionEngine {
           this.unsubscribe(path.join(this.options.root, change.target.id));
           break;
       }
-    });
+    }
   }
 
   private getDefaultPackageManager(): PackageManager {
-    return this.horizon.pkgmanagers.get(this.horizon.runtime.description.name);
+    return this.scheduler.pkgmanagers.get(this.scheduler.runtime.description.name);
   }
 
   getPackages(fn: Function): Promise<Package[]> {
@@ -109,7 +110,7 @@ export class FunctionEngine {
 
   compile(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.horizon.runtime.compile({
+    return this.scheduler.runtime.compile({
       cwd: functionRoot,
       entrypoint: "index.ts"
     });
@@ -138,16 +139,30 @@ export class FunctionEngine {
   }
 
   getEnqueuer(name: string) {
-    const enq = Array.from(this.horizon.enqueuers);
+    const enq = Array.from(this.scheduler.enqueuers);
     return enq.find(e => e.description.name == name);
   }
 
   private subscribe(change: TargetChange) {
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
-      const target = new Event.Target();
-      target.cwd = path.join(this.options.root, change.target.id);
-      target.handler = change.target.handler;
+      const target = new Event.Target({
+        id: change.target.id,
+        cwd: path.join(this.options.root, change.target.id),
+        handler: change.target.handler,
+        context: new Event.SchedulingContext({
+          env: Object.keys(change.target.context.env).reduce((envs, key) => {
+            envs.push(
+              new Event.SchedulingContext.Env({
+                key,
+                value: change.target.context.env[key]
+              })
+            );
+            return envs;
+          }, []),
+          timeout: change.target.context.timeout
+        })
+      });
       enqueuer.subscribe(target, change.options);
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);
@@ -155,9 +170,10 @@ export class FunctionEngine {
   }
 
   private unsubscribe(cwd: string) {
-    for (const enqueuer of this.horizon.enqueuers) {
-      const target = new Event.Target();
-      target.cwd = cwd;
+    for (const enqueuer of this.scheduler.enqueuers) {
+      const target = new Event.Target({
+        cwd
+      });
       enqueuer.unsubscribe(target);
     }
   }

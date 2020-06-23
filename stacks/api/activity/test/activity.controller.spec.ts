@@ -201,7 +201,7 @@ describe("Activity Acceptance", () => {
     ]);
 
     const {body: activities} = await request.get("/activity", {
-      resource: {$all: ["test_module"], $in: ["test_id1", "test_id3"]}
+      resource: JSON.stringify({$all: ["test_module"], $in: ["test_id1", "test_id3"]})
     });
     expect(activities).toEqual([
       {
@@ -271,7 +271,7 @@ describe("Activity Acceptance", () => {
 
     const res = await request.delete(`/activity/${insertedIds[1]}`);
     expect(res.statusCode).toEqual(204);
-    expect(res.body).toEqual(undefined);
+    expect(res.body).toBeFalsy();
 
     const activities = await service.find({});
 
@@ -301,7 +301,7 @@ describe("Activity Acceptance", () => {
 
     const res = await request.delete("/activity", insertedIds);
     expect(res.statusCode).toEqual(204);
-    expect(res.body).toEqual(undefined);
+    expect(res.body).toBeFalsy();
 
     const activities = await service.find({});
 

@@ -1,19 +1,13 @@
 import {ObjectId} from "@spica-server/database";
 
-export const FUNCTION_OPTIONS = "FUNCTION_OPTIONS";
-
-export interface Options {
-  root: string;
-}
-
 export interface Function {
   _id?: string | ObjectId;
   name?: string;
   description?: string;
-  env?: Environment;
+  env: Environment;
   triggers: Triggers;
   memoryLimit?: number;
-  timeout?: number;
+  timeout: number;
 }
 
 export interface Triggers {
