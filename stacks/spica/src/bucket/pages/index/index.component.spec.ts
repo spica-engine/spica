@@ -510,10 +510,11 @@ describe("IndexComponent", () => {
     });
 
     it("should return date", () => {
-      let template = fixture.componentInstance.buildTemplate("2020-06-01T09:54:24.000Z", {
+      let now = new Date();
+      let template = fixture.componentInstance.buildTemplate(now, {
         type: "date"
       });
-      expect(template).toEqual("01/06/2020, 12:54:24");
+      expect(template).toEqual(now.toLocaleString());
     });
 
     it("should return color", () => {
