@@ -4,14 +4,13 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 
-
 ts_library(
     name = "mongoreplicationcontroller",
     srcs = ["main.ts"],
     deps = [
         "@npm//@types/node",
+        "@npm//@types/yargs",
         "@npm//yargs",
-        "@npm//@types/yargs"
     ],
 )
 
@@ -21,7 +20,7 @@ container_image(
     labels = {
         "maintainer": "Spica maintainers <dev@spicanengine.com>",
     },
-    visibility = ["//visibility:private"]
+    visibility = ["//visibility:private"],
 )
 
 nodejs_image(
