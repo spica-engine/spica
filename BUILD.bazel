@@ -25,7 +25,7 @@ k8s_deploy(
     images = {
         "spicaengine/api:master": "//stacks/api:image",
         "spicaengine/spica:master": "//stacks/spica",
-        "spicaengine/mongoreplicationcontroller:master": "//tools/mongoreplicationcontroller",
+        "spicaengine/mongoreplicationcontroller:master": "//tools/mongoreplicationcontroller:image",
     },
     template = ":deployment.yaml",
 )

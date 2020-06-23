@@ -182,25 +182,32 @@ workflows:
           filters:
             # Do not run on release branches
             branches:
-              ignore: /^\d\.\d\.x$/
+              ignore: /^(\d\.\d\.x|master)$/
       - test_api:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - test_api_e2e:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - test_api_flaky:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - test_spica:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - deploy:
-          requires:
-            - test_api_flaky
-            - test_api_e2e
-            - test_api
-            - test_spica
           filters:
             branches:
               only: master
