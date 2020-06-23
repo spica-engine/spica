@@ -42,6 +42,7 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
+import {MatSliderModule} from "@angular/material";
 
 @NgModule({
   declarations: [
@@ -76,6 +77,7 @@ import {WebhookModule} from "./webhook.module";
     MatToolbarModule,
     MatTabsModule,
     MatMenuModule,
+    MatSliderModule,
     RouterModule,
     SatDatepickerModule,
     SatNativeDateModule,

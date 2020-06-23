@@ -17,4 +17,5 @@ spec:
       targetPort: 27017
   clusterIP: None
   selector:
-    app: {{ .Release.Name }}-database
+    app.kubernetes.io/name: {{ .Release.Name }}-database
+    app.kubernetes.io/component: database

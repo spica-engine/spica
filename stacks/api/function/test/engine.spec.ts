@@ -1,18 +1,20 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {Horizon, HorizonModule} from "@spica-server/function/horizon";
+import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
 import {ChangeKind, FunctionService, TargetChange} from "../src/function.service";
 
-describe("engine", () => {
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24045";
+
+describe("Engine", () => {
   let engine: FunctionEngine;
   let subscribeSpy: jasmine.Spy;
   let unsubscribeSpy: jasmine.Spy;
 
-  let horizon: Horizon;
+  let scheduler: Scheduler;
   let database: DatabaseService;
   let mongo: MongoClient;
 
@@ -21,7 +23,7 @@ describe("engine", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
-        HorizonModule.forRoot({
+        SchedulerModule.forRoot({
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
@@ -33,7 +35,11 @@ describe("engine", () => {
       ]
     }).compile();
 
-    horizon = module.get(Horizon);
+    const app = module.createNestApplication();
+
+    await app.init();
+
+    scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
     mongo = module.get(MongoClient);
 
@@ -41,8 +47,8 @@ describe("engine", () => {
       new FunctionService(database),
       database,
       mongo,
-      horizon,
-      {root: "test_root"},
+      scheduler,
+      {root: "test_root", timeout: 1},
       null
     );
 
@@ -69,8 +75,7 @@ describe("engine", () => {
 
     expect(subscribeSpy).toHaveBeenCalledTimes(1);
     expect(subscribeSpy).toHaveBeenCalledWith(changes);
-
-    expect(unsubscribeSpy).toHaveBeenCalledTimes(0);
+    expect(unsubscribeSpy).not.toHaveBeenCalled();
   });
 
   it("should unsubscribe from removed trigger if ChangeKind is Removed", () => {
@@ -115,6 +120,40 @@ describe("engine", () => {
 
     expect(subscribeSpy).toHaveBeenCalledTimes(2);
     expect(subscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[0]], [changes[1]]]);
+  });
+
+  it("should create the scheduling context when subscribing", () => {
+    const changes: TargetChange = {
+      kind: ChangeKind.Added,
+      target: {
+        id: "test_id",
+        handler: "test_handler",
+        context: {
+          env: {
+            TEST: "true"
+          },
+          timeout: 60
+        }
+      },
+      type: "http",
+      options: {
+        method: "POST",
+        path: "/test"
+      }
+    };
+
+    const httpEnqueuer = Array.from(scheduler.enqueuers).find(
+      enqueuer => enqueuer.description.name == "http"
+    );
+    const httpSubscribe = spyOn(httpEnqueuer, "subscribe");
+    subscribeSpy.and.callThrough();
+    engine["categorizeChanges"]([changes]);
+    expect(httpSubscribe.calls.mostRecent().args[0].toObject()).toEqual({
+      id: "test_id",
+      cwd: "test_root/test_id",
+      handler: "test_handler",
+      context: {env: [{key: "TEST", value: "true"}], timeout: 60}
+    });
   });
 
   describe("Database Schema", () => {
