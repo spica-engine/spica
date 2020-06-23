@@ -165,6 +165,9 @@ Example: http(s)://doomed-d45f1.spica.io/api`
     }
     return true;
   })
+  .parserConfiguration({
+    "duplicate-arguments-array": false
+  })
   .env()
   .parse();
 
