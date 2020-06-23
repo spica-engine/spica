@@ -15,12 +15,12 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-application
+      app.kubernetes.io/name: {{ .Release.Name }}-spica
+      app.kubernetes.io/component: application
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-application
-        app.kubernetes.io/name: spica
+        app.kubernetes.io/name: {{ .Release.Name }}-spica
         app.kubernetes.io/component: application
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/version: {{ .Chart.AppVersion }}

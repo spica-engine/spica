@@ -20,4 +20,5 @@ spec:
       port: 4300
       targetPort: 4300
   selector:
-    app: {{ .Release.Name }}-application
+    app.kubernetes.io/name: {{ .Release.Name }}-spica
+    app.kubernetes.io/component: application
