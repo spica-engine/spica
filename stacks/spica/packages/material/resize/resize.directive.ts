@@ -9,7 +9,7 @@ import {
   Output,
   AfterViewInit
 } from "@angular/core";
-import {MatSortHeader} from "@angular/material";
+import {MatSortHeader} from "@angular/material/sort";
 
 @Directive({
   selector: "[mat-resize-header]",

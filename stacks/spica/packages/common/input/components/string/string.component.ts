@@ -15,7 +15,7 @@ export class StringComponent implements ControlValueAccessor {
   _onChangeFn: Function = () => {};
   _onTouchedFn: Function = () => {};
 
-  @ViewChild(NgModel, {static: false}) model: NgModel;
+  @ViewChild(NgModel) model: NgModel;
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 

@@ -122,7 +122,7 @@ describe("Webhook", () => {
         body: "",
         trigger: {active: true, name: "database", options: {collection: "bucket", type: "DELETE"}}
       };
-      fixture.detectChanges();
+      fixture.detectChanges(false);
 
       webhookService.add.and.returnValue(of({...fixture.componentInstance.webhook, _id: "1"}));
       const addButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
@@ -136,10 +136,10 @@ describe("Webhook", () => {
       });
 
       tick();
-      fixture.detectChanges();
+      fixture.detectChanges(false);
 
       tick(1000);
-      fixture.detectChanges();
+      fixture.detectChanges(false);
 
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith(["webhook/1"]);

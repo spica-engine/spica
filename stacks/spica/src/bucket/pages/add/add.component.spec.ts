@@ -1,19 +1,16 @@
 import {DebugElement, Directive, HostBinding, Input} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
-import {
-  MatBadge,
-  MatBadgeModule,
-  MatButtonModule,
-  MatCardModule,
-  MatChipsModule,
-  MatFormFieldModule,
-  MatIconModule,
-  MatMenuModule,
-  MatProgressSpinnerModule,
-  MatToolbarModule,
-  MatTooltipModule
-} from "@angular/material";
+import {MatBadge, MatBadgeModule} from "@angular/material/badge";
+import {MatButtonModule} from "@angular/material/button";
+import {MatCardModule} from "@angular/material/card";
+import {MatChipsModule} from "@angular/material/chips";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatIconModule} from "@angular/material/icon";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
@@ -510,7 +507,7 @@ describe("AddComponent", () => {
       tick(1);
       fixture.detectChanges(true);
       tick(1);
-      fixture.detectChanges();
+      fixture.detectChanges(true);
       expect(
         fixture.debugElement.query(By.css("mat-card > mat-card-actions > button:last-of-type"))
           .nativeElement.disabled

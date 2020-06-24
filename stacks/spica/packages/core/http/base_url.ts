@@ -4,7 +4,7 @@ import {BaseUrlInterceptor} from "./base_url.interceptor";
 
 @NgModule({})
 export class BaseUrlInterceptorModule {
-  static forRoot(baseCollection: BaseUrlCollection): ModuleWithProviders {
+  static forRoot(baseCollection: BaseUrlCollection): ModuleWithProviders<BaseUrlInterceptorModule> {
     return {
       ngModule: BaseUrlInterceptorModule,
       providers: [

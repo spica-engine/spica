@@ -1,7 +1,12 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketDataService, BucketModule} from "@spica-server/bucket";
 import {DocumentScheduler} from "@spica-server/bucket/scheduler";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {
+  DatabaseTestingModule,
+  ObjectId,
+  DatabaseService,
+  stream
+} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
@@ -9,6 +14,7 @@ describe("scheduler", () => {
   let bds: jasmine.SpyObj<BucketDataService>;
   let scheduler: DocumentScheduler;
   const bucketId = new ObjectId();
+  const documentId = new ObjectId();
   let module: TestingModule;
   let clock: jasmine.Clock;
 
@@ -42,7 +48,6 @@ describe("scheduler", () => {
   });
 
   it("should publish immediately if the date is past", () => {
-    const documentId = new ObjectId();
     const date = new Date();
     date.setSeconds(date.getSeconds() + 1);
 
@@ -59,7 +64,6 @@ describe("scheduler", () => {
   });
 
   it("should publish after 15seconds", () => {
-    const documentId = new ObjectId();
     const date = new Date();
 
     date.setSeconds(date.getSeconds() + 15);
@@ -75,5 +79,26 @@ describe("scheduler", () => {
     expect(scheduledBucketId).toBe(bucketId);
     expect(filter).toEqual({_id: documentId});
     expect(update).toEqual({$unset: {_schedule: ""}});
+  });
+
+  it("should call schedule when entry inserted", async () => {
+    let scheduleSpy = spyOn(scheduler, "schedule");
+
+    const date = new Date();
+
+    date.setSeconds(date.getSeconds() + 15);
+
+    await module
+      .get(DatabaseService)
+      .collection(`bucket_${bucketId}`)
+      .insertOne({
+        _id: documentId,
+        _schedule: date
+      });
+
+    await stream.change.wait();
+
+    expect(scheduleSpy).toHaveBeenCalledTimes(1);
+    expect(scheduleSpy).toHaveBeenCalledWith(bucketId, documentId, date);
   });
 });

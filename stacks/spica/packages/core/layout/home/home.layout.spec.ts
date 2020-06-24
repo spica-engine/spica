@@ -148,7 +148,7 @@ describe("Home Layout", () => {
       expect(sideNav.getAttribute("ng-reflect-opened")).toBe("false");
       expect(sideNav.getAttribute("ng-reflect-mode")).toBe("over");
       expect(sideNav.getAttribute("role")).toBe("dialog");
-      expect(sideNav.getAttribute("style")).toContain("visibility:hidden");
+      expect(sideNav.getAttribute("style")).toContain("visibility: hidden");
     }));
 
     it("should open sidenav", fakeAsync(() => {
