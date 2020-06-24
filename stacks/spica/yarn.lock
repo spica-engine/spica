@@ -7385,10 +7385,10 @@ sass@^1.17.3:
   dependencies:
     chokidar ">=2.0.0 <4.0.0"
 
-saturn-datepicker@8.0.1:
-  version "8.0.1"
-  resolved "https://registry.yarnpkg.com/saturn-datepicker/-/saturn-datepicker-8.0.1.tgz#8842dfd10eec7fa6529f059246170c29fee14367"
-  integrity sha512-kUmf8xg5oeGAZtgwqfkNY8Dro6EzX0zGIWnAcQ9cfQ+w3xBq4TbjdBUWuEA19rJlvLLP/uH3PAoXG/SHVLYncQ==
+saturn-datepicker@^8.0.5:
+  version "8.0.5"
+  resolved "https://registry.yarnpkg.com/saturn-datepicker/-/saturn-datepicker-8.0.5.tgz#3606b06769327aa286528173a9df47b4995f9b52"
+  integrity sha512-LEJftfa/mDNYFLdOZRETU4SEjXPtd5xve8hjyUHmxmc/znYD4PqBfS044+C1uekN4M92YZlsLUXWKmPKSdAQbg==
   dependencies:
     tslib "^1.9.0"
 
