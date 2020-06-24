@@ -1,7 +1,7 @@
 import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 
 import {SnackbarComponent} from "./snackbar.component";
-import {MatSnackBar, MatSnackBarModule} from "@angular/material";
+import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
 import {SnackbarError} from "./interface";
 import {Component, NgModule} from "@angular/core";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";

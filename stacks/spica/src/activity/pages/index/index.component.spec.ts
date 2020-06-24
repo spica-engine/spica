@@ -1,15 +1,13 @@
 import {IndexComponent} from "@spica-client/activity/pages/index/index.component";
-import {
-  MatIconModule,
-  MatToolbarModule,
-  MatCardModule,
-  MatTableModule,
-  MatOptionModule,
-  MatSelectModule,
-  MatInputModule,
-  MatButtonModule,
-  MatTooltipModule
-} from "@angular/material";
+import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
+import { MatOptionModule } from "@angular/material/core";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { MatSelectModule } from "@angular/material/select";
+import { MatTableModule } from "@angular/material/table";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTooltipModule } from "@angular/material/tooltip";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {MatListModule} from "@angular/material/list";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";

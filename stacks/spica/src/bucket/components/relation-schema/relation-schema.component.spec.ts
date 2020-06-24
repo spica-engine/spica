@@ -1,6 +1,7 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import {MatOptionModule, MatSelectModule} from "@angular/material";
+import { MatOptionModule } from "@angular/material/core";
+import { MatSelectModule } from "@angular/material/select";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {EMPTY_INPUT_SCHEMA, INPUT_SCHEMA} from "@spica-client/common";

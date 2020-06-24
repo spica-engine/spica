@@ -1,7 +1,7 @@
 import {animate, style, transition, trigger} from "@angular/animations";
 import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
 import {Component, OnDestroy, OnInit} from "@angular/core";
-import {MatCheckboxChange} from "@angular/material";
+import { MatCheckboxChange } from "@angular/material/checkbox";
 import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
 import {deepCopy} from "@spica-client/core";

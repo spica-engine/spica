@@ -1,6 +1,6 @@
 import {async, ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
-import {MatIconModule} from "@angular/material";
+import { MatIconModule } from "@angular/material/icon";
 import {By} from "@angular/platform-browser";
 import {InputModule} from "@spica-client/common";
 import {INPUT_SCHEMA} from "../..";

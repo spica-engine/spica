@@ -1,15 +1,12 @@
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {
-  MatCardModule,
-  MatDialogRef,
-  MatGridListModule,
-  MatIconModule,
-  MatPaginator,
-  MatPaginatorModule,
-  MatProgressBarModule,
-  MatTabsModule
-} from "@angular/material";
+import { MatCardModule } from "@angular/material/card";
+import { MatDialogRef } from "@angular/material/dialog";
+import { MatGridListModule } from "@angular/material/grid-list";
+import { MatIconModule } from "@angular/material/icon";
+import { MatPaginator, MatPaginatorModule } from "@angular/material/paginator";
+import { MatProgressBarModule } from "@angular/material/progress-bar";
+import { MatTabsModule } from "@angular/material/tabs";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ngfModule} from "angular-file";

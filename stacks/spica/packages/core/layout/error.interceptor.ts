@@ -11,7 +11,7 @@ import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {SnackbarError} from "./snackbar/interface";
-import {MatSnackBar} from "@angular/material";
+import { MatSnackBar } from "@angular/material/snack-bar";
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {

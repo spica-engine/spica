@@ -1,12 +1,10 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ApiKeyIndexComponent} from "./apikey-index.component";
-import {
-  MatIconModule,
-  MatToolbarModule,
-  MatCardModule,
-  MatTableModule,
-  MatPaginatorModule
-} from "@angular/material";
+import { MatCardModule } from "@angular/material/card";
+import { MatIconModule } from "@angular/material/icon";
+import { MatPaginatorModule } from "@angular/material/paginator";
+import { MatTableModule } from "@angular/material/table";
+import { MatToolbarModule } from "@angular/material/toolbar";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {MatAwareDialogModule} from "@spica-client/material";

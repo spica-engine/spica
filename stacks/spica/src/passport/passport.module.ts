@@ -3,7 +3,7 @@ import {CommonModule} from "@angular/common";
 import {HTTP_INTERCEPTORS} from "@angular/common/http";
 import {ModuleWithProviders, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {MatGridListModule} from "@angular/material";
+import { MatGridListModule } from "@angular/material/grid-list";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";

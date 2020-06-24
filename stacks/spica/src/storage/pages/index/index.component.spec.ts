@@ -4,15 +4,12 @@ import {StorageService} from "../../storage.service";
 import {of, Subject, Observable} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
-import {
-  MatIconModule,
-  MatMenuModule,
-  MatCardModule,
-  MatToolbarModule,
-  MatTooltipModule,
-  MatPaginatorModule,
-  MatPaginator
-} from "@angular/material";
+import { MatCardModule } from "@angular/material/card";
+import { MatIconModule } from "@angular/material/icon";
+import { MatMenuModule } from "@angular/material/menu";
+import { MatPaginatorModule, MatPaginator } from "@angular/material/paginator";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTooltipModule } from "@angular/material/tooltip";
 import {FormsModule} from "@angular/forms";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatGridListModule} from "@angular/material/grid-list";

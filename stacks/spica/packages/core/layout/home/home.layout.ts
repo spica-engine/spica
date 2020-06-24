@@ -1,6 +1,6 @@
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, Inject, OnInit, Optional, Type, ViewChild} from "@angular/core";
-import {MatSidenavContainer} from "@angular/material";
+import { MatSidenavContainer } from "@angular/material/sidenav";
 import {BehaviorSubject, Observable} from "rxjs";
 import {debounceTime, map, switchMap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
