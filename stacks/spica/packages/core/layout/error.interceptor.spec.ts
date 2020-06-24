@@ -3,7 +3,7 @@ import {HttpClientTestingModule, HttpTestingController} from "@angular/common/ht
 import {HTTP_INTERCEPTORS, HttpClient} from "@angular/common/http";
 import {ErrorInterceptor} from "./error.interceptor";
 import {Router} from "@angular/router";
-import { MatSnackBar } from "@angular/material/snack-bar";
+import {MatSnackBar} from "@angular/material/snack-bar";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 
 describe("Error Interceptor", () => {

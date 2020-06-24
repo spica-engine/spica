@@ -4,12 +4,12 @@ import {StorageService} from "../../storage.service";
 import {of, Subject, Observable} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
-import { MatCardModule } from "@angular/material/card";
-import { MatIconModule } from "@angular/material/icon";
-import { MatMenuModule } from "@angular/material/menu";
-import { MatPaginatorModule, MatPaginator } from "@angular/material/paginator";
-import { MatToolbarModule } from "@angular/material/toolbar";
-import { MatTooltipModule } from "@angular/material/tooltip";
+import {MatCardModule} from "@angular/material/card";
+import {MatIconModule} from "@angular/material/icon";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatPaginatorModule, MatPaginator} from "@angular/material/paginator";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {FormsModule} from "@angular/forms";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatGridListModule} from "@angular/material/grid-list";
@@ -114,7 +114,7 @@ describe("Storage/IndexComponent", () => {
     fixture = TestBed.createComponent(IndexComponent);
     location = TestBed.get(Location);
 
-    fixture.detectChanges();
+    fixture.detectChanges(false);
   });
 
   describe("basic behaviours", () => {
@@ -303,7 +303,7 @@ describe("Storage/IndexComponent", () => {
       expect(
         fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
           .textContent
-      ).toBe("1 – 12 of 10000");
+      ).toBe(" 1 – 12 of 10000 ");
     }));
     it("should change page", () => {
       paginator.nextPage();
@@ -311,7 +311,7 @@ describe("Storage/IndexComponent", () => {
       expect(
         fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
           .textContent
-      ).toBe("13 – 24 of 10000");
+      ).toBe(" 13 – 24 of 10000 ");
     });
     it("should change page size", () => {
       paginator._changePageSize(24);
@@ -319,7 +319,7 @@ describe("Storage/IndexComponent", () => {
       expect(
         fixture.debugElement.query(By.css("div.mat-paginator-range-label")).nativeElement
           .textContent
-      ).toBe("1 – 24 of 10000");
+      ).toBe(" 1 – 24 of 10000 ");
     });
   });
 });

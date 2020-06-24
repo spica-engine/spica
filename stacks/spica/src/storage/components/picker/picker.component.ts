@@ -1,5 +1,5 @@
 import {Component, OnInit, ViewChild} from "@angular/core";
-import { MatDialogRef } from "@angular/material/dialog";
+import {MatDialogRef} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";

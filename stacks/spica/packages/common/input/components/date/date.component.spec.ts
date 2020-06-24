@@ -1,8 +1,8 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatInputModule } from "@angular/material/input";
-import { MatMenuModule } from "@angular/material/menu";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatInputModule} from "@angular/material/input";
+import {MatMenuModule} from "@angular/material/menu";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";

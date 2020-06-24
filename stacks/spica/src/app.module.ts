@@ -1,6 +1,6 @@
 import {HttpClientModule} from "@angular/common/http";
 import {NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import {BrowserModule, HammerModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
@@ -18,6 +18,7 @@ import {StorageModule} from "./storage/storage.module";
   imports: [
     /** Initialize main modules. */
     BrowserModule,
+    HammerModule,
     BrowserAnimationsModule,
     RouterModule.forRoot([], {paramsInheritanceStrategy: "always"}),
     HttpClientModule,

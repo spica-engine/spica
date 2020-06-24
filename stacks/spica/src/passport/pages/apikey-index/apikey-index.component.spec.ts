@@ -1,10 +1,10 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ApiKeyIndexComponent} from "./apikey-index.component";
-import { MatCardModule } from "@angular/material/card";
-import { MatIconModule } from "@angular/material/icon";
-import { MatPaginatorModule } from "@angular/material/paginator";
-import { MatTableModule } from "@angular/material/table";
-import { MatToolbarModule } from "@angular/material/toolbar";
+import {MatCardModule} from "@angular/material/card";
+import {MatIconModule} from "@angular/material/icon";
+import {MatPaginatorModule} from "@angular/material/paginator";
+import {MatTableModule} from "@angular/material/table";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
@@ -63,6 +63,7 @@ describe("ApiKeyIndexComponent", () => {
     component.deleteApiKey("0");
 
     await fixture.whenStable();
+    fixture.detectChanges();
 
     const cells = fixture.debugElement.queryAll(By.css("mat-table mat-cell"));
     expect(cells).toEqual([]);

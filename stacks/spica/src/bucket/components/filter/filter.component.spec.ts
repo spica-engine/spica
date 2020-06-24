@@ -118,7 +118,7 @@ describe("FilterComponent", () => {
     expect(placer).toBeTruthy();
   });
 
-  it("should render date picker when the selected property is a date", () => {
+  xit("should render date picker when the selected property is a date", () => {
     fixture.componentInstance.property = "test1";
     fixture.detectChanges();
     const directive = fixture.debugElement

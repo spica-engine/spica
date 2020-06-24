@@ -85,7 +85,7 @@ describe("Common#object", () => {
       })
       .compileComponents();
     fixture = TestBed.createComponent(ObjectComponent);
-    fixture.detectChanges();
+    fixture.detectChanges(false);
     changeSpy = jasmine.createSpy("ngModelChange");
     fixture.componentInstance.registerOnChange(changeSpy);
   });

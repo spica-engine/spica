@@ -2,10 +2,10 @@ import {HttpEventType, HttpResponse} from "@angular/common/http";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {Component, Directive, EventEmitter, Input, Output} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { MatIconModule } from "@angular/material/icon";
-import { MatProgressBarModule } from "@angular/material/progress-bar";
-import { MatProgressSpinner, MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatTooltipModule } from "@angular/material/tooltip";
+import {MatIconModule} from "@angular/material/icon";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
+import {MatProgressSpinner, MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {INPUT_SCHEMA} from "@spica-client/common";
 import {StorageComponent} from "./storage.component";
@@ -231,7 +231,7 @@ describe("StorageComponent", () => {
 
       fixture.detectChanges();
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       const req = httpTestingController.expectOne("api:/storage");
 
