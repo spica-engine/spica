@@ -1,7 +1,8 @@
 import {ChangeDetectorRef} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
-import {MatIconModule, MatInputModule} from "@angular/material";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatTooltip, MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";

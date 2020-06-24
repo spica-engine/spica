@@ -58,12 +58,12 @@ executors:
     working_directory: ~/spica
     resource_class: xlarge
     docker:
-      - image: circleci/node:11-browsers
+      - image: circleci/node:12-browsers
   api-executor:
     working_directory: ~/spica
     resource_class: xlarge
     docker:
-      - image: circleci/node:11
+      - image: circleci/node:12
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3

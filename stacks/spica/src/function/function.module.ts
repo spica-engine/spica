@@ -42,7 +42,7 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
-import {MatSliderModule} from "@angular/material";
+import {MatSliderModule} from "@angular/material/slider";
 
 @NgModule({
   declarations: [
@@ -90,7 +90,7 @@ import {MatSliderModule} from "@angular/material";
   ]
 })
 export class FunctionModule {
-  public static forRoot(options: FunctionOptions): ModuleWithProviders {
+  public static forRoot(options: FunctionOptions): ModuleWithProviders<FunctionModule> {
     return {
       ngModule: FunctionModule,
       providers: [

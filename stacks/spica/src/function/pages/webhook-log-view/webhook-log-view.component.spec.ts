@@ -1,16 +1,14 @@
 import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 import {WebhookLogViewComponent} from "./webhook-log-view.component";
 import {WebhookService} from "../../webhook.service";
-import {
-  MatIconModule,
-  MatToolbarModule,
-  MatOptionModule,
-  MatSelectModule,
-  MatButtonModule,
-  MatProgressSpinnerModule,
-  MatCardModule,
-  MatInputModule
-} from "@angular/material";
+import {MatButtonModule} from "@angular/material/button";
+import {MatCardModule} from "@angular/material/card";
+import {MatOptionModule} from "@angular/material/core";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {MatSelectModule} from "@angular/material/select";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";

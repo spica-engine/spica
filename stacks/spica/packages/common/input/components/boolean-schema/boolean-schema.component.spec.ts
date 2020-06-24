@@ -1,6 +1,8 @@
 import {async, ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
-import {MatFormFieldModule, MatInputModule, MatSlideToggleModule} from "@angular/material";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatInputModule} from "@angular/material/input";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {By} from "@angular/platform-browser";
 import {INPUT_SCHEMA} from "../../input";
 import {BooleanSchemaComponent} from "./boolean-schema.component";

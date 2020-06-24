@@ -6,7 +6,6 @@
     "rootDir": ".",
     "moduleResolution": "node",
     "target": "es2015",
-    "module": "esnext",
     "lib": ["es2018", "dom"],
     "paths": {
       "@spica-client/*": [

@@ -18,8 +18,8 @@ import {
   styleUrls: ["./bucket-index.component.scss"]
 })
 export class BucketIndexComponent implements OnDestroy {
-  @ViewChild(CdkDropListGroup, {static: false}) listGroup: CdkDropListGroup<CdkDropList>;
-  @ViewChild(CdkDropList, {static: false}) placeholder: CdkDropList;
+  @ViewChild(CdkDropListGroup) listGroup: CdkDropListGroup<CdkDropList>;
+  @ViewChild(CdkDropList) placeholder: CdkDropList;
   public target: CdkDropList;
   public targetIndex: number;
   public source: CdkDropList;
