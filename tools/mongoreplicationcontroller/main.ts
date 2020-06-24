@@ -169,11 +169,16 @@ async function initialize() {
       }
       let primary = await findPrimaryNode(nodes);
       if (!primary) {
-        debug("Theres no primary, initializing the replica set.");
-        await initiateReplication([nodes[0]]);
-        primary = nodes[0];
+        if ( nodes.length == 1 ) {
+          debug("There is only one node and it is either inaccessible or secondary. Skipping the initialization.");
+        } else {
+          debug("Theres no primary, initializing the replica set.");
+          await initiateReplication([nodes[0]]);
+          primary = nodes[0];
+          await addAsSecondary(primary, domainName.hostname, nodes.length);
+        }
       }
-      await addAsSecondary(primary, domainName.hostname, nodes.length);
+
     }
   } else {
     const nodes = options.nodes;
