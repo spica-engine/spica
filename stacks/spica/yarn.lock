@@ -5480,12 +5480,10 @@ matcher@^2.1.0:
   dependencies:
     escape-string-regexp "^2.0.0"
 
-material-community-components@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/material-community-components/-/material-community-components-5.0.1.tgz#842fdc14534ad03f8b0fbc6b71b66bf1930c5da3"
-  integrity sha512-DQsBaQMm487r5/8OcRVtCN3t9MuE0jFaOtS/RBKNHVBzu6lj1xqNwMGb8SgcmyR6pzIidVLJj1FrAtA/mEXIYg==
-  dependencies:
-    tslib "^1.9.0"
+material-community-components@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/material-community-components/-/material-community-components-6.0.1.tgz#69725c7d67ac78790c3fa3a47289d3ddc871c0e3"
+  integrity sha512-b+rXw6RyNdcpP8wKeR/tVotp62Yqo2jLdXgjlKjY9kKBTPUMkstfMwFgxU9d1ReKnpSx8Q8Kjyw62R1cbqlXvg==
 
 md5.js@^1.3.4:
   version "1.3.5"
