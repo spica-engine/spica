@@ -1,15 +1,12 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {Component, TemplateRef} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {
-  MatButtonModule,
-  MatCardModule,
-  MatIconModule,
-  MatPaginator,
-  MatPaginatorModule,
-  MatTableModule,
-  MatToolbarModule
-} from "@angular/material";
+import {MatButtonModule} from "@angular/material/button";
+import {MatCardModule} from "@angular/material/card";
+import {MatIconModule} from "@angular/material/icon";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
+import {MatTableModule} from "@angular/material/table";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";

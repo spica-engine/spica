@@ -149,7 +149,7 @@ export function coerceObject() {
   ]
 })
 export class InputModule {
-  static withPlacers(placers: InputPlacerWithMetaPlacer[]): ModuleWithProviders {
+  static withPlacers(placers: InputPlacerWithMetaPlacer[]): ModuleWithProviders<InputModule> {
     return {ngModule: InputModule, providers: providePlacers(placers)};
   }
 }

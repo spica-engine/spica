@@ -3,7 +3,7 @@ import {CommonModule} from "@angular/common";
 import {HTTP_INTERCEPTORS} from "@angular/common/http";
 import {ModuleWithProviders, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {MatGridListModule} from "@angular/material";
+import {MatGridListModule} from "@angular/material/grid-list";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
@@ -96,7 +96,7 @@ import {PassportRouteFilter} from "./services/route.filter";
   entryComponents: [IdentityBadgeComponent, StrategyDialogComponent]
 })
 export class PassportModule {
-  static forRoot(): ModuleWithProviders {
+  static forRoot(): ModuleWithProviders<PassportModule> {
     return {
       ngModule: PassportModule,
       providers: [
@@ -108,7 +108,7 @@ export class PassportModule {
     };
   }
 
-  static forChild(): ModuleWithProviders {
+  static forChild(): ModuleWithProviders<PassportModule> {
     return {ngModule: PassportModule, providers: []};
   }
 }

@@ -65,8 +65,6 @@ import "zone.js/dist/zone"; // Included with Angular CLI.
  */
 // import 'intl/locale-data/jsonp/en';
 
-import "hammerjs/hammer";
-
 // Hotfix for socket.io avoid Uncaught ReferenceError: global is not defined
 // See: https://github.com/angular/angular-cli/issues/8160
 (window as any).global = window;

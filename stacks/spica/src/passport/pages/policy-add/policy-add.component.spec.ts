@@ -3,15 +3,13 @@ import {PolicyAddComponent} from "./policy-add.component";
 import {PolicyService} from "../../services/policy.service";
 import {of} from "rxjs";
 import {ActivatedRoute, RouterModule} from "@angular/router";
-import {
-  MatIconModule,
-  MatToolbarModule,
-  MatFormFieldModule,
-  MatCardModule,
-  MatExpansionModule,
-  MatInputModule,
-  MatSelectModule
-} from "@angular/material";
+import {MatCardModule} from "@angular/material/card";
+import {MatExpansionModule} from "@angular/material/expansion";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import {MatSelectModule} from "@angular/material/select";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {FormsModule, NgModel} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";

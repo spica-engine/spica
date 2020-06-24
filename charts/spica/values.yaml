@@ -20,6 +20,7 @@ application:
     storageClass: 
     apiResources: {}
     webResources: {}
+    args: []
 
 ingress:
     host: 

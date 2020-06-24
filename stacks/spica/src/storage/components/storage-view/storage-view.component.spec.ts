@@ -2,7 +2,7 @@ import {HttpResponse} from "@angular/common/http";
 import {HttpClientTestingModule, HttpTestingController} from "@angular/common/http/testing";
 import {Component, DebugElement} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {MatIconModule} from "@angular/material";
+import {MatIconModule} from "@angular/material/icon";
 import {By} from "@angular/platform-browser";
 import {empty, of} from "rxjs";
 import {StorageViewComponent} from "./storage-view.component";

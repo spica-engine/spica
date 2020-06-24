@@ -29,6 +29,7 @@ import * as locale from "locale";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
 import {findRelations} from "./utilities";
+import {HistoryService} from "./history/history.service";
 
 function filterReviver(k: string, v: string) {
   const availableConstructors = {
@@ -52,7 +53,8 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    @Optional() private dispatcher: ActionDispatcher
+    @Optional() private dispatcher: ActionDispatcher,
+    @Optional() private history: HistoryService
   ) {}
 
   private async getLanguage(language: string) {
@@ -406,7 +408,18 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-    return this.bds.replaceOne(bucketId, {_id: documentId}, body).then(result => result.value);
+
+    return this.bds
+      .replaceOne(bucketId, {_id: documentId}, body, {returnOriginal: true})
+      .then(result => {
+        if (result.ok == 1 && result.value) {
+          const currentDocument = {...body, _id: documentId};
+          const _ = this.createHistory(bucketId, result.value, currentDocument);
+          return currentDocument;
+        } else {
+          throw new BadRequestException();
+        }
+      });
   }
 
   @UseInterceptors(activity(createBucketDataActivity))
@@ -434,6 +447,12 @@ export class BucketDataController {
       .then(result => result.deletedCount);
     if (deletedCount < 1) return;
 
+    if (this.history) {
+      await this.history.deleteMany({
+        document_id: documentId
+      });
+    }
+
     return this.clearRelations(this.bs, bucketId, documentId);
   }
 
@@ -456,6 +475,16 @@ export class BucketDataController {
       .then(result => result.deletedCount);
     if (deletedCount < 1) return;
 
+    if (this.history) {
+      await Promise.all(
+        body.map(id => {
+          this.history.deleteMany({
+            document_id: new ObjectId(id)
+          });
+        })
+      );
+    }
+
     return Promise.all(
       body.map(id => {
         this.clearRelations(this.bs, bucketId, new ObjectId(id)).catch(err => err);
@@ -477,5 +506,17 @@ export class BucketDataController {
           .updateMany({[target]: documentId.toHexString()}, {$unset: {[target]: ""}});
       }
     }
+  }
+
+  createHistory(
+    bucketId: ObjectId,
+    previousDocument: BucketDocument,
+    currentDocument: BucketDocument
+  ) {
+    return this.bs.findOne({_id: bucketId}).then(bucket => {
+      if (bucket && bucket.history) {
+        return this.history.createHistory(bucketId, previousDocument, currentDocument);
+      }
+    });
   }
 }

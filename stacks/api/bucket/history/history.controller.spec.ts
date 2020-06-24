@@ -34,7 +34,7 @@ describe("History Acceptance", () => {
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DatabaseTestingModule.replicaSet(),
+        DatabaseTestingModule.create(),
         PreferenceTestingModule,
         ServicesModule,
         HistoryModule

@@ -1,5 +1,5 @@
 import {Component, Inject, HostListener} from "@angular/core";
-import {MAT_SNACK_BAR_DATA, MatSnackBarRef} from "@angular/material";
+import {MAT_SNACK_BAR_DATA, MatSnackBarRef} from "@angular/material/snack-bar";
 import {SnackbarError} from "./interface";
 
 @Component({

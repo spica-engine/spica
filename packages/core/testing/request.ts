@@ -1,35 +1,34 @@
-import {Injectable} from "@nestjs/common";
-import * as request from "request-promise-native";
+import {Inject, Injectable} from "@nestjs/common";
+import got, {Headers, Method} from "got";
+import * as querystring from "querystring";
 
 @Injectable()
 export class Request {
   reject: boolean = false;
 
-  get socket() {
-    return `/tmp/${process.env.BAZEL_TARGET.replace(/\/|:/g, "_")}.sock`;
-  }
+  constructor(@Inject("SOCKET") readonly socket: string) {}
 
   options<T>(path: string) {
     return this.request<T>({method: "OPTIONS", path});
   }
 
-  get<T>(path: string, query: any, headers?: object) {
-    return this.request<T>({method: "GET", path, qs: query, headers});
+  get<T>(path: string, query?: any, headers?: Headers) {
+    return this.request<T>({method: "GET", path, query, headers});
   }
 
-  delete<T>(path: string, body?: object, headers?: object) {
+  delete<T>(path: string, body?: object, headers?: Headers) {
     return this.request<T>({method: "DELETE", path, body, headers});
   }
 
-  post<T>(path: string, body?: object, headers?: object) {
+  post<T>(path: string, body?: object, headers?: Headers) {
     return this.request<T>({method: "POST", path, body, headers});
   }
 
-  put<T>(path: string, body?: object, headers?: object) {
+  put<T>(path: string, body?: object, headers?: Headers) {
     return this.request<T>({method: "PUT", path, body, headers});
   }
 
-  patch<T>(path: string, body?: object, headers?: object) {
+  patch<T>(path: string, body?: object, headers?: Headers) {
     return this.request<T>({method: "PATCH", path, body, headers});
   }
 
@@ -37,49 +36,87 @@ export class Request {
     const req: any = {
       headers: options.headers,
       method: options.method,
-      body: options.body,
-      uri: `http://unix:${this.socket}:${options.path}`,
-      qs: options.qs,
-      transform: (body, response) => {
+      socketPath: this.socket,
+      pathname: options.path,
+      hostname: "unix",
+      protocol: "http:",
+      responseType: "text"
+    };
+
+    if (options.query) {
+      req.search = querystring.stringify(options.query);
+    }
+    if (options.body instanceof Buffer) {
+      req.body = options.body;
+    } else {
+      req.json = options.body;
+    }
+
+    return got(req)
+      .then(response => {
+        if (response && typeof response.body == "string" && response.body) {
+          try {
+            response.body = JSON.parse(response.body);
+          } catch (e) {
+            console.error(e);
+          }
+        }
         return {
-          headers: response.headers,
-          body,
+          headers: response.headers as any,
+          body: response.body ? response.body : undefined,
           statusCode: response.statusCode,
           statusText: response.statusMessage
         };
-      }
-    };
-
-    if (options.body instanceof Buffer) {
-      req.encoding = null;
-    } else {
-      req.json = true;
-    }
-
-    return request(req).catch(e => {
-      const {response} = e;
-      if (response && typeof response.body == "string") {
-        try {
-          response.body = JSON.parse(response.body);
-        } catch (e) {
-          console.error(e);
+      })
+      .catch(error => {
+        let {response} = error;
+        if (!response) {
+          return Promise.reject(error);
         }
-      }
+        if (response && typeof response.body == "string" && response.body) {
+          try {
+            response.body = JSON.parse(response.body);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        response = {
+          headers: response.headers as any,
+          body: response.body ? response.body : undefined,
+          statusCode: response.statusCode,
+          statusText: response.statusMessage
+        };
+        if (this.reject) {
+          return Promise.reject(response);
+        }
+        return response;
+      });
 
-      if (this.reject) {
-        return Promise.reject(response);
-      }
-      return response;
-    });
+    // return request(req).catch(e => {
+    //   const {response} = e;
+    //   console.log(e);
+    //   if (response && typeof response.body == "string") {
+    //     try {
+    //       response.body = JSON.parse(response.body);
+    //     } catch (e) {
+    //       console.error(e);
+    //     }
+    //   }
+
+    //   if (this.reject) {
+    //     return Promise.reject(response);
+    //   }
+    //   return response;
+    // });
   }
 }
 
 export interface RequestOptions {
-  method: string;
+  method: Method;
   path: string;
   body?: any;
-  qs?: object;
-  headers?: object;
+  query?: any;
+  headers?: Headers;
 }
 
 export interface Response<T = any> {

@@ -2,7 +2,7 @@ import {Global, Module} from "@nestjs/common";
 import {ServicesModule} from "@spica-server/bucket/services";
 import {DatabaseService} from "@spica-server/database";
 import {SCHEMA} from "@spica-server/function";
-import {ENQUEUER} from "@spica-server/function/horizon";
+import {ENQUEUER} from "@spica-server/function/scheduler";
 import {EventQueue} from "@spica-server/function/queue";
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";

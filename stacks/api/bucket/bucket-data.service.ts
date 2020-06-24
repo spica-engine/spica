@@ -48,7 +48,7 @@ export class BucketDataService {
     bucketId: ObjectId,
     filter: FilterQuery<BucketDocument>,
     document: BucketDocument,
-    options: FindOneAndReplaceOption = {returnOriginal: false}
+    options: FindOneAndReplaceOption
   ): Promise<FindAndModifyWriteOpResultObject> {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
     return collection.findOneAndReplace(filter, document, options);

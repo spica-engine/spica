@@ -4,15 +4,13 @@ import {PreferencesService} from "../../../../packages/core/preferences/preferen
 import {of} from "rxjs";
 import {ActivatedRoute, RouterModule} from "@angular/router";
 import {IdentityService} from "../../services/identity.service";
-import {
-  MatIconModule,
-  MatToolbarModule,
-  MatCardModule,
-  MatExpansionModule,
-  MatMenuModule,
-  MatCheckboxModule,
-  MatInputModule
-} from "@angular/material";
+import {MatCardModule} from "@angular/material/card";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatExpansionModule} from "@angular/material/expansion";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
 import {FormsModule, NgModel} from "@angular/forms";
 import {InputModule} from "@spica-client/common";

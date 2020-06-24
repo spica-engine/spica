@@ -148,7 +148,7 @@ import {RequiredTranslate} from "./validators";
   ]
 })
 export class BucketModule {
-  public static forRoot(): ModuleWithProviders {
+  public static forRoot(): ModuleWithProviders<BucketModule> {
     return {
       ngModule: BucketModule,
       providers: [
@@ -175,7 +175,7 @@ export class BucketModule {
     };
   }
 
-  public static forChild(): ModuleWithProviders {
+  public static forChild(): ModuleWithProviders<BucketModule> {
     return {
       ngModule: BucketModule,
       providers: [BucketService, BucketDataService]

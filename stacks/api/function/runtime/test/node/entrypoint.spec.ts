@@ -66,19 +66,21 @@ describe("Entrypoint", () => {
 
   it("should pop the latest event from queue", async () => {
     await initializeFn(`export default function() {}`);
-
-    const event = new Event.Event();
-    event.target = new Event.Target();
-    event.id = "1";
-    event.type = -1 /* NO-OP */;
-    event.target.cwd = compilation.cwd;
-    event.target.handler = "default";
-
-    queue.enqueue(event);
+    queue.enqueue(
+      new Event.Event({
+        type: -1,
+        target: new Event.Target({
+          handler: "default",
+          cwd: compilation.cwd,
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      })
+    );
     expect(queue.size).toBe(1);
-
     await spawn();
-
     expect(queue.size).toBe(0);
   });
 
@@ -112,7 +114,11 @@ describe("Entrypoint", () => {
       type: -1,
       target: new Event.Target({
         cwd: compilation.cwd,
-        handler: "shouldhaveexisted"
+        handler: "shouldhaveexisted",
+        context: new Event.SchedulingContext({
+          env: [],
+          timeout: 60
+        })
       })
     });
     queue.enqueue(event);
@@ -133,7 +139,11 @@ describe("Entrypoint", () => {
       type: -1,
       target: new Event.Target({
         cwd: compilation.cwd,
-        handler: "notafunction"
+        handler: "notafunction",
+        context: new Event.SchedulingContext({
+          env: [],
+          timeout: 60
+        })
       })
     });
     queue.enqueue(event);
@@ -152,15 +162,19 @@ describe("Entrypoint", () => {
       console.log('this should appear in the logs');
       console.warn('this also should appear in the logs');
     }`);
-
-    const event = new Event.Event();
-    event.target = new Event.Target();
-    event.id = "1";
-    event.type = -1 /* NO-OP */;
-    event.target.cwd = compilation.cwd;
-    event.target.handler = "default";
-
-    queue.enqueue(event);
+    queue.enqueue(
+      new Event.Event({
+        type: -1,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      })
+    );
 
     const stream = new PassThrough();
 
@@ -203,16 +217,46 @@ describe("Entrypoint", () => {
       }
     }`);
 
-    const event = new Event.Event();
-    event.target = new Event.Target();
-    event.type = -1 /* NO-OP */;
-    event.target.cwd = compilation.cwd;
-    event.target.handler = "default";
-
+    const event = new Event.Event({
+      type: -1,
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new Event.SchedulingContext({
+          env: [],
+          timeout: 60
+        })
+      })
+    });
     queue.enqueue(event);
 
     const exitCode = await spawn().catch(e => e);
+    expect(exitCode).toBe(4);
+  });
 
+  it("should set env variables from scheduling context", async () => {
+    await initializeFn(`
+    declare var process;
+    export default function() {
+      if (process.env.SET_FROM_CTX == "true" && process.env.TIMEOUT == "60") {
+        process.exit(4);
+      }
+    }`);
+
+    const event = new Event.Event({
+      type: -1,
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new Event.SchedulingContext({
+          env: [new Event.SchedulingContext.Env({key: "SET_FROM_CTX", value: "true"})],
+          timeout: 60
+        })
+      })
+    });
+    queue.enqueue(event);
+
+    const exitCode = await spawn().catch(e => e);
     expect(exitCode).toBe(4);
   });
 
@@ -229,13 +273,17 @@ describe("Entrypoint", () => {
     it("should pop from the queue", async () => {
       await initializeFn(`export default function() {}`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.HTTP;
-
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.HTTP,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
       const request = new Http.Request();
@@ -259,23 +307,26 @@ describe("Entrypoint", () => {
         }
       }`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.HTTP;
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
+      const event = new Event.Event({
+        type: Event.Type.HTTP,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
 
       queue.enqueue(event);
 
-      const request = new Http.Request();
-      const header = new Http.Header();
-      header.key = "content-type";
-      header.value = "application/json";
-      request.headers = [header];
+      const request = new Http.Request({
+        headers: [new Http.Header({key: "content-type", value: "application/json"})]
+      });
       httpQueue.enqueue(event.id, request, undefined);
 
       const exitCode = await spawn().catch(e => e);
-
       expect(exitCode).toBe(4);
     });
 
@@ -288,12 +339,17 @@ describe("Entrypoint", () => {
         }
       }`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.HTTP;
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.HTTP,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
       const request = new Http.Request();
@@ -309,30 +365,87 @@ describe("Entrypoint", () => {
         res.send({ oughtToSerialize: true  })
       }`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.HTTP;
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.HTTP,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
-      const request = new Http.Request();
-      const serverResponse: any = {
+      const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
-        write: jasmine.createSpy("write"),
         end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
       };
-      httpQueue.enqueue(event.id, request, serverResponse);
-
-      expect(httpQueue.size).toBe(1);
-      expect(queue.size).toBe(1);
+      httpQueue.enqueue(event.id, new Http.Request(), serverResponse as any);
 
       await spawn();
-
-      expect(httpQueue.size).toBe(0);
-      expect(serverResponse.writeHead).toHaveBeenCalledTimes(1);
       expect(serverResponse.end).toHaveBeenCalledTimes(1);
+    });
+
+    it("should send the response from the returned value", async () => {
+      await initializeFn(`export default function(req, res) {
+        return {worksViaReturn: true};
+      }`);
+
+      const event = new Event.Event({
+        type: Event.Type.HTTP,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+      queue.enqueue(event);
+
+      const serverResponse = {
+        writeHead: jasmine.createSpy("writeHead"),
+        end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
+      };
+      httpQueue.enqueue(event.id, new Http.Request(), serverResponse as any);
+
+      await spawn();
+      expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
+        JSON.stringify({worksViaReturn: true})
+      ]);
+    });
+
+    it("should not send the response from the returned value if the response has been sent already", async () => {
+      await initializeFn(`export default function(req, res) {
+        res.send({hasBeenSentViaSend: true});
+        return {worksViaReturn: true};
+      }`);
+
+      const event = new Event.Event({
+        type: Event.Type.HTTP,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
+      queue.enqueue(event);
+
+      const serverResponse = {
+        writeHead: jasmine.createSpy("writeHead"),
+        end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
+      };
+      httpQueue.enqueue(event.id, new Http.Request(), serverResponse as any);
+      await spawn();
+      expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
+        JSON.stringify({hasBeenSentViaSend: true})
+      ]);
     });
   });
 
@@ -349,17 +462,20 @@ describe("Entrypoint", () => {
     it("should pop from the queue", async () => {
       await initializeFn(`export default function() {}`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.DATABASE;
-
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.DATABASE,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
       const change = new Database.Change();
-
       databaseQueue.enqueue(event.id, change);
 
       expect(databaseQueue.size).toBe(1);
@@ -377,20 +493,23 @@ describe("Entrypoint", () => {
           process.exit(4);
         }
       }`);
-
-      const event = new Event.Event();
-      event.type = Event.Type.DATABASE;
-
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.DATABASE,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
-      const change = new Database.Change();
-      change.kind = Database.Change.Kind.INSERT;
-      change.collection = "test";
-
+      const change = new Database.Change({
+        kind: Database.Change.Kind.INSERT,
+        collection: "test"
+      });
       databaseQueue.enqueue(event.id, change);
 
       const exitCode = await spawn().catch(e => e);
@@ -424,13 +543,17 @@ describe("Entrypoint", () => {
         }
       }`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.FIREHOSE;
-
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.FIREHOSE,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
       firehoseQueue.enqueue(
@@ -455,13 +578,17 @@ describe("Entrypoint", () => {
         socket.send('test', 'thisisthedata');
       }`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.FIREHOSE;
-
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.FIREHOSE,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
       const socketSpy = jasmine.createSpyObj("Socket", ["send"]);
@@ -489,13 +616,17 @@ describe("Entrypoint", () => {
         socket.close();
       }`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.FIREHOSE;
-
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.FIREHOSE,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
       const socketSpy = jasmine.createSpyObj("Socket", ["close"]);
@@ -524,13 +655,17 @@ describe("Entrypoint", () => {
         pool.send('test', 'thisisthedata');
       }`);
 
-      const event = new Event.Event();
-      event.type = Event.Type.FIREHOSE;
-
-      event.target = new Event.Target();
-      event.target.cwd = compilation.cwd;
-      event.target.handler = "default";
-
+      const event = new Event.Event({
+        type: Event.Type.FIREHOSE,
+        target: new Event.Target({
+          cwd: compilation.cwd,
+          handler: "default",
+          context: new Event.SchedulingContext({
+            env: [],
+            timeout: 60
+          })
+        })
+      });
       queue.enqueue(event);
 
       const pool = new Firehose.PoolDescription({size: 21}),

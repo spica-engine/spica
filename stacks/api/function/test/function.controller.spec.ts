@@ -17,7 +17,10 @@ describe("FunctionController", () => {
     }).compile();
     functionService = module.get(FunctionService);
     functionEngine = jasmine.createSpyObj<FunctionEngine>("engine", ["createFunction"]);
-    controller = new FunctionController(functionService, functionEngine, undefined);
+    controller = new FunctionController(functionService, functionEngine, undefined, {
+      root: "",
+      timeout: 60
+    });
   });
 
   afterEach(async () => await functionService.deleteMany({}));
@@ -42,7 +45,9 @@ describe("FunctionController", () => {
               type: "GET"
             }
           }
-        }
+        },
+        env: {},
+        timeout: 60
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
@@ -61,7 +66,9 @@ describe("FunctionController", () => {
             type: "GET"
           }
         }
-      }
+      },
+      env: {},
+      timeout: 60
     });
     const result = await controller
       .insertOne({
@@ -73,7 +80,9 @@ describe("FunctionController", () => {
               type: "GET"
             }
           }
-        }
+        },
+        env: {},
+        timeout: 60
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
@@ -83,7 +92,11 @@ describe("FunctionController", () => {
   });
 
   it("should fail if the updated function has bucket triggers with same configuration", async () => {
-    const fn = await controller.insertOne({triggers: {}});
+    const fn = await controller.insertOne({
+      triggers: {},
+      env: {},
+      timeout: 60
+    });
     const result = await controller
       .replaceOne(fn._id as ObjectId, {
         triggers: {
@@ -101,7 +114,9 @@ describe("FunctionController", () => {
               type: "GET"
             }
           }
-        }
+        },
+        env: {},
+        timeout: 60
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
@@ -120,7 +135,9 @@ describe("FunctionController", () => {
             type: "GET"
           }
         }
-      }
+      },
+      env: {},
+      timeout: 60
     });
 
     await expectAsync(
@@ -133,7 +150,9 @@ describe("FunctionController", () => {
               type: "GET"
             }
           }
-        }
+        },
+        env: {},
+        timeout: 60
       })
     ).toBeResolved();
   });

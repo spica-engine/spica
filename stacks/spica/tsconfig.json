@@ -14,9 +14,9 @@
       ]
     }
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["test.ts", "**/*.spec.ts"],
-  "angularCompilerOptions": {
-    "disableTypeScriptVersionCheck": true
-  }
+  "files": [
+    "src/main.ts",
+    "src/polyfills.ts"
+  ],
+  "include": ["src/**/*.d.ts"]
 }

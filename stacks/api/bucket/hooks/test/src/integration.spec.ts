@@ -58,7 +58,7 @@ describe("Hooks Integration", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           publicUrl: undefined,
-          timeout: 60000
+          timeout: 20
         })
       ]
     }).compile();
@@ -168,7 +168,8 @@ describe("Hooks Integration", () => {
             active: true
           }
         },
-        env: {}
+        env: {},
+        timeout: 20
       })
       .then(res => res.body);
     await updateIndex(`

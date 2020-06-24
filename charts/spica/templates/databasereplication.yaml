@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-replication-controller
+  namespace: {{.Release.Namespace}}
+  labels:
+    app.kubernetes.io/component: database-replication
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/part-of: {{ .Chart.Name }}
+    app.kubernetes.io/managed-by: helm
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: main
+          image: spicaengine/mongoreplicationcontroller:{{ $.Chart.AppVersion }}
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "10m"
+            limits:
+              memory: "50Mi"
+              cpu: "50m"
+          args: [
+            "--from-srv",
+            "false",
+            "--nodes",
+            {{ template "database.nodes" . }},
+            "--debug"
+          ]

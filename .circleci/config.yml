@@ -56,12 +56,14 @@ commands:
 executors:
   default-executor:
     working_directory: ~/spica
+    resource_class: xlarge
     docker:
-      - image: circleci/node:11-browsers
+      - image: circleci/node:12-browsers
   api-executor:
     working_directory: ~/spica
+    resource_class: xlarge
     docker:
-      - image: circleci/node:11
+      - image: circleci/node:12
 
 orbs:
   gcp-gke: circleci/gcp-gke@1.0.3
@@ -98,7 +100,7 @@ jobs:
       - setup_circleci_bazel_config
       - run:
           name: "Running tests"
-          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e --jobs 4
+          command: yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
       - custom_save_cache
 
   test_api_flaky:
@@ -180,25 +182,34 @@ workflows:
           filters:
             # Do not run on release branches
             branches:
-              ignore: /^\d\.\d\.x$/
+              ignore: /^(\d\.\d\.x|master)$/
       - test_api:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - test_api_e2e:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - test_api_flaky:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - test_spica:
           requires:
             - setup
+          filters:
+            branches:
+              ignore: master
       - deploy:
           requires:
-            - test_api_flaky
-            - test_api_e2e
-            - test_api
-            - test_spica
+            - setup
           filters:
             branches:
               only: master

@@ -22,8 +22,7 @@
       "default": 100
     },
     "timeout": {
-      "type": "number",
-      "default": 100
+      "type": "number"
     },
     "triggers": true
   }
