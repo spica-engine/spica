@@ -12,7 +12,7 @@
     "type": "git",
     "url": "https://github.com/spica-engine/spica.git"
   },
-  "workspaces": [
+  "workspaces_": [
     "stacks/*"
   ],
   "scripts": {
