@@ -19,6 +19,8 @@ spec:
         - name: init
           image: spicaengine/mongoreplicationcontroller:master
           imagePullPolicy: Always
+          args:
+            - --debug
       containers:
         - name: mongo
           image: mongo:4.2
