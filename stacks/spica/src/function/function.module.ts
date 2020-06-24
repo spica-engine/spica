@@ -90,7 +90,7 @@ import {MatSliderModule} from "@angular/material";
   ]
 })
 export class FunctionModule {
-  public static forRoot(options: FunctionOptions): ModuleWithProviders {
+  public static forRoot(options: FunctionOptions): ModuleWithProviders<FunctionModule> {
     return {
       ngModule: FunctionModule,
       providers: [

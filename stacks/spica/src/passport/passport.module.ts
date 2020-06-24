@@ -96,7 +96,7 @@ import {PassportRouteFilter} from "./services/route.filter";
   entryComponents: [IdentityBadgeComponent, StrategyDialogComponent]
 })
 export class PassportModule {
-  static forRoot(): ModuleWithProviders {
+  static forRoot(): ModuleWithProviders<PassportModule> {
     return {
       ngModule: PassportModule,
       providers: [
@@ -108,7 +108,7 @@ export class PassportModule {
     };
   }
 
-  static forChild(): ModuleWithProviders {
+  static forChild(): ModuleWithProviders<PassportModule> {
     return {ngModule: PassportModule, providers: []};
   }
 }

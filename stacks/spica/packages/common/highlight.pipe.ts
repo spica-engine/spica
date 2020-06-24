@@ -1,4 +1,4 @@
-import {Pipe, Output, EventEmitter, ElementRef, Input} from "@angular/core";
+import { Pipe, Output, EventEmitter, ElementRef, Input } from "@angular/core";
 
 @Pipe({
   name: "highlight"

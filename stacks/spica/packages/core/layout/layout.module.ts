@@ -53,7 +53,7 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
   entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent, SnackbarComponent]
 })
 export class LayoutModule {
-  static forRoot(config: LayoutConfig = {}): ModuleWithProviders {
+  static forRoot(config: LayoutConfig = {}): ModuleWithProviders<LayoutModule> {
     return {
       ngModule: LayoutModule,
       providers: [

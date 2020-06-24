@@ -13,7 +13,7 @@ import {RouteService} from "./route.service";
 
 @NgModule({imports: [StoreModule.forFeature("routes", reducer)]})
 export class RouteModule {
-  static forRoot(): ModuleWithProviders {
+  static forRoot(): ModuleWithProviders<RouteModule> {
     return {
       ngModule: RouteModule,
       providers: [
@@ -36,7 +36,7 @@ export class RouteModule {
       ]
     };
   }
-  static forChild(routes: Route[]): ModuleWithProviders {
+  static forChild(routes: Route[]): ModuleWithProviders<RouteModule> {
     return {ngModule: RouteModule, providers: [{provide: ROUTE, multi: true, useValue: routes}]};
   }
 }
