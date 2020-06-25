@@ -5,6 +5,7 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "node_test_lib",
+    testonly = True,
     srcs = [
         "node.spec.ts",
     ],
@@ -27,10 +28,14 @@ jasmine_node_test(
 
 ts_library(
     name = "entrypoint_test_lib",
+    testonly = True,
     srcs = [
         "entrypoint.spec.ts",
     ],
     deps = [
+        "//stacks/api/function/compiler",
+        "//stacks/api/function/compiler/javascript",
+        "//stacks/api/function/compiler/typescript",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/runtime",

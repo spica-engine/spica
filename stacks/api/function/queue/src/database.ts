@@ -1,5 +1,5 @@
 import {Database} from "@spica-server/function/queue/proto";
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import {Queue} from "./queue";
 
 export class DatabaseQueue extends Queue<typeof Database.Queue> {
@@ -16,7 +16,7 @@ export class DatabaseQueue extends Queue<typeof Database.Queue> {
   }
 
   pop(
-    call: grpc.ServerUnaryCall<Database.Change.Pop>,
+    call: grpc.ServerUnaryCall<Database.Change.Pop, Database.Change>,
     callback: grpc.sendUnaryData<Database.Change>
   ) {
     if (!this.queue.has(call.request.id)) {

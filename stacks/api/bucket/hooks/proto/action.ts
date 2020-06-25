@@ -1,5 +1,6 @@
 import * as pb_1 from "google-protobuf";
-import * as grpc_1 from "grpc";
+import * as grpc_1 from "@grpc/grpc-js";
+
 export class Header extends pb_1.Message {
   constructor(
     data?:
@@ -36,10 +37,11 @@ export class Header extends pb_1.Message {
   }
   serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
     const writer = w || new pb_1.BinaryWriter();
-    if (this.key) writer.writeString(1, this.key);
-    if (this.value) writer.writeString(2, this.value);
+    if (this.key !== undefined) writer.writeString(1, this.key);
+    if (this.value !== undefined) writer.writeString(2, this.value);
     if (!w) return writer.getResultBuffer();
   }
+
   static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Header {
     const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
       message = new Header();
@@ -106,20 +108,21 @@ export class Action extends pb_1.Message {
   toObject() {
     return {
       type: this.type,
-      headers: this.headers && this.headers.map(r => r.toObject()),
+      headers: this.headers.map((item: Header) => item.toObject()),
       bucket: this.bucket,
       document: this.document
     };
   }
   serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
     const writer = w || new pb_1.BinaryWriter();
-    if (this.type != undefined) writer.writeEnum(1, this.type);
-    if (this.headers)
+    if (this.type !== undefined) writer.writeEnum(1, this.type);
+    if (this.headers !== undefined)
       writer.writeRepeatedMessage(2, this.headers, (item: Header) => item.serialize(writer));
-    if (this.bucket) writer.writeString(3, this.bucket);
-    if (this.document) writer.writeString(4, this.document);
+    if (this.bucket !== undefined) writer.writeString(3, this.bucket);
+    if (this.document !== undefined) writer.writeString(4, this.document);
     if (!w) return writer.getResultBuffer();
   }
+
   static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Action {
     const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
       message = new Action();
@@ -148,6 +151,13 @@ export class Action extends pb_1.Message {
   }
 }
 export namespace Action {
+  export enum Type {
+    INSERT = 0,
+    UPDATE = 1,
+    INDEX = 2,
+    GET = 3,
+    DELETE = 4
+  }
   export class Pop extends pb_1.Message {
     constructor(
       data?:
@@ -175,9 +185,10 @@ export namespace Action {
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
       const writer = w || new pb_1.BinaryWriter();
-      if (this.id) writer.writeString(1, this.id);
+      if (this.id !== undefined) writer.writeString(1, this.id);
       if (!w) return writer.getResultBuffer();
     }
+
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Pop {
       const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
         message = new Pop();
@@ -193,13 +204,6 @@ export namespace Action {
       }
       return message;
     }
-  }
-  export enum Type {
-    INSERT = 0,
-    UPDATE = 1,
-    INDEX = 2,
-    GET = 3,
-    DELETE = 4
   }
 }
 export class Result extends pb_1.Message {
@@ -238,10 +242,11 @@ export class Result extends pb_1.Message {
   }
   serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
     const writer = w || new pb_1.BinaryWriter();
-    if (this.id) writer.writeString(1, this.id);
-    if (this.result) writer.writeString(2, this.result);
+    if (this.id !== undefined) writer.writeString(1, this.id);
+    if (this.result !== undefined) writer.writeString(2, this.result);
     if (!w) return writer.getResultBuffer();
   }
+
   static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Result {
     const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
       message = new Result();
@@ -276,6 +281,7 @@ export namespace Result {
       const writer = w || new pb_1.BinaryWriter();
       if (!w) return writer.getResultBuffer();
     }
+
     static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Response {
       const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
         message = new Response();
@@ -317,31 +323,5 @@ export var Queue = {
 export class QueueClient extends grpc_1.makeGenericClientConstructor(Queue, "Queue", {}) {
   constructor(address: string, credentials: grpc_1.ChannelCredentials) {
     super(address, credentials);
-  }
-  pop(request: Action.Pop, metadata?: grpc_1.Metadata): Promise<Action> {
-    return new Promise((resolve, reject) =>
-      super["pop"](request, metadata, (error: grpc_1.ServiceError, response: Action) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(response);
-        }
-      })
-    );
-  }
-  result(request: Result, metadata?: grpc_1.Metadata): Promise<Result.Response> {
-    return new Promise((resolve, reject) =>
-      super["result"](
-        request,
-        metadata,
-        (error: grpc_1.ServiceError, response: Result.Response) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(response);
-          }
-        }
-      )
-    );
   }
 }

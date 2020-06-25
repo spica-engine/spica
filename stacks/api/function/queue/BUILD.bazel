@@ -12,10 +12,10 @@ ts_library(
     deps = [
         "//packages/database",
         "//stacks/api/function/queue/proto",
+        "@npm//@grpc/grpc-js",
         "@npm//@types/node",
         "@npm//@types/ws",
         "@npm//google-protobuf",
-        "@npm//grpc",
         "@npm//uniqid",
         "@npm//ws",
     ],

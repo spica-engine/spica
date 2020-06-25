@@ -1,20 +1,8 @@
-:host ::ng-deep {
-  .mat-subheader {
-    padding: 0;
-  }
-  mat-divider {
-    width: 100% !important;
-    margin: 15px 0 15px 0;
-    position: relative !important;
-  }
-
-  .toolbar {
+:host {
+  mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
-    .space-between {
-      flex: 1 1 auto;
-    }
     h4 {
       mat-icon,
       span {
@@ -26,8 +14,7 @@
 
   mat-card {
     margin: 30px;
-    margin-top: -110px;
-    // For proper border radius
+    margin-top: -130px;
     overflow: hidden;
     mat-card-header {
       mat-card-title > * {
@@ -38,79 +25,21 @@
     mat-card-content {
       mat-list {
         padding-top: 0px;
-        mat-list-item:not(:first-of-type) {
-          mat-form-field:not(:first-of-type) {
-            margin: 0px 5px !important;
-          }
-          mat-form-field:first-of-type {
-            margin-right: 5px !important;
-          }
+        mat-divider {
+          width: 100% !important;
+          margin-top: 0px 0px 15px 0px;
+          position: relative !important;
         }
 
-        mat-list-item:first-of-type {
-          mat-form-field[description] {
-            width: 100%;
+        h4[mat-subheader] {
+          display: flex;
+          span:first-of-type {
+            flex: 1;
           }
-
-          mat-form-field[name] {
-            width: 65%;
-          }
-
-          span[timeout] {
-            vertical-align: middle;
-            display: inline-flex;
-            flex-flow: column;
-            width: 30%;
-            margin-left: 10px;
-          }
-        }
-
-        .mat-list-item {
-          height: auto;
-          .mat-list-item-content {
-            display: contents;
-          }
-
-          &.triggers .mat-list-item-content > *:not(mat-form-field) {
-            margin: 0px 5px;
-          }
-
-          &.dependency {
-            .mat-list-item-content {
-              display: flex;
-            }
-            svg {
-              height: 44px;
-              width: 44px;
-            }
-            span.seperator {
-              font-weight: bold;
-              padding: 0 1px;
-            }
-
-            button:first-of-type {
-              margin-left: 5px;
-            }
-          }
-
-          &.add-dependency {
-            margin-top: 25px;
-          }
-        }
-        code-editor {
-          height: calc(100vh - 100px);
-        }
-        .editor {
-          .decorationsOverviewRuler {
-            display: none;
-          }
-          .overflow-guard {
-            border: 2px solid #0000000f;
-          }
-          .last-saved {
+          span.last-saved {
             display: block;
             text-align: right;
-            mat-hint {
+            mat-label {
               height: 20px;
               font-size: 12px;
               text-align: right;
@@ -124,48 +53,114 @@
             }
           }
         }
-        .run {
-          mat-expansion-panel {
-            mat-expansion-panel-header {
-              &[state="failed"] {
-                color: red;
-              }
-              &[state="succeeded"] {
-                color: green;
-              }
-              span {
-                margin-top: 3px;
-                padding-left: 3px;
-              }
-            }
-          }
-          .output {
-            mat-icon,
-            pre {
-              display: inline-block;
-              vertical-align: middle;
-            }
-          }
-        }
 
-        .triggers {
-          display: inline-table;
-          padding-bottom: 20px;
-          height: 80px;
-          mat-form-field {
+        mat-list-item {
+          height: auto !important;
+          ::ng-deep .mat-list-item-content {
+            display: block !important;
+            padding-bottom: 25px !important;
+            padding-top: 25px !important;
+          }
+
+          &:first-of-type {
+            ::ng-deep .mat-list-item-content {
+              display: grid !important;
+              gap: 15px;
+              grid-template-columns: 1fr 1fr 1fr 1fr;
+            }
             mat-select {
               mat-select-trigger {
-                & > * {
+                > * {
                   vertical-align: middle;
                 }
-                mat-label {
-                  padding-left: 10px;
+                svg {
+                  height: 24px;
+                  margin-top: -4px;
+                }
+              }
+            }
+            mat-form-field {
+              mat-hint {
+                mat-icon {
+                  font-size: 15px;
+                  cursor: help;
+                }
+              }
+            }
+            span {
+              margin-top: 8px;
+              vertical-align: middle;
+              display: inline-flex;
+              flex-flow: column;
+            }
+          }
+
+          &.editor {
+            ::ng-deep .mat-list-item-content {
+              padding-left: 4px;
+              padding-right: 4px;
+            }
+            code-editor {
+              height: calc(100vh - 100px);
+              ::ng-deep {
+                .decorationsOverviewRuler {
+                  display: none;
+                }
+                .overflow-guard {
+                  border: 2px solid #0000000f;
                 }
               }
             }
           }
-          button {
-            margin-left: 30px;
+
+          &.dependency {
+            ::ng-deep .mat-list-item-content {
+              display: flex !important;
+            }
+            svg {
+              height: 44px;
+              width: 44px;
+            }
+            span.seperator {
+              font-weight: 100;
+              padding: 0 2px;
+            }
+
+            button:first-of-type {
+              margin-left: 5px;
+            }
+          }
+
+          &.triggers {
+            display: inline-table;
+            padding-bottom: 20px;
+            height: 80px;
+
+            ::ng-deep .mat-list-item-content > *:not(:first-child) {
+              margin-left: 5px;
+            }
+
+            mat-form-field {
+              mat-select {
+                mat-select-trigger {
+                  & > * {
+                    vertical-align: middle;
+                  }
+                  mat-label {
+                    padding-left: 10px;
+                  }
+                }
+              }
+            }
+            button {
+              margin-left: 30px;
+            }
+          }
+
+          &.environment  {
+            mat-form-field:not(:first-of-type) {
+              margin-left: 5px;
+            }
           }
         }
       }

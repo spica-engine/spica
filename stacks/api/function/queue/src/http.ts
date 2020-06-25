@@ -1,5 +1,5 @@
 import {Http} from "@spica-server/function/queue/proto";
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as http from "http";
 import {Queue} from "./queue";
 
@@ -19,19 +19,22 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     this.streamMap.set(id, response);
   }
 
-  write(call: grpc.ServerUnaryCall<Http.End>, callback: grpc.sendUnaryData<Http.End.Result>) {
+  write(
+    call: grpc.ServerUnaryCall<Http.Write, Http.Write.Result>,
+    callback: grpc.sendUnaryData<Http.Write.Result>
+  ) {
     if (!this.streamMap.has(call.request.id)) {
       callback(new Error(`write: Queue has no item with id ${call.request.id}`), undefined);
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
       serverResponse.write(call.request.data, call.request.encoding, error =>
-        callback(error, error ? undefined : new Http.End.Result())
+        callback(error, error ? undefined : new Http.Write.Result())
       );
     }
   }
 
   writeHead(
-    call: grpc.ServerUnaryCall<Http.WriteHead>,
+    call: grpc.ServerUnaryCall<Http.WriteHead, Http.WriteHead.Result>,
     callback: grpc.sendUnaryData<Http.WriteHead.Result>
   ) {
     if (!this.streamMap.has(call.request.id)) {
@@ -58,7 +61,10 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     }
   }
 
-  end(call: grpc.ServerUnaryCall<Http.End>, callback: grpc.sendUnaryData<Http.End.Result>) {
+  end(
+    call: grpc.ServerUnaryCall<Http.End, Http.End.Result>,
+    callback: grpc.sendUnaryData<Http.End.Result>
+  ) {
     if (!this.streamMap.has(call.request.id)) {
       callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
     } else {
@@ -70,7 +76,10 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     }
   }
 
-  pop(call: grpc.ServerUnaryCall<Http.Request.Pop>, callback: grpc.sendUnaryData<Http.Request>) {
+  pop(
+    call: grpc.ServerUnaryCall<Http.Request.Pop, Http.Request>,
+    callback: grpc.sendUnaryData<Http.Request>
+  ) {
     if (!this.queue.has(call.request.id)) {
       callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
     } else {

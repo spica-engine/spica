@@ -1,6 +1,10 @@
+// @ts-ignore
 import {Action} from "@spica-server/bucket/hooks/proto";
+// @ts-ignore
 import {ActionParameters} from "@spica-server/bucket/hooks/proto/node";
+// @ts-ignore
 import {ActionQueue} from "@spica-server/bucket/hooks/proto/node/queue";
+// @ts-ignore
 import {
   Change,
   DatabaseQueue,
@@ -12,7 +16,9 @@ import {
   Message,
   Request,
   Response
+  // @ts-ignore
 } from "@spica-server/function/queue/node";
+// @ts-ignore
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
 
@@ -33,7 +39,7 @@ if (!process.env.WORKER_ID) {
   const pop = new Event.Pop({
     id: process.env.WORKER_ID
   });
-  const event: Event.Event | undefined = await queue.pop(pop).catch(e => {
+  const event = await queue.pop(pop).catch(e => {
     console.log(e);
     return undefined;
   });
@@ -51,7 +57,7 @@ if (!process.env.WORKER_ID) {
   }
 
   const callArguments = [];
-  let callback = (r: unknown) => {};
+  let callback = r => {};
 
   switch (event.type) {
     case Event.Type.HTTP:
@@ -77,7 +83,7 @@ if (!process.env.WORKER_ID) {
       callback = async result => {
         if (!response.headersSent && result != undefined) {
           result = await result;
-          response.send(result as any);
+          response.send(result);
         }
       };
       break;
@@ -147,23 +153,27 @@ if (!process.env.WORKER_ID) {
       break;
   }
 
-  const fn = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
+  let module = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
+
+  if ("default" in module && module.default.__esModule) {
+    module = module.default; // Do not ask me why
+  }
 
   // Call the function
-  if (!(event.target.handler in fn)) {
+  if (!(event.target.handler in module)) {
     callback(undefined);
     exitAbnormally(`This function does not export any symbol named '${event.target.handler}'.`);
-  } else if (typeof fn[event.target.handler] != "function") {
+  } else if (typeof module[event.target.handler] != "function") {
     callback(undefined);
     exitAbnormally(
       `This function does export a symbol named '${event.target.handler}' yet it is not a function.`
     );
   } else {
-    callback(fn[event.target.handler](...callArguments));
+    callback(module[event.target.handler](...callArguments));
   }
 })();
 
-function exitAbnormally(reason: string) {
+function exitAbnormally(reason) {
   console.error(reason);
   process.exit(126);
 }

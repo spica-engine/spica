@@ -1,6 +1,7 @@
 import {Event} from "@spica-server/function/queue/proto";
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as uniqid from "uniqid";
+import * as util from "util";
 import {Queue} from "./queue";
 
 export class EventQueue {
@@ -32,8 +33,14 @@ export class EventQueue {
     this._create();
   }
 
-  listen() {
-    this.server.bind(process.env.FUNCTION_GRPC_ADDRESS, grpc.ServerCredentials.createInsecure());
+  async listen() {
+    await util
+      .promisify(this.server.bindAsync)
+      .call(
+        this.server,
+        process.env.FUNCTION_GRPC_ADDRESS,
+        grpc.ServerCredentials.createInsecure()
+      );
     this.server.start();
   }
 
@@ -41,7 +48,7 @@ export class EventQueue {
    * ATTENTION: Do not use this method since it is only designed for testing.
    */
   kill(): Promise<void> {
-    return new Promise(resolve => this.server.tryShutdown(resolve));
+    return util.promisify(this.server.tryShutdown).call(this.server);
   }
 
   enqueue(event: Event.Event) {
@@ -53,7 +60,10 @@ export class EventQueue {
     }
   }
 
-  async pop(call: grpc.ServerUnaryCall<Event.Event>, callback: grpc.sendUnaryData<Event.Event>) {
+  async pop(
+    call: grpc.ServerUnaryCall<Event.Pop, Event.Event>,
+    callback: grpc.sendUnaryData<Event.Event>
+  ) {
     let event: Event.Event;
 
     if (this.size == 0) {
@@ -69,7 +79,7 @@ export class EventQueue {
 
   addQueue<T>(queue: Queue<T>) {
     try {
-      this.server.addService(queue.TYPE, queue.create());
+      this.server.addService(queue.TYPE, queue.create() as any);
     } catch (e) {
       console.log(e);
     }

@@ -47,7 +47,8 @@ describe("FunctionController", () => {
           }
         },
         env: {},
-        timeout: 60
+        timeout: 60,
+        language: "javascript"
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
@@ -68,7 +69,8 @@ describe("FunctionController", () => {
         }
       },
       env: {},
-      timeout: 60
+      timeout: 60,
+      language: "javascript"
     });
     const result = await controller
       .insertOne({
@@ -82,7 +84,8 @@ describe("FunctionController", () => {
           }
         },
         env: {},
-        timeout: 60
+        timeout: 60,
+        language: "javascript"
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
@@ -95,7 +98,8 @@ describe("FunctionController", () => {
     const fn = await controller.insertOne({
       triggers: {},
       env: {},
-      timeout: 60
+      timeout: 60,
+      language: "javascript"
     });
     const result = await controller
       .replaceOne(fn._id as ObjectId, {
@@ -116,7 +120,8 @@ describe("FunctionController", () => {
           }
         },
         env: {},
-        timeout: 60
+        timeout: 60,
+        language: "javascript"
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
@@ -137,7 +142,8 @@ describe("FunctionController", () => {
         }
       },
       env: {},
-      timeout: 60
+      timeout: 60,
+      language: "javascript"
     });
 
     await expectAsync(
@@ -152,7 +158,8 @@ describe("FunctionController", () => {
           }
         },
         env: {},
-        timeout: 60
+        timeout: 60,
+        language: "javascript"
       })
     ).toBeResolved();
   });

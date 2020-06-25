@@ -96,7 +96,8 @@ describe("Function Add", () => {
       name: "test function",
       description: "test description",
       triggers: [emptyTrigger("handler1"), emptyTrigger("handler1")],
-      env: []
+      env: [],
+      language: "javascript"
     };
 
     fixture.componentInstance.checkHandlers();
@@ -108,7 +109,8 @@ describe("Function Add", () => {
       name: "test function",
       description: "test description",
       triggers: [emptyTrigger("handler1"), emptyTrigger("handler2")],
-      env: []
+      env: [],
+      language: "javascript"
     };
 
     fixture.componentInstance.checkHandlers();
@@ -120,7 +122,8 @@ describe("Function Add", () => {
       name: "test function",
       description: "test description",
       triggers: [emptyTrigger("handler1"), emptyTrigger("handler2"), emptyTrigger("handler1")],
-      env: []
+      env: [],
+      language: "javascript"
     });
 
     fixture.componentInstance.deleteTrigger(2);

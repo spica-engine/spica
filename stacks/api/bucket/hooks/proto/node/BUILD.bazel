@@ -12,6 +12,6 @@ ts_library(
     module_name = "@spica-server/bucket/hooks/proto/node",
     deps = [
         "//stacks/api/bucket/hooks/proto",
-        "@npm//grpc",
+        "@npm//@grpc/grpc-js",
     ],
 )

@@ -7,7 +7,7 @@ import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7910";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("Scheduler", () => {
@@ -32,7 +32,7 @@ describe("Scheduler", () => {
 
     scheduler = module.get(Scheduler);
 
-    spawnSpy = spyOn(scheduler.runtime, "spawn").and.callThrough();
+    spawnSpy = spyOn(scheduler.runtimes.get("node"), "spawn").and.callThrough();
 
     app = module.createNestApplication();
 
@@ -50,7 +50,7 @@ describe("Scheduler", () => {
 
   beforeEach(async () => {
     compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
-    await scheduler.runtime.compile(compilation);
+    await scheduler.languages.get("typescript").compile(compilation);
   });
 
   afterEach(() => {

@@ -65,7 +65,7 @@ export class FunctionEngine {
   }
 
   private getDefaultPackageManager(): PackageManager {
-    return this.scheduler.pkgmanagers.get(this.scheduler.runtime.description.name);
+    return this.scheduler.pkgmanagers.get("node");
   }
 
   getPackages(fn: Function): Promise<Package[]> {
@@ -92,7 +92,6 @@ export class FunctionEngine {
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
-      main: "index.ts",
       keywords: ["spica", "function", "node.js"],
       license: "UNLICENSED"
     };
@@ -110,20 +109,28 @@ export class FunctionEngine {
 
   compile(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.scheduler.runtime.compile({
+    const language = this.scheduler.languages.get(fn.language);
+    return language.compile({
       cwd: functionRoot,
-      entrypoint: "index.ts"
+      entrypoint: `index.${language.description.extension}`
     });
   }
 
   update(fn: Function, index: string): Promise<void> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return fs.promises.writeFile(path.join(functionRoot, "index.ts"), index);
+    const language = this.scheduler.languages.get(fn.language);
+    return fs.promises.writeFile(
+      path.join(functionRoot, `index.${language.description.extension}`),
+      index
+    );
   }
 
   read(fn: Function): Promise<string> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    return fs.promises.readFile(path.join(functionRoot, "index.ts")).then(b => b.toString());
+    const language = this.scheduler.languages.get(fn.language);
+    return fs.promises
+      .readFile(path.join(functionRoot, `index.${language.description.extension}`))
+      .then(b => b.toString());
   }
 
   getSchema(name: string): Observable<JSONSchema7 | null> | Promise<JSONSchema7 | null> {

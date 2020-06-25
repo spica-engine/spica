@@ -1,5 +1,6 @@
 import * as pb_1 from "google-protobuf";
-import * as grpc_1 from "grpc";
+import * as grpc_1 from "@grpc/grpc-js";
+
 export namespace Firehose {
   export class Message extends pb_1.Message {
     constructor(
@@ -520,5 +521,5 @@ export namespace Firehose {
       responseDeserialize: (bytes: Buffer) => Message.Result.deserialize(new Uint8Array(bytes))
     }
   };
-  export const QueueClient = grpc_1.makeGenericClientConstructor(Queue, "Queue", {});
+  export const QueueClient: any = grpc_1.makeGenericClientConstructor(Queue, "Queue", {});
 }

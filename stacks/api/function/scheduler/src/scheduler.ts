@@ -1,6 +1,9 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
+import {Language} from "@spica-server/function/compiler";
+import {Javascript} from "@spica-server/function/compiler/javascript";
+import {Typescript} from "@spica-server/function/compiler/typescript";
 import {
   DatabaseEnqueuer,
   Enqueuer,
@@ -27,12 +30,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
 
-  private output: StandartStream;
-  runtime: Node;
-
-  readonly runtimes = new Set<Runtime>();
+  readonly runtimes = new Map<string, Runtime>();
   readonly pkgmanagers = new Map<string, PackageManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
+  readonly languages = new Map<string, Language>();
+
+  private output: StandartStream;
 
   private readonly pool = new Map<string, Worker>();
 
@@ -44,10 +47,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   ) {
     this.output = new DatabaseOutput(database);
 
-    this.runtime = new Node();
-    this.runtimes.add(this.runtime);
-
-    this.pkgmanagers.set(this.runtime.description.name, new Npm());
+    this.languages.set("typescript", new Typescript());
+    this.languages.set("javascript", new Javascript());
+    this.runtimes.set("node", new Node());
+    this.pkgmanagers.set("node", new Npm());
 
     this.queue = new EventQueue(this.schedule.bind(this), this.scheduled.bind(this));
 
@@ -61,7 +64,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.queue.addQueue(this.firehoseQueue);
   }
 
-  onModuleInit() {
+  async onModuleInit() {
     this.enqueuers.add(
       new HttpEnqueuer(this.queue, this.httpQueue, this.http.httpAdapter.getInstance())
     );
@@ -77,28 +80,31 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
     if (typeof this.enqueuerFactory == "function") {
-      const scheduler = this.enqueuerFactory(this.queue);
-      this.queue.addQueue(scheduler.queue);
-      this.enqueuers.add(scheduler.enqueuer);
+      const factory = this.enqueuerFactory(this.queue);
+      this.queue.addQueue(factory.queue);
+      this.enqueuers.add(factory.enqueuer);
     }
 
-    this.queue.listen();
+    await this.queue.listen();
 
     for (let i = 0; i < this.options.poolSize; i++) {
       this.schedule();
     }
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     for (const worker of this.pool.values()) {
       worker.kill();
     }
-    this.queue.kill();
+    for (const language of this.languages.values()) {
+      await language.kill();
+    }
+    return this.queue.kill();
   }
 
   private schedule() {
     const id: string = uniqid();
-    const worker = this.runtime.spawn({
+    const worker = this.runtimes.get("node").spawn({
       id,
       env: {
         __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,

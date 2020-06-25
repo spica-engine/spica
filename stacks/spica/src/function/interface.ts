@@ -13,6 +13,7 @@ export interface FunctionDescription {
   description: string;
   memoryLimit?: number;
   timeout?: number;
+  language: string;
 }
 
 export interface NormalizedFunction extends FunctionDescription {
@@ -54,7 +55,8 @@ export function emptyFunction(): NormalizedFunction {
     name: undefined,
     description: undefined,
     triggers: [emptyTrigger("default")],
-    env: []
+    env: [],
+    language: "javascript"
   };
 }
 

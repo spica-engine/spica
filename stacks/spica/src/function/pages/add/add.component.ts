@@ -17,7 +17,6 @@ import {
   takeUntil,
   tap
 } from "rxjs/operators";
-import {LanguageService} from "../../components/editor/language.service";
 import {FunctionService} from "../../function.service";
 import {
   denormalizeFunction,
@@ -62,19 +61,12 @@ export class AddComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private functionService: FunctionService,
-    private http: HttpClient,
-    private ls: LanguageService
+    private http: HttpClient
   ) {
     this.information = this.functionService.information().pipe(share());
   }
 
   ngOnInit() {
-    this.ls.open();
-    this.ls
-      .fromEvent("reconnect")
-      .pipe(takeUntil(this.dispose))
-      .subscribe(() => this.ls.request("open", this.function._id));
-
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
@@ -85,7 +77,6 @@ export class AddComponent implements OnInit, OnDestroy {
           this.isIndexPending = true;
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
-          this.ls.request("open", this.function._id);
           this.getDependencies();
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
@@ -102,7 +93,6 @@ export class AddComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.dispose.emit();
-    this.ls.close();
   }
 
   formatTimeout(value: number) {

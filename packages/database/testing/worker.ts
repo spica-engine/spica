@@ -23,7 +23,7 @@ replSet
     fs.writeFileSync(process.env.WORKER_CONNECTION_URI_FILE, connectionString);
   });
 
-const INTERVAL = 60000;
+const INTERVAL = 120000;
 
 let timeout = setTimeout(() => process.exit(0), INTERVAL);
 
