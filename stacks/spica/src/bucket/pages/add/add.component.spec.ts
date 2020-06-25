@@ -485,7 +485,7 @@ describe("AddComponent", () => {
         }
       });
       tick(1);
-      fixture.detectChanges();
+      fixture.detectChanges(false);
       tick(1);
       expect(fixture.debugElement.query(By.directive(NgForm)).injector.get(NgForm).invalid).toBe(
         true
@@ -505,9 +505,9 @@ describe("AddComponent", () => {
         }
       });
       tick(1);
-      fixture.detectChanges(true);
+      fixture.detectChanges(false);
       tick(1);
-      fixture.detectChanges(true);
+      fixture.detectChanges(false);
       expect(
         fixture.debugElement.query(By.css("mat-card > mat-card-actions > button:last-of-type"))
           .nativeElement.disabled
