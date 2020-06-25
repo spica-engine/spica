@@ -82,23 +82,23 @@
             <h3>
               Message
             </h3>
-            <p>
+            <pre>
               {{ log.content.error }}
-            </p>
+            </pre>
           </ng-container>
           <ng-template #elseBlock>
             <h3>
               Request
             </h3>
-            <p>
+            <pre>
               {{ log.content.request | json }}
-            </p>
+            </pre>
             <h3>
               Response
             </h3>
-            <p>
+            <pre>
               {{ log.content.response | json }}
-            </p>
+            </pre>
           </ng-template>
         </mat-expansion-panel>
         <mat-progress-spinner

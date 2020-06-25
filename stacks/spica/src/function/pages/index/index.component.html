@@ -58,7 +58,7 @@
             color="warn"
             matTooltip="Delete"
             [matAwareDialog]="{
-              title: 'Attention',
+              title: 'Confirmation',
               templateOrDescription: dialogTemplate,
               answer: function.name
             }"
@@ -76,9 +76,8 @@
 </mat-card>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action cannot be undone.</p>
+  <p>This action will <b>permanently</b> delete this function.</p>
   <p>
-    This action will permanently delete the <code>{{ answer }}</code> function.
+    Please type in <code>{{ answer }}</code> to confirm.
   </p>
-  <p class="mat-body">Please type in the name of the function to confirm.</p>
 </ng-template>

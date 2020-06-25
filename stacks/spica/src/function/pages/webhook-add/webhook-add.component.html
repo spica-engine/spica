@@ -9,14 +9,6 @@
     <form #form="ngForm">
       <mat-list>
         <mat-list-item>
-          <span>
-            <mat-label>
-              {{ webhook.trigger.active ? "Active" : "Deactive" }}
-            </mat-label>
-            <mat-slide-toggle name="status" [(ngModel)]="webhook.trigger.active"></mat-slide-toggle>
-          </span>
-        </mat-list-item>
-        <mat-list-item>
           <mat-form-field url>
             <input
               matInput
@@ -81,6 +73,12 @@
             </mat-select>
             <mat-error *ngIf="typeModel.errors?.required">Type is required.</mat-error>
           </mat-form-field>
+          <span>
+            <mat-label>
+              {{ webhook.trigger.active ? "Active" : "Deactive" }}
+            </mat-label>
+            <mat-slide-toggle name="status" [(ngModel)]="webhook.trigger.active"></mat-slide-toggle>
+          </span>
         </mat-list-item>
       </mat-list>
     </form>

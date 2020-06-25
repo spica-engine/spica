@@ -52,7 +52,7 @@
             [matAwareDialog]="{
               title: 'Confirmation',
               templateOrDescription: dialogTemplate,
-              answer: 'yes'
+              answer: identity.identifier
             }"
             (confirm)="delete(identity._id)"
           >
@@ -72,6 +72,8 @@
 </mat-card>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action will delete the user.</p>
-  <p>Please type {{ answer }} to confirm.</p>
+  <p>This action will <b>permanently</b> delete this identity.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
 </ng-template>

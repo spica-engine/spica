@@ -60,21 +60,23 @@
             <ng-container
               *ngFor="let resource of statement.resource; let index = index; trackBy: _trackBy"
             >
-              <mat-form-field
+              <ng-container
                 *ngFor="let resourceInput of services[servicePicker.value]?.parsedArguments"
               >
-                <input
-                  matInput
-                  [placeholder]="resourceInput.name"
-                  [(ngModel)]="statement.resource[index]"
-                />
-                <mat-hint>
-                  Enter asterisk (*) to include all of the resources under the service.
-                </mat-hint>
-              </mat-form-field>
-              <button mat-button (click)="removeResource(statement.resource, index)">
-                <mat-icon>delete</mat-icon>
-              </button>
+                <mat-form-field>
+                  <input
+                    matInput
+                    [placeholder]="resourceInput.name"
+                    [(ngModel)]="statement.resource[index]"
+                  />
+                  <mat-hint>
+                    Enter asterisk (*) to include all of the resources under the service.
+                  </mat-hint>
+                </mat-form-field>
+                <button mat-button (click)="removeResource(statement.resource, index)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </ng-container>
             </ng-container>
             <button
               *ngIf="servicePicker.value != null && services[servicePicker.value]?.parsedArguments"

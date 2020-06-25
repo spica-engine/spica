@@ -104,9 +104,6 @@
         &.properties {
           mat-expansion-panel {
             margin-top: 10px;
-            box-shadow: unset !important;
-            background: rgba(var(--background-app-bar-rgb), var(--opacity));
-            transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
             mat-expansion-panel-header {
               mat-panel-title {
                 align-items: center;

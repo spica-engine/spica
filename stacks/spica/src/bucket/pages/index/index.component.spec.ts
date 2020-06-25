@@ -421,7 +421,7 @@ describe("IndexComponent", () => {
       );
       expect(headerCells[0].textContent).toBe(" test ");
       expect(headerCells[1].textContent).toBe("Actions");
-      expect(cell.textContent).toBe(" 123 ");
+      expect(cell.textContent).toBe("123");
     });
 
     it("should render actions correctly", () => {
@@ -492,6 +492,73 @@ describe("IndexComponent", () => {
             .textContent
         ).toBe("delete");
       });
+    });
+  });
+
+  describe("row template", () => {
+    it("should return when value is undefined or null", () => {
+      let template = fixture.componentInstance.buildTemplate(undefined, {});
+      expect(template).toEqual(undefined);
+    });
+
+    it("should return object", () => {
+      let template = fixture.componentInstance.buildTemplate({test: "value"}, {type: "object"});
+      expect(template).toEqual('{"test":"value"}');
+    });
+
+    it("should return date", () => {
+      let now = new Date();
+      let template = fixture.componentInstance.buildTemplate(now, {
+        type: "date"
+      });
+      expect(template).toEqual(now.toLocaleString());
+    });
+
+    it("should return color", () => {
+      let template = fixture.componentInstance.buildTemplate("#ffffff", {type: "color"});
+      expect(template).toEqual(
+        fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
+          `<div style='width:20px; height:20px; background-color:#ffffff; border-radius:3px'></div>`
+        )
+      );
+    });
+
+    it("should return relation one to one", () => {
+      let template = fixture.componentInstance.buildTemplate(
+        {test: "value", otherField: "other_value"},
+        {
+          type: "relation",
+          relationType: "onetoone",
+          primary: "test"
+        }
+      );
+      expect(template).toEqual("value");
+    });
+
+    it("should return relation one to many", () => {
+      let template = fixture.componentInstance.buildTemplate(
+        [{test: "value", otherField: "other_value"}, {test: "value2", otherField: "other_value2"}],
+        {
+          type: "relation",
+          relationType: "onetomany",
+          primary: "test"
+        }
+      );
+      expect(template).toEqual(["value", "value2"]);
+    });
+
+    it("should return storage", () => {
+      let template = fixture.componentInstance.buildTemplate("test_url", {type: "storage"});
+      expect(template).toEqual(
+        fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
+          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=test_url alt=test_url>`
+        )
+      );
+    });
+
+    it("should return default", () => {
+      let template = fixture.componentInstance.buildTemplate("default_value", {type: "string"});
+      expect(template).toEqual("default_value");
     });
   });
 

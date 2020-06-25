@@ -10,6 +10,7 @@ import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
+import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
 
 @Component({
   selector: "bucket-index",
@@ -52,7 +53,8 @@ export class IndexComponent implements OnInit {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -86,8 +88,18 @@ export class IndexComponent implements OnInit {
         const cachedDisplayedProperties = JSON.parse(
           localStorage.getItem(`${this.bucketId}-displayedProperties`)
         );
+
+        //eliminate the properties which are not included by schema
         this.displayedProperties = cachedDisplayedProperties
-          ? cachedDisplayedProperties
+          ? cachedDisplayedProperties.filter(dispProps =>
+              Object.keys(schema.properties)
+                .concat([
+                  "$$spicainternal_schedule",
+                  "$$spicainternal_actions",
+                  "$$spicainternal_select"
+                ])
+                .some(schemaProps => schemaProps == dispProps)
+            )
           : [
               ...Object.entries(schema.properties)
                 .filter(([, value]) => value.options.visible)
@@ -235,10 +247,45 @@ export class IndexComponent implements OnInit {
       .then(() => this.refresh.emit());
   }
   guideRequest(url: string, key: string) {
-    this.bs
-      .guideRequest(url, key == "getDataWithLang" ? {headers: {"Accept-Language": "tr-TR"}} : {})
-      .subscribe(returnData => {
-        this.guideResponse[key] = returnData;
-      });
+    if (!this.guideResponse[key]) {
+      this.bs
+        .guideRequest(url, key == "getDataWithLang" ? {headers: {"Accept-Language": "tr-TR"}} : {})
+        .pipe(take(1))
+        .subscribe(returnedData => {
+          this.guideResponse[key] = returnedData;
+        });
+    } else {
+      this.guideResponse[key] = undefined;
+    }
+  }
+
+  buildTemplate(value, property) {
+    if (value == undefined || value == null) {
+      return value;
+    }
+    switch (property.type) {
+      case "object":
+        return JSON.stringify(value);
+      case "date":
+        return new Date(value).toLocaleString();
+      case "color":
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<div style='width:20px; height:20px; background-color:${value}; border-radius:3px'></div>`
+        );
+      case "relation":
+        if (property["relationType"] == "onetomany") {
+          return value.map(val =>
+            val.hasOwnProperty(property.primary) ? val[property.primary] : val
+          );
+        } else {
+          return value.hasOwnProperty(property.primary) ? value[property.primary] : value;
+        }
+      case "storage":
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=${value} alt=${value}>`
+        );
+      default:
+        return value;
+    }
   }
 }

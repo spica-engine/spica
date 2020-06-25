@@ -26,7 +26,6 @@
     word-break: break-all;
     flex: 1.5;
     justify-content: flex-start;
-    margin: 10px 5px 10px 0px;
   }
 
   mat-header-cell:nth-child(2),
@@ -34,7 +33,6 @@
     word-break: break-word;
     flex: 2;
     justify-content: center;
-    margin: 10px 5px;
   }
 
   mat-header-cell:nth-child(3),
@@ -42,7 +40,6 @@
     word-break: break-word;
     flex: 3;
     justify-content: center;
-    margin: 10px 5px;
   }
 
   mat-header-cell:last-of-type,
@@ -50,6 +47,5 @@
     min-width: 150px;
     flex: 1;
     justify-content: flex-end;
-    margin: 10px 0px 10px 5px;
   }
 }

@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar *ngIf="storages$ | async" color="primary">
   <div>
     <h4 class="mat-h4">
       <mat-icon>filter_drama</mat-icon>
@@ -97,7 +97,7 @@
               mat-menu-item
               color="warn"
               [matAwareDialog]="{
-                title: 'Attention',
+                title: 'Confirmation',
                 templateOrDescription: dialogTemplate,
                 answer: 'agree'
               }"
@@ -119,11 +119,8 @@
 ></mat-paginator>
 
 <ng-template #dialogTemplate let-answer="answer">
-  <p>This action cannot be undone.</p>
+  <p>This action will <b>permanently</b> delete this object and break all associations.</p>
   <p>
-    This action will permanently delete the object and broke the all associations.
-  </p>
-  <p>
-    Please type <code>{{ answer }}</code> to confirm.
+    Please type in <code>{{ answer }}</code> to confirm.
   </p>
 </ng-template>
