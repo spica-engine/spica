@@ -116,6 +116,9 @@
           &.dependency {
             ::ng-deep .mat-list-item-content {
               display: flex !important;
+              padding-top: unset !important;
+              padding-bottom: 10px !important;
+              padding-top: 10px !important;
             }
             svg {
               height: 44px;
@@ -137,7 +140,7 @@
             height: 80px;
 
             ::ng-deep .mat-list-item-content > *:not(:first-child) {
-              margin-left: 5px;
+              margin-left: 10px;
             }
 
             mat-form-field {
@@ -159,7 +162,7 @@
 
           &.environment  {
             mat-form-field:not(:first-of-type) {
-              margin-left: 5px;
+              margin-left: 10px;
             }
           }
         }
