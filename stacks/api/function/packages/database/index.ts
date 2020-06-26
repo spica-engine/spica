@@ -1,2 +1,5 @@
 export * from "./src/index";
-export * from "mongodb";
+
+const mongodb = require("mongodb");
+
+export const ObjectId = mongodb.ObjectId;

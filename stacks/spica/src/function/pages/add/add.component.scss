@@ -116,7 +116,6 @@
           &.dependency {
             ::ng-deep .mat-list-item-content {
               display: flex !important;
-              padding-top: unset !important;
               padding-bottom: 10px !important;
               padding-top: 10px !important;
             }
@@ -161,6 +160,10 @@
           }
 
           &.environment  {
+            ::ng-deep .mat-list-item-content {
+              padding-bottom: 0px !important;
+              padding-top: 10px !important;
+            }
             mat-form-field:not(:first-of-type) {
               margin-left: 10px;
             }

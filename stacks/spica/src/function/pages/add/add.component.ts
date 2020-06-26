@@ -26,6 +26,7 @@ import {
   NormalizedFunction,
   normalizeFunction
 } from "../../interface";
+import {info} from "console";
 
 @Component({
   selector: "functions-add",
@@ -63,7 +64,12 @@ export class AddComponent implements OnInit, OnDestroy {
     private functionService: FunctionService,
     private http: HttpClient
   ) {
-    this.information = this.functionService.information().pipe(share());
+    this.information = this.functionService.information().pipe(
+      share(),
+      tap(information => {
+        this.function.timeout = this.function.timeout || information.timeout * 0.7;
+      })
+    );
   }
 
   ngOnInit() {
@@ -97,9 +103,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   formatTimeout(value: number) {
     if (value >= 60) {
-      return Math.floor(value / 60) + "m";
+      return (Math.round((value / 60) * 100 + Number.EPSILON) / 100).toFixed(1) + "m";
     }
-
     return `${value}s`;
   }
 

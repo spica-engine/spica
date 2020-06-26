@@ -1,0 +1,11 @@
+package(default_visibility = ["//stacks/api/function:__subpackages__"])
+
+exports_files(["rollup.config.js"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_config")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    deps = ["//:tsconfig.json"],
+)

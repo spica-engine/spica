@@ -1,8 +1,8 @@
-import * as mongodb from "mongodb";
+const mongodb = require("mongodb");
 import * as util from "util";
 import {checkDocument} from "./check";
 
-let connection: mongodb.MongoClient;
+let connection: typeof mongodb.MongoClient;
 
 function checkEnvironment() {
   if (!process.env.RUNTIME) {
@@ -24,12 +24,13 @@ function checkEnvironment() {
   }
 }
 
-async function connect(): Promise<mongodb.MongoClient> {
+async function connect(): Promise<typeof mongodb.MongoClient> {
   if (!connected()) {
     connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
       replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
       appname: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`,
-      useNewUrlParser: true
+      useNewUrlParser: true,
+      useUnifiedTopology: true
     });
   }
   if (!connection.isConnected()) {
@@ -38,7 +39,7 @@ async function connect(): Promise<mongodb.MongoClient> {
   return connection;
 }
 
-export async function database(): Promise<mongodb.Db> {
+export async function database(): Promise<typeof mongodb.Db> {
   checkEnvironment();
 
   const connection = await connect();
@@ -53,7 +54,7 @@ export async function database(): Promise<mongodb.Db> {
   const collection = db.collection;
 
   db.collection = (...args) => {
-    const coll: mongodb.Collection = collection.call(db, ...args);
+    const coll: typeof mongodb.Collection = collection.call(db, ...args);
     coll.watch = util.deprecate(
       coll.watch,
       `It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing.`

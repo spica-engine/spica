@@ -219,13 +219,7 @@ export class FunctionController {
         tap(response => res.write(`${JSON.stringify(response)}${os.EOL}`))
       );
     }
-    operators.push(
-      last(),
-      tap(() => {
-        this.engine.compile(fn).catch(() => {});
-      }),
-      finalize(() => res.end())
-    );
+    operators.push(last(), finalize(() => res.end()));
 
     return (this.engine.addPackage(fn, name) as any).pipe(...operators);
   }

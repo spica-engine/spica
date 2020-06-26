@@ -1,31 +1,80 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:index.bzl", "ts_config", "ts_library")
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("@npm_bazel_rollup//:index.bzl", "rollup_bundle")
 
-ts_config(
-    name = "tsconfig",
-    src = "tsconfig.json",
-    deps = ["//:tsconfig.json"],
-)
+SRCS = glob(["src/*.ts"]) + ["index.ts"]
 
 ts_library(
     name = "dashboard",
-    srcs = glob(["src/*.ts"]) + ["index.ts"],
+    srcs = SRCS,
     module_name = "@spica-devkit/dashboard",
-    tsconfig = ":tsconfig",
+    tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
     ],
 )
 
+ROLLUP_DEPS = [
+    ":dashboard",
+    "@npm//rollup-plugin-commonjs",
+    "@npm//rollup-plugin-node-resolve",
+    "@npm//@rollup/plugin-json",
+]
+
+rollup_bundle(
+    name = "cjs",
+    config_file = "//stacks/api/function/packages:rollup.config.js",
+    entry_points = {
+        "index.ts": "index.js",
+    },
+    format = "cjs",
+    output_dir = True,
+    sourcemap = "true",
+    deps = ROLLUP_DEPS,
+)
+
+rollup_bundle(
+    name = "esm",
+    config_file = "//stacks/api/function/packages:rollup.config.js",
+    entry_points = {
+        "index.ts": "index.mjs",
+    },
+    format = "esm",
+    output_dir = True,
+    sourcemap = "true",
+    deps = ROLLUP_DEPS,
+)
+
+genrule(
+    name = "bundle",
+    srcs = [
+        ":esm",
+        ":cjs",
+        ":dashboard",
+    ],
+    outs = [
+        "dist/index.js",
+        "dist/index.js.map",
+        "dist/index.mjs",
+        "dist/index.mjs.map",
+    ] + [
+        "dist/%s.d.ts" % (f[:-3])
+        for f in SRCS
+    ],
+    cmd = "cp -r $(locations :cjs)/* $(RULEDIR)/dist && cp -r $(locations :esm)/* $(RULEDIR)/dist && rsync -a --include='*.d.ts' $(GENDIR)/stacks/api/function/packages/dashboard/ $(RULEDIR)/dist",
+)
+
 pkg_npm(
     name = "package",
-    srcs = ["package.json"],
+    srcs = [
+        "package.json",
+    ],
     tags = ["release-with-spica"],
     deps = [
-        ":dashboard",
+        ":bundle",
     ],
 )
