@@ -4,7 +4,10 @@
   "version": "0.0.0-PLACEHOLDER",
   "description": "Dashboard package for Spica.",
   "author": "spica",
-  "main": "index.js",
+  "keywords": ["spica", "devkit"],
+  "main": "dist/index",
+  "module": "dist/index.mjs",
+  "sideEffects": false,
   "dependencies": {
     "node-fetch": "^2.6.0"
   }

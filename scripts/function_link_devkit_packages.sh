@@ -4,26 +4,21 @@ set -u -e -o pipefail
 echo "Building the database and dashboard package"
 yarn bazel build //stacks/api/function/packages/database:package //stacks/api/function/packages/dashboard:package
 
-OUTPUT=`mktemp -d`;
+(cd "./bazel-bin/stacks/api/function/packages/dashboard/package")
+(cd "./bazel-bin/stacks/api/function/packages/database/package")
 
-mkdir "$OUTPUT/database"
+echo "Now please provide the root directory of functions which you want install these packages locally.";
+echo "If you leave empty /private/tmp/functions will be used as default"
+read -p "Path: " FUNCTION_PATH
+FUNCTION_PATH=${FUNCTION_PATH:=/private/tmp/functions}
 
-cp -r ./bazel-bin/stacks/api/function/packages/database/package/* "$OUTPUT/database"
-(cd "$OUTPUT/database" && sudo npm link)
 
-mkdir "$OUTPUT/dashboard"
-
-cp -r ./bazel-bin/stacks/api/function/packages/dashboard/package/* "$OUTPUT/dashboard"
-(cd "$OUTPUT/dashboard" && sudo npm link)
-
-echo "Now you please provide the directory of function which you want install this package locally.";
-echo "It should be something like this '/private/tmp/functions'"
-read -p "Path: " FUNCTION_PATH || exit 1
-
-cd $FUNCTION_PATH
-
-for DIR in */
+for DIR in $FUNCTION_PATH/*
 do
-  (cd "./$DIR" && sudo npm link @spica-devkit/database)
-  (cd "./$DIR" && sudo npm link @spica-devkit/dashboard)
+  DASHBOARD_PATH="$DIR/node_modules/@spica-devkit/dashboard"
+  DATABASE_PATH="$DIR/node_modules/@spica-devkit/database"
+  (mkdir -p $DASHBOARD_PATH && rsync -ar --no-owner --no-group ./bazel-bin/stacks/api/function/packages/dashboard/package/* $DASHBOARD_PATH)
+  (cd $DASHBOARD_PATH && npm install)
+  (mkdir -p $DATABASE_PATH && rsync -ar --no-owner --no-group ./bazel-bin/stacks/api/function/packages/database/package/* $DATABASE_PATH)
+  (cd $DATABASE_PATH && npm install)
 done

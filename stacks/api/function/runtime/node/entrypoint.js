@@ -1,10 +1,6 @@
-// @ts-ignore
 import {Action} from "@spica-server/bucket/hooks/proto";
-// @ts-ignore
 import {ActionParameters} from "@spica-server/bucket/hooks/proto/node";
-// @ts-ignore
 import {ActionQueue} from "@spica-server/bucket/hooks/proto/node/queue";
-// @ts-ignore
 import {
   Change,
   DatabaseQueue,
@@ -16,11 +12,10 @@ import {
   Message,
   Request,
   Response
-  // @ts-ignore
 } from "@spica-server/function/queue/node";
-// @ts-ignore
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
+import {createRequire} from "module";
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
@@ -152,6 +147,8 @@ if (!process.env.WORKER_ID) {
       exitAbnormally(`Invalid event type received. (${event.type})`);
       break;
   }
+
+  globalThis.require = createRequire(process.cwd());
 
   let module = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
 

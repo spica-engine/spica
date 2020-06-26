@@ -1,4 +1,4 @@
-import {ObjectId} from "mongodb";
+const mongodb = require("mongodb");
 
 function emitWarning(path: string) {
   process.emitWarning(
@@ -9,7 +9,7 @@ function emitWarning(path: string) {
 }
 
 export function checkDocument(document: object, path: string = undefined): void {
-  if (document instanceof ObjectId) {
+  if (document instanceof mongodb.ObjectId) {
     // Check if the path is alike 0._id or _id or $set._id
     if (/^(\d\._id|_id|\$.*?\._id)$/.test(path)) {
       return;
