@@ -33,15 +33,12 @@ describe("Hooks Integration", () => {
     return req.post(`/function/${fn._id}/index`, {index}, headers);
   }
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     jasmine.addCustomEqualityTester((actual, expected) => {
       if (expected == "__skip__" && typeof actual == typeof expected) {
         return true;
       }
     });
-  });
-
-  beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
@@ -169,9 +166,11 @@ describe("Hooks Integration", () => {
           }
         },
         env: {},
-        timeout: 20
+        timeout: 20,
+        language: "typescript"
       })
       .then(res => res.body);
+
     await updateIndex(`
       export function insert(){
         return true;
@@ -202,7 +201,6 @@ describe("Hooks Integration", () => {
     it("should hide password field of bucket-data for specific apikey", async () => {
       await updateIndex(`export function get(req){
         const aggregation = [];
-        
         if(req.headers.authorization == 'MY_SECRET_TOKEN' ){
           aggregation.push( { $unset: ["password"] } )
         }
@@ -232,7 +230,7 @@ describe("Hooks Integration", () => {
 
     it("should filter users", async () => {
       await updateIndex(`export function index(request){
-        return [ { $match: { age: { $lt: 20 } } } ]
+        return [ { $match: { age: { $lt: 20 } } } ];
       }`);
       const {body: document} = await req.get(`/bucket/${bucket._id}/data`, {}, headers);
       expect(document).toEqual([
@@ -243,7 +241,7 @@ describe("Hooks Integration", () => {
 
   describe("UPDATE", () => {
     beforeEach(async () => {
-      await updateIndex(`export function update(req){ return req.document != '${user1._id}' }`);
+      await updateIndex(`export function update(req){ return req.document != '${user1._id}'; }`);
     });
     it("should not allow to update to the user1's data", async () => {
       const response = await req.put(
@@ -333,7 +331,7 @@ describe("Hooks Integration", () => {
     it("should not fail when an empty object returned", async done => {
       await updateIndex(`export function stream(action) {
         return {};
-      };`);
+      }`);
       const ws = wsc.get(`/bucket/${bucket._id}/data`);
       const message = jasmine.createSpy();
       ws.onmessage = e => {
@@ -356,7 +354,7 @@ describe("Hooks Integration", () => {
     it("should filter by incoming headers", async done => {
       await updateIndex(`export function stream(action) {
         return {username: action.headers.user};
-      };`);
+      }`);
       const ws = wsc.get(`/bucket/${bucket._id}/data`, {
         headers: {
           user: user1.username

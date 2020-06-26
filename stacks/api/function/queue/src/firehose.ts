@@ -1,5 +1,5 @@
 import {Firehose} from "@spica-server/function/queue/proto";
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as Websocket from "ws";
 import {Queue} from "./queue";
 
@@ -41,7 +41,7 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
   }
 
   pop(
-    call: grpc.ServerUnaryCall<Firehose.Message.Pop>,
+    call: grpc.ServerUnaryCall<Firehose.Message.Pop, Firehose.Message.Incoming>,
     callback: grpc.sendUnaryData<Firehose.Message.Incoming>
   ) {
     if (!this.queue.has(call.request.id)) {
@@ -53,7 +53,7 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
   }
 
   sendAll(
-    call: grpc.ServerUnaryCall<Firehose.Message>,
+    call: grpc.ServerUnaryCall<Firehose.Message, Firehose.Message.Result>,
     callback: grpc.sendUnaryData<Firehose.Message.Result>
   ) {
     const message = JSON.stringify(parseMessage(call.request));
@@ -66,7 +66,7 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
   }
 
   send(
-    call: grpc.ServerUnaryCall<Firehose.Message.Outgoing>,
+    call: grpc.ServerUnaryCall<Firehose.Message.Outgoing, Firehose.Message.Result>,
     callback: grpc.sendUnaryData<Firehose.Message.Result>
   ) {
     const socket = this.sockets.get(call.request.client.id);
@@ -84,7 +84,7 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
   }
 
   close(
-    call: grpc.ServerUnaryCall<Firehose.Close>,
+    call: grpc.ServerUnaryCall<Firehose.Close, Firehose.Close.Result>,
     callback: grpc.sendUnaryData<Firehose.Close.Result>
   ) {
     const socket = this.sockets.get(call.request.client.id);

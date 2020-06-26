@@ -5,6 +5,7 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "scheduler",
+    testonly = True,
     srcs = glob(["*.ts"]),
     deps = [
         "//packages/database/testing",

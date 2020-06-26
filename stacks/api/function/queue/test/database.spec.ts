@@ -1,6 +1,6 @@
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
 import {Database} from "@spica-server/function/queue/proto";
-import {credentials} from "grpc";
+import {credentials} from "@grpc/grpc-js";
 
 describe("DatabaseQueue", () => {
   let queue: EventQueue;

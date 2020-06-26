@@ -8,6 +8,7 @@ export interface Function {
   triggers: Triggers;
   memoryLimit?: number;
   timeout: number;
+  language: string;
 }
 
 export interface Triggers {

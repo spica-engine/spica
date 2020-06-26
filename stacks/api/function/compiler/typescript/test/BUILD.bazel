@@ -1,0 +1,27 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "typescript_test_lib",
+    testonly = True,
+    srcs = [
+        "typescript.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/function/compiler",
+        "//stacks/api/function/compiler/typescript",
+        "//stacks/api/function/runtime/testing",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "typescript_test",
+    srcs = [":typescript_test_lib"],
+    tags = [
+        "flaky",
+    ],
+)

@@ -1,29 +1,33 @@
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
-import {Compilation} from "@spica-server/function/runtime";
+import {Compilation, Language} from "@spica-server/function/compiler";
+import {Javascript} from "@spica-server/function/compiler/javascript";
+import {Typescript} from "@spica-server/function/compiler/typescript";
 import {Node} from "@spica-server/function/runtime/node";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as os from "os";
 import {PassThrough, Writable} from "stream";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24075";
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe("Entrypoint", () => {
   let queue: EventQueue;
 
   let runtime: Node;
+  let language: Language;
   let enqueueSpy: jasmine.Spy;
   let popSpy: jasmine.Spy;
   let compilation: Compilation = {
     cwd: undefined,
-    entrypoint: "index.ts"
+    entrypoint: undefined
   };
   let id = 0;
 
   function initializeFn(index: string) {
-    compilation.cwd = FunctionTestBed.initialize(index);
-    return runtime.compile(compilation);
+    compilation.entrypoint = `index.${language.description.extension}`;
+    compilation.cwd = FunctionTestBed.initialize(index, compilation.entrypoint);
+    return language.compile(compilation);
   }
 
   function spawn(stdout?: Writable, idOverride?: string): Promise<number> {
@@ -42,7 +46,7 @@ describe("Entrypoint", () => {
         reject(e);
       });
 
-      worker.once("exit", (code, signal) => {
+      worker.once("exit", code => {
         if (code == 0) {
           resolve(code);
         } else {
@@ -52,12 +56,13 @@ describe("Entrypoint", () => {
     });
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     enqueueSpy = jasmine.createSpy("enqueue");
     popSpy = jasmine.createSpy("pop");
     queue = new EventQueue(enqueueSpy, popSpy);
-    queue.listen();
+    await queue.listen();
     runtime = new Node();
+    language = new Javascript();
   });
 
   afterEach(() => {
@@ -195,7 +200,6 @@ describe("Entrypoint", () => {
     process.env.REPLICA_SET = "repl";
     process.env.HOME = os.homedir();
     await initializeFn(`
-    declare var process;
     export default function() {
       const {
         ENTRYPOINT,
@@ -206,7 +210,7 @@ describe("Entrypoint", () => {
         __INTERNAL__SPICA__MONGOREPL__: repl
       } = process.env;
       if (
-        ENTRYPOINT == "index.js" &&
+        ENTRYPOINT == "index" &&
         HOME &&
         RUNTIME == "node" &&
         url == "mongodb://test" &&
@@ -236,8 +240,7 @@ describe("Entrypoint", () => {
 
   it("should set env variables from scheduling context", async () => {
     await initializeFn(`
-    declare var process;
-    export default function() {
+    export function env() {
       if (process.env.SET_FROM_CTX == "true" && process.env.TIMEOUT == "60") {
         process.exit(4);
       }
@@ -247,7 +250,7 @@ describe("Entrypoint", () => {
       type: -1,
       target: new Event.Target({
         cwd: compilation.cwd,
-        handler: "default",
+        handler: "env",
         context: new Event.SchedulingContext({
           env: [new Event.SchedulingContext.Env({key: "SET_FROM_CTX", value: "true"})],
           timeout: 60
@@ -258,6 +261,58 @@ describe("Entrypoint", () => {
 
     const exitCode = await spawn().catch(e => e);
     expect(exitCode).toBe(4);
+  });
+
+  describe("cjs interop", () => {
+    beforeEach(() => {
+      language = new Typescript();
+    });
+
+    it("should work with default handler", async () => {
+      await initializeFn(`
+      declare var process;
+      export default function() { 
+        process.exit(4); 
+      }`);
+      queue.enqueue(
+        new Event.Event({
+          type: -1,
+          target: new Event.Target({
+            handler: "default",
+            cwd: compilation.cwd,
+            context: new Event.SchedulingContext({
+              env: [],
+              timeout: 60
+            })
+          })
+        })
+      );
+      const exitCode = await spawn().catch(e => e);
+      expect(exitCode).toBe(4);
+    });
+
+    it("should work with custom handler", async () => {
+      await initializeFn(`
+      declare var process;
+      export function test() { 
+        process.exit(4); 
+      }`);
+      queue.enqueue(
+        new Event.Event({
+          type: -1,
+          target: new Event.Target({
+            handler: "test",
+            cwd: compilation.cwd,
+            context: new Event.SchedulingContext({
+              env: [],
+              timeout: 60
+            })
+          })
+        })
+      );
+      const exitCode = await spawn().catch(e => e);
+      expect(exitCode).toBe(4);
+    });
   });
 
   describe("http", () => {
@@ -300,7 +355,6 @@ describe("Entrypoint", () => {
 
     it("should pass request to fn", async () => {
       await initializeFn(`
-      declare var process;
       export default function(req) {
         if ( req.headers.get('content-type') == 'application/json' ) {
           process.exit(4);
@@ -332,7 +386,6 @@ describe("Entrypoint", () => {
 
     it("should pass response to fn", async () => {
       await initializeFn(`
-      declare var process;
       export default function(req, res) {
         if ( res ) {
           process.exit(4);
@@ -362,7 +415,7 @@ describe("Entrypoint", () => {
 
     it("should send the response", async () => {
       await initializeFn(`export default function(req, res) {
-        res.send({ oughtToSerialize: true  })
+        res.send({ oughtToSerialize: true  });
       }`);
 
       const event = new Event.Event({
@@ -487,7 +540,6 @@ describe("Entrypoint", () => {
 
     it("should pass change to fn", async () => {
       await initializeFn(`
-      declare var process;
       export default function(change) {
         if ( change.kind == 'insert' && change.collection == 'test') {
           process.exit(4);
@@ -530,7 +582,6 @@ describe("Entrypoint", () => {
 
     it("pop from the queue", async () => {
       await initializeFn(`
-      declare var process;
       export default function({socket, pool}, message) {
         if ( 
           socket.remoteAddress == "[::1]" && 

@@ -6,8 +6,9 @@ import {FunctionEngine} from "@spica-server/function/src/engine";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
 import {ChangeKind, FunctionService, TargetChange} from "../src/function.service";
+import {INestApplication} from "@nestjs/common";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:24045";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
 describe("Engine", () => {
   let engine: FunctionEngine;
@@ -19,6 +20,7 @@ describe("Engine", () => {
   let mongo: MongoClient;
 
   let module: TestingModule;
+  let app: INestApplication;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -35,9 +37,7 @@ describe("Engine", () => {
       ]
     }).compile();
 
-    const app = module.createNestApplication();
-
-    await app.init();
+    app = module.createNestApplication();
 
     scheduler = module.get(Scheduler);
     database = module.get(DatabaseService);
@@ -52,14 +52,17 @@ describe("Engine", () => {
       null
     );
 
+    await app.init();
+
     subscribeSpy = spyOn<any>(engine, "subscribe").and.returnValue(null);
     unsubscribeSpy = spyOn<any>(engine, "unsubscribe").and.returnValue(null);
-  }, 120000);
+  });
 
   afterEach(async () => {
     subscribeSpy.calls.reset();
     unsubscribeSpy.calls.reset();
     await module.close();
+    return app.close();
   });
 
   it("should subscribe to new trigger if ChangeKind is Added", () => {

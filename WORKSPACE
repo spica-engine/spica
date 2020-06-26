@@ -22,35 +22,6 @@ node_repositories()
 yarn_install(
     name = "npm",
     always_hide_bazel_files = True,
-    manual_build_file_contents = """
-filegroup(
-    name = "function_runtime_node_dependencies",
-    srcs = [
-        "//grpc:grpc__contents",
-        "//grpc:grpc__nested_node_modules",
-        # Rest are the dependencies of grpc flattened by package manager.
-        "//@types/bytebuffer:bytebuffer__files",
-        "//@types/long:long__files",
-        "//@types/node:node__files",
-        "//lodash.camelcase:lodash.camelcase__files",
-        "//lodash.clone:lodash.clone__files",
-        "//nan:nan__files",
-        "//ascli:ascli__files",
-        "//colour:colour__files",
-        "//optjs:optjs__files",
-        "//bytebuffer:bytebuffer__files",
-        "//yargs:yargs__files",
-        "//string-width:string-width__files",
-        "//code-point-at:code-point-at__files",
-        "//number-is-nan:number-is-nan__files",
-        "//strip-ansi:strip-ansi__files",
-        "//ansi-regex:ansi-regex__files",
-        "//wrap-ansi:wrap-ansi__files",
-        "//decamelize:decamelize__files",
-        "//window-size:window-size__files",
-    ]
-)
-    """,
     package_json = "//:package.json",
     yarn_lock = "//:yarn.lock",
 )
@@ -140,20 +111,3 @@ k8s_defaults(
     image_chroot = "index.docker.io",
     kind = "deployment",
 )
-
-# Setup proto workspace
-http_archive(
-    name = "rules_proto",
-    sha256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208",
-    strip_prefix = "rules_proto-97d8af4dc474595af3900dd85cb3a29ad28cc313",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
-        "https://github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
-    ],
-)
-
-load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
-
-rules_proto_dependencies()
-
-rules_proto_toolchains()

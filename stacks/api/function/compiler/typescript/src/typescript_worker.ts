@@ -1,4 +1,4 @@
-import {Compilation} from "@spica-server/function/runtime";
+import {Compilation} from "@spica-server/function/compiler";
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";

@@ -20,10 +20,10 @@ ts_library(
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/scheduler",
         "//stacks/api/preference",
+        "@npm//@grpc/grpc-js",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//@types/node",
-        "@npm//grpc",
         "@npm//rxjs",
     ],
 )

@@ -1,6 +1,6 @@
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
 import {Http} from "@spica-server/function/queue/proto";
-import {credentials} from "grpc";
+import {credentials} from "@grpc/grpc-js";
 
 describe("HttpQueue", () => {
   let queue: EventQueue;

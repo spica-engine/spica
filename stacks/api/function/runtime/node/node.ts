@@ -1,15 +1,7 @@
-import {
-  Compilation,
-  Description,
-  Runtime,
-  SpawnOptions,
-  Worker
-} from "@spica-server/function/runtime";
+import {Description, Runtime, SpawnOptions, Worker} from "@spica-server/function/runtime";
 import * as child_process from "child_process";
-import * as fs from "fs";
 import * as path from "path";
 import {Transform, Writable} from "stream";
-import * as worker_threads from "worker_threads";
 
 class FilterExperimentalWarnings extends Transform {
   _transform(rawChunk: Buffer, encoding: string, cb: Function) {
@@ -39,7 +31,8 @@ class NodeWorker extends Worker {
         "--experimental-modules",
         "--enable-source-maps",
         "--unhandled-rejections=strict",
-        `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap.js")}`
+        "--es-module-specifier-resolution=node",
+        `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap")}`
       ],
       {
         stdio: ["ignore", "pipe", "pipe"],
@@ -47,7 +40,7 @@ class NodeWorker extends Worker {
           PATH: process.env.PATH,
           HOME: process.env.HOME,
           FUNCTION_GRPC_ADDRESS: process.env.FUNCTION_GRPC_ADDRESS,
-          ENTRYPOINT: "index.js",
+          ENTRYPOINT: "index",
           RUNTIME: "node",
           WORKER_ID: options.id,
           ...options.env
@@ -74,72 +67,7 @@ export class Node extends Runtime {
     description: "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine."
   };
 
-  private compilationWorker: worker_threads.Worker;
-
-  constructor() {
-    super();
-    this.compilationWorker = new worker_threads.Worker(__dirname + "/compiler_worker.js");
-  }
-
-  async compile(compilation: Compilation): Promise<void> {
-    await super.prepare(compilation);
-    const hasSpicaDevkitDatabasePackage = await fs.promises
-      .access(path.join(compilation.cwd, "node_modules", "@spica-devkit"), fs.constants.F_OK)
-      .then(() => true)
-      .catch(() => false);
-
-    if (hasSpicaDevkitDatabasePackage) {
-      const targetPath = path.join(compilation.cwd, "node_modules", "@internal");
-      await fs.promises.mkdir(targetPath, {recursive: true});
-      await fs.promises
-        .symlink(
-          path.join(compilation.cwd, "node_modules", "@spica-devkit", "database"),
-          path.join(targetPath, "database"),
-          "dir"
-        )
-        .catch(e => {
-          if (e.code == "EEXIST" || e.code == "ENOENT") {
-            // Do nothing.
-            return;
-          }
-          return Promise.reject(e);
-        });
-    }
-
-    await fs.promises
-      .symlink(
-        path.join(compilation.cwd, "node_modules"),
-        path.join(compilation.cwd, ".build", "node_modules"),
-        "dir"
-      )
-      .catch(e => {
-        if (e.code == "EEXIST") {
-          // Do nothing.
-          return;
-        }
-        return Promise.reject(e);
-      });
-    return new Promise((resolve, reject) => {
-      const handleMessage = message => {
-        if (message.baseUrl == compilation.cwd) {
-          this.compilationWorker.off("message", handleMessage);
-          if (message.diagnostics.length) {
-            reject(message.diagnostics);
-          } else {
-            resolve();
-          }
-        }
-      };
-      this.compilationWorker.on("message", handleMessage);
-      this.compilationWorker.postMessage(compilation);
-    });
-  }
-
   spawn(options: SpawnOptions): Worker {
     return new NodeWorker(options);
-  }
-
-  clear(compilation: Compilation) {
-    return super.rimraf(path.join(compilation.cwd, ".build"));
   }
 }

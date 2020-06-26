@@ -58,7 +58,7 @@ export class FunctionController {
     }
 
     const runtimes = [];
-    for (const runtime of this.scheduler.runtimes) {
+    for (const [_, runtime] of this.scheduler.runtimes) {
       runtimes.push(runtime.description);
     }
 
@@ -128,6 +128,8 @@ export class FunctionController {
       );
     }
     delete fn._id;
+    // Language is immutable
+    delete fn.language;
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 

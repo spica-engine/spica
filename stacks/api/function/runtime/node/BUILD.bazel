@@ -7,7 +7,6 @@ load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 ts_library(
     name = "node",
     srcs = [
-        "compiler_worker.ts",
         "index.ts",
         "node.ts",
     ],
@@ -18,29 +17,16 @@ ts_library(
     deps = [
         "//stacks/api/function/runtime",
         "@npm//@types/node",
-        "@npm//typescript",
     ],
 )
 
 pkg_npm(
     name = "runtime",
     srcs = [
-        "@npm//:function_runtime_node_dependencies",
+        "package.json",
     ],
     deps = [
         ":entrypoint",
-    ],
-)
-
-ts_library(
-    name = "entrypoint_lib",
-    srcs = ["entrypoint.ts"],
-    deps = [
-        "//stacks/api/bucket/hooks/proto",
-        "//stacks/api/bucket/hooks/proto/node",
-        "//stacks/api/function/queue/node",
-        "//stacks/api/function/queue/proto",
-        "@npm//@types/node",
     ],
 )
 
@@ -48,12 +34,17 @@ rollup_bundle(
     name = "entrypoint",
     config_file = "rollup.config.js",
     entry_points = {
-        ":entrypoint.ts": "bootstrap",
+        ":entrypoint.js": "bootstrap",
     },
-    format = "cjs",
+    format = "esm",
     sourcemap = "true",
     deps = [
-        ":entrypoint_lib",
+        "//stacks/api/bucket/hooks/proto",
+        "//stacks/api/bucket/hooks/proto/node",
+        "//stacks/api/function/queue/node",
+        "//stacks/api/function/queue/proto",
+        "@npm//@grpc/grpc-js",
+        "@npm//@rollup/plugin-json",
         "@npm//rollup-plugin-commonjs",
         "@npm//rollup-plugin-node-resolve",
         "@npm//rollup-plugin-terser",

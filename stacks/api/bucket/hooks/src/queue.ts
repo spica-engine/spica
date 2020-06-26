@@ -1,6 +1,6 @@
 import {Action} from "@spica-server/bucket/hooks/proto";
 import {Queue} from "@spica-server/function/queue";
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 
 export class ActionQueue implements Queue<typeof Action.Queue> {
   TYPE = Action.Queue;
@@ -12,7 +12,10 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
     return this.queue.size;
   }
 
-  pop(call: grpc.ServerUnaryCall<Action.Action.Pop>, callback: grpc.sendUnaryData<Action.Action>) {
+  pop(
+    call: grpc.ServerUnaryCall<Action.Action.Pop, Action.Action>,
+    callback: grpc.sendUnaryData<Action.Action>
+  ) {
     const action = this.queue.get(call.request.id);
     if (!this.queue.has(call.request.id)) {
       return callback(new Error(`Queue has no item with id ${call.request.id}`), null);
@@ -22,7 +25,7 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
   }
 
   result(
-    call: grpc.ServerUnaryCall<Action.Result>,
+    call: grpc.ServerUnaryCall<Action.Result, Action.Result.Response>,
     callback: grpc.sendUnaryData<Action.Result.Response>
   ) {
     const _callback = this.callbacks.get(call.request.id);
