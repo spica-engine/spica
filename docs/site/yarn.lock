@@ -127,12 +127,12 @@
   dependencies:
     tslib "^2.0.0"
 
-"@angular/cdk@^8.2.3":
-  version "8.2.3"
-  resolved "https://registry.yarnpkg.com/@angular/cdk/-/cdk-8.2.3.tgz#16b96ffa935cbf5a646757ecaf2b19c434678f72"
-  integrity sha512-ZwO5Sn720RA2YvBqud0JAHkZXjmjxM0yNzCO8RVtRE9i8Gl26Wk0j0nQeJkVm4zwv2QO8MwbKUKGTMt8evsokA==
+"@angular/cdk@^10.0.0":
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/@angular/cdk/-/cdk-10.0.0.tgz#da9ad61e4916d0a1c9d57b817270c59b6f265260"
+  integrity sha512-Ug4Cj2ioxEzsm7co6sLGnPa1LINbeKdN/IeCCwZiSDFp555O8TLEwcCVqQz8KKbo/YLfaWOcvGRSrlxEhyAM/A==
   dependencies:
-    tslib "^1.7.1"
+    tslib "^2.0.0"
   optionalDependencies:
     parse5 "^5.0.0"
 
@@ -228,12 +228,12 @@
   resolved "https://registry.yarnpkg.com/@angular/language-service/-/language-service-10.0.1.tgz#7f6d7c079876e0fa24ab9b88a912ebd7ae6c03a2"
   integrity sha512-6fzr8xngnPsQU/dOLEfxs0SkwydH8mHhD7MACB7Pu5a0px1Ef96hW8e1sX7Msg4YXOSK68hejCDNtxfi0aG5qQ==
 
-"@angular/material@^8.2.3":
-  version "8.2.3"
-  resolved "https://registry.yarnpkg.com/@angular/material/-/material-8.2.3.tgz#16543e4e06a3fde2651a25cfe126e88e714ae105"
-  integrity sha512-SOczkIaqes+r+9XF/UUiokidfFKBpHkOPIaFK857sFD0FBNPvPEpOr5oHKCG3feERRwAFqHS7Wo2ohVEWypb5A==
+"@angular/material@^10.0.0":
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/@angular/material/-/material-10.0.0.tgz#ecd83ade893b1501a9db5e2f98ab94015a9e7cee"
+  integrity sha512-u8uORUlDUYo8NlyXAw7BJdkvAXZiIQuSQ58a+RVlR37CGjI07vrECj4i4Z22XOjBGykvsKj0rhq/hCPzXy/RTQ==
   dependencies:
-    tslib "^1.7.1"
+    tslib "^2.0.0"
 
 "@angular/platform-browser-dynamic@^10.0.1":
   version "10.0.1"
@@ -3886,11 +3886,6 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.15, graceful-fs@^4.1.2, graceful-fs@^4.1.6
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.4.tgz#2256bde14d3632958c465ebc96dc467ca07a29fb"
   integrity sha512-WjKPNJF79dtJAVniUlGGWHYGz2jWxT6VhN/4m1NdkbZ2nOsEF+cI1Edgql5zCRhs/VsQYRvrXctxktVXZUkixw==
-
-hammerjs@^2.0.8:
-  version "2.0.8"
-  resolved "https://registry.yarnpkg.com/hammerjs/-/hammerjs-2.0.8.tgz#04ef77862cff2bb79d30f7692095930222bf60f1"
-  integrity sha1-BO93hiz/K7edMPdpIJWTAiK/YPE=
 
 handle-thing@^2.0.0:
   version "2.0.1"
@@ -8100,7 +8095,7 @@ tslib@2.0.0, tslib@^2.0.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.0.0.tgz#18d13fc2dce04051e20f074cc8387fd8089ce4f3"
   integrity sha512-lTqkx847PI7xEDYJntxZH89L2/aXInsyF2luSafe/+0fHOMjlBNXdH6th7f70qxLDhul7KZK0zC8V5ZIyHl0/g==
 
-tslib@^1.10.0, tslib@^1.7.1, tslib@^1.8.1, tslib@^1.9.0:
+tslib@^1.10.0, tslib@^1.8.1, tslib@^1.9.0:
   version "1.13.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.13.0.tgz#c881e13cc7015894ed914862d276436fa9a47043"
   integrity sha512-i/6DQjL8Xf3be4K/E6Wgpekn5Qasl1usyw++dAA35Ue5orEn65VIxOA+YvNNl9HV3qv70T7CNwjODHZrLwvd1Q==

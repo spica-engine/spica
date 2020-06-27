@@ -21,14 +21,14 @@
         color: #1c1c50;
 
         &::after {
-          content: "";
-          background-image: url(../../../assets/icons/link.svg);
-          background-size: contain;
+          content: "open_in_new";
+          font-family: "Material Icons";
           height: 19px;
           width: 19px;
           vertical-align: middle;
           display: inline-block;
           margin-left: 3px;
+          margin-top: -20px;
         }
       }
     }
@@ -78,7 +78,7 @@
           a {
             font-weight: 400;
             text-decoration: none;
-            color: black;
+            color: #73849a;
           }
         }
       }

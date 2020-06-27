@@ -2,23 +2,20 @@ import {HttpClientModule} from "@angular/common/http";
 import {Injector, NgModule} from "@angular/core";
 import {createCustomElement} from "@angular/elements";
 import {FlexLayoutModule} from "@angular/flex-layout";
-import {
-  MatButtonModule,
-  MatCardModule,
-  MatGridListModule,
-  MatIconModule,
-  MatListModule,
-  MatMenuModule,
-  MatSidenavModule,
-  MatToolbarModule,
-  MatTooltipModule,
-  MatFormFieldModule,
-  MatInputModule,
-  MatSelectModule,
-  MatOptionModule,
-  MatExpansionPanel,
-  MatExpansionModule
-} from "@angular/material";
+import {MatButtonModule} from "@angular/material/button";
+import {MatCardModule} from "@angular/material/card";
+import {MatOptionModule} from "@angular/material/core";
+import {MatExpansionModule} from "@angular/material/expansion";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatGridListModule} from "@angular/material/grid-list";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import {MatListModule} from "@angular/material/list";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatSelectModule} from "@angular/material/select";
+import {MatSidenavModule} from "@angular/material/sidenav";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatTooltipModule} from "@angular/material/tooltip";
 import {BrowserModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {ServiceWorkerModule} from "@angular/service-worker";
@@ -49,6 +46,7 @@ import {CalendarComponent} from "./pages/calendar/calendar.component";
 @NgModule({
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
     ServiceWorkerModule.register("ngsw-worker.js", {
@@ -56,8 +54,6 @@ import {CalendarComponent} from "./pages/calendar/calendar.component";
     }),
     InlineSVGModule.forRoot(),
     FlexLayoutModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
     MatCardModule,
     MatToolbarModule,
     MatGridListModule,
@@ -96,7 +92,6 @@ import {CalendarComponent} from "./pages/calendar/calendar.component";
     FairusagePolicyComponent,
     CalendarComponent
   ],
-  entryComponents: [FragmentLinkComponent, TocComponent, DocCardComponent, DocCardsComponent],
   providers: [],
   bootstrap: [AppComponent]
 })

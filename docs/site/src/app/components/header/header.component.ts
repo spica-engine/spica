@@ -2,7 +2,7 @@ import {Component, OnInit} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {map} from "rxjs/operators";
 import {Observable} from "rxjs";
-import {MatIconRegistry} from "@angular/material";
+import {MatIconRegistry} from "@angular/material/icon";
 import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({

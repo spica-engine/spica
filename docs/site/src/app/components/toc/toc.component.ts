@@ -28,9 +28,7 @@ export class TocComponent implements OnInit, OnDestroy {
     )
       .pipe(filter(fragment => !!fragment))
       .subscribe(fragment =>
-        document
-          .getElementById(fragment)
-          .scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
+        document.getElementById(fragment).scrollIntoView({behavior: "smooth"})
       );
   }
 
