@@ -112,6 +112,9 @@
         <h4 mat-subheader>
           <mat-icon>code</mat-icon> Code
           <span></span>
+          <button mat-icon-button (click)="language.format()" matTooltip="Format">
+            <mat-icon>format_align_center</mat-icon>
+          </button>
           <span class="last-saved" *ngIf="$indexSave | async; let lastSaved">
             <mat-label *ngIf="lastSaved != 'inprogress'">
               Last saved: {{ lastSaved | date: "mediumTime" }}
@@ -132,8 +135,9 @@
             [(ngModel)]="index"
             name="code"
             [options]="editorOptions"
-            language="typescript"
+            [language]="function.language"
             [marker]="$markers | async"
+            #language="language"
           >
           </code-editor>
         </mat-list-item>

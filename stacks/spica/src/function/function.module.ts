@@ -30,7 +30,7 @@ import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {PassportModule} from "../passport/passport.module";
-import {TypescriptLanguageDirective} from "./components/editor/typescript.language";
+import {LanguageDirective} from "./components/editor/dynamic.language";
 import {FunctionRoutingModule} from "./function-routing.module";
 import {FunctionInitializer} from "./function.initializer";
 import {FunctionService} from "./function.service";
@@ -50,7 +50,7 @@ import {MatSliderModule} from "@angular/material/slider";
     IndexComponent,
     LogViewComponent,
     WelcomeComponent,
-    TypescriptLanguageDirective,
+    LanguageDirective,
     EnqueuerPipe
   ],
   imports: [

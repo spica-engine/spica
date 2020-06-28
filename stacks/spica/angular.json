@@ -21,20 +21,17 @@
                 "glob": "**/*",
                 "input": "assets",
                 "output": "assets/"
-              },
-              {
-                "glob": "**/*",
-                "input": "../../node_modules/monaco-editor-core",
-                "output": "./assets/function"
               }
             ],
             "styles": [
               "src/styles.scss",
               "../../node_modules/cropperjs/dist/cropper.css",
               "../../node_modules/leaflet/dist/leaflet.css",
-              "../../node_modules/ng-pick-datetime/assets/style/picker.min.css"
+              "../../node_modules/ng-pick-datetime/assets/style/picker.min.css",
+              "../../node_modules/monaco-editor-core/dev/vs/editor/editor.main.css"
             ],
-            "scripts": ["../../node_modules/cropperjs/dist/cropper.js"]
+            "scripts": ["../../node_modules/cropperjs/dist/cropper.js"],
+            "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
             "production": {
