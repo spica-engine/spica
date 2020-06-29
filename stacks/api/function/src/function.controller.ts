@@ -235,9 +235,9 @@ export class FunctionController {
   @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Query("progress", BOOLEAN) progress?: boolean,
     @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
-    @Res() res
+    @Res() res,
+    @Query("progress", BOOLEAN) progress?: boolean,
   ) {
     if (!name) {
       throw new BadRequestException("Dependency name is required.");
