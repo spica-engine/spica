@@ -41,8 +41,6 @@ describe("Webhook Index", () => {
       if (limit) {
         data = data.slice(0, limit);
       }
-
-      console.log(data);
       return of({meta: {total: 20}, data} as IndexResult<Webhook>);
     });
 

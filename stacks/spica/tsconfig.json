@@ -18,5 +18,6 @@
     "src/main.ts",
     "src/polyfills.ts"
   ],
+  "exclude": ["src/**/*.worker.ts"],
   "include": ["src/**/*.d.ts"]
 }

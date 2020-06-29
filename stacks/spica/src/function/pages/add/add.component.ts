@@ -26,7 +26,6 @@ import {
   NormalizedFunction,
   normalizeFunction
 } from "../../interface";
-import {info} from "console";
 
 @Component({
   selector: "functions-add",
@@ -56,7 +55,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   $save: Observable<SavingState>;
 
-  $markers = new Subject<monaco.editor.IMarkerData[]>();
+  $markers = new Subject<unknown[]>();
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -143,8 +142,7 @@ export class AddComponent implements OnInit, OnDestroy {
                 startLineNumber: diagnostic.start.line,
                 startColumn: diagnostic.start.column,
                 endLineNumber: diagnostic.end.line,
-                endColumn: diagnostic.end.column,
-                severity: monaco.MarkerSeverity.Error
+                endColumn: diagnostic.end.column
               }))
             );
             return of(new Date());

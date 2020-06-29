@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {Directive, HostBinding, Input} from "@angular/core";
+import {Directive, HostBinding, Input, Component} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
@@ -88,8 +88,6 @@ describe("Webhook", () => {
     navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
 
     fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
   });
 
   describe("Add", () => {
@@ -100,6 +98,7 @@ describe("Webhook", () => {
     }));
 
     it("should enable save button when form fields are valid", fakeAsync(() => {
+      fixture.detectChanges();
       const addButton = fixture.debugElement.query(By.css("mat-card mat-card-actions button"));
       const form = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgForm);
       expect(addButton.nativeElement.disabled).toEqual(true);

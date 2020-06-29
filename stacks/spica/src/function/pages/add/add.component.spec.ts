@@ -30,9 +30,13 @@ export class CanInteractDirectiveTest {
   @Input("canInteract") action: string;
 }
 
-@Directive({selector: "code-editor[language]"})
+@Directive({
+  selector: "code-editor[language]",
+  exportAs: "language"
+})
 class MockLanguageDirective {
   @Input() marker: any;
+  format() {}
 }
 
 describe("Function Add", () => {
