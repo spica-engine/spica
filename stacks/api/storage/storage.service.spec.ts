@@ -86,9 +86,7 @@ describe("storage service", () => {
         size: 10
       }
     };
-    await expectAsync(
-      storageService.updateOne({_id: storageObjectId}, updatedData).catch(console.log)
-    ).toBeResolved();
+    await expectAsync(storageService.updateOne({_id: storageObjectId}, updatedData)).toBeResolved();
 
     return await expectAsync(
       storageService.get(storageObjectId).then(result => {

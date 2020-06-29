@@ -1,3 +1,5 @@
+@import url(https://cdn.jsdelivr.net/npm/firacode@3.1.0/distr/fira_code.min.css);
+
 :root:not(.dark) :host ::ng-deep {
   .mtk20,
   .mtk23 {
@@ -16,7 +18,6 @@
 }
 
 :host ::ng-deep {
-  @import url(https://cdn.jsdelivr.net/npm/firacode@3.1.0/distr/fira_code.min.css);
   display: block;
   min-height: 400px;
   width: 100%;

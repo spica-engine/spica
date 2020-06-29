@@ -215,7 +215,6 @@ describe("ApiKey", () => {
 
     it("should throw NotFoundExpection", async () => {
       const {body} = await req.delete(`/passport/apikey/${new ObjectId()}`);
-      console.log(body);
       expect([body.statusCode, body.message]).toEqual([404, "Not Found"]);
 
       const apiKeys = (await req.get("/passport/apikey", {})).body;

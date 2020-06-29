@@ -108,6 +108,7 @@ describe("StorageViewComponent", () => {
     it("should show images", done => {
       fixture.componentInstance.blob = "http://example/test.png";
       fixture.detectChanges();
+      fixture.detectChanges();
 
       expect(viewComponent.componentInstance.ready).toBe(false);
 
