@@ -237,7 +237,7 @@ export class FunctionController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
     @Res() res,
-    @Query("progress", BOOLEAN) progress?: boolean,
+    @Query("progress", BOOLEAN) progress?: boolean
   ) {
     if (!name) {
       throw new BadRequestException("Dependency name is required.");
