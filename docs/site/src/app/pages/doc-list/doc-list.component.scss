@@ -1,4 +1,14 @@
 :host {
   display: block;
   line-height: 2;
+  ul {
+    li {
+      span {
+        margin-left: 5px;
+        border: 1px solid #1c1c50;
+        border-radius: 20px;
+        padding: 5px 20px;
+      }
+    }
+  }
 }

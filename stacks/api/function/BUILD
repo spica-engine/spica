@@ -38,12 +38,10 @@ docs(
     name = "docs",
     srcs = [
         "src/function.controller.ts",
-        #"src/subscription.controller.ts",
     ],
     tags = ["function-docs"],
     exports = [
-        "FunctionController",
-        #"SubscriptionController",
+        "Function",
     ],
     deps = [
         "//packages/database",

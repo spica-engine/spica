@@ -2,7 +2,7 @@ import {DocCollection, Processor} from "dgeni";
 import {parse, Token} from "path-to-regexp";
 
 export class ControllerProcessor implements Processor {
-  httpMethods = ["Delete", "Get", "Post", "Patch"];
+  httpMethods = ["Delete", "Get", "Post", "Patch", "Put"];
   name = "controller-processor";
   $runBefore = ["docs-processed"];
 

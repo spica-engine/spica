@@ -34,6 +34,10 @@ import {Function, Trigger} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
 
+/**
+ * @name Function
+ * @description These APIs are responsible for all function operations.
+ */
 @Controller("function")
 export class FunctionController {
   constructor(
@@ -43,6 +47,10 @@ export class FunctionController {
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
+  /**
+   * @description Returns all available enqueuers, runtimes, and the timeout information.
+   * @param id Identifier of the function
+   */
   @Get("information")
   @UseGuards(AuthGuard())
   async information() {
@@ -65,18 +73,30 @@ export class FunctionController {
     return {enqueuers, runtimes, timeout: this.options.timeout};
   }
 
+  /**
+   * @description Returns all available function objects.
+   * @param id Identifier of the function
+   */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
   index() {
     return this.fs.find();
   }
 
+  /**
+   * @description Returns the function object
+   * @param id Identifier of the function
+   */
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.fs.findOne({_id: id});
   }
 
+  /**
+   * @description Removes the function object along with its index and dependencies.
+   * @param id Identifier of the function
+   */
   @UseInterceptors(activity(createFunctionActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:delete"))
@@ -113,6 +133,11 @@ export class FunctionController {
       });
   }
 
+  /**
+   * @description Replaces a function object and returns the latest committed version of function object.<br>
+   * Keep in mind that `language` is immutable and ignored silently if present
+   * @param id Identifier of the function
+   */
   @UseInterceptors(activity(createFunctionActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("function:update"))
@@ -133,6 +158,10 @@ export class FunctionController {
     return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
   }
 
+  /**
+   * @description Adds the function object present in the body and returns the inserted function object.
+   * @param id Identifier of the function
+   */
   @UseInterceptors(activity(createFunctionActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
@@ -148,6 +177,11 @@ export class FunctionController {
     return fn;
   }
 
+  /**
+   * @description Replaces index(code) of the function with the index in the body. <br>
+   * Also, it compiles the index to make it ready for execution.
+   * @param id Identifier of the function
+   */
   @Post(":id/index")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
@@ -162,6 +196,10 @@ export class FunctionController {
       .catch(diagnostics => Promise.reject(new HttpException(diagnostics, 422)));
   }
 
+  /**
+   * @description Returns index(code) of the function
+   * @param id Identifier of the function
+   */
   @Get(":id/index")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async showIndex(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -173,6 +211,10 @@ export class FunctionController {
     return {index};
   }
 
+  /**
+   * @description Returns of dependencies of the function with their versions.
+   * @param id Identifier of the function
+   */
   @Get(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:show", "function/:id"))
   async getDependencies(@Param("id", OBJECT_ID) id: ObjectId) {
@@ -183,14 +225,19 @@ export class FunctionController {
     return this.engine.getPackages(fn);
   }
 
+  /**
+   * @description Adds one or more dependency to the function
+   * @param progress When true, installation progress is reported.
+   * @param id Identifier of the function
+   */
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Query("progress", BOOLEAN) progress: boolean,
     @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
-    @Res() res
+    @Res() res,
+    @Query("progress", BOOLEAN) progress?: boolean
   ) {
     if (!name) {
       throw new BadRequestException("Dependency name is required.");
@@ -224,6 +271,11 @@ export class FunctionController {
     return (this.engine.addPackage(fn, name) as any).pipe(...operators);
   }
 
+  /**
+   * @description Removes a dependency from the function
+   * @param id Identifier of the function
+   * @param name Name of the dependency to remove
+   */
   @Delete(":id/dependencies/:name(*)")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   @HttpCode(HttpStatus.NO_CONTENT)
