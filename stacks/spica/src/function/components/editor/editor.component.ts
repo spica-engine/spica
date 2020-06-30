@@ -103,12 +103,9 @@ export class EditorComponent
     );
     this.monaco = await import("monaco-editor-core");
     this.editorRef = this.monaco.editor.create(this.elementRef.nativeElement, this._options);
-    this.editorRef.onDidChangeModelContent(() => {
-      this.onChanged(this.editorRef.getValue());
-    });
-    this.editorRef.onDidBlurEditorText(() => {
-      this.onTouched();
-    });
+
+    this.editorRef.onDidChangeModelContent(() => this.onChanged(this.editorRef.getValue()));
+    this.editorRef.onDidBlurEditorText(() => this.onTouched());
 
     this.init.emit(this.editorRef);
 
@@ -151,9 +148,17 @@ export class EditorComponent
       this.editorRef.setValue(this.value);
     }
 
-    this.monaco.editor.setModelLanguage(this.editorRef.getModel(), this.language);
-    this.monaco.editor.setTheme(this.theme);
-    this.monaco.editor.setModelMarkers(this.editorRef.getModel(), this.language, this.markers);
+    if (this.language) {
+      this.monaco.editor.setModelLanguage(this.editorRef.getModel(), this.language);
+    }
+
+    if (this.theme) {
+      this.monaco.editor.setTheme(this.theme);
+    }
+
+    if (this.markers) {
+      this.monaco.editor.setModelMarkers(this.editorRef.getModel(), this.language, this.markers);
+    }
 
     this.schemeObserver
       .observe(Scheme.Dark)
@@ -192,7 +197,6 @@ export class EditorComponent
     if (this.editorRef) {
       this.editorRef.dispose();
     }
-
     this.dispose.next();
   }
 }
