@@ -125,12 +125,12 @@ export class Response {
   headers = new ResponseHeaders();
 
   constructor(
-    private _writeHead: (e: Http.WriteHead) => void,
-    private _write: (e: Http.Write) => void,
-    private _end: (e: Http.End) => void
+    private _writeHead: (e: Http.WriteHead) => Promise<void>,
+    private _write: (e: Http.Write) => Promise<void>,
+    private _end: (e: Http.End) => Promise<void>
   ) {}
 
-  send(body: Buffer | Array<any> | object | string | boolean | number) {
+  async send(body: Buffer | Array<any> | object | string | boolean | number): Promise<void> {
     let type: string;
     let chunk: Buffer;
     if (Buffer.isBuffer(body)) {
@@ -143,11 +143,11 @@ export class Response {
       type = "text/html";
       chunk = Buffer.from(String(body));
     }
-    this.writeHead(this.statusCode || 200, this.statusMessage || "OK", {
+    await this.writeHead(this.statusCode || 200, this.statusMessage || "OK", {
       "Content-type": type,
       "Content-length": String(Buffer.byteLength(chunk))
     });
-    this.end(chunk, "utf-8");
+    return this.end(chunk, "utf-8");
   }
 
   status(code: number, message?: string) {
@@ -156,14 +156,14 @@ export class Response {
     return this;
   }
 
-  write(chunk: string | Buffer, encoding?: BufferEncoding) {
+  write(chunk: string | Buffer, encoding?: BufferEncoding): Promise<void> {
     const write = new Http.Write();
     write.encoding = encoding;
     write.data = new Uint8Array(chunk instanceof Buffer ? chunk : Buffer.from(chunk, encoding));
-    this._write(write);
+    return this._write(write);
   }
 
-  writeHead(statusCode: number, statusMessage?: string, headers?: object) {
+  async writeHead(statusCode: number, statusMessage?: string, headers?: object) {
     if (this.headersSent) {
       throw new Error("Headers already sent");
     }
@@ -197,14 +197,14 @@ export class Response {
       return headers;
     }, []);
 
-    this._writeHead(writeHead);
     this.headersSent = true;
+    return this._writeHead(writeHead);
   }
 
-  end(data: string | Buffer, encoding?: BufferEncoding) {
+  end(data: string | Buffer, encoding?: BufferEncoding): Promise<void> {
     const end = new Http.End();
     end.encoding = encoding;
     end.data = new Uint8Array(data instanceof Buffer ? data : Buffer.from(data, encoding));
-    this._end(end);
+    return this._end(end);
   }
 }

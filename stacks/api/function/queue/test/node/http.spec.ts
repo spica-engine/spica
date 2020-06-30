@@ -74,8 +74,8 @@ describe("Http", () => {
       response = new Response(writeHeadSpy, writeSpy, endSpy);
     });
 
-    it("should write", () => {
-      response.write("test");
+    it("should write", async () => {
+      await response.write("test");
       expect(writeSpy).toHaveBeenCalledTimes(1);
       const [write] = writeSpy.calls.mostRecent().args as [Http.Write];
       expect(write.data instanceof Uint8Array).toBe(true);
@@ -83,8 +83,8 @@ describe("Http", () => {
     });
 
     describe("status", () => {
-      it("should assign to statusCode and statusMessage optionally", () => {
-        response.status(201, "Created").send({});
+      it("should assign to statusCode and statusMessage optionally", async () => {
+        await response.status(201, "Created").send({});
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
         const [write] = writeHeadSpy.calls.mostRecent().args as [Http.WriteHead];
         expect(write.statusCode).toBe(201);
@@ -93,26 +93,28 @@ describe("Http", () => {
     });
 
     describe("writeHead", () => {
-      it("should call the callback", () => {
-        response.writeHead(200, "OK");
+      it("should call the callback", async () => {
+        await response.writeHead(200, "OK");
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
         const [writeHead] = writeHeadSpy.calls.mostRecent().args as [Http.WriteHead];
         expect(writeHead.statusCode).toBe(200);
         expect(writeHead.statusMessage).toBe("OK");
       });
 
-      it("should throw an error if it was called already", () => {
-        response.writeHead(200, "OK", {"Content-type": "application/bson"});
+      it("should throw an error if it was called already", async () => {
+        await response.writeHead(200, "OK", {"Content-type": "application/bson"});
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
-        expect(() => response.writeHead(200, "OK")).toThrowError("Headers already sent");
+        await expectAsync(response.writeHead(200, "OK")).toBeRejectedWith(
+          new Error("Headers already sent")
+        );
       });
     });
 
     describe("send", () => {
-      it("should send boolean as string", () => {
+      it("should send boolean as string", async () => {
         const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
         const endSpy = spyOn(response, "end").and.callThrough();
-        response.send(true);
+        await response.send(true);
 
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
         expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
@@ -125,10 +127,10 @@ describe("Http", () => {
         expect(encoding).toBe("utf-8");
       });
 
-      it("should send number as string", () => {
+      it("should send number as string", async () => {
         const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
         const endSpy = spyOn(response, "end").and.callThrough();
-        response.send(12345);
+        await response.send(12345);
 
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
         expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
@@ -141,10 +143,10 @@ describe("Http", () => {
         expect(encoding).toBe("utf-8");
       });
 
-      it("should send object as json", () => {
+      it("should send object as json", async () => {
         const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
         const endSpy = spyOn(response, "end").and.callThrough();
-        response.send({
+        await response.send({
           "some.key": 1,
           subobject: {}
         });
@@ -160,10 +162,10 @@ describe("Http", () => {
         expect(encoding).toBe("utf-8");
       });
 
-      it("should send array as json", () => {
+      it("should send array as json", async () => {
         const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
         const endSpy = spyOn(response, "end").and.callThrough();
-        response.send([
+        await response.send([
           {
             test: 1
           },
@@ -182,10 +184,10 @@ describe("Http", () => {
         expect(encoding).toBe("utf-8");
       });
 
-      it("should send buffer as octet-stream", () => {
+      it("should send buffer as octet-stream", async () => {
         const writeHeadSpy = spyOn(response, "writeHead").and.callThrough();
         const endSpy = spyOn(response, "end").and.callThrough();
-        response.send(Buffer.from("test"));
+        await response.send(Buffer.from("test"));
 
         expect(writeHeadSpy).toHaveBeenCalledTimes(1);
         expect(writeHeadSpy).toHaveBeenCalledWith(200, "OK", {
