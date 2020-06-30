@@ -15,7 +15,9 @@ import {
 } from "@spica-server/function/queue/node";
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
-import {createRequire} from "module";
+import {createRequire, Module} from "module";
+import * as fs from "fs";
+import "v8-compile-cache";
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
@@ -43,7 +45,7 @@ if (!process.env.WORKER_ID) {
     exitAbnormally("There is no event in the queue.");
   }
 
-  process.chdir(path.join(event.target.cwd, ".build"));
+  process.chdir(event.target.cwd);
 
   process.env.TIMEOUT = String(event.target.context.timeout);
 
@@ -148,9 +150,45 @@ if (!process.env.WORKER_ID) {
       break;
   }
 
-  globalThis.require = createRequire(process.cwd());
+  const nodeModulesRoot = path.join(process.cwd(), "node_modules");
 
-  let module = await import(path.join(process.cwd(), process.env.ENTRYPOINT));
+  const nodeModulePaths = Module._nodeModulePaths;
+
+  Module._nodeModulePaths = function(from) {
+    const paths = nodeModulePaths.call(this, from);
+    const newPaths = paths.filter(function(path) {
+      return path.match(nodeModulesRoot);
+    });
+    return newPaths;
+  };
+
+  const pathCachePath = ".build/pathcache.json";
+
+  Module._pathCache = JSON.parse(
+    (await fs.promises.readFile(pathCachePath).catch(() => "{}")).toString()
+  );
+
+  process.once("exit", () => {
+    fs.writeFileSync(pathCachePath, JSON.stringify(Module._pathCache));
+  });
+
+  const findPath = Module._findPath;
+
+  Module._findPath = function(request, paths, isMain) {
+    const cacheKey = request + "\x00" + (paths.length === 1 ? paths[0] : paths.join("\x00"));
+    if (Module._pathCache[cacheKey] == false) {
+      return false;
+    }
+    const res = findPath.call(this, request, paths, isMain);
+    if (res == false) {
+      Module._pathCache[cacheKey] = false;
+    }
+    return res;
+  };
+
+  globalThis.require = createRequire(nodeModulesRoot);
+
+  let module = await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT));
 
   if ("default" in module && module.default.__esModule) {
     module = module.default; // Do not ask me why

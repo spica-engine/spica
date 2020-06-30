@@ -8,7 +8,9 @@ module.exports = {
     nodeResolve({
       preferBuiltins: true
     }),
-    commonjs(),
+    commonjs({
+      ignore: ["v8-compile-cache"]
+    }),
     terser(),
     json()
   ],
