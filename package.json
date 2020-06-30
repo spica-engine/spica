@@ -66,6 +66,7 @@
     "multimatch": "^3.0.0",
     "nearest-color": "^0.4.4",
     "open": "^6.4.0",
+    "v8-compile-cache": "^2.1.1",
     "ora": "^3.4.0",
     "pacote": "^9.5.0",
     "parse5": "^5.1.0",
