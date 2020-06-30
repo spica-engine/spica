@@ -5,7 +5,7 @@ metadata:
   name: database
 spec:
   serviceName: mongo
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
         app: database
@@ -15,12 +15,6 @@ spec:
         app: database
     spec:
       terminationGracePeriodSeconds: 10
-      initContainers:
-        - name: init
-          image: spicaengine/mongoreplicationcontroller:master
-          imagePullPolicy: Always
-          args:
-            - --debug
       containers:
         - name: mongo
           image: mongo:4.2
@@ -102,8 +96,8 @@ spec:
           imagePullPolicy: Always
           resources:
             requests:
-              memory: "10Mi"
-              cpu: "10m"
+              memory: "100Mi"
+              cpu: "100m"
             limits:
               memory: "250Mi"
               cpu: "150m"
@@ -113,7 +107,7 @@ spec:
             - --port
             - "4300"
             - --database-uri
-            - mongodb://database-0.mongo.infrastructure-master-spicaengine-com.svc.cluster.local,database-1.mongo.infrastructure-master-spicaengine-com.svc.cluster.local,database-2.mongo.infrastructure-master-spicaengine-com.svc.cluster.local
+            - mongodb://database-0.mongo.infrastructure-master-spicaengine-com.svc.cluster.local
             - --database-name
             - spica
             - --database-replica-set
@@ -126,6 +120,8 @@ spec:
             - /data
             - --public-url
             - https://master.spicaengine.com/api
+            - --function-pool-size
+            - "5"
           volumeMounts:
             - name: master-data
               mountPath: /data
@@ -133,6 +129,7 @@ spec:
     - metadata:
         name: master-data
       spec:
+        storageClassName: pd-ssd
         accessModes:
           - ReadWriteOnce
         resources:
@@ -183,3 +180,32 @@ spec:
             backend:
               serviceName: spica
               servicePort: 4300
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: replication-controller
+  namespace: infrastructure-master-spicaengine-com
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: main
+          image: spicaengine/mongoreplicationcontroller:master
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "10m"
+            limits:
+              memory: "50Mi"
+              cpu: "50m"
+          args: [
+            "--from-srv",
+            "false",
+            "--nodes",
+            "database-0.mongo.infrastructure-master-spicaengine-com.svc.cluster.local",
+            "--debug"
+          ]
