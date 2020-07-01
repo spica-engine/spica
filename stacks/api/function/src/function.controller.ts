@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Header,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -33,6 +34,27 @@ import {FunctionService} from "./function.service";
 import {Function, Trigger} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
+
+//it will be helper function for all enpoints to create their own aggregations from given state
+export function buildFilter(state: {alloweds: string[]; denieds: string[]}) {
+  let filter = {};
+
+  if (!state.alloweds.includes("*")) {
+    filter["_id"] = {};
+    filter["_id"]["$in"] = state.alloweds
+      .filter(st => ObjectId.isValid(st))
+      .map(st => new ObjectId(st));
+  }
+
+  if (state.denieds.length && !state.denieds.includes("*")) {
+    filter["_id"] = filter["_id"] || {};
+    filter["_id"]["$nin"] = state.denieds
+      .filter(st => ObjectId.isValid(st))
+      .map(st => new ObjectId(st));
+  }
+
+  return filter;
+}
 
 /**
  * @name Function
@@ -79,8 +101,14 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index() {
-    return this.fs.find();
+  index(@Headers("resource-state")
+  resourceState: {
+    alloweds: string[];
+    denieds: string[];
+  }) {
+    let filter = buildFilter(resourceState);
+    console.log(filter);
+    return this.fs.find(filter);
   }
 
   /**

@@ -51,13 +51,11 @@ export class ActionGuardService {
     );
 
     const result = (Array.isArray(actions) ? actions : [actions]).map(action =>
-      getStatementResult(statements, action, resourceName)
+      getStatementResult(request, statements, action, resourceName)
     );
 
-    const canAccess =
-      result.filter(r => r === true).length > 0 && result.filter(r => r === false).length == 0;
-
-    if (!canAccess) {
+    //is there any false
+    if (result.some(val => val == false)) {
       this.throwException();
     }
 
