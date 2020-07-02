@@ -89,6 +89,26 @@ jasmine_node_test(
 )
 
 ts_library(
+    name = "operators_test_lib",
+    testonly = True,
+    srcs = glob([
+        "**/operators.spec.ts",
+    ]),
+    deps = [
+        "//packages/database",
+        "//stacks/api/passport",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "operators_test",
+    deps = [
+        "operators_test_lib",
+    ],
+)
+
+ts_library(
     name = "identity_utilities_test_lib",
     testonly = True,
     srcs = glob([

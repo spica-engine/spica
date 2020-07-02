@@ -19,8 +19,8 @@ import {ActionGuardService, PolicyService} from "./policy";
 import {PolicyController} from "./policy/policy.controller";
 import {SamlService} from "./saml.service";
 import {provideSchemaResolver, SchemaResolver} from "./schema.resolver";
-import {StrategyController} from "./strategies/strategy.controller";
-import {StrategyService} from "./strategies/strategy.service";
+import {StrategyController} from "./strategy/strategy.controller";
+import {StrategyService} from "./strategy/strategy.service";
 
 @Global()
 @Module({})

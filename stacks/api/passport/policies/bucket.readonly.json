@@ -10,7 +10,7 @@
         "bucket:index",
         "bucket:show"
       ],
-      "resource": "bucket/*",
+      "resource": "*",
       "service": "bucket"
     },
     {
@@ -20,7 +20,7 @@
         "bucket:data:stream",
         "bucket:data:show"
       ],
-      "resource": "bucket:data/*",
+      "resource": "*",
       "service": "bucket:data"
     }
   ]

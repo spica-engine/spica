@@ -5,7 +5,9 @@ import {
   ObjectId,
   InsertOneWriteOpResult,
   FilterQuery,
-  FindOneAndReplaceOption
+  FindOneAndReplaceOption,
+  CollectionAggregationOptions,
+  AggregationCursor
 } from "@spica-server/database";
 import {Policy, Service} from "./interface";
 
@@ -69,6 +71,13 @@ export class PolicyService {
 
   deleteOne(id: ObjectId) {
     return this._policyCollection.deleteOne({_id: new ObjectId(id)});
+  }
+
+  aggregate(
+    pipeline?: object[],
+    options?: CollectionAggregationOptions
+  ): AggregationCursor<Policy> {
+    return this._policyCollection.aggregate(pipeline, options);
   }
 }
 

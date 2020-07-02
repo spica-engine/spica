@@ -4,10 +4,10 @@
 	"$resource": "passport:policy",
 	"title": "Passport Policy",
 	"actions": [
-		"passport:policy:show",
-		"passport:policy:update",
-		"passport:policy:delete",
 		"passport:policy:index",
-		"passport:policy:create"
+		"passport:policy:show",
+		"passport:policy:create",
+		"passport:policy:update",
+		"passport:policy:delete"
 	]
 }

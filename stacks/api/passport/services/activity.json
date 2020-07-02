@@ -4,7 +4,7 @@
 	"$resource": "activity",
 	"title": "Activity",
 	"actions": [
-		"passport:apikey:index",
-		"passport:apikey:delete"
+		"activity:index",
+		"activity:delete"
 	]
 }

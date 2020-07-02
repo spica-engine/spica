@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   NotFoundException,
+  Headers,
   Param,
   Post,
   Put,
@@ -21,6 +22,7 @@ import {ActionGuard} from "../policy/action.guard";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
+import {policyAggregation} from "@spica-server/passport";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
@@ -29,10 +31,13 @@ export class ApiKeyController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:index"))
   find(
+    @Headers("resource-state") resourceState,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @Query("sort", JSONP) sort: {[k: string]: number}
   ) {
+    let policyAgg = policyAggregation(resourceState);
+
     let dataPipeline: object[] = [];
 
     dataPipeline.push({$skip: skip});
@@ -42,6 +47,7 @@ export class ApiKeyController {
     if (sort) dataPipeline.push({$sort: sort});
 
     const pipeline = [
+      ...policyAgg,
       {
         $facet: {
           meta: [{$count: "total"}],

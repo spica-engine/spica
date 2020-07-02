@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Headers,
   Delete,
   Get,
   Inject,
@@ -16,8 +17,9 @@ import {Strategy} from "../interface";
 import {PassportOptions, PASSPORT_OPTIONS} from "../options";
 import {ActionGuard} from "../policy";
 import {StrategyService} from "./strategy.service";
+import {policyAggregation} from "@spica-server/passport";
 
-@Controller("strategies")
+@Controller("passport/strategy")
 export class StrategyController {
   constructor(
     private strategy: StrategyService,
@@ -26,8 +28,13 @@ export class StrategyController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:index"))
-  find() {
-    return this.strategy.find();
+  find(@Headers("resource-state") resourceState) {
+    let policyAgg = policyAggregation(resourceState);
+
+    return this.strategy
+      .aggregate(policyAgg)
+      .toArray()
+      .then(result => result[0]);
   }
 
   @Get(":id")

@@ -4,5 +4,10 @@
   "$resource": "bucket",
   "$arguments": "/:id",
   "title": "Bucket",
-  "actions": ["bucket:index", "bucket:show", "bucket:delete", "bucket:update", "bucket:create"]
+  "actions": [
+    "bucket:index", 
+    "bucket:show", 
+    "bucket:delete", 
+    "bucket:update", 
+    "bucket:create"]
 }

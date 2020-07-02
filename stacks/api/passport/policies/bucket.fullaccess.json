@@ -7,13 +7,13 @@
 		{
 			"effect": "allow",
 			"action": "bucket:*",
-			"resource": "bucket/*",
+			"resource": "*",
 			"service": "bucket"
 		},
 		{
 			"effect": "allow",
 			"action": "bucket:data:*",
-			"resource": "bucket:data/*",
+			"resource": "*",
 			"service": "bucket:data"
 		}
 	]

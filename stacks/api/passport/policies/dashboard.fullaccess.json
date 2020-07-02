@@ -7,7 +7,7 @@
 		{
 			"effect": "allow",
 			"action": "dashboard:*",
-			"resource": "dashboard/*",
+			"resource": "*",
 			"service": "dashboard"
 		}
 	]

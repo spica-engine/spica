@@ -16,7 +16,8 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
-  BadRequestException
+  BadRequestException,
+  UnauthorizedException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
@@ -24,7 +25,7 @@ import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, policyAggregation} from "@spica-server/passport";
 import * as locale from "locale";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
@@ -170,22 +171,34 @@ export class BucketDataController {
     }
   }
 
+  isAllowedBucket(resourceState: {alloweds: string[]; denieds: string[]}, id: string) {
+    return (
+      (resourceState.alloweds.includes("*") && !resourceState.denieds.includes(id)) ||
+      resourceState.alloweds.includes(id)
+    );
+  }
+
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
+    @Headers("resource-state") resourceState,
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers("accept-language") acceptedLanguage: string,
     @Headers() headers: object,
     @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
-    @Query("schedule", DEFAULT(false), BOOLEAN) schedule: boolean = false,
+    @Query("scheduleÎ", DEFAULT(false), BOOLEAN) schedule: boolean = false,
     @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
     @Query("filter", JSONPR(filterReviver)) filter: FilterQuery<BucketDocument>,
     @Query("limit", NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP) sort: object
   ) {
+    if (!this.isAllowedBucket(resourceState, bucketId.toHexString())) {
+      throw new ForbiddenException("You do not have sufficient permissions to do this action.");
+    }
+
     let aggregation: unknown[] = [
       {
         $match: {

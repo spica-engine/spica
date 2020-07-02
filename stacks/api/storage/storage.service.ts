@@ -15,7 +15,12 @@ export class Storage {
     this._collection = database.collection("storage");
   }
 
-  getAll(limit: number, skip: number = 0, sort?: any): Promise<StorageResponse> {
+  getAll(
+    policyAgg: object[],
+    limit: number,
+    skip: number = 0,
+    sort?: any
+  ): Promise<StorageResponse> {
     let dataPipeline: object[] = [];
 
     dataPipeline.push({$skip: skip});
@@ -25,6 +30,7 @@ export class Storage {
     if (sort) dataPipeline.push({$sort: sort});
 
     const aggregation = [
+      ...policyAgg,
       {
         $facet: {
           meta: [{$count: "total"}],

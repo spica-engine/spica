@@ -2,6 +2,7 @@
   "$schema": "http://spica.internal/passport/service",
   "$id": "http://spica.internal/subscription",
   "$resource": "passport:strategy",
+	"$arguments": "/:id",
   "title": "Passport Strategy",
   "actions": [
     "passport:strategy:index",

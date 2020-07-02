@@ -2,6 +2,12 @@
   "$schema": "http://spica.internal/passport/service",
   "$id": "http://spica.internal/dashboard",
   "$resource": "dashboard",
+	"$arguments": "/:id",
   "title": "Dashboard",
-  "actions": ["dashboard:index", "dashboard:show", "dashboard:update", "dashboard:delete"]
+  "actions": [
+    "dashboard:index", 
+    "dashboard:show", 
+    "dashboard:update", 
+    "dashboard:delete"
+  ]
 }

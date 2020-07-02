@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   InternalServerErrorException,
+  Headers,
   Param,
   Post,
   Put,
@@ -24,6 +25,7 @@ import {createIdentityActivity} from "./activity.resource";
 import {IdentityService} from "./identity.service";
 import {Identity} from "./interface";
 import {attachIdentityAccess} from "./utilities";
+import {policyAggregation} from "@spica-server/passport";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -48,9 +50,12 @@ export class IdentityController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
   find(
+    @Headers("resource-state") resourceState,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number
   ) {
+    let policyAgg = policyAggregation(resourceState);
+
     let dataPipeline: object[] = [];
 
     dataPipeline.push({$skip: skip});
@@ -58,6 +63,7 @@ export class IdentityController {
     if (limit) dataPipeline.push({$limit: limit});
 
     const aggregate = [
+      ...policyAgg,
       {
         $facet: {
           meta: [{$count: "total"}],

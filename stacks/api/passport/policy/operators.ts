@@ -1,4 +1,5 @@
-import {Statement} from "./interface";
+import {Statement, LastState} from "./interface";
+import {ObjectId} from "@spica-server/database";
 
 export function getStatementResult(
   req,
@@ -8,77 +9,76 @@ export function getStatementResult(
 ): boolean {
   let filteredStatements = statements
     //filter by service
-    .filter(st => st["service"] + "/" == resource)
+    .filter(st => action.substring(0, action.lastIndexOf(":")) == st.service)
     //filter by action
     .filter(
       st =>
-        wrapArray(st.action).includes(`${st["service"]}:*`) || wrapArray(st.action).includes(action)
+        wrapArray(st.action).includes(st.service + ":*") || wrapArray(st.action).includes(action)
     )
-    //map the resources
+    //map the resource ids
     .map(st => {
-      st.resource = wrapArray(st.resource).map(res => res.replace(resource, ""));
+      st.resource = wrapArray(st.resource).map(res => res.replace(st.service + "/", ""));
       return st;
     });
 
-  if (!filteredStatements.length) {
-    return false;
+  //we dont need to check resource for create and policy actions
+  if ((action.includes("create") || action.includes("policy")) && filteredStatements.length > 0) {
+    return createLastDecision(statements);
   }
 
-  let decidedState = decideState(
-    filteredStatements.map(st => {
-      return {effect: st.effect, resource: wrapArray(st.resource)};
-    })
-  );
+  let state: LastState = createLastState(filteredStatements);
 
-  //user doesnt have any allowed resource for perform this action
-  if (!decidedState.alloweds.length) {
+  //user doesnt have any allowed resource to perform this action
+  if (!state.alloweds.length) {
     return false;
   } else {
-    //put it to the request header and return true, controller will filter the resources
-    req.headers["resource-state"] = decidedState;
-    return true;
+    //pass the state to controller to create aggregation
+    if (action.includes("index")) {
+      req.headers["resource-state"] = state;
+      return true;
+    } else {
+      //rest of actions
+      let res = resource.substring(resource.lastIndexOf("/") + 1);
+      return (
+        (state.alloweds.includes("*") && !state.denieds.includes(res)) ||
+        state.alloweds.includes(res)
+      );
+    }
   }
 }
 
-function wrapArray(val: string | string[]) {
+export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);
 }
 export type StatementResult = true | false | undefined;
 
-function decideState(
-  statements: {effect: "allow" | "deny"; resource: string[]}[]
-): {alloweds: string[]; denieds: string[]} {
+export function createLastDecision(statements: Statement[]): boolean {
+  //get the latest effect
+  return statements[statements.length - 1].effect == "allow";
+}
+
+export function createLastState(statements: Statement[]): LastState {
   return statements.reduce(
     (acc, curr) => {
       let state = acc;
 
-      if (curr.resource == []) {
-        return state;
-      }
-
-      if (curr.resource.includes("*")) {
+      if (wrapArray(curr.resource).includes("*")) {
         if (curr.effect == "allow") {
-          //clear denieds and add the * to alloweds
           state.alloweds = ["*"];
           state.denieds = [];
         } else {
-          //clear alloweds and add the * to denieds
           state.denieds = ["*"];
           state.alloweds = [];
         }
       } else {
-        curr.resource.forEach(res => {
+        wrapArray(curr.resource).forEach(res => {
           if (curr.effect == "allow") {
-            //delete it from denieds and add it to the alloweds
             state.denieds = state.denieds.filter(rs => rs != res);
-            //don't add if it has '*'
             if (!state.alloweds.includes("*")) {
               state.alloweds.push(res);
             }
           } else {
-            //delete it from alloweds and add it to the denieds
             state.alloweds = state.alloweds.filter(rs => rs != res);
-            //don't add if it has '*'
             if (!state.denieds.includes("*")) {
               state.denieds.push(res);
             }
@@ -89,4 +89,34 @@ function decideState(
     },
     {alloweds: [], denieds: []}
   );
+}
+
+export function policyAggregation(state: LastState) {
+  let aggregation = [];
+
+  if (state.alloweds.length && !state.alloweds.includes("*")) {
+    aggregation.push({
+      $match: {
+        _id: {
+          $in: state.alloweds.filter(st => ObjectId.isValid(st)).map(st => new ObjectId(st))
+        }
+      }
+    });
+  }
+
+  if (state.denieds.length && !state.denieds.includes("*")) {
+    aggregation.length
+      ? (aggregation[0]["$match"]["_id"]["$nin"] = state.denieds
+          .filter(st => ObjectId.isValid(st))
+          .map(st => new ObjectId(st)))
+      : aggregation.push({
+          $match: {
+            _id: {
+              $nin: state.denieds.filter(st => ObjectId.isValid(st)).map(st => new ObjectId(st))
+            }
+          }
+        });
+  }
+
+  return aggregation;
 }

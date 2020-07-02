@@ -9,6 +9,7 @@ export interface Statement {
   effect: "allow" | "deny";
   action: string | string[];
   resource: string | string[];
+  service: string;
 }
 
 export interface Service {
@@ -20,4 +21,9 @@ export interface Service {
 
 export interface PrepareUser {
   (request: any): any;
+}
+
+export interface LastState {
+  alloweds: string[];
+  denieds: string[];
 }

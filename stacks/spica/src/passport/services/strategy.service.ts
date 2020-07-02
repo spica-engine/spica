@@ -7,18 +7,18 @@ export class StrategyService {
   constructor(private http: HttpClient) {}
 
   getStrategies() {
-    return this.http.get<Strategy[]>("api:/strategies");
+    return this.http.get<Strategy[]>("api:/passport/strategy");
   }
 
   getStrategy(id: string) {
-    return this.http.get<Strategy>(`api:/strategies/${id}`);
+    return this.http.get<Strategy>(`api:/passport/strategy/${id}`);
   }
 
   updateStrategy(strategy: Strategy) {
-    return this.http.post<Strategy>(`api:/strategies`, strategy);
+    return this.http.post<Strategy>(`api:/passport/strategy`, strategy);
   }
 
   deleteStrategy(id: string) {
-    return this.http.delete(`api:/strategies/${id}`);
+    return this.http.delete(`api:/passport/strategy/${id}`);
   }
 }

@@ -7,7 +7,7 @@
 		{
 			"effect": "allow",
 			"action": "function:*",
-			"resource": "function/*",
+			"resource": "*",
 			"service": "function"
 		}
 	]

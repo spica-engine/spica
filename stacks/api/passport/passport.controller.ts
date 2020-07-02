@@ -19,7 +19,7 @@ import {catchError, take, timeout} from "rxjs/operators";
 import {Identity, IdentityService} from "./identity";
 import {PassportService} from "./passport.service";
 import {SamlService} from "./saml.service";
-import {StrategyService} from "./strategies/strategy.service";
+import {StrategyService} from "./strategy/strategy.service";
 
 @Controller("passport")
 export class PassportController {

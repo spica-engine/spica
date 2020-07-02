@@ -3,7 +3,7 @@ import * as saml2 from "saml2-js";
 import * as uuid from "uuid/v4";
 import {SamlStrategy} from "./interface";
 import {PassportOptions, PASSPORT_OPTIONS} from "./options";
-import {StrategyService} from "./strategies/strategy.service";
+import {StrategyService} from "./strategy/strategy.service";
 
 @Injectable()
 export class SamlService {

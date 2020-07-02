@@ -21,7 +21,7 @@ import {activity} from "@spica-server/activity/services";
 import {Bucket, BucketDocument, BucketService, ImportFile} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, policyAggregation} from "@spica-server/passport";
 import * as archiver from "archiver";
 import * as fs from "fs";
 import * as mime from "mime-types";
@@ -55,8 +55,10 @@ export class BucketController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
-  index() {
-    return this.bs.find({}, {sort: {order: 1}});
+  index(@Headers("resource-state") resourceState) {
+    let aggregation = policyAggregation(resourceState);
+    return this.bs.aggregate([...aggregation, {$sort: {order: 1}}]).toArray();
+    //return this.bs.find({}, {sort: {order: 1}});
   }
 
   @Get("predefs")

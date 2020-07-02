@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Inject,
   Param,
   Post,
@@ -16,7 +17,7 @@ import {
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, policyAggregation} from "@spica-server/passport";
 import {Binary} from "bson";
 import {createStorageActivity} from "./activity.resource";
 import {Storage, StorageObject} from "./storage.service";
@@ -28,11 +29,14 @@ export class StorageController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
   async findAll(
+    @Headers("resource-state") resourceState,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", NUMBER) skip: number,
     @Query("sort", JSONP, DEFAULT({_id: -1})) sort: object
   ) {
-    const object = await this.storage.getAll(limit, skip, sort);
+    let policyAgg = policyAggregation(resourceState);
+
+    const object = await this.storage.getAll(policyAgg, limit, skip, sort);
     return object;
   }
 
