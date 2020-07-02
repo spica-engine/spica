@@ -32,15 +32,20 @@ pkg_npm(
 
 rollup_bundle(
     name = "entrypoint",
+    srcs = [
+        "experimental_database.js",
+    ],
     config_file = "rollup.config.js",
     entry_points = {
         ":entrypoint.js": "bootstrap",
     },
     format = "esm",
+    output_dir = True,
     sourcemap = "true",
     deps = [
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/hooks/proto/node",
+        "//stacks/api/function/packages/database:package",
         "//stacks/api/function/queue/node",
         "//stacks/api/function/queue/proto",
         "@npm//@grpc/grpc-js",

@@ -32,7 +32,7 @@ class NodeWorker extends Worker {
         "--enable-source-maps",
         "--unhandled-rejections=strict",
         "--es-module-specifier-resolution=node",
-        `--experimental-loader=${path.join(__dirname, "runtime", "bootstrap")}`
+        `--experimental-loader=${path.join(__dirname, "runtime", "entrypoint", "bootstrap")}`
       ],
       {
         stdio: ["ignore", "pipe", "pipe"],

@@ -28,7 +28,8 @@ export class FunctionModule {
           databaseUri: options.databaseUri,
           poolSize: options.poolSize,
           publicUrl: options.publicUrl,
-          timeout: options.timeout
+          timeout: options.timeout,
+          experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache
         })
       ],
       controllers: [LogController, FunctionController],
