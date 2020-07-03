@@ -45,7 +45,7 @@ rollup_bundle(
     deps = [
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/hooks/proto/node",
-        "//stacks/api/function/packages/database:package",
+        "//stacks/api/function/packages/database",
         "//stacks/api/function/queue/node",
         "//stacks/api/function/queue/proto",
         "@npm//@grpc/grpc-js",
