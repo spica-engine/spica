@@ -6,12 +6,13 @@ import {of} from "rxjs";
 
 @Component({
   template: `
-    <button [canInteract]="condition">Click here.</button>
+    <button [canInteract]="condition" [resource]="id">Click here.</button>
   `
 })
 class TestComponent {
   @ViewChild(CanInteractDirective, {static: true}) directive: CanInteractDirective;
   condition = false;
+  id = undefined;
 }
 
 class TestPassportService {
@@ -48,7 +49,7 @@ describe("CanInteract", () => {
 
   it("shouldn't show button if condition is false", () => {
     expect(setVisibleSpy).toHaveBeenCalledTimes(1);
-    expect(setVisibleSpy).toHaveBeenCalledWith(false);
+    expect(setVisibleSpy).toHaveBeenCalledWith(false, undefined);
     expect(button.style.visibility).toEqual("hidden");
   });
 
@@ -56,13 +57,14 @@ describe("CanInteract", () => {
     setVisibleSpy.calls.reset();
 
     component.condition = true;
+    component.id = "test_id";
     fixture.detectChanges();
 
     await fixture.whenStable();
     fixture.detectChanges();
 
     expect(setVisibleSpy).toHaveBeenCalledTimes(1);
-    expect(setVisibleSpy).toHaveBeenCalledWith(true);
+    expect(setVisibleSpy).toHaveBeenCalledWith(true, "test_id");
     expect(button.style.visibility).toEqual("visible");
   });
 

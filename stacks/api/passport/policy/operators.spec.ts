@@ -19,6 +19,22 @@ describe("ActionGuard Operators", () => {
   });
 
   describe("statement results", () => {
+    it("should return false when there is no statement that matches", () => {
+      let request = {
+        headers: {}
+      };
+      const statements: Statement[] = [
+        {
+          action: "dashboard:index",
+          effect: "allow",
+          resource: ["*"],
+          service: "dashboard"
+        }
+      ];
+      const action = "webhook:index";
+      const resource = "webhook";
+      expect(getStatementResult(request, statements, action, resource)).toEqual(false);
+    });
     it("should return true when the resource is * and pass the state to the headers", () => {
       let request = {
         headers: {}
@@ -35,6 +51,30 @@ describe("ActionGuard Operators", () => {
       const resource = "function/";
       expect(getStatementResult(request, statements, action, resource)).toEqual(true);
       expect(request.headers["resource-state"]).toEqual({alloweds: ["*"], denieds: []});
+    });
+
+    it("should return true when the resource is * and denied resource exists, then pass the state to the headers", () => {
+      let request = {
+        headers: {}
+      };
+      const statements: Statement[] = [
+        {
+          action: "function:index",
+          effect: "allow",
+          resource: "*",
+          service: "function"
+        },
+        {
+          action: "function:index",
+          effect: "deny",
+          resource: ["test"],
+          service: "function"
+        }
+      ];
+      const action = "function:index";
+      const resource = "function/";
+      expect(getStatementResult(request, statements, action, resource)).toEqual(true);
+      expect(request.headers["resource-state"]).toEqual({alloweds: ["*"], denieds: ["test"]});
     });
 
     it("should return false when there is no allowed resources", () => {
@@ -94,15 +134,38 @@ describe("ActionGuard Operators", () => {
       };
       const statements: Statement[] = [
         {
-          action: "bucket:data:index",
+          action: "bucket:data:show",
+          effect: "allow",
+          resource: ["*"],
+          service: "bucket:data"
+        },
+        {
+          action: "bucket:data:show",
           effect: "deny",
           resource: ["test"],
           service: "bucket:data"
         }
       ];
-      const action = "bucket:data:index";
+      const action = "bucket:data:show";
       const resource = "bucket:data/test";
       expect(getStatementResult(request, statements, action, resource)).toEqual(false);
+    });
+
+    it("should return true if allowed resources is *", () => {
+      let request = {
+        headers: {}
+      };
+      const statements: Statement[] = [
+        {
+          action: "function:delete",
+          effect: "allow",
+          resource: ["*"],
+          service: "function"
+        }
+      ];
+      const action = "function:delete";
+      const resource = "function/test";
+      expect(getStatementResult(request, statements, action, resource)).toEqual(true);
     });
   });
 

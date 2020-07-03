@@ -15,11 +15,15 @@ export class CanInteractDirective implements OnInit {
 
   ngOnChanges(changes: SimpleChanges) {
     if (
-      changes.action.previousValue != undefined &&
-      changes.action.currentValue != undefined &&
-      changes.action.previousValue != changes.action.currentValue
-    )
-      this.setVisible(changes.action.currentValue, changes.resource.currentValue);
+      Object.keys(changes)
+        .map(key => changes[key].firstChange)
+        .some(firstChange => firstChange == false)
+    ) {
+      this.setVisible(
+        changes.action ? changes.action.currentValue : undefined,
+        changes.resource ? changes.resource.currentValue : undefined
+      );
+    }
   }
 
   setVisible(action: string, resource: string) {
