@@ -3,7 +3,8 @@ import {
   createLastState,
   wrapArray,
   policyAggregation,
-  createLastDecision
+  createLastDecision,
+  filterAndMapStatements
 } from "./operators";
 import {Statement} from "./interface";
 import {ObjectId} from "@spica-server/database";
@@ -166,6 +167,57 @@ describe("ActionGuard Operators", () => {
       const action = "function:delete";
       const resource = "function/test";
       expect(getStatementResult(request, statements, action, resource)).toEqual(true);
+    });
+  });
+
+  describe("filterAndMapStatements", () => {
+    it("should filter and map bucket index", () => {
+      const statements: Statement[] = [
+        {
+          action: "bucket:index",
+          effect: "allow",
+          resource: ["*"],
+          service: "bucket"
+        },
+        {
+          action: "bucket:update",
+          effect: "allow",
+          resource: ["*"],
+          service: "bucket"
+        },
+        {
+          action: "function:index",
+          effect: "allow",
+          resource: ["*"],
+          service: "function"
+        }
+      ];
+      expect(filterAndMapStatements("bucket:index", statements)).toEqual([
+        {
+          action: "bucket:index",
+          effect: "allow",
+          resource: ["*"],
+          service: "bucket"
+        }
+      ]);
+    });
+
+    it("should return empty array", () => {
+      const statements: Statement[] = [
+        {
+          action: "bucket:index",
+          effect: "allow",
+          resource: ["*"],
+          service: "bucket"
+        },
+        {
+          action: "function:update",
+          effect: "allow",
+          resource: ["*"],
+          service: "function"
+        }
+      ];
+      expect(filterAndMapStatements("dashboard:delete", statements)).toEqual([]);
     });
   });
 

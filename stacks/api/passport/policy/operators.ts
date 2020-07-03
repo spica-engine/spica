@@ -7,7 +7,7 @@ export function getStatementResult(
   action: string,
   resource: string
 ): boolean {
-  let filteredStatements = filterAndMapStatements(action, resource, statements);
+  let filteredStatements = filterAndMapStatements(action, statements);
 
   if ((action.includes("create") || action.includes("policy")) && filteredStatements.length > 0) {
     return createLastDecision(statements);
@@ -36,7 +36,7 @@ export function wrapArray(val: string | string[]) {
 }
 export type StatementResult = true | false | undefined;
 
-export function filterAndMapStatements(action: string, resource: string, statements: Statement[]) {
+export function filterAndMapStatements(action: string, statements: Statement[]) {
   return statements
     .filter(st => action.substring(0, action.lastIndexOf(":")) == st.service)
     .filter(

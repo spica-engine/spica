@@ -54,7 +54,6 @@ export class ActionGuardService {
       getStatementResult(request, statements, action, resourceName)
     );
 
-    //is there any false
     if (result.some(val => val == false)) {
       this.throwException();
     }

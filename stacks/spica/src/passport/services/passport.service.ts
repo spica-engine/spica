@@ -106,11 +106,9 @@ export class PassportService {
 
         let state = createLastState(statements);
 
-        //user doesnt have any allowed resource to perform this action
         if (!state.alloweds.length) {
           return false;
         } else {
-          //pass the state to controller to create aggregation
           if (action.includes("index")) {
             return true;
           } else {
@@ -122,13 +120,10 @@ export class PassportService {
         }
       })
     );
-
-    //return of(true);
   }
 }
 
 export function createLastDecision(statements: Statement[]): boolean {
-  //get the latest effect
   return statements[statements.length - 1].effect == "allow";
 }
 

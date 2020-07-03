@@ -58,7 +58,6 @@ export class BucketController {
   index(@Headers("resource-state") resourceState) {
     let aggregation = policyAggregation(resourceState);
     return this.bs.aggregate([...aggregation, {$sort: {order: 1}}]).toArray();
-    //return this.bs.find({}, {sort: {order: 1}});
   }
 
   @Get("predefs")
