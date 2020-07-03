@@ -188,7 +188,7 @@ export class BucketDataController {
     @Headers() headers: object,
     @Query("relation", DEFAULT(false), BOOLEAN) relation: boolean = false,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean = false,
-    @Query("scheduleÎ", DEFAULT(false), BOOLEAN) schedule: boolean = false,
+    @Query("schedule", DEFAULT(false), BOOLEAN) schedule: boolean = false,
     @Query("localize", DEFAULT(true), BOOLEAN) localize: boolean = true,
     @Query("filter", JSONPR(filterReviver)) filter: FilterQuery<BucketDocument>,
     @Query("limit", NUMBER) limit: number,
