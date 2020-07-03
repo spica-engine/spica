@@ -110,6 +110,11 @@ const args = yargs
       number: true,
       description: "Amount of time in seconds that has to elapse before aborting a function.",
       default: 120
+    },
+    "experimental-function-devkit-database-cache": {
+      boolean: true,
+      description: "When true, @spica-devkit/database will be cached and run significantly fast.",
+      default: true
     }
   })
   /* Storage Options */
@@ -210,7 +215,8 @@ const modules = [
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
     publicUrl: args["public-url"],
-    timeout: args["function-timeout"]
+    timeout: args["function-timeout"],
+    experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"]
   })
 ];
 

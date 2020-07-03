@@ -1,4 +1,4 @@
-const mongodb = require("mongodb");
+import {mongodb} from "./mongo";
 
 function emitWarning(path: string) {
   process.emitWarning(

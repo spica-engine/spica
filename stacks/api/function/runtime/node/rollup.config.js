@@ -9,10 +9,10 @@ module.exports = {
       preferBuiltins: true
     }),
     commonjs({
-      ignore: ["v8-compile-cache"]
+      ignore: ["v8-compile-cache", "mongodb"]
     }),
-    terser(),
-    json()
+    json(),
+    terser()
   ],
   external: ["path"]
 };
