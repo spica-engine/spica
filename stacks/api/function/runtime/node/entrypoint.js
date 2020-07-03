@@ -33,7 +33,7 @@ if (!process.env.WORKER_ID) {
 (async () => {
   if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
     const _require = globalThis.require;
-    globalThis.require = createRequire(path.join(process.cwd(), "external/npm"));
+    globalThis.require = createRequire(path.join(process.cwd(), "external/npm/node_modules"));
     await import("./experimental_database");
     globalThis.require = _require;
   }
