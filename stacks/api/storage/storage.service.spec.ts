@@ -62,7 +62,7 @@ describe("storage service", () => {
       )
     ).toBeResolved();
     return await expectAsync(
-      storageService.getAll(30, 0, {_id: -1}).then(result => {
+      storageService.getAll([], 30, 0, {_id: -1}).then(result => {
         Array.from(result.data).forEach((val, index) => {
           expect(val.name).toBe("name" + (result.data.length - 1 - index));
           expect(val.content.data).toBe(undefined);
@@ -125,7 +125,7 @@ describe("storage service", () => {
     });
     it("should sort storage objects descend by name", async () => {
       return await expectAsync(
-        storageService.getAll(3, 0, {name: -1}).then(result => {
+        storageService.getAll([], 3, 0, {name: -1}).then(result => {
           expect(result.data[0].name).toBe("name2");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name0");
@@ -135,7 +135,7 @@ describe("storage service", () => {
     });
     it("should sort storage objects ascend by name", async () => {
       return await expectAsync(
-        storageService.getAll(3, 0, {name: 1}).then(result => {
+        storageService.getAll([], 3, 0, {name: 1}).then(result => {
           expect(result.data[0].name).toBe("name0");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name2");
@@ -145,7 +145,7 @@ describe("storage service", () => {
     });
     it("should sort storage objects descend by date", async () => {
       return await expectAsync(
-        storageService.getAll(3, 0, {_id: -1}).then(result => {
+        storageService.getAll([], 3, 0, {_id: -1}).then(result => {
           expect(result.data[0].name).toBe("name0");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name2");
@@ -155,7 +155,7 @@ describe("storage service", () => {
     });
     it("should sort storage objects ascend by date", async () => {
       return await expectAsync(
-        storageService.getAll(3, 0, {_id: 1}).then(result => {
+        storageService.getAll([], 3, 0, {_id: 1}).then(result => {
           expect(result.data[0].name).toBe("name2");
           expect(result.data[1].name).toBe("name1");
           expect(result.data[2].name).toBe("name0");

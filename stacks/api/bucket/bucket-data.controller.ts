@@ -25,7 +25,7 @@ import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, policyAggregation} from "@spica-server/passport";
+import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";

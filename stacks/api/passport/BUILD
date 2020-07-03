@@ -52,6 +52,7 @@ ts_library(
     deps = [
         ":passport",
         "//packages/core/testing",
+        "//packages/database",
         "//packages/database/testing",
         "//stacks/api/passport/testing",
         "//stacks/api/preference/testing",
@@ -85,26 +86,6 @@ jasmine_node_test(
     name = "activity_test",
     deps = [
         "activity_test_lib",
-    ],
-)
-
-ts_library(
-    name = "operators_test_lib",
-    testonly = True,
-    srcs = glob([
-        "**/operators.spec.ts",
-    ]),
-    deps = [
-        "//packages/database",
-        "//stacks/api/passport",
-        "@npm//@types/jasmine",
-    ],
-)
-
-jasmine_node_test(
-    name = "operators_test",
-    deps = [
-        "operators_test_lib",
     ],
 )
 

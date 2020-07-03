@@ -10,6 +10,8 @@ export class PassportTestingModule {
   static initialize(options?: TestingOptions): DynamicModule {
     options = options || {};
     options.skipActionCheck = options.skipActionCheck == undefined ? true : options.skipActionCheck;
+    options.allowAllResources =
+      options.allowAllResources == undefined ? true : options.allowAllResources;
     return {
       module: PassportTestingModule,
       imports: [PassportModule.register({defaultStrategy: "noop", session: false})],
