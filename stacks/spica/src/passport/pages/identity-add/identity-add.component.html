@@ -97,6 +97,7 @@
   <mat-card-actions>
     <button
       [canInteract]="identity._id ? 'passport:identity:update' : 'passport:identity:create'"
+      [resource]="identity._id"
       [disabled]="identityForm.invalid"
       mat-button
       (click)="upsertIdentity()"

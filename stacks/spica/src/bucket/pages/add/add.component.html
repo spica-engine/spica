@@ -126,6 +126,7 @@
     </button>
     <button
       [canInteract]="data._id ? 'bucket:data:update' : 'bucket:data:create'"
+      [resource]="data._id"
       *matSave="$save | async; let state"
       [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly || !!state"
       mat-button

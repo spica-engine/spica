@@ -7,8 +7,8 @@
 	"actions": [
 		"storage:index",
 		"storage:show",
+		"storage:create",
 		"storage:update",
-		"storage:delete",
-		"storage:create"
+		"storage:delete"
 	]
 }

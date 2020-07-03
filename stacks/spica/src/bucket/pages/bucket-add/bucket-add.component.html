@@ -409,6 +409,7 @@
     <button
       mat-button
       [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
+      [resource]="bucket._id"
       form="describeForm"
       *matSave="$save | async; let state"
       [disabled]="

@@ -40,6 +40,7 @@
           <button
             mat-icon-button
             canInteract="passport:identity:update"
+            [resource]="identity._id"
             [routerLink]="identity._id + '/edit'"
           >
             <mat-icon>edit</mat-icon>
@@ -47,6 +48,7 @@
           <button
             *ngIf="identity.system !== true"
             canInteract="passport:identity:delete"
+            [resource]="identity._id"
             mat-icon-button
             color="warn"
             [matAwareDialog]="{

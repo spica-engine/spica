@@ -7,9 +7,9 @@
 	"actions": [
 		"passport:identity:index",
 		"passport:identity:show",
+		"passport:identity:create",
 		"passport:identity:update",
 		"passport:identity:delete",
-		"passport:identity:policy",
-		"passport:identity:create"
+		"passport:identity:policy"
 	]
 }

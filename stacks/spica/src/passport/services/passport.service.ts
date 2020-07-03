@@ -79,30 +79,93 @@ export class PassportService {
     return this.http.get<Statement[]>("api:/passport/identity/statements");
   }
 
-  checkAllowed(action: string): Observable<boolean> {
-    function wrapArray(val: string | string[]) {
-      return Array.isArray(val) ? val : Array(val);
-    }
+  checkAllowed(action: string, resource?: string): Observable<boolean> {
     if (!this._statements) {
       // To eliminate redundant requests
       this._statements = this.getStatements().pipe(shareReplay());
     }
 
-    return of(true);
-    //this logic need to be refactored cause it returns false when any statement includes 'deny'
+    return this._statements.pipe(
+      map(statements =>
+        statements
+          .filter(st => action.substring(0, action.lastIndexOf(":")) == st.service)
+          .filter(
+            st =>
+              wrapArray(st.action).includes(st.service + ":*") ||
+              wrapArray(st.action).includes(action)
+          )
+          .map(st => {
+            st.resource = wrapArray(st.resource).map(res => res.replace(st.service + "/", ""));
+            return st;
+          })
+      ),
+      map(statements => {
+        if ((action.includes("create") || action.includes("policy")) && statements.length > 0) {
+          return createLastDecision(statements);
+        }
 
-    // return this._statements.pipe(
-    //   map(statements => {
-    //     const applicableStatements = statements.filter(
-    //       si => matcher(wrapArray(action), wrapArray(si.action)).length > 0
-    //     );
+        let state = createLastState(statements);
 
-    //     if (applicableStatements.length < 1) {
-    //       return false;
-    //     }
-    //     const statementResult = applicableStatements.map(s => s.effect === "allow");
-    //     return statementResult.every(sr => sr) ? true : false;
-    //   })
-    // );
+        //user doesnt have any allowed resource to perform this action
+        if (!state.alloweds.length) {
+          return false;
+        } else {
+          //pass the state to controller to create aggregation
+          if (action.includes("index")) {
+            return true;
+          } else {
+            return (
+              (state.alloweds.includes("*") && !state.denieds.includes(resource)) ||
+              state.alloweds.includes(resource)
+            );
+          }
+        }
+      })
+    );
+
+    //return of(true);
   }
+}
+
+export function createLastDecision(statements: Statement[]): boolean {
+  //get the latest effect
+  return statements[statements.length - 1].effect == "allow";
+}
+
+export function wrapArray(val: string | string[]) {
+  return Array.isArray(val) ? val : Array(val);
+}
+
+export function createLastState(statements: Statement[]) {
+  return statements.reduce(
+    (acc, curr) => {
+      let state = acc;
+
+      if (wrapArray(curr.resource).includes("*")) {
+        if (curr.effect == "allow") {
+          state.alloweds = ["*"];
+          state.denieds = [];
+        } else {
+          state.denieds = ["*"];
+          state.alloweds = [];
+        }
+      } else {
+        wrapArray(curr.resource).forEach(res => {
+          if (curr.effect == "allow") {
+            state.denieds = state.denieds.filter(rs => rs != res);
+            if (!state.alloweds.includes("*")) {
+              state.alloweds.push(res);
+            }
+          } else {
+            state.alloweds = state.alloweds.filter(rs => rs != res);
+            if (!state.denieds.includes("*")) {
+              state.denieds.push(res);
+            }
+          }
+        });
+      }
+      return state;
+    },
+    {alloweds: [], denieds: []}
+  );
 }

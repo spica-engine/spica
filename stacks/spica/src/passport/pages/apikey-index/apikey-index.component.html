@@ -41,6 +41,7 @@
           <button
             mat-icon-button
             canInteract="passport:apikey:show"
+            [resource]="apiKey._id"
             [routerLink]="apiKey._id + '/edit'"
           >
             <mat-icon>edit</mat-icon>
@@ -48,6 +49,7 @@
           <button
             mat-icon-button
             canInteract="passport:apikey:delete"
+            [resource]="apiKey._id"
             color="warn"
             (confirm)="deleteApiKey(apiKey._id)"
             [matAwareDialog]="{

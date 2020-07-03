@@ -86,6 +86,7 @@
   <mat-card-actions>
     <button
       [canInteract]="webhook._id ? 'webhook:update' : 'webhook:create'"
+      [resource]="webhook._id"
       mat-button
       *matSave="$save | async; let state"
       [ngSwitch]="state"

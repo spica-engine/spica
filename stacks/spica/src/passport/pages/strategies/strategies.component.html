@@ -43,6 +43,7 @@
           <button
             mat-icon-button
             canInteract="passport:strategy:update"
+            [resource]="strategy._id"
             [routerLink]="[strategy._id, 'edit']"
           >
             <mat-icon>edit</mat-icon>
@@ -50,6 +51,7 @@
           <button
             mat-icon-button
             canInteract="passport:strategy:delete"
+            [resource]="strategy._id"
             color="warn"
             [matAwareDialog]="{
               title: 'Confirmation',

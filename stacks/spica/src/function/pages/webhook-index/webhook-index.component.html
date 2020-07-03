@@ -29,6 +29,7 @@
         <mat-cell *matCellDef="let webhook">
           <button
             canInteract="webhook:show"
+            [resource]="webhook._id"
             mat-icon-button
             [routerLink]="webhook._id"
             matTooltip="Edit"
@@ -37,6 +38,7 @@
           </button>
           <button
             canInteract="webhook:delete"
+            [resource]="webhook._id"
             mat-icon-button
             color="warn"
             [matAwareDialog]="{

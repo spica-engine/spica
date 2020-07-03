@@ -5,10 +5,11 @@
 	"$arguments": "/:id",
 	"title": "Functions",
 	"actions": [
+		"function:index",
+		"function:show",
 		"function:create",
 		"function:update",
 		"function:delete",
-		"function:index",
 		"function:run"
 	]
 }

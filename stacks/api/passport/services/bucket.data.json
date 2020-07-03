@@ -7,8 +7,8 @@
   "actions": [
     "bucket:data:index",
     "bucket:data:show",
-    "bucket:data:delete",
+    "bucket:data:create",
     "bucket:data:update",
-    "bucket:data:create"
+    "bucket:data:delete"
   ]
 }
