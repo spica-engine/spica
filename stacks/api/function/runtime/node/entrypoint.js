@@ -15,8 +15,7 @@ import {
 } from "@spica-server/function/queue/node";
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import * as path from "path";
-import {createRequire, Module} from "module";
-import * as fs from "fs";
+import {createRequire} from "module";
 import "v8-compile-cache";
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
@@ -32,6 +31,13 @@ if (!process.env.WORKER_ID) {
 }
 
 (async () => {
+  if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
+    const _require = globalThis.require;
+    globalThis.require = createRequire(path.join(process.cwd(), "external/npm/node_modules"));
+    await import("./experimental_database");
+    globalThis.require = _require;
+  }
+
   const queue = new EventQueue();
   const pop = new Event.Pop({
     id: process.env.WORKER_ID
@@ -80,7 +86,9 @@ if (!process.env.WORKER_ID) {
       callback = async result => {
         if (!response.headersSent && result != undefined) {
           result = await result;
-          response.send(result);
+          if (result != undefined && !response.headersSent) {
+            response.send(result);
+          }
         }
       };
       break;
@@ -150,43 +158,7 @@ if (!process.env.WORKER_ID) {
       break;
   }
 
-  const nodeModulesRoot = path.join(process.cwd(), "node_modules");
-
-  const nodeModulePaths = Module._nodeModulePaths;
-
-  Module._nodeModulePaths = function(from) {
-    const paths = nodeModulePaths.call(this, from);
-    const newPaths = paths.filter(function(path) {
-      return path.match(nodeModulesRoot);
-    });
-    return newPaths;
-  };
-
-  const pathCachePath = ".build/pathcache.json";
-
-  Module._pathCache = JSON.parse(
-    (await fs.promises.readFile(pathCachePath).catch(() => "{}")).toString()
-  );
-
-  process.once("exit", () => {
-    fs.writeFileSync(pathCachePath, JSON.stringify(Module._pathCache));
-  });
-
-  const findPath = Module._findPath;
-
-  Module._findPath = function(request, paths, isMain) {
-    const cacheKey = request + "\x00" + (paths.length === 1 ? paths[0] : paths.join("\x00"));
-    if (Module._pathCache[cacheKey] == false) {
-      return false;
-    }
-    const res = findPath.call(this, request, paths, isMain);
-    if (res == false) {
-      Module._pathCache[cacheKey] = false;
-    }
-    return res;
-  };
-
-  globalThis.require = createRequire(nodeModulesRoot);
+  globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
 
   let module = await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT));
 

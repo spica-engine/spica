@@ -1,8 +1,8 @@
-const mongodb = require("mongodb");
 import * as util from "util";
 import {checkDocument} from "./check";
+import {mongodb, _mongodb} from "./mongo";
 
-let connection: typeof mongodb.MongoClient;
+let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
 
 function checkEnvironment() {
   if (!process.env.RUNTIME) {
@@ -24,12 +24,13 @@ function checkEnvironment() {
   }
 }
 
-async function connect(): Promise<typeof mongodb.MongoClient> {
+async function connect(): Promise<_mongodb.MongoClient> {
   if (!connected()) {
     connection = new mongodb.MongoClient(process.env.__INTERNAL__SPICA__MONGOURL__, {
       replicaSet: process.env.__INTERNAL__SPICA__MONGOREPL__,
       appname: `Functions on ${process.env.RUNTIME || "unknown"} runtime.`,
       useNewUrlParser: true,
+      // @ts-ignore
       useUnifiedTopology: true
     });
   }
@@ -39,22 +40,26 @@ async function connect(): Promise<typeof mongodb.MongoClient> {
   return connection;
 }
 
-export async function database(): Promise<typeof mongodb.Db> {
+export async function database(): Promise<_mongodb.Db> {
   checkEnvironment();
 
-  const connection = await connect();
-  process.emitWarning(
-    `As the structure of the data in the database is subject to change in any future release, we encourage you not to interact with the database directly.\n` +
-      `Alternatively, we recommend you to use APIs with an API Key to accomplish same thing.`,
-    "ExpermintalWarning"
-  );
+  const connection = (globalThis[Symbol.for("kDatabaseDevkitConn")] = await connect());
+
+  if (!("NO_DEVKIT_DATABASE_WARNING" in process.env) && "TIMEOUT" in process.env) {
+    process.emitWarning(
+      `As the structure of the data in the database is subject to change in any future release, we encourage you not to interact with the database directly.\n` +
+        `As an alternative, we recommend you to interact with the APIs through an API Key to do the same. \n` +
+        `Set NO_DEVKIT_DATABASE_WARNING environment variable to ignore this warning.`,
+      "FootgunWarning"
+    );
+  }
 
   const db = connection.db(process.env.__INTERNAL__SPICA__MONGODBNAME__);
 
   const collection = db.collection;
 
   db.collection = (...args) => {
-    const coll: typeof mongodb.Collection = collection.call(db, ...args);
+    const coll: _mongodb.Collection = collection.call(db, ...args);
     coll.watch = util.deprecate(
       coll.watch,
       `It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing.`
@@ -133,6 +138,7 @@ export async function database(): Promise<typeof mongodb.Db> {
 
 export async function close(force?: boolean): Promise<void> {
   if (connection) {
+    globalThis[Symbol.for("kDatabaseDevkitConn")] = undefined;
     return connection.close(force);
   }
 }
