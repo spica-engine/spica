@@ -32,7 +32,10 @@ if (!process.env.WORKER_ID) {
 
 (async () => {
   if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
+    const _require = globalThis.require;
+    globalThis.require = createRequire(path.join(process.cwd(), "external/npm"));
     await import("./experimental_database");
+    globalThis.require = _require;
   }
 
   const queue = new EventQueue();
@@ -83,7 +86,9 @@ if (!process.env.WORKER_ID) {
       callback = async result => {
         if (!response.headersSent && result != undefined) {
           result = await result;
-          response.send(result);
+          if (result != undefined && !response.headersSent) {
+            response.send(result);
+          }
         }
       };
       break;
