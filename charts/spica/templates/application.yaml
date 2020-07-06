@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: spicaengine/spica:{{ $.Chart.AppVersion }}
+          image: {{ .Values.images.web }}:{{ $.Chart.AppVersion }}
           resources:
 {{ toYaml .Values.application.webResources | indent 12 }}
           ports:
@@ -38,7 +38,7 @@ spec:
             - name: BASE_URL
               value: {{.Values.application.webBaseUrl}}
         - name: api
-          image: spicaengine/api:{{ $.Chart.AppVersion }}
+          image: {{ .Values.images.api }}:{{ $.Chart.AppVersion }}
           resources:
 {{ toYaml .Values.application.apiResources | indent 12 }}
           ports:
