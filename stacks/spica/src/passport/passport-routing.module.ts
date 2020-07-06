@@ -105,7 +105,8 @@ const route: Route[] = [
     category: RouteCategory.System,
     display: "Settings",
     path: "/passport/settings",
-    icon: "settings"
+    icon: "settings",
+    data: {action: "passport:identity:show"}
   }
 ];
 

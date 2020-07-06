@@ -27,7 +27,7 @@ const routes: Routes = [
         canActivate: [FunctionIndexGuard],
         path: ":id",
         component: AddComponent,
-        data: {action: "update"}
+        data: {action: "show"}
       }
     ]
   }
@@ -47,7 +47,8 @@ const route: Route[] = [
     category: RouteCategory.Developer,
     icon: "format_list_numbered",
     path: "/webhook/logs",
-    display: "Webhook Logs"
+    display: "Webhook Logs",
+    data: {action: "webhook:index"}
   }
 ];
 

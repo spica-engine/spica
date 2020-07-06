@@ -22,7 +22,8 @@ const route: Route[] = [
     category: RouteCategory.Primary,
     display: "User Activities",
     icon: "account_box",
-    path: "/activity"
+    path: "/activity",
+    data: {action: "activity:index"}
   }
 ];
 

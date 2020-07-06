@@ -33,7 +33,6 @@ export class BucketInitializer {
     ) {
       this.bs.retrieve().toPromise();
     } else {
-      // Clean up the content category if the user has no permission to see.
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Content));
     }
   }

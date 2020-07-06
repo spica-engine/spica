@@ -9,7 +9,10 @@ export class PolicyGuard {
 
   canActivate(route: ActivatedRouteSnapshot): Observable<boolean> | boolean {
     if (route.data.action && route.data.service) {
-      return this.passport.checkAllowed(`${route.data.service}:${route.data.action}`);
+      return this.passport.checkAllowed(
+        `${route.data.service}:${route.data.action}`,
+        route.params.id
+      );
     }
     return true;
   }

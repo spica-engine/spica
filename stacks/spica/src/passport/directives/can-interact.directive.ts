@@ -20,8 +20,8 @@ export class CanInteractDirective implements OnInit {
         .some(firstChange => firstChange == false)
     ) {
       this.setVisible(
-        changes.action ? changes.action.currentValue : undefined,
-        changes.resource ? changes.resource.currentValue : undefined
+        changes.action ? changes.action.currentValue : this.action,
+        changes.resource ? changes.resource.currentValue : this.resource
       );
     }
   }
