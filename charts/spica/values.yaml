@@ -9,6 +9,13 @@ database:
     storageSize: 2Gi
     storageClass: 
     resources: {}
+    replicationControllerImage: 
+
+images:
+    api: spicaengine/api
+    web: spicaengine/spica
+    replicationcontroller: spicaengine/mongoreplicationcontroller
+    migrate: spicaengine/migrate
 
 application:
     secret: 
