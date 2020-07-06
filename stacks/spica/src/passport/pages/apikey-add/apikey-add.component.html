@@ -53,6 +53,8 @@
             <mat-icon mat-list-icon>layers</mat-icon>
             <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
             <button
+              canInteract="passport:apikey:policy"
+              [resource]="apiKey._id"
               mat-icon-button
               matTooltip="Detach this policy"
               (click)="detachPolicy(policy._id)"
@@ -70,6 +72,8 @@
               <mat-icon mat-list-icon>layers</mat-icon>
               <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
               <button
+                canInteract="passport:apikey:policy"
+                [resource]="apiKey._id"
                 mat-icon-button
                 matTooltip="Attach this policy"
                 (click)="attachPolicy(policy._id)"

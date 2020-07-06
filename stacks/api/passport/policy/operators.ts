@@ -9,8 +9,11 @@ export function getStatementResult(
 ): boolean {
   let filteredStatements = filterAndMapStatements(action, statements);
 
-  if ((action.includes("create") || action.includes("policy")) && filteredStatements.length > 0) {
-    return createLastDecision(statements);
+  if (
+    (action.includes("create") || (action.includes("policy") && !action.endsWith("policy"))) &&
+    filteredStatements.length > 0
+  ) {
+    return createLastDecision(filteredStatements);
   }
 
   let state: LastState = createLastState(filteredStatements);

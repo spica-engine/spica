@@ -39,7 +39,7 @@
         <mat-cell *matCellDef="let identity">
           <button
             mat-icon-button
-            canInteract="passport:identity:update"
+            canInteract="passport:identity:show"
             [resource]="identity._id"
             [routerLink]="identity._id + '/edit'"
           >

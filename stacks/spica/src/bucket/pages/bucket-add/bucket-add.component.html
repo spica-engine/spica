@@ -434,10 +434,10 @@
       <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
-  <mat-list-item 
-    *ngIf="bucket._id" 
+  <mat-list-item
+    *ngIf="bucket._id"
     canInteract="bucket:update"
-    [resource]="bucket._id" 
+    [resource]="bucket._id"
     class="remove-history"
   >
     <mat-divider></mat-divider>
@@ -445,7 +445,6 @@
       DANGER ZONE
     </h3>
     <button
-      
       (click)="clearHistories()"
       mat-raised-button
       color="warn"

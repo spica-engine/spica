@@ -64,6 +64,7 @@
             <button
               mat-icon-button
               canInteract="passport:identity:policy"
+              [resource]="identity._id"
               matTooltip="Detach this policy"
               (click)="detachPolicy(policy._id)"
               color="warn"
@@ -82,6 +83,7 @@
               <button
                 mat-icon-button
                 canInteract="passport:identity:policy"
+                [resource]="identity._id"
                 matTooltip="Attach this policy"
                 (click)="attachPolicy(policy._id)"
               >

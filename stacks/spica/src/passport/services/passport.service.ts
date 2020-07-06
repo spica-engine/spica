@@ -100,7 +100,11 @@ export class PassportService {
           })
       ),
       map(statements => {
-        if ((action.includes("create") || action.includes("policy")) && statements.length > 0) {
+        if (
+          (action.includes("create") ||
+            (action.includes("policy") && !action.endsWith("policy"))) &&
+          statements.length > 0
+        ) {
           return createLastDecision(statements);
         }
 

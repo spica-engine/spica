@@ -177,7 +177,12 @@
         <ng-container matColumnDef="$$spicainternal_actions" *ngIf="schema$ | async; let schema">
           <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
           <td mat-cell class="action" *matCellDef="let row">
-            <button canInteract="bucket:data:show" [resource]="schema._id" mat-icon-button [routerLink]="row._id">
+            <button
+              canInteract="bucket:data:show"
+              [resource]="schema._id"
+              mat-icon-button
+              [routerLink]="row._id"
+            >
               <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
             </button>
             <button

@@ -14,6 +14,7 @@ import {of, throwError} from "rxjs";
 import {InputModule} from "../../../../packages/common/input/input.module";
 import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
 import {IdentityService} from "../../services/identity.service";
+import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {PolicyService} from "../../services/policy.service";
 import {IdentityAddComponent} from "./identity-add.component";
 import {Directive, HostBinding, Input} from "@angular/core";
@@ -54,6 +55,7 @@ describe("Identity Add Component", () => {
 
   let identityService: jasmine.SpyObj<Partial<IdentityService>>,
     policyService: jasmine.SpyObj<Partial<PolicyService>>,
+    passportService: jasmine.SpyObj<Partial<PassportService>>,
     router: jasmine.SpyObj<Partial<Router>>;
 
   beforeEach(async () => {
@@ -76,6 +78,10 @@ describe("Identity Add Component", () => {
       ),
       updateOne: null,
       insertOne: null
+    };
+
+    passportService = {
+      checkAllowed: jasmine.createSpy("checkAllowed").and.returnValue(of(true))
     };
 
     policyService = {
@@ -156,6 +162,7 @@ describe("Identity Add Component", () => {
     });
     TestBed.overrideProvider(PolicyService, {useValue: policyService});
     TestBed.overrideProvider(IdentityService, {useValue: identityService});
+    TestBed.overrideProvider(PassportService, {useValue: passportService});
 
     fixture = TestBed.createComponent(IdentityAddComponent);
     fixture.detectChanges();
