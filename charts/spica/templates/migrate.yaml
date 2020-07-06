@@ -19,8 +19,8 @@ spec:
     spec:
       restartPolicy: OnFailure
       containers:
-        - name: main
-          image: spicaengine/migrate:{{ $.Chart.AppVersion }}
+        - name: migrate
+          image: {{ .Values.images.migrate }}:{{ $.Chart.AppVersion }}
           imagePullPolicy: Always
           args: [
             --from, "$(FROM)",

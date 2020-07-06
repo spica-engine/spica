@@ -17,8 +17,8 @@ spec:
     spec:
       restartPolicy: OnFailure
       containers:
-        - name: main
-          image: spicaengine/mongoreplicationcontroller:{{ $.Chart.AppVersion }}
+        - name: replication-controller
+          image: {{ .Values.images.replicationcontroller }}:{{ $.Chart.AppVersion }}
           imagePullPolicy: IfNotPresent
           resources:
             requests:
