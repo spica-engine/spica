@@ -21,6 +21,7 @@ ts_library(
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/scheduler",
         "//stacks/api/function/webhook",
+        "//stacks/api/function/src/realtime",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",

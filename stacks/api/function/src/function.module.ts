@@ -11,6 +11,7 @@ import {LogController} from "./log.controller";
 import {LogService} from "./log.service";
 import {FunctionOptions} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
+import {FunctionRealtimeModule} from "@spica-server/function/src/realtime";
 
 @Module({})
 export class FunctionModule {
@@ -18,6 +19,7 @@ export class FunctionModule {
     return {
       module: FunctionModule,
       imports: [
+        FunctionRealtimeModule,
         SchemaModule.forChild({
           schemas: [require("./schema/function.json")]
         }),

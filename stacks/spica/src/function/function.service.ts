@@ -2,6 +2,7 @@ import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
+import {webSocket} from "rxjs/webSocket";
 import {map, tap} from "rxjs/operators";
 import {
   DeleteFunction,
@@ -46,6 +47,7 @@ export class FunctionService {
     if (filter.end instanceof Date) {
       serializedFilter.end = this.resetTimezoneOffset(filter.end).toISOString();
     }
+    // webSocket("ws://localhost:4300/function/logs")
     return this.http.get<any[]>(`api:/function/logs`, {params: serializedFilter});
   }
 
