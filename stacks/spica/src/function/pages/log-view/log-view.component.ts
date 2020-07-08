@@ -1,8 +1,8 @@
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {Component, OnInit} from "@angular/core";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {BehaviorSubject, combineLatest, forkJoin, Observable} from "rxjs";
-import {switchMap, tap, map} from "rxjs/operators";
+import {switchMap, tap, map, share, delay, debounceTime} from "rxjs/operators";
 import {Function, Log, LogFilter} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
 
@@ -28,50 +28,76 @@ export class LogViewComponent implements OnInit {
   functions$: Observable<Function[]>;
 
   maxDate = new Date();
-  showErrors: boolean = true;
   selectedFunctions: string[];
 
-  filter$ = new BehaviorSubject<LogFilter>({
-    functions: []
-  });
+  queryParams: Observable<any>;
 
-  constructor(private route: ActivatedRoute, private fs: FunctionService) {}
+  constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {}
 
   ngOnInit() {
+    this.queryParams = this.route.queryParams.pipe(
+      map(filter => {
+        filter = {...filter};
+        if (filter.showErrors) {
+          filter.showErrors = JSON.parse(filter.showErrors);
+        }
+        if (!Array.isArray(filter.function)) {
+          if (!filter.function) {
+            filter.function = [];
+          } else {
+            filter.function = [filter.function];
+          }
+        }
+        if (filter.begin) {
+          filter.begin = new Date(filter.begin);
+        }
+        if (filter.end) {
+          filter.end = new Date(filter.end);
+        }
+        return filter;
+      })
+    );
     this.functions$ = this.fs.getFunctions();
-    this.logs$ = combineLatest(
-      this.filter$.pipe(
-        map(filter => {
-          filter.end = new Date((filter.end ? filter.end : new Date()).setHours(23, 59, 59, 999));
-          filter.begin = new Date((filter.begin ? filter.begin : new Date()).setHours(0, 0, 0, 0));
-          return filter;
-        })
-      ),
-      this.route.queryParamMap.pipe(
-        tap(params => (this.filter$.value.functions = params.getAll("function")))
-      )
-    ).pipe(
-      tap(([filter]) => {
+
+    this.logs$ = this.queryParams.pipe(
+      tap(filter => {
         const functionColumnIndex = this.displayedColumns.indexOf("function");
-        if (filter.functions.length > 1 && functionColumnIndex == -1) {
+        if (filter.function.length > 1 && functionColumnIndex == -1) {
           this.displayedColumns.splice(1, 0, "function");
-        } else if (filter.functions.length <= 1 && functionColumnIndex != -1) {
+        } else if (filter.function.length <= 1 && functionColumnIndex != -1) {
           this.displayedColumns.splice(functionColumnIndex, 1);
         }
       }),
-      switchMap(([filter]) => this.fs.getLogs(filter)),
-      map(logs => (this.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
+      switchMap(filter =>
+        this.fs
+          .getLogs(filter)
+          .pipe(
+            map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
+          )
+      )
     );
   }
 
   clearLogs() {
-    const visibleFunctionsIds = this.filter$.value.functions;
-    forkJoin(...visibleFunctionsIds.map(id => this.fs.clearLogs(id)))
-      .pipe(
-        tap({
-          complete: () => this.filter$.next(this.filter$.value)
-        })
-      )
-      .toPromise();
+    // const visibleFunctionsIds = this.filter$.value.functions;
+    // forkJoin(...visibleFunctionsIds.map(id => this.fs.clearLogs(id)))
+    //   .pipe(
+    //     tap({
+    //       complete: () => this.filter$.next(this.filter$.value)
+    //     })
+    //   )
+    //   .toPromise();
+  }
+
+  next(filter: any) {
+    this.router.navigate([], {queryParams: filter, queryParamsHandling: "merge"});
+  }
+
+  formatHours(range: {begin: Date; end: Date}) {
+    if (range.begin instanceof Date && range.end instanceof Date)
+      return {
+        begin: new Date(range.begin.setHours(0, 0, 0, 0)),
+        end: new Date(range.end.setHours(23, 59, 59, 999))
+      };
   }
 }

@@ -21,23 +21,13 @@ export class FunctionRealtimeGateway implements OnGatewayConnection {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
 
     try {
-      //await this.authGuardService.check(req, client);
+      await this.authGuardService.check(req, client);
     } catch (e) {
       client.send(JSON.stringify({code: e.status || 500, message: e.message}));
       return client.close(1003);
     }
 
     const options: any = {};
-
-    let begin = new Date(new Date().setUTCHours(0, 0, 0, 0));
-    let end = new Date(new Date().setUTCHours(23, 59, 59, 999));
-
-    options.filter = {
-      _id: {
-        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-        $lt: ObjectId.createFromTime(end.getTime() / 1000)
-      }
-    };
 
     if (req.query.has("functions")) {
       options.filter = {
@@ -47,17 +37,37 @@ export class FunctionRealtimeGateway implements OnGatewayConnection {
       };
     }
 
-    // if (req.query.has("sort")) {
-    //   options.sort = JSON.parse(req.query.get("sort"));
-    // }
+    let begin = new Date(new Date().setUTCHours(0, 0, 0, 0));
+    let end = new Date(new Date().setUTCHours(23, 59, 59, 999));
 
-    // if (req.query.has("limit")) {
-    //   options.limit = Number(req.query.get("limit"));
-    // }
+    if (req.query.has("begin") && req.query.has("end")) {
+      begin = new Date(req.query.get("begin"));
+      end = new Date(req.query.get("end"));
+    }
 
-    // if (req.query.has("skip")) {
-    //   options.skip = Number(req.query.get("skip"));
-    // }
+    options.filter = {
+      ...options.filter,
+      _id: {
+        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
+        $lt: ObjectId.createFromTime(end.getTime() / 1000)
+      }
+    };
+
+    if (req.query.has("sort")) {
+      try {
+        options.sort = JSON.parse(req.query.get("sort"));
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    if (req.query.has("limit")) {
+      options.limit = Number(req.query.get("limit"));
+    }
+
+    if (req.query.has("skip")) {
+      options.skip = Number(req.query.get("skip"));
+    }
 
     const cursorName = `${JSON.stringify(options)}`;
     let stream = this.streams.get(cursorName);
