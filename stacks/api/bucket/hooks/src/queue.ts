@@ -7,6 +7,7 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
 
   callbacks = new Map<string, Function>();
   queue = new Map<string, Action.Action>();
+  actions = new Map<string, Action.Action.Type>();
 
   get size() {
     return this.queue.size;
@@ -21,6 +22,7 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
       return callback(new Error(`Queue has no item with id ${call.request.id}`), null);
     }
     this.queue.delete(call.request.id);
+    this.actions.set(call.request.id, action.type);
     callback(null, action);
   }
 
@@ -29,24 +31,40 @@ export class ActionQueue implements Queue<typeof Action.Queue> {
     callback: grpc.sendUnaryData<Action.Result.Response>
   ) {
     const _callback = this.callbacks.get(call.request.id);
+
     if (!this.callbacks.has(call.request.id)) {
       return callback(new Error(`Queue has no callback with id ${call.request.id}`), null);
     }
+    const action = this.actions.get(call.request.id);
+
+    this.actions.delete(call.request.id);
     this.callbacks.delete(call.request.id);
 
     let result = true;
 
     try {
       result = JSON.parse(call.request.result);
-      callback(null, new Action.Result.Response());
     } catch (error) {
-      callback(
-        new Error(
-          "Return value was not given or invalid type. Valid types for the actions are: \n - Insert, Update, Delete: Boolean \n - Get, Index: Array\n - Stream: Object"
-        ),
-        null
-      );
+      callback(new Error(error), null);
     }
+
+    if (
+      (action == Action.Action.Type.INSERT ||
+        action == Action.Action.Type.UPDATE ||
+        action == Action.Action.Type.DELETE) &&
+      typeof result != "boolean"
+    ) {
+      callback(new Error("Return value type must be boolean."), null);
+    } else if (
+      (action == Action.Action.Type.GET || action == Action.Action.Type.INDEX) &&
+      !Array.isArray(result)
+    ) {
+      callback(new Error("Return value type must be array."), null);
+    } else if (action == Action.Action.Type.STREAM && typeof result != "object") {
+      callback(new Error("Return value type must be object."), null);
+    }
+
+    callback(null, new Action.Result.Response());
 
     _callback(result);
   }

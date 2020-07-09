@@ -156,7 +156,8 @@ export namespace Action {
     UPDATE = 1,
     INDEX = 2,
     GET = 3,
-    DELETE = 4
+    DELETE = 4,
+    STREAM = 5
   }
   export class Pop extends pb_1.Message {
     constructor(
