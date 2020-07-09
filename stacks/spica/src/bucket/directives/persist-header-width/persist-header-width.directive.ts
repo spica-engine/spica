@@ -1,17 +1,18 @@
-import {Directive, Input, OnChanges, SimpleChanges} from "@angular/core";
+import {Directive, Input, OnChanges, SimpleChanges, EventEmitter, Output} from "@angular/core";
 import {MatColumnDef} from "@angular/material/table";
 
 @Directive({
   selector: "[persist-header-width]",
   host: {
-    "(resizeend)": "resizeEnd($event)",
-    "[style.width.px]": "_width"
+    "(resizeend)": "resizeEnd($event)"
   }
 })
 export class PersistHeaderWidthDirective implements OnChanges {
   @Input("persist-header-width") bucket: string;
 
-  _width: number;
+
+  @Output() _resize = new EventEmitter();
+
 
   private get _key(): string {
     return `${this.bucket}-${this.columnDef.name}`;
@@ -35,7 +36,7 @@ export class PersistHeaderWidthDirective implements OnChanges {
     if (changes.bucket) {
       const desiredWidth = this._persistedWidth;
       if (desiredWidth != undefined) {
-        this._width = desiredWidth;
+        this._resize.emit(desiredWidth);
       }
     }
   }
