@@ -90,6 +90,7 @@
     "ws": "^7.1.2"
   },
   "devDependencies": {
+    "@bazel/worker": "^1.7.0",
     "@bazel/bazelisk": "^1.4.0",
     "@bazel/buildifier": "^3.0.0",
     "@bazel/hide-bazel-files": "^1.7.0",

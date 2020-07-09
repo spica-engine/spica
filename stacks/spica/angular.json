@@ -52,7 +52,6 @@
               "extractLicenses": true,
               "vendorChunk": true,
               "buildOptimizer": true,
-              "es5BrowserSupport": true,
               "fileReplacements": [
                 {
                   "replace": "environments/environment.ts",
