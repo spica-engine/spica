@@ -1,15 +1,14 @@
-import {Optional} from "@nestjs/common";
-import {OnGatewayConnection, WebSocketGateway, WebSocketServer} from "@nestjs/websockets";
+import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
 import {ObjectId} from "@spica-server/database";
 import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
-import {ActionGuardService, AuthGuardService} from "@spica-server/passport";
+import {AuthGuardService} from "@spica-server/passport";
 import {fromEvent, Observable} from "rxjs";
 import {takeUntil, tap} from "rxjs/operators";
 
 @WebSocketGateway(31, {
   path: "/function/logs"
 })
-export class FunctionRealtimeGateway implements OnGatewayConnection {
+export class RealtimeGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
 
   constructor(

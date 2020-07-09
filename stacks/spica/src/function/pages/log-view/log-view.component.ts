@@ -1,9 +1,9 @@
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {BehaviorSubject, combineLatest, forkJoin, Observable} from "rxjs";
-import {switchMap, tap, map, share, delay, debounceTime} from "rxjs/operators";
-import {Function, Log, LogFilter} from "../../../function/interface";
+import {Observable, forkJoin} from "rxjs";
+import {switchMap, tap, map, filter, take, flatMap} from "rxjs/operators";
+import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
 
 @Component({
@@ -74,19 +74,36 @@ export class LogViewComponent implements OnInit {
           .pipe(
             map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
           )
-      )
+      ),
+      switchMap(logs => {
+        return this.fs.getFunctions().pipe(
+          map(fns => {
+            logs.map(log => {
+              log.function = fns.find(fn => fn._id == log.function)
+                ? fns.find(fn => fn._id == log.function).name
+                : log.function;
+              log.created_at = this.objectIdToDate(log._id).toString();
+              return log;
+            });
+            return logs;
+          })
+        );
+      })
     );
   }
 
+  objectIdToDate(id: string) {
+    return new Date(parseInt(id.substring(0, 8), 16) * 1000);
+  }
+
   clearLogs() {
-    // const visibleFunctionsIds = this.filter$.value.functions;
-    // forkJoin(...visibleFunctionsIds.map(id => this.fs.clearLogs(id)))
-    //   .pipe(
-    //     tap({
-    //       complete: () => this.filter$.next(this.filter$.value)
-    //     })
-    //   )
-    //   .toPromise();
+    this.queryParams
+      .pipe(
+        filter(filter => filter.function),
+        flatMap(filter => forkJoin(filter.function.map(fn => this.fs.clearLogs(fn)))),
+        take(1)
+      )
+      .toPromise();
   }
 
   next(filter: any) {

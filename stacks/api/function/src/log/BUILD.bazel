@@ -5,13 +5,15 @@ load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
-    name = "realtime",
+    name = "log",
     srcs = glob([
         "src/*.ts",
+        "src/realtime/*.ts",
         "index.ts",
     ]),
-    module_name = "@spica-server/function/src/realtime",
+    module_name = "@spica-server/function/src/log",
     deps = [
+        "//packages/core",
         "//packages/database",
         "//packages/database/realtime",
         "//stacks/api/passport",

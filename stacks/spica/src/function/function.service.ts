@@ -1,9 +1,8 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable, Inject} from "@angular/core";
 import {select, Store} from "@ngrx/store";
-import {Observable, timer, of} from "rxjs";
-import {webSocket} from "rxjs/webSocket";
-import {map, tap, delayWhen, debounceTime} from "rxjs/operators";
+import {Observable} from "rxjs";
+import {map, tap} from "rxjs/operators";
 import {
   DeleteFunction,
   LoadFunctions,
@@ -13,6 +12,7 @@ import {
 import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR} from "./interface";
 import * as fromFunction from "./reducers/function.reducer";
 import {PassportService} from "@spica-client/passport";
+import {getWsObs} from "@spica-client/common";
 
 @Injectable({providedIn: "root"})
 export class FunctionService {
@@ -43,7 +43,7 @@ export class FunctionService {
 
   getLogs(
     filter: LogFilter,
-    limit: number = 10,
+    limit: number = 0,
     skip: number = 0,
     sort: object = {_id: -1}
   ): Observable<Log[]> {
@@ -69,35 +69,7 @@ export class FunctionService {
 
     let mergedParams = "?" + queryParams.join("&");
 
-    const data = new IterableSet<Log>();
-
-    return webSocket<any>(`${this.wsInterceptor}/function/logs${mergedParams}`).pipe(
-      tap(chunk => {
-        switch (chunk.kind) {
-          case ChunkKind.Initial:
-          case ChunkKind.Insert:
-          case ChunkKind.Replace:
-          case ChunkKind.Update:
-            data.set(chunk.document._id, chunk.document);
-            break;
-          case ChunkKind.Expunge:
-          case ChunkKind.Delete:
-            data.delete(chunk.document._id);
-            break;
-          case ChunkKind.Order:
-            data.order(chunk.sequence);
-            break;
-        }
-      }),
-      delayWhen(chunk => {
-        if (sort && chunk.kind == ChunkKind.Insert) {
-          return timer(2);
-        }
-        return of(null);
-      }),
-      debounceTime(1),
-      map(() => Array.from(data))
-    );
+    return getWsObs<Log>(`${this.wsInterceptor}/function/logs${mergedParams}`, sort);
   }
 
   clearLogs(id: string) {
@@ -139,88 +111,4 @@ export class FunctionService {
       .delete(`api:/function/${id}`)
       .pipe(tap(() => this.store.dispatch(new DeleteFunction({id}))));
   }
-}
-
-export class IterableSet<T> implements Iterable<T> {
-  ids = new Array<string>();
-  dataset = new Map<string, T>();
-  order(sequences: Sequence[]) {
-    if (sequences) {
-      const deletedIds = new Set<string>();
-      for (const sequence of sequences) {
-        switch (sequence.kind) {
-          case SequenceKind.Substitute:
-            this.ids[sequence.at] = sequence.with;
-            break;
-          case SequenceKind.Insert:
-            this.ids.splice(sequence.at, 0, sequence.item);
-            break;
-          case SequenceKind.Delete:
-            this.ids.splice(sequence.at, 1);
-            deletedIds.add(sequence.item);
-            break;
-        }
-      }
-      // TODO: This should be handled at backend.
-      deletedIds.forEach(id => {
-        if (this.ids.indexOf(id) == -1) {
-          this.dataset.delete(id);
-        }
-      });
-    }
-  }
-  set(id: string, value: any) {
-    if (!this.dataset.has(id)) {
-      this.ids.push(id);
-    }
-    this.dataset.set(id, value);
-  }
-  delete(id: string, index?: number) {
-    index = index || this.ids.indexOf(id);
-    this.dataset.delete(id);
-    this.ids.splice(index, 1);
-  }
-  [Symbol.iterator]() {
-    let i = 0;
-    return {
-      next: () => {
-        let value: T;
-        if (i < this.ids.length) {
-          value = this.dataset.get(this.ids[i]);
-        }
-        return {
-          value: value,
-          done: (i += 1) > this.ids.length
-        };
-      }
-    } as Iterator<T>;
-  }
-}
-
-export interface Sequence {
-  kind: SequenceKind;
-  item: string;
-  at: number;
-  with?: string;
-}
-export enum SequenceKind {
-  Delete = 0,
-  Substitute = 1,
-  Insert = 2
-}
-
-export interface StreamChunk<T = any> {
-  kind: ChunkKind;
-  document?: T;
-  sequence?: Sequence[];
-}
-export enum ChunkKind {
-  Initial = 0,
-  EndOfInitial = 1,
-  Insert = 2,
-  Delete = 3,
-  Expunge = 4,
-  Update = 5,
-  Replace = 6,
-  Order = 7
 }
