@@ -7,10 +7,9 @@ import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {FunctionService} from "./function.service";
 import {FUNCTION_OPTIONS} from "./options";
-import {LogController} from "./log.controller";
-import {LogService} from "./log.service";
 import {FunctionOptions} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
+import {LogModule} from "./log";
 
 @Module({})
 export class FunctionModule {
@@ -18,6 +17,7 @@ export class FunctionModule {
     return {
       module: FunctionModule,
       imports: [
+        LogModule,
         SchemaModule.forChild({
           schemas: [require("./schema/function.json")]
         }),
@@ -32,11 +32,10 @@ export class FunctionModule {
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache
         })
       ],
-      controllers: [LogController, FunctionController],
+      controllers: [FunctionController],
       providers: [
         FunctionEngine,
         FunctionService,
-        LogService,
         {
           provide: FUNCTION_OPTIONS,
           useValue: {root: path.join(options.path, "functions"), timeout: options.timeout}
