@@ -8,7 +8,7 @@ import {takeUntil, tap} from "rxjs/operators";
 @WebSocketGateway(31, {
   path: "/function/logs"
 })
-export class RealtimeGateway implements OnGatewayConnection {
+export class LogGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
 
   constructor(

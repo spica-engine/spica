@@ -1,11 +1,12 @@
 import {Module} from "@nestjs/common";
 import {LogController} from "./log.controller";
 import {LogService} from "./log.service";
-import {RealtimeModule} from "./realtime";
+import {LogGateway} from "./realtime.gateway";
+import {RealtimeDatabaseModule} from "@spica-server/database/realtime";
 
 @Module({
-  imports: [RealtimeModule],
+  imports: [RealtimeDatabaseModule],
   controllers: [LogController],
-  providers: [LogService]
+  providers: [LogService, LogGateway]
 })
 export class LogModule {}

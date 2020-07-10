@@ -8,7 +8,6 @@ ts_library(
     name = "log",
     srcs = glob([
         "src/*.ts",
-        "src/realtime/*.ts",
         "index.ts",
     ]),
     module_name = "@spica-server/function/src/log",

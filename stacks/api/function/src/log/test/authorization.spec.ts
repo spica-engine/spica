@@ -1,6 +1,6 @@
 import {INestApplication, UnauthorizedException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {RealtimeModule} from "@spica-server/function/src/log";
+import {LogModule} from "@spica-server/function/src/log";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
@@ -17,7 +17,7 @@ describe("Realtime Authorization", () => {
       imports: [
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        RealtimeModule,
+        LogModule,
         PassportTestingModule.initialize({
           overriddenStrategyType: "JWT"
         })
@@ -51,7 +51,7 @@ describe("Realtime Authorization", () => {
     await ws.close();
   });
 
-  it("should the authorization error messages", done => {
+  it("should show error messages", done => {
     authGuardCheck.and.callFake(() => {
       throw new UnauthorizedException();
     });

@@ -7,7 +7,7 @@ ts_library(
     name = "realtime_e2e_specs",
     testonly = True,
     srcs = [
-        "realtime/realtime.spec.ts",
+        "realtime.spec.ts",
     ],
     deps = [
         "//packages/core/testing",
@@ -23,7 +23,7 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "realtime_e2e_test",
+    name = "realtime_e2e",
     deps = [
         ":realtime_e2e_specs",
     ],
@@ -33,7 +33,7 @@ ts_library(
     name = "authorization_e2e_specs",
     testonly = True,
     srcs = [
-        "realtime/authorization.spec.ts",
+        "authorization.spec.ts",
     ],
     deps = [
         "//packages/core/testing",
@@ -49,7 +49,7 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "authorization_e2e_test",
+    name = "authorization_e2e",
     deps = [
         ":authorization_e2e_specs",
     ],

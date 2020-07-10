@@ -9,7 +9,7 @@ import {FunctionService} from "./function.service";
 import {FUNCTION_OPTIONS} from "./options";
 import {FunctionOptions} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
-import {LogModule} from "./log/src/log.module";
+import {LogModule} from "./log";
 
 @Module({})
 export class FunctionModule {

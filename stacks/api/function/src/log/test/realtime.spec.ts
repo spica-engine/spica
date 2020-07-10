@@ -1,6 +1,6 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {RealtimeModule} from "@spica-server/function/src/log";
+import {LogModule} from "@spica-server/function/src/log";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {ChunkKind} from "@spica-server/database/realtime";
@@ -31,7 +31,7 @@ describe("Realtime", () => {
       imports: [
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        RealtimeModule,
+        LogModule,
         PassportTestingModule.initialize()
       ]
     }).compile();

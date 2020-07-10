@@ -47,29 +47,27 @@ export class FunctionService {
     skip: number = 0,
     sort: object = {_id: -1}
   ): Observable<Log[]> {
-    let queryParams: string[] = [];
+    let url = new URL(`${this.wsInterceptor}/function/logs`);
 
     if (filter.function.length > 0) {
-      filter.function.forEach(fn => queryParams.push(`functions=${fn}`));
+      filter.function.forEach(fn => url.searchParams.append("functions", fn));
     }
 
     if (filter.begin instanceof Date) {
-      queryParams.push(`begin=${this.resetTimezoneOffset(filter.begin).toISOString()}`);
+      url.searchParams.set("begin", this.resetTimezoneOffset(filter.begin).toISOString());
     }
 
     if (filter.end instanceof Date) {
-      queryParams.push(`end=${this.resetTimezoneOffset(filter.end).toISOString()}`);
+      url.searchParams.set("end", this.resetTimezoneOffset(filter.end).toISOString());
     }
 
-    queryParams.push(`limit=${limit}`);
-    queryParams.push(`skip=${skip}`);
-    queryParams.push(`sort=${JSON.stringify(sort)}`);
+    url.searchParams.set("limit", limit.toString());
+    url.searchParams.set("skip", skip.toString());
+    url.searchParams.set("sort", JSON.stringify(sort));
 
-    queryParams.push(`Authorization=${this.passport.token}`);
+    url.searchParams.set("Authorization", this.passport.token);
 
-    let mergedParams = "?" + queryParams.join("&");
-
-    return getWsObs<Log>(`${this.wsInterceptor}/function/logs${mergedParams}`, sort);
+    return getWsObs<Log>(url.toString(), sort);
   }
 
   clearLogs(id: string) {

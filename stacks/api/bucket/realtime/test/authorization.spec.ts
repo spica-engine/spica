@@ -55,7 +55,7 @@ describe("Realtime Authorization", () => {
     await ws.close();
   });
 
-  it("should the authorization error messages", done => {
+  it("should show error messages", done => {
     authGuardCheck.and.callFake(() => {
       throw new UnauthorizedException();
     });
