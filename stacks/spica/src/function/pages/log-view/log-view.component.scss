@@ -12,11 +12,15 @@
     }
   }
 
+  .example-viewport {
+    height: 500px;
+    width: 100%;
+  }
+
   mat-card {
     width: calc(100% - 60px);
     margin: 30px;
     margin-top: -110px;
-    padding: 24px;
 
     > *:first-child {
       margin-right: 5px;
@@ -25,58 +29,68 @@
     > *:not(:first-child):not(mat-table) {
       margin: 0px 10px;
     }
+  }
 
-    mat-table {
-      max-width: 100%;
-      mat-header-row mat-header-cell {
-        flex: unset;
-        &.mat-column-function {
-          padding-right: 10px;
+  .mat-card-content {
+    height: 100%;
+    .emptyList {
+      display: flex;
+      justify-content: center;
+    }
+    .cdk-virtual-scroll-viewport {
+      div:first-of-type {
+        margin-right: 24px;
+        padding: 0px 24px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        span {
+          display: inline-block;
+          width: 25%;
           text-align: center;
+          word-wrap: break-word;
         }
-        &.mat-column-timestamp {
-          min-width: 200px;
+        span:first-child {
+          text-align: left;
         }
-      }
-      mat-row:nth-child(even) {
-        cursor: pointer;
-        mat-cell {
-          white-space: nowrap;
-          flex: unset;
-          &.mat-column-function {
-            padding-right: 10px;
-            text-align: center;
-          }
-          &.mat-column-timestamp {
-            min-width: 200px;
-          }
-          &.mat-column-content {
-            flex: 1;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            mat-icon {
-              margin-right: 5px;
-            }
-          }
+
+        span:last-child {
+          text-align: right;
         }
       }
 
-      mat-row:nth-child(odd) {
-        min-height: 0;
-        mat-cell {
-          overflow: hidden;
+      ::ng-deep .mat-expansion-panel {
+        box-shadow: none;
+        border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1) !important;
+      }
+
+      .mat-expansion-panel  {
+        pre {
           white-space: pre-wrap;
-          line-height: 20px;
-          opacity: 0.8;
-          &[channel="stderr"] {
-            color: var(--warn-500);
-          }
-          div {
-            padding-top: 10px;
-            padding-bottom: 10px;
-          }
         }
+        .mat-expansion-panel-header {
+          min-height: 64px !important;
+          height: auto !important;
+        }
+        .mat-expansion-panel-header span {
+          width: 25%;
+          text-align: center;
+          word-break: break-word;
+          align-self: center;
+          margin: 10px 5px;
+        }
+        .mat-expansion-panel-header span:first-child {
+          text-align: left;
+          margin: 10px 5px 10px 0px;
+        }
+        .mat-expansion-panel-header span:last-child {
+          text-align: right;
+          margin: 10px 0px 10px 5px;
+        }
+      }
+
+      .mat-progress-spinner {
+        margin: 15px auto;
       }
     }
   }

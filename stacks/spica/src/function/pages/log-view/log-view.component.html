@@ -15,6 +15,7 @@
     <mat-label>Enter a date range</mat-label>
     <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
       <input
+        matInput
         matStartDate
         placeholder="Start date"
         #begin="ngModel"
@@ -44,6 +45,7 @@
   </mat-form-field>
   <mat-form-field>
     <mat-select
+      matInput
       multiple
       [ngModel]="(queryParams | async)?.function"
       (ngModelChange)="next({function: $event})"
@@ -58,48 +60,53 @@
     </mat-select>
   </mat-form-field>
   <mat-slide-toggle
-    #showErrorsModel="ngModel"
-    [ngModel]="(queryParams | async)?.showErrors"
-    (ngModelChange)="next({showErrors: $event})"
+    #showErrorsToggle
+    [checked]="(queryParams | async)?.showErrors"
+    (change)="next({showErrors: $event.checked})"
   >
-    {{ showErrorsModel.value ? "Show Errors" : "Hide Errors" }}
+    {{ showErrorsToggle.checked ? "Show Errors" : "Hide Errors" }}
   </mat-slide-toggle>
-
-  <mat-table multiTemplateDataRows [dataSource]="logs$">
-    <ng-container matColumnDef="timestamp">
-      <mat-header-cell mat-header-cell *matHeaderCellDef>TIMESTAMP</mat-header-cell>
-      <mat-cell *matCellDef="let log">{{
-        log.created_at | date: "yyyy-MM-dd HH:mm:ss.SSS"
-      }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="function">
-      <mat-header-cell mat-header-cell *matHeaderCellDef>FUNCTION</mat-header-cell>
-      <mat-cell *matCellDef="let log">{{ log.function }}</mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="content">
-      <mat-header-cell mat-header-cell *matHeaderCellDef>CONTENT</mat-header-cell>
-      <mat-cell mat-cell *matCellDef="let log">
-        <mat-icon *ngIf="log.channel == 'stderr'">error</mat-icon>{{ log.content }}
-      </mat-cell>
-    </ng-container>
-
-    <ng-container matColumnDef="detail">
-      <mat-cell
-        *matCellDef="let log"
-        [@detail]="log == expandedLog ? 'expanded' : 'collapsed'"
-        [attr.channel]="log.channel"
-      >
-        {{ log.content }}
-      </mat-cell>
-    </ng-container>
-
-    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-    <mat-row
-      *matRowDef="let log; columns: displayedColumns"
-      (click)="expandedLog = expandedLog == log ? null : log"
-    ></mat-row>
-    <mat-row mat-row *matRowDef="let row; columns: ['detail']"></mat-row>
-  </mat-table>
+  <mat-card-content>
+    <mat-accordion>
+      <cdk-virtual-scroll-viewport itemSize="50" class="example-viewport">
+        <div>
+          <span>Id</span>
+          <span>Function Name</span>
+          <span>Status</span>
+          <span>Execution Time</span>
+        </div>
+        <span class="emptyList" *ngIf="!(dataStream | async)?.length">
+          Couldn't find any log to show.
+        </span>
+        <mat-expansion-panel *cdkVirtualFor="let log of dataSource">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <span>
+                {{ log._id }}
+              </span>
+              <span>
+                {{ log.function }}
+              </span>
+              <span>
+                <mat-icon [style.color]="log.channel == 'stdout' ? 'green' : 'red'">
+                  {{ log.channel == "stdout" ? "done" : "error" }}
+                </mat-icon>
+              </span>
+              <span>
+                {{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}
+              </span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <pre>{{ log.content }}</pre>
+        </mat-expansion-panel>
+        <mat-progress-spinner
+          *ngIf="isPending"
+          [diameter]="35"
+          color="primary"
+          mode="indeterminate"
+        >
+        </mat-progress-spinner>
+      </cdk-virtual-scroll-viewport>
+    </mat-accordion>
+  </mat-card-content>
 </mat-card>

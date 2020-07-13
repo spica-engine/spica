@@ -41,12 +41,7 @@ export class FunctionService {
     return this.store.pipe(select(fromFunction.selectEntities)).pipe(map(entities => entities[id]));
   }
 
-  getLogs(
-    filter: LogFilter,
-    limit: number = 0,
-    skip: number = 0,
-    sort: object = {_id: -1}
-  ): Observable<Log[]> {
+  getLogs(filter: LogFilter): Observable<Log[]> {
     let url = new URL(`${this.wsInterceptor}/function/logs`);
 
     if (filter.function.length > 0) {
@@ -61,13 +56,18 @@ export class FunctionService {
       url.searchParams.set("end", this.resetTimezoneOffset(filter.end).toISOString());
     }
 
-    url.searchParams.set("limit", limit.toString());
-    url.searchParams.set("skip", skip.toString());
-    url.searchParams.set("sort", JSON.stringify(sort));
+    url.searchParams.set("limit", filter.limit.toString());
+    //url.searchParams.set("skip", filter.skip.toString());
+
+
+    if (!filter.sort) {
+      filter.sort = {_id: -1};
+    }
+    url.searchParams.set("sort", JSON.stringify(filter.sort));
 
     url.searchParams.set("Authorization", this.passport.token);
 
-    return getWsObs<Log>(url.toString(), sort);
+    return getWsObs<Log>(url.toString(), filter.sort);
   }
 
   clearLogs(id: string) {
