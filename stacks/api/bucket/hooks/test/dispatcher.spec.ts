@@ -1,5 +1,5 @@
-import {ActionDispatcher} from "../../src";
-import {actionKey} from "../../src/dispatcher";
+import {ActionDispatcher} from "../src";
+import {actionKey} from "../src/dispatcher";
 
 describe("Dispatcher", () => {
   let actionDispatcher: ActionDispatcher;
