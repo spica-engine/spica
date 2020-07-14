@@ -6,6 +6,7 @@ export interface FunctionOptions {
 }
 
 export const FUNCTION_OPTIONS = new InjectionToken<FunctionOptions>("FUNCTION_OPTIONS");
+export const WEBSOCKET_INTERCEPTOR = new InjectionToken<FunctionOptions>("WEBSOCKET_INTERCEPTOR");
 
 export interface FunctionDescription {
   _id?: string;
@@ -106,7 +107,7 @@ export function denormalizeFunction(fn: NormalizedFunction): Function {
 }
 
 export interface LogFilter {
-  functions: string[];
+  function: string[];
   begin?: Date;
   end?: Date;
 }

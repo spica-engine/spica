@@ -1,4 +1,4 @@
 export * from "@spica-server/database";
-export {getConnectionUri, getDatabaseName, start} from "./start";
+export {getConnectionUri, start, getDatabaseName} from "./start";
 export * from "./testing.module";
 export {stream} from "./watch-shim";
