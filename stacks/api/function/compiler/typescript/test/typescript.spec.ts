@@ -72,7 +72,7 @@ describe("Typescript", () => {
       Object({
         code: 2307,
         category: 1,
-        text: "Cannot find module '@spica-server/database'.",
+        text: "Cannot find module '@spica-server/database' or its corresponding type declarations.",
         start: Object({line: 2, column: 28}),
         end: Object({line: 2, column: 52})
       }),
@@ -114,7 +114,7 @@ describe("Typescript", () => {
         {
           code: 2307,
           category: 1,
-          text: "Cannot find module 'non-existent-module'.",
+          text: "Cannot find module 'non-existent-module' or its corresponding type declarations.",
           start: {line: 1, column: 16},
           end: {line: 1, column: 37}
         }

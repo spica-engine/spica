@@ -1,6 +1,31 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
+load(":worker.bzl", "database_worker")
+
+nodejs_binary(
+    name = "worker",
+    configuration_env_vars = ["cache_bust"],
+    data = [
+        "@npm//@bazel/worker",
+        "@npm//mongodb-memory-server-core",
+        "@npm//which",
+    ],
+    entry_point = ":worker.js",
+)
+
+database_worker(
+    name = "replicaset",
+    cachebust = ":cachebust.txt",
+    type = "replicaset",
+)
+
+database_worker(
+    name = "standalone",
+    cachebust = ":cachebust.txt",
+    type = "standalone",
+)
 
 ts_library(
     name = "testing",
@@ -9,20 +34,18 @@ ts_library(
         "start.ts",
         "testing.module.ts",
         "watch-shim.ts",
-        "worker.ts",
+    ],
+    data = [
+        ":replicaset",
+        ":standalone",
     ],
     module_name = "@spica-server/database/testing",
     deps = [
         "//packages/database",
         "@npm//@nestjs/common",
-        "@npm//@nestjs/core",
-        "@npm//@types/lockfile",
         "@npm//@types/mongodb",
         "@npm//@types/node",
-        "@npm//get-port",
-        "@npm//lockfile",
         "@npm//mongodb",
         "@npm//mongodb-memory-server-core",
-        "@npm//which",
     ],
 )

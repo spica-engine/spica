@@ -1,7 +1,7 @@
 import {EventQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
 import {ActionEnqueuer, ActionDispatcher, mapHeaders} from "@spica-server/bucket/hooks";
-import {Action} from "../../proto";
+import {Action} from "../proto";
 
 describe("enqueuer", () => {
   let actionEnqueuer: ActionEnqueuer;
