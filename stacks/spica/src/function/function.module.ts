@@ -26,6 +26,7 @@ import {InputModule} from "@spica-client/common";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {provideActivityFactory} from "@spica-client/function/providers/activity";
+import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
 import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
@@ -101,9 +102,7 @@ export class FunctionModule {
         {provide: FUNCTION_OPTIONS, useValue: options},
         {
           provide: WEBSOCKET_INTERCEPTOR,
-          useFactory: (options: FunctionOptions) => {
-            return options.url.startsWith("http") ? options.url.replace("http", "ws") : undefined;
-          },
+          useFactory: provideWsInterceptor,
           deps: [FUNCTION_OPTIONS]
         },
         {
