@@ -11,6 +11,8 @@ ts_library(
     module_name = "@spica-server/core/websocket",
     deps = [
         "@npm//@nestjs/platform-ws",
+        "@npm//@types/ws",
         "@npm//path-to-regexp",
+        "@npm//ws",
     ],
 )

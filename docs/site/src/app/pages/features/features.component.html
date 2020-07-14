@@ -61,10 +61,23 @@
     </p>
   </span>
 
-  <img single="true" intersect="flyOne" src="assets/artboard/life-preserver.svg" alt="Support" />
+  <img
+    intersect
+    single="true"
+    #intersect="intersect"
+    [@flyOne]="intersect.isIntersecting"
+    src="assets/artboard/life-preserver.svg"
+    alt="Support"
+  />
 </section>
 
-<section single="true" intersect="flyOne" class="modules">
+<section
+  intersect
+  single="true"
+  #intersect1="intersect"
+  [@flyOne]="intersect1.isIntersecting"
+  class="modules"
+>
   <ul>
     <li>
       <h1>Custom Functions</h1>

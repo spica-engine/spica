@@ -20,6 +20,7 @@ ts_library(
         "//stacks/api/function/pkgmanager",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/scheduler",
+        "//stacks/api/function/src/log",
         "//stacks/api/function/webhook",
         "//stacks/api/passport",
         "@npm//@nestjs/common",

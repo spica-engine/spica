@@ -30,7 +30,9 @@
               "../../node_modules/ng-pick-datetime/assets/style/picker.min.css",
               "../../node_modules/monaco-editor-core/dev/vs/editor/editor.main.css"
             ],
-            "scripts": ["../../node_modules/cropperjs/dist/cropper.js"],
+            "scripts": [
+              "../../node_modules/cropperjs/dist/cropper.js"
+            ],
             "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
@@ -50,7 +52,6 @@
               "extractLicenses": true,
               "vendorChunk": true,
               "buildOptimizer": true,
-              "es5BrowserSupport": true,
               "fileReplacements": [
                 {
                   "replace": "environments/environment.ts",
@@ -90,7 +91,8 @@
     }
   },
   "cli": {
-    "packageManager": "yarn"
+    "packageManager": "yarn",
+    "analytics": false
   },
   "schematics": {
     "@schematics/angular:component": {

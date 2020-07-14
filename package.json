@@ -83,13 +83,14 @@
     "saml2-js": "^2.0.3",
     "short-id": "^0.1.0-1",
     "symlink-dir": "^3.1.2",
-    "typescript": "^3.8.3",
+    "typescript": "^3.9.6",
     "uniqid": "^5.2.0",
     "url": "^0.11.0",
     "vm2": "^3.6.9",
     "ws": "^7.1.2"
   },
   "devDependencies": {
+    "@bazel/worker": "^1.7.0",
     "@bazel/bazelisk": "^1.4.0",
     "@bazel/buildifier": "^3.0.0",
     "@bazel/hide-bazel-files": "^1.7.0",
@@ -131,7 +132,6 @@
     "rollup-plugin-terser": "^5.2.0",
     "@rollup/plugin-json": "^4.1.0",
     "which": "^2.0.2",
-    "lockfile": "^1.0.4",
     "got": "^11.3.0",
     "@types/got": "^9.6.11"
   }
