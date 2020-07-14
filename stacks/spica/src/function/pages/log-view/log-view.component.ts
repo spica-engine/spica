@@ -1,4 +1,3 @@
-//import {animate, state, style, transition, trigger} from "@angular/animations";
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, forkJoin, BehaviorSubject, Subscription, Subject} from "rxjs";

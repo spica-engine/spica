@@ -57,8 +57,6 @@ export class FunctionService {
     }
 
     url.searchParams.set("limit", filter.limit.toString());
-    //url.searchParams.set("skip", filter.skip.toString());
-
 
     if (!filter.sort) {
       filter.sort = {_id: -1};
