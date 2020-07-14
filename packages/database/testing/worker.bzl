@@ -1,5 +1,3 @@
-load("@build_bazel_rules_nodejs//:providers.bzl", "DeclarationInfo", "JSNamedModuleInfo")
-
 def _database_worker(ctx):
     output = ctx.actions.declare_file(ctx.attr.type + ".json")
 

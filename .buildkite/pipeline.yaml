@@ -54,7 +54,7 @@ steps:
     depends_on: "install_packages"
     <<: *api_test_docker_plugin
     commands:
-      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e --config=ci
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
 
   - label: ":docker: + :bazel: Test APIs (Flaky)"
     key: test_api_flaky
@@ -62,7 +62,7 @@ steps:
     depends_on: "install_packages"
     <<: *api_test_docker_plugin
     commands:
-      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5 --config=ci
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5
 
   - label: ":docker: + :bazel: Test APIs (E2E)"
     key: test_api_e2e
@@ -70,7 +70,7 @@ steps:
     depends_on: "install_packages"
     <<: *api_test_docker_plugin
     commands:
-      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5 --config=ci
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5
 
   - label: ":angular: + :chrome: Test Spica (Chrome)"
     key: test_spica
@@ -88,7 +88,7 @@ steps:
 
   - label: ":k8s: + :docker: Deploy"
     key: deploy
-    if: build.branch == "buildkite" # TODO: change
+    if: build.branch == "master"
     depends_on: "install_packages"
     <<: *release_docker_plugin
     commands:
@@ -103,7 +103,9 @@ steps:
 
   - label: ":npm: + :docker: Release"
     key: release
-    if: build.branch =~ /^\d\.\d\.x$/
+    # There is two $ because of environment variable substitution
+    # See: https://buildkite.com/docs/pipelines/conditionals
+    if: build.branch =~ /^\d\.\d\.x$$/
     depends_on:
       - test_api_flaky
       - test_api_e2e
