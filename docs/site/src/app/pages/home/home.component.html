@@ -47,7 +47,9 @@
   class="major-features"
   title="Major Features"
   description="It has many features that allows you to create contents simply."
-  intersect="fly"
+  intersect
+  #intersect1="intersect"
+  [@fly]="intersect1.isIntersecting"
 >
   <div fxFlex="33" fxFlex.lt-md="100">
     <img src="assets/artboard/functions.svg" alt="Function" />
@@ -104,7 +106,9 @@
   cnFxLayoutAlign.gt-sm="space-around center"
 >
   <img
-    intersect="flyOne"
+    intersect
+    #intersect2="intersect"
+    [@flyOne]="intersect2.isIntersecting"
     fxFlex.lt-md="30%"
     fxFlex.gt-sm="35%"
     single="true"
@@ -183,9 +187,11 @@
       </p>
     </span>
     <img
-      single="true"
       fxFlex="30%"
-      intersect="flyOne"
+      intersect
+      #intersect3="intersect"
+      single="true"
+      [@flyOne]="intersect3.isIntersecting"
       alt="For developers"
       src="assets/artboard/for-developers.svg"
     />
@@ -198,9 +204,11 @@
     fxLayoutGap.gt-sm="20%"
   >
     <img
-      single="true"
       fxFlex="30%"
-      intersect="flyOne"
+      intersect
+      single="true"
+      #intersect4="intersect"
+      [@flyOne]="intersect4.isIntersecting"
       alt="For agencies"
       src="assets/artboard/for-agencies.svg"
     />
@@ -244,8 +252,10 @@
     </span>
     <img
       fxFlex="30%"
+      intersect
       single="true"
-      intersect="flyOne"
+      #intersect5="intersect"
+      [@flyOne]="intersect5.isIntersecting"
       src="assets/artboard/for-marketers.svg"
       alt="For marketers"
     />
@@ -258,8 +268,10 @@
     fxFlex.lt-md="45%"
     fxFlexAlign.gt-sm="flex-start"
     ngClass.gt-sm="desktop"
-    intersect="flyOne"
+    intersect
     single="true"
+    #intersect6="intersect"
+    [@flyOne]="intersect6.isIntersecting"
     alt="Astro boy"
     src="assets/artboard/tool-and-astro-boy.svg"
   />

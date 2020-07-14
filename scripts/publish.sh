@@ -48,10 +48,10 @@ NPM_PACKAGE_LABELS=`$BAZEL query --output=label --noshow_progress 'attr("tags", 
 echo $DOCKER_IMAGE_LABELS $NPM_PACKAGE_LABELS
 
 
-# Once we migrate client to bazel we'll get rid of this
+# Once we migrate client to bazel we'll get rid of these steps
 echo ""
 echo "## Building spica"
-(cd stacks/spica && yarn --silent ng build --prod --progress=false)
+yarn --cwd=stacks/spica --silent ng build --prod --progress=false
 
 echo ""
 echo "## Building documentation"
@@ -59,9 +59,8 @@ yarn --silent docs
 
 echo ""
 echo "## Building spicaengine.com"
-(cd docs/site && 
-yarn --silent install --frozen-lockfile &&
-yarn --silent ng build --prod --progress=false)
+yarn --cwd=docs/site --silent install --frozen-lockfile
+yarn --cwd=docs/site --silent ng build --prod --progress=false
 
 
 echo ""

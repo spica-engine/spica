@@ -52,7 +52,6 @@
               "extractLicenses": true,
               "vendorChunk": true,
               "buildOptimizer": true,
-              "es5BrowserSupport": true,
               "fileReplacements": [
                 {
                   "replace": "environments/environment.ts",
@@ -93,7 +92,7 @@
   },
   "cli": {
     "packageManager": "yarn",
-    "analytics": "51fc7f80-fc74-4b94-9fa2-b3721c6b7414"
+    "analytics": false
   },
   "schematics": {
     "@schematics/angular:component": {

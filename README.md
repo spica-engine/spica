@@ -3,7 +3,7 @@
 </p>
 
 
-# Spica - Development Engine ![CircleCI](https://img.shields.io/circleci/build/github/spica-engine/spica/master)
+# Spica - Development Engine [![Build status](https://badge.buildkite.com/231efc3a5086b0db36206b21f04ee665939ca9186505894312.svg)](https://buildkite.com/spica/default)
 
 Spica is not a framework, it's a full-fledged free and open-source development engine. We aim cost-efficient, fast and reliable development. Spica fulfills the needs of development among other things such as:
 

@@ -34,7 +34,7 @@ import {LanguageDirective} from "./components/editor/dynamic.language";
 import {FunctionRoutingModule} from "./function-routing.module";
 import {FunctionInitializer} from "./function.initializer";
 import {FunctionService} from "./function.service";
-import {FunctionOptions, FUNCTION_OPTIONS} from "./interface";
+import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
@@ -43,6 +43,8 @@ import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
 import {MatSliderModule} from "@angular/material/slider";
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {ScrollingModule} from "@angular/cdk/scrolling";
 
 @NgModule({
   declarations: [
@@ -86,7 +88,9 @@ import {MatSliderModule} from "@angular/material/slider";
     StoreModule.forFeature("function", fromFunction.reducer),
     PassportModule.forChild(),
     WebhookModule,
-    MatSaveModule
+    MatSaveModule,
+    MatDatepickerModule,
+    ScrollingModule
   ]
 })
 export class FunctionModule {
@@ -95,6 +99,13 @@ export class FunctionModule {
       ngModule: FunctionModule,
       providers: [
         {provide: FUNCTION_OPTIONS, useValue: options},
+        {
+          provide: WEBSOCKET_INTERCEPTOR,
+          useFactory: (options: FunctionOptions) => {
+            return options.url.startsWith("http") ? options.url.replace("http", "ws") : undefined;
+          },
+          deps: [FUNCTION_OPTIONS]
+        },
         {
           provide: FunctionInitializer,
           useClass: FunctionInitializer,

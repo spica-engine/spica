@@ -1,9 +1,9 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {Activity, ActivityFilter} from "@spica-client/activity/interface";
 import {ActivityService} from "@spica-client/activity/services/activity.service";
-import {Observable, BehaviorSubject, Subscription, of, merge} from "rxjs";
+import {Observable, BehaviorSubject, Subscription, of} from "rxjs";
 import {DataSource, CollectionViewer} from "@angular/cdk/collections";
-import {map, mergeMap, tap, catchError, flatMap, switchMap} from "rxjs/operators";
+import {map, mergeMap, switchMap} from "rxjs/operators";
 import {MatOption} from "@angular/material/core";
 import {MatSelectChange} from "@angular/material/select";
 

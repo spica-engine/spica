@@ -1,0 +1,56 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "realtime_e2e_specs",
+    testonly = True,
+    srcs = [
+        "realtime.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/core/websocket",
+        "//packages/database/realtime",
+        "//packages/database/testing",
+        "//stacks/api/function/src/log",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "realtime_e2e",
+    deps = [
+        ":realtime_e2e_specs",
+    ],
+)
+
+ts_library(
+    name = "authorization_e2e_specs",
+    testonly = True,
+    srcs = [
+        "authorization.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/core/websocket",
+        "//packages/database/testing",
+        "//stacks/api/function/src/log",
+        "//stacks/api/passport",
+        "//stacks/api/passport/testing",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "authorization_e2e",
+    deps = [
+        ":authorization_e2e_specs",
+    ],
+)
