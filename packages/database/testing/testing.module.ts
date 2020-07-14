@@ -1,46 +1,39 @@
-import {DynamicModule, Global, Module, OnModuleDestroy, Optional} from "@nestjs/common";
+import {DynamicModule, Global, Module} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
-import {MongoMemoryServer} from "mongodb-memory-server-core";
-import * as which from "which";
-import {getDatabaseName, start} from "./start";
-
-const MONGOD_PATH: string = which.sync("mongod");
+import {start, getDatabaseName} from "./start";
 
 @Global()
-@Module({})
-export class DatabaseTestingModule implements OnModuleDestroy {
-  constructor(@Optional() private server: MongoMemoryServer) {}
-
+@Module({
+  providers: [
+    {
+      provide: DatabaseService,
+      useFactory: async (client: MongoClient) => client.db(getDatabaseName()),
+      inject: [MongoClient]
+    }
+  ],
+  exports: [DatabaseService]
+})
+export class DatabaseTestingModule {
+  /**
+   * @deprecated
+   */
   static create(): DynamicModule {
+    console.warn(
+      "DatabaseTestingModule.create is deprecated. Use DatabaseTestingModule.standalone instead."
+    );
+    return DatabaseTestingModule.standalone();
+  }
+
+  static standalone(): DynamicModule {
     return {
       module: DatabaseTestingModule,
       providers: [
         {
-          provide: MongoMemoryServer,
-          useFactory: async () =>
-            new MongoMemoryServer({
-              binary: {
-                // @ts-ignore
-                systemBinary: MONGOD_PATH
-              }
-            })
-        },
-        {
           provide: MongoClient,
-          useFactory: async (server: MongoMemoryServer) =>
-            MongoClient.connect(await server.getConnectionString(), {
-              useNewUrlParser: true
-            }),
-          inject: [MongoMemoryServer]
-        },
-        {
-          provide: DatabaseService,
-          useFactory: async (client: MongoClient, server: MongoMemoryServer) =>
-            client.db(await server.getDbName()),
-          inject: [MongoClient, MongoMemoryServer]
+          useFactory: async () => start("standalone")
         }
       ],
-      exports: [DatabaseService, MongoClient]
+      exports: [MongoClient]
     };
   }
   static replicaSet(): DynamicModule {
@@ -49,21 +42,10 @@ export class DatabaseTestingModule implements OnModuleDestroy {
       providers: [
         {
           provide: MongoClient,
-          useFactory: () => start("replset")
-        },
-        {
-          provide: DatabaseService,
-          useFactory: async (client: MongoClient) => client.db(getDatabaseName()),
-          inject: [MongoClient]
+          useFactory: async () => start("replset")
         }
       ],
       exports: [DatabaseService, MongoClient]
     };
-  }
-
-  onModuleDestroy() {
-    if (this.server) {
-      this.server.stop();
-    }
   }
 }

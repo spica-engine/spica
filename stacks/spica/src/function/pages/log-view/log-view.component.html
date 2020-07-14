@@ -5,38 +5,48 @@
   </h4>
   <span class="space-between"></span>
 
-  <button mat-icon-button (click)="filter$.next(filter$.value)">
-    <mat-icon>refresh</mat-icon>
-  </button>
-
   <button mat-icon-button (click)="clearLogs()">
     <mat-icon>clear_all</mat-icon>
   </button>
 </mat-toolbar>
 
 <mat-card class="mat-elevation-z25">
-  <!-- Use material date range picker once there is public one: https://github.com/angular/components/issues/4763 -->
   <mat-form-field>
-    <input
-      matInput
-      placeholder="Select a date range"
-      [satDatepicker]="picker"
-      [max]="maxDate"
-      [ngModel]="filter$ | async"
-      (ngModelChange)="
-        filter$.value.begin = $event.begin;
-        filter$.value.end = $event.end;
-        filter$.next(filter$.value)
+    <mat-label>Enter a date range</mat-label>
+    <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
+      <input
+        matStartDate
+        placeholder="Start date"
+        #begin="ngModel"
+        [ngModel]="(queryParams | async)?.begin"
+      />
+
+      <input
+        matEndDate
+        placeholder="End date"
+        #end="ngModel"
+        [ngModel]="(queryParams | async)?.end"
+      />
+    </mat-date-range-input>
+
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-date-range-picker
+      #picker
+      (closed)="
+        next(
+          formatHours({
+            begin: begin.value,
+            end: end.value
+          })
+        )
       "
-    />
-    <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
-    <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
+    ></mat-date-range-picker>
   </mat-form-field>
   <mat-form-field>
     <mat-select
       multiple
-      [(ngModel)]="filter$.value.functions"
-      (ngModelChange)="filter$.next(filter$.value)"
+      [ngModel]="(queryParams | async)?.function"
+      (ngModelChange)="next({function: $event})"
     >
       <mat-option
         class="mat-accent"
@@ -47,9 +57,14 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
-  <mat-slide-toggle [(ngModel)]="showErrors" (ngModelChange)="filter$.next(filter$.value)">
-    {{ showErrors ? "Show Errors" : "Hide Errors" }}
+  <mat-slide-toggle
+    #showErrorsModel="ngModel"
+    [ngModel]="(queryParams | async)?.showErrors"
+    (ngModelChange)="next({showErrors: $event})"
+  >
+    {{ showErrorsModel.value ? "Show Errors" : "Hide Errors" }}
   </mat-slide-toggle>
+
   <mat-table multiTemplateDataRows [dataSource]="logs$">
     <ng-container matColumnDef="timestamp">
       <mat-header-cell mat-header-cell *matHeaderCellDef>TIMESTAMP</mat-header-cell>
