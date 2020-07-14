@@ -1,30 +1,30 @@
-import {Directive, ElementRef, Input, OnDestroy, OnInit, Renderer2} from "@angular/core";
+import {AfterViewInit, Directive, ElementRef, Input, OnDestroy} from "@angular/core";
 import {Observable, Subscription} from "rxjs";
-import {distinctUntilChanged, filter, map, delay, delayWhen} from "rxjs/operators";
+import {distinctUntilChanged, filter, map} from "rxjs/operators";
 
 @Directive({
   selector: "[intersect]",
   exportAs: "intersect"
 })
-export class IntersectDirective implements OnDestroy, OnInit {
+export class IntersectDirective implements OnDestroy, AfterViewInit {
   private subscription: Subscription;
   @Input() wait: boolean = false;
   @Input() single: boolean = false;
-  @Input() intersect: string;
 
-  constructor(private element: ElementRef<HTMLElement>, private renderer: Renderer2) {}
+  isIntersecting: boolean = false;
 
-  ngOnInit(): void {
-    this.renderer.setProperty(this.element.nativeElement, `@${this.intersect}`, false);
-    this.subscription = this.observe().subscribe(r =>
-      this.renderer.setProperty(this.element.nativeElement, `@${this.intersect}`, r)
+  constructor(private element: ElementRef<HTMLElement>) {}
+
+  ngAfterViewInit(): void {
+    this.subscription = this.observe().subscribe(
+      isIntersecting => (this.isIntersecting = isIntersecting)
     );
   }
 
   private observe() {
     return new Observable<IntersectionObserverEntry[]>(observer => {
       const iobserver = new IntersectionObserver(entry => observer.next(entry), {
-        threshold: this.single ? 0.8 : 0
+        threshold: this.single ? 0.8 : 0.1
       });
       iobserver.observe(this.element.nativeElement);
       return () => iobserver.disconnect();
@@ -36,6 +36,8 @@ export class IntersectDirective implements OnDestroy, OnInit {
   }
 
   ngOnDestroy(): void {
-    this.subscription.unsubscribe();
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
   }
 }

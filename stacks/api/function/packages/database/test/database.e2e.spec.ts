@@ -1,24 +1,13 @@
-import {Test, TestingModule} from "@nestjs/testing";
 import {database, connected, close} from "@spica-devkit/database";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {start, getConnectionUri, getDatabaseName} from "@spica-server/database/testing";
 import {Db} from "mongodb";
 
 describe("Database e2e", () => {
-  let module: TestingModule;
-  let db: DatabaseService;
-  beforeAll(async () => {
-    module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()]
-    }).compile();
-    db = module.get(DatabaseService);
-    const {host, port} = db.serverConfig["s"];
-    process.env.__INTERNAL__SPICA__MONGOURL__ = `mongodb://${host}:${port}`;
-    process.env.__INTERNAL__SPICA__MONGODBNAME__ = db.databaseName;
+  beforeEach(async () => {
+    const db = await start("standalone");
+    process.env.__INTERNAL__SPICA__MONGOURL__ = await getConnectionUri();
+    process.env.__INTERNAL__SPICA__MONGODBNAME__ = getDatabaseName();
   });
-
-  afterAll(async () => await module.close());
-
-  afterEach(async () => await db.dropDatabase());
 
   it("should connect to database", async () => {
     const db = await database();

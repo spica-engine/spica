@@ -9,7 +9,9 @@
   <img
     fxFlex="30"
     fxFlex.lt-md="70"
-    intersect="flyOne"
+    intersect
+    #intersect="intersect"
+    [@flyOne]="intersect.isIntersecting"
     wait="true"
     src="assets/artboard/enterprise.svg"
     alt="Enterprise"
@@ -374,7 +376,9 @@
   <img
     fxFlex="30"
     fxFlex.lt-md="45"
-    intersect="flyOne"
+    intersect
+    #intersect1="intersect"
+    [@flyOne]="intersect1.isIntersecting"
     wait="true"
     src="assets/artboard/partner.svg"
     alt="Enterprise"
