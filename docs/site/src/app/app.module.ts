@@ -43,6 +43,7 @@ import {SupportPolicyComponent} from "./pages/support-policy/support-policy.comp
 import {LimitPolicyComponent} from "./pages/limit-policy/limit-policy.component";
 import {FairusagePolicyComponent} from "./pages/fairusage-policy/fairusage-policy.component";
 import {CalendarComponent} from "./pages/calendar/calendar.component";
+
 @NgModule({
   imports: [
     BrowserModule,
@@ -92,7 +93,6 @@ import {CalendarComponent} from "./pages/calendar/calendar.component";
     FairusagePolicyComponent,
     CalendarComponent
   ],
-  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {

@@ -8,10 +8,28 @@ var_1: &api_test_docker_plugin
           - "/var/cache/spica/node_modules:/spica/node_modules"
           - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
           - "/var/cache/spica/stacks/cli/node_modules:/spica/stacks/cli/node_modules"
+          - "/var/cache/spica/docs/site/node_modules:/spica/docs/site/node_modules"
+          - "./.buildkite/bazel.rc:/etc/bazel.bazelrc"
+          # This is here to enable us write e2e against docker
+          - "/var/run/docker.sock:/var/run/docker.sock"
+
+var_2: &release_docker_plugin
+  plugins:
+    - docker#v3.5.0:
+        image: "spicaengine/buildkite-node-with-mongodb:12"
+        workdir: /spica
+        volumes:
+          - "/var/cache/spica:/var/cache/spica"
+          - "/var/cache/spica/node_modules:/spica/node_modules"
+          - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
+          - "/var/cache/spica/stacks/cli/node_modules:/spica/stacks/cli/node_modules"
+          - "/var/cache/spica/docs/site/node_modules:/spica/docs/site/node_modules"
           - "./.buildkite/bazel.rc:/etc/bazel.bazelrc"
           - "/var/run/docker.sock:/var/run/docker.sock"
+          # These are secrets, which shall not be exposed that are stored in the agent
           - "/root/service-account.json:/root/service-account.json"
           - "/root/docker-password:/root/docker-password"
+          - "/root/.npmrc:/root/.npmrc"
 
 steps:
   - label: ":yarn: Install packages"
@@ -21,62 +39,82 @@ steps:
       - yarn config set cache-folder /var/cache/spica/.cache
       - yarn install --frozen-lockfile --network-timeout 1000000
 
-
-  # - label: ":medical_symbol: Lint"
-  #   if: build.branch != "master"
-  #   depends_on: "install_packages"
-  #   <<: *api_test_docker_plugin
-  #   commands:
-  #     -  yarn bazel:format -mode=check
-  #     -  yarn code:format-check
-
-  # - label: ":docker: + :bazel: Test APIs"
-  #   if: build.branch != "master"
-  #   depends_on: "install_packages"
-  #   <<: *api_test_docker_plugin
-  #   commands:
-  #     - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e --config=ci
-
-  # - label: ":docker: + :bazel: Test APIs (Flaky)"
-  #   if: build.branch != "master"
-  #   depends_on: "install_packages"
-  #   <<: *api_test_docker_plugin
-  #   commands:
-  #     - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5 --config=ci
-  
-  # - label: ":docker: + :bazel: Test APIs (E2E)"
-  #   if: build.branch != "master"
-  #   depends_on: "install_packages"
-  #   <<: *api_test_docker_plugin
-  #   commands:
-  #     - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5 --config=ci
-
-  # - label: ":angular: + :chrome: Test Spica (Chrome)"
-  #   if: build.branch != "master"
-  #   depends_on: "install_packages"
-  #   plugins:
-  #       - docker#v3.5.0:
-  #           image: "circleci/node:12-browsers"
-  #           workdir: /spica
-  #           volumes:
-  #             - "/var/cache/spica/node_modules:/spica/node_modules"
-  #             - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
-  #   commands:
-  #     -  cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
- 
-
-  - label: ":k8s: Deploy"
-    if: build.branch == "buildkite" # TODO: change
+  - label: ":medical_symbol: Lint"
+    key: lint
+    if: build.branch != "master"
     depends_on: "install_packages"
     <<: *api_test_docker_plugin
     commands:
-      - |
-        gcloud auth activate-service-account --key-file=/root/service-account.json
-        gcloud config set project $GCLOUD_PROJECT_ID
-        gcloud config set compute/zone $GCLOUD_COMPUTE_ZONE
-        gcloud container clusters get-credentials $GCLOUD_CLUSTER_NAME
-        
+      - yarn bazel:format -mode=check
+      - yarn code:format-check
+
+  - label: ":docker: + :bazel: Test APIs"
+    key: test_api
+    if: build.branch != "master"
+    depends_on: "install_packages"
+    <<: *api_test_docker_plugin
+    commands:
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e --config=ci
+
+  - label: ":docker: + :bazel: Test APIs (Flaky)"
+    key: test_api_flaky
+    if: build.branch != "master"
+    depends_on: "install_packages"
+    <<: *api_test_docker_plugin
+    commands:
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5 --config=ci
+
+  - label: ":docker: + :bazel: Test APIs (E2E)"
+    key: test_api_e2e
+    if: build.branch != "master"
+    depends_on: "install_packages"
+    <<: *api_test_docker_plugin
+    commands:
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5 --config=ci
+
+  - label: ":angular: + :chrome: Test Spica (Chrome)"
+    key: test_spica
+    if: build.branch != "master"
+    depends_on: "install_packages"
+    plugins:
+      - docker#v3.5.0:
+          image: "circleci/node:12-browsers"
+          workdir: /spica
+          volumes:
+            - "/var/cache/spica/node_modules:/spica/node_modules"
+            - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
+    commands:
+      - cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
+
+  - label: ":k8s: + :docker: Deploy"
+    key: deploy
+    if: build.branch == "buildkite" # TODO: change
+    depends_on: "install_packages"
+    <<: *release_docker_plugin
+    commands:
+      - gcloud auth activate-service-account --key-file=/root/service-account.json
+      - gcloud config set project $GCLOUD_PROJECT_ID
+      - gcloud config set compute/zone $GCLOUD_COMPUTE_ZONE
+      - gcloud container clusters get-credentials $GCLOUD_CLUSTER_NAME
       - cat /root/docker-password | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - |
-        (cd stacks/spica && yarn ng build --prod --progress=false)
-        yarn bazel run deploy.replace -- --config=release -- --force
+
+      - yarn --cwd=stacks/spica ng build --prod --progress=false
+      - yarn bazel run deploy.replace -- --config=release -- --force
+
+  - label: ":npm: + :docker: Release"
+    key: release
+    if: build.branch =~ /^\d\.\d\.x$/
+    depends_on:
+      - test_api_flaky
+      - test_api_e2e
+      - test_api
+      - test_spica
+    <<: *release_docker_plugin
+    commands:
+      - gcloud auth activate-service-account --key-file=/root/service-account.json
+      - gcloud config set project $GCLOUD_PROJECT_ID
+      - gcloud config set compute/zone $GCLOUD_COMPUTE_ZONE
+      - gcloud container clusters get-credentials $GCLOUD_CLUSTER_NAME
+      - cat /root/docker-password | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+      - ./scripts/publish.sh latest

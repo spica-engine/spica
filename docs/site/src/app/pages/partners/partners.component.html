@@ -42,7 +42,15 @@
     </div>
   </div>
 
-  <div intersect="fly" class="left" fxFlex.gt-md="60" fxFlex.lt-md="100%" ngClass.lt-md="mobile">
+  <div
+    intersect
+    #intersect="intersect"
+    [@fly]="intersect.isIntersecting"
+    class="left"
+    fxFlex.gt-md="60"
+    fxFlex.lt-md="100%"
+    ngClass.lt-md="mobile"
+  >
     <div fxFlex="50">
       <img fxFlex="50" src="assets/icons/setting.svg" alt="Setting" />
       <p fxFlex="50">Technical <span>Consulting</span></p>
@@ -68,7 +76,9 @@
     fxFlex.gt-md="40"
     fxFlex.gt-xs="auto"
     ngClass.lt-md="mobile-img"
-    intersect="flyOne"
+    intersect
+    #intersect="intersect"
+    [@flyOne]="intersect.isIntersecting"
     wait="true"
     src="assets/artboard/partner.svg"
     alt="Partner"

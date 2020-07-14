@@ -1,8 +1,10 @@
 <nav fxLayout.lt-md="column" fxLayout.gt-sm="row wrap" fxLayoutAlign.gt-sm="space-evenly">
   <img
     fxFlex.lt-md="30%"
+    intersect
     single="true"
-    intersect="flyOne"
+    #intersect="intersect"
+    [@flyOne]="intersect.isIntersecting"
     alt="Spica logo"
     src="assets/images/logo-2.svg"
   />

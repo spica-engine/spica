@@ -1,3 +1,7 @@
+# This is our base image with all necessary tooling that we need to test and release spica
+# Run    docker build .buildkite -t spicaengine/buildkite-node-with-mongodb:12      from the workspace root
+# and publish the image by running    docker push spicaengine/buildkite-node-with-mongodb:12  
+# Note that the number 12 ought to be sync with node's version to keep us beware which version of node we are testing against
 FROM node:12
 
 # Install essentials
@@ -32,6 +36,3 @@ RUN apt-get update && apt-get install helm -y
 RUN gcloud version
 RUN kubectl version --client
 RUN helm version
-
-# Run `docker build .buildkite/ -t spicaengine/buildkite-node-with-mongodb:12` from the workspace root
-# and publish the image by running `docker push spicaengine/buildkite-node-with-mongodb:12`
