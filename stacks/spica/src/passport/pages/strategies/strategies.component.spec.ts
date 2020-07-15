@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {Component, TemplateRef} from "@angular/core";
+import {Component, TemplateRef, Directive, HostBinding, Input} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -15,6 +15,13 @@ import {Subject} from "rxjs";
 import {Strategy} from "../../interfaces/strategy";
 import {StrategyService} from "../../services/strategy.service";
 import {StrategiesComponent} from "./strategies.component";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 @Component({
   template: `
@@ -44,7 +51,7 @@ describe("StrategiesComponent", () => {
         NoopAnimationsModule,
         RouterTestingModule
       ],
-      declarations: [StrategiesComponent, ToolbarCmp]
+      declarations: [StrategiesComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
     strategyService = {
       getStrategies: jasmine.createSpy("getStrategies").and.returnValue(rows)

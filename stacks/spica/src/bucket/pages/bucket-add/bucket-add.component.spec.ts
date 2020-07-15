@@ -38,6 +38,7 @@ import {Directive, HostBinding, Input} from "@angular/core";
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
+  @Input("resource") resource: string;
 }
 
 describe("Bucket Add Component", () => {
@@ -198,7 +199,7 @@ describe("Bucket Add Component", () => {
 
     it("should render component", () => {
       expect(
-        fixture.debugElement.query(By.css("h4 > button > mat-icon")).nativeElement.textContent
+        fixture.debugElement.query(By.css("h4 > button mat-icon")).nativeElement.textContent
       ).toBe("myIcon");
       expect(fixture.debugElement.query(By.css("h4 > span")).nativeElement.textContent).toBe(
         "my bucket"

@@ -19,6 +19,7 @@ import {Directive, HostBinding, Input} from "@angular/core";
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
+  @Input("resource") resource: string;
 }
 
 describe("Policy Add Component", () => {

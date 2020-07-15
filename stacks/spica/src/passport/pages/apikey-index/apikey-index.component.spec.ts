@@ -13,6 +13,14 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {ApiKey} from "../../interfaces/apikey";
 import {By} from "@angular/platform-browser";
 import {MatButtonModule} from "@angular/material/button";
+import {Input, HostBinding, Directive} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 describe("ApiKeyIndexComponent", () => {
   let component: ApiKeyIndexComponent;
@@ -38,7 +46,7 @@ describe("ApiKeyIndexComponent", () => {
           useValue: new MockApiKeyService()
         }
       ],
-      declarations: [ApiKeyIndexComponent]
+      declarations: [ApiKeyIndexComponent, CanInteractDirectiveTest]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ApiKeyIndexComponent);

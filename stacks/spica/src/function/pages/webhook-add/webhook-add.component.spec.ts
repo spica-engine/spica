@@ -29,6 +29,7 @@ import {MatButtonModule} from "@angular/material/button";
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
+  @Input("resource") resource: string;
 }
 
 describe("Webhook", () => {

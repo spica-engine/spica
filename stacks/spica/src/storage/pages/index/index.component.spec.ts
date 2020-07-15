@@ -21,8 +21,16 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
 import {Location} from "@angular/common";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
-import {HttpEvent, HttpEventType, HttpResponse} from "@angular/common/http";
+import {HttpEvent, HttpEventType} from "@angular/common/http";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -108,7 +116,7 @@ describe("Storage/IndexComponent", () => {
           useValue: storageService
         }
       ],
-      declarations: [IndexComponent, StorageViewComponent]
+      declarations: [IndexComponent, StorageViewComponent, CanInteractDirectiveTest]
     });
 
     fixture = TestBed.createComponent(IndexComponent);
