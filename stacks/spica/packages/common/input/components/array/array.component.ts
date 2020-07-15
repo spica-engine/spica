@@ -51,9 +51,6 @@ export class ArrayComponent implements ControlValueAccessor {
     } else {
       this._values = [];
     }
-    if (!this._values.length) {
-      this.addItem();
-    }
   }
 
   registerOnChange(fn: any): void {

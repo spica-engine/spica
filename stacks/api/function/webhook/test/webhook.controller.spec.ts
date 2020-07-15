@@ -178,10 +178,11 @@ describe("Webhook Controller", () => {
           }
         })
         .catch(e => e);
-      expect(validationErrors.error).toBe(
+      expect(validationErrors.statusCode).toBe(400);
+      expect(validationErrors.error).toBe("validation failed");
+      expect(validationErrors.message).toBe(
         ".trigger.options.collection should be equal to one of the allowed values"
       );
-      expect(validationErrors.statusCode).toBe(400);
     });
 
     it("should report if body is missing", async () => {
@@ -197,8 +198,9 @@ describe("Webhook Controller", () => {
           }
         })
         .catch(e => e);
-      expect(validationErrors.error).toBe(" should have required property 'body'");
       expect(validationErrors.statusCode).toBe(400);
+      expect(validationErrors.error).toBe("validation failed");
+      expect(validationErrors.message).toBe(" should have required property 'body'");
     });
 
     it("should report if compilation failed for insert", async () => {
@@ -215,8 +217,8 @@ describe("Webhook Controller", () => {
           }
         })
         .catch(e => e);
-      expect(validationErrors.error).toBe("Bad Request");
       expect(validationErrors.statusCode).toBe(400);
+      expect(validationErrors.error).toBe("Bad Request");
       expect(validationErrors.message.startsWith("Error: Parse error")).toEqual(true);
     });
 
@@ -246,8 +248,8 @@ describe("Webhook Controller", () => {
           }
         })
         .catch(e => e);
-      expect(validationErrors.error).toBe("Bad Request");
       expect(validationErrors.statusCode).toBe(400);
+      expect(validationErrors.error).toBe("Bad Request");
       expect(validationErrors.message.startsWith("Error: Parse error")).toEqual(true);
     });
   });

@@ -335,7 +335,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, title: "asd"};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".title should NOT be shorter than 4 characters",
           "validation failed"
         ]);
@@ -345,7 +345,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, title: "a".repeat(101)};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".title should NOT be longer than 100 characters",
           "validation failed"
         ]);
@@ -357,7 +357,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, description: "asde"};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".description should NOT be shorter than 5 characters",
           "validation failed"
         ]);
@@ -367,7 +367,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, description: "a".repeat(251)};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".description should NOT be longer than 250 characters",
           "validation failed"
         ]);
@@ -379,7 +379,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, icon: 333};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".icon should be string",
           "validation failed"
         ]);
@@ -398,7 +398,7 @@ describe("Bucket acceptance", () => {
       const invalidBucket = {...validBucket, primary: []};
       const response = await req.post("/bucket", invalidBucket);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect([response.body.error, response.body.message]).toEqual([
+      expect([response.body.message, response.body.error]).toEqual([
         ".primary should be string",
         "validation failed"
       ]);
@@ -408,7 +408,7 @@ describe("Bucket acceptance", () => {
       const invalidBucket = {...validBucket, order: "1"};
       const response = await req.post("/bucket", invalidBucket);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect([response.body.error, response.body.message]).toEqual([
+      expect([response.body.message, response.body.error]).toEqual([
         ".order should be number",
         "validation failed"
       ]);
@@ -419,7 +419,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, required: {asd: "qwe"}};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".required should be array",
           "validation failed"
         ]);
@@ -429,7 +429,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, required: ["asd", 1]};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".required[1] should be string",
           "validation failed"
         ]);
@@ -439,7 +439,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, required: ["asd", "asd", "qwe", "zxc"]};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".required should NOT have duplicate items (items ## 1 and 0 are identical)",
           "validation failed"
         ]);
@@ -450,7 +450,7 @@ describe("Bucket acceptance", () => {
       const invalidBucket = {...validBucket, readOnly: "true"};
       const response = await req.post("/bucket", invalidBucket);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-      expect([response.body.error, response.body.message]).toEqual([
+      expect([response.body.message, response.body.error]).toEqual([
         ".readOnly should be boolean",
         "validation failed"
       ]);
@@ -461,7 +461,7 @@ describe("Bucket acceptance", () => {
         const invalidBucket = {...validBucket, properties: 1};
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties should be object",
           "validation failed"
         ]);
@@ -472,7 +472,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.type = 333;
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].type should be string",
           "validation failed"
         ]);
@@ -483,7 +483,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.type = "hashmap";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].type should be equal to one of the allowed values",
           "validation failed"
         ]);
@@ -494,7 +494,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.title = 333;
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].title should be string",
           "validation failed"
         ]);
@@ -505,7 +505,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.description = ["asdqwe", "ahsgdasd"];
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].description should be string",
           "validation failed"
         ]);
@@ -516,7 +516,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.options = "asd";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options should be object",
           "validation failed"
         ]);
@@ -527,7 +527,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.options.visible = "asd";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.visible should be boolean",
           "validation failed"
         ]);
@@ -538,7 +538,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.options.translate = 33;
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.translate should be boolean",
           "validation failed"
         ]);
@@ -549,7 +549,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.options.history = "false";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.history should be boolean",
           "validation failed"
         ]);
@@ -560,7 +560,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.options.position = ["bottom,left"];
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.position should be string",
           "validation failed"
         ]);
@@ -571,7 +571,7 @@ describe("Bucket acceptance", () => {
         invalidBucket.properties.title.options.position = "top";
         const response = await req.post("/bucket", invalidBucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.error, response.body.message]).toEqual([
+        expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.position should be equal to one of the allowed values",
           "validation failed"
         ]);

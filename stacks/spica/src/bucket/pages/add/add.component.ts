@@ -138,12 +138,18 @@ export class AddComponent implements OnInit {
     this.data._schedule = undefined;
   }
 
-  saveBucketRow() {
-    if (!(this.data._schedule instanceof Date)) {
-      delete this.data._schedule;
-    }
+  removeFalsies(data: any) {
+    Object.keys(data)
+      .filter(key => data[key] == undefined || data[key] == null)
+      .forEach(key => delete data[key]);
 
+    return data;
+  }
+
+  saveBucketRow() {
     const isInsert = !this.data._id;
+
+    this.data = this.removeFalsies({...this.data});
 
     const save = isInsert
       ? this.bds.insertOne(this.bucketId, this.data)

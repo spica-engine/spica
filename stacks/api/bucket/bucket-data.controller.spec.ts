@@ -923,8 +923,8 @@ describe("BucketDataController", () => {
       expect(response.statusText).toBe("Bad Request");
       expect(response.body).toEqual({
         statusCode: 400,
-        error: ".title should be string",
-        message: "validation failed"
+        message: ".title should be string",
+        error: "validation failed"
       });
     });
 
@@ -958,8 +958,8 @@ describe("BucketDataController", () => {
       });
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.error, response.body.message]).toEqual([
+        "validation failed",
         ".description should be string",
-        "validation failed"
       ]);
     });
   });

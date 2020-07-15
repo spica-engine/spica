@@ -200,14 +200,6 @@ describe("Common#array", () => {
       );
     }));
 
-    it("should push an item if array is empty", fakeAsync(() => {
-      fixture.componentInstance.writeValue(undefined);
-      fixture.detectChanges();
-      expect(changeSpy).not.toHaveBeenCalled();
-      expect(fixture.componentInstance._values).toEqual([undefined]);
-      expect(inputResolver.coerce).toHaveBeenCalledWith("string");
-    }));
-
     it("should write value to placer", fakeAsync(() => {
       fixture.componentInstance.writeValue(["test"]);
       fixture.detectChanges();
