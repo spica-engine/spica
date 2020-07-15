@@ -12,8 +12,7 @@ import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
 import {RouterTestingModule} from "@angular/router/testing";
 import {ApiKey} from "../../interfaces/apikey";
 import {By} from "@angular/platform-browser";
-import {MatButtonModule} from '@angular/material/button';
-
+import {MatButtonModule} from "@angular/material/button";
 
 describe("ApiKeyIndexComponent", () => {
   let component: ApiKeyIndexComponent;

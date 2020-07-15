@@ -18,8 +18,7 @@ import {PassportService} from "@spica/client/src/passport/services/passport.serv
 import {PolicyService} from "../../services/policy.service";
 import {IdentityAddComponent} from "./identity-add.component";
 import {Directive, HostBinding, Input} from "@angular/core";
-import {MatButtonModule} from '@angular/material/button';
-
+import {MatButtonModule} from "@angular/material/button";
 
 @Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {

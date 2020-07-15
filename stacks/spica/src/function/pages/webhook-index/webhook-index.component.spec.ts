@@ -13,8 +13,7 @@ import {of} from "rxjs";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
-import {MatButtonModule} from '@angular/material/button';
-
+import {MatButtonModule} from "@angular/material/button";
 
 describe("Webhook Index", () => {
   let fixture: ComponentFixture<WebhookIndexComponent>;

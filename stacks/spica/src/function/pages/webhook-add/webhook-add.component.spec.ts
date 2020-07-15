@@ -23,8 +23,7 @@ import {WebhookService} from "../../webhook.service";
 import {WebhookAddComponent} from "./webhook-add.component";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSaveModule} from "@spica-client/material";
-import {MatButtonModule} from '@angular/material/button';
-
+import {MatButtonModule} from "@angular/material/button";
 
 @Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {
