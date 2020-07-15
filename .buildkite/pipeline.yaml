@@ -84,7 +84,9 @@ steps:
             - "/var/cache/spica/node_modules:/spica/node_modules"
             - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
     commands:
-      - cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
+      - cd ./stacks/spica
+      - yarn ngcc
+      - yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
 
   - label: ":k8s: + :docker: Deploy"
     key: deploy
