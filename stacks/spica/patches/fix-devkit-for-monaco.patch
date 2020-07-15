@@ -1,0 +1,14 @@
+diff --git node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js
+index 147354a..47c54ff 100644
+--- /node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js
++++ /node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/webpack-configs/common.js
+@@ -424,7 +424,7 @@ function getCommonConfig(wco) {
+                 },
+                 {
+                     test: /\.m?js$/,
+-                    exclude: [/[\/\\](?:core-js|\@babel|tslib)[\/\\]/, /(ngfactory|ngstyle)\.js$/],
++                    exclude: [/[\/\\](?:core-js|\@babel|tslib|monaco-editor-core)[\/\\]/, /(ngfactory|ngstyle)\.js$/],
+                     use: [
+                         ...(wco.supportES2015
+                             ? []
+                             
