@@ -13,6 +13,8 @@ import {of} from "rxjs";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
+import {MatButtonModule} from '@angular/material/button';
+
 
 describe("Webhook Index", () => {
   let fixture: ComponentFixture<WebhookIndexComponent>;
@@ -53,7 +55,8 @@ describe("Webhook Index", () => {
         MatToolbarModule,
         MatCardModule,
         NoopAnimationsModule,
-        MatAwareDialogModule
+        MatAwareDialogModule,
+        MatButtonModule
       ],
       declarations: [WebhookIndexComponent],
       providers: [

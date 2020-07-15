@@ -22,6 +22,8 @@ import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
+import {MatButtonModule} from '@angular/material/button';
+
 
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
@@ -84,6 +86,7 @@ describe("Bucket Add Component", () => {
         MatGridListModule,
         MatSelectModule,
         MatOptionModule,
+        MatButtonModule,
         MatCheckboxModule,
         MatExpansionModule,
         MatIconModule,

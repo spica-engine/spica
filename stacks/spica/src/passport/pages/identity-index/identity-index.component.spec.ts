@@ -16,6 +16,7 @@ import {Identity} from "../../interfaces/identity";
 import {IdentityService} from "../../services/identity.service";
 import {IdentityIndexComponent} from "./identity-index.component";
 
+
 @Component({
   template: `
     <ng-container *ngTemplateOutlet="outlet"></ng-container>
