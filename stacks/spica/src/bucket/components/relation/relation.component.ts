@@ -46,10 +46,7 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
     this._oneToManyRelation = this._schema.relationType == RelationType.OneToMany;
     this.schema$ = this.bs.getBucket(this._schema.bucketId).pipe(
       tap(schema => {
-        this.displayedProperties = Object.entries(schema.properties)
-          .filter(([, value]) => value.options && value.options.visible)
-          .map(([key]) => key)
-          .concat("actions");
+        this.displayedProperties = [schema.primary].concat("actions");
       })
     );
     this.data$ = merge(this.paginator.page, this.refresh).pipe(

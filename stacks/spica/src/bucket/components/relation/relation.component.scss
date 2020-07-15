@@ -7,8 +7,7 @@
         mat-row {
           mat-header-cell,
           mat-cell {
-            &:first-of-type,
-            &:nth-of-type(2) {
+            &:first-of-type {
               flex: 5;
             }
             &:last-of-type {
