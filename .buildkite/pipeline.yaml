@@ -37,7 +37,22 @@ steps:
     <<: *api_test_docker_plugin
     commands:
       - yarn config set cache-folder /var/cache/spica/.cache
-      - yarn install --frozen-lockfile --network-timeout 1000000
+      - yarn install --force --network-timeout 1000000 
+      
+  - label: ":angular: + :chrome: Test Spica (Chrome)"
+    key: test_spica
+    if: build.branch != "master"
+    depends_on: "install_packages"
+    plugins:
+      - docker#v3.5.0:
+          image: "circleci/node:12-browsers"
+          workdir: /spica
+          volumes:
+            - "/var/cache/spica/node_modules:/spica/node_modules"
+            - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
+    commands:
+      - cd ./stacks/spica
+      - yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
 
   - label: ":medical_symbol: Lint"
     key: lint
@@ -71,22 +86,6 @@ steps:
     <<: *api_test_docker_plugin
     commands:
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5
-
-  - label: ":angular: + :chrome: Test Spica (Chrome)"
-    key: test_spica
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    plugins:
-      - docker#v3.5.0:
-          image: "circleci/node:12-browsers"
-          workdir: /spica
-          volumes:
-            - "/var/cache/spica/node_modules:/spica/node_modules"
-            - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
-    commands:
-      - cd ./stacks/spica
-      - yarn ngcc
-      - yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
 
   - label: ":k8s: + :docker: Deploy"
     key: deploy
