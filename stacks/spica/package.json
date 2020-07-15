@@ -68,5 +68,8 @@
     "protractor": "~5.4.0",
     "ts-node": "~8.5.4",
     "tslint": "~5.20.1"
+  },
+  "scripts": {
+    "postinstall": "ngcc"
   }
 }
