@@ -51,10 +51,10 @@ describe("Bucket", () => {
   });
 
   it("should update bucket", () => {
-    Bucket.update("test", {...bucket, title: "new title"});
+    Bucket.update("bucket_id", {...bucket, title: "new title"});
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith("http://test/bucket/test", {
+    expect(fetchSpy).toHaveBeenCalledWith("http://test/bucket/bucket_id", {
       method: "put",
       body: JSON.stringify({...bucket, title: "new title"}),
       headers: {
@@ -77,10 +77,10 @@ describe("Bucket", () => {
   });
 
   it("should get specific bucket", () => {
-    Bucket.get("test");
+    Bucket.get("bucket_id");
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith(`http://test/bucket/test`, {
+    expect(fetchSpy).toHaveBeenCalledWith(`http://test/bucket/bucket_id`, {
       method: "get",
       headers: {
         Authorization: "APIKEY TEST_APIKEY"
@@ -89,10 +89,10 @@ describe("Bucket", () => {
   });
 
   it("should remove bucket", () => {
-    Bucket.remove("test");
+    Bucket.remove("bucket_id");
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).toHaveBeenCalledWith(`http://test/bucket/test`, {
+    expect(fetchSpy).toHaveBeenCalledWith(`http://test/bucket/bucket_id`, {
       method: "delete",
       headers: {
         Authorization: "APIKEY TEST_APIKEY"
