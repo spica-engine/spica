@@ -192,7 +192,7 @@ describe("StorageViewComponent", () => {
       setTimeout(() => {
         expect(viewComponent.componentInstance.ready).toBe(true);
         done();
-      }, 10);
+      }, 100);
     });
 
     xit("should show videos", () => {
