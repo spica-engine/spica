@@ -15,7 +15,6 @@
     <mat-label>Enter a date range</mat-label>
     <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
       <input
-        matInput
         matStartDate
         placeholder="Start date"
         #begin="ngModel"
@@ -45,7 +44,6 @@
   </mat-form-field>
   <mat-form-field>
     <mat-select
-      matInput
       multiple
       [ngModel]="(queryParams | async)?.function"
       (ngModelChange)="next({function: $event})"
