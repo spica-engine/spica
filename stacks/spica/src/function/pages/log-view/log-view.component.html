@@ -68,32 +68,32 @@
   </mat-slide-toggle>
   <mat-card-content>
     <mat-accordion>
-      <cdk-virtual-scroll-viewport itemSize="50" class="example-viewport">
+      <cdk-virtual-scroll-viewport itemSize="50" class="log-viewport">
         <div>
-          <span>Id</span>
-          <span>Function Name</span>
-          <span>Status</span>
-          <span>Execution Time</span>
+          <span>Timestamp</span>
+          <span>Name</span>
+          <span>Content</span>
         </div>
-        <span class="emptyList" *ngIf="!(dataStream | async)?.length">
+        <span class="empty-list" *ngIf="!(dataStream | async)?.length">
           Couldn't find any log to show.
         </span>
         <mat-expansion-panel *cdkVirtualFor="let log of dataSource">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <span>
-                {{ log._id }}
+                {{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}
               </span>
               <span>
                 {{ log.function }}
               </span>
+
               <span>
-                <mat-icon [style.color]="log.channel == 'stdout' ? 'green' : 'red'">
-                  {{ log.channel == "stdout" ? "done" : "error" }}
+                <mat-icon *ngIf="log.channel == 'stderr'">
+                  error
                 </mat-icon>
-              </span>
-              <span>
-                {{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}
+                <span>
+                  {{ log.content }}
+                </span>
               </span>
             </mat-panel-title>
           </mat-expansion-panel-header>
