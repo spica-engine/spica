@@ -1,2 +1,1 @@
-import {database} from "@spica-devkit/database";
-database().catch(() => {});
+import "@spica-devkit/database";
