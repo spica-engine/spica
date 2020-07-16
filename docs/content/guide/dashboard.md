@@ -13,7 +13,7 @@ export default function(req, res) {
       title:"line title",
       options: {legend: {display: true}, responsive: true},
       label: ["1", "2", "3", "4", "5", "6"],
-      datasets: [{data: [65, 59, 90, 81, 56, 55, 40], label: "linedata"}],,
+      datasets: [{data: [65, 59, 90, 81, 56, 55, 40], label: "linedata"}],
       legend: true,
       width:70,
       filters:[{key:'line_data_filter',title:'Please enter filter',type:"string"}]
@@ -144,7 +144,7 @@ export default function(req, res) {
       displayedColumns: ["position", "name", "weight", "symbol"]
     }
   };
-  response.send([
+  res.send([
     bubbledata,
     scatterdata,
     linedata,
