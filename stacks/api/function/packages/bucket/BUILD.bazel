@@ -13,10 +13,10 @@ ts_library(
     module_name = "@spica-devkit/bucket",
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
+        "@npm//@types/json-schema",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
-        "@npm//@types/json-schema"
-    ]
+    ],
 )
 
 ROLLUP_DEPS = [
@@ -67,7 +67,7 @@ genrule(
         for f in SRCS
     ],
     cmd = "cp -r $(locations :cjs)/* $(RULEDIR)/dist && cp -r $(locations :esm)/* $(RULEDIR)/dist && " + "&&".join([
-        "cp -r $(GENDIR)/stacks/api/function/packages/dashboard/%s.d.ts $(RULEDIR)/dist/%s.d.ts" % (
+        "cp -r $(GENDIR)/stacks/api/function/packages/bucket/%s.d.ts $(RULEDIR)/dist/%s.d.ts" % (
             f[:-3],
             f[:-3],
         )

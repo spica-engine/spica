@@ -1,12 +1,13 @@
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
 export interface Bucket {
-  title?: string;
+  _id?: string;
+  title: string;
   icon?: string;
-  description?: string;
+  description: string;
   primary: string;
   history?: boolean;
-  properties?: {
+  properties: {
     [key: string]: JSONSchema7 & PropertyOptions;
   };
   order?: number;
@@ -23,5 +24,13 @@ interface PropertyOptions {
 }
 
 export interface BucketDocument {
+  _id?: string;
   [key: string]: any | undefined;
+}
+
+export interface IndexResult<T> {
+  meta: {
+    total: number;
+  };
+  data: T[];
 }
