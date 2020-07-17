@@ -19,7 +19,7 @@ export class Typescript extends Language {
 
   constructor() {
     super();
-    this.worker = new worker_threads.Worker(__dirname + "/typescript_worker.js");
+    this.worker = new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
     this.worker.on("exit", exitCode => {
       if (exitCode != 0) {
         console.log("Compiler worker has quit with non-zero exit code.");
@@ -67,7 +67,13 @@ export class Typescript extends Language {
         return Promise.reject(e);
       });
 
-    this.worker.postMessage(compilation);
+    setImmediate(() => {
+      // Sometimes the worker responds faster than we could capture hence
+      // the observable below just hangs indefinitely till the next message comes
+      // so we post the message after the observer subscribes
+      this.worker.postMessage(compilation);
+    });
+
     return this.message$
       .pipe(
         filter(message => message.baseUrl == compilation.cwd),
