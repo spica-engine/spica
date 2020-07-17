@@ -144,11 +144,10 @@ export function line(req, res) {
       displayedColumns: ["position", "name", "weight", "symbol"]
     }
   };
-  res.send([linedata,
-       
+  res.send([
+    linedata,
     bubbledata,
     scatterdata,
-    
     piedata,
     radardata,
     doughnutdata,
