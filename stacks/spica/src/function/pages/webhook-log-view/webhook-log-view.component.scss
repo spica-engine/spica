@@ -68,6 +68,7 @@
 
       .mat-expansion-panel  {
         pre {
+          word-break: break-word;
           white-space: pre-wrap;
         }
         .mat-expansion-panel-header {

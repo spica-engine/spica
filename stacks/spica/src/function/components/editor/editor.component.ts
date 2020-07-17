@@ -192,7 +192,7 @@ export class EditorComponent
       if (changes.theme) {
         this.monaco.editor.setTheme(this.theme);
       }
-      if (changes.marker) {
+      if (changes.markers) {
         this.monaco.editor.setModelMarkers(this.editorRef.getModel(), this.language, this.markers);
       }
     }

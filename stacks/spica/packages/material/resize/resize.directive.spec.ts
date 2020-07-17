@@ -85,13 +85,13 @@ describe("MatResize", () => {
     const [positionColumnHeader] = columnHeaders;
 
     positionColumnHeader.triggerEventHandler("mousemove", {
-      screenX: getElementScreenXForSize(positionColumnHeader, 90)
+      pageX: getElementScreenXForSize(positionColumnHeader, 90)
     });
     fixture.detectChanges();
     expect(hasOriginalClickHandler(positionColumnHeader)).toBe(false);
 
     positionColumnHeader.triggerEventHandler("mousemove", {
-      screenX: getElementScreenXForSize(positionColumnHeader, 120)
+      pageX: getElementScreenXForSize(positionColumnHeader, 120)
     });
     fixture.detectChanges();
     expect(hasOriginalClickHandler(positionColumnHeader)).toBe(true);
@@ -105,9 +105,9 @@ describe("MatResize", () => {
 
     positionColumnHeader.triggerEventHandler("mousedown", {
       target: positionColumnHeader.nativeElement,
-      screenX: borderPosition - 50
+      pageX: borderPosition - 50
     });
-    positionColumnHeader.triggerEventHandler("mousemove", {screenX: borderPosition + 100});
+    positionColumnHeader.triggerEventHandler("mousemove", {pageX: borderPosition + 100});
     positionColumnHeader.triggerEventHandler("mouseup", {});
     fixture.detectChanges();
 
@@ -147,9 +147,9 @@ describe("MatResize", () => {
 
     positionColumnHeader.triggerEventHandler("mousedown", {
       target: positionColumnHeader.nativeElement,
-      screenX: borderPosition - 50
+      pageX: borderPosition - 50
     });
-    positionColumnHeader.triggerEventHandler("mousemove", {screenX: borderPosition + 100});
+    positionColumnHeader.triggerEventHandler("mousemove", {pageX: borderPosition + 100});
     window.dispatchEvent(new MouseEvent("mouseup"));
     fixture.detectChanges();
     expect(fixture.componentInstance.positionColumnResize).toHaveBeenCalledWith(initalWidth + 150);

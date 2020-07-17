@@ -18,10 +18,12 @@ import {MatSortHeader} from "@angular/material/sort";
     "[style.padding-right.px]": "size",
     "[style.width.px]": "_width",
     "[style.cursor]": "_cursor",
+    "[style.user-select]": "_cursor ? 'none':'initial'",
     "[attr.disabled]": "_isDragging",
     "(mousedown)": "mouseDown($event)",
     "(mouseup)": "mouseUp()",
-    "(mousemove)": "mouseMove($event)"
+    "(mousemove)": "mouseMove($event)",
+    "(_resize)": "_width = $event"
   }
 })
 export class MatResizeHeader implements AfterViewInit {
@@ -59,9 +61,9 @@ export class MatResizeHeader implements AfterViewInit {
 
   @HostListener("mousedown", ["$event"])
   mouseDown(event: MouseEvent) {
-    const isInMovementRect = this.getIsInMovementRect(event.screenX);
+    const isInMovementRect = this.getIsInMovementRect(event.pageX);
     if (isInMovementRect) {
-      this._startX = event.screenX;
+      this._startX = event.pageX;
       this._startWidth = (<HTMLTableColElement>event.target).clientWidth;
     }
   }
@@ -77,7 +79,7 @@ export class MatResizeHeader implements AfterViewInit {
 
   @HostListener("mousemove", ["$event"])
   mouseMove(event: MouseEvent) {
-    const isInMovementRect = this.getIsInMovementRect(event.screenX);
+    const isInMovementRect = this.getIsInMovementRect(event.pageX);
     if (isInMovementRect) {
       this._cursor = "col-resize";
       this.setMatSortDisabled(true);
@@ -86,7 +88,7 @@ export class MatResizeHeader implements AfterViewInit {
       this.setMatSortDisabled(false);
     }
     if (this._isDragging) {
-      const diff = event.screenX - this._startX;
+      const diff = event.pageX - this._startX;
       if (diff != 0) {
         this._width = this._startWidth + diff;
         this.resize.emit(this._width);
