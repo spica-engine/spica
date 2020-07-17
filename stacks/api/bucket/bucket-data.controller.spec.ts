@@ -959,7 +959,7 @@ describe("BucketDataController", () => {
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.error, response.body.message]).toEqual([
         "validation failed",
-        ".description should be string",
+        ".description should be string"
       ]);
     });
   });
