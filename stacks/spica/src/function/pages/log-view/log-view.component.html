@@ -72,10 +72,10 @@
           <span>Name</span>
           <span>Content</span>
         </div>
-        <span class="empty-list" *ngIf="!(dataStream | async)?.length">
+        <span class="empty-list" *ngIf="!logs.length && !isPending">
           Couldn't find any log to show.
         </span>
-        <mat-expansion-panel *cdkVirtualFor="let log of dataSource">
+        <mat-expansion-panel *cdkVirtualFor="let log of logs">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <span>
