@@ -5,12 +5,28 @@
     &.storage {
       padding: 0 10%;
     }
-    > mat-form-field {
+    > mat-form-field,
+    section,
+    section ~ mat-hint {
       width: 80% !important;
-      min-width: unset !important;
+      margin: 0 10%;
+    }
+
+    .mat-form-field-suffix {
+      align-self: center;
+      padding-right: 5px;
     }
   }
-  .filter-buttons > button {
-    margin: 5px;
+  mat-form-field,
+  section {
+    width: 80% !important;
+    margin: 0 10%;
+  }
+  .filter-buttons {
+    display: flex;
+    justify-content: center;
+    button {
+      margin: 5px;
+    }
   }
 }
