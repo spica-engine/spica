@@ -20,6 +20,7 @@ message Action {
       INDEX = 2;
       GET = 3;
       DELETE = 4;
+      STREAM = 5;
    }
 }
 
