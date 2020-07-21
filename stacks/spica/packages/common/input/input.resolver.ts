@@ -24,7 +24,20 @@ export class InputResolver {
   }
 
   coerce(type: string) {
+    const originMap = {
+      "string": "",
+      "number": 0,
+      "boolean": false
+    }
     const input = this.resolve(type);
-    return input && input.coerce && input.coerce();
+    if ( input ) {
+      if ( input.coerce ) {
+        return input.coerce();
+      } else {
+        console.log(input.origin);
+        return originMap[input.origin];
+      }
+    }
+    return undefined;
   }
 }
