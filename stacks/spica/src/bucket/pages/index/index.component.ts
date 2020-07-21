@@ -225,7 +225,9 @@ export class IndexComponent implements OnInit {
 
   sortChange(sort: Sort) {
     if (sort.direction) {
-      this.sort = {[sort.active]: sort.direction === "asc" ? 1 : -1};
+      this.sort = {
+        [sort.active.replace("$$spicainternal", "")]: sort.direction === "asc" ? 1 : -1
+      };
     } else {
       this.sort = {};
     }
