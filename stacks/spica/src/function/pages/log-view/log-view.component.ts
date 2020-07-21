@@ -1,7 +1,7 @@
-import {Component, OnInit, OnDestroy} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, forkJoin, Subject} from "rxjs";
-import {switchMap, tap, map, filter, take, flatMap, takeUntil} from "rxjs/operators";
+import {Observable, forkJoin} from "rxjs";
+import {switchMap, tap, map, filter, take, flatMap} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
 
@@ -10,9 +10,7 @@ import {FunctionService} from "../../function.service";
   templateUrl: "./log-view.component.html",
   styleUrls: ["./log-view.component.scss"]
 })
-export class LogViewComponent implements OnInit, OnDestroy {
-  onDestroy = new Subject();
-
+export class LogViewComponent implements OnInit {
   isPending = false;
 
   functions$: Observable<Function[]>;
@@ -29,6 +27,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.queryParams = this.route.queryParams.pipe(
+      tap(() => (this.isPending = true)),
       map(filter => {
         filter = {...filter};
         if (filter.showErrors) {
@@ -55,9 +54,6 @@ export class LogViewComponent implements OnInit, OnDestroy {
     this.functions$ = this.fs.getFunctions();
 
     this.logs$ = this.queryParams.pipe(
-      takeUntil(this.onDestroy),
-      tap(() => (this.isPending = true)),
-
       switchMap(filter =>
         this.fs.getLogs(filter as any).pipe(
           map(logs => logs.filter(log => !!log)),
@@ -65,9 +61,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
         )
       ),
       switchMap(logs => this.functions$.pipe(map(fns => this.mapLogs(logs, fns)))),
-      tap(logs => {
-        this.isPending = false;
-      })
+      tap(() => (this.isPending = false))
     );
   }
 
@@ -111,9 +105,5 @@ export class LogViewComponent implements OnInit, OnDestroy {
     if (this.bufferSize < height) {
       this.bufferSize = height + 200;
     }
-  }
-
-  ngOnDestroy() {
-    this.onDestroy.next();
   }
 }
