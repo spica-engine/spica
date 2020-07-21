@@ -1,6 +1,6 @@
-import {Component, OnInit, OnDestroy} from "@angular/core";
+import {Component, OnInit, OnDestroy, ViewChild, TemplateRef} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, forkJoin, Subscription, Subject} from "rxjs";
+import {Observable, forkJoin, Subject} from "rxjs";
 import {switchMap, tap, map, filter, take, flatMap, takeUntil} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
@@ -21,7 +21,9 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
   queryParams: Observable<any>;
 
-  logs: Log[] = [];
+  logs$: Observable<Log[]>;
+
+  bufferSize = 500;
 
   constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {}
 
@@ -52,24 +54,21 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
     this.functions$ = this.fs.getFunctions();
 
-    this.queryParams
-      .pipe(
-        takeUntil(this.onDestroy),
-        tap(() => (this.isPending = true)),
+    this.logs$ = this.queryParams.pipe(
+      takeUntil(this.onDestroy),
+      tap(() => (this.isPending = true)),
 
-        switchMap(filter =>
-          this.fs.getLogs(filter as any).pipe(
-            map(logs => logs.filter(log => !!log)),
-            map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
-          )
-        ),
-        switchMap(logs => this.functions$.pipe(map(fns => this.mapLogs(logs, fns)))),
-        tap(logs => {
-          this.isPending = false;
-          this.logs = logs;
-        })
-      )
-      .subscribe();
+      switchMap(filter =>
+        this.fs.getLogs(filter as any).pipe(
+          map(logs => logs.filter(log => !!log)),
+          map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
+        )
+      ),
+      switchMap(logs => this.functions$.pipe(map(fns => this.mapLogs(logs, fns)))),
+      tap(logs => {
+        this.isPending = false;
+      })
+    );
   }
 
   mapLogs(logs: Log[], fns: Function[]): Log[] {
@@ -106,6 +105,12 @@ export class LogViewComponent implements OnInit, OnDestroy {
         begin: new Date(range.begin.setHours(0, 0, 0, 0)),
         end: new Date(range.end.setHours(23, 59, 59, 999))
       };
+  }
+
+  onExpand(height: number) {
+    if (this.bufferSize < height) {
+      this.bufferSize = height + 200;
+    }
   }
 
   ngOnDestroy() {

@@ -1,7 +1,7 @@
 import {HttpClientModule} from "@angular/common/http";
 import {NgModule} from "@angular/core";
 import {BrowserModule, HammerModule} from "@angular/platform-browser";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {BrowserAnimationsModule, NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
 import {BaseUrlInterceptorModule, LayoutModule, RouteModule} from "@spica-client/core";
@@ -20,6 +20,7 @@ import {StorageModule} from "./storage/storage.module";
     BrowserModule,
     HammerModule,
     BrowserAnimationsModule,
+    // NoopAnimationsModule,
     RouterModule.forRoot([], {paramsInheritanceStrategy: "always"}),
     HttpClientModule,
     BaseUrlInterceptorModule.forRoot({api: environment.api}),
