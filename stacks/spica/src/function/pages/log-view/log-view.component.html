@@ -82,7 +82,7 @@
         </span>
         <mat-expansion-panel
           (opened)="onExpand(content.offsetHeight)"
-          *cdkVirtualFor="let log of logs$; index as i"
+          *cdkVirtualFor="let log of logs$"
         >
           <mat-expansion-panel-header>
             <mat-panel-title>
