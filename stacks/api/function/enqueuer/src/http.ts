@@ -58,7 +58,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         throw new Error("Preflight option was used with HttpMethod.Options");
       }
 
-      const fn = (req, res, next) => Middlewares.Preflight(req, res, next);
+      const fn = (req, res, next) => Middlewares.Preflight({})(req, res, next);
 
       Object.defineProperty(fn, "target", {writable: false, value: target});
 

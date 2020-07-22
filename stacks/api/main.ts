@@ -241,6 +241,17 @@ NestFactory.create(RootModule, {
   httpsOptions
 }).then(app => {
   app.useWebSocketAdapter(new WsAdapter(app));
-  app.use(Middlewares.BsonBodyParser, Middlewares.MergePatchJsonParser, Middlewares.Preflight);
+  app.use(
+    Middlewares.BsonBodyParser,
+    Middlewares.MergePatchJsonParser,
+    Middlewares.Preflight({
+      allowedOrigins: ["http://localhost:4200", "http://localhost:4500"],
+      //Somehow 'POST' always pass
+      allowedMethods: ["GET", "HEAD", "PUT", "DELETE"],
+      allowedHeaders: ["Origin"],
+      overrideDefaultHeaders: false,
+      allowCredentials:false,
+    })
+  );
   app.listen(args.port);
 });
