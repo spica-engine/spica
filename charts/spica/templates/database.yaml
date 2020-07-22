@@ -28,6 +28,7 @@ spec:
         app.kubernetes.io/part-of: {{ .Chart.Name }}
         app.kubernetes.io/managed-by: helm
     spec:
+      terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
           image: mongo:{{ .Values.database.version }}
@@ -42,7 +43,7 @@ spec:
 {{ toYaml .Values.database.resources | indent 12 }}
           volumeMounts:
             - name: {{ .Release.Name }}-data
-              mountPath: /data
+              mountPath: /data/db
   volumeClaimTemplates:
     - metadata:
         name: {{ .Release.Name }}-data
