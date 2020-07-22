@@ -1,22 +1,26 @@
-import {json, raw} from "body-parser";
-import * as BSON from "bson";
+import {json} from "body-parser";
+import * as typeis from "type-is";
 
 export namespace Middlewares {
-  export function BsonBodyParser(req, res, next) {
-    return raw({
-      type: "application/bson",
-      limit: "20mb"
-    })(req, res, error => {
-      if (req.headers["content-type"] == "application/bson") {
-        req.body = BSON.deserialize(req.body);
+  export function JsonBodyParser(limit?: number): ReturnType<typeof json> {
+    if (limit) {
+      limit = limit * 1024 * 1024;
+    }
+    const parser = json({
+      limit: limit,
+      type: req => {
+        // TODO(thesayyn): Find a better way to handle this
+        return typeis(req, "application/json") && !/$\/storage/.test(req.url);
       }
-      next(error);
     });
+    return parser;
   }
 
-  export function MergePatchJsonParser(req, res, next) {
-    const parser = json({type: "application/merge-patch+json"});
-    return parser(req, res, next);
+  export function MergePatchJsonParser(limit?: number): ReturnType<typeof json> {
+    if (limit) {
+      limit = limit * 1024 * 1024;
+    }
+    return (req, res, next) => json({type: "application/merge-patch+json", limit})(req, res, next);
   }
 
   export function Preflight(req, res, next) {

@@ -5,6 +5,7 @@ import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
+import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
@@ -110,8 +111,21 @@ export class IndexComponent implements OnInit {
     this.dialog.open(StorageDialogOverviewDialog, {
       maxWidth: "80%",
       maxHeight: "80%",
-      panelClass: "preview-file",
+      panelClass: "preview-object",
       data: storage
     });
+  }
+
+  openEdit(storage: Storage): void {
+    this.dialog
+      .open(ImageEditorComponent, {
+        maxWidth: "80%",
+        maxHeight: "80%",
+        panelClass: "edit-object",
+        data: storage
+      })
+      .afterClosed()
+      .toPromise()
+      .then(() => this.refresh.next());
   }
 }

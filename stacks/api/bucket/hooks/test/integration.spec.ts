@@ -65,7 +65,7 @@ describe("Hooks Integration", () => {
 
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
-    app.use(Middlewares.MergePatchJsonParser);
+    app.use(Middlewares.MergePatchJsonParser(15));
 
     await app.listen(req.socket);
 
