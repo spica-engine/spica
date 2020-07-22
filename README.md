@@ -38,13 +38,15 @@ password: spica
 ## Packages
 
 | Project | Package | Version | Size | Downloads |
-|:------------------------------:|:---------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------:|
+|:-:|:-:|:-:|:-:|:-:|
 | APIs | [`spicaengine/api`](https://hub.docker.com/r/spicaengine/api) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/api?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/api?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/api) |
 | Web Client | [`spicaengine/spica`](https://hub.docker.com/r/spicaengine/spica) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/spica?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/spica?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/spica) |
 | Docs - SITE | [`spicaengine/site`](https://hub.docker.com/r/spicaengine/site) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/site?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/site?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/site) |
 | MongoDB Replication Controller | [`spicaengine/mongoreplicationcontroller`](https://hub.docker.com/r/spicaengine/mongoreplicationcontroller) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/mongoreplicationcontroller?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/mongoreplicationcontroller?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/mongoreplicationcontroller) |
 | CLI | [`@spica/cli`](https://www.npmjs.com/package/@spica/cli) | ![npm (scoped)](https://img.shields.io/npm/v/@spica/cli?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica/cli) |
 | Devkit - Database | [`@spica-devkit/database`](https://www.npmjs.com/package/@spica-devkit/database) | ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/database?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica-devkit/database) |
+| Devkit - Dashboard | [`@spica-devkit/dashboard`](https://www.npmjs.com/package/@spica-devkit/dashboard) | ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/dashboard?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica-devkit/dashboard) |
+| Devkit - Bucket | [`@spica-devkit/bucket`](https://www.npmjs.com/package/@spica-devkit/bucket) | ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/bucket?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica-devkit/bucket) |
 
 ## Chat
 Join us on [Slack][slack] or [Discord][discord], feel free to request to join our private `#development` channel if you're planning to contribute. 
