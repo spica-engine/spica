@@ -135,6 +135,35 @@ const args = yargs
       description: "Name of the bucket to store documents on GCS."
     }
   })
+  /* CORS Options */
+  .option({
+    allowedOrigins: {
+      array: true,
+      description: "Access-Control-Allow-Origin.",
+      default: ["*"]
+    },
+    allowedMethods: {
+      array: true,
+      description: "Access-Control-Allow-Methods",
+      default: ["*"]
+    },
+    allowedHeaders: {
+      array: true,
+      description: "Access-Control-Allow-Headers",
+      default: [""]
+    },
+    overrideDefaultHeaders: {
+      boolean: true,
+      description:
+        "When false, default headers(Authorization, Content-type and Accept-Language) will be merged with given allowedHeaders ",
+      default: false
+    },
+    allowCredentials: {
+      booelan: true,
+      description: "Access-Control-Allow-Credentials",
+      default: true
+    }
+  })
   /* Common Options */
   .option("port", {
     number: true,
@@ -245,12 +274,12 @@ NestFactory.create(RootModule, {
     Middlewares.BsonBodyParser,
     Middlewares.MergePatchJsonParser,
     Middlewares.Preflight({
-      allowedOrigins: ["http://localhost:4200", "http://localhost:4500"],
+      allowedOrigins: args["allowedOrigins"],
       //Somehow 'POST' always pass
-      allowedMethods: ["GET", "HEAD", "PUT", "DELETE"],
-      allowedHeaders: ["Origin"],
-      overrideDefaultHeaders: false,
-      allowCredentials:false,
+      allowedMethods: args["allowedMethods"],
+      allowedHeaders: args["allowedHeaders"],
+      overrideDefaultHeaders: args["overrideDefaultHeaders"],
+      allowCredentials: args["allowCredentials"]
     })
   );
   app.listen(args.port);

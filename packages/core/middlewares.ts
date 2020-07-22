@@ -28,6 +28,8 @@ export namespace Middlewares {
   }
 
   export function Preflight(options: CorsOptions) {
+    console.log(options)
+    console.log(!!options.allowCredentials)
     return (req, res, next) => {
       //res.header("Access-Control-Allow-Origin", req.header("Origin") || "*");
 
@@ -55,6 +57,9 @@ export namespace Middlewares {
       // }
 
       res.header("Access-Control-Allow-Headers", allowedHeaders);
+
+
+      
 
       if (options.allowCredentials) {
         req.header("Access-Control-Allow-Credentials", "true");
