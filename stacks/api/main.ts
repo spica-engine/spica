@@ -150,13 +150,7 @@ const args = yargs
     allowedHeaders: {
       array: true,
       description: "Access-Control-Allow-Headers",
-      default: [""]
-    },
-    overrideDefaultHeaders: {
-      boolean: true,
-      description:
-        "When false, default headers(Authorization, Content-type and Accept-Language) will be merged with given allowedHeaders ",
-      default: false
+      default: ["Authorization", "Content-type", "Accept-Language"]
     },
     allowCredentials: {
       booelan: true,
@@ -266,6 +260,7 @@ if (args["cert-file"] && args["key-file"]) {
     cert: fs.readFileSync(args["key-file"])
   };
 }
+console.log(typeof args["allowCredentials"]);
 NestFactory.create(RootModule, {
   httpsOptions
 }).then(app => {
@@ -275,10 +270,8 @@ NestFactory.create(RootModule, {
     Middlewares.MergePatchJsonParser,
     Middlewares.Preflight({
       allowedOrigins: args["allowedOrigins"],
-      //Somehow 'POST' always pass
       allowedMethods: args["allowedMethods"],
       allowedHeaders: args["allowedHeaders"],
-      overrideDefaultHeaders: args["overrideDefaultHeaders"],
       allowCredentials: args["allowCredentials"]
     })
   );

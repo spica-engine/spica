@@ -1,13 +1,7 @@
 import {json, raw} from "body-parser";
 import * as BSON from "bson";
-
-export interface CorsOptions {
-  allowedOrigins?: string[];
-  allowedMethods?: string[];
-  allowedHeaders?: string[];
-  overrideDefaultHeaders?: boolean;
-  allowCredentials?: boolean;
-}
+import * as matcher from "matcher";
+import {CorsOptions} from "./interfaces";
 
 export namespace Middlewares {
   export function BsonBodyParser(req, res, next) {
@@ -28,38 +22,37 @@ export namespace Middlewares {
   }
 
   export function Preflight(options: CorsOptions) {
-    console.log(options)
-    console.log(!!options.allowCredentials)
+    console.log(options);
     return (req, res, next) => {
-      //res.header("Access-Control-Allow-Origin", req.header("Origin") || "*");
-
-      let allowedOrigin = mapAllowedOrigins(options.allowedOrigins, req);
+      let allowedOrigin = getMatchedValue(req.header("Origin"), options.allowedOrigins);
 
       res.header("Access-Control-Allow-Origin", allowedOrigin);
 
-      let allowedMethods = mapAllowedMethods(options.allowedMethods);
-
-      res.header("Access-Control-Allow-Methods", allowedMethods);
-
-      // if (req.header("access-control-request-method")) {
-      //   res.header("Access-Control-Allow-Methods", req.header("access-control-request-method"));
-      // }
-
-      let allowedHeaders = mapAllowedHeaders(
-        options.allowedHeaders,
-        options.overrideDefaultHeaders,
-        ["Authorization", "Content-Type", "Accept-Language"]
+      let allowedMethod = getMatchedValue(
+        req.header("access-control-request-method")
+          ? req.header("access-control-request-method")
+          : req.method,
+        options.allowedMethods
       );
 
-      // let allowedHeaders = "Authorization, Content-Type, Accept-Language";
-      // if (req.header("access-control-request-headers")) {
-      //   allowedHeaders = req.header("access-control-request-headers");
-      // }
+      res.header("Access-Control-Allow-Methods", allowedMethod);
+
+      let allowedHeaders = options.allowedHeaders.join(",");
+
+      if (req.header("access-control-request-headers")) {
+        allowedHeaders = getMatchedValue(
+          req.header("access-control-request-headers"),
+          options.allowedHeaders
+        );
+      }
 
       res.header("Access-Control-Allow-Headers", allowedHeaders);
 
-
-      
+      if (options.allowCredentials) {
+        console.log("TRUE");
+      } else {
+        console.log("FALSE");
+      }
 
       if (options.allowCredentials) {
         req.header("Access-Control-Allow-Credentials", "true");
@@ -75,51 +68,13 @@ export namespace Middlewares {
     };
   }
 
-  function mapAllowedOrigins(alloweds: string[], req: any): string {
-    let result = "";
-    if (alloweds && alloweds.length > 0) {
-      if (alloweds.includes("*")) {
-        result = "*";
-      } else if (alloweds.includes(req.header("Origin"))) {
-        result = req.header("Origin");
-      } else {
-        //which means denied
-        result = "";
-      }
+  function getMatchedValue(source: string, alloweds: string[]): string {
+    if (alloweds.findIndex(allowed => matcher.isMatch(source, allowed)) != -1) {
+      //console.log("MATCHED", source, alloweds);
+      return source;
     } else {
-      result = "*";
+      //console.log("NOT MATCHED", source, alloweds);
+      return "";
     }
-    
-    return result;
-  }
-
-  function mapAllowedMethods(alloweds: string[]) {
-    let result = "";
-    if (alloweds && alloweds.length > 0) {
-      if (alloweds.includes("*")) {
-        result = "*";
-      } else {
-        result = alloweds.join(",");
-      }
-    } else {
-      result = "*";
-    }
-
-    return result;
-  }
-
-  function mapAllowedHeaders(alloweds: string[], overrideDefaults: boolean, defaults: string[]) {
-    let result = "";
-    if (alloweds && alloweds.length > 0) {
-      if (alloweds.includes("*")) {
-        result = alloweds.includes("Authorization") ? ["*"].concat("Authorization").join(",") : "*";
-      } else {
-        result = overrideDefaults ? alloweds.join(",") : alloweds.concat(defaults).join(",");
-      }
-    } else {
-      result = overrideDefaults ? "" : defaults.join(",");
-    }
-
-    return result;
   }
 }

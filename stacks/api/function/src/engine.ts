@@ -170,6 +170,7 @@ export class FunctionEngine {
           timeout: change.target.context.timeout
         })
       });
+      change.options["corsOptions"] = this.options.corsOptions;
       enqueuer.subscribe(target, change.options);
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);

@@ -4,6 +4,7 @@ import {Event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 import bodyParser = require("body-parser");
+import {CorsOptions} from "@spica-server/core/interfaces";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   description: Description = {
@@ -58,7 +59,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         throw new Error("Preflight option was used with HttpMethod.Options");
       }
 
-      const fn = (req, res, next) => Middlewares.Preflight({})(req, res, next);
+      const fn = (req, res, next) => Middlewares.Preflight(options.corsOptions)(req, res, next);
 
       Object.defineProperty(fn, "target", {writable: false, value: target});
 
@@ -144,4 +145,5 @@ export interface HttpOptions {
   method: HttpMethod;
   path: string;
   preflight: boolean;
+  corsOptions: CorsOptions;
 }

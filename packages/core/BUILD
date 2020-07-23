@@ -9,6 +9,7 @@ ts_library(
         "index.ts",
         "middlewares.ts",
         "pipes.ts",
+        "interfaces.ts"
     ],
     module_name = "@spica-server/core",
     deps = [
@@ -18,6 +19,8 @@ ts_library(
         "@npm//@types/node",
         "@npm//body-parser",
         "@npm//bson",
+        "@npm//@types/matcher",
+        "@npm//matcher"
     ],
 )
 

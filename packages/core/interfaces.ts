@@ -4,3 +4,10 @@ export interface IndexResult<T> {
   };
   data: T[];
 }
+
+export interface CorsOptions {
+  allowedOrigins: string[];
+  allowedMethods: string[];
+  allowedHeaders: string[];
+  allowCredentials: boolean;
+}
