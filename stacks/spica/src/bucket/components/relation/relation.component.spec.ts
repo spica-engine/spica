@@ -198,12 +198,7 @@ describe("Relation Component", () => {
       const pickButtons = document.querySelectorAll(".mat-menu-panel mat-cell button");
       pickButtons[0].dispatchEvent(new MouseEvent("click"));
       pickButtons[1].dispatchEvent(new MouseEvent("click"));
-      fixture.detectChanges();
-
-      fixture.debugElement
-        .query(By.css("section div span:first-of-type button:last-of-type"))
-        .triggerEventHandler("click", "undefined");
-
+      pickButtons[0].dispatchEvent(new MouseEvent("click"));
       fixture.detectChanges();
 
       const row = fixture.debugElement.query(By.css("section div span button"));
