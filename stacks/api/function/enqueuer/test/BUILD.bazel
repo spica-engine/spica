@@ -7,6 +7,7 @@ ts_library(
     name = "enqueuer_test_lib",
     srcs = glob(["*.spec.ts"]),
     deps = [
+        "//packages/core",
         "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/function/enqueuer",

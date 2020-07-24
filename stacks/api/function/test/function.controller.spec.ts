@@ -19,7 +19,13 @@ describe("FunctionController", () => {
     functionEngine = jasmine.createSpyObj<FunctionEngine>("engine", ["createFunction"]);
     controller = new FunctionController(functionService, functionEngine, undefined, {
       root: "",
-      timeout: 60
+      timeout: 60,
+      corsOptions: {
+        allowedOrigins: ["*"],
+        allowedMethods: ["*"],
+        allowCredentials: true,
+        allowedHeaders: ["*"]
+      }
     });
   });
 

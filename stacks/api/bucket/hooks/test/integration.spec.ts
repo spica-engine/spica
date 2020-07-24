@@ -55,7 +55,13 @@ describe("Hooks Integration", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           publicUrl: undefined,
-          timeout: 20
+          timeout: 20,
+          corsOptions: {
+            allowCredentials: true,
+            allowedHeaders: ["*"],
+            allowedMethods: ["*"],
+            allowedOrigins: ["*"]
+          }
         })
       ]
     }).compile();

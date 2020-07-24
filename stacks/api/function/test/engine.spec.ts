@@ -48,7 +48,16 @@ describe("Engine", () => {
       database,
       mongo,
       scheduler,
-      {root: "test_root", timeout: 1},
+      {
+        root: "test_root",
+        timeout: 1,
+        corsOptions: {
+          allowedOrigins: ["*"],
+          allowedMethods: ["*"],
+          allowCredentials: true,
+          allowedHeaders: ["*"]
+        }
+      },
       null
     );
 

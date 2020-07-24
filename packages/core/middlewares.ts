@@ -27,6 +27,8 @@ export namespace Middlewares {
 
       res.header("Access-Control-Allow-Origin", allowedOrigin);
 
+      //console.log(res.header("Access-Control-Allow-Origin"));
+
       let allowedMethod = getMatchedValue(
         req.header("access-control-request-method")
           ? req.header("access-control-request-method")
