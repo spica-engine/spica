@@ -131,6 +131,7 @@ describe("MiddleWare", () => {
         expect(res.header("Access-Control-Allow-Credentials")).toEqual("true");
         expect(next).toHaveBeenCalledTimes(1);
       });
+
       it("should not put 'Access-Control-Allow-Credentials' to response header", () => {
         options.allowCredentials = false;
         Middlewares.Preflight(options)(req, res, next);
@@ -163,6 +164,10 @@ describe("MiddleWare", () => {
 
     it("should return undefined when pattern is empty", () => {
       expect(getMatchedValue("test", [])).toEqual("");
+    });
+
+    it("should work with array", () => {
+      expect(getMatchedValue(["test", "test1", "test2"], ["test"])).toEqual("test,test1,test2");
     });
   });
 });
