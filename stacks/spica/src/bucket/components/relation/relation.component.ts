@@ -46,10 +46,7 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
     this._oneToManyRelation = this._schema.relationType == RelationType.OneToMany;
     this.schema$ = this.bs.getBucket(this._schema.bucketId).pipe(
       tap(schema => {
-        this.displayedProperties = Object.entries(schema.properties)
-          .filter(([, value]) => value.options && value.options.visible)
-          .map(([key]) => key)
-          .concat("actions");
+        this.displayedProperties = [schema.primary].concat("actions");
       })
     );
     this.data$ = merge(this.paginator.page, this.refresh).pipe(
@@ -75,26 +72,26 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
   _selectRow(row: BucketRow): void {
     if (this._oneToManyRelation) {
       if (Array.isArray(this.value)) {
-        this.value.push(row._id);
+        if (!this.value.includes(row._id)) {
+          this.value.push(row._id);
+        } else {
+          this.value = this.value.filter(val => val != row._id);
+        }
       } else {
         this.value = [row._id];
       }
       this.value = Array.from(new Set(this.value));
     } else {
-      this.value = row._id;
+      if (this.value != row._id) {
+        this.value = row._id;
+      } else {
+        this.value = undefined;
+      }
     }
     this._fetchRows();
     if (this.onChangeFn) {
       this.onChangeFn(this.value);
     }
-  }
-
-  _removeRow(row: BucketRow) {
-    const index = this.value.indexOf(row._id);
-    if (index > -1) {
-      (<Array<string>>this.value).splice(index, 1);
-    }
-    this._fetchRows();
   }
 
   _fetchRows() {
