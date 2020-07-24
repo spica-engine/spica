@@ -24,19 +24,9 @@ export class InputResolver {
   }
 
   coerce(type: string) {
-    const originMap = {
-      "string": "",
-      "number": 0,
-      "boolean": false
-    }
     const input = this.resolve(type);
-    if ( input ) {
-      if ( input.coerce ) {
-        return input.coerce();
-      } else {
-        console.log(input.origin);
-        return originMap[input.origin];
-      }
+    if (input && typeof input.coerce == "function") {
+      return input.coerce();
     }
     return undefined;
   }

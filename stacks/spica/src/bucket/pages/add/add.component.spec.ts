@@ -514,14 +514,4 @@ describe("AddComponent", () => {
       ).toBe(true);
     }));
   });
-
-  it("should clear undefined and null fields", () => {
-    let mappedData = fixture.componentInstance.removeFalsies({
-      _id: "1",
-      name: undefined,
-      surname: "test",
-      when: null
-    });
-    expect(mappedData).toEqual({_id: "1", surname: "test"});
-  });
 });

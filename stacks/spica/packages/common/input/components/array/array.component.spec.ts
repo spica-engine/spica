@@ -13,6 +13,11 @@ import {InputPlacerComponent} from "../../input.placer";
 import {InputResolver} from "../../input.resolver";
 import {MaxItemsValidator, MinItemsValidator, UniqueItemsValidator} from "../../validators";
 import {ArrayComponent} from "./array.component";
+import {ArrayControlContainer} from "./array.container";
+import {HarnessLoader} from "@angular/cdk/testing";
+import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import {MatBadgeModule} from "@angular/material/badge";
+import {MatBadgeHarness} from "@angular/material/badge/testing";
 
 function createEvent<T>(previousIndex: number, currentIndex: number): CdkDragDrop<T[], T[]> {
   return {
@@ -69,51 +74,54 @@ describe("Common#array", () => {
     })
   };
 
+  let loader: HarnessLoader;
+
   beforeEach(() => {
-    TestBed.resetTestingModule()
-      .configureTestingModule({
-        imports: [
-          FormsModule,
-          MatCardModule,
-          MatButtonModule,
-          MatFormFieldModule,
-          MatIconModule,
-          DragDropModule,
-          NoopAnimationsModule
-        ],
-        declarations: [
-          StringPlacer,
-          ArrayComponent,
-          InputPlacerComponent,
-          UniqueItemsValidator,
-          MinItemsValidator,
-          MaxItemsValidator
-        ],
-        providers: [
-          {
-            provide: INPUT_SCHEMA,
-            useValue: {
-              type: "array",
-              $name: "test",
-              items: {
-                type: "string"
-              }
+    TestBed.configureTestingModule({
+      imports: [
+        FormsModule,
+        MatCardModule,
+        MatButtonModule,
+        MatFormFieldModule,
+        MatBadgeModule,
+        MatIconModule,
+        DragDropModule,
+        NoopAnimationsModule
+      ],
+      declarations: [
+        StringPlacer,
+        ArrayComponent,
+        ArrayControlContainer,
+        InputPlacerComponent,
+        UniqueItemsValidator,
+        MinItemsValidator,
+        MaxItemsValidator
+      ],
+      providers: [
+        {
+          provide: INPUT_SCHEMA,
+          useValue: {
+            type: "array",
+            $name: "test",
+            items: {
+              type: "string"
             }
-          },
-          {
-            provide: InputResolver,
-            useValue: inputResolver
-          },
-          {
-            provide: ANALYZE_FOR_ENTRY_COMPONENTS,
-            multi: true,
-            useValue: StringPlacer
           }
-        ]
-      })
-      .compileComponents();
+        },
+        {
+          provide: InputResolver,
+          useValue: inputResolver
+        },
+        {
+          provide: ANALYZE_FOR_ENTRY_COMPONENTS,
+          multi: true,
+          useValue: StringPlacer
+        }
+      ]
+    }).compileComponents();
     fixture = TestBed.createComponent(ArrayComponent);
     fixture.detectChanges();
+    loader = TestbedHarnessEnvironment.loader(fixture);
     changeSpy = jasmine.createSpy("ngModelChange");
     fixture.componentInstance.registerOnChange(changeSpy);
   });
@@ -169,13 +177,13 @@ describe("Common#array", () => {
       const buttons = fixture.debugElement.queryAll(
         By.css("div:first-of-type > button:not(:last-of-type)")
       );
-      expect(buttons.map(b => b.nativeElement.textContent)).toEqual([" 1 ", " 2 "]);
+      expect(buttons.map(b => b.nativeElement.textContent)).toEqual([" 1 X", " 2 X"]);
       expect(buttons[0].nativeElement.classList).toContain("mat-primary");
 
       expect(fixture.componentInstance._activeIndex).toBe(0);
-      expect(fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel).name).toEqual(
-        "test0"
-      );
+      expect(
+        fixture.debugElement.queryAll(By.directive(NgModel))[1].injector.get(NgModel).name
+      ).toEqual("test0");
     });
 
     it("should change active item", fakeAsync(() => {
@@ -195,9 +203,9 @@ describe("Common#array", () => {
       expect(placer.componentInstance.writeValue).toHaveBeenCalledWith("test2");
 
       expect(fixture.componentInstance._activeIndex).toBe(1);
-      expect(fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel).name).toEqual(
-        "test1"
-      );
+      expect(
+        fixture.debugElement.queryAll(By.directive(NgModel))[1].injector.get(NgModel).name
+      ).toEqual("test1");
     }));
 
     it("should write value to placer", fakeAsync(() => {
@@ -207,19 +215,6 @@ describe("Common#array", () => {
       const placer = fixture.debugElement.query(By.directive(StringPlacer));
       expect(placer.componentInstance.writeValue).toHaveBeenCalledTimes(2);
       expect(placer.componentInstance.writeValue).toHaveBeenCalledWith("test");
-    }));
-
-    it("should propagate changes from placer", fakeAsync(() => {
-      fixture.componentInstance.writeValue(["test"]);
-      fixture.detectChanges();
-      tick();
-
-      const placer = fixture.debugElement.query(By.directive(StringPlacer));
-      placer.componentInstance._change("test123");
-      tick();
-
-      expect(changeSpy).toHaveBeenCalledTimes(1);
-      expect(changeSpy).toHaveBeenCalledWith(["test123"]);
     }));
 
     it("should be able to move items", fakeAsync(() => {
@@ -241,8 +236,9 @@ describe("Common#array", () => {
 
     it("should add item and make it active", () => {
       const button = fixture.debugElement.query(By.css("div > button:last-of-type"));
-      button.nativeElement.click();
-      fixture.detectChanges();
+      button.triggerEventHandler("click", undefined);
+      fixture.autoDetectChanges(true);
+
       const itemButton = fixture.debugElement.query(
         By.css("div:first-of-type > button:first-of-type")
       );
@@ -262,18 +258,53 @@ describe("Common#array", () => {
   });
 
   describe("validation", () => {
-    describe("uniqueItems", () => {
+    it("should show a badge when an item has uniqueItems error", async () => {
+      fixture.componentInstance.schema.uniqueItems = true;
+      fixture.componentInstance.writeValue(["test", "test"]);
+      fixture.detectChanges();
+      const select = await loader.getAllHarnesses(MatBadgeHarness);
+      expect(await select[0].isHidden()).toBe(false);
+      expect(await select[1].isHidden()).toBe(false);
+    });
+    it("should show a badge when an item has emptyItem error", async () => {
+      fixture.componentInstance.schema.uniqueItems = true;
+      fixture.componentInstance.writeValue([undefined, "test"]);
+      fixture.detectChanges();
+      const select = await loader.getAllHarnesses(MatBadgeHarness);
+      expect(await select[0].isHidden()).toBe(false);
+      expect(await select[1].isHidden()).toBe(true);
+    });
+    describe("emptyItems", () => {
       it("should not show errors", () => {
         fixture.componentInstance.schema.uniqueItems = true;
-        fixture.componentInstance.writeValue(["test", "test1"]);
+        fixture.componentInstance.writeValue(["test2", "test1"]);
         fixture.detectChanges(false);
         expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
       });
 
       it("should show errors", fakeAsync(() => {
         fixture.componentInstance.schema.uniqueItems = true;
+        fixture.componentInstance.writeValue([undefined, "test"]);
+        fixture.detectChanges();
+        tick();
+        fixture.detectChanges();
+        expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+          " All items in the array must be filled. "
+        );
+      }));
+    });
+    describe("uniqueItems", () => {
+      it("should not show errors", () => {
+        fixture.componentInstance.schema.uniqueItems = true;
+        fixture.componentInstance.writeValue(["test", "test1"]);
+        fixture.detectChanges();
+        expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
+      });
+
+      it("should show errors", fakeAsync(() => {
+        fixture.componentInstance.schema.uniqueItems = true;
         fixture.componentInstance.writeValue(["test", "test"]);
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         tick();
         fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
@@ -286,14 +317,14 @@ describe("Common#array", () => {
       it("should not show errors", () => {
         fixture.componentInstance.schema.minItems = 2;
         fixture.componentInstance.writeValue(["test", "test1"]);
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
       });
 
       it("should show errors", fakeAsync(() => {
         fixture.componentInstance.schema.minItems = 2;
         fixture.componentInstance.writeValue(["test"]);
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         tick();
         fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
@@ -306,14 +337,14 @@ describe("Common#array", () => {
       it("should not show errors", () => {
         fixture.componentInstance.schema.maxItems = 2;
         fixture.componentInstance.writeValue(["test", "test"]);
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error"))).toBeNull();
       });
 
       it("should show errors", fakeAsync(() => {
         fixture.componentInstance.schema.maxItems = 2;
         fixture.componentInstance.writeValue(["test", "test", "test"]);
-        fixture.detectChanges(false);
+        fixture.detectChanges();
         tick();
         fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(

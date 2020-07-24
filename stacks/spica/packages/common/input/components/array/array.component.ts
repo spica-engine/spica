@@ -1,6 +1,6 @@
 import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
-import {Component, forwardRef, Inject, ViewChild} from "@angular/core";
-import {ControlValueAccessor, NG_VALUE_ACCESSOR, NgModel} from "@angular/forms";
+import {Component, forwardRef, Inject} from "@angular/core";
+import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 import {InputResolver} from "../../input.resolver";
 
@@ -17,8 +17,6 @@ export class ArrayComponent implements ControlValueAccessor {
   _onChangeFn: Function = () => {};
   _onTouchedFn: Function = () => {};
   _activeIndex: number;
-
-  @ViewChild('model', {static: true}) model: NgModel;
 
   constructor(
     @Inject(INPUT_SCHEMA) public schema: InternalPropertySchema,
@@ -53,11 +51,6 @@ export class ArrayComponent implements ControlValueAccessor {
       this._activeIndex = this._values.length > 0 ? 0 : undefined;
     } else {
       this._values = [];
-    }
-
-    if (!this._values.length) {	
-      this.addItem();
-      this.model.control.updateValueAndValidity();
     }
   }
 

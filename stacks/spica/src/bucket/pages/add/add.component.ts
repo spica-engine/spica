@@ -138,18 +138,8 @@ export class AddComponent implements OnInit {
     this.data._schedule = undefined;
   }
 
-  removeFalsies(data: any) {
-    Object.keys(data)
-      .filter(key => data[key] == undefined || data[key] == null)
-      .forEach(key => delete data[key]);
-
-    return data;
-  }
-
   saveBucketRow() {
     const isInsert = !this.data._id;
-
-    this.data = this.removeFalsies({...this.data});
 
     const save = isInsert
       ? this.bds.insertOne(this.bucketId, this.data)
@@ -158,9 +148,11 @@ export class AddComponent implements OnInit {
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(bucketDocument => {
+        tap(() => {
           this.refreshHistory.next(undefined);
-          if (isInsert) return this.router.navigate([`bucket/${this.bucketId}`]);
+          if (isInsert) {
+            return this.router.navigate(["bucket", this.bucketId]);
+          }
         }),
         ignoreElements(),
         endWith(SavingState.Saved),
