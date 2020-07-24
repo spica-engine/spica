@@ -150,10 +150,10 @@ const args = yargs
     allowedHeaders: {
       array: true,
       description: "Access-Control-Allow-Headers",
-      default: ["Authorization", "Content-type", "Accept-Language"]
+      default: ["Authorization", "Content-Type", "Accept-Language"]
     },
     allowCredentials: {
-      booelan: true,
+      boolean: true,
       description: "Access-Control-Allow-Credentials",
       default: true
     }
@@ -239,7 +239,13 @@ const modules = [
     poolSize: args["function-pool-size"],
     publicUrl: args["public-url"],
     timeout: args["function-timeout"],
-    experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"]
+    experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
+    corsOptions: {
+      allowedOrigins: args["allowedOrigins"],
+      allowedMethods: args["allowedMethods"],
+      allowedHeaders: args["allowedHeaders"],
+      allowCredentials: args["allowCredentials"]
+    }
   })
 ];
 
@@ -260,7 +266,6 @@ if (args["cert-file"] && args["key-file"]) {
     cert: fs.readFileSync(args["key-file"])
   };
 }
-console.log(typeof args["allowCredentials"]);
 NestFactory.create(RootModule, {
   httpsOptions
 }).then(app => {

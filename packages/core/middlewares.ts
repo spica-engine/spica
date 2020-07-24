@@ -22,7 +22,6 @@ export namespace Middlewares {
   }
 
   export function Preflight(options: CorsOptions) {
-    console.log(options);
     return (req, res, next) => {
       let allowedOrigin = getMatchedValue(req.header("Origin"), options.allowedOrigins);
 
@@ -41,7 +40,9 @@ export namespace Middlewares {
 
       if (req.header("access-control-request-headers")) {
         allowedHeaders = getMatchedValue(
-          req.header("access-control-request-headers"),
+          req.header("access-control-request-headers").indexOf(",") != -1
+            ? req.header("access-control-request-headers").split(",")
+            : req.header("access-control-request-headers"),
           options.allowedHeaders
         );
       }
@@ -49,15 +50,7 @@ export namespace Middlewares {
       res.header("Access-Control-Allow-Headers", allowedHeaders);
 
       if (options.allowCredentials) {
-        console.log("TRUE");
-      } else {
-        console.log("FALSE");
-      }
-
-      if (options.allowCredentials) {
-        req.header("Access-Control-Allow-Credentials", "true");
-      } else {
-        delete req.headers["Access-Control-Allow-Credentials"];
+        res.header("Access-Control-Allow-Credentials", "true");
       }
 
       if (req.method == "OPTIONS") {
@@ -67,14 +60,12 @@ export namespace Middlewares {
       }
     };
   }
+}
 
-  function getMatchedValue(source: string, alloweds: string[]): string {
-    if (alloweds.findIndex(allowed => matcher.isMatch(source, allowed)) != -1) {
-      //console.log("MATCHED", source, alloweds);
-      return source;
-    } else {
-      //console.log("NOT MATCHED", source, alloweds);
-      return "";
-    }
+export function getMatchedValue(source: string | string[], alloweds: string[]): string {
+  if (alloweds.findIndex(allowed => matcher.isMatch(source, allowed)) != -1) {
+    return Array.isArray(source) ? source.join(",") : source;
+  } else {
+    return "";
   }
 }

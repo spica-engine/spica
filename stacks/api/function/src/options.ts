@@ -11,4 +11,5 @@ export interface Options {
 
 export interface FunctionOptions extends SchedulingOptions {
   path: string;
+  corsOptions: CorsOptions;
 }

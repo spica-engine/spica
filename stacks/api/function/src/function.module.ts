@@ -38,7 +38,11 @@ export class FunctionModule {
         FunctionService,
         {
           provide: FUNCTION_OPTIONS,
-          useValue: {root: path.join(options.path, "functions"), timeout: options.timeout}
+          useValue: {
+            root: path.join(options.path, "functions"),
+            timeout: options.timeout,
+            corsOptions: options.corsOptions
+          }
         },
         {
           provide: EnqueuerSchemaResolver,

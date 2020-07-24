@@ -7,20 +7,20 @@ ts_library(
     name = "core",
     srcs = [
         "index.ts",
+        "interfaces.ts",
         "middlewares.ts",
         "pipes.ts",
-        "interfaces.ts"
     ],
     module_name = "@spica-server/core",
     deps = [
         "@npm//@nestjs/common",
         "@npm//@types/body-parser",
         "@npm//@types/bson",
+        "@npm//@types/matcher",
         "@npm//@types/node",
         "@npm//body-parser",
         "@npm//bson",
-        "@npm//@types/matcher",
-        "@npm//matcher"
+        "@npm//matcher",
     ],
 )
 
@@ -28,6 +28,7 @@ ts_library(
     name = "test_lib",
     testonly = True,
     srcs = [
+        "middlewares.spec.ts",
         "pipes.spec.ts",
     ],
     tsconfig = "//:tsconfig.json",
