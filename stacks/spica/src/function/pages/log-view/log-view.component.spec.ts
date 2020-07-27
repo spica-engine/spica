@@ -51,7 +51,6 @@ describe("LogViewComponent", () => {
             queryParams: of({
               showErrors: "false",
               function: "fn_id",
-              limit: undefined,
               begin: now.toString(),
               end: now.toString()
             })
@@ -100,7 +99,6 @@ describe("LogViewComponent", () => {
       expect(filter).toEqual({
         showErrors: false,
         function: ["fn_id"],
-        limit: 20,
         begin: new Date(now.toString()),
         end: new Date(now.toString())
       })
@@ -145,7 +143,6 @@ describe("LogViewComponent", () => {
   it("should navigate with new filter params", fakeAsync(async () => {
     let navigateSpy = spyOn(fixture.componentInstance.router, "navigate");
     fixture.componentInstance.next({showErrors: true});
-    expect(fixture.componentInstance["pageSize"]).toEqual(1);
     expect(navigateSpy).toHaveBeenCalledTimes(1);
     expect(navigateSpy).toHaveBeenCalledWith([], {
       queryParams: {showErrors: true},
@@ -158,17 +155,6 @@ describe("LogViewComponent", () => {
     expect(formattedHours).toEqual({
       begin: new Date(now.setHours(0, 0, 0, 0)),
       end: new Date(now.setHours(23, 59, 59, 999))
-    });
-  });
-
-  it("should next page", () => {
-    let navigateSpy = spyOn(fixture.componentInstance.router, "navigate");
-    fixture.componentInstance.fetchNextPage();
-    expect(fixture.componentInstance["pageIndex"]).toEqual(2);
-    expect(navigateSpy).toHaveBeenCalledTimes(1);
-    expect(navigateSpy).toHaveBeenCalledWith([], {
-      queryParams: {limit: 40},
-      queryParamsHandling: "merge"
     });
   });
 });

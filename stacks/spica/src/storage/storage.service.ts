@@ -28,8 +28,8 @@ export class StorageService {
     return this.http.get<IndexResult<Storage>>("api:/storage", {params});
   }
 
-  getOne(id, withMeta = "true"): Observable<Storage> {
-    return this.http.get<Storage>(`api:/storage/${id}`, {params: {withMeta: withMeta}});
+  getOne(id, metadata = "true"): Observable<Storage> {
+    return this.http.get<Storage>(`api:/storage/${id}`, {params: {metadata}});
   }
 
   delete(id: string): Observable<void> {
@@ -39,9 +39,12 @@ export class StorageService {
   updateOne(id: string, file: File): Observable<HttpEvent<Storage>> {
     return from(fileToBuffer(file)).pipe(
       flatMap(content => {
-        const data = BSON.serialize({
+        const schema = {
           _id: id,
           content: {data: new BSON.Binary(content), type: file.type}
+        };
+        const data = BSON.serialize(schema, {
+          minInternalBufferSize: BSON.calculateObjectSize(schema)
         });
         const request = new HttpRequest("PUT", `api:/storage/${id}`, data.buffer, {
           reportProgress: true,
@@ -57,21 +60,21 @@ export class StorageService {
     const files = Array.from(fileList);
     return from(Promise.all(files.map(f => fileToBuffer(f)))).pipe(
       flatMap(content => {
-        const data = BSON.serialize(
-          content.map((c, i) => ({
+        const contents = {
+          content: content.map((c, i) => ({
             name: files[i].name,
             content: {
               data: new BSON.Binary(c),
               type: files[i].type
             }
           }))
-        );
-
-        const request = new HttpRequest("POST", "api:/storage", data.buffer, {
+        };
+        const size = BSON.calculateObjectSize(contents);
+        const buffer = BSON.serialize(contents, {minInternalBufferSize: size});
+        const request = new HttpRequest("POST", "api:/storage", buffer.buffer, {
           reportProgress: true,
           headers: new HttpHeaders({"Content-Type": "application/bson"})
         });
-
         return this.http.request<Storage>(request);
       })
     );

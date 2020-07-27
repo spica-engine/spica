@@ -49,14 +49,12 @@ export class StorageComponent implements ControlValueAccessor {
 
     if (files.length) {
       this.blob = files.item(0);
-
       this.progress$ = this.storage.insertMany(files).pipe(
         map(event => {
           if (event.type === HttpEventType.UploadProgress) {
             return Math.round((100 * event.loaded) / event.total);
           } else if (event.type === HttpEventType.Response) {
-            // TODO: Ideally this should have come from response body
-            this.value = event.url + "/" + event.body[0]._id;
+            this.value = event.body[0].url;
             this.onChangeFn(this.value);
             this.progress$ = undefined;
           }
