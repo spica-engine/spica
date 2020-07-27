@@ -5,7 +5,7 @@
     fxLayoutAlign="space-between flex-start"
     ngClass.gt-md="desktop"
   >
-    <div>
+    <div fxFlex.xl="30" fxFlex.lg="45" fxFlex.md="60" fxFlex.sm="90" fxFlex.xs="100">
       <h1>
         Go beyond, <br />
         your dreams!
@@ -13,26 +13,34 @@
       <p>
         Now, you don’t need to spend tons of hours and money to make your projects.
       </p>
-      <div class="button-group">
+      <div
+        fxLayout="row"
+        fxLayoutAlign="space-between center"
+        fxLayout.lt-sm="column"
+        class="button-group"
+      >
         <!-- <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
           <mat-icon svgIcon="instagram"></mat-icon>
         </a> -->
-        <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
-          <mat-icon svgIcon="twitter"></mat-icon>
-        </a>
-        <a
-          mat-icon-button
-          href="https://www.facebook.com/Spica-Development-Engine-292036878363505/"
-          target="_blank"
-        >
-          <mat-icon svgIcon="facebook"></mat-icon>
-        </a>
-        <a mat-icon-button href="https://github.com/spica-engine/spica">
-          <mat-icon svgIcon="github"></mat-icon>
-        </a>
-        <button mat-flat-button color="accent" routerLink="/docs/guide/getting-started">
-          Get Started
-        </button>
+        <div>
+          <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
+            <mat-icon svgIcon="twitter"></mat-icon>
+          </a>
+          <a
+            mat-icon-button
+            href="https://www.facebook.com/Spica-Development-Engine-292036878363505/"
+            target="_blank"
+          >
+            <mat-icon svgIcon="facebook"></mat-icon>
+          </a>
+          <a mat-icon-button href="https://github.com/spica-engine/spica">
+            <mat-icon svgIcon="github"></mat-icon>
+          </a>
+        </div>
+        <div fxLayoutAlign="center center">
+          <a mat-flat-button href="https://dashboard.spicaengine.com/register">Get Started</a>
+          <a mat-flat-button href="/calendar">Book a free call</a>
+        </div>
       </div>
     </div>
     <div fxLayout="column" fxLayoutAlign="center center" fxShow.lt-lg="false">
