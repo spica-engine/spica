@@ -1,20 +1,16 @@
-import {Component, OnInit, OnDestroy} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, forkJoin, BehaviorSubject, Subscription, Subject} from "rxjs";
-import {switchMap, tap, map, filter, take, flatMap, takeUntil} from "rxjs/operators";
+import {Observable, forkJoin} from "rxjs";
+import {switchMap, tap, map, filter, take, flatMap} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
-import {DataSource} from "@angular/cdk/table";
-import {CollectionViewer} from "@angular/cdk/collections";
 
 @Component({
   selector: "log-view",
   templateUrl: "./log-view.component.html",
   styleUrls: ["./log-view.component.scss"]
 })
-export class LogViewComponent extends DataSource<Log> implements OnInit, OnDestroy {
-  onDestroy = new Subject();
-
+export class LogViewComponent implements OnInit {
   isPending = false;
 
   functions$: Observable<Function[]>;
@@ -23,57 +19,15 @@ export class LogViewComponent extends DataSource<Log> implements OnInit, OnDestr
 
   queryParams: Observable<any>;
 
-  dataSource: LogViewComponent;
+  logs$: Observable<Log[]>;
 
-  dataStream = new BehaviorSubject<(Log)[]>([]);
+  bufferSize = 500;
 
-  private subscription = new Subscription();
-
-  private lastPage = 0;
-
-  private pageSize = 0;
-
-  private pageIndex = 1;
-
-  private defaultLimit = 20;
-
-  connect(collectionViewer: CollectionViewer): Observable<(Log)[]> {
-    this.subscription.add(
-      collectionViewer.viewChange.subscribe(range => {
-        if (!this.pageSize) {
-          this.pageIndex = 1;
-          this.pageSize = this.lastPage = range.end;
-          return;
-        }
-
-        if (range.end >= this.lastPage) {
-          this.lastPage = range.end + this.pageSize;
-          this.fetchNextPage();
-        }
-      })
-    );
-    return this.dataStream;
-  }
-
-  disconnect(): void {
-    this.subscription.unsubscribe();
-  }
-
-  fetchNextPage(): void {
-    this.pageIndex++;
-    this.router.navigate([], {
-      queryParams: {limit: this.defaultLimit * this.pageIndex},
-      queryParamsHandling: "merge"
-    });
-  }
-
-  constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {
-    super();
-    this.dataSource = this;
-  }
+  constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {}
 
   ngOnInit() {
     this.queryParams = this.route.queryParams.pipe(
+      tap(() => (this.isPending = true)),
       map(filter => {
         filter = {...filter};
         if (filter.showErrors) {
@@ -87,10 +41,6 @@ export class LogViewComponent extends DataSource<Log> implements OnInit, OnDestr
           }
         }
 
-        if (filter.limit == undefined) {
-          filter.limit = this.defaultLimit;
-        }
-
         if (filter.begin) {
           filter.begin = new Date(filter.begin);
         }
@@ -101,26 +51,18 @@ export class LogViewComponent extends DataSource<Log> implements OnInit, OnDestr
       })
     );
 
-    this.queryParams
-      .pipe(
-        takeUntil(this.onDestroy),
-        tap(() => (this.isPending = true)),
-        switchMap(filter =>
-          this.fs
-            .getLogs(filter as any)
-            .pipe(
-              map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
-            )
-        ),
-        switchMap(logs => this.fs.getFunctions().pipe(map(fns => this.mapLogs(logs, fns)))),
-        tap(logs => {
-          this.isPending = false;
-          this.dataStream.next(logs);
-        })
-      )
-      .subscribe();
-
     this.functions$ = this.fs.getFunctions();
+
+    this.logs$ = this.queryParams.pipe(
+      switchMap(filter =>
+        this.fs.getLogs(filter as any).pipe(
+          map(logs => logs.filter(log => !!log)),
+          map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
+        )
+      ),
+      switchMap(logs => this.functions$.pipe(map(fns => this.mapLogs(logs, fns)))),
+      tap(() => (this.isPending = false))
+    );
   }
 
   mapLogs(logs: Log[], fns: Function[]): Log[] {
@@ -148,7 +90,6 @@ export class LogViewComponent extends DataSource<Log> implements OnInit, OnDestr
   }
 
   next(filter: any) {
-    this.pageSize = 1;
     this.router.navigate([], {queryParams: filter, queryParamsHandling: "merge"});
   }
 
@@ -160,8 +101,9 @@ export class LogViewComponent extends DataSource<Log> implements OnInit, OnDestr
       };
   }
 
-  ngOnDestroy() {
-    this.onDestroy.next();
-    this.subscription.unsubscribe();
+  onExpand(height: number) {
+    if (this.bufferSize < height) {
+      this.bufferSize = height + 200;
+    }
   }
 }

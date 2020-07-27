@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://spica.internal/storage/body/json/object",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name", "content"],
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "content": {
+            "type": "object",
+            "required": ["type", "data"],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "pattern": "^[-\\w.]+/[-\\w.]+$"
+                },
+                "data": {
+                    "type": "string",
+                    "format": "base64"
+                }
+            }
+        }
+    }
+    
+}
+  

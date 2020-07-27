@@ -19,22 +19,19 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {InputModule} from "@spica-client/common";
+import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
+import {provideActivityFactory} from "@spica-client/storage/providers/activity";
 import {AngularCropperjsModule} from "angular-cropperjs";
 import {ngfModule} from "angular-file";
-
-import {PassportModule} from "../passport/passport.module";
-
+import {ImageEditorComponent} from "./components/image-editor/image-editor.component";
 import {PickerComponent} from "./components/picker/picker.component";
 import {PickerDirective} from "./components/picker/picker.directive";
 import {StorageDialogOverviewDialog} from "./components/storage-dialog-overview/storage-dialog-overview";
 import {StorageViewComponent} from "./components/storage-view/storage-view.component";
 import {StorageComponent} from "./components/storage/storage.component";
-import {ImageEditorComponent} from "./pages/image-editor/image-editor.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {StorageRoutingModule} from "./storage-routing.module";
-import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
-import {provideActivityFactory} from "@spica-client/storage/providers/activity";
 
 @NgModule({
   imports: [
@@ -61,8 +58,7 @@ import {provideActivityFactory} from "@spica-client/storage/providers/activity";
     MatToolbarModule,
     MatClipboardModule,
     MatMenuModule,
-    InputModule.withPlacers([{origin: "string", type: "storage", placer: StorageComponent}]),
-    PassportModule.forChild()
+    InputModule.withPlacers([{origin: "string", type: "storage", placer: StorageComponent}])
   ],
   declarations: [
     IndexComponent,
@@ -73,8 +69,7 @@ import {provideActivityFactory} from "@spica-client/storage/providers/activity";
     StorageViewComponent,
     ImageEditorComponent
   ],
-  exports: [PickerDirective],
-  entryComponents: [PickerComponent, StorageDialogOverviewDialog]
+  exports: [PickerDirective]
 })
 export class StorageModule {
   static forRoot(): ModuleWithProviders {
