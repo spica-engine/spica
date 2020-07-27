@@ -66,16 +66,24 @@
   </mat-slide-toggle>
   <mat-card-content>
     <mat-accordion>
-      <cdk-virtual-scroll-viewport itemSize="50" class="log-viewport">
+      <cdk-virtual-scroll-viewport
+        itemSize="50"
+        [minBufferPx]="bufferSize"
+        [maxBufferPx]="bufferSize * 1.1"
+        class="log-viewport"
+      >
         <div>
           <span>Timestamp</span>
           <span>Name</span>
           <span>Content</span>
         </div>
-        <span class="empty-list" *ngIf="!(dataStream | async)?.length">
+        <span class="empty-list" *ngIf="!(logs$ | async)?.length && !isPending">
           Couldn't find any log to show.
         </span>
-        <mat-expansion-panel *cdkVirtualFor="let log of dataSource">
+        <mat-expansion-panel
+          (opened)="onExpand(content.offsetHeight)"
+          *cdkVirtualFor="let log of logs$"
+        >
           <mat-expansion-panel-header>
             <mat-panel-title>
               <span>
@@ -95,7 +103,7 @@
               </span>
             </mat-panel-title>
           </mat-expansion-panel-header>
-          <pre>{{ log.content }}</pre>
+          <pre #content>{{ log.content }}</pre>
         </mat-expansion-panel>
         <mat-progress-spinner
           *ngIf="isPending"

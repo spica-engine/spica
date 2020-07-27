@@ -56,8 +56,6 @@ export class FunctionService {
       url.searchParams.set("end", this.resetTimezoneOffset(filter.end).toISOString());
     }
 
-    url.searchParams.set("limit", filter.limit.toString());
-
     if (!filter.sort) {
       filter.sort = {_id: -1};
     }
