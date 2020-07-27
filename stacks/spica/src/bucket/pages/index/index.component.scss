@@ -1,4 +1,6 @@
 ::ng-deep .filter-menu {
+  max-width: unset !important;
+  width: 380px;
   .mat-menu-content {
     width: 100%;
     padding: 30px 0 20px !important;
