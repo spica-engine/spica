@@ -40,17 +40,18 @@
             font-weight: 200;
             font-size: 1.2rem;
             line-height: 2rem;
-            max-width: 500px;
           }
           .button-group {
-            max-width: 400px;
-            button[mat-flat-button] {
-              float: right;
-              color: white;
-              font-size: 1.2rem;
-              padding-top: 4px;
-              padding-bottom: 4px;
-              border-radius: 15px;
+            div:last-of-type {
+              a {
+                color: white;
+                font-size: 1.1rem;
+                margin: 8px;
+                padding-top: 4px;
+                padding-bottom: 4px;
+                background-color: #15bde8;
+                border-radius: 15px;
+              }
             }
           }
         }

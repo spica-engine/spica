@@ -19,6 +19,7 @@ import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
 import * as fs from "fs";
+import * as path from "path";
 import * as https from "https";
 import * as yargs from "yargs";
 
@@ -126,6 +127,12 @@ const args = yargs
       default: "default",
       choices: ["default", "gcloud"]
     },
+    "default-storage-path": {
+      string: true,
+      description:
+        "A relative path to --persistent-path that will be used to store storage objects.",
+      default: "storage"
+    },
     "gcloud-service-account-path": {
       string: true,
       description: "Path for the service account file to authorize on google cloud services."
@@ -133,6 +140,11 @@ const args = yargs
     "gcloud-bucket-name": {
       string: true,
       description: "Name of the bucket to store documents on GCS."
+    },
+    "storage-object-size-limit": {
+      number: true,
+      description: "Maximum size in Mi that an object could be.",
+      default: 35
     }
   })
   /* CORS Options */
@@ -159,6 +171,11 @@ const args = yargs
     }
   })
   /* Common Options */
+  .option("payload-size-limit", {
+    number: true,
+    description: "Maximum size in Mi that a body could be.",
+    default: 15
+  })
   .option("port", {
     number: true,
     alias: ["p"],
@@ -191,6 +208,16 @@ Example: http(s)://doomed-d45f1.spica.io/api`
         "--gcloud-service-account-path and --gcloud-bucket-name options must be present when --storage-strategy is set to 'gcloud'."
       );
     }
+    if (args["storage-strategy"] == "default") {
+      if (!args["default-storage-path"]) {
+        throw new TypeError(
+          "--default-storage-path options must be present when --storage-strategy is set to 'default'."
+        );
+      }
+      if (path.isAbsolute(args["default-storage-path"])) {
+        throw new TypeError("--default-storage-path must be relative.");
+      }
+    }
     return true;
   })
   .parserConfiguration({
@@ -217,11 +244,12 @@ const modules = [
     realtime: args["experimental-bucket-realtime"]
   }),
   StorageModule.forRoot({
-    path: args["persistent-path"],
-    publicUrl: args["public-url"],
-    strategy: args["storage-strategy"],
+    strategy: args["storage-strategy"] as "default" | "gcloud",
+    defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
+    defaultPublicUrl: args["public-url"],
     gcloudServiceAccountPath: args["gcloud-service-account-path"],
-    gcloudBucketName: args["gcloud-bucket-name"]
+    gcloudBucketName: args["gcloud-bucket-name"],
+    objectSizeLimit: args["storage-object-size-limit"]
   }),
   PassportModule.forRoot({
     publicUrl: args["public-url"],
@@ -267,18 +295,19 @@ if (args["cert-file"] && args["key-file"]) {
   };
 }
 NestFactory.create(RootModule, {
-  httpsOptions
+  httpsOptions,
+  bodyParser: false
 }).then(app => {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
-    Middlewares.BsonBodyParser,
-    Middlewares.MergePatchJsonParser,
     Middlewares.Preflight({
       allowedOrigins: args["allowedOrigins"],
       allowedMethods: args["allowedMethods"],
       allowedHeaders: args["allowedHeaders"],
       allowCredentials: args["allowCredentials"]
-    })
+    }),
+    Middlewares.JsonBodyParser(args["payload-size-limit"]),
+    Middlewares.MergePatchJsonParser(args["payload-size-limit"])
   );
   app.listen(args.port);
 });

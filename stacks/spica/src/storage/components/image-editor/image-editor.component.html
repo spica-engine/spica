@@ -24,14 +24,14 @@
   </mat-card-actions>
   <mat-card-content>
     <angular-cropper
-      *ngIf="imageUrl"
+      *ngIf="storage?.url"
       #cropperComponent
       (cropend)="cropendImage()"
       (ready)="cropperReady()"
       (zoom)="zoomManual()"
       class="cropperCanvas"
       [cropperOptions]="cropperOptions"
-      [imageUrl]="imageUrl"
+      [imageUrl]="storage.url"
     ></angular-cropper>
   </mat-card-content>
   <canvas [hidden]="true" #canvas></canvas>

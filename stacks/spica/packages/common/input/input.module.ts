@@ -24,6 +24,7 @@ import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
 import {ArrayComponent} from "./components/array/array.component";
+import {ArrayControlContainer} from "./components/array/array.container";
 import {BooleanComponent} from "./components/boolean/boolean.component";
 import {ColorComponent} from "./components/color/color.component";
 import {DateComponent} from "./components/date/date.component";
@@ -50,6 +51,7 @@ import {
 } from "./validators";
 import {BooleanSchemaComponent} from "./components/boolean-schema/boolean-schema.component";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
+import {MatBadgeModule} from "@angular/material/badge";
 
 export function coerceObject() {
   return {};
@@ -71,6 +73,7 @@ export function coerceObject() {
     MatGridListModule,
     MatCardModule,
     MatListModule,
+    MatBadgeModule,
     MatMenuModule,
     MatDatepickerModule,
     MatCheckboxModule,
@@ -103,7 +106,8 @@ export function coerceObject() {
     MinItemsValidator,
     MaxItemsValidator,
     ColorComponent,
-    BooleanSchemaComponent
+    BooleanSchemaComponent,
+    ArrayControlContainer
   ],
   providers: [
     {
