@@ -40,7 +40,12 @@ describe("http enqueuer", () => {
     httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue"]);
 
     await app.listen(req.socket);
-    httpEnqueuer = new HttpEnqueuer(eventQueue, httpQueue, app.getHttpAdapter().getInstance());
+    httpEnqueuer = new HttpEnqueuer(
+      eventQueue,
+      httpQueue,
+      app.getHttpAdapter().getInstance(),
+      corsOptions
+    );
   });
 
   afterEach(() => {
@@ -54,7 +59,7 @@ describe("http enqueuer", () => {
   });
 
   it("should handle preflight requests", async () => {
-    const options = {method: HttpMethod.Post, path: "/test", preflight: true, corsOptions};
+    const options = {method: HttpMethod.Post, path: "/test", preflight: true};
     httpEnqueuer.subscribe(noopTarget, options);
     let response = await req.options("/fn-execute/test", {Origin: "test"});
     expect(response.statusCode).toBe(200);
@@ -72,8 +77,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Post,
       path: "/test",
-      preflight: false,
-      corsOptions
+      preflight: false
     });
 
     const response = await req.options("/fn-execute/test");
@@ -89,8 +93,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Head,
       path: "/test2",
-      preflight: true,
-      corsOptions
+      preflight: true
     });
     let response = await req.options("/fn-execute/test2");
     expect(response.statusCode).toBe(404);
@@ -105,8 +108,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Post,
       path: "/test1",
-      preflight: true,
-      corsOptions
+      preflight: true
     });
     const response = await req.post("/fn-execute/test1", {}, {Origin: "test"});
     expect(response.headers["access-control-allow-origin"]).toBe("test");
@@ -128,8 +130,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(putTarget, {
       method: HttpMethod.Put,
       path: "/sameroute",
-      preflight: true,
-      corsOptions
+      preflight: true
     });
 
     let response = await req.options("/fn-execute/sameroute");
@@ -151,8 +152,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(postTarget, {
       method: HttpMethod.Post,
       path: "/sameroute",
-      preflight: true,
-      corsOptions
+      preflight: true
     });
 
     response = await req.options("/fn-execute/sameroute");
@@ -185,8 +185,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(headTarget, {
       method: HttpMethod.Head,
       path: "conflictedpath",
-      preflight: true,
-      corsOptions
+      preflight: true
     });
 
     // GET
@@ -196,8 +195,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(getTarget, {
       method: HttpMethod.Get,
       path: "/conflictedpath",
-      preflight: true,
-      corsOptions
+      preflight: true
     });
 
     // POST
@@ -207,8 +205,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(postTarget, {
       method: HttpMethod.Post,
       path: "/conflictedpath/",
-      preflight: true,
-      corsOptions
+      preflight: true
     });
 
     let response = await req.options("/fn-execute/conflictedpath", {Origin: "test"});
@@ -237,8 +234,7 @@ describe("http enqueuer", () => {
     httpEnqueuer.subscribe(noopTarget, {
       method: HttpMethod.Post,
       path: "/test",
-      preflight: false,
-      corsOptions
+      preflight: false
     });
     await req.post("/fn-execute/test", {test: 1}, {"Content-type": "application/json"});
     expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);

@@ -16,7 +16,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
   private router = express.Router({mergeParams: true});
 
-  constructor(private queue: EventQueue, private http: HttpQueue, httpServer: express.Application) {
+  constructor(
+    private queue: EventQueue,
+    private http: HttpQueue,
+    httpServer: express.Application,
+    private corsOptions: CorsOptions
+  ) {
     super();
     this.router.use(
       bodyParser.raw({
@@ -59,7 +64,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         throw new Error("Preflight option was used with HttpMethod.Options");
       }
 
-      const fn = (req, res, next) => Middlewares.Preflight(options.corsOptions)(req, res, next);
+      const fn = (req, res, next) => Middlewares.Preflight(this.corsOptions)(req, res, next);
 
       Object.defineProperty(fn, "target", {writable: false, value: target});
 
@@ -145,5 +150,4 @@ export interface HttpOptions {
   method: HttpMethod;
   path: string;
   preflight: boolean;
-  corsOptions: CorsOptions;
 }

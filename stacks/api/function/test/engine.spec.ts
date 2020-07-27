@@ -31,7 +31,13 @@ describe("Engine", () => {
           databaseUri: undefined,
           poolSize: 10,
           publicUrl: undefined,
-          timeout: 60000
+          timeout: 60000,
+          corsOptions: {
+            allowedOrigins: ["*"],
+            allowedMethods: ["*"],
+            allowCredentials: true,
+            allowedHeaders: ["*"]
+          }
         }),
         DatabaseTestingModule.replicaSet()
       ]
@@ -50,13 +56,7 @@ describe("Engine", () => {
       scheduler,
       {
         root: "test_root",
-        timeout: 1,
-        corsOptions: {
-          allowedOrigins: ["*"],
-          allowedMethods: ["*"],
-          allowCredentials: true,
-          allowedHeaders: ["*"]
-        }
+        timeout: 1
       },
       null
     );

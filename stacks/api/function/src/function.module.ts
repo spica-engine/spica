@@ -29,7 +29,8 @@ export class FunctionModule {
           poolSize: options.poolSize,
           publicUrl: options.publicUrl,
           timeout: options.timeout,
-          experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache
+          experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
+          corsOptions: options.corsOptions
         })
       ],
       controllers: [FunctionController],
@@ -40,8 +41,7 @@ export class FunctionModule {
           provide: FUNCTION_OPTIONS,
           useValue: {
             root: path.join(options.path, "functions"),
-            timeout: options.timeout,
-            corsOptions: options.corsOptions
+            timeout: options.timeout
           }
         },
         {

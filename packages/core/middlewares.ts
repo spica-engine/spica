@@ -27,8 +27,6 @@ export namespace Middlewares {
 
       res.header("Access-Control-Allow-Origin", allowedOrigin);
 
-      //console.log(res.header("Access-Control-Allow-Origin"));
-
       let allowedMethod = getMatchedValue(
         req.header("access-control-request-method")
           ? req.header("access-control-request-method")
@@ -42,9 +40,7 @@ export namespace Middlewares {
 
       if (req.header("access-control-request-headers")) {
         allowedHeaders = getMatchedValue(
-          req.header("access-control-request-headers").indexOf(",") != -1
-            ? req.header("access-control-request-headers").split(",")
-            : req.header("access-control-request-headers"),
+          req.header("access-control-request-headers").split(","),
           options.allowedHeaders
         );
       }
