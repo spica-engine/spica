@@ -242,7 +242,7 @@ describe("StorageComponent", () => {
         fixture.debugElement.query(By.directive(MatProgressSpinner)).componentInstance.value
       ).toBe(10);
 
-      req.event(new HttpResponse({body: [{_id: 0}], url: "http://example"}));
+      req.event(new HttpResponse({body: [{url: "http://example/0"}]}));
 
       expect(fixture.componentInstance.value).toBe("http://example/0");
     });

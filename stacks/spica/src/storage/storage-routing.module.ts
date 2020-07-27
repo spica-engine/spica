@@ -2,7 +2,6 @@ import {NgModule} from "@angular/core";
 import {RouterModule, Routes} from "@angular/router";
 import {Route, RouteCategory, RouteModule} from "@spica-client/core";
 import {IdentityGuard, PolicyGuard} from "../passport";
-import {ImageEditorComponent} from "./pages/image-editor/image-editor.component";
 import {IndexComponent} from "./pages/index/index.component";
 
 const routes: Routes = [
@@ -10,10 +9,7 @@ const routes: Routes = [
     path: "storage",
     canActivateChild: [IdentityGuard, PolicyGuard],
     data: {service: "storage"},
-    children: [
-      {path: "", component: IndexComponent, data: {action: "index"}},
-      {path: ":id", component: ImageEditorComponent, data: {action: "update"}}
-    ]
+    children: [{path: "", component: IndexComponent, data: {action: "index"}}]
   }
 ];
 const route: Route[] = [

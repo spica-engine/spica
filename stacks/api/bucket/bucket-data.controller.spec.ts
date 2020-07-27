@@ -2,7 +2,6 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {
   CREATED_AT,
@@ -42,7 +41,6 @@ describe("BucketDataController", () => {
     db = module.get(DatabaseService);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
-    app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);

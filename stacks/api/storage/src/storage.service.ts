@@ -1,17 +1,13 @@
 import {Injectable} from "@nestjs/common";
 import {Collection, DatabaseService, FilterQuery, ObjectId} from "@spica-server/database";
-import {Strategy} from "./strategy";
+import {StorageObject} from "./body";
+import {Strategy} from "./strategy/strategy";
 
 @Injectable()
-export class Storage {
-  public readonly storageName: string = "storage";
-
+export class StorageService {
   private _collection: Collection<StorageObject>;
 
-  private service: Strategy;
-
-  constructor(database: DatabaseService, private strategy: Strategy) {
-    this.service = strategy;
+  constructor(database: DatabaseService, private service: Strategy) {
     this._collection = database.collection("storage");
   }
 
@@ -33,7 +29,7 @@ export class Storage {
       },
       {
         $project: {
-          meta: {$arrayElemAt: ["$meta", 0]},
+          meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]},
           data: "$data"
         }
       }
@@ -74,35 +70,27 @@ export class Storage {
     return this._collection.updateOne(filter, {$set: object}, {upsert: true}).then(() => object);
   }
 
-  async insertMany(object: StorageObject[]): Promise<StorageObject[]> {
-    const data = Array.from(object);
+  async insertMany(objects: StorageObject[]): Promise<StorageObject[]> {
+    const datas = objects.map(object => object.content.data);
+    const schemas = objects.map(object => {
+      delete object.content.data;
+      return object;
+    });
 
-    await Promise.all(
-      data.map(d => {
-        d._id = new ObjectId(d._id);
-        return this.service.write(d._id.toHexString(), d.content.data).then(() => {
-          delete d.content.data;
-        });
-      })
-    );
+    const insertedObjects = await this._collection
+      .insertMany(schemas)
+      .then(result => result.ops as StorageObject[]);
 
-    return this._collection.insertMany(data).then(() => object);
+    for (const [i, object] of insertedObjects.entries()) {
+      await this.service.write(object._id.toString(), datas[i], object.content.type);
+    }
+
+    return insertedObjects;
   }
 
   async getUrl(id: string) {
     return this.service.url(id);
   }
-}
-
-export interface StorageObject {
-  _id?: string | ObjectId;
-  name?: string;
-  url?: string;
-  content: {
-    data: Buffer;
-    type: string;
-    size?: number;
-  };
 }
 
 export interface StorageResponse {

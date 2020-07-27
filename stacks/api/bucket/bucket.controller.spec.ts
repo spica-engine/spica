@@ -10,7 +10,7 @@ import {
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {BucketModule} from "./bucket.module";
@@ -18,7 +18,6 @@ import {BucketModule} from "./bucket.module";
 describe("Bucket acceptance", () => {
   let app: INestApplication;
   let req: Request;
-  let module: TestingModule;
 
   const bucket = {
     _id: new ObjectId(),
@@ -44,8 +43,8 @@ describe("Bucket acceptance", () => {
     }
   };
 
-  beforeAll(async () => {
-    module = await Test.createTestingModule({
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
           formats: [OBJECT_ID, OBJECTID_STRING],
@@ -61,21 +60,11 @@ describe("Bucket acceptance", () => {
     app = module.createNestApplication();
     req = module.get(Request);
     app.useWebSocketAdapter(new WsAdapter(app));
-    app.use(Middlewares.MergePatchJsonParser);
+    app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(req.socket);
-  }, 120000);
-
-  afterEach(async () => {
-    await module
-      .get(DatabaseService)
-      .collection("buckets")
-      .deleteMany({})
-      .catch(error => console.log(error));
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
+  afterEach(() => app.close());
 
   describe("get requests", () => {
     it("should get predefinedDefaults", async () => {

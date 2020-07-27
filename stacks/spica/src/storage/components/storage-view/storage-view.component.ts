@@ -21,6 +21,7 @@ import {Storage} from "../../interfaces/storage";
 })
 export class StorageViewComponent implements OnChanges {
   @Input() blob: string | Blob | Storage;
+  @Input() autoplay = false;
   displayableTypes: RegExp = /image\/.*?|video\/.*?/;
   ready: boolean = false;
   error: string;

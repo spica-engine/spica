@@ -13,6 +13,7 @@ import {By} from "@angular/platform-browser";
 })
 class StorageViewCmp {
   @Input() blob: string | Blob | Storage;
+  @Input() autoplay: boolean;
 }
 
 describe("StorageDialogOverview", () => {

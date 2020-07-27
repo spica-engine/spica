@@ -18,6 +18,7 @@ ts_library(
         "@npm//@types/node",
         "@npm//body-parser",
         "@npm//bson",
+        "@npm//type-is",
     ],
 )
 
