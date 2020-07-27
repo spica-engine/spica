@@ -139,10 +139,6 @@ export class AddComponent implements OnInit {
   }
 
   saveBucketRow() {
-    if (!(this.data._schedule instanceof Date)) {
-      delete this.data._schedule;
-    }
-
     const isInsert = !this.data._id;
 
     const save = isInsert
@@ -152,9 +148,11 @@ export class AddComponent implements OnInit {
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(bucketDocument => {
+        tap(() => {
           this.refreshHistory.next(undefined);
-          if (isInsert) return this.router.navigate([`bucket/${this.bucketId}`]);
+          if (isInsert) {
+            return this.router.navigate(["bucket", this.bucketId]);
+          }
         }),
         ignoreElements(),
         endWith(SavingState.Saved),

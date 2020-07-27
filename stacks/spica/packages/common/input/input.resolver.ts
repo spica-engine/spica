@@ -25,6 +25,9 @@ export class InputResolver {
 
   coerce(type: string) {
     const input = this.resolve(type);
-    return input && input.coerce && input.coerce();
+    if (input && typeof input.coerce == "function") {
+      return input.coerce();
+    }
+    return undefined;
   }
 }
