@@ -191,10 +191,7 @@ Bucket.initialize({apikey: "{APIKEY which as the needed policy}", publicUrl: ""}
 ```typescript
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.get("{BUCKET ID}").then(result => {
-    console.log(result);
-    res.send(result);
-  });
+  return Bucket.get("{BUCKET ID}");
 }
 ```
 
@@ -203,10 +200,7 @@ export default function (req, res) {
 ```typescript
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.getAll().then(result => {
-    console.log(result);
-    res.send(result);
-  });
+  return Bucket.getAll();
 }
 ```
 
@@ -234,10 +228,7 @@ export default function (req, res) {
     }
   };
 
-  return Bucket.insert(newBucket).then(result => {
-    console.log(result);
-    res.send(result);
-  });
+  return Bucket.insert(newBucket);
 }
 ```
 
@@ -268,9 +259,6 @@ export default function (req, res) {
   return Bucket.update("5f10302b4d858d1824e57e6d", {
     ...bucket,
     title: "UPDATED BUCKET TITLE"
-  }).then(result => {
-    console.log(result);
-    res.send(result);
   });
 }
 ```
@@ -280,10 +268,7 @@ export default function (req, res) {
 ```typescript
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.remove("5f10302b4d858d1824e57e6d").then(result => {
-    console.log(result);
-    res.send(result);
-  });
+  return Bucket.remove("5f10302b4d858d1824e57e6d");
 }
 ```
 
@@ -292,10 +277,7 @@ export default function (req, res) {
 ```typescript
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.data.get("{BUCKET ID}", "{BUCKET DATA ID}").then(result => {
-    console.log(result);
-    res.send(result);
-  });
+  return Bucket.data.get("{BUCKET ID}", "{BUCKET DATA ID}");
 }
 ```
 
@@ -304,15 +286,10 @@ export default function (req, res) {
 ```typescript
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.data
-    .getAll("{BUCKET ID}", {
-      headers: {"accept-language": "TR"},
-      queryParams: {paginate: true, skip: 1}
-    })
-    .then(result => {
-      console.log(result);
-      res.send(result);
-    });
+  return Bucket.data.getAll("{BUCKET ID}", {
+    headers: {"accept-language": "TR"},
+    queryParams: {paginate: true, skip: 1}
+  });
 }
 ```
 
@@ -327,10 +304,7 @@ export default function (req, res) {
     surname: "321"
   };
 
-  return Bucket.data.insert("{BUCKET ID}", document).then(result => {
-    console.log(result);
-    res.send(result);
-  });
+  return Bucket.data.insert("{BUCKET ID}", document);
 }
 ```
 
@@ -345,15 +319,10 @@ export default function (req, res) {
     surname: "321"
   };
 
-  return Bucket.data
-    .update("{BUCKET ID}", "{BUCKET DATA ID}", {
-      ...document,
-      name: "updated_name"
-    })
-    .then(result => {
-      console.log(result);
-      res.send(result);
-    });
+  return Bucket.data.update("{BUCKET ID}", "{BUCKET DATA ID}", {
+    ...document,
+    name: "updated_name"
+  });
 }
 ```
 
@@ -362,10 +331,7 @@ export default function (req, res) {
 ```typescript
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.data.remove("{BUCKET ID}", "{BUCKET DATA ID}").then(result => {
-    console.log(result);
-    res.send(result);
-  });
+  return Bucket.data.remove("{BUCKET ID}", "{BUCKET DATA ID}");
 }
 ```
 
