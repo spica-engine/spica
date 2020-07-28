@@ -10,6 +10,7 @@ ts_library(
     ]),
     module_name = "@spica-server/function/scheduler",
     deps = [
+        "//packages/core",
         "//packages/database",
         "//stacks/api/function/compiler",
         "//stacks/api/function/compiler/javascript",

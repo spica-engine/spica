@@ -1,3 +1,5 @@
+import * as matcher from "matcher";
+import {CorsOptions} from "./interfaces";
 import {json} from "body-parser";
 import * as typeis from "type-is";
 
@@ -23,26 +25,49 @@ export namespace Middlewares {
     return (req, res, next) => json({type: "application/merge-patch+json", limit})(req, res, next);
   }
 
-  export function Preflight(req, res, next) {
-    res.header("Access-Control-Allow-Origin", req.header("Origin") || "*");
+  export function Preflight(options: CorsOptions) {
+    return (req, res, next) => {
+      let allowedOrigin = getMatchedValue(req.header("Origin"), options.allowedOrigins);
 
-    if (req.header("access-control-request-method")) {
-      res.header("Access-Control-Allow-Methods", req.header("access-control-request-method"));
-    }
+      res.header("Access-Control-Allow-Origin", allowedOrigin);
 
-    let allowedHeaders = "Authorization, Content-Type, Accept-Language";
-    if (req.header("access-control-request-headers")) {
-      allowedHeaders = req.header("access-control-request-headers");
-    }
+      let allowedMethod = getMatchedValue(
+        req.header("access-control-request-method")
+          ? req.header("access-control-request-method")
+          : req.method,
+        options.allowedMethods
+      );
 
-    res.header("Access-Control-Allow-Headers", allowedHeaders);
+      res.header("Access-Control-Allow-Methods", allowedMethod);
 
-    req.header("Access-Control-Allow-Credentials", "true");
+      let allowedHeaders = options.allowedHeaders.join(",");
 
-    if (req.method == "OPTIONS") {
-      res.end();
-    } else {
-      next();
-    }
+      if (req.header("access-control-request-headers")) {
+        allowedHeaders = getMatchedValue(
+          req.header("access-control-request-headers").split(","),
+          options.allowedHeaders
+        );
+      }
+
+      res.header("Access-Control-Allow-Headers", allowedHeaders);
+
+      if (options.allowCredentials) {
+        res.header("Access-Control-Allow-Credentials", "true");
+      }
+
+      if (req.method == "OPTIONS") {
+        res.end();
+      } else {
+        next();
+      }
+    };
+  }
+}
+
+export function getMatchedValue(source: string | string[], alloweds: string[]): string {
+  if (alloweds.findIndex(allowed => matcher.isMatch(source, allowed)) != -1) {
+    return Array.isArray(source) ? source.join(",") : source;
+  } else {
+    return "";
   }
 }

@@ -20,7 +20,13 @@ describe("Scheduler", () => {
     databaseReplicaSet: undefined,
     poolSize: 10,
     publicUrl: undefined,
-    timeout: 60000
+    timeout: 60000,
+    corsOptions: {
+      allowCredentials: true,
+      allowedHeaders: ["*"],
+      allowedMethods: ["*"],
+      allowedOrigins: ["*"]
+    }
   };
 
   let clock: jasmine.Clock;
