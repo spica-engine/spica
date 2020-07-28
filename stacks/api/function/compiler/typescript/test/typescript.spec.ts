@@ -40,27 +40,6 @@ describe("Typescript", () => {
     expect(stat.toString()).toContain("exports.default = default_1");
   });
 
-  it("should symlink @spica-devkit/database to @internal/database", async () => {
-    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
-    const devkitDatabasePath = path.join(
-      compilation.cwd,
-      "node_modules",
-      "@spica-devkit",
-      "database"
-    );
-    await fs.promises.mkdir(devkitDatabasePath, {recursive: true});
-    await fs.promises.writeFile(
-      path.join(devkitDatabasePath, "package.json"),
-      JSON.stringify({name: "@spica-devkit/database"})
-    );
-
-    await language.compile(compilation);
-    const stat = await fs.promises.lstat(
-      path.join(compilation.cwd, ".build", "node_modules", "@internal", "database")
-    );
-    expect(stat.isSymbolicLink()).toBe(true);
-  });
-
   it("should report diagnostics", async () => {
     compilation.cwd = FunctionTestBed.initialize(`
     import {database} from '@spica-server/database';
@@ -127,9 +106,8 @@ describe("Typescript", () => {
     const indexPath = path.join(compilation.cwd, "index.ts");
     expect(await language.compile(compilation)).not.toBeTruthy();
 
-    setTimeout(() => {
-      fs.promises.writeFile(indexPath, `const a;`);
-    }, 1);
+    await fs.promises.writeFile(indexPath, `const a;`);
+
     expect(await language.compile(compilation).catch(e => e)).toEqual([
       {
         code: 1155,
@@ -137,6 +115,22 @@ describe("Typescript", () => {
         text: "'const' declarations must be initialized.",
         start: {line: 1, column: 7},
         end: {line: 1, column: 8}
+      }
+    ]);
+
+    // to make test harsher
+    await fs.promises.writeFile(indexPath, `const b;`);
+
+    await fs.promises.writeFile(indexPath, `test();`);
+
+    expect(await language.compile(compilation).catch(e => e)).toEqual([
+      {
+        code: 2582,
+        category: 1,
+        text:
+          "Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i @types/jest` or `npm i @types/mocha`.",
+        start: {line: 1, column: 1},
+        end: {line: 1, column: 5}
       }
     ]);
   });
