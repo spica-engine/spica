@@ -307,7 +307,7 @@ export default function (req, res) {
   return Bucket.data
     .getAll("{BUCKET ID}", {
       headers: {"accept-language": "TR"},
-      querParams: {paginate: true, skip: 1}
+      queryParams: {paginate: true, skip: 1}
     })
     .then(result => {
       console.log(result);
