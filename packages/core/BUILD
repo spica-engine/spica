@@ -21,7 +21,7 @@ ts_library(
         "@npm//body-parser",
         "@npm//bson",
         "@npm//matcher",
-        "@npm//type-is"
+        "@npm//type-is",
     ],
 )
 
