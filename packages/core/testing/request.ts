@@ -8,8 +8,8 @@ export class Request {
 
   constructor(@Inject("SOCKET") readonly socket: string) {}
 
-  options<T>(path: string) {
-    return this.request<T>({method: "OPTIONS", path});
+  options<T>(path: string, headers?: Headers) {
+    return this.request<T>({method: "OPTIONS", path, headers});
   }
 
   get<T>(path: string, query?: any, headers?: Headers) {
@@ -43,6 +43,10 @@ export class Request {
       responseType: "text"
     };
 
+    if (options.followRedirect != undefined) {
+      req.followRedirect = options.followRedirect;
+    }
+
     if (options.query) {
       req.search = querystring.stringify(options.query);
     }
@@ -58,7 +62,7 @@ export class Request {
           try {
             response.body = JSON.parse(response.body);
           } catch (e) {
-            console.error(e);
+            /application\/json/.test(response.headers["content-type"]) && console.error(e);
           }
         }
         return {
@@ -77,7 +81,7 @@ export class Request {
           try {
             response.body = JSON.parse(response.body);
           } catch (e) {
-            console.error(e);
+            /application\/json/.test(response.headers["content-type"]) && console.error(e);
           }
         }
         response = {
@@ -91,23 +95,6 @@ export class Request {
         }
         return response;
       });
-
-    // return request(req).catch(e => {
-    //   const {response} = e;
-    //   console.log(e);
-    //   if (response && typeof response.body == "string") {
-    //     try {
-    //       response.body = JSON.parse(response.body);
-    //     } catch (e) {
-    //       console.error(e);
-    //     }
-    //   }
-
-    //   if (this.reject) {
-    //     return Promise.reject(response);
-    //   }
-    //   return response;
-    // });
   }
 }
 
@@ -117,6 +104,7 @@ export interface RequestOptions {
   body?: any;
   query?: any;
   headers?: Headers;
+  followRedirect?: boolean;
 }
 
 export interface Response<T = any> {

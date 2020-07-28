@@ -8,7 +8,7 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe("Scheduler", () => {
   let scheduler: Scheduler;
@@ -20,7 +20,13 @@ describe("Scheduler", () => {
     databaseReplicaSet: undefined,
     poolSize: 10,
     publicUrl: undefined,
-    timeout: 60000
+    timeout: 60000,
+    corsOptions: {
+      allowCredentials: true,
+      allowedHeaders: ["*"],
+      allowedMethods: ["*"],
+      allowedOrigins: ["*"]
+    }
   };
 
   let clock: jasmine.Clock;

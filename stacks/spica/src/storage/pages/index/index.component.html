@@ -87,7 +87,7 @@
               canInteract="storage:update"
               *ngIf="storage.content?.type?.startsWith('image/')"
               mat-menu-item
-              [routerLink]="storage._id"
+              (click)="openEdit(storage)"
             >
               <mat-icon>edit</mat-icon>
               Edit

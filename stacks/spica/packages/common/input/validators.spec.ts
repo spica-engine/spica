@@ -17,21 +17,16 @@ describe("Validators", () => {
     });
 
     it("should not return errors", () => {
-      validator.items = ["ab", "cd"];
-      expect(validator.validate(new FormControl("tset"))).toBeNull();
+      expect(validator.validate(new FormControl(["ab", "cd"]))).toBeNull();
     });
 
     it("should return errors", () => {
-      validator.items = ["ab", "cd"];
-      validator.index = 2;
-      expect(validator.validate(new FormControl("ab"))).toEqual({uniqueItems: [2]});
+      expect(validator.validate(new FormControl(["ab", "ab"]))).toEqual({uniqueItems: [0, 1]});
     });
 
     it("should not return errors when disabled", () => {
-      validator.items = ["ab", "ab"];
-      validator.index = 2;
       validator.uniqueItems = false;
-      expect(validator.validate(new FormControl("ab"))).toBeNull();
+      expect(validator.validate(new FormControl(["ab", "ab"]))).toBeNull();
     });
   });
 
@@ -76,14 +71,14 @@ describe("Validators", () => {
 
     it("should not return errors", () => {
       validator.maxItems = 3;
-      validator.items = ["12", "213", "213"];
-      expect(validator.validate(new FormControl())).toBeNull();
+      expect(validator.validate(new FormControl(["12", "213", "213"]))).toBeNull();
     });
 
     it("should return errors", () => {
       validator.maxItems = 3;
-      validator.items = ["12", "213", "213", "123"];
-      expect(validator.validate(new FormControl(4))).toEqual({maxItems: {max: 3, actual: 4}});
+      expect(validator.validate(new FormControl(["12", "213", "213", "123"]))).toEqual({
+        maxItems: {max: 3, actual: 4}
+      });
     });
   });
 
@@ -93,14 +88,12 @@ describe("Validators", () => {
 
     it("should not return errors", () => {
       validator.minItems = 2;
-      validator.items = ["12", "213"];
-      expect(validator.validate(new FormControl())).toBeNull();
+      expect(validator.validate(new FormControl(["12", "213"]))).toBeNull();
     });
 
     it("should return errors", () => {
       validator.minItems = 2;
-      validator.items = ["12"];
-      expect(validator.validate(new FormControl(4))).toEqual({minItems: {min: 2, actual: 1}});
+      expect(validator.validate(new FormControl(["12"]))).toEqual({minItems: {min: 2, actual: 1}});
     });
   });
 });

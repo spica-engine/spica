@@ -1,0 +1,25 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "strategy_test_lib",
+    testonly = True,
+    srcs = [
+        "default.spec.ts",
+        "gcloud.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/storage",
+        "@npm//@types/jasmine",
+        "@npm//@types/node",
+    ],
+)
+
+jasmine_node_test(
+    name = "strategy_test",
+    deps = [
+        "strategy_test_lib",
+    ],
+)

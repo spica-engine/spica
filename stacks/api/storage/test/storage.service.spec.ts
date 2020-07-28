@@ -1,14 +1,15 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {StorageOptions, STORAGE_OPTIONS} from "./options";
-import {Storage, StorageObject} from "./storage.service";
-import {Strategy, factoryProvider} from "./strategy";
+import {StorageService} from "@spica-server/storage";
+import {StorageObject} from "@spica-server/storage/src/body";
+import {Default} from "@spica-server/storage/src/strategy/default";
+import {Strategy} from "@spica-server/storage/src/strategy/strategy";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
-describe("storage service", () => {
+describe("Storage Service", () => {
   let module: TestingModule;
-  let storageService: Storage;
+  let storageService: StorageService;
   let storageObject: StorageObject;
   let storageObjectId: ObjectId = new ObjectId("56cb91bdc3464f14678934ca");
 
@@ -24,30 +25,19 @@ describe("storage service", () => {
       }
     };
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.standalone()],
       providers: [
-        Storage,
-        {
-          provide: STORAGE_OPTIONS,
-          useValue: <StorageOptions>{
-            publicUrl: "",
-            path: "",
-            strategy: "default"
-          }
-        },
+        StorageService,
         {
           provide: Strategy,
-          useFactory: factoryProvider,
-          inject: [STORAGE_OPTIONS]
+          useValue: new Default(process.env.TEST_TMPDIR, "http://insteadof")
         }
       ]
     }).compile();
-    storageService = module.get(Storage);
+    storageService = module.get(StorageService);
   });
 
-  afterAll(async () => {
-    return await module.close();
-  });
+  afterEach(() => module.close());
 
   it("should add storage objects", async () => {
     await expectAsync(

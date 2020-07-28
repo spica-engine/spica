@@ -1,5 +1,5 @@
 import {Sequence, SequenceKind, ChunkKind} from "./interface";
-import {tap, delayWhen, map, debounceTime} from "rxjs/operators";
+import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
 import {webSocket} from "rxjs/webSocket";
 import {timer, of} from "rxjs";
 
@@ -86,6 +86,7 @@ export function getWsObs<T>(url: string, sort: object = {}) {
       return of(null);
     }),
     debounceTime(1),
-    map(() => Array.from(data))
+    map(() => Array.from(data)),
+    retryWhen(errors => errors.pipe(filter(error => error.code == 1006)))
   );
 }

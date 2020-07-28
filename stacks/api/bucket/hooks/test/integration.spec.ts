@@ -55,7 +55,13 @@ describe("Hooks Integration", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           publicUrl: undefined,
-          timeout: 20
+          timeout: 20,
+          corsOptions: {
+            allowCredentials: true,
+            allowedHeaders: ["*"],
+            allowedMethods: ["*"],
+            allowedOrigins: ["*"]
+          }
         })
       ]
     }).compile();
@@ -65,7 +71,7 @@ describe("Hooks Integration", () => {
 
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
-    app.use(Middlewares.MergePatchJsonParser);
+    app.use(Middlewares.MergePatchJsonParser(15));
 
     await app.listen(req.socket);
 
