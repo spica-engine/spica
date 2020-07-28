@@ -6,5 +6,7 @@ import {InputSchema, INPUT_SCHEMA} from "../../input";
   styleUrls: ["./boolean-schema.component.scss"]
 })
 export class BooleanSchemaComponent {
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
+  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
+    schema.default = schema.default != undefined ? schema.default : false;
+  }
 }
