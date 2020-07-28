@@ -8,6 +8,8 @@
   "main": "dist/index",
   "module": "dist/index.mjs",
   "sideEffects": false,
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
   "dependencies": {
     "mongodb": "^3.5.4",
     "@types/mongodb": "^3.3.16"

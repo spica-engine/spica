@@ -1,11 +1,8 @@
-import {Component, ElementRef, OnInit, ViewChild} from "@angular/core";
-import {DomSanitizer} from "@angular/platform-browser";
-import {ActivatedRoute, Router} from "@angular/router";
+import {Component, ElementRef, Inject, OnInit, ViewChild} from "@angular/core";
+import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {CropperComponent} from "angular-cropperjs";
-import {filter, switchMap, take} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
-import {bufferToBase64} from "../../utils";
 
 @Component({
   selector: "storage-image-editor",
@@ -25,19 +22,16 @@ export class ImageEditorComponent implements OnInit {
   };
 
   public scale: number = 100;
-  public base64File;
   public storage: Storage;
 
-  public imageUrl: string = undefined;
   public resourceLoaded: boolean = false;
 
   private _cropperRes = {width: 0, height: 0};
 
   constructor(
-    private activatedRoute: ActivatedRoute,
     private storageService: StorageService,
-    private domSanitizer: DomSanitizer,
-    private router: Router
+    private dialogRef: MatDialogRef<ImageEditorComponent>,
+    @Inject(MAT_DIALOG_DATA) private data: Storage
   ) {}
 
   get cropperRes() {
@@ -52,19 +46,9 @@ export class ImageEditorComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.activatedRoute.params
-      .pipe(
-        take(1),
-        filter(params => params.id),
-        switchMap(params => this.storageService.getOne(params.id))
-      )
-      .subscribe(storage => {
-        this.storage = storage;
-        this.base64File = bufferToBase64(storage.content.data.data);
-        this.imageUrl = this.domSanitizer.bypassSecurityTrustUrl(
-          `data:${storage.content.type};base64,${this.base64File}`
-        ) as string;
-      });
+    this.storageService.getOne(this.data._id).subscribe(storage => {
+      this.storage = storage;
+    });
   }
 
   cropperReady() {
@@ -99,7 +83,7 @@ export class ImageEditorComponent implements OnInit {
         .updateOne(this.storage._id, file)
         .toPromise()
         .then(() => {
-          this.router.navigate(["storage"]);
+          this.dialogRef.close();
         });
     });
   }

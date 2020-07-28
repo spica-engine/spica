@@ -66,7 +66,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     this.enqueuers.add(
-      new HttpEnqueuer(this.queue, this.httpQueue, this.http.httpAdapter.getInstance())
+      new HttpEnqueuer(
+        this.queue,
+        this.httpQueue,
+        this.http.httpAdapter.getInstance(),
+        this.options.corsOptions
+      )
     );
 
     this.enqueuers.add(

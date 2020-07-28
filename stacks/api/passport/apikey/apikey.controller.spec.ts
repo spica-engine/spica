@@ -153,8 +153,9 @@ describe("ApiKey", () => {
           description: "test"
         })
         .catch(r => r);
-      expect(body.error).toBe(" should have required property 'name'");
       expect(statusCode).toBe(400);
+      expect(body.error).toBe("validation failed");
+      expect(body.message).toBe(" should have required property 'name'");
     });
   });
 
@@ -281,7 +282,7 @@ describe("ApiKey", () => {
         "another policy"
       ])).body;
 
-      expect([responseBody.statusCode, responseBody.error, responseBody.message]).toEqual([
+      expect([responseBody.statusCode, responseBody.message, responseBody.error]).toEqual([
         400,
         " should NOT have duplicate items (items ## 1 and 0 are identical)",
         "validation failed"
@@ -299,7 +300,7 @@ describe("ApiKey", () => {
         "another policy"
       ])).body;
 
-      expect([responseBody.statusCode, responseBody.error, responseBody.message]).toEqual([
+      expect([responseBody.statusCode, responseBody.message, responseBody.error]).toEqual([
         400,
         " should NOT have duplicate items (items ## 1 and 0 are identical)",
         "validation failed"
