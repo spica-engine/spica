@@ -27,7 +27,12 @@ abstract class __BsonBody {
       parser(req, res, error => {
         if (error) {
           if (error.type == "entity.too.large") {
-            return observer.error(new HttpException(error.message, HttpStatus.PAYLOAD_TOO_LARGE));
+            return observer.error(
+              new HttpException(
+                error.message + ` maximum file size is ${this.options.objectSizeLimit} MB `,
+                HttpStatus.PAYLOAD_TOO_LARGE
+              )
+            );
           }
           return observer.error(error);
         }
