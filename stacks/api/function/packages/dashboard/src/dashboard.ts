@@ -1,22 +1,24 @@
 import {Dashboard} from "./interface";
 import fetch from "node-fetch";
 
-let _apikey = "";
-let url = "";
+let apikey;
+let url;
 
-export function initialize(apikey: string) {
-  _apikey = `APIKEY ${apikey}`;
+export function initialize(options: {apikey: string; publicUrl?: string}) {
+  apikey = `APIKEY ${options.apikey}`;
 
-  let publicUrl = process.env.__INTERNAL__SPICA__PUBLIC_URL__;
-  if (!publicUrl) {
-    throw new Error("The <__INTERNAL__SPICA__PUBLIC_URL__> variable was not given. ");
+  let _publicUrl = options.publicUrl || process.env.__INTERNAL__SPICA__PUBLIC_URL__;
+  if (!_publicUrl) {
+    throw new Error(
+      "The <__INTERNAL__SPICA__PUBLIC_URL__> variable and public url was not given. "
+    );
   }
 
-  url = `${publicUrl}/dashboard`;
+  url = `${_publicUrl}/dashboard`;
 }
 
 function checkInitialized() {
-  if (!_apikey) {
+  if (!apikey) {
     throw new Error("You should call initialize method with apikey before this action.");
   }
 }
@@ -28,7 +30,7 @@ export function create(dashboard: Dashboard): Promise<any> {
     method: "put",
     body: JSON.stringify(dashboard),
     headers: {
-      Authorization: _apikey,
+      Authorization: apikey,
       "Content-Type": "application/json"
     }
   };
@@ -43,7 +45,7 @@ export function update(dashboard: Dashboard): Promise<any> {
     method: "put",
     body: JSON.stringify(dashboard),
     headers: {
-      Authorization: _apikey,
+      Authorization: apikey,
       "Content-Type": "application/json"
     }
   };
@@ -57,7 +59,7 @@ export function get(key: string): Promise<any> {
   let request = {
     method: "get",
     headers: {
-      Authorization: _apikey
+      Authorization: apikey
     }
   };
 
@@ -70,7 +72,7 @@ export function getAll(): Promise<any> {
   let request = {
     method: "get",
     headers: {
-      Authorization: _apikey
+      Authorization: apikey
     }
   };
 
@@ -83,7 +85,7 @@ export function remove(key: string): Promise<any> {
   let request = {
     method: "delete",
     headers: {
-      Authorization: _apikey
+      Authorization: apikey
     }
   };
 

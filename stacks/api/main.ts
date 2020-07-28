@@ -147,6 +147,29 @@ const args = yargs
       default: 35
     }
   })
+  /* CORS Options */
+  .option({
+    allowedOrigins: {
+      array: true,
+      description: "Access-Control-Allow-Origin.",
+      default: ["*"]
+    },
+    allowedMethods: {
+      array: true,
+      description: "Access-Control-Allow-Methods",
+      default: ["*"]
+    },
+    allowedHeaders: {
+      array: true,
+      description: "Access-Control-Allow-Headers",
+      default: ["Authorization", "Content-Type", "Accept-Language"]
+    },
+    allowCredentials: {
+      boolean: true,
+      description: "Access-Control-Allow-Credentials",
+      default: true
+    }
+  })
   /* Common Options */
   .option("payload-size-limit", {
     number: true,
@@ -244,7 +267,13 @@ const modules = [
     poolSize: args["function-pool-size"],
     publicUrl: args["public-url"],
     timeout: args["function-timeout"],
-    experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"]
+    experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
+    corsOptions: {
+      allowedOrigins: args["allowedOrigins"],
+      allowedMethods: args["allowedMethods"],
+      allowedHeaders: args["allowedHeaders"],
+      allowCredentials: args["allowCredentials"]
+    }
   })
 ];
 
@@ -271,7 +300,12 @@ NestFactory.create(RootModule, {
 }).then(app => {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
-    Middlewares.Preflight,
+    Middlewares.Preflight({
+      allowedOrigins: args["allowedOrigins"],
+      allowedMethods: args["allowedMethods"],
+      allowedHeaders: args["allowedHeaders"],
+      allowCredentials: args["allowCredentials"]
+    }),
     Middlewares.JsonBodyParser(args["payload-size-limit"]),
     Middlewares.MergePatchJsonParser(args["payload-size-limit"])
   );

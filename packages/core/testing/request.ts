@@ -8,8 +8,8 @@ export class Request {
 
   constructor(@Inject("SOCKET") readonly socket: string) {}
 
-  options<T>(path: string) {
-    return this.request<T>({method: "OPTIONS", path});
+  options<T>(path: string, headers?: Headers) {
+    return this.request<T>({method: "OPTIONS", path, headers});
   }
 
   get<T>(path: string, query?: any, headers?: Headers) {
