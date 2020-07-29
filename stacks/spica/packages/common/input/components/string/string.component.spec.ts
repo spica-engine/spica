@@ -83,19 +83,6 @@ describe("Common#string", () => {
       expect(fixture.debugElement.query(By.css("mat-select"))).toBeTruthy();
     });
 
-    it("should default to default value if undefined", fakeAsync(() => {
-      const inputElem = fixture.debugElement.query(By.css("input")).nativeElement;
-      const changeSpy = jasmine.createSpy("ngModelChange");
-      fixture.componentInstance.registerOnChange(changeSpy);
-
-      fixture.componentInstance.schema.default = "test";
-      fixture.componentInstance.writeValue(undefined);
-      fixture.detectChanges();
-      tick();
-      expect(changeSpy).toHaveBeenCalledWith("test");
-      expect(inputElem.value).toBe("test");
-    }));
-
     it("should be valid pristine and untouched", () => {
       const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
       expect(formFieldElem.classList).toContain("ng-untouched");
