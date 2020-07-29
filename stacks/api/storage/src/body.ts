@@ -29,7 +29,7 @@ abstract class __BsonBody {
           if (error.type == "entity.too.large") {
             return observer.error(
               new HttpException(
-           `maximum object size is ${this.options.objectSizeLimit}Mi`,
+                `maximum object size is ${this.options.objectSizeLimit}Mi`,
                 HttpStatus.PAYLOAD_TOO_LARGE
               )
             );
