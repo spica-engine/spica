@@ -17,7 +17,6 @@ var_2: &release_docker_plugin
   plugins:
     - docker#v3.5.0:
         image: "spicaengine/buildkite-node-with-mongodb:12"
-        mount-ssh-agent: true
         workdir: /spica
         volumes:
           - "/var/cache/spica:/var/cache/spica"
