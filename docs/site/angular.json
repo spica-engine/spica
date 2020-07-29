@@ -62,8 +62,11 @@
               "../../node_modules/highlight.js/styles/darcula.css"
             ],
             "scripts": [
-           
-              { "input": "calendly.js", "inject": false, "bundleName": "external-module" }
+              {
+                "input": "calendly.js",
+                "inject": false,
+                "bundleName": "external-module"
+              }
             ]
           },
           "configurations": {
@@ -121,6 +124,7 @@
   },
   "defaultProject": "site",
   "cli": {
-    "packageManager": "yarn"
+    "packageManager": "yarn",
+    "analytics": false
   }
 }

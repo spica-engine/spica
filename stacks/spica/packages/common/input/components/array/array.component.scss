@@ -30,6 +30,15 @@
         flex-flow: column;
         &:first-of-type {
           width: 40px;
+          button {
+            ::ng-deep .mat-badge-content {
+              right: -1px;
+              top: -1px;
+            }
+            &:not(:first-of-type) {
+              margin-top: 4px;
+            }
+          }
         }
         &:last-of-type {
           flex: 1 1 auto;
@@ -39,6 +48,9 @@
           flex-flow: row;
           span {
             flex: 1 1 auto;
+          }
+          ::ng-deep mat-form-field {
+            padding-top: 0px !important;
           }
           button {
             margin-left: 10px;

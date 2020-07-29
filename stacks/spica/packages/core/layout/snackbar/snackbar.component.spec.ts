@@ -15,7 +15,6 @@ class TestComponent {
     this.snackBar.openFromComponent(SnackbarComponent, {
       data: {
         status: 404,
-        statusText: "Not Found",
         message: "Couldn't find."
       } as SnackbarError,
       duration: 3000
@@ -49,8 +48,7 @@ describe("SnackbarComponent", () => {
     const lines = document.body.querySelectorAll("snackbar > div");
 
     expect(lines[0].textContent).toEqual("Code: 404");
-    expect(lines[1].textContent).toEqual("Not Found");
-    expect(lines[2].textContent).toEqual("Couldn't find.");
+    expect(lines[1].textContent).toEqual("Couldn't find.");
   });
 
   it("should close component", async () => {

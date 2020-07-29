@@ -8,6 +8,8 @@
   "main": "dist/index",
   "module": "dist/index.mjs",
   "sideEffects": false,
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
   "dependencies": {
     "node-fetch": "^2.6.0"
   }

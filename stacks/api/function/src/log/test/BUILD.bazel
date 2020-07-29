@@ -24,6 +24,10 @@ ts_library(
 
 jasmine_node_test(
     name = "realtime_e2e",
+    tags = [
+        "e2e",
+        "flaky",
+    ],
     deps = [
         ":realtime_e2e_specs",
     ],

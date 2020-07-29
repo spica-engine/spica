@@ -111,11 +111,6 @@ export class BucketIndexComponent implements OnDestroy {
       dropIndex > dragIndex ? dropElement.nextSibling : dropElement
     );
 
-    this.placeholder["enter"](
-      drag,
-      drag.element.nativeElement.offsetLeft,
-      drag.element.nativeElement.offsetTop
-    );
     return false;
   };
 

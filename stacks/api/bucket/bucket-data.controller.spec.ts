@@ -2,7 +2,6 @@ import {INestApplication} from "@nestjs/common";
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {
   CREATED_AT,
@@ -42,7 +41,6 @@ describe("BucketDataController", () => {
     db = module.get(DatabaseService);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
-    app.use(Middlewares.BsonBodyParser);
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
@@ -923,8 +921,8 @@ describe("BucketDataController", () => {
       expect(response.statusText).toBe("Bad Request");
       expect(response.body).toEqual({
         statusCode: 400,
-        error: ".title should be string",
-        message: "validation failed"
+        message: ".title should be string",
+        error: "validation failed"
       });
     });
 
@@ -958,8 +956,8 @@ describe("BucketDataController", () => {
       });
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.error, response.body.message]).toEqual([
-        ".description should be string",
-        "validation failed"
+        "validation failed",
+        ".description should be string"
       ]);
     });
   });

@@ -11,15 +11,7 @@ export class Npm extends PackageManager {
     return new Observable(observer => {
       const proc = child_process.spawn(
         "npm",
-        [
-          "install",
-          ...qualifiedNames,
-          "--no-audit",
-          "--loglevel",
-          "timing",
-          "--cache",
-          path.join(os.tmpdir(), fs.mkdtempSync("_npm_cache_"))
-        ],
+        ["install", ...qualifiedNames, "--no-audit", "--loglevel", "timing"],
         {cwd}
       );
       let stderr: string = "",

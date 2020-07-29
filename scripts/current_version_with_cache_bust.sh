@@ -9,3 +9,4 @@ if [ ! -f WORKSPACE ]; then
 fi
 
 echo "$(date)" > ./packages/database/testing/cachebust.txt
+source ./scripts/current_version.sh

@@ -25,8 +25,8 @@ abstract class MixinValidator {
       .catch((error: ValidationError) => {
         this.validator.removeSchema("");
         throw new BadRequestException(
-          error.message,
-          (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n")
+          (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+          error.message
         );
       });
   }

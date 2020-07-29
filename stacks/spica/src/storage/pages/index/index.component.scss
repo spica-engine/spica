@@ -1,8 +1,10 @@
 ::ng-deep {
-  mat-toolbar .preview-file {
+  .preview-object,
+  .edit-object {
     position: relative !important;
     .mat-dialog-container {
       height: unset;
+      padding: unset;
     }
   }
 }
@@ -11,7 +13,7 @@
   mat-toolbar {
     p {
       font-size: 12px;
-      margin: 0px 0px 0px 5px;
+      margin-left: 5px;
     }
     min-height: 250px;
     padding: 0 30px;
@@ -46,6 +48,7 @@
       width: 100%;
       padding-top: 0px;
       overflow: hidden;
+      max-height: 300px;
       mat-card-subtitle {
         display: block;
         white-space: nowrap;
@@ -63,6 +66,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding-top: 16px !important;
         mat-label {
           white-space: nowrap;
           overflow: hidden;

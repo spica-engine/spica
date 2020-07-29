@@ -28,7 +28,12 @@ export class FunctionInitializer {
           icon: "pest_control",
           path: "/function/logs",
           display: "Logs",
-          queryParams: {function: funcs.map(func => func._id), showErrors: true}
+          queryParams: {
+            begin: new Date(new Date().setHours(0, 0, 0, 0)),
+            end: new Date(new Date().setHours(23, 59, 59, 999)),
+            function: funcs.map(func => func._id),
+            showErrors: true
+          }
         })
       );
       funcs.forEach(func => {

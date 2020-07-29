@@ -72,19 +72,19 @@ steps:
     commands:
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5
 
-  - label: ":angular: + :chrome: Test Spica (Chrome)"
-    key: test_spica
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    plugins:
-      - docker#v3.5.0:
-          image: "circleci/node:12-browsers"
-          workdir: /spica
-          volumes:
-            - "/var/cache/spica/node_modules:/spica/node_modules"
-            - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
-    commands:
-      - cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
+  # - label: ":angular: + :chrome: Test Spica (Chrome)"
+  #   key: test_spica
+  #   if: build.branch != "master"
+  #   depends_on: "install_packages"
+  #   plugins:
+  #     - docker#v3.5.0:
+  #         image: "circleci/node:12-browsers"
+  #         workdir: /spica
+  #         volumes:
+  #           - "/var/cache/spica/node_modules:/spica/node_modules"
+  #           - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
+  #   commands:
+  #     - cd ./stacks/spica && yarn ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
 
   - label: ":k8s: + :docker: Deploy"
     key: deploy
@@ -110,9 +110,12 @@ steps:
       - test_api_flaky
       - test_api_e2e
       - test_api
-      - test_spica
+      # - test_spica
     <<: *release_docker_plugin
     commands:
+      # Buildkite does not fetch tags automatically so we have to do it ourselves.
+      # See: https://github.com/buildkite/agent/issues/338#issuecomment-402017501
+      - git fetch --tags
       - gcloud auth activate-service-account --key-file=/root/service-account.json
       - gcloud config set project $GCLOUD_PROJECT_ID
       - gcloud config set compute/zone $GCLOUD_COMPUTE_ZONE
