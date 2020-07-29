@@ -24,4 +24,4 @@ test --cache_test_results
 
 # Database worker and cache bust
 build --strategy=DatabaseCompile=worker
-build --workspace_status_command="./scripts/database_worker_cache_bust.sh"
+build --workspace_status_command="./scripts/current_version_with_cache_bust.sh"

@@ -12,20 +12,29 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 export class DateComponent implements ControlValueAccessor {
   _value: Date;
   _disabled: boolean = false;
-  _onChangeFn: Function = () => {};
-  _onTouchedFn: Function = () => {};
+  _onChangeFn = (_: Date) => {};
+  _onTouchedFn = () => {};
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
+
+  keyPress(event: KeyboardEvent) {
+    if (event.keyCode == 8 /* Backspace */ && !this._value) {
+      this._onChangeFn(undefined);
+    }
+  }
 
   writeValue(val: any): void {
     this._value = val && new Date(val);
   }
+
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;
   }
+
   registerOnTouched(fn: any): void {
     this._onTouchedFn = fn;
   }
+
   setDisabledState?(isDisabled: boolean): void {
     this._disabled = isDisabled;
   }
