@@ -43,7 +43,7 @@ describe("Error Interceptor", () => {
       queryParams: {
         message: "error message",
         status: 403,
-        statusText: 'Unknown Error'
+        statusText: "Unknown Error"
       }
     };
     service
@@ -57,14 +57,16 @@ describe("Error Interceptor", () => {
     httpTesting
       .expectOne("testurl")
       .flush({message: "error message"}, {status: 403, statusText: ""});
-
   }));
 
   it("should open the snackbar if status code is 500", fakeAsync(() => {
-    service.get("testurl").toPromise().catch(() => {});
+    service
+      .get("testurl")
+      .toPromise()
+      .catch(() => {});
     httpTesting
       .expectOne("testurl")
-      .flush({message: "error message"}, {status: 500, statusText: ''});
+      .flush({message: "error message"}, {status: 500, statusText: ""});
     expect(mockRouter.navigate).toHaveBeenCalledTimes(0);
     expect(mockSnackbar.openFromComponent).toHaveBeenCalledTimes(1);
     expect(mockSnackbar.openFromComponent).toHaveBeenCalledWith(SnackbarComponent, {
