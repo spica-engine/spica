@@ -113,9 +113,6 @@ steps:
       # - test_spica
     <<: *release_docker_plugin
     commands:
-      # Buildkite does not fetch tags automatically so we have to do it ourselves.
-      # See: https://github.com/buildkite/agent/issues/338#issuecomment-402017501
-      - git fetch --tags
       - gcloud auth activate-service-account --key-file=/root/service-account.json
       - gcloud config set project $GCLOUD_PROJECT_ID
       - gcloud config set compute/zone $GCLOUD_COMPUTE_ZONE
