@@ -39,40 +39,39 @@ describe("Error Interceptor", () => {
   });
 
   it("should navigate to error page with these queryParams", fakeAsync(() => {
+    const routerData = {
+      queryParams: {
+        message: "error message",
+        status: 403,
+        statusText: "Unknown Error"
+      }
+    };
     service
       .get("testurl")
       .toPromise()
-      .catch(err => {
+      .catch(() => {
         expect(mockRouter.navigate).toHaveBeenCalledWith(["/error"], routerData);
         expect(mockRouter.navigate).toHaveBeenCalledTimes(1);
         mockRouter.navigate.calls.reset();
       });
     httpTesting
       .expectOne("testurl")
-      .flush({message: "error message"}, {status: 403, statusText: "status text"});
-    let routerData = {
-      queryParams: {
-        message: "error message",
-        status: 403,
-        statusText: "status text"
-      }
-    };
+      .flush({message: "error message"}, {status: 403, statusText: ""});
   }));
 
   it("should open the snackbar if status code is 500", fakeAsync(() => {
     service
       .get("testurl")
       .toPromise()
-      .catch(err => {});
+      .catch(() => {});
     httpTesting
       .expectOne("testurl")
-      .flush({message: "error message"}, {status: 500, statusText: "status text"});
+      .flush({message: "error message"}, {status: 500, statusText: ""});
     expect(mockRouter.navigate).toHaveBeenCalledTimes(0);
     expect(mockSnackbar.openFromComponent).toHaveBeenCalledTimes(1);
     expect(mockSnackbar.openFromComponent).toHaveBeenCalledWith(SnackbarComponent, {
       data: {
         status: 500,
-        statusText: "status text",
         message: "error message"
       },
       duration: 3000
