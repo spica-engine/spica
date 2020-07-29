@@ -89,6 +89,8 @@ function createEmitAndSemanticDiagnosticsBuilderProgram(
 function build(compilation: Compilation) {
   const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
 
+  astCache.delete(path.join(compilation.cwd, compilation.entrypoint));
+
   const rootTsConfig: any = readRootTsConfig();
 
   const refPath = `./${referencedProject}`;

@@ -34,7 +34,7 @@ ts_library(
 docs(
     name = "docs",
     srcs = [
-        "storage.controller.ts",
+        "src/storage.controller.ts",
     ],
     tags = ["storage-docs"],
     exports = [

@@ -8,6 +8,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {INPUT_SCHEMA} from "../../input";
 import {DateComponent} from "./date.component";
+import {DateValidatorDirective} from "./date.validator";
 
 describe("Common#date", () => {
   let fixture: ComponentFixture<DateComponent>;
@@ -24,7 +25,7 @@ describe("Common#date", () => {
           OwlNativeDateTimeModule,
           NoopAnimationsModule
         ],
-        declarations: [DateComponent],
+        declarations: [DateComponent, DateValidatorDirective],
         providers: [
           {
             provide: INPUT_SCHEMA,
@@ -81,6 +82,31 @@ describe("Common#date", () => {
       const input = fixture.debugElement.query(By.css("input"));
       input.nativeElement.click();
       expect(document.body.querySelector("owl-date-time-container")).toBeDefined();
+    });
+
+    it("should progpagate undefined when the date is not valid", () => {
+      const input = fixture.debugElement.query(By.css("input"));
+      const changeSpy = spyOn(fixture.componentInstance, "_onChangeFn");
+      expect(changeSpy).not.toHaveBeenCalled();
+      input.triggerEventHandler("keyup", {
+        keyCode: 8
+      });
+      expect(changeSpy).toHaveBeenCalledTimes(1);
+      expect(changeSpy).toHaveBeenCalledWith(undefined);
+    });
+  });
+
+  describe("errors", () => {
+    it("should show date validation errors", () => {
+      const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+      input.control.setValue("invalid date");
+      input.control.markAsTouched();
+      fixture.detectChanges();
+      const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+      expect(formFieldElem.classList).toContain("ng-invalid");
+      expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        "Must be a valid date-time"
+      );
     });
   });
 });
