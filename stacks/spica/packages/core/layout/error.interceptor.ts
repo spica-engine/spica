@@ -33,7 +33,6 @@ export class ErrorInterceptor implements HttpInterceptor {
               this.snackBar.openFromComponent(SnackbarComponent, {
                 data: {
                   status: err.status,
-                  statusText: err.statusText,
                   message: err.error.message
                 } as SnackbarError,
                 duration: 3000
