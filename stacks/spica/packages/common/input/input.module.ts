@@ -1,3 +1,4 @@
+import {DragDropModule} from "@angular/cdk/drag-drop";
 import {CommonModule} from "@angular/common";
 import {
   ANALYZE_FOR_ENTRY_COMPONENTS,
@@ -7,6 +8,7 @@ import {
   Optional
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
+import {MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
@@ -22,12 +24,15 @@ import {MatMenuModule} from "@angular/material/menu";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatTooltipModule} from "@angular/material/tooltip";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
 import {ArrayComponent} from "./components/array/array.component";
 import {ArrayControlContainer} from "./components/array/array.container";
+import {BooleanSchemaComponent} from "./components/boolean-schema/boolean-schema.component";
 import {BooleanComponent} from "./components/boolean/boolean.component";
 import {ColorComponent} from "./components/color/color.component";
 import {DateComponent} from "./components/date/date.component";
+import {DateValidatorDirective} from "./components/date/date.validator";
 import {EnumSchemaComponent} from "./components/enum-schema/enum-schema.component";
 import {NumberSchemaComponent} from "./components/number-schema/number-schema.component";
 import {NumberComponent} from "./components/number/number.component";
@@ -41,17 +46,13 @@ import {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 import {InputPlacerComponent} from "./input.placer";
 import {InputResolver} from "./input.resolver";
 import {NgModelParentDirective} from "./ngmodel.parent";
-import {DragDropModule} from "@angular/cdk/drag-drop";
 import {
+  MaxItemsValidator,
   MaxValidator,
   MinItemsValidator,
   MinValidator,
-  UniqueItemsValidator,
-  MaxItemsValidator
+  UniqueItemsValidator
 } from "./validators";
-import {BooleanSchemaComponent} from "./components/boolean-schema/boolean-schema.component";
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
-import {MatBadgeModule} from "@angular/material/badge";
 
 export function coerceObject() {
   return {};
@@ -91,6 +92,7 @@ export function coerceObject() {
     StringSchemaComponent,
     EnumSchemaComponent,
     DateComponent,
+    DateValidatorDirective,
     NumberComponent,
     NumberSchemaComponent,
     BooleanComponent,

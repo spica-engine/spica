@@ -21,17 +21,19 @@ export class StringComponent implements ControlValueAccessor {
 
   writeValue(val: string): void {
     this.value = val;
-    if (this.value == undefined && this.schema.default) {
+    if (this.value == null && this.schema.default) {
       this.value = String(this.schema.default);
-      this._onChangeFn(this.value);
     }
   }
+
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;
   }
+
   registerOnTouched(fn: any): void {
     this._onTouchedFn = fn;
   }
+
   setDisabledState?(isDisabled: boolean): void {
     this.disabled = isDisabled;
   }
