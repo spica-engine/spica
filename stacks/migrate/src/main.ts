@@ -1,8 +1,10 @@
 import * as semver from "semver";
 import * as yargs from "yargs";
+import * as color from "cli-color";
 import {migrate} from "./migrate";
 
 export async function run(arg?: string | readonly string[]) {
+  const _console = new console.Console(process.stdout, process.stderr);
   const args = yargs
     .option("from", {
       type: "string",
@@ -26,13 +28,24 @@ export async function run(arg?: string | readonly string[]) {
       type: "boolean",
       describe: "When true, runs through and reports activity without writing out results."
     })
+    .option("continue-if-versions-are-equal", {
+      type: "boolean",
+      describe: "When true, migration will run even if --from and --to are equal.",
+      default: false
+    })
     .check(args => {
       if (!semver.valid(args.from) || !semver.valid(args.to)) {
         throw new TypeError("--from or --to was not a valid semver string.");
       }
 
       if (semver.eq(args.from, args.to)) {
-        throw new TypeError("--from and --to can not be equal.");
+        if (!args["continue-if-versions-are-equal"]) {
+          throw new TypeError("--from and --to can not be equal.");
+        } else {
+          _console.info(
+            color.cyan("Not interrupting the migration despite --from and --to were equal.")
+          );
+        }
       }
 
       if (semver.gt(args.from, args.to)) {
@@ -48,7 +61,7 @@ export async function run(arg?: string | readonly string[]) {
     from: args.from.toString(),
     to: args.to.toString(),
     dryRun: args["dry-run"],
-    console: new console.Console(process.stdout, process.stderr),
+    console: _console,
     database: {
       name: args["database-name"],
       uri: args["database-uri"]

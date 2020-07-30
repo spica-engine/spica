@@ -26,12 +26,13 @@ spec:
             --from, "$(FROM)",
             --to, {{ .Chart.Version }},
             --database-uri, {{ template "database.connection-uri" . }},
-            --database-name,  {{ .Values.database.name }}
+            --database-name,  {{ .Values.database.name }},
+            --continue-if-versions-are-equal
           ]
           env:
             - name: FROM
               valueFrom:
                 configMapKeyRef:
-                  name: version
+                  name: {{ .Release.Name }}-version
                   key: VERSION
 {{- end -}}
