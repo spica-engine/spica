@@ -6,7 +6,7 @@
     [name]="schema.$name"
     [required]="schema.$required"
     ngModelParent
-    [(ngModel)]="value"
+    [ngModel]="value"
     (ngModelChange)="_onChangeFn($event)"
     (blur)="_onTouchedFn()"
   >
@@ -22,7 +22,7 @@
     [maxlength]="schema.maxLength"
     [pattern]="schema.pattern"
     ngModelParent
-    [(ngModel)]="value"
+    [ngModel]="value"
     (ngModelChange)="_onChangeFn($event)"
     (blur)="_onTouchedFn()"
   />
@@ -39,7 +39,7 @@
         <button
           mat-menu-item
           *ngFor="let example of schema.examples"
-          (click)="value = example; callOnChange()"
+          (click)="value = example; _onChangeFn(example)"
         >
           {{ example }}
         </button>
