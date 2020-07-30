@@ -10,8 +10,8 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
   ]
 })
 export class ObjectComponent implements ControlValueAccessor {
-  _value: Object = new Object();
-  _disabled: boolean = false;
+  value: Object;
+  disabled: boolean = false;
   _onChangeFn: Function = () => {};
   _onTouchedFn: Function = () => {};
 
@@ -23,12 +23,14 @@ export class ObjectComponent implements ControlValueAccessor {
   }
 
   callOnChange() {
-    this._onChangeFn(this._value);
+    this._onChangeFn(this.value);
   }
 
   writeValue(val: object): void {
     if (typeof val == "object" && val != null) {
-      this._value = val;
+      this.value = val;
+    } else {
+      this.value = {};
     }
   }
 
@@ -41,6 +43,6 @@ export class ObjectComponent implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this._disabled = isDisabled;
+    this.disabled = isDisabled;
   }
 }

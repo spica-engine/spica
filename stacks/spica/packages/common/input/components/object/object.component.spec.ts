@@ -142,10 +142,11 @@ describe("Common#object", () => {
     }));
 
     it("should propagate changes from placer", () => {
+      fixture.componentInstance.writeValue(undefined);
       const placers = fixture.debugElement.queryAll(By.directive(StringPlacer));
       placers[0].componentInstance._change("test1");
       placers[1].componentInstance._change("test2");
-      expect(fixture.componentInstance._value).toEqual({prop1: "test1", prop2: "test2"});
+      expect(fixture.componentInstance.value).toEqual({prop1: "test1", prop2: "test2"});
     });
   });
 

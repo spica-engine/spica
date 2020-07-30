@@ -105,7 +105,7 @@ describe("Common#date", () => {
       const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
       expect(formFieldElem.classList).toContain("ng-invalid");
       expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-        "Must be a valid date-time"
+        " Must be a valid date-time "
       );
     });
   });

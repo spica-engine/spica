@@ -289,7 +289,7 @@ describe("Common#array", () => {
         tick();
         fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-          " All items in the array must be filled. "
+          " All items in this property must be filled. "
         );
       }));
     });
@@ -308,7 +308,7 @@ describe("Common#array", () => {
         tick();
         fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-          " All items in the array must be unique. "
+          " All items in this property must be unique. "
         );
       }));
     });
@@ -328,7 +328,7 @@ describe("Common#array", () => {
         tick();
         fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-          " Array must have at least 2 items. "
+          " This property must have at least 2 items. "
         );
       }));
     });
@@ -348,7 +348,7 @@ describe("Common#array", () => {
         tick();
         fixture.detectChanges();
         expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
-          " Array can have maximum 2 items. "
+          " This property can have maximum 2 items. "
         );
       }));
     });
