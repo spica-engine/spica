@@ -36,22 +36,6 @@ describe("Common#boolean", () => {
       slideToggle = fixture.debugElement.query(By.css("mat-slide-toggle")).componentInstance;
     }));
 
-    it("should default to default value if undefined", () => {
-      const fixture = TestBed.createComponent(BooleanComponent);
-      const changeSpy = jasmine.createSpy("ngModelChange");
-      fixture.componentInstance.registerOnChange(changeSpy);
-
-      fixture.componentInstance.schema.default = true;
-      fixture.componentInstance.writeValue(undefined);
-      fixture.detectChanges();
-      expect(changeSpy).toHaveBeenCalledWith(true);
-
-      fixture.componentInstance.schema.default = false;
-      fixture.componentInstance.writeValue(undefined);
-      fixture.detectChanges();
-      expect(changeSpy).toHaveBeenCalledWith(false);
-    });
-
     it("should propagate true on click if the start value is false", () => {
       const changeSpy = jasmine.createSpy("ngModelChange");
       fixture.componentInstance.registerOnChange(changeSpy);
@@ -72,6 +56,20 @@ describe("Common#boolean", () => {
       fixture.detectChanges();
       expect(changeSpy).toHaveBeenCalledWith(true);
       expect(slideToggle.checked).toBe(true);
+    });
+
+    describe("default", () => {
+      it("should default to default value if undefined", () => {
+        const ngModelChange = jasmine.createSpy("ngModelChange");
+        fixture.componentInstance.registerOnChange(ngModelChange);
+
+        fixture.componentInstance.schema.default = false;
+        fixture.componentInstance.writeValue(undefined);
+        fixture.detectChanges();
+
+        expect(ngModelChange).toHaveBeenCalledWith(false);
+        expect(slideToggle.checked).toBe(false);
+      });
     });
   });
 });

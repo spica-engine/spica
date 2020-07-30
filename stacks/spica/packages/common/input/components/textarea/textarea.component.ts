@@ -12,24 +12,27 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 export class TextAreaComponent implements ControlValueAccessor {
   value: string;
   disabled: boolean = false;
-  _onChangeFn: any = () => {};
-  _onTouchedFn: any = () => {};
+  _onChangeFn = (_: string) => {};
+  _onTouchedFn = () => {};
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
   writeValue(val: string): void {
     this.value = val;
-    if (this.value == undefined && this.schema.default) {
+    if (this.value === undefined && this.schema.default) {
       this.value = String(this.schema.default);
       this._onChangeFn(this.value);
     }
   }
+
   registerOnChange(fn: any): void {
     this._onChangeFn = fn;
   }
+
   registerOnTouched(fn: any): void {
     this._onTouchedFn = fn;
   }
+
   setDisabledState?(isDisabled: boolean): void {
     this.disabled = isDisabled;
   }

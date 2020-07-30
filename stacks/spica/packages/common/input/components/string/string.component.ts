@@ -1,4 +1,12 @@
-import {Component, forwardRef, Inject, ViewChild} from "@angular/core";
+import {
+  Component,
+  forwardRef,
+  Inject,
+  ViewChild,
+  OnDestroy,
+  OnInit,
+  AfterViewInit
+} from "@angular/core";
 import {ControlValueAccessor, NgModel, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 
@@ -12,8 +20,9 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 export class StringComponent implements ControlValueAccessor {
   value: string;
   disabled: boolean = false;
-  _onChangeFn: Function = () => {};
-  _onTouchedFn: Function = () => {};
+
+  _onChangeFn = (_: string) => {};
+  _onTouchedFn = () => {};
 
   @ViewChild(NgModel) model: NgModel;
 
@@ -21,8 +30,9 @@ export class StringComponent implements ControlValueAccessor {
 
   writeValue(val: string): void {
     this.value = val;
-    if (this.value == null && this.schema.default) {
+    if (this.value === undefined && this.schema.default) {
       this.value = String(this.schema.default);
+      this._onChangeFn(this.value);
     }
   }
 
