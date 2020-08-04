@@ -1,4 +1,6 @@
 import {DynamicModule, Module, Type} from "@nestjs/common";
+import {BucketCache, provideBucketCache} from "@spica-server/bucket/cache";
+import {DataChangeModule} from "@spica-server/bucket/change";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
@@ -10,18 +12,18 @@ import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
-import {BucketCache, provideBucketCache} from "./cache";
 import {DocumentScheduler} from "./scheduler";
-const BucketSchema = require("./schemas/bucket.schema.json");
-const BucketsSchema = require("./schemas/buckets.schema.json");
-const PropertyOptionsSchema = require("./schemas/property-options.schema.json");
 
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
     const imports: (Type<any> | DynamicModule)[] = [
       SchemaModule.forChild({
-        schemas: [BucketSchema, BucketsSchema, PropertyOptionsSchema]
+        schemas: [
+          require("./schemas/bucket.schema.json"),
+          require("./schemas/buckets.schema.json"),
+          require("./schemas/property-options.schema.json")
+        ]
       }),
       ServicesModule
     ];
@@ -36,6 +38,10 @@ export class BucketModule {
 
     if (options.realtime) {
       imports.push(RealtimeModule);
+    }
+
+    if (options.experimentalDataChange) {
+      imports.push(DataChangeModule);
     }
 
     return {
@@ -78,4 +84,5 @@ export interface BucketOptions {
   hooks: boolean;
   history: boolean;
   realtime: boolean;
+  experimentalDataChange: boolean;
 }

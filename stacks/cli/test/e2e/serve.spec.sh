@@ -12,6 +12,7 @@ assert_partially "$OUTPUT" "Pulling images"
 assert_partially "$OUTPUT" "Creating an ingress to route traffic."
 assert_partially "$OUTPUT" "Spica $NAME is serving on http://localhost"
 
+echo $OUTPUT
 
 PORT_REGEX='on http:\/\/localhost\:([0-9]+)'
 
