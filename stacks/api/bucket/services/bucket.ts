@@ -38,10 +38,3 @@ export interface BucketPreferences extends Preference {
   default: string;
 }
 
-export interface ImportFile {
-  content: {
-    data: Buffer;
-    type: string;
-    size?: number;
-  };
-}
