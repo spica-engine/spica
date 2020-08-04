@@ -47,7 +47,12 @@ describe("Hooks Integration", () => {
         }),
         CoreTestingModule,
         PreferenceTestingModule,
-        BucketModule.forRoot({hooks: true, history: false, realtime: true}),
+        BucketModule.forRoot({
+          hooks: true,
+          history: false,
+          realtime: true,
+          experimentalDataChange: false
+        }),
         FunctionModule.forRoot({
           path: os.tmpdir(),
           databaseName: undefined,

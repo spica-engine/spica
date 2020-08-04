@@ -24,7 +24,12 @@ describe("scheduler", () => {
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
-        BucketModule.forRoot({hooks: false, realtime: false, history: false})
+        BucketModule.forRoot({
+          hooks: false,
+          realtime: false,
+          history: false,
+          experimentalDataChange: false
+        })
       ]
     })
       .overrideProvider(BucketDataService)

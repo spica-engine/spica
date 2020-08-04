@@ -77,7 +77,12 @@ const args = yargs
     },
     "experimental-bucket-realtime": {
       boolean: true,
-      description: "Whether Experimental Bucket Realtime feature is enabled.",
+      description: "Whether the experimental Bucket realtime feature is enabled.",
+      default: true
+    },
+    "experimental-bucket-data-change": {
+      boolean: true,
+      description: "Whether the experimental Bucket data change feature is enabled.",
       default: true
     }
   })
@@ -241,7 +246,8 @@ const modules = [
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"]
+    realtime: args["experimental-bucket-realtime"],
+    experimentalDataChange: args["experimental-bucket-data-change"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",

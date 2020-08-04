@@ -10,7 +10,9 @@
     (ngModelChange)="_onChangeFn($event)"
     (blur)="_onTouchedFn()"
   >
-    <mat-option *ngFor="let enum of schema.enum" [value]="enum">{{ enum }}</mat-option>
+    <mat-option *ngFor="let enum of schema.enum; let index = index" [value]="enum">
+      {{ schema["viewEnum"] ? schema["viewEnum"][index] : enum }}
+    </mat-option>
   </mat-select>
   <input
     *ngIf="!schema.enum"

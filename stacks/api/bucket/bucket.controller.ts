@@ -8,16 +8,17 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Optional,
   Param,
   Patch,
   Post,
   Put,
   Res,
   UseGuards,
-  UseInterceptors,
-  Optional
+  UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
+import {HistoryService} from "@spica-server/bucket/history";
 import {Bucket, BucketDocument, BucketService, ImportFile} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
@@ -29,7 +30,6 @@ import * as request from "request";
 import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {findRelations, findRemovedKeys} from "./utilities";
-import {HistoryService} from "./history/history.service";
 
 @Controller("bucket")
 export class BucketController {

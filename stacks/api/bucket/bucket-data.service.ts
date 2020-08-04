@@ -59,7 +59,7 @@ export class BucketDataService {
     filter: FilterQuery<BucketDocument>
   ): Promise<DeleteWriteOpResultObject> {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
-    return collection.deleteOne(filter);
+    return collection.deleteOne(filter, {});
   }
 
   deleteAll(bucketId: string | ObjectId): Promise<boolean> {
@@ -68,7 +68,7 @@ export class BucketDataService {
 
   deleteMany(
     bucketId: string | ObjectId,
-    idArray: Array<string>
+    idArray: Array<string | ObjectId>
   ): Promise<DeleteWriteOpResultObject> {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
 

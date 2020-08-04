@@ -35,7 +35,12 @@ describe("BucketDataController", () => {
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
-        BucketModule.forRoot({hooks: false, history: false, realtime: false})
+        BucketModule.forRoot({
+          hooks: false,
+          history: false,
+          realtime: false,
+          experimentalDataChange: false
+        })
       ]
     }).compile();
     db = module.get(DatabaseService);

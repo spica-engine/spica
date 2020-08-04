@@ -5,8 +5,6 @@ import {Function} from "../interface";
 import {Observable} from "rxjs";
 import {JSONSchema7} from "json-schema";
 
-// TODO(thesayyn): Provide a schema invalidator
-// in order to catch up latest schemas from triggers
 @Injectable()
 export class EnqueuerSchemaResolver {
   constructor(private registry: FunctionEngine) {}

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -15,38 +16,26 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors,
-  BadRequestException
+  UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
+import {DataChangeEmitter} from "@spica-server/bucket/change";
+import {HistoryService} from "@spica-server/bucket/history";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import * as locale from "locale";
 import {createBucketDataActivity} from "./activity.resource";
-import {BucketDataService, getBucketDataCollection} from "./bucket-data.service";
-import {findRelations} from "./utilities";
-import {HistoryService} from "./history/history.service";
-
-function filterReviver(k: string, v: string) {
-  const availableConstructors = {
-    Date: v => new Date(v),
-    ObjectId: v => new ObjectId(v)
-  };
-  const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
-  if (typeof v == "string" && ctr.test(v)) {
-    const [, desiredCtr, arg] = v.match(ctr);
-    if (availableConstructors[desiredCtr]) {
-      return availableConstructors[desiredCtr](arg);
-    } else {
-      throw new Error(`Could not find the constructor ${desiredCtr} in {"${k}":"${v}"}`);
-    }
-  }
-  return v;
-}
+import {BucketDataService} from "./bucket-data.service";
+import {
+  findRelations,
+  buildI18nAggregation,
+  filterReviver,
+  buildRelationAggregation
+} from "./utilities";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -54,7 +43,8 @@ export class BucketDataController {
     private bs: BucketService,
     private bds: BucketDataService,
     @Optional() private dispatcher: ActionDispatcher,
-    @Optional() private history: HistoryService
+    @Optional() private history: HistoryService,
+    @Optional() private changes: DataChangeEmitter
   ) {}
 
   private async getLanguage(language: string) {
@@ -70,104 +60,6 @@ export class BucketDataController {
     const fallback = bucketSettings.language.default;
 
     return {best, fallback};
-  }
-
-  private buildI18nAggregation(property: any, locale: string, fallback: string) {
-    return {
-      $mergeObjects: [
-        property,
-        {
-          $arrayToObject: {
-            $map: {
-              input: {
-                $filter: {
-                  input: {
-                    $objectToArray: property
-                  },
-                  as: "item",
-                  cond: {
-                    $eq: [
-                      {
-                        $type: "$$item.v"
-                      },
-                      "object"
-                    ]
-                  }
-                }
-              },
-              as: "prop",
-              in: {
-                k: "$$prop.k",
-                v: {
-                  $ifNull: [
-                    `$$prop.v.${locale}`,
-                    {
-                      $ifNull: [`$$prop.v.${fallback}`, `$$prop.v`]
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      ]
-    };
-  }
-
-  private buildRelationAggregation(
-    property: string,
-    bucketId: string,
-    type: "onetomany" | "onetoone",
-    locale: {best: string; fallback: string}
-  ) {
-    if (type == "onetomany") {
-      return [
-        {
-          $lookup: {
-            from: getBucketDataCollection(bucketId),
-            let: {
-              documentIds: {
-                $ifNull: [
-                  {
-                    $map: {
-                      input: `$${property}`,
-                      in: {$toObjectId: "$$this"}
-                    }
-                  },
-                  []
-                ]
-              }
-            },
-            pipeline: [
-              {$match: {$expr: {$in: ["$_id", "$$documentIds"]}}},
-              {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
-              {$set: {_id: {$toString: "$_id"}}}
-            ],
-            as: property
-          }
-        }
-      ];
-    } else {
-      return [
-        {
-          $lookup: {
-            from: getBucketDataCollection(bucketId),
-            let: {
-              documentId: {
-                $toObjectId: `$${property}`
-              }
-            },
-            pipeline: [
-              {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
-              {$replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
-              {$set: {_id: {$toString: "$_id"}}}
-            ],
-            as: property
-          }
-        },
-        {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
-      ];
-    }
   }
 
   @Get()
@@ -213,7 +105,7 @@ export class BucketDataController {
       const locale = await this.getLanguage(acceptedLanguage);
 
       aggregation.push({
-        $replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
       });
     }
 
@@ -228,7 +120,7 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggregation(
+            ...buildRelationAggregation(
               propertyKey,
               property["bucketId"],
               property["relationType"],
@@ -327,7 +219,7 @@ export class BucketDataController {
       const locale = await this.getLanguage(acceptedLanguage);
 
       aggregation.unshift({
-        $replaceWith: this.buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
       });
     }
 
@@ -337,7 +229,7 @@ export class BucketDataController {
         const property = schema.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
-            ...this.buildRelationAggregation(
+            ...buildRelationAggregation(
               propertyKey,
               property["bucketId"],
               property["relationType"],
@@ -370,7 +262,7 @@ export class BucketDataController {
   @UseInterceptors(activity(createBucketDataActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
-  async replaceOne(
+  async insertOne(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers() headers: object,
@@ -385,7 +277,24 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-    return this.bds.insertOne(bucketId, body).then(result => result.ops[0]);
+    const {
+      ops: [currentDocument],
+      insertedId
+    } = await this.bds.insertOne(bucketId, body);
+
+    if (this.changes) {
+      this.changes.emitChange(
+        {
+          bucket: bucketId.toHexString(),
+          type: "insert"
+        },
+        insertedId.toHexString(),
+        undefined,
+        currentDocument
+      );
+    }
+
+    return currentDocument;
   }
 
   @UseInterceptors(activity(createBucketDataActivity))
@@ -409,17 +318,26 @@ export class BucketDataController {
       }
     }
 
-    return this.bds
-      .replaceOne(bucketId, {_id: documentId}, body, {returnOriginal: true})
-      .then(result => {
-        if (result.ok == 1 && result.value) {
-          const currentDocument = {...body, _id: documentId};
-          const _ = this.createHistory(bucketId, result.value, currentDocument);
-          return currentDocument;
-        } else {
-          throw new BadRequestException();
-        }
-      });
+    const {value: previousDocument} = await this.bds.replaceOne(bucketId, {_id: documentId}, body, {
+      returnOriginal: true
+    });
+
+    const currentDocument = {...body, _id: documentId};
+    const _ = this.createHistory(bucketId, previousDocument, currentDocument);
+
+    if (this.changes) {
+      this.changes.emitChange(
+        {
+          bucket: bucketId.toHexString(),
+          type: "replace"
+        },
+        documentId.toHexString(),
+        previousDocument,
+        currentDocument
+      );
+    }
+
+    return currentDocument;
   }
 
   @UseInterceptors(activity(createBucketDataActivity))
@@ -442,18 +360,33 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-    let deletedCount = await this.bds
-      .deleteOne(bucketId, {_id: documentId})
-      .then(result => result.deletedCount);
-    if (deletedCount < 1) return;
 
-    if (this.history) {
-      await this.history.deleteMany({
-        document_id: documentId
-      });
+    let deletedDocument: BucketDocument;
+
+    if (this.changes) {
+      deletedDocument = await this.bds.findOne(bucketId, {_id: documentId});
     }
+    const {deletedCount} = await this.bds.deleteOne(bucketId, {_id: documentId});
 
-    return this.clearRelations(this.bs, bucketId, documentId);
+    if (deletedCount > 0) {
+      if (this.changes) {
+        this.changes.emitChange(
+          {
+            bucket: bucketId.toHexString(),
+            type: "delete"
+          },
+          documentId.toHexString(),
+          deletedDocument,
+          undefined
+        );
+      }
+      if (this.history) {
+        await this.history.deleteMany({
+          document_id: documentId
+        });
+      }
+      await this.clearRelations(this.bs, bucketId, documentId);
+    }
   }
 
   @UseInterceptors(activity(createBucketDataActivity))
@@ -463,33 +396,37 @@ export class BucketDataController {
   async deleteMany(
     @Headers("strategy-type") strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Body() body
+    @Body(ARRAY(v => new ObjectId(v))) ids: ObjectId[]
   ) {
     if (strategyType == "APIKEY") {
       throw new BadRequestException(
-        "Apikey strategy doesn't support to delete multiple resource at once."
-      );
-    }
-    let deletedCount = await this.bds
-      .deleteMany(bucketId, body)
-      .then(result => result.deletedCount);
-    if (deletedCount < 1) return;
-
-    if (this.history) {
-      await Promise.all(
-        body.map(id => {
-          this.history.deleteMany({
-            document_id: new ObjectId(id)
-          });
-        })
+        "Apikey strategy does not support deleting multiple resource at once."
       );
     }
 
-    return Promise.all(
-      body.map(id => {
-        this.clearRelations(this.bs, bucketId, new ObjectId(id)).catch(err => err);
-      })
-    );
+    let documents: BucketDocument[];
+
+    if (this.changes) {
+      documents = await this.bds.find(bucketId, {$match: {_id: {$in: ids}}});
+    }
+    const {deletedCount} = await this.bds.deleteMany(bucketId, ids);
+
+    if (deletedCount > 0) {
+      if (this.changes) {
+        for (const document of documents) {
+          this.changes.emitChange(
+            {bucket: bucketId.toHexString(), type: "delete"},
+            document._id.toHexString(),
+            document,
+            null
+          );
+        }
+      }
+      await Promise.all(ids.map(id => this.clearRelations(this.bs, bucketId, id)));
+      if (this.history) {
+        await Promise.all(ids.map(id => this.history.deleteMany({document_id: id})));
+      }
+    }
   }
 
   async clearRelations(bucketService: BucketService, bucketId: ObjectId, documentId: ObjectId) {
