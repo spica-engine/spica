@@ -54,7 +54,12 @@ describe("Bucket acceptance", () => {
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
-        BucketModule.forRoot({hooks: false, history: false, realtime: false})
+        BucketModule.forRoot({
+          hooks: false,
+          history: false,
+          realtime: false,
+          experimentalDataChange: false
+        })
       ]
     }).compile();
     app = module.createNestApplication();

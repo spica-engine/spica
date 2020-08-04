@@ -58,6 +58,7 @@ describe("Engine", () => {
         root: "test_root",
         timeout: 1
       },
+      null,
       null
     );
 

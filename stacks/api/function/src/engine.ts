@@ -13,7 +13,7 @@ import * as util from "util";
 import {ChangeKind, FunctionService, TargetChange} from "./function.service";
 import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
-import {Schema, SCHEMA, SchemaWithName} from "./schema/schema";
+import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
 
 @Injectable()
 export class FunctionEngine {
@@ -32,10 +32,14 @@ export class FunctionEngine {
     private mongo: MongoClient,
     private scheduler: Scheduler,
     @Inject(FUNCTION_OPTIONS) private options: Options,
-    @Optional() @Inject(SCHEMA) private schema: SchemaWithName
+    @Optional() @Inject(SCHEMA) schema: SchemaWithName,
+    @Optional() @Inject(SCHEMA1) private schema1: SchemaWithName
   ) {
     if (schema) {
-      this.schemas.set(this.schema.name, this.schema.schema);
+      this.schemas.set(schema.name, schema.schema);
+    }
+    if (schema1) {
+      this.schemas.set(schema1.name, schema1.schema);
     }
     this.fs
       .targets()

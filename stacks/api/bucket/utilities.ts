@@ -1,3 +1,6 @@
+import {getBucketDataCollection} from "./bucket-data.service";
+import {ObjectId} from "@spica-server/database";
+
 export function findRelations(schema: any, bucketId: string, path: string = "", targets: string[]) {
   path = path ? `${path}.` : ``;
   for (const key of Object.keys(schema)) {
@@ -65,4 +68,119 @@ export function isRelation(schema: any, bucketId: string) {
 
 export function isArray(schema: any) {
   return schema.type == "array";
+}
+
+export function filterReviver(k: string, v: string) {
+  const availableConstructors = {
+    Date: v => new Date(v),
+    ObjectId: v => new ObjectId(v)
+  };
+  const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
+  if (typeof v == "string" && ctr.test(v)) {
+    const [, desiredCtr, arg] = v.match(ctr);
+    if (availableConstructors[desiredCtr]) {
+      return availableConstructors[desiredCtr](arg);
+    } else {
+      throw new Error(`Could not find the constructor ${desiredCtr} in {"${k}":"${v}"}`);
+    }
+  }
+  return v;
+}
+
+export function buildRelationAggregation(
+  property: string,
+  bucketId: string,
+  type: "onetomany" | "onetoone",
+  locale: {best: string; fallback: string}
+) {
+  if (type == "onetomany") {
+    return [
+      {
+        $lookup: {
+          from: getBucketDataCollection(bucketId),
+          let: {
+            documentIds: {
+              $ifNull: [
+                {
+                  $map: {
+                    input: `$${property}`,
+                    in: {$toObjectId: "$$this"}
+                  }
+                },
+                []
+              ]
+            }
+          },
+          pipeline: [
+            {$match: {$expr: {$in: ["$_id", "$$documentIds"]}}},
+            {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+            {$set: {_id: {$toString: "$_id"}}}
+          ],
+          as: property
+        }
+      }
+    ];
+  } else {
+    return [
+      {
+        $lookup: {
+          from: getBucketDataCollection(bucketId),
+          let: {
+            documentId: {
+              $toObjectId: `$${property}`
+            }
+          },
+          pipeline: [
+            {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
+            {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+            {$set: {_id: {$toString: "$_id"}}}
+          ],
+          as: property
+        }
+      },
+      {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
+    ];
+  }
+}
+
+export function buildI18nAggregation(property: any, locale: string, fallback: string) {
+  return {
+    $mergeObjects: [
+      property,
+      {
+        $arrayToObject: {
+          $map: {
+            input: {
+              $filter: {
+                input: {
+                  $objectToArray: property
+                },
+                as: "item",
+                cond: {
+                  $eq: [
+                    {
+                      $type: "$$item.v"
+                    },
+                    "object"
+                  ]
+                }
+              }
+            },
+            as: "prop",
+            in: {
+              k: "$$prop.k",
+              v: {
+                $ifNull: [
+                  `$$prop.v.${locale}`,
+                  {
+                    $ifNull: [`$$prop.v.${fallback}`, `$$prop.v`]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  };
 }
