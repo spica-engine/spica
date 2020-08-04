@@ -19,8 +19,8 @@ import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
 import {StorageModule} from "@spica-server/storage";
 import * as fs from "fs";
-import * as path from "path";
 import * as https from "https";
+import * as path from "path";
 import * as yargs from "yargs";
 
 const args = yargs
@@ -154,22 +154,22 @@ const args = yargs
   })
   /* CORS Options */
   .option({
-    allowedOrigins: {
+    "cors-allowed-origins": {
       array: true,
       description: "Access-Control-Allow-Origin.",
       default: ["*"]
     },
-    allowedMethods: {
+    "cors-allowed-methods": {
       array: true,
       description: "Access-Control-Allow-Methods",
       default: ["*"]
     },
-    allowedHeaders: {
+    "cors-allowed-headers": {
       array: true,
       description: "Access-Control-Allow-Headers",
       default: ["Authorization", "Content-Type", "Accept-Language"]
     },
-    allowCredentials: {
+    "cors-allow-credentials": {
       boolean: true,
       description: "Access-Control-Allow-Credentials",
       default: true
@@ -275,10 +275,10 @@ const modules = [
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
     corsOptions: {
-      allowedOrigins: args["allowedOrigins"],
-      allowedMethods: args["allowedMethods"],
-      allowedHeaders: args["allowedHeaders"],
-      allowCredentials: args["allowCredentials"]
+      allowedOrigins: args["cors-allowed-origins"],
+      allowedMethods: args["cors-allowed-methods"],
+      allowedHeaders: args["cors-allowed-headers"],
+      allowCredentials: args["cors-allow-credentials"]
     }
   })
 ];
