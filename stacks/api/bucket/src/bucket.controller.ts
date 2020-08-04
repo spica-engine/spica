@@ -15,15 +15,15 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import { activity } from "@spica-server/activity/services";
-import { HistoryService } from "@spica-server/bucket/history";
-import { Bucket, BucketService } from "@spica-server/bucket/services";
-import { Schema } from "@spica-server/core/schema";
-import { ObjectId, OBJECT_ID } from "@spica-server/database";
-import { ActionGuard, AuthGuard } from "@spica-server/passport";
-import { createBucketActivity } from "./activity.resource";
-import { BucketDataService } from "./bucket-data.service";
-import { findRelations, findRemovedKeys } from "./utilities";
+import {activity} from "@spica-server/activity/services";
+import {HistoryService} from "@spica-server/bucket/history";
+import {Bucket, BucketService} from "@spica-server/bucket/services";
+import {Schema} from "@spica-server/core/schema";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {createBucketActivity} from "./activity.resource";
+import {BucketDataService} from "./bucket-data.service";
+import {findRelations, findRemovedKeys} from "./utility";
 
 @Controller("bucket")
 export class BucketController {
@@ -63,7 +63,9 @@ export class BucketController {
   ) {
     const previousSchema = await this.bs.findOne({_id: id});
 
-    const currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {returnOriginal: false});
+    const currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {
+      returnOriginal: false
+    });
 
     await this.clearRemovedFields(this.bds, previousSchema, currentSchema);
 
@@ -99,7 +101,7 @@ export class BucketController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const deletedCount = await this.bs.deleteOne({_id: id});
-    if ( deletedCount >  0 ) {
+    if (deletedCount > 0) {
       await this.bds.deleteAll(id);
       await this.clearRelations(this.bs, this.bds, id);
       if (this.history) {

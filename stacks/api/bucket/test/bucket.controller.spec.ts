@@ -1,5 +1,6 @@
 import {INestApplication} from "@nestjs/common";
-import {Test, TestingModule} from "@nestjs/testing";
+import {Test} from "@nestjs/testing";
+import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {
@@ -13,7 +14,6 @@ import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {BucketModule} from "./bucket.module";
 
 describe("Bucket acceptance", () => {
   let app: INestApplication;

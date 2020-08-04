@@ -1,4 +1,10 @@
-import {isRelation, isObject, findRelations, isArray, findRemovedKeys} from "./utilities";
+import {
+  isRelation,
+  isObject,
+  findRelations,
+  isArray,
+  findRemovedKeys
+} from "@spica-server/bucket/src/utility";
 
 describe("Utilities", () => {
   it("should check whether schema is object or not", () => {

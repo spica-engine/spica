@@ -37,4 +37,3 @@ export interface BucketPreferences extends Preference {
   };
   default: string;
 }
-

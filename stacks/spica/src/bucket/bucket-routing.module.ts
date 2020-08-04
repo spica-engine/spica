@@ -5,7 +5,6 @@ import {IdentityGuard, PolicyGuard} from "../passport";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
-import {ImportExportComponent} from "./pages/import-export/import-export.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
@@ -52,10 +51,6 @@ const routes: Routes = [
       {
         path: "welcome",
         component: WelcomeComponent
-      },
-      {
-        path: "import-export",
-        component: ImportExportComponent
       },
       {
         path: "settings",
