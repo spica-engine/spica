@@ -18,7 +18,7 @@ sh_test(
     data = [
         ":prepare_integration_tests",
         "//stacks/api:image.tar",
-        "//stacks/cli:package",
+        "//stacks/cli:bin",
     ],
     deps = [
         "@bazel_tools//tools/bash/runfiles",

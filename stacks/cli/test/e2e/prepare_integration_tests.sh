@@ -12,7 +12,7 @@ source "$(grep -sm1 "^$f " "$0.exe.runfiles_manifest" | cut -f2- -d' ')" 2>/dev/
 
 shopt -s expand_aliases
 
-alias spica=$(rlocation $TEST_WORKSPACE/stacks/cli/package/bin/spica)
+alias spica=$(rlocation $TEST_WORKSPACE/stacks/cli/bin.sh)
 
 echo "## Building local images"
 
