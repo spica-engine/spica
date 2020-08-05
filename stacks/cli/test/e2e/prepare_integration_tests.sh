@@ -19,13 +19,13 @@ echo "## Building local images"
 TAG="${TEST_BINARY//\//_}"
 
 
-# docker load -i $(rlocation $TEST_WORKSPACE/stacks/api/image.tar) -q
-# docker image tag bazel/stacks/api:image spicaengine/api:$TAG
+docker load -i $(rlocation $TEST_WORKSPACE/stacks/api/image.tar) -q
+docker image tag bazel/stacks/api:image spicaengine/api:$TAG
 
-# # Client image does not break frequently so we should not waste
-# # time building it from scratch. instead we pull it from nighty builds
-# docker pull spicaengine/spica:master -q
-# docker image tag spicaengine/spica:master spicaengine/spica:$TAG
+# Client image does not break frequently so we should not waste
+# time building it from scratch. instead we pull it from nighty builds
+docker pull spicaengine/spica:master -q
+docker image tag spicaengine/spica:master spicaengine/spica:$TAG
 
 function assert_partially {
     declare OUTPUT="$1"
