@@ -60,10 +60,10 @@ export class ServeCommand extends Command {
           default: false
         },
         {
-          name: "clear-volumes",
+          name: "retain-volumes",
           type: Boolean,
-          summary: "When true, the existing data will be removed.",
-          default: false
+          summary: "When false, the existing data will be removed.",
+          default: true
         },
         {
           name: "restart",
@@ -141,7 +141,7 @@ export class ServeCommand extends Command {
     if (options.force && (foundNetworks.length || foundContainers.length)) {
       await this.namespace.logger.spin({
         text: `Shutting down and removing the previous containers, networks${
-          options["clear-volumes"] ? ", and volumes" : ""
+          !options["retain-volumes"] ? ", and volumes" : ""
         }.`,
         op: async () => {
           await Promise.all(
@@ -155,7 +155,7 @@ export class ServeCommand extends Command {
             })
           );
           await Promise.all(foundNetworks.map(network => machine.getNetwork(network.Id).remove()));
-          if (options["clear-volumes"]) {
+          if (!options["retain-volumes"]) {
             const foundVolumes = (await machine.listVolumes({
               filters: JSON.stringify({label: [`namespace=${namespace}`]})
             })).Volumes;

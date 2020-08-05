@@ -27,7 +27,29 @@ docker image tag bazel/stacks/api:image spicaengine/api:$TAG
 docker pull spicaengine/spica:master -q
 docker image tag spicaengine/spica:master spicaengine/spica:$TAG
 
-function assert_partially {
+
+function assert_not_contains {
+    declare OUTPUT="$1"
+    declare EXPECTED="$2"
+    if [[ $OUTPUT == *"$EXPECTED"* ]]; then
+        echo ""
+        echo "ASSERTION ERROR"
+        echo ""
+        echo "EXPECTED" 
+        echo ""
+        echo $OUTPUT 
+        echo ""
+        echo "TO NOT CONTAIN"
+        echo ""
+        echo $EXPECTED
+        echo ""
+        echo "BUT IT DID."
+        echo ""
+        exit 1
+    fi
+}
+
+function assert_contains {
     declare OUTPUT="$1"
     declare EXPECTED="$2"
     if [[ $OUTPUT != *"$EXPECTED"* ]]; then

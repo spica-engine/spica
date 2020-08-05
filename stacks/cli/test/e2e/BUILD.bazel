@@ -24,3 +24,21 @@ sh_test(
         "@bazel_tools//tools/bash/runfiles",
     ],
 )
+
+sh_test(
+    name = "rm_test",
+    srcs = [
+        "rm.spec.sh",
+    ],
+    args = [
+        "$(location :prepare_integration_tests)",
+    ],
+    data = [
+        ":prepare_integration_tests",
+        "//stacks/api:image.tar",
+        "//stacks/cli:bin",
+    ],
+    deps = [
+        "@bazel_tools//tools/bash/runfiles",
+    ],
+)

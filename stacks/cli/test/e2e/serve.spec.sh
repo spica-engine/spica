@@ -7,11 +7,11 @@ NAME="${TAG//_/-}"
 # FD 5
 exec 5>&1
 
-OUTPUT=$(spica serve $NAME --force --version=$TAG --image-pull-policy=if-not-present --no-open 2>&1 | tee /dev/fd/5; exit ${PIPESTATUS[0]})
+OUTPUT=$(spica serve $NAME --force --version=$TAG --image-pull-policy=if-not-present --retain-volumes=false --no-open 2>&1 | tee /dev/fd/5; exit ${PIPESTATUS[0]})
 
-assert_partially "$OUTPUT" "Pulling images" 
-assert_partially "$OUTPUT" "Creating an ingress to route traffic."
-assert_partially "$OUTPUT" "Spica $NAME is serving on http://localhost"
+assert_contains "$OUTPUT" "Pulling images" 
+assert_contains "$OUTPUT" "Creating an ingress to route traffic."
+assert_contains "$OUTPUT" "Spica $NAME is serving on http://localhost"
 
 echo "## Waiting for a few seconds to let the server become available"
 sleep 5
@@ -30,11 +30,11 @@ if [[ "$OUTPUT" =~ $PORT_REGEX ]]
 
 OUTPUT="$(docker run --network host --rm curlimages/curl curl -s -w '%{http_code} %{content_type}'  http://localhost:$PORT/api/bucket | tee /dev/fd/5; exit ${PIPESTATUS[0]})"
 
-assert_partially "$OUTPUT" "401"
-assert_partially "$OUTPUT" "application/json"
+assert_contains "$OUTPUT" "401"
+assert_contains "$OUTPUT" "application/json"
 
 echo ""
 echo "## All tests have passed. Cleaning"
 echo ""
 
-spica rm $NAME
+spica rm $NAME --retain-volumes=false
