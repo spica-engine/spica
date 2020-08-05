@@ -1,5 +1,5 @@
 import {DynamicModule, Module, Type} from "@nestjs/common";
-import {BucketCache, provideBucketCache} from "@spica-server/bucket/cache";
+import {BucketCache, provideBucketCache} from "./cache";
 import {DataChangeModule} from "@spica-server/bucket/change";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
