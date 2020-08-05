@@ -310,8 +310,9 @@ export class ServeCommand extends Command {
 
         if (
           output.indexOf('"already initialized"') != -1 ||
-          output.indexOf('"Error connecting to')
+          output.indexOf('"Error connecting to') != -1
         ) {
+          console.log(output);
           result = await (await firstContainer.exec({
             Cmd: ["mongo", "admin", "--eval", `rs.reconfig(${replSetConfig}, { force: true })`],
             AttachStderr: true,

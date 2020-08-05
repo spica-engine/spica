@@ -15,6 +15,9 @@ sh_test(
     args = [
         "$(location :prepare_integration_tests)",
     ],
+    tags = [
+        "e2e"
+    ],
     data = [
         ":prepare_integration_tests",
         "//stacks/api:image.tar",
@@ -29,6 +32,9 @@ sh_test(
     name = "rm_test",
     srcs = [
         "rm.spec.sh",
+    ],
+    tags = [
+        "e2e"
     ],
     args = [
         "$(location :prepare_integration_tests)",
