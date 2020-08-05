@@ -7,7 +7,7 @@ NAME="${TAG//_/-}"
 # FD 5
 exec 5>&1
 
-OUTPUT=$(spica serve $NAME --force --version=$TAG --image-pull-policy=if-not-present --retain-volumes=false --no-open 2>&1 | tee /dev/fd/5; exit ${PIPESTATUS[0]})
+OUTPUT=$(spica serve $NAME --force --version=$TAG --port=5791 --image-pull-policy=if-not-present --retain-volumes=false --no-open 2>&1 | tee /dev/fd/5; exit ${PIPESTATUS[0]})
 
 assert_contains "$OUTPUT" "Pulling images" 
 assert_contains "$OUTPUT" "Creating an ingress to route traffic."
