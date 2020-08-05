@@ -27,15 +27,11 @@ import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core
 import {Schema} from "@spica-server/core/schema";
 import {FilterQuery, MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
-import * as locale from "locale";
+
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
-import {
-  findRelations,
-  buildI18nAggregation,
-  filterReviver,
-  buildRelationAggregation
-} from "./utilities";
+import {findRelations, filterReviver, buildRelationAggregation} from "./utility";
+import {findLocale, buildI18nAggregation, hasTranslatedProperties, Locale} from "./locale";
 
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
@@ -46,21 +42,6 @@ export class BucketDataController {
     @Optional() private history: HistoryService,
     @Optional() private changes: DataChangeEmitter
   ) {}
-
-  private async getLanguage(language: string) {
-    const bucketSettings = await this.bs.getPreferences();
-
-    const supportedLocales = new locale.Locales(Object.keys(bucketSettings.language.available));
-    const locales = new locale.Locales(language);
-    const bestLocale = locales.best(supportedLocales);
-
-    const best =
-      bestLocale && !bestLocale.defaulted ? bestLocale.normalized : bucketSettings.language.default;
-
-    const fallback = bucketSettings.language.default;
-
-    return {best, fallback};
-  }
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
@@ -94,16 +75,11 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the bucket with id ${bucketId}`);
     }
 
-    const schema = relation || localize ? bucket : null;
+    let locale: Locale;
 
-    if (
-      localize &&
-      Object.values(schema.properties).some(
-        property => property.options && property.options.translate
-      )
-    ) {
-      const locale = await this.getLanguage(acceptedLanguage);
-
+    if (localize && hasTranslatedProperties(bucket.properties)) {
+      const preferences = await this.bs.getPreferences();
+      locale = findLocale(acceptedLanguage, preferences);
       aggregation.push({
         $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
       });
@@ -116,8 +92,8 @@ export class BucketDataController {
     }
 
     if (relation) {
-      for (const propertyKey in schema.properties) {
-        const property = schema.properties[propertyKey];
+      for (const propertyKey in bucket.properties) {
+        const property = bucket.properties[propertyKey];
         if (property.type == "relation") {
           aggregation.push(
             ...buildRelationAggregation(
@@ -215,9 +191,11 @@ export class BucketDataController {
       }
     });
 
-    if (localize) {
-      const locale = await this.getLanguage(acceptedLanguage);
+    let locale: Locale;
 
+    if (localize) {
+      const preferences = await this.bs.getPreferences();
+      locale = findLocale(acceptedLanguage, preferences);
       aggregation.unshift({
         $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
       });

@@ -1,5 +1,6 @@
-import {getBucketDataCollection} from "./bucket-data.service";
 import {ObjectId} from "@spica-server/database";
+import {getBucketDataCollection} from "./bucket-data.service";
+import {buildI18nAggregation, Locale} from "./locale";
 
 export function findRelations(schema: any, bucketId: string, path: string = "", targets: string[]) {
   path = path ? `${path}.` : ``;
@@ -91,7 +92,7 @@ export function buildRelationAggregation(
   property: string,
   bucketId: string,
   type: "onetomany" | "onetoone",
-  locale: {best: string; fallback: string}
+  locale: Locale
 ) {
   if (type == "onetomany") {
     return [
@@ -113,9 +114,11 @@ export function buildRelationAggregation(
           },
           pipeline: [
             {$match: {$expr: {$in: ["$_id", "$$documentIds"]}}},
-            {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+            locale
+              ? {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)}
+              : undefined,
             {$set: {_id: {$toString: "$_id"}}}
-          ],
+          ].filter(Boolean),
           as: property
         }
       }
@@ -132,55 +135,15 @@ export function buildRelationAggregation(
           },
           pipeline: [
             {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
-            {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)},
+            locale
+              ? {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)}
+              : undefined,
             {$set: {_id: {$toString: "$_id"}}}
-          ],
+          ].filter(Boolean),
           as: property
         }
       },
       {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
     ];
   }
-}
-
-export function buildI18nAggregation(property: any, locale: string, fallback: string) {
-  return {
-    $mergeObjects: [
-      property,
-      {
-        $arrayToObject: {
-          $map: {
-            input: {
-              $filter: {
-                input: {
-                  $objectToArray: property
-                },
-                as: "item",
-                cond: {
-                  $eq: [
-                    {
-                      $type: "$$item.v"
-                    },
-                    "object"
-                  ]
-                }
-              }
-            },
-            as: "prop",
-            in: {
-              k: "$$prop.k",
-              v: {
-                $ifNull: [
-                  `$$prop.v.${locale}`,
-                  {
-                    $ifNull: [`$$prop.v.${fallback}`, `$$prop.v`]
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    ]
-  };
 }
