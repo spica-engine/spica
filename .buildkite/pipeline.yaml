@@ -39,14 +39,6 @@ steps:
       - yarn config set cache-folder /var/cache/spica/.cache
       - yarn install --frozen-lockfile --network-timeout 1000000
 
-  - label: ":docker: + :bazel: Test APIs"
-    key: test_api
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    <<: *api_test_docker_plugin
-    commands:
-      - yarn --silent bazel test //stacks/cli/test/...
-
   - label: ":medical_symbol: Lint"
     key: lint
     if: build.branch != "master"
@@ -55,6 +47,14 @@ steps:
     commands:
       - yarn bazel:format -mode=check
       - yarn code:format-check
+
+  - label: ":docker: + :bazel: Test APIs"
+    key: test_api
+    if: build.branch != "master"
+    depends_on: "install_packages"
+    <<: *api_test_docker_plugin
+    commands:
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
 
   - label: ":docker: + :bazel: Test APIs (Flaky)"
     key: test_api_flaky
