@@ -15,6 +15,7 @@ import {SpicaNamespace} from "./interface";
 import {Logger} from "./logger";
 import chalk from "chalk";
 import {FunctionNamespace} from "./commands/function/index";
+import {VersionCommand} from "./commands/version";
 
 class RootNamespace extends SpicaNamespace {
   logger?: Logger = new Logger(process.stdout, process.stderr);
@@ -33,7 +34,8 @@ class RootNamespace extends SpicaNamespace {
       ["rm", async () => new RemoveCommand(this)],
       ["login", async () => new LoginCommand(this)],
       ["pull", async () => new PullCommand(this)],
-      ["push", async () => new PushCommand(this)]
+      ["push", async () => new PushCommand(this)],
+      ["version", async () => new VersionCommand(this)]
     ]);
   }
 

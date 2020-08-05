@@ -20,6 +20,14 @@ export class RemoveCommand extends Command {
           summary: "Namespace of the spica that will be created.",
           validators: [validators.required, namespace]
         }
+      ],
+      options: [
+        {
+          name: "retain-volumes",
+          type: Boolean,
+          summary: "When false, the data will be removed along with the containers.",
+          default: true
+        }
       ]
     };
   }
@@ -78,6 +86,30 @@ export class RemoveCommand extends Command {
             foundNetworks.map(network =>
               machine
                 .getNetwork(network.Id)
+                .remove()
+                .then(() => increaseDeletedCount())
+            )
+          );
+        }
+      });
+    }
+
+    if (!options["retain-volumes"]) {
+      const foundVolumes = (await machine.listVolumes({
+        filters: JSON.stringify({label: [`namespace=${namespace}`]})
+      })).Volumes;
+      await this.namespace.logger.spin({
+        text: `Removing volumes (0/${foundVolumes.length}).`,
+        op: spinner => {
+          let deleted = 0;
+          function increaseDeletedCount() {
+            deleted++;
+            spinner.text = `Removing volumes (${deleted}/${foundVolumes.length}).`;
+          }
+          return Promise.all(
+            foundVolumes.map(volume =>
+              machine
+                .getVolume(volume.Name)
                 .remove()
                 .then(() => increaseDeletedCount())
             )
