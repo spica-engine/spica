@@ -8,7 +8,6 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe("Scheduler", () => {
   let scheduler: Scheduler;
@@ -18,9 +17,9 @@ describe("Scheduler", () => {
     databaseUri: undefined,
     databaseName: undefined,
     databaseReplicaSet: undefined,
-    poolSize: 10,
+    poolSize: 1,
     publicUrl: undefined,
-    timeout: 60000,
+    timeout: 20,
     corsOptions: {
       allowCredentials: true,
       allowedHeaders: ["*"],
@@ -30,6 +29,11 @@ describe("Scheduler", () => {
   };
 
   let clock: jasmine.Clock;
+
+  const compilation = {
+    cwd: undefined,
+    entrypoint: "index.js"
+  };
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -47,16 +51,12 @@ describe("Scheduler", () => {
     clock.install();
 
     await app.init();
-  });
 
-  const compilation = {
-    cwd: undefined,
-    entrypoint: "index.ts"
-  };
-
-  beforeEach(async () => {
-    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
-    await scheduler.languages.get("typescript").compile(compilation);
+    compilation.cwd = FunctionTestBed.initialize(
+      `export default function() {}`,
+      compilation.entrypoint
+    );
+    await scheduler.languages.get("javascript").compile(compilation);
   });
 
   afterEach(() => {
@@ -66,7 +66,7 @@ describe("Scheduler", () => {
   });
 
   it("should spawn N process", () => {
-    expect(spawnSpy).toHaveBeenCalledTimes(10);
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
   });
 
   it("should attach outputs when the worker scheduled", () => {
@@ -85,9 +85,9 @@ describe("Scheduler", () => {
   });
 
   it("should spawn a new worker when a new message queued", () => {
-    expect(spawnSpy).toHaveBeenCalledTimes(10);
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
     scheduler["schedule"]();
-    expect(spawnSpy).toHaveBeenCalledTimes(11);
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize + 1);
   });
 
   it("should kill the worker when the execution times out", () => {
@@ -145,7 +145,7 @@ describe("Scheduler", () => {
     expect(write).not.toHaveBeenCalled();
     clock.tick(schedulerOptions.timeout * 1000);
     expect(write).toHaveBeenCalledWith(
-      "Function (default) did not finish within 60000 seconds. Aborting."
+      "Function (default) did not finish within 20 seconds. Aborting."
     );
   });
 

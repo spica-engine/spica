@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 load("@npm_bazel_typescript//:index.bzl", "ts_config", "ts_library")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
 
 ts_config(
     name = "tsconfig",
@@ -12,10 +13,7 @@ ts_config(
 
 ts_library(
     name = "cli",
-    srcs = glob(
-        ["src/**/*.ts"],
-        exclude = ["src/**/*.spec.ts"],
-    ),
+    srcs = glob(["src/**/*.ts"]),
     data = ["bin/spica"],
     module_name = "@spica/cli",
     tsconfig = ":tsconfig",
@@ -33,6 +31,13 @@ ts_library(
         "@npm//ora",
         "@npm//yaml",
     ],
+)
+
+nodejs_binary(
+    name = "bin",
+    data = [":cli"],
+    entry_point = "bin/spica",
+    templated_args = ["--nobazel_patch_module_resolver"],
 )
 
 pkg_npm(
