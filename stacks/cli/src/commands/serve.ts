@@ -287,8 +287,6 @@ export class ServeCommand extends Command {
     await this.namespace.logger.spin({
       text: "Waiting the database containers to become ready.",
       op: async spinner => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        spinner.text = "Initiating replication between database containers.";
         const replSetConfig = JSON.stringify({
           _id: namespace,
           members: new Array(databaseReplicas).fill(0).map((_, index) => {
@@ -298,30 +296,44 @@ export class ServeCommand extends Command {
 
         const firstContainer = machine.getContainer(`${databaseName}-0`);
 
-        let result = await (await firstContainer.exec({
-          Cmd: ["mongo", "admin", "--eval", `rs.initiate(${replSetConfig})`],
-          AttachStderr: true,
-          AttachStdout: true
-        }))
-          .start()
-          .catch(e => e);
-
-        let output = (await this.streamToBuffer(result.output)).toString();
-
-        if (
-          output.indexOf('"already initialized"') != -1 ||
-          output.indexOf('"Error connecting to') != -1
-        ) {
-          console.log(output);
-          result = await (await firstContainer.exec({
-            Cmd: ["mongo", "admin", "--eval", `rs.reconfig(${replSetConfig}, { force: true })`],
+        const initiateReplication = async (reconfig = false) => {
+          spinner.text = "Initiating replication between database containers.";
+          const result = await (await firstContainer.exec({
+            Cmd: [
+              "mongo",
+              "admin",
+              "--eval",
+              reconfig
+                ? `rs.reconfig(${replSetConfig}, { force: true })`
+                : `rs.initiate(${replSetConfig})`
+            ],
             AttachStderr: true,
             AttachStdout: true
           }))
             .start()
             .catch(e => e);
 
-          output = (await this.streamToBuffer(result.output)).toString();
+          return (await this.streamToBuffer(result.output)).toString();
+        };
+
+        let output = await initiateReplication();
+        let retry = 0,
+          maxRetries = 5,
+          wait = 1000;
+
+        while (retry < maxRetries) {
+          retry++;
+          if (output.indexOf("Connection refused")) {
+            output = await initiateReplication();
+          } else {
+            break;
+          }
+          await new Promise(resolve => setTimeout(resolve, wait));
+          spinner.text = `Initiating replication between database containers. Retrying ${retry}`;
+        }
+
+        if (output.indexOf('"already initialized"') != -1) {
+          output = await initiateReplication(true);
         }
 
         if (output.indexOf('"ok" : 1') == -1) {
