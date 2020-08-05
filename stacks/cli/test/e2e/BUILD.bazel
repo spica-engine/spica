@@ -15,13 +15,13 @@ sh_test(
     args = [
         "$(location :prepare_integration_tests)",
     ],
-    tags = [
-        "e2e"
-    ],
     data = [
         ":prepare_integration_tests",
         "//stacks/api:image.tar",
         "//stacks/cli:bin",
+    ],
+    tags = [
+        "e2e",
     ],
     deps = [
         "@bazel_tools//tools/bash/runfiles",
@@ -33,9 +33,6 @@ sh_test(
     srcs = [
         "rm.spec.sh",
     ],
-    tags = [
-        "e2e"
-    ],
     args = [
         "$(location :prepare_integration_tests)",
     ],
@@ -43,6 +40,9 @@ sh_test(
         ":prepare_integration_tests",
         "//stacks/api:image.tar",
         "//stacks/cli:bin",
+    ],
+    tags = [
+        "e2e",
     ],
     deps = [
         "@bazel_tools//tools/bash/runfiles",
