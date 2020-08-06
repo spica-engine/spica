@@ -53,7 +53,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.runtimes.set("node", new Node());
     this.pkgmanagers.set("node", new Npm());
 
-    this.queue = new EventQueue(this.schedule.bind(this), this.scheduled.bind(this));
+    this.queue = new EventQueue(this.schedule.bind(this), this.yield.bind(this));
 
     this.httpQueue = new HttpQueue();
     this.queue.addQueue(this.httpQueue);
@@ -116,6 +116,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private schedule() {
+    if (this.pool.size >= this.options.poolMaxSize) {
+      return;
+    }
     const id: string = uniqid();
     const worker = this.runtimes.get("node").spawn({
       id,
@@ -129,10 +132,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           : ""
       }
     });
+    worker.once("exit", () => {
+      this.pool.delete(id);
+      this.schedule();
+    });
     this.pool.set(id, worker);
   }
 
-  private scheduled(event: Event.Event, workerId: string) {
+  private yield(event: Event.Event, workerId: string) {
     const worker = this.pool.get(workerId);
     this.pool.delete(workerId);
     const [stdout, stderr] = this.output.create({
@@ -147,9 +154,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.kill();
     }, timeoutInSeconds * 1000);
     worker.attach(stdout, stderr);
-    worker.once("exit", () => {
-      clearTimeout(timeout);
-    });
+    worker.once("exit", () => clearTimeout(timeout));
   }
 
   /**

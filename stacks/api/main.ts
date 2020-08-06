@@ -112,6 +112,11 @@ const args = yargs
       description: "Number of worker processes to fork at start up.",
       default: 10
     },
+    "function-pool-maxium-size": {
+      number: true,
+      description: "Maxium number of worker processes to fork.",
+      default: 15
+    },
     "function-timeout": {
       number: true,
       description: "Amount of time in seconds that has to elapse before aborting a function.",
@@ -154,22 +159,22 @@ const args = yargs
   })
   /* CORS Options */
   .option({
-    allowedOrigins: {
+    "cors-allowed-origins": {
       array: true,
       description: "Access-Control-Allow-Origin.",
       default: ["*"]
     },
-    allowedMethods: {
+    "cors-allowed-methods": {
       array: true,
       description: "Access-Control-Allow-Methods",
       default: ["*"]
     },
-    allowedHeaders: {
+    "cors-allowed-headers": {
       array: true,
       description: "Access-Control-Allow-Headers",
       default: ["Authorization", "Content-Type", "Accept-Language"]
     },
-    allowCredentials: {
+    "cors-allow-credentials": {
       boolean: true,
       description: "Access-Control-Allow-Credentials",
       default: true
@@ -271,14 +276,15 @@ const modules = [
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
+    poolMaxSize: args["function-pool-maxium-size"],
     publicUrl: args["public-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
     corsOptions: {
-      allowedOrigins: args["allowedOrigins"],
-      allowedMethods: args["allowedMethods"],
-      allowedHeaders: args["allowedHeaders"],
-      allowCredentials: args["allowCredentials"]
+      allowedOrigins: args["cors-allowed-origins"],
+      allowedMethods: args["cors-allowed-methods"],
+      allowedHeaders: args["cors-allowed-headers"],
+      allowCredentials: args["cors-allow-credentials"]
     }
   })
 ];
@@ -307,10 +313,10 @@ NestFactory.create(RootModule, {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Preflight({
-      allowedOrigins: args["allowedOrigins"],
-      allowedMethods: args["allowedMethods"],
-      allowedHeaders: args["allowedHeaders"],
-      allowCredentials: args["allowCredentials"]
+      allowedOrigins: args["cors-allowed-origins"],
+      allowedMethods: args["cors-allowed-methods"],
+      allowedHeaders: args["cors-allowed-headers"],
+      allowCredentials: args["cors-allow-credentials"]
     }),
     Middlewares.JsonBodyParser(args["payload-size-limit"]),
     Middlewares.MergePatchJsonParser(args["payload-size-limit"])
