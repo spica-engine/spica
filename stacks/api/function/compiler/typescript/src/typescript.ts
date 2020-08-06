@@ -1,8 +1,8 @@
-import {Compilation, Language, Description} from "@spica-server/function/compiler";
+import {Compilation, Description, Language} from "@spica-server/function/compiler";
 import * as fs from "fs";
 import * as path from "path";
 import {fromEvent, Observable, of, throwError} from "rxjs";
-import {filter, switchMap, take, tap} from "rxjs/operators";
+import {filter, switchMap, take} from "rxjs/operators";
 import * as worker_threads from "worker_threads";
 
 export class Typescript extends Language {
@@ -19,16 +19,19 @@ export class Typescript extends Language {
 
   constructor() {
     super();
-    this.worker = new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
-    this.worker.on("exit", exitCode => {
-      if (exitCode != 0) {
-        console.log("Compiler worker has quit with non-zero exit code.");
-      }
-    });
-    this.message$ = fromEvent<any>(this.worker, "message");
   }
 
   async compile(compilation: Compilation): Promise<void> {
+    if (!this.worker) {
+      this.worker = new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
+      this.worker.once("exit", exitCode => {
+        this.worker = undefined;
+        if (exitCode != 0) {
+          console.log("Compiler worker has quit with non-zero exit code.");
+        }
+      });
+      this.message$ = fromEvent<any>(this.worker, "message");
+    }
     await super.prepare(compilation);
 
     await fs.promises
@@ -67,6 +70,9 @@ export class Typescript extends Language {
   }
 
   kill() {
-    return this.worker.terminate().then(() => {});
+    if (this.worker) {
+      return this.worker.terminate().then(() => {});
+    }
+    return Promise.resolve();
   }
 }

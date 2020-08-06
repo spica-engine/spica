@@ -1,4 +1,4 @@
-import {Inject, Injectable, Optional} from "@nestjs/common";
+import {Inject, Injectable, Optional, OnModuleDestroy} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
@@ -7,8 +7,8 @@ import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
 import * as rimraf from "rimraf";
-import {Observable} from "rxjs";
-import {bufferTime} from "rxjs/operators";
+import {Observable, Subject} from "rxjs";
+import {bufferTime, takeUntil} from "rxjs/operators";
 import * as util from "util";
 import {ChangeKind, FunctionService, TargetChange} from "./function.service";
 import {Function} from "./interface";
@@ -16,7 +16,7 @@ import {FUNCTION_OPTIONS, Options} from "./options";
 import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
 
 @Injectable()
-export class FunctionEngine {
+export class FunctionEngine implements OnModuleDestroy {
   readonly schemas = new Map<string, Schema>([
     ["http", require("./schema/http.json")],
     ["schedule", require("./schema/schedule.json")],
@@ -25,6 +25,8 @@ export class FunctionEngine {
     ["database", () => getDatabaseSchema(this.db, this.mongo)]
   ]);
   readonly runSchemas = new Map<string, JSONSchema7>();
+
+  private dispose = new Subject();
 
   constructor(
     private fs: FunctionService,
@@ -43,10 +45,17 @@ export class FunctionEngine {
     }
     this.fs
       .targets()
-      .pipe(bufferTime(50))
+      .pipe(
+        bufferTime(1),
+        takeUntil(this.dispose)
+      )
       .subscribe(changes => {
         this.categorizeChanges(changes);
       });
+  }
+
+  onModuleDestroy() {
+    this.dispose.next();
   }
 
   private categorizeChanges(changes: TargetChange[]) {

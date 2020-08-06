@@ -106,8 +106,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    for (const worker of this.pool.values()) {
-      worker.kill();
+    for (const [id, worker] of this.pool.entries()) {
+      await worker.kill();
+      this.pool.delete(id);
     }
     for (const language of this.languages.values()) {
       await language.kill();
@@ -132,11 +133,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           : ""
       }
     });
-    worker.once("exit", () => {
-      this.pool.delete(id);
-      this.schedule();
-    });
     this.pool.set(id, worker);
+    // Do not enable autospawn under testing
+    if (!process.env.TEST_TARGET) {
+      worker.once("exit", () => {
+        this.pool.delete(id);
+        this.schedule();
+      });
+    }
   }
 
   private yield(event: Event.Event, workerId: string) {
