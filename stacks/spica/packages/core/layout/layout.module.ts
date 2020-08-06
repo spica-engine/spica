@@ -21,6 +21,7 @@ import {SchemeObserver} from "./scheme.observer";
 import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {ToolbarActionDirective} from "./toolbar-action";
+import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -59,7 +60,8 @@ export class LayoutModule {
       providers: [
         {provide: DEFAULT_LAYOUT, useValue: config.defaultLayout || HomeLayoutComponent},
         {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
-        {provide: LAYOUT_ACTIONS, useValue: SchemeSwitcherComponent, multi: true}
+        {provide: LAYOUT_ACTIONS, useValue: SchemeSwitcherComponent, multi: true},
+        {provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: {appearance: "outline"}}
       ]
     };
   }

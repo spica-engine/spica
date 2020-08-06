@@ -9,9 +9,14 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {INPUT_SCHEMA} from "../../input";
 import {DateComponent} from "./date.component";
 import {DateValidatorDirective} from "./date.validator";
+import {MatFormFieldHarness} from "@angular/material/form-field/testing";
+import {HarnessLoader} from "@angular/cdk/testing";
+import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import {MatIconModule} from "@angular/material/icon";
 
 describe("Common#date", () => {
   let fixture: ComponentFixture<DateComponent>;
+  let loader: HarnessLoader;
 
   beforeEach(() => {
     TestBed.resetTestingModule()
@@ -23,7 +28,8 @@ describe("Common#date", () => {
           MatMenuModule,
           OwlDateTimeModule,
           OwlNativeDateTimeModule,
-          NoopAnimationsModule
+          NoopAnimationsModule,
+          MatIconModule
         ],
         declarations: [DateComponent, DateValidatorDirective],
         providers: [
@@ -39,6 +45,7 @@ describe("Common#date", () => {
       .compileComponents();
     fixture = TestBed.createComponent(DateComponent);
     fixture.detectChanges();
+    loader = TestbedHarnessEnvironment.loader(fixture);
   });
 
   describe("basic behavior", () => {
@@ -59,6 +66,15 @@ describe("Common#date", () => {
       const title = (fixture.componentInstance.schema.title = "my title");
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css("mat-label")).nativeElement.textContent).toBe(title);
+    });
+
+    it("should gmt date", async () => {
+      const model = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+      model.control.setValue(new Date("Aug 26, 2020, 10:23:26 AM"), {emitEvent: true});
+      fixture.detectChanges();
+      const field = await loader.getHarness(MatFormFieldHarness);
+      const [hint] = await field.getTextHints();
+      expect(hint).toBe("Aug 26, 2020, 7:23:26 AM help");
     });
 
     it("should show description if provided", () => {

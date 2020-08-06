@@ -5,18 +5,13 @@
   background: none;
   border-radius: 24px;
   margin-top: 5px;
+  transform: translateX(-3px);
+  transition: transform 0.3s ease-in;
   .mat-menu-content {
     padding: 0 !important;
     button:not(:first-of-type) {
       margin-top: 4px;
     }
-  }
-}
-
-.mat-form-field-suffix :host {
-  button.mat-icon-button {
-    height: 30px;
-    width: 30px;
   }
 }
 
