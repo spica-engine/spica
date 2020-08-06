@@ -21,7 +21,7 @@
   <mat-hint
     align="end"
     *ngIf="_value && _value.toISOString"
-    matTooltip="This the actual date that will be stored in the API."
+    matTooltip="This is the actual date that will be stored in the API server."
   >
     {{ _value | date: "medium":"GMT" }}
     <mat-icon>help</mat-icon>
