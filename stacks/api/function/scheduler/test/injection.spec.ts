@@ -38,6 +38,7 @@ describe("Scheduler Injection", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           poolSize: 0,
+          poolMaxSize: 0,
           publicUrl: undefined,
           timeout: 5,
           corsOptions: {

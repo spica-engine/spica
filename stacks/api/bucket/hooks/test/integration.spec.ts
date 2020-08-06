@@ -57,6 +57,7 @@ describe("Hooks Integration", () => {
           path: os.tmpdir(),
           databaseName: undefined,
           poolSize: 1,
+          poolMaxSize: 2,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           publicUrl: undefined,
