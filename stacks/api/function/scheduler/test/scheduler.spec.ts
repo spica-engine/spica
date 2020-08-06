@@ -18,6 +18,7 @@ describe("Scheduler", () => {
     databaseName: undefined,
     databaseReplicaSet: undefined,
     poolSize: 1,
+    poolMaxSize: 2,
     publicUrl: undefined,
     timeout: 20,
     corsOptions: {
@@ -69,6 +70,25 @@ describe("Scheduler", () => {
     expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
   });
 
+  it("should spawn max N process", () => {
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
+    const event = new Event.Event({
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new Event.SchedulingContext({env: [], timeout: 1000})
+      }),
+      type: -1
+    });
+    // @ts-expect-error
+    scheduler.schedule();
+    // @ts-expect-error
+    scheduler.schedule();
+    // @ts-expect-error
+    scheduler.schedule();
+    expect(spawnSpy).toHaveBeenCalledTimes(2);
+  });
+
   it("should attach outputs when the worker scheduled", () => {
     const event = new Event.Event({
       target: new Event.Target({
@@ -80,7 +100,8 @@ describe("Scheduler", () => {
     });
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
     const attachSpy = spyOn(worker, "attach");
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     expect(attachSpy).toHaveBeenCalled();
   });
 
@@ -101,7 +122,8 @@ describe("Scheduler", () => {
     });
 
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     const kill = spyOn(worker, "kill");
     expect(kill).not.toHaveBeenCalled();
     clock.tick(schedulerOptions.timeout * 1000);
@@ -119,7 +141,8 @@ describe("Scheduler", () => {
     });
 
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     const kill = spyOn(worker, "kill");
     expect(kill).not.toHaveBeenCalled();
     clock.tick(schedulerOptions.timeout * 1000);
@@ -139,7 +162,8 @@ describe("Scheduler", () => {
     const id = scheduler["pool"].keys().next().value;
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
 
     const write = spyOn(stream, "write");
     expect(write).not.toHaveBeenCalled();
@@ -162,7 +186,8 @@ describe("Scheduler", () => {
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     const write = spyOn(stream, "write");
     expect(write).not.toHaveBeenCalled();
     worker.emit("exit"); /* simulate exit */

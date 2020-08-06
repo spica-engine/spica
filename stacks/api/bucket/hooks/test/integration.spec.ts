@@ -30,7 +30,7 @@ describe("Hooks Integration", () => {
   let fn: Function;
 
   function updateIndex(index: string) {
-    return req.post(`/function/${fn._id}/index`, {index}, headers);
+    return req.post(`/function/${fn._id}/index`, {index});
   }
 
   beforeEach(async () => {
@@ -57,6 +57,7 @@ describe("Hooks Integration", () => {
           path: os.tmpdir(),
           databaseName: undefined,
           poolSize: 1,
+          poolMaxSize: 1,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           publicUrl: undefined,
@@ -178,24 +179,18 @@ describe("Hooks Integration", () => {
         },
         env: {},
         timeout: 20,
-        language: "typescript"
+        language: "javascript"
       })
       .then(res => res.body);
 
-    await updateIndex(`
-      export function insert(){
-        return true;
-      }
-      `);
+    await updateIndex(`export function insert(){ return true; }`);
   });
 
   afterEach(() => app.close());
 
   describe("GET", () => {
     it("should not change the behaviour of bucket-data endpoint", async () => {
-      await updateIndex(`export function get(){
-        return [];
-      }`);
+      await updateIndex(`export function get() { return []; }`);
       const {body: document} = await req.get(
         `/bucket/${bucket._id}/data/${user1._id}`,
         {},
@@ -211,11 +206,10 @@ describe("Hooks Integration", () => {
 
     it("should hide password field of bucket-data for specific apikey", async () => {
       await updateIndex(`export function get(req){
-        const aggregation = [];
-        if(req.headers.authorization == 'MY_SECRET_TOKEN' ){
-          aggregation.push( { $unset: ["password"] } )
+        if(req.headers.authorization === 'MY_SECRET_TOKEN' ){
+          return [{ $unset: ["password"] }];
         }
-        return aggregation;
+        return []
       }`);
       const {body: document} = await req.get(
         `/bucket/${bucket._id}/data/${user1._id}`,

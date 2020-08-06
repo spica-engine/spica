@@ -22,6 +22,11 @@ class FilterExperimentalWarnings extends Transform {
 
 class NodeWorker extends Worker {
   private _process: child_process.ChildProcess;
+  private _quit = false;
+
+  private get quit() {
+    return this._process.killed || this._quit;
+  }
 
   constructor(options: SpawnOptions) {
     super();
@@ -47,6 +52,7 @@ class NodeWorker extends Worker {
         }
       }
     );
+    this._process.once("exit", () => (this._quit = true));
     Object.assign(this, this._process);
   }
 
@@ -56,7 +62,14 @@ class NodeWorker extends Worker {
   }
 
   kill() {
-    this._process.kill("SIGKILL");
+    if (this.quit) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>(resolve => {
+      this._process.once("exit", () => resolve());
+      this._process.kill("SIGTERM");
+    });
   }
 }
 
