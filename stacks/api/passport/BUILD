@@ -114,6 +114,7 @@ docs(
         "passport.controller.ts",
         "policy/policy.controller.ts",
     ],
+    doc_name = "passport",
     tags = ["passport-docs"],
     exports = [
         "IdentityController",

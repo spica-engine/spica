@@ -1,9 +1,9 @@
-## Spica CLI
+# CLI
 
 Spica prodivdes CLI to manage your instances. To use CLI, simply enter the following command to your terminal:
 
 ```shell
-npm install @spica/cli -g
+$ npm install @spica/cli -g
 ```
 
 Usage:

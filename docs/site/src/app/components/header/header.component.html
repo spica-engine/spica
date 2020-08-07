@@ -6,6 +6,7 @@
   fxFlex="100"
 >
   <div
+    *ngIf="!hideLogin"
     fxFlex="100"
     fxLayout="row"
     fxLayoutAlign="space-between center"
@@ -36,7 +37,7 @@
   >
     <img
       fxFlex.xl="10"
-      fxFlex.lg="20"
+      fxFlex.lg="15"
       fxFlex.md="25"
       routerLink="/"
       src="assets/images/logo.svg"

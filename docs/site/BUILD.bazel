@@ -31,6 +31,7 @@ container_image(
     docker_run_flags = "-p 80:80",
     files = [
         ":site_pkg",
+        "//docs/content",
         "//stacks/spica/container:nginx.conf",
     ],
     labels = {
@@ -40,6 +41,7 @@ container_image(
     stamp = True,
     symlinks = {
         "/etc/nginx/nginx.conf": "/stacks/spica/container/nginx.conf",
+        "/site_pkg/site_stamp_pkg/dist/spica-site/assets/docs": "/docs/content/content",
         "/usr/share/nginx/html": "/site_pkg/site_stamp_pkg/dist/spica-site",
     },
 )
