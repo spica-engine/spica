@@ -129,14 +129,6 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-}
-
-//
-doc-cards {
-  @media screen and(max-width:1280px) {
-    doc-card {
-      width: 100%;
-    }
-  }
+  font-family: "Ubuntu", sans-serif;
+  font-size: 16px;
 }

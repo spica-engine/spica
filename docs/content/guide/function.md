@@ -1,4 +1,4 @@
-## Function
+# Function
 
 Functions are an event-driven execution context for your spica. Simply, you can attach an event to your function from other modules and services. Your function will be triggered _when the event occurs_.
 

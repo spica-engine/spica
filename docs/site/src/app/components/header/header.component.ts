@@ -1,4 +1,4 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {map} from "rxjs/operators";
 import {Observable} from "rxjs";
@@ -17,6 +17,9 @@ import {DomSanitizer} from "@angular/platform-browser";
 export class HeaderComponent implements OnInit {
   supportMessage: string = "If you like spica\nSupport us with a star ❤";
   $stargazers: Observable<number>;
+
+  @Input() hideLogin = false;
+
   constructor(
     http: HttpClient,
     private matIconRegistry: MatIconRegistry,

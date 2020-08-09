@@ -1,4 +1,4 @@
-## Webhook
+# Webhook
 
 Webhook module is designed for the automation of flow. It listens to the events in the Spica environment and sends an HTTP/POST call when a specific event occurs. You can set a post-action trigger which will be one of the following collection triggers; `INSERT`, `UPDATE`, `DELETE`, `REPLACE`
 

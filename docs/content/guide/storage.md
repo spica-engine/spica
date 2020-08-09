@@ -1,4 +1,4 @@
-## Storage
+# Storage
 
 This module is essentially a file manager on your Spica instance. You can store, list and delete your files via this module.
 

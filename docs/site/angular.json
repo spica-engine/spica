@@ -46,11 +46,6 @@
               "src/assets",
               {
                 "glob": "**/*",
-                "input": "../../bazel-bin/docs/content/api",
-                "output": "./assets/docs"
-              },
-              {
-                "glob": "**/*",
                 "input": "../../bazel-bin/docs/content/content",
                 "output": "./assets/docs"
               },

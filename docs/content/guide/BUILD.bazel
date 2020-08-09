@@ -4,16 +4,17 @@ load("//tools/dgeni:index.bzl", "docs")
 
 docs(
     name = "guide",
+    # buildifier: leave-alone
     srcs = [
-        "bucket.md",
-        "cli.md",
-        "dashboard.md",
-        "function.md",
         "getting-started.md",
-        "index.md",
         "passport.md",
+        "bucket.md",
+        "function.md",
+        "dashboard.md",
         "storage.md",
-        "user-activities.md",
         "webhook.md",
+        "user-activities.md",
+        "index.md",
+        "cli.md",
     ],
 )
