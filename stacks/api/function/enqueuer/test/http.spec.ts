@@ -252,7 +252,7 @@ describe("http enqueuer", () => {
     ]);
   });
 
-  it("should dequeue when connection is closed",  (done) => {
+  it("should dequeue when connection is closed", done => {
     httpQueue.enqueue.and.callFake((id, req, res) => {
       res.connection.destroy();
     });
@@ -267,7 +267,7 @@ describe("http enqueuer", () => {
       httpEnqueuer.unsubscribe(noopTarget);
       done();
     });
-  })
+  });
 
   afterAll(() => {
     app.close();
