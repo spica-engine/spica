@@ -89,6 +89,21 @@
             width: 15%;
             word-break: break-word;
             margin: 10px 5px;
+            outline: none;
+            mat-icon {
+              opacity: 0;
+              will-change: opacity;
+              transition: opacity 0.1s ease-in;
+              margin-left: 15px;
+            }
+            &:hover  {
+              mat-icon {
+                opacity: 1;
+              }
+            }
+            &.active {
+              pointer-events: none;
+            }
           }
           span:last-of-type {
             word-break: break-all;

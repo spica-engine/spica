@@ -39,6 +39,8 @@ if (!process.env.WORKER_ID) {
     globalThis.require = _require;
   }
 
+  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} waiting for the event.`;
+
   const queue = new EventQueue();
   const pop = new Event.Pop({
     id: process.env.WORKER_ID
@@ -52,6 +54,8 @@ if (!process.env.WORKER_ID) {
     exitAbnormally("There is no event in the queue.");
   }
 
+  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} processing the event ${event.id}.`;
+
   process.chdir(event.target.cwd);
 
   process.env.TIMEOUT = String(event.target.context.timeout);
@@ -61,7 +65,7 @@ if (!process.env.WORKER_ID) {
   }
 
   const callArguments = [];
-  let callback = r => {};
+  let callback = () => {};
 
   switch (event.type) {
     case Event.Type.HTTP:

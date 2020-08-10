@@ -105,6 +105,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         return acc;
       }, []);
       this.http.enqueue(event.id, request, res);
+      req.once("close", () => this.http.dequeue(event.id));
     };
 
     Object.defineProperty(fn, "target", {writable: false, value: target});

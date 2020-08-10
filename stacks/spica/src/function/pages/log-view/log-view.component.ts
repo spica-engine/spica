@@ -67,9 +67,8 @@ export class LogViewComponent implements OnInit {
 
   mapLogs(logs: Log[], fns: Function[]): Log[] {
     return logs.map(log => {
-      log.function = fns.find(fn => fn._id == log.function)
-        ? fns.find(fn => fn._id == log.function).name
-        : log.function;
+      const fn = fns.find(fn => fn._id == log.function);
+      log.function = fn ? fn : log.function;
       log.created_at = this.objectIdToDate(log._id).toString();
       return log;
     });

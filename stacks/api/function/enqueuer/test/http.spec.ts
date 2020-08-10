@@ -37,7 +37,7 @@ describe("http enqueuer", () => {
     req = module.get(Request);
 
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue"]);
+    httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue", "dequeue"]);
 
     await app.listen(req.socket);
     httpEnqueuer = new HttpEnqueuer(
@@ -251,6 +251,23 @@ describe("http enqueuer", () => {
       125
     ]);
   });
+
+  it("should dequeue when connection is closed",  (done) => {
+    httpQueue.enqueue.and.callFake((id, req, res) => {
+      res.connection.destroy();
+    });
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/test",
+      preflight: false
+    });
+    expect(httpQueue.dequeue).not.toHaveBeenCalled();
+    req.get("/fn-execute/test", {}).catch(() => {
+      expect(httpQueue.dequeue).toHaveBeenCalled();
+      httpEnqueuer.unsubscribe(noopTarget);
+      done();
+    });
+  })
 
   afterAll(() => {
     app.close();

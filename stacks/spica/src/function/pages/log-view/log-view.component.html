@@ -89,8 +89,13 @@
               <span>
                 {{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}
               </span>
-              <span>
-                {{ log.function }}
+              <span
+                [routerLink]="[]"
+                [queryParams]="{function: log.function._id}"
+                queryParamsHandling="merge"
+                routerLinkActive="active"
+              >
+                {{ log.function.name }} <mat-icon>filter_alt</mat-icon>
               </span>
 
               <span>
