@@ -1333,7 +1333,7 @@ describe("BucketDataController", () => {
           .post(`/bucket/${relationBucketId}/data`, {
             title: "document_one",
             nested_relation: {
-              user_relation: [userOneId, userTwoId],
+              user_relation: [userOneId, userTwoId, userOneId],
               other_relation: [otherBucketDocumentId]
             }
           })
