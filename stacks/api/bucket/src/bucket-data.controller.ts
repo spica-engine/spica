@@ -30,7 +30,7 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport";
 
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
-import {findRelations, filterReviver, buildRelationAggregation} from "./utility";
+import {findRelations, filterReviver, buildRelationAggregation, getUpdateParams} from "./utility";
 import {findLocale, buildI18nAggregation, hasTranslatedProperties, Locale} from "./locale";
 
 @Controller("bucket/:bucketId/data")
@@ -412,13 +412,14 @@ export class BucketDataController {
     if (buckets.length < 1) return;
 
     for (const bucket of buckets) {
-      let targets = findRelations(bucket.properties, bucketId.toHexString(), "", []);
-      if (targets.length < 1) continue;
+      let targets = findRelations(bucket.properties, bucketId.toHexString(), "", new Map());
+      if (targets.size < 1) continue;
 
-      for (const target of targets) {
+      for (const [target, type] of targets.entries()) {
+        const updateParams = getUpdateParams(target, type, documentId.toHexString());
         await bucketService
           .collection(`bucket_${bucket._id.toHexString()}`)
-          .updateMany({[target]: documentId.toHexString()}, {$unset: {[target]: ""}});
+          .updateMany(updateParams.filter, updateParams.update);
       }
     }
   }

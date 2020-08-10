@@ -2,13 +2,18 @@ import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
 
-export function findRelations(schema: any, bucketId: string, path: string = "", targets: string[]) {
+export function findRelations(
+  schema: any,
+  bucketId: string,
+  path: string = "",
+  targets: Map<string, "onetoone" | "onetomany">
+) {
   path = path ? `${path}.` : ``;
   for (const key of Object.keys(schema)) {
     if (isObject(schema[key])) {
       findRelations(schema[key].properties, bucketId, `${path}${key}`, targets);
     } else if (isRelation(schema[key], bucketId)) {
-      targets.push(`${path}${key}`);
+      targets.set(`${path}${key}`, schema[key].relationType);
     }
   }
   return targets;
@@ -56,6 +61,21 @@ export function addArrayPattern(
     addArrayPattern(previousSchema.items, currentSchema.items, removedKeys, path);
   } else if (isObject(previousSchema) && isObject(currentSchema)) {
     findRemovedKeys(previousSchema.properties, currentSchema.properties, removedKeys, path);
+  }
+}
+
+export function getUpdateParams(
+  target: string,
+  type: "onetoone" | "onetomany",
+  documentId: string
+): {filter: object; update: object} {
+  if (type == "onetoone") {
+    return {filter: {[target]: documentId}, update: {$unset: {[target]: ""}}};
+  } else if ((type = "onetomany")) {
+    return {
+      filter: {[target]: {$in: [documentId]}},
+      update: {$pull: {[target]: documentId}}
+    };
   }
 }
 
