@@ -51,6 +51,7 @@ describe("http enqueuer", () => {
   afterEach(() => {
     // Reset enqueue spy in case some of the it blocks might have their spy delegates registered onto.
     httpQueue.enqueue = jasmine.createSpy();
+    httpQueue.dequeue.calls.reset();
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
