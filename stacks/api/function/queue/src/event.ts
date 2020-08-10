@@ -60,6 +60,10 @@ export class EventQueue {
     }
   }
 
+  dequeue(event: Event.Event) {
+    this.queue.delete(event.id);
+  }
+
   async pop(
     call: grpc.ServerUnaryCall<Event.Pop, Event.Event>,
     callback: grpc.sendUnaryData<Event.Event>

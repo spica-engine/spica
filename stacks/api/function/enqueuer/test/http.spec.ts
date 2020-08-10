@@ -37,7 +37,7 @@ describe("http enqueuer", () => {
     req = module.get(Request);
 
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue"]);
+    httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue", "dequeue"]);
 
     await app.listen(req.socket);
     httpEnqueuer = new HttpEnqueuer(
@@ -51,6 +51,7 @@ describe("http enqueuer", () => {
   afterEach(() => {
     // Reset enqueue spy in case some of the it blocks might have their spy delegates registered onto.
     httpQueue.enqueue = jasmine.createSpy();
+    httpQueue.dequeue.calls.reset();
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
@@ -250,6 +251,23 @@ describe("http enqueuer", () => {
       49,
       125
     ]);
+  });
+
+  it("should dequeue when connection is closed", done => {
+    httpQueue.enqueue.and.callFake((id, req, res) => {
+      res.connection.destroy();
+    });
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/test",
+      preflight: false
+    });
+    expect(httpQueue.dequeue).not.toHaveBeenCalled();
+    req.get("/fn-execute/test", {}).catch(() => {
+      expect(httpQueue.dequeue).toHaveBeenCalled();
+      httpEnqueuer.unsubscribe(noopTarget);
+      done();
+    });
   });
 
   afterAll(() => {
