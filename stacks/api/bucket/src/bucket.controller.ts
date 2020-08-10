@@ -120,7 +120,10 @@ export class BucketController {
     if (buckets.length < 1) return;
 
     for (const bucket of buckets) {
-      let targets = findRelations(bucket.properties, bucketId.toHexString(), "", []);
+      let targets = Array.from(
+        findRelations(bucket.properties, bucketId.toHexString(), "", new Map()).keys()
+      );
+
       if (targets.length < 1) continue;
 
       let unsetFieldsBucket = targets.reduce((acc, current) => {
