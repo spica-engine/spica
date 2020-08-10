@@ -145,7 +145,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   private yield(event: Event.Event, workerId: string) {
     const worker = this.pool.get(workerId);
-    this.pool.delete(workerId);
     const [stdout, stderr] = this.output.create({
       eventId: event.id,
       functionId: event.target.id

@@ -67,3 +67,13 @@ body {
   margin: 0px !important;
   padding: 0px !important;
 }
+
+mat-form-field {
+  .mat-form-field-outline {
+    background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+    border-radius: 5px;
+    > * {
+      visibility: hidden;
+    }
+  }
+}

@@ -7,14 +7,23 @@
   "properties": {
     "method": {
       "title": "Method",
-      "description": "Http trigger would rely on request method.",
+      "description": "Http trigger rely on request method.",
       "type": "string",
-      "enum": ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"]
+      "enum": ["All", "Get", "Post", "Put", "Delete", "Patch", "Head"],
+      "default": "Get"
     },
     "path": {
       "title": "Path",
-      "description": "Full route path that function will be served on. eg /books",
-      "type": "string"
+      "description": "Full route path that function will be served on.",
+      "type": "string",
+      "examples": [
+        "/v1/books",
+        "/v2/books",
+        "/v2beta1/books",
+        "/v1/authorize",
+        "/v2/authorize"
+      ],
+      "default": "/"
     },
     "preflight": {
       "title": "Preflight (CORS)",
