@@ -109,12 +109,16 @@
       </mat-expansion-panel>
     </mat-accordion>
     <button
+      class="save-button"
       canInteract="passport:strategy:update"
       mat-button
       type="submit"
       (click)="submitForm(certificateModel)"
     >
-      Save strategy
+      <mat-icon>save</mat-icon>
+      <span>
+        Save
+      </span>
     </button>
   </mat-card-content>
 </mat-card>

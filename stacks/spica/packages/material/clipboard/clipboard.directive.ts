@@ -1,4 +1,4 @@
-import {Directive, HostListener, Input} from "@angular/core";
+import {Directive, HostListener, Input, Output} from "@angular/core";
 
 //TODO: We should refactor copy method when ClipBoard API ready to use for all browsers: https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API
 
@@ -7,8 +7,9 @@ import {Directive, HostListener, Input} from "@angular/core";
   exportAs: "matClipboard"
 })
 export class MatClipboardDirective {
-  @Input() icon: string = "info";
+  @Input() icon: string = "content_paste";
   @Input("matClipboard") text: string;
+  toolTip = "Copy to clipboard";
 
   @HostListener("click")
   copy() {
@@ -23,8 +24,10 @@ export class MatClipboardDirective {
     document.body.removeChild(element);
 
     this.icon = "check";
+    this.toolTip = "Copied!";
     setTimeout(() => {
-      this.icon = "info";
+      this.icon = "content_paste";
+      this.toolTip = "Copy to clipboard";
     }, 1000);
   }
 

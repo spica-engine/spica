@@ -24,8 +24,9 @@
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
+    flex-direction: column;
 
-    span:first-of-type {
+    span:nth-child(1) {
       h4 {
         & > * {
           vertical-align: middle;
@@ -50,12 +51,20 @@
       }
 
       h6 {
-        font-size: 14px;
+        margin-top: -10px;
+        font-size: 13px;
+        .mat-icon{
+          font-size:17px;
+        }
+      }
+
+      h5 {
+        font-size: 15px;
       }
     }
 
-    .space-between {
-      flex: 1 1 auto;
+    div.actions {
+      align-self: flex-end;
     }
 
     button.delete {

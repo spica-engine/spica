@@ -358,6 +358,7 @@
   </mat-card-content>
   <mat-card-actions>
     <button
+      class="save-button"
       mat-button
       *matSave="$save | async; let state"
       [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
@@ -365,7 +366,7 @@
       (click)="save()"
       [ngSwitch]="state"
     >
-      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-icon *ngSwitchDefault>save</mat-icon>
       <mat-progress-spinner
         *ngSwitchCase="'saving'"
         [diameter]="18"

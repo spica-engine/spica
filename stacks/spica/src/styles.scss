@@ -77,3 +77,14 @@ mat-form-field {
     }
   }
 }
+
+.save-button {
+  float: right;
+  mat-icon {
+    margin-right: 5px;
+  }
+  mat-progress-spinner {
+    display: inline-block;
+    margin-right: 5px;
+  }
+}

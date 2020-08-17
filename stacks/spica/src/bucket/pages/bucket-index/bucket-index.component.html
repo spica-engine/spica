@@ -31,16 +31,6 @@
         <mat-icon>{{ bucket.icon }}</mat-icon>
         <span>{{ bucket.title }}</span>
         <span class="space-between"></span>
-        <button
-          mat-icon-button
-          #clipboard="matClipboard"
-          [matClipboard]="bucket._id"
-          (mouseenter)="$event.stopImmediatePropagation()"
-        >
-          <mat-icon [matTooltip]="clipboard.icon == 'info' ? 'Copy to clipboard' : 'Copied!'">
-            {{ clipboard.icon }}
-          </mat-icon>
-        </button>
       </mat-card-title>
       <mat-card-content>
         <p>{{ bucket.description }}</p>
