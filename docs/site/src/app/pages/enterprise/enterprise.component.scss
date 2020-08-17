@@ -24,7 +24,6 @@
 
   app-header {
     min-height: 200px;
-    line-height: 30px;
   }
 
   section {
@@ -68,13 +67,6 @@
       mat-icon {
         color: #1abde7;
         margin-right: 5px;
-      }
-    }
-
-    .pricing {
-      flex-wrap: wrap;
-      mat-card {
-        min-width: 300px;
       }
     }
 

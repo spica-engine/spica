@@ -53,6 +53,14 @@ echo ""
 echo "## Building spica"
 yarn --cwd=stacks/spica --silent ng build --prod --progress=false
 
+if [ $TAG == "latest" ]; then
+  source ./scripts/publish_site.sh
+else 
+  echo ""
+  echo "WARNING: Skipping publish of spicaengine.com because the provided tag was not 'latest'"
+  echo ""
+fi
+
 echo ""
 echo "## Building bazel generated artifacts in parallel"
 $BAZEL build --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --noshow_progress --config=release $NPM_PACKAGE_LABELS $DOCKER_IMAGE_LABELS
@@ -71,14 +79,6 @@ for PACKAGE_LABEL in $NPM_PACKAGE_LABELS; do
   echo "** Publishing $PACKAGE_LABEL"
   $BAZEL run ${PACKAGE_LABEL}.publish --platforms=@build_bazel_rules_nodejs//toolchains/node:linux_amd64 --config=release -- --access public --tag $1
 done
-
-if [ $TAG == "latest" ]; then
-  source ./scripts/publish_site.sh
-else 
-  echo ""
-  echo "WARNING: Skipping publish of spicaengine.com because the provided tag was not 'latest'"
-  echo ""
-fi
 
 
 echo ""
