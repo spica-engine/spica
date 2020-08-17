@@ -19,7 +19,7 @@ describe("Scheduler", () => {
     databaseReplicaSet: undefined,
     poolSize: 1,
     poolMaxSize: 2,
-    publicUrl: undefined,
+    apiUrl: undefined,
     timeout: 20,
     corsOptions: {
       allowCredentials: true,
