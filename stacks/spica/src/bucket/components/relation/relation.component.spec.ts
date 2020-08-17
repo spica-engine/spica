@@ -158,13 +158,17 @@ describe("Relation Component", () => {
   it("should clear selected row(s)", () => {
     fixture.componentInstance.value = "1";
     fixture.detectChanges();
+    expect(onChangeSpy).not.toHaveBeenCalled();
+
     fixture.debugElement
       .query(By.css("section button:last-of-type"))
       .triggerEventHandler("click", undefined);
 
     fixture.detectChanges();
     const row = fixture.debugElement.query(By.css("section div span"));
+
     expect(row).not.toBeTruthy();
+    expect(onChangeSpy).toHaveBeenCalledWith(undefined);
   });
 
   describe("many to many", () => {
