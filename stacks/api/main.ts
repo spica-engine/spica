@@ -112,6 +112,11 @@ const args = yargs
       description: "Number of worker processes to fork at start up.",
       default: 10
     },
+    "function-api-url": {
+      string: true,
+      description:
+        "Internally or publicly accessible url of the api. This value will be used by various devkit packets such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
+    },
     "function-pool-maxium-size": {
       number: true,
       description: "Maxium number of worker processes to fork.",
@@ -142,6 +147,11 @@ const args = yargs
       description:
         "A relative path to --persistent-path that will be used to store storage objects.",
       default: "storage"
+    },
+    "default-storage-public-url": {
+      string: true,
+      description:
+        "Publicly accessible url of the storage. This value will be used by storage to generate urls to objects. Defaults to --public-url if not present."
     },
     "gcloud-service-account-path": {
       string: true,
@@ -210,6 +220,12 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
   .check(args => {
+    if (!args["default-storage-public-url"]) {
+      args["default-storage-public-url"] = args["public-url"];
+    }
+    if (!args["function-api-url"]) {
+      args["function-api-url"] = args["public-url"];
+    }
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -257,7 +273,7 @@ const modules = [
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",
     defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
-    defaultPublicUrl: args["public-url"],
+    defaultPublicUrl: args["default-storage-public-url"],
     gcloudServiceAccountPath: args["gcloud-service-account-path"],
     gcloudBucketName: args["gcloud-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"]
@@ -277,7 +293,7 @@ const modules = [
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
     poolMaxSize: args["function-pool-maxium-size"],
-    publicUrl: args["public-url"],
+    apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
     corsOptions: {
