@@ -115,7 +115,7 @@ const args = yargs
     "function-api-url": {
       string: true,
       description:
-        "Internally or publicly accessible url of the api. This value will be used by various devkit packets such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
+        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
     },
     "function-pool-maxium-size": {
       number: true,
