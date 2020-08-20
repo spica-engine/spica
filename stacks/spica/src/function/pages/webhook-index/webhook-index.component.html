@@ -3,12 +3,9 @@
     <mat-icon>http</mat-icon>
     <span>Webhooks</span>
   </h4>
-  <span class="space-between"></span>
-  <button mat-icon-button (click)="refresh.next()">
-    <mat-icon>refresh</mat-icon>
-  </button>
-  <button canInteract="webhook:create" mat-icon-button routerLink="add">
+  <button canInteract="webhook:create" mat-button routerLink="add">
     <mat-icon>add</mat-icon>
+    Add New
   </button>
 </mat-toolbar>
 

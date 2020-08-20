@@ -3,13 +3,16 @@
     <mat-icon>http</mat-icon>
     <span>Webhook Logs</span>
   </h4>
-  <span class="space-between"></span>
-  <button mat-icon-button (click)="applyFilter()">
-    <mat-icon>refresh</mat-icon>
-  </button>
-  <button mat-icon-button canInteract="webhook:delete" (click)="clearLogs()">
-    <mat-icon>clear_all</mat-icon>
-  </button>
+  <div class="actions">
+    <button mat-button (click)="applyFilter()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+    <button mat-button canInteract="webhook:delete" (click)="clearLogs()">
+      <mat-icon>clear_all</mat-icon>
+      Clear
+    </button>
+  </div>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25">
   <mat-form-field>

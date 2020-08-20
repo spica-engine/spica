@@ -5,13 +5,16 @@
       <span>Buckets</span>
     </h4>
   </span>
-  <span class="space-between"></span>
-  <button canInteract="bucket:create" mat-icon-button routerLink="add">
-    <mat-icon>add</mat-icon>
-  </button>
-  <button mat-icon-button routerLink="settings">
-    <mat-icon>settings</mat-icon>
-  </button>
+  <div class="actions">
+    <button canInteract="bucket:create" mat-button routerLink="add">
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
+    <button mat-button routerLink="settings">
+      <mat-icon>settings</mat-icon>
+      Settings
+    </button>
+  </div>
 </mat-toolbar>
 
 <div class="drag-container" cdkDropListGroup>

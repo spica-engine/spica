@@ -3,13 +3,16 @@
     <mat-icon>account_box</mat-icon>
     <span>User Activities</span>
   </h4>
-  <span class="space-between"></span>
-  <button mat-icon-button (click)="applyFilters()">
-    <mat-icon>refresh</mat-icon>
-  </button>
-  <button mat-icon-button canInteract="activity:delete" (click)="clearActivities()">
-    <mat-icon>clear_all</mat-icon>
-  </button>
+  <div class="actions">
+    <button mat-button (click)="applyFilters()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+    <button mat-button canInteract="activity:delete" (click)="clearActivities()">
+      <mat-icon>clear_all</mat-icon>
+      Clear
+    </button>
+  </div>
 </mat-toolbar>
 
 <mat-card class="mat-elevation-z25">

@@ -54,9 +54,7 @@
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
-    .space-between {
-      flex: 1 1 auto;
-    }
+    flex-direction: column;
     span:first-of-type {
       h4 {
         & > * {
@@ -73,6 +71,11 @@
       h6 {
         font-size: 14px;
       }
+    }
+
+    div.actions {
+      align-self: flex-end;
+      margin-top: 50px;
     }
   }
 
@@ -102,9 +105,10 @@
       overflow-wrap: break-word;
       overflow: hidden;
     }
-    .mat-card-actions {
-      position: absolute;
-      bottom: 10px;
+    mat-card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
     }
   }
 }
