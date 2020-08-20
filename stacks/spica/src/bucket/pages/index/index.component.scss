@@ -26,7 +26,7 @@
     align-items: flex-start;
     flex-direction: column;
 
-    span:nth-child(1) {
+    span:first-of-type {
       h4 {
         & > * {
           vertical-align: middle;
