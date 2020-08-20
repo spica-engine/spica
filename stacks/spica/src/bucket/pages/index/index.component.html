@@ -121,6 +121,7 @@
         ></bucket-filter>
       </mat-menu>
     </button>
+
     <button
       mat-icon-button
       [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'"
@@ -128,21 +129,22 @@
     >
       <mat-icon>contact_support</mat-icon>
     </button>
+
     <button mat-icon-button matTooltip="Refresh data" (click)="refresh.next()">
       <mat-icon>refresh</mat-icon>
     </button>
+
     <button
-    *ngIf="!readOnly"
-    mat-button
-    canInteract="bucket:data:create"
-    matTooltip="Add new"
-    routerLink="add"
-  >
-    <mat-icon>add</mat-icon>
-    Add New
-  </button>
+      *ngIf="!readOnly"
+      mat-button
+      canInteract="bucket:data:create"
+      matTooltip="Add new"
+      routerLink="add"
+    >
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
   </div>
-  
 </mat-toolbar>
 
 <div class="data-guide">

@@ -220,7 +220,7 @@ describe("AddComponent", () => {
         fixture.debugElement.query(
           By.css("mat-card > mat-card-actions > button:last-of-type > span > mat-icon")
         ).nativeElement.textContent
-      ).toBe("sync");
+      ).toBe("save");
     }));
   });
 
