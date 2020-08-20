@@ -6,7 +6,7 @@ export interface SchedulingOptions {
   databaseUri: string;
   databaseName: string;
   databaseReplicaSet: string;
-  publicUrl: string;
+  apiUrl: string;
   timeout: number;
   experimentalDevkitDatabaseCache?: boolean;
   corsOptions: CorsOptions;

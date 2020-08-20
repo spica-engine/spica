@@ -31,7 +31,7 @@ describe("Engine", () => {
           databaseUri: undefined,
           poolSize: 1,
           poolMaxSize: 2,
-          publicUrl: undefined,
+          apiUrl: undefined,
           timeout: 60000,
           corsOptions: {
             allowedOrigins: ["*"],

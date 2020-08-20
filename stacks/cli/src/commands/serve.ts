@@ -113,6 +113,7 @@ export class ServeCommand extends Command {
     args = [
       ...args,
       `--port=80`,
+      `--function-api-url=http://localhost`,
       `--database-name=${namespace}`,
       `--database-replica-set=${namespace}`,
       `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,

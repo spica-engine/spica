@@ -60,7 +60,7 @@ describe("Hooks Integration", () => {
           poolMaxSize: 1,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          publicUrl: undefined,
+          apiUrl: undefined,
           timeout: 20,
           corsOptions: {
             allowCredentials: true,

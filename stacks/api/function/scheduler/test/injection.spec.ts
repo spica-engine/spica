@@ -39,7 +39,7 @@ describe("Scheduler Injection", () => {
           databaseUri: undefined,
           poolSize: 0,
           poolMaxSize: 0,
-          publicUrl: undefined,
+          apiUrl: undefined,
           timeout: 5,
           corsOptions: {
             allowCredentials: true,
