@@ -32,25 +32,41 @@ import {
 } from "./body";
 import {StorageService} from "./storage.service";
 
+/**
+ * @name storage
+ */
 @Controller("storage")
 export class StorageController {
   constructor(private storage: StorageService) {}
 
+  /**
+   * @param limit The maximum amount documents that can be present in the response.
+   * @param skip The amount of documents to skip.
+   * @param sort A JSON string to sort the documents by its properties.
+   * Example: Descending `{"content.size": -1}` OR Ascending `{"content.size": 1}`
+   */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
-  async findAll(
-    @Query("limit", DEFAULT(0), NUMBER) limit: number,
-    @Query("skip", NUMBER) skip: number,
-    @Query("sort", JSONP, DEFAULT({_id: -1})) sort: object
+  async find(
+    @Query("limit", NUMBER) limit?: number,
+    @Query("skip", NUMBER) skip?: number,
+    @Query("sort", JSONP) sort?: object
   ) {
     return this.storage.getAll(limit, skip, sort);
   }
 
+  /**
+   * Returns content of the object along with http caching headers.
+   * When `if-none-match` header is present and matches the objects checksum, it will end the response with status code 304
+   * for futher information check: https://en.wikipedia.org/wiki/HTTP_ETag
+   * @param id Identifier of the object
+   * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
+   */
   @Get(":id/view")
   async view(
+    @Res() res,
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Headers("if-none-match") ifNoneMatch: string,
-    @Res() res
+    @Headers("if-none-match") ifNoneMatch?: string
   ) {
     const object = await this.storage.get(id);
     if (!object) {
@@ -66,11 +82,17 @@ export class StorageController {
     res.end(object.content.data);
   }
 
+  /**
+   * Returns metadata of the object size, content-type and url.
+   * > Deprecated: `metadata` query parameter is deprecated and will be removed soon. this endpoint used to return both objects content and its metadata controlled by the `metadata` query parameter.
+   * @param id Identifier of the object
+   * @param metadata When true, it will respond with the metadata instead of object itself.
+   */
   @Get(":id")
-  async showOne(
+  async findOne(
+    @Res() res,
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Query("metadata", BOOLEAN) metadata: boolean,
-    @Res() res
+    @Query("metadata", BOOLEAN) metadata?: boolean
   ) {
     const object = await this.storage.get(id);
 
@@ -97,6 +119,19 @@ export class StorageController {
     res.send(object);
   }
 
+  /**
+   * Updates the object and content of the object.
+   * @param id Identifier of the object
+   * @body ```json
+   * {
+   *    "name": "updated name.txt",
+   *    "content": {
+   *      "type": "text/plain",
+   *      "data": "Y29udGVudCBmcm9tIHN0b3JhZ2U="
+   *    }
+   * }
+   * ```
+   */
   @UseInterceptors(BsonBodyParser(), JsonBodyParser(), activity(createStorageActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:update"))
@@ -114,6 +149,21 @@ export class StorageController {
     return object;
   }
 
+  /**
+   * Adds one or more object into the storage.
+   * @accepts application/json
+   * @body ```json
+   *  [
+   *     {
+   *       "name": "file.txt",
+   *       "content": {
+   *         "type": "text/plain",
+   *         "data": "Y29udGVudCBmcm9tIHN0b3JhZ2U="
+   *       }
+   *     }
+   *   ]
+   * ```
+   */
   @UseInterceptors(BsonBodyParser(), JsonBodyParser(), activity(createStorageActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("storage:create"))
@@ -154,6 +204,10 @@ export class StorageController {
     return objects;
   }
 
+  /**
+   * Removes the object from the storage along with its metadata
+   * @param id Identifier of the object
+   */
   @UseInterceptors(activity(createStorageActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))

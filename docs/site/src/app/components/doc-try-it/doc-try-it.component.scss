@@ -1,0 +1,40 @@
+:host {
+  font-size: 15px;
+
+  button {
+    color: #15bde8;
+    margin-left: 15px;
+
+    mat-icon {
+      font-size: 13px;
+      vertical-align: bottom;
+    }
+  }
+
+  div {
+    display: block;
+    margin-top: 40px;
+    mat-form-field:first-of-type {
+      width: 400px;
+    }
+    mat-form-field:not(:first-of-type):last-of-type {
+      margin-left: 5px;
+    }
+    mat-checkbox {
+      margin-left: 5px;
+    }
+    code {
+      display: block;
+      margin-top: 15px;
+      background: #f1f1f1;
+      border-radius: 5px;
+      padding: 5px 10px;
+      color: #000;
+      white-space: pre;
+      &.remove-newlines {
+        word-break: break-all;
+        white-space: unset;
+      }
+    }
+  }
+}

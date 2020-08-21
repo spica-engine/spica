@@ -9,6 +9,7 @@ ts_library(
     name = "dgeni_sources",
     srcs = [
         "dgeni.ts",
+        "helper/evaluator.ts",
         "processors/controller.ts",
         "processors/copydata.ts",
         "processors/filter.ts",
@@ -32,4 +33,5 @@ nodejs_binary(
         ":dgeni_sources",
     ],
     entry_point = ":dgeni.ts",
+    install_source_map_support = True,
 )
