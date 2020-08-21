@@ -19,10 +19,7 @@
     padding: 0 30px;
     align-items: flex-start;
     display: flex;
-    justify-content: space-between;
-    .space-between {
-      flex: 1 1 auto;
-    }
+    flex-direction: column;
     h4 {
       mat-icon,
       span {
@@ -31,11 +28,17 @@
       }
     }
     button {
-      padding: 0;
-      min-width: 40px;
       input {
         display: none;
       }
+
+      mat-progress-spinner {
+        display: inline-block;
+      }
+    }
+
+    div.actions {
+      align-self: flex-end;
     }
   }
 

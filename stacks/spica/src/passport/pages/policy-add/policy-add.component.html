@@ -93,12 +93,14 @@
       </mat-accordion>
     </div>
     <button
+      class="save-button"
       mat-button
       type="submit"
       [canInteract]="policy._id ? 'passport:policy:update' : 'passport:policy:create'"
       (click)="submitForm()"
     >
-      Save Policy
+      <mat-icon>save</mat-icon>
+      <span>Save</span>
     </button>
   </mat-card-content>
 </mat-card>

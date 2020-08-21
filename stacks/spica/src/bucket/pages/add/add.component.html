@@ -125,6 +125,7 @@
       <mat-icon>schedule</mat-icon>
     </button>
     <button
+      class="save-button"
       [canInteract]="data._id ? 'bucket:data:update' : 'bucket:data:create'"
       *matSave="$save | async; let state"
       [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly || !!state"
@@ -132,7 +133,7 @@
       (click)="saveBucketRow()"
       [ngSwitch]="state"
     >
-      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-icon *ngSwitchDefault>save</mat-icon>
       <mat-progress-spinner
         *ngSwitchCase="'saving'"
         [diameter]="18"

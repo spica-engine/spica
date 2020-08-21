@@ -176,6 +176,11 @@
     </mat-list-item>
   </mat-card-content>
   <mat-card-actions>
-    <button mat-button (click)="saveSettings()"><mat-icon>save</mat-icon> Save</button>
+    <button class="save-button" mat-button (click)="saveSettings()">
+      <mat-icon>save</mat-icon>
+      <span>
+        Save
+      </span>
+    </button>
   </mat-card-actions>
 </mat-card>

@@ -58,22 +58,6 @@ describe("PolicyIndexComponent", () => {
     fixture.detectChanges();
   });
 
-  describe("basic behavior", () => {
-    let toolbarFixture: ComponentFixture<ToolbarCmp>;
-
-    beforeEach(() => {
-      toolbarFixture = TestBed.createComponent(ToolbarCmp);
-      toolbarFixture.componentInstance.outlet = fixture.componentInstance.toolbar;
-      toolbarFixture.detectChanges();
-    });
-
-    it("should refresh", () => {
-      policyService.find.calls.reset();
-      toolbarFixture.debugElement.query(By.css("button")).nativeElement.click();
-      expect(policyService.find).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe("rows", () => {
     beforeEach(() => {
       rows.next([

@@ -3,12 +3,14 @@
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
+    flex-direction: column;
     h4 > * {
       margin-left: 5px;
       vertical-align: middle;
     }
-    .space-between {
-      flex: 1 1 auto;
+    button:last-of-type {
+      align-self: flex-end;
+      margin-top: 60px;
     }
   }
 

@@ -128,7 +128,7 @@ describe("LogViewComponent", () => {
         content: "content",
         created_at: new Date("2019-12-31T21:00:00.000Z").toString(),
         event_id: "new_event",
-        function: "function_name"
+        function: {_id: "fn1", name: "function_name"} as any
       }
     ]);
   });
