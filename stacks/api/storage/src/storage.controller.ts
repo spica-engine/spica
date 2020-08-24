@@ -73,7 +73,7 @@ export class StorageController {
       throw new NotFoundException("Could not find the object.");
     }
     const eTag = etag(object.content.data);
-    if (eTag == ifNoneMatch) {
+    if (eTag === ifNoneMatch) {
       return res.status(HttpStatus.NOT_MODIFIED).end();
     }
     res.header("Content-type", object.content.type);

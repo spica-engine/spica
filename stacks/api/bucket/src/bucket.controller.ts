@@ -37,6 +37,16 @@ export class BucketController {
     @Optional() private history: HistoryService
   ) {}
 
+
+  /**
+   * Returns predefined defaults
+   */
+  @Get("predefineddefaults")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
+  getPredefinedDefaults() {
+    return this.bs.getPredefinedDefaults();
+  }
+
   /**
    * Returns all schemas.
    */
@@ -54,15 +64,6 @@ export class BucketController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
   async show(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.bs.findOne({_id: id});
-  }
-
-  /**
-   * Returns predefined defaults
-   */
-  @Get("predefineddefaults")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
-  getPredefinedDefaults() {
-    return this.bs.getPredefinedDefaults();
   }
 
   /**

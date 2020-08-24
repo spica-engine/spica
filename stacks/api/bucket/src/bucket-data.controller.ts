@@ -17,7 +17,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
-  Res
+  Req
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DataChangeEmitter} from "@spica-server/bucket/change";
@@ -68,7 +68,7 @@ export class BucketDataController {
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers() headers: object,
-    @Res() res: any,
+    @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), BOOLEAN) relation?: boolean,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
@@ -103,7 +103,7 @@ export class BucketDataController {
       aggregation.push({
         $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
       });
-      res.header("Content-language", locale.best || locale.fallback);
+      req.res.header("Content-language", locale.best || locale.fallback);
     }
 
     if (sort) {
@@ -208,7 +208,7 @@ export class BucketDataController {
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
     @Headers() headers: object,
-    @Res() res: any,
+    @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
@@ -230,7 +230,7 @@ export class BucketDataController {
       aggregation.unshift({
         $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
       });
-      res.header("Content-language", locale.best || locale.fallback);
+      req.res.header("Content-language", locale.best || locale.fallback);
     }
 
     if (relation) {
@@ -273,7 +273,7 @@ export class BucketDataController {
    * Adds a new document into the bucket. Keep in mind that the document in the body has to match schema of the bucket.
    * @param bucketId Identifier of the bucket.
    * @body
-   * ##### When the bucket has translated property body looks like below
+   * ##### When the bucket has no translated property body looks like below
    * ```json
    * {
    *    "name": "Lucifer",
