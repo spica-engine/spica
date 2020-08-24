@@ -292,7 +292,7 @@ const modules = [
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
-    poolMaxSize: args["function-pool-maxium-size"],
+    poolMaxSize: args["function-pool-maximum-size"],
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],

@@ -37,7 +37,6 @@ export class BucketController {
     @Optional() private history: HistoryService
   ) {}
 
-
   /**
    * Returns predefined defaults
    */

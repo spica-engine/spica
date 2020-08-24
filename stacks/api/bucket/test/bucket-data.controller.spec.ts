@@ -1,8 +1,8 @@
-import { INestApplication } from "@nestjs/common";
-import { Test, TestingModule } from "@nestjs/testing";
-import { BucketModule } from "@spica-server/bucket";
-import { Bucket, BucketDocument } from "@spica-server/bucket/services";
-import { SchemaModule } from "@spica-server/core/schema";
+import {INestApplication} from "@nestjs/common";
+import {Test, TestingModule} from "@nestjs/testing";
+import {BucketModule} from "@spica-server/bucket";
+import {Bucket, BucketDocument} from "@spica-server/bucket/services";
+import {SchemaModule} from "@spica-server/core/schema";
 import {
   CREATED_AT,
   DATE_TIME,
@@ -10,10 +10,10 @@ import {
   OBJECT_ID,
   UPDATED_AT
 } from "@spica-server/core/schema/defaults";
-import { CoreTestingModule, Request } from "@spica-server/core/testing";
-import { DatabaseService, DatabaseTestingModule, ObjectId } from "@spica-server/database/testing";
-import { PassportTestingModule } from "@spica-server/passport/testing";
-import { PreferenceTestingModule } from "@spica-server/preference/testing";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 describe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
@@ -948,8 +948,6 @@ describe("BucketDataController", () => {
     let myBucketId: ObjectId;
     let myBucketData;
 
-
-
     beforeEach(async () => {
       const myBucket = {
         title: "New Bucket",
@@ -1046,77 +1044,76 @@ describe("BucketDataController", () => {
     let otherBucketDocumentId: ObjectId;
 
     describe("One to One", () => {
-
       beforeEach(async () => {
         usersBucketId = await req
-        .post("/bucket", {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            name: {
-              type: "string",
-              title: "name",
-              description: "Title of the name",
-              options: {position: "left"}
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              name: {
+                type: "string",
+                title: "name",
+                description: "Title of the name",
+                options: {position: "left"}
+              }
             }
-          }
-        })
-        .then(r => new ObjectId(r.body._id));
+          })
+          .then(r => new ObjectId(r.body._id));
 
-      otherBucketId = await req
-        .post("/bucket", {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the title",
-              options: {position: "left"}
+        otherBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the title",
+                options: {position: "left"}
+              }
             }
-          }
-        })
-        .then(r => new ObjectId(r.body._id));
+          })
+          .then(r => new ObjectId(r.body._id));
 
-      relationBucketId = await req
-        .post("/bucket", {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            },
-            nested_relation: {
-              type: "object",
-              options: {position: "left", visible: true},
-              properties: {
-                user_relation: {
-                  type: "relation",
-                  bucketId: usersBucketId,
-                  relationType: "onetoone"
-                },
-                other_relation: {
-                  type: "relation",
-                  bucketId: otherBucketId,
-                  relationType: "onetoone"
+        relationBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", visible: true}
+              },
+              nested_relation: {
+                type: "object",
+                options: {position: "left", visible: true},
+                properties: {
+                  user_relation: {
+                    type: "relation",
+                    bucketId: usersBucketId,
+                    relationType: "onetoone"
+                  },
+                  other_relation: {
+                    type: "relation",
+                    bucketId: otherBucketId,
+                    relationType: "onetoone"
+                  }
                 }
               }
             }
-          }
-        })
-        .then(r => new ObjectId(r.body._id));
+          })
+          .then(r => new ObjectId(r.body._id));
         userOneId = await req
           .post(`/bucket/${usersBucketId}/data`, {
             name: "user_one"
