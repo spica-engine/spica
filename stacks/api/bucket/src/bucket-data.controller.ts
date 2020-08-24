@@ -276,22 +276,20 @@ export class BucketDataController {
    * ##### When the bucket has no translated property body looks like below
    * ```json
    * {
-   *    "name": "Lucifer",
-   *    "age": 35,
-   *    "famous": true,
-   *    "role": "Actor"
+   *    "name": "The Great Gatsby",
+   *    "writer": "F. Scott Fitzgerald",
+   *    "written_at": "1925",
    * }
    * ```
    * ##### Otherwise, when there is a translated property, for instance the `name` property has to be like below
    * ```json
    * {
    *    "name": {
-   *      "tr_TR": "Lusifır",
-   *      "en_US": "Lucifer"
+   *      "tr_TR": "Muhteşem Gatsby",
+   *      "en_US": "The Great Gatsby"
    *    },
-   *    "age": 35,
-   *    "famous": true,
-   *    "role": "Actor"
+   *    "writer": "F. Scott Fitzgerald",
+   *    "written_at": "1925",
    * }
    * ```
    */
