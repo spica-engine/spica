@@ -99,13 +99,6 @@ const route: Route[] = [
     path: "/passport/apikey",
     icon: "vpn_key",
     data: {action: "passport:apikey:index"}
-  },
-  {
-    id: "passport.settings",
-    category: RouteCategory.System,
-    display: "Settings",
-    path: "/passport/settings",
-    icon: "settings"
   }
 ];
 

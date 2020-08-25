@@ -75,7 +75,7 @@ export class BucketService {
   }
 
   getPredefinedDefaults(): Observable<PredefinedDefault[]> {
-    return this.http.get<PredefinedDefault[]>(`api:/bucket/predefineddefaults`);
+    return this.http.get<PredefinedDefault[]>(`api:/bucket/predefs`);
   }
 
   importData(file: File, bucketId: string): Observable<any> {

@@ -39,13 +39,13 @@ const route: Route[] = [
     category: RouteCategory.Developer,
     icon: "http",
     path: "/webhook",
-    display: "Webhook",
+    display: "Webhooks",
     data: {action: "webhook:index"}
   },
   {
     id: "webhook_logs",
     category: RouteCategory.Developer,
-    icon: "format_list_numbered",
+    icon: "pest_control",
     path: "/webhook/logs",
     display: "Webhook Logs"
   }
