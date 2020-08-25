@@ -11,9 +11,10 @@ import {
   UPDATED_AT
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+
 describe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
@@ -394,12 +395,6 @@ describe("BucketDataController", () => {
             message:
               'Could not find the constructor Throw in {"$gt":"Throw(2020-04-20T10:00:00.000Z)"}'
           });
-        });
-
-        afterAll(async () => {
-          for (const row of rows) {
-            await req.delete(`/bucket/${bucket._id}/data/${row._id}`);
-          }
         });
       });
     });
@@ -975,12 +970,6 @@ describe("BucketDataController", () => {
         {title: "first title", description: "first description"},
         {title: "last title", description: "last description"}
       ];
-      //clear bucket-data
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
 
       //add data
       myBucketData[0]._id = new ObjectId(
@@ -989,19 +978,6 @@ describe("BucketDataController", () => {
       myBucketData[1]._id = new ObjectId(
         (await req.post(`/bucket/${myBucketId}/data`, myBucketData[1])).body._id
       );
-    });
-
-    afterAll(async () => {
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
-      await app
-        .get(DatabaseService)
-        .collection("buckets")
-        .deleteOne({_id: myBucketId})
-        .catch();
     });
 
     it("should delete document", async () => {
