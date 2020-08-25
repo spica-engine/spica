@@ -34,11 +34,12 @@ ts_library(
 docs(
     name = "docs",
     srcs = [
-        "storage.controller.ts",
+        "src/storage.controller.ts",
     ],
+    doc_name = "storage",
     tags = ["storage-docs"],
     exports = [
-        "StorageController",
+        "storage",
     ],
     deps = [
         "//packages/database",

@@ -4,7 +4,7 @@
     <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
     <span class="fill"></span>
     <mat-error *ngIf="model?.errors?.minItems && _values.length == 0">
-      Array must have at least {{ model?.errors?.minItems?.min }} items.
+      This property must have at least {{ model?.errors?.minItems?.min }} items.
     </mat-error>
     <ng-content></ng-content>
   </mat-card-header>
@@ -63,16 +63,16 @@
         (click)="arrayContainer._onTouched()"
       >
         <mat-error *ngIf="model?.errors?.emptyItems">
-          All items in the array must be filled.
+          All items in this property must be filled.
         </mat-error>
         <mat-error *ngIf="model?.errors?.uniqueItems">
-          All items in the array must be unique.
+          All items in this property must be unique.
         </mat-error>
         <mat-error *ngIf="model?.errors?.minItems">
-          Array must have at least {{ model?.errors?.minItems?.min }} items.
+          This property must have at least {{ model?.errors?.minItems?.min }} items.
         </mat-error>
         <mat-error *ngIf="model?.errors?.maxItems">
-          Array can have maximum {{ model?.errors?.maxItems?.max }} items.
+          This property can have maximum {{ model?.errors?.maxItems?.max }} items.
         </mat-error>
       </span>
       <button

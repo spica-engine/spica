@@ -3,10 +3,9 @@
     <mat-icon>bug_report</mat-icon>
     <span>Logs</span>
   </h4>
-  <span class="space-between"></span>
-
-  <button mat-icon-button (click)="clearLogs()">
+  <button mat-button (click)="clearLogs()">
     <mat-icon>clear_all</mat-icon>
+    Clear
   </button>
 </mat-toolbar>
 
@@ -89,8 +88,13 @@
               <span>
                 {{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}
               </span>
-              <span>
-                {{ log.function }}
+              <span
+                [routerLink]="[]"
+                [queryParams]="{function: log.function._id}"
+                queryParamsHandling="merge"
+                routerLinkActive="active"
+              >
+                {{ log.function.name }} <mat-icon>filter_alt</mat-icon>
               </span>
 
               <span>

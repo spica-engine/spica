@@ -48,6 +48,19 @@ describe("Basic behavior", () => {
     expect(error).toEqual(new TypeError("--from and --to can not be equal."));
   });
 
+  it("should skip migration when --from and --to are equal", async () => {
+    const result = await run([
+      ...args,
+      "--from",
+      "0.1.0",
+      "--to",
+      "0.1.0",
+      "--continue-if-versions-are-equal",
+      "true"
+    ]);
+    expect(result).toBeFalsy();
+  });
+
   it("should throw an error when --from greater than --to", async () => {
     const error = await run([...args, "--from", "1.1.0", "--to", "0.1.0"]).catch(e => e);
     expect(error).toEqual(new TypeError("--from must not be greater than --to."));

@@ -12,9 +12,9 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 export class BooleanComponent implements ControlValueAccessor {
   value: boolean;
   disabled: boolean = false;
-  _onChangeFn: Function = () => {};
 
-  _onTouchedFn: Function = () => {};
+  _onChangeFn = (_: boolean) => {};
+  _onTouchedFn = () => {};
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
@@ -25,7 +25,11 @@ export class BooleanComponent implements ControlValueAccessor {
 
   writeValue(val: boolean): void {
     this.value = val;
-    if (this.value == undefined && this.schema.default != undefined) {
+    if (
+      this.value === undefined &&
+      this.schema.default !== undefined &&
+      this.schema.default !== null
+    ) {
       this.value = !!this.schema.default;
       this._onChangeFn(this.value);
     }

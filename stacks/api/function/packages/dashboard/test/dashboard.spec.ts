@@ -24,7 +24,7 @@ describe("Dashboard", () => {
         } as any)
       )
     );
-    initialize("TEST_APIKEY");
+    initialize({apikey: "TEST_APIKEY"});
   });
 
   afterEach(() => {

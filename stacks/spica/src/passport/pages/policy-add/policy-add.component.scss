@@ -4,7 +4,7 @@
       > *:not(mat-form-field) {
         margin-top: 1em;
       }
-      > button {
+      > button:not(:last-of-type) {
         margin-right: 10px;
       }
     }

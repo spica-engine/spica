@@ -11,20 +11,16 @@ import {
   UPDATED_AT
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
-  let db: DatabaseService;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
@@ -35,12 +31,15 @@ describe("BucketDataController", () => {
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
-        BucketModule.forRoot({hooks: false, history: false, realtime: false})
+        BucketModule.forRoot({
+          hooks: false,
+          history: false,
+          realtime: false,
+          experimentalDataChange: false
+        })
       ]
     }).compile();
-    db = module.get(DatabaseService);
     app = module.createNestApplication();
-    app.useWebSocketAdapter(new WsAdapter(app));
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
@@ -52,7 +51,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  afterAll(async () => await app.close());
+  afterEach(() => app.close());
 
   describe("index", () => {
     let bucket = {
@@ -84,7 +83,7 @@ describe("BucketDataController", () => {
 
     let rows = [];
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       bucket = await req.post("/bucket", bucket).then(response => response.body);
       rows = [
         await req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
@@ -336,7 +335,7 @@ describe("BucketDataController", () => {
 
       describe("advanced filter", () => {
         let rows;
-        beforeAll(async () => {
+        beforeEach(async () => {
           rows = [
             await req.post(`/bucket/${bucket._id}/data`, {
               name: "Sherlock",
@@ -396,12 +395,6 @@ describe("BucketDataController", () => {
             message:
               'Could not find the constructor Throw in {"$gt":"Throw(2020-04-20T10:00:00.000Z)"}'
           });
-        });
-
-        afterAll(async () => {
-          for (const row of rows) {
-            await req.delete(`/bucket/${bucket._id}/data/${row._id}`);
-          }
         });
       });
     });
@@ -829,7 +822,7 @@ describe("BucketDataController", () => {
 
   describe("post requests", () => {
     let myBucketId: ObjectId;
-    beforeAll(async () => {
+    beforeEach(async () => {
       const myBucket = {
         title: "New Bucket",
         description: "Describe your new bucket",
@@ -852,22 +845,6 @@ describe("BucketDataController", () => {
         }
       };
       myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
-    });
-
-    afterEach(async () => {
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
-    });
-
-    afterAll(async () => {
-      await app
-        .get(DatabaseService)
-        .collection("buckets")
-        .deleteOne({_id: myBucketId})
-        .catch();
     });
 
     it("should add document to bucket and return inserted document", async () => {
@@ -966,7 +943,7 @@ describe("BucketDataController", () => {
     let myBucketId: ObjectId;
     let myBucketData;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       const myBucket = {
         title: "New Bucket",
         description: "Describe your new bucket",
@@ -989,19 +966,10 @@ describe("BucketDataController", () => {
         }
       };
       myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
-    });
-
-    beforeEach(async () => {
       myBucketData = [
         {title: "first title", description: "first description"},
         {title: "last title", description: "last description"}
       ];
-      //clear bucket-data
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
 
       //add data
       myBucketData[0]._id = new ObjectId(
@@ -1010,19 +978,6 @@ describe("BucketDataController", () => {
       myBucketData[1]._id = new ObjectId(
         (await req.post(`/bucket/${myBucketId}/data`, myBucketData[1])).body._id
       );
-    });
-
-    afterAll(async () => {
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
-      await app
-        .get(DatabaseService)
-        .collection("buckets")
-        .deleteOne({_id: myBucketId})
-        .catch();
     });
 
     it("should delete document", async () => {
@@ -1064,169 +1019,338 @@ describe("BucketDataController", () => {
     let userTwoId: ObjectId;
     let otherBucketDocumentId: ObjectId;
 
-    beforeAll(async () => {
-      usersBucketId = await req
-        .post("/bucket", {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            name: {
-              type: "string",
-              title: "name",
-              description: "Title of the name",
-              options: {position: "left"}
+    describe("One to One", () => {
+      beforeEach(async () => {
+        usersBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              name: {
+                type: "string",
+                title: "name",
+                description: "Title of the name",
+                options: {position: "left"}
+              }
             }
-          }
-        })
-        .then(r => new ObjectId(r.body._id));
+          })
+          .then(r => new ObjectId(r.body._id));
 
-      otherBucketId = await req
-        .post("/bucket", {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the title",
-              options: {position: "left"}
+        otherBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the title",
+                options: {position: "left"}
+              }
             }
-          }
-        })
-        .then(r => new ObjectId(r.body._id));
+          })
+          .then(r => new ObjectId(r.body._id));
 
-      relationBucketId = await req
-        .post("/bucket", {
-          title: "New Bucket",
-          description: "Describe your new bucket",
-          icon: "view_stream",
-          primary: "title",
-          readOnly: false,
-          properties: {
-            title: {
-              type: "string",
-              title: "title",
-              description: "Title of the row",
-              options: {position: "left", visible: true}
-            },
-            nested_relation: {
-              type: "object",
-              options: {position: "left", visible: true},
-              properties: {
-                user_relation: {
-                  type: "relation",
-                  bucketId: usersBucketId
-                },
-                other_relation: {
-                  type: "relation",
-                  bucketId: otherBucketId
+        relationBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", visible: true}
+              },
+              nested_relation: {
+                type: "object",
+                options: {position: "left", visible: true},
+                properties: {
+                  user_relation: {
+                    type: "relation",
+                    bucketId: usersBucketId,
+                    relationType: "onetoone"
+                  },
+                  other_relation: {
+                    type: "relation",
+                    bucketId: otherBucketId,
+                    relationType: "onetoone"
+                  }
                 }
               }
             }
+          })
+          .then(r => new ObjectId(r.body._id));
+        userOneId = await req
+          .post(`/bucket/${usersBucketId}/data`, {
+            name: "user_one"
+          })
+          .then(r => new ObjectId(r.body._id));
+
+        userTwoId = await req
+          .post(`/bucket/${usersBucketId}/data`, {
+            name: "user_two"
+          })
+          .then(r => new ObjectId(r.body._id));
+
+        otherBucketDocumentId = await req
+          .post(`/bucket/${otherBucketId}/data`, {
+            title: "test_title"
+          })
+          .then(r => new ObjectId(r.body._id));
+
+        documentOneId = await req
+          .post(`/bucket/${relationBucketId}/data`, {
+            title: "document_one",
+            nested_relation: {
+              user_relation: userOneId,
+              other_relation: otherBucketDocumentId
+            }
+          })
+          .then(r => new ObjectId(r.body._id));
+
+        documentTwoId = await req
+          .post(`/bucket/${relationBucketId}/data`, {
+            title: "document_two",
+            nested_relation: {
+              user_relation: userTwoId,
+              other_relation: otherBucketDocumentId
+            }
+          })
+          .then(r => new ObjectId(r.body._id));
+      });
+
+      afterEach(async () => {
+        await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+        await req.delete(`/bucket/${relationBucketId}/data`, [documentOneId, documentTwoId]);
+        await req.delete(`/bucket/${otherBucketId}/data/${otherBucketDocumentId}`);
+      });
+      it("should clear relations of documentOne when userOne deleted", async () => {
+        let response = await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+        expect(response.statusCode).toEqual(204);
+        expect(response.body).toEqual(undefined);
+
+        let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+        expect(relationDocuments).toEqual([
+          {
+            _id: "__skip__",
+            title: "document_one",
+            nested_relation: {
+              other_relation: otherBucketDocumentId.toHexString()
+            }
+          },
+          {
+            _id: "__skip__",
+            title: "document_two",
+            nested_relation: {
+              user_relation: userTwoId.toHexString(),
+              other_relation: otherBucketDocumentId.toHexString()
+            }
           }
-        })
-        .then(r => new ObjectId(r.body._id));
+        ]);
+      });
+
+      it("should clear relations for both documents when userOne and userTwo deleted", async () => {
+        let response = await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+        expect(response.statusCode).toEqual(204);
+        expect(response.body).toEqual(undefined);
+
+        let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+        expect(relationDocuments).toEqual([
+          {
+            _id: "__skip__",
+            title: "document_one",
+            nested_relation: {
+              other_relation: otherBucketDocumentId.toHexString()
+            }
+          },
+          {
+            _id: "__skip__",
+            title: "document_two",
+            nested_relation: {
+              other_relation: otherBucketDocumentId.toHexString()
+            }
+          }
+        ]);
+      });
     });
 
-    beforeEach(async () => {
-      userOneId = await req
-        .post(`/bucket/${usersBucketId}/data`, {
-          name: "user_one"
-        })
-        .then(r => new ObjectId(r.body._id));
+    describe("One to Many", () => {
+      beforeEach(async () => {
+        usersBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              name: {
+                type: "string",
+                title: "name",
+                description: "Title of the name",
+                options: {position: "left"}
+              }
+            }
+          })
+          .then(r => new ObjectId(r.body._id));
 
-      userTwoId = await req
-        .post(`/bucket/${usersBucketId}/data`, {
-          name: "user_two"
-        })
-        .then(r => new ObjectId(r.body._id));
+        otherBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the title",
+                options: {position: "left"}
+              }
+            }
+          })
+          .then(r => new ObjectId(r.body._id));
 
-      otherBucketDocumentId = await req
-        .post(`/bucket/${otherBucketId}/data`, {
-          title: "test_title"
-        })
-        .then(r => new ObjectId(r.body._id));
+        relationBucketId = await req
+          .post("/bucket", {
+            title: "New Bucket",
+            description: "Describe your new bucket",
+            icon: "view_stream",
+            primary: "title",
+            readOnly: false,
+            properties: {
+              title: {
+                type: "string",
+                title: "title",
+                description: "Title of the row",
+                options: {position: "left", visible: true}
+              },
+              nested_relation: {
+                type: "object",
+                options: {position: "left", visible: true},
+                properties: {
+                  user_relation: {
+                    type: "relation",
+                    bucketId: usersBucketId,
+                    relationType: "onetomany"
+                  },
+                  other_relation: {
+                    type: "relation",
+                    bucketId: otherBucketId,
+                    relationType: "onetomany"
+                  }
+                }
+              }
+            }
+          })
+          .then(r => new ObjectId(r.body._id));
+        userOneId = await req
+          .post(`/bucket/${usersBucketId}/data`, {
+            name: "user_one"
+          })
+          .then(r => new ObjectId(r.body._id));
 
-      documentOneId = await req
-        .post(`/bucket/${relationBucketId}/data`, {
-          title: "document_one",
-          nested_relation: {
-            user_relation: userOneId,
-            other_relation: otherBucketDocumentId
+        userTwoId = await req
+          .post(`/bucket/${usersBucketId}/data`, {
+            name: "user_two"
+          })
+          .then(r => new ObjectId(r.body._id));
+
+        otherBucketDocumentId = await req
+          .post(`/bucket/${otherBucketId}/data`, {
+            title: "test_title"
+          })
+          .then(r => new ObjectId(r.body._id));
+
+        documentOneId = await req
+          .post(`/bucket/${relationBucketId}/data`, {
+            title: "document_one",
+            nested_relation: {
+              user_relation: [userOneId, userTwoId, userOneId],
+              other_relation: [otherBucketDocumentId]
+            }
+          })
+          .then(r => new ObjectId(r.body._id));
+
+        documentTwoId = await req
+          .post(`/bucket/${relationBucketId}/data`, {
+            title: "document_two",
+            nested_relation: {
+              user_relation: [userOneId],
+              other_relation: [otherBucketDocumentId]
+            }
+          })
+          .then(r => new ObjectId(r.body._id));
+      });
+
+      afterEach(async () => {
+        await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+        await req.delete(`/bucket/${relationBucketId}/data`, [documentOneId, documentTwoId]);
+        await req.delete(`/bucket/${otherBucketId}/data/${otherBucketDocumentId}`);
+      });
+
+      it("should update relations when userOne deleted", async () => {
+        let response = await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+        expect(response.statusCode).toEqual(204);
+        expect(response.body).toEqual(undefined);
+
+        let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+        expect(relationDocuments).toEqual([
+          {
+            _id: "__skip__",
+            title: "document_one",
+            nested_relation: {
+              user_relation: [userTwoId.toHexString()],
+              other_relation: [otherBucketDocumentId.toHexString()]
+            }
+          },
+          {
+            _id: "__skip__",
+            title: "document_two",
+            nested_relation: {
+              user_relation: [],
+              other_relation: [otherBucketDocumentId.toHexString()]
+            }
           }
-        })
-        .then(r => new ObjectId(r.body._id));
+        ]);
+      });
 
-      documentTwoId = await req
-        .post(`/bucket/${relationBucketId}/data`, {
-          title: "document_two",
-          nested_relation: {
-            user_relation: userTwoId,
-            other_relation: otherBucketDocumentId
+      it("should clear relations when userOne and userTwo deleted", async () => {
+        let response = await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
+        expect(response.statusCode).toEqual(204);
+        expect(response.body).toEqual(undefined);
+
+        let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
+        expect(relationDocuments).toEqual([
+          {
+            _id: "__skip__",
+            title: "document_one",
+            nested_relation: {
+              user_relation: [],
+              other_relation: [otherBucketDocumentId.toHexString()]
+            }
+          },
+          {
+            _id: "__skip__",
+            title: "document_two",
+            nested_relation: {
+              user_relation: [],
+              other_relation: [otherBucketDocumentId.toHexString()]
+            }
           }
-        })
-        .then(r => new ObjectId(r.body._id));
-    });
-
-    afterEach(async () => {
-      await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
-      await req.delete(`/bucket/${relationBucketId}/data`, [documentOneId, documentTwoId]);
-      await req.delete(`/bucket/${otherBucketId}/data/${otherBucketDocumentId}`);
-    });
-
-    it("should clear relations of documentOne when userOne deleted", async () => {
-      let response = await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
-      expect(response.statusCode).toEqual(204);
-      expect(response.body).toEqual(undefined);
-
-      let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
-      expect(relationDocuments).toEqual([
-        {
-          _id: "__skip__",
-          title: "document_one",
-          nested_relation: {
-            other_relation: otherBucketDocumentId.toHexString()
-          }
-        },
-        {
-          _id: "__skip__",
-          title: "document_two",
-          nested_relation: {
-            user_relation: userTwoId.toHexString(),
-            other_relation: otherBucketDocumentId.toHexString()
-          }
-        }
-      ]);
-    });
-
-    it("should clear relations for both documents when userOne and userTwo deleted", async () => {
-      let response = await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
-      expect(response.statusCode).toEqual(204);
-      expect(response.body).toEqual(undefined);
-
-      let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
-      expect(relationDocuments).toEqual([
-        {
-          _id: "__skip__",
-          title: "document_one",
-          nested_relation: {
-            other_relation: otherBucketDocumentId.toHexString()
-          }
-        },
-        {
-          _id: "__skip__",
-          title: "document_two",
-          nested_relation: {
-            other_relation: otherBucketDocumentId.toHexString()
-          }
-        }
-      ]);
+        ]);
+      });
     });
   });
 });

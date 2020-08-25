@@ -314,19 +314,9 @@
             "
             ngModel
             required
-            minlength="3"
-            maxlength="25"
           />
           <mat-error *ngIf="pnm?.errors?.required">
             Property name is required.
-          </mat-error>
-          <mat-error *ngIf="pnm?.errors?.minlength">
-            Length of the property name must be greater than
-            {{ pnm?.errors?.minlength?.requiredLength }} character.
-          </mat-error>
-          <mat-error *ngIf="pnm?.errors?.maxlength">
-            Length of the property name must be less than
-            {{ pnm?.errors?.maxlength?.requiredLength }} character.
           </mat-error>
         </mat-form-field>
 
@@ -407,6 +397,7 @@
   </mat-card-content>
   <mat-card-actions>
     <button
+      class="save-button"
       mat-button
       [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
       form="describeForm"
@@ -421,7 +412,7 @@
       (click)="saveBucket()"
       [ngSwitch]="state"
     >
-      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-icon *ngSwitchDefault>save</mat-icon>
       <mat-progress-spinner
         *ngSwitchCase="'saving'"
         [diameter]="18"

@@ -53,11 +53,13 @@
     div {
       overflow-x: auto;
       max-height: 180px;
-      span {
-        button {
-          margin: 5px;
-        }
+      button {
+        margin: 5px;
       }
+    }
+
+    > button {
+      margin-left: 5px;
     }
 
     span {

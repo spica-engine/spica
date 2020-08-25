@@ -1,4 +1,4 @@
-<app-header fxHide.lt-md="true"> </app-header>
+<app-header fxHide.lt-md="true" hideLogin="true"></app-header>
 
 <mat-toolbar color="primary" fxHide.lt-md="false" fxHide="true">
   <button mat-icon-button (click)="drawer.toggle()">
@@ -8,7 +8,11 @@
   <span class="fill-space"></span>
 </mat-toolbar>
 
-<mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
+<mat-sidenav-container
+  ngStyle.gt-md="margin-left: 12%;margin-right: 12%;"
+  [class.handset]="isHandset$ | async"
+  autosize
+>
   <mat-sidenav
     #drawer
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
@@ -33,16 +37,13 @@
       >
         {{ subDoc.name }}
       </a>
-    </mat-nav-list>
-    <mat-nav-list>
-      <h6 mat-subheader routerLink="api" routerLinkActive="active">API</h6>
       <a
         mat-list-item
-        *ngFor="let apiDoc of ($apiDocs | async)?.children"
-        [routerLink]="['api', apiDoc.name]"
+        *ngFor="let subDoc of contentDoc.children"
+        [routerLink]="[contentDoc.name, subDoc.name]"
         routerLinkActive="active"
       >
-        {{ apiDoc.name | titlecase }}
+        {{ subDoc.name | titlecase }}
       </a>
     </mat-nav-list>
   </mat-sidenav>

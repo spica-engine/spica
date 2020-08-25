@@ -8,12 +8,9 @@
       A Policy is a collection of statements. A statement is an access level for an action.
     </h6>
   </span>
-  <span class="space-between"></span>
-  <button mat-icon-button (click)="refresh$.next()">
-    <mat-icon>refresh</mat-icon>
-  </button>
-  <button mat-icon-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
+  <button mat-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
     <mat-icon>add</mat-icon>
+    Add New
   </button>
 </ng-template>
 

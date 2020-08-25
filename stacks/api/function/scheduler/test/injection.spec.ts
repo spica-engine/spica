@@ -21,7 +21,7 @@ const spyScheduler = jasmine
 })
 export class SpySchedulerModule {}
 
-describe("Scheduler injects enqueuer", () => {
+describe("Scheduler Injection", () => {
   let module: TestingModule;
   let scheduler: Scheduler;
   let app: INestApplication;
@@ -37,9 +37,10 @@ describe("Scheduler injects enqueuer", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          poolSize: 10,
-          publicUrl: undefined,
-          timeout: 60000,
+          poolSize: 0,
+          poolMaxSize: 0,
+          apiUrl: undefined,
+          timeout: 5,
           corsOptions: {
             allowCredentials: true,
             allowedHeaders: ["*"],
@@ -54,16 +55,16 @@ describe("Scheduler injects enqueuer", () => {
     scheduler = module.get(Scheduler);
     addQueueSpy = spyOn(scheduler["queue"], "addQueue");
     addEnqueuerSpy = spyOn(scheduler.enqueuers, "add");
-    await app.init();
   });
 
   afterEach(() => module.close());
 
   it("should inject the provided enqueuer and queue", async () => {
+    await app.init();
     expect(spyScheduler).toHaveBeenCalledTimes(1);
     expect(spyScheduler).toHaveBeenCalledWith(scheduler["queue"]);
 
     expect(addQueueSpy).toHaveBeenCalledTimes(1);
     expect(addQueueSpy).toHaveBeenCalledWith(null);
-  });
+  }, 20000);
 });

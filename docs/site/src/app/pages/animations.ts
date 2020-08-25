@@ -2,7 +2,7 @@ import {animate, state, style, transition, trigger, stagger, query} from "@angul
 
 export function fly(name: string) {
   return trigger(name, [
-    transition("* => *", [
+    transition("* => true", [
       query("div", style({opacity: 0, transform: "translateY(-40px)"})),
       query(
         "div",
@@ -17,6 +17,6 @@ export function flyOne(name: string) {
   return trigger(name, [
     state("false", style({opacity: 0, transform: "translateY(-40px)"})),
     state("true", style({opacity: 1, transform: "translateX(0)"})),
-    transition("* => *", [animate("0.5s")])
+    transition("* => true", [animate("0.5s")])
   ]);
 }

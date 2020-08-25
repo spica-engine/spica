@@ -8,7 +8,6 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {PassThrough} from "stream";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:5687";
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 describe("Scheduler", () => {
   let scheduler: Scheduler;
@@ -18,9 +17,10 @@ describe("Scheduler", () => {
     databaseUri: undefined,
     databaseName: undefined,
     databaseReplicaSet: undefined,
-    poolSize: 10,
-    publicUrl: undefined,
-    timeout: 60000,
+    poolSize: 1,
+    poolMaxSize: 2,
+    apiUrl: undefined,
+    timeout: 20,
     corsOptions: {
       allowCredentials: true,
       allowedHeaders: ["*"],
@@ -30,6 +30,11 @@ describe("Scheduler", () => {
   };
 
   let clock: jasmine.Clock;
+
+  const compilation = {
+    cwd: undefined,
+    entrypoint: "index.js"
+  };
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -47,16 +52,12 @@ describe("Scheduler", () => {
     clock.install();
 
     await app.init();
-  });
 
-  const compilation = {
-    cwd: undefined,
-    entrypoint: "index.ts"
-  };
-
-  beforeEach(async () => {
-    compilation.cwd = FunctionTestBed.initialize(`export default function() {}`);
-    await scheduler.languages.get("typescript").compile(compilation);
+    compilation.cwd = FunctionTestBed.initialize(
+      `export default function() {}`,
+      compilation.entrypoint
+    );
+    await scheduler.languages.get("javascript").compile(compilation);
   });
 
   afterEach(() => {
@@ -66,7 +67,26 @@ describe("Scheduler", () => {
   });
 
   it("should spawn N process", () => {
-    expect(spawnSpy).toHaveBeenCalledTimes(10);
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
+  });
+
+  it("should spawn max N process", () => {
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
+    const event = new Event.Event({
+      target: new Event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new Event.SchedulingContext({env: [], timeout: 1000})
+      }),
+      type: -1
+    });
+    // @ts-expect-error
+    scheduler.schedule();
+    // @ts-expect-error
+    scheduler.schedule();
+    // @ts-expect-error
+    scheduler.schedule();
+    expect(spawnSpy).toHaveBeenCalledTimes(2);
   });
 
   it("should attach outputs when the worker scheduled", () => {
@@ -80,14 +100,15 @@ describe("Scheduler", () => {
     });
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
     const attachSpy = spyOn(worker, "attach");
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     expect(attachSpy).toHaveBeenCalled();
   });
 
   it("should spawn a new worker when a new message queued", () => {
-    expect(spawnSpy).toHaveBeenCalledTimes(10);
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
     scheduler["schedule"]();
-    expect(spawnSpy).toHaveBeenCalledTimes(11);
+    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize + 1);
   });
 
   it("should kill the worker when the execution times out", () => {
@@ -101,7 +122,8 @@ describe("Scheduler", () => {
     });
 
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     const kill = spyOn(worker, "kill");
     expect(kill).not.toHaveBeenCalled();
     clock.tick(schedulerOptions.timeout * 1000);
@@ -119,7 +141,8 @@ describe("Scheduler", () => {
     });
 
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     const kill = spyOn(worker, "kill");
     expect(kill).not.toHaveBeenCalled();
     clock.tick(schedulerOptions.timeout * 1000);
@@ -139,13 +162,14 @@ describe("Scheduler", () => {
     const id = scheduler["pool"].keys().next().value;
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
 
     const write = spyOn(stream, "write");
     expect(write).not.toHaveBeenCalled();
     clock.tick(schedulerOptions.timeout * 1000);
     expect(write).toHaveBeenCalledWith(
-      "Function (default) did not finish within 60000 seconds. Aborting."
+      "Function (default) did not finish within 20 seconds. Aborting."
     );
   });
 
@@ -162,7 +186,8 @@ describe("Scheduler", () => {
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
-    scheduler["scheduled"](event, id);
+    // @ts-expect-error
+    scheduler.yield(event, id);
     const write = spyOn(stream, "write");
     expect(write).not.toHaveBeenCalled();
     worker.emit("exit"); /* simulate exit */

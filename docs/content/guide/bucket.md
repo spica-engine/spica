@@ -1,4 +1,4 @@
-## Buckets as Data Layer
+# Bucket
 
 Buckets are the main foundation of Spica Development Engine. While creating a Bucket, the user defines a data schema.
 

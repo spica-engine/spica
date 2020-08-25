@@ -23,8 +23,9 @@ const routes: Routes = [
     component: DocsLayoutComponent,
     children: [
       {
+        pathMatch: "full",
         path: "",
-        component: DocsComponent
+        redirectTo: "guide/getting-started"
       },
       {
         path: "api/:apiName",

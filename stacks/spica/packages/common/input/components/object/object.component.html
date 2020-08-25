@@ -8,8 +8,8 @@
     [inputPlacer]="property.value"
     [name]="schema.$name + property.key"
     [required]="schema.required && schema.required.indexOf(property.key) > -1"
-    [(ngModel)]="_value[property.key]"
-    (ngModelChange)="callOnChange()"
-    [disabled]="_disabled"
+    [ngModel]="value ? value[property.key] : null"
+    (ngModelChange)="value[property.key] = $event; callOnChange()"
+    [disabled]="disabled"
   ></span>
 </section>

@@ -1,4 +1,4 @@
-# Subscription (Webhooks)
+# Webhook
 
 Sometimes you need to set a trigger for a 3rd party application or for your own system. For this case we provide subscription system.
 This system works with other modules in harmony. You will see subscriptions in “Developer Area”.

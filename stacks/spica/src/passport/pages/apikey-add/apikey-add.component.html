@@ -82,13 +82,17 @@
       </div>
 
       <button
+        class="save-button"
         [disabled]="apiKeyForm.invalid"
         [canInteract]="apiKey._id ? 'passport:apikey:update' : 'passport:apikey:create'"
         mat-button
         type="submit"
         (click)="saveApiKey()"
       >
-        Save
+        <mat-icon>save</mat-icon>
+        <span>
+          Save
+        </span>
       </button>
     </form>
   </mat-card-content>

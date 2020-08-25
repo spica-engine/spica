@@ -30,7 +30,7 @@ export class Logger extends console.Console {
         },
         error => {
           spinner.fail();
-          if ("message" in error) {
+          if (typeof error == "object" && "message" in error) {
             this.error(error.message);
             process.exit();
           }

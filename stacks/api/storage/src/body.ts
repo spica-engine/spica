@@ -19,15 +19,25 @@ abstract class __BsonBody {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const [req, res] = context.getArgs();
     return new Observable(observer => {
+      const limit = this.options.objectSizeLimit * 1024 * 1024;
       const parser = raw({
         type: "application/bson",
-        limit: this.options.objectSizeLimit * 1024 * 1024
+        limit
       });
+
+      const payloadSizeError = new HttpException(
+        `maximum object size is ${this.options.objectSizeLimit}Mi`,
+        HttpStatus.PAYLOAD_TOO_LARGE
+      );
+
+      if (Number(req.headers["content-length"]) > limit) {
+        return observer.error(payloadSizeError);
+      }
 
       parser(req, res, error => {
         if (error) {
           if (error.type == "entity.too.large") {
-            return observer.error(new HttpException(error.message, HttpStatus.PAYLOAD_TOO_LARGE));
+            return observer.error(payloadSizeError);
           }
           return observer.error(error);
         }
@@ -49,15 +59,26 @@ abstract class __JsonBody {
   constructor(@Inject(STORAGE_OPTIONS) public options: StorageOptions) {}
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const [req, res] = context.getArgs();
+
     return new Observable(observer => {
+      const limit = this.options.objectSizeLimit * 1024 * 1024;
       const parser = json({
-        limit: this.options.objectSizeLimit * 1024 * 1024
+        limit
       });
+
+      const payloadSizeError = new HttpException(
+        `maximum object size is ${this.options.objectSizeLimit}Mi`,
+        HttpStatus.PAYLOAD_TOO_LARGE
+      );
+
+      if (Number(req.headers["content-length"]) > limit) {
+        return observer.error(payloadSizeError);
+      }
 
       parser(req, res, error => {
         if (error) {
           if (error.type == "entity.too.large") {
-            return observer.error(new HttpException(error.message, HttpStatus.PAYLOAD_TOO_LARGE));
+            return observer.error(payloadSizeError);
           }
           return observer.error(error);
         }

@@ -1,6 +1,7 @@
+import {Change as BucketDataChange, DataChangeQueue} from "@spica-server/bucket/change/node";
+import {DataChange} from "@spica-server/bucket/change/proto";
 import {Action} from "@spica-server/bucket/hooks/proto";
-import {ActionParameters} from "@spica-server/bucket/hooks/proto/node";
-import {ActionQueue} from "@spica-server/bucket/hooks/proto/node/queue";
+import {ActionParameters, ActionQueue} from "@spica-server/bucket/hooks/proto/node";
 import {
   Change,
   DatabaseQueue,
@@ -14,8 +15,8 @@ import {
   Response
 } from "@spica-server/function/queue/node";
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
-import * as path from "path";
 import {createRequire} from "module";
+import * as path from "path";
 import "v8-compile-cache";
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
@@ -38,6 +39,8 @@ if (!process.env.WORKER_ID) {
     globalThis.require = _require;
   }
 
+  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} waiting for the event.`;
+
   const queue = new EventQueue();
   const pop = new Event.Pop({
     id: process.env.WORKER_ID
@@ -51,6 +54,8 @@ if (!process.env.WORKER_ID) {
     exitAbnormally("There is no event in the queue.");
   }
 
+  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} processing the event ${event.id}.`;
+
   process.chdir(event.target.cwd);
 
   process.env.TIMEOUT = String(event.target.context.timeout);
@@ -60,7 +65,7 @@ if (!process.env.WORKER_ID) {
   }
 
   const callArguments = [];
-  let callback = r => {};
+  let callback = () => {};
 
   switch (event.type) {
     case Event.Type.HTTP:
@@ -94,8 +99,9 @@ if (!process.env.WORKER_ID) {
       break;
     case Event.Type.DATABASE:
       const database = new DatabaseQueue();
-      const databasePop = new Database.Change.Pop();
-      databasePop.id = event.id;
+      const databasePop = new Database.Change.Pop({
+        id: event.id
+      });
       const change = await database.pop(databasePop);
       callArguments[0] = new Change(change);
       break;
@@ -152,6 +158,15 @@ if (!process.env.WORKER_ID) {
           })
         );
       };
+      break;
+    case Event.Type.BUCKET_DATA:
+      const dataChangeQueue = new DataChangeQueue();
+      const dataChange = await dataChangeQueue.pop(
+        new DataChange.Change.Pop({
+          id: event.id
+        })
+      );
+      callArguments[0] = new BucketDataChange(dataChange);
       break;
     default:
       exitAbnormally(`Invalid event type received. (${event.type})`);

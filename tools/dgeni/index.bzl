@@ -7,17 +7,22 @@ load("@build_bazel_rules_nodejs//internal/providers:npm_package_info.bzl", "NpmP
 load("@build_bazel_rules_nodejs//internal/providers:declaration_info.bzl", "DeclarationInfo")
 load("@npm_bazel_typescript//internal:common/compilation.bzl", "DEPS_ASPECTS")
 
-DocSources = provider(
+DocumentationInfo = provider(
     doc = "Provides sources for docs",
     fields = {
-        "docs": "Output of docs",
+        "output_path": "Output directory",
         "name": "Name of the doc",
+        "docs": "Name of the doc",
         "list": "Json formatted doc list",
     },
 )
 
 def _docs(ctx):
     doc_name = ctx.label.name
+
+    if ctx.attr.doc_name:
+        doc_name = ctx.attr.doc_name
+
     doc_label_directory = ctx.label.package
 
     doc_output_directory = "%s/%s/%s" % (ctx.bin_dir.path, doc_label_directory, doc_name)
@@ -52,40 +57,29 @@ def _docs(ctx):
     # Expected symbols
     expected_symbols = []
 
-    for symbol in ctx.attr.exports:
-        expected_docs += [
-            ctx.actions.declare_file("%s/%s.html" % (doc_name, symbol)),
-        ]
-        expected_symbols += [symbol]
-
-    for sourceFile in ctx.files.srcs:
-        if not ctx.attr.exports and sourceFile.basename.endswith(".ts"):
+    for src in ctx.files.srcs:
+        if not ctx.attr.exports and src.basename.endswith(".ts"):
             fail("You have to specify exports, if you have typescript files.")
-        elif sourceFile.basename.endswith(".md"):
-            name = sourceFile.basename.replace(sourceFile.basename[-3:], "")
-            expected_symbols += [name]
-            expected_docs += [
-                ctx.actions.declare_file("%s/%s.html" % (doc_name, name)),
-            ]
+        elif src.basename.endswith(".md"):
+            name = src.basename.replace(src.basename[-3:], "")
+            expected_docs.append(ctx.actions.declare_file("%s/%s.html" % (doc_name, name)))
+            expected_symbols.append(name)
+
+    for symbol in ctx.attr.exports:
+        expected_docs.append(ctx.actions.declare_file("%s/%s.html" % (doc_name, symbol)))
+        expected_symbols.append(symbol)
 
     data = []
 
     for doc in ctx.attr.data:
-        if DocSources in doc:
-            docSource = doc[DocSources]
-            docSourcePath = "%s/%s" % (doc.label.package, doc.label.name)
+        doc = doc[DocumentationInfo]
+        expected_docs.append(ctx.actions.declare_directory("%s/%s" % (doc_name, doc.name)))
+        data.append(struct(name = doc.name, list = doc.list.short_path, output_path = doc.output_path))
 
-            # Make docs available in execution context
-            sources = depset([docSource.list], transitive = [sources, docSource.docs])
-            docFiles = []
-            for docFile in docSource.docs.to_list():
-                docFiles.append(docFile.short_path)
-                expected_docs.append(ctx.actions.declare_file("%s/%s/%s" % (doc_name, docSource.name, docFile.short_path.replace(docSourcePath, ""))))
-            data.append(struct(name = docSource.name, list = docSource.list.short_path, docs = docFiles, path = docSourcePath))
+        # Make docs available in execution context
+        sources = depset([doc.list], transitive = [sources, doc.docs])
 
     args = ctx.actions.args()
-    args.use_param_file("%s", use_always = True)
-    args.set_param_file_format(format = "multiline")
     args.add(ctx.label.package.split("/")[-1])
     args.add(doc_output_directory)
     args.add_joined(ctx.files.srcs, join_with = ",", omit_if_empty = False)
@@ -105,7 +99,15 @@ def _docs(ctx):
 
     generated_docs = depset(expected_docs)
 
-    return [DefaultInfo(files = generated_docs), DocSources(docs = generated_docs, name = ctx.label.package.split("/")[-1], list = doc_list)]
+    return [
+        DefaultInfo(files = generated_docs),
+        DocumentationInfo(
+            name = doc_name,
+            docs = generated_docs,
+            output_path = "%s/%s" % (doc_label_directory, doc_name),
+            list = doc_list,
+        ),
+    ]
 
 """
   Rule definition for the "docs" rule that can generate API documentation
@@ -114,6 +116,9 @@ def _docs(ctx):
 docs = rule(
     implementation = _docs,
     attrs = {
+        "doc_name": attr.string(
+            doc = "Name of the documentation",
+        ),
         "data": attr.label_list(
             default = [],
             allow_files = True,
@@ -129,10 +134,6 @@ docs = rule(
         "deps": attr.label_list(
             aspects = DEPS_ASPECTS + [node_modules_aspect],
             doc = "Compile-time dependencies, typically other ts_library targets",
-        ),
-        "flat": attr.bool(
-            doc = "Whether docs should be in package directory",
-            default = False,
         ),
         "_dgeni_templates": attr.label(
             default = Label("//tools/dgeni/templates"),

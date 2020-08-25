@@ -32,5 +32,5 @@ export interface Execution {
 
 export abstract class Worker extends EventEmitter {
   abstract attach(stdout?: Writable, stderr?: Writable): void;
-  abstract kill(): void;
+  abstract kill(): Promise<void>;
 }

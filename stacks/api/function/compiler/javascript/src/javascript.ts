@@ -11,28 +11,6 @@ export class Javascript extends Language {
   };
   async compile(compilation: Compilation): Promise<void> {
     await super.prepare(compilation);
-    const hasSpicaDevkitDatabasePackage = await fs.promises
-      .access(path.join(compilation.cwd, "node_modules", "@spica-devkit"), fs.constants.F_OK)
-      .then(() => true)
-      .catch(() => false);
-
-    if (hasSpicaDevkitDatabasePackage) {
-      const targetPath = path.join(compilation.cwd, "node_modules", "@internal");
-      await fs.promises.mkdir(targetPath, {recursive: true});
-      await fs.promises
-        .symlink(
-          path.join(compilation.cwd, "node_modules", "@spica-devkit", "database"),
-          path.join(targetPath, "database"),
-          "dir"
-        )
-        .catch(e => {
-          if (e.code == "EEXIST" || e.code == "ENOENT") {
-            // Do nothing.
-            return;
-          }
-          return Promise.reject(e);
-        });
-    }
 
     await fs.promises
       .symlink(

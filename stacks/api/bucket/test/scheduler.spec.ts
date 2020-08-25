@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketDataService, BucketModule} from "@spica-server/bucket";
-import {DocumentScheduler} from "@spica-server/bucket/scheduler";
+import {DocumentScheduler} from "@spica-server/bucket/src/scheduler";
 import {
   DatabaseTestingModule,
   ObjectId,
@@ -10,7 +10,7 @@ import {
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
-describe("scheduler", () => {
+describe("Scheduler", () => {
   let bds: jasmine.SpyObj<BucketDataService>;
   let scheduler: DocumentScheduler;
   const bucketId = new ObjectId();
@@ -24,7 +24,12 @@ describe("scheduler", () => {
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
         PreferenceTestingModule,
-        BucketModule.forRoot({hooks: false, realtime: false, history: false})
+        BucketModule.forRoot({
+          hooks: false,
+          realtime: false,
+          history: false,
+          experimentalDataChange: false
+        })
       ]
     })
       .overrideProvider(BucketDataService)

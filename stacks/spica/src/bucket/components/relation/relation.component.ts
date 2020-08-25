@@ -66,6 +66,7 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
 
   clear() {
     this.value = this._oneToManyRelation ? [] : undefined;
+    this.onChangeFn(this.value);
     this._fetchRows();
   }
 

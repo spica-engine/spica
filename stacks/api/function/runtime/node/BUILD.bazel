@@ -43,6 +43,8 @@ rollup_bundle(
     output_dir = True,
     sourcemap = "true",
     deps = [
+        "//stacks/api/bucket/change/node",
+        "//stacks/api/bucket/change/proto",
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/hooks/proto/node",
         "//stacks/api/function/packages/database",

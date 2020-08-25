@@ -77,7 +77,12 @@ const args = yargs
     },
     "experimental-bucket-realtime": {
       boolean: true,
-      description: "Whether Experimental Bucket Realtime feature is enabled.",
+      description: "Whether the experimental Bucket realtime feature is enabled.",
+      default: true
+    },
+    "experimental-bucket-data-change": {
+      boolean: true,
+      description: "Whether the experimental Bucket data change feature is enabled.",
       default: true
     }
   })
@@ -107,6 +112,16 @@ const args = yargs
       description: "Number of worker processes to fork at start up.",
       default: 10
     },
+    "function-api-url": {
+      string: true,
+      description:
+        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
+    },
+    "function-pool-maximum-size": {
+      number: true,
+      description: "Maximum number of worker processes to fork.",
+      default: 15
+    },
     "function-timeout": {
       number: true,
       description: "Amount of time in seconds that has to elapse before aborting a function.",
@@ -133,6 +148,11 @@ const args = yargs
         "A relative path to --persistent-path that will be used to store storage objects.",
       default: "storage"
     },
+    "default-storage-public-url": {
+      string: true,
+      description:
+        "Publicly accessible url of the storage. This value will be used by storage to generate urls to objects. Defaults to --public-url if not present."
+    },
     "gcloud-service-account-path": {
       string: true,
       description: "Path for the service account file to authorize on google cloud services."
@@ -149,22 +169,22 @@ const args = yargs
   })
   /* CORS Options */
   .option({
-    allowedOrigins: {
+    "cors-allowed-origins": {
       array: true,
       description: "Access-Control-Allow-Origin.",
       default: ["*"]
     },
-    allowedMethods: {
+    "cors-allowed-methods": {
       array: true,
       description: "Access-Control-Allow-Methods",
       default: ["*"]
     },
-    allowedHeaders: {
+    "cors-allowed-headers": {
       array: true,
       description: "Access-Control-Allow-Headers",
       default: ["Authorization", "Content-Type", "Accept-Language"]
     },
-    allowCredentials: {
+    "cors-allow-credentials": {
       boolean: true,
       description: "Access-Control-Allow-Credentials",
       default: true
@@ -200,6 +220,12 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
   .check(args => {
+    if (!args["default-storage-public-url"]) {
+      args["default-storage-public-url"] = args["public-url"];
+    }
+    if (!args["function-api-url"]) {
+      args["function-api-url"] = args["public-url"];
+    }
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -241,12 +267,13 @@ const modules = [
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"]
+    realtime: args["experimental-bucket-realtime"],
+    experimentalDataChange: args["experimental-bucket-data-change"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",
     defaultPath: path.join(args["persistent-path"], args["default-storage-path"]),
-    defaultPublicUrl: args["public-url"],
+    defaultPublicUrl: args["default-storage-public-url"],
     gcloudServiceAccountPath: args["gcloud-service-account-path"],
     gcloudBucketName: args["gcloud-bucket-name"],
     objectSizeLimit: args["storage-object-size-limit"]
@@ -265,14 +292,15 @@ const modules = [
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
-    publicUrl: args["public-url"],
+    poolMaxSize: args["function-pool-maximum-size"],
+    apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
     corsOptions: {
-      allowedOrigins: args["allowedOrigins"],
-      allowedMethods: args["allowedMethods"],
-      allowedHeaders: args["allowedHeaders"],
-      allowCredentials: args["allowCredentials"]
+      allowedOrigins: args["cors-allowed-origins"],
+      allowedMethods: args["cors-allowed-methods"],
+      allowedHeaders: args["cors-allowed-headers"],
+      allowCredentials: args["cors-allow-credentials"]
     }
   })
 ];
@@ -301,10 +329,10 @@ NestFactory.create(RootModule, {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
     Middlewares.Preflight({
-      allowedOrigins: args["allowedOrigins"],
-      allowedMethods: args["allowedMethods"],
-      allowedHeaders: args["allowedHeaders"],
-      allowCredentials: args["allowCredentials"]
+      allowedOrigins: args["cors-allowed-origins"],
+      allowedMethods: args["cors-allowed-methods"],
+      allowedHeaders: args["cors-allowed-headers"],
+      allowCredentials: args["cors-allow-credentials"]
     }),
     Middlewares.JsonBodyParser(args["payload-size-limit"]),
     Middlewares.MergePatchJsonParser(args["payload-size-limit"])

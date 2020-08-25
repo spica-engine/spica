@@ -29,8 +29,9 @@ describe("Engine", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          poolSize: 10,
-          publicUrl: undefined,
+          poolSize: 1,
+          poolMaxSize: 2,
+          apiUrl: undefined,
           timeout: 60000,
           corsOptions: {
             allowedOrigins: ["*"],
@@ -58,6 +59,7 @@ describe("Engine", () => {
         root: "test_root",
         timeout: 1
       },
+      null,
       null
     );
 

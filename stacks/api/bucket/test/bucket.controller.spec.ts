@@ -1,5 +1,6 @@
 import {INestApplication} from "@nestjs/common";
-import {Test, TestingModule} from "@nestjs/testing";
+import {Test} from "@nestjs/testing";
+import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {
@@ -9,11 +10,11 @@ import {
   UPDATED_AT
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {BucketModule} from "./bucket.module";
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 describe("Bucket acceptance", () => {
   let app: INestApplication;
@@ -54,12 +55,16 @@ describe("Bucket acceptance", () => {
         PassportTestingModule.initialize(),
         DatabaseTestingModule.replicaSet(),
         PreferenceTestingModule,
-        BucketModule.forRoot({hooks: false, history: false, realtime: false})
+        BucketModule.forRoot({
+          hooks: false,
+          history: false,
+          realtime: false,
+          experimentalDataChange: false
+        })
       ]
     }).compile();
     app = module.createNestApplication();
     req = module.get(Request);
-    app.useWebSocketAdapter(new WsAdapter(app));
     app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(req.socket);
   });
@@ -68,7 +73,7 @@ describe("Bucket acceptance", () => {
 
   describe("get requests", () => {
     it("should get predefinedDefaults", async () => {
-      const response = await req.get("/bucket/predefs", {});
+      const response = await req.get("/bucket/predefineddefaults", {});
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
 
       const defaults = response.body;
@@ -79,7 +84,7 @@ describe("Bucket acceptance", () => {
       ]);
     });
 
-    it("should get spesific bucket", async () => {
+    it("should get specific bucket", async () => {
       //add bucket
       const insertedBucket = (await req.post("/bucket", bucket)).body;
 
@@ -667,11 +672,6 @@ describe("Bucket acceptance", () => {
       bucketDataId = (await req.post(`/bucket/${bucketId}/data`, bucketData)).body._id;
     });
 
-    afterEach(async () => {
-      await req.delete(`/bucket/${bucketId}`);
-      await req.delete(`/bucket/${bucketId}/data/${bucketDataId}`);
-    });
-
     it("should update bucket document when bucket schema updated", async () => {
       await req.put(`/bucket/${bucketId}`, updatedSchema);
       let {body: updatedBucketDocument} = await req.get(
@@ -777,17 +777,6 @@ describe("Bucket acceptance", () => {
           setting: setting._id
         })
         .then(res => res.body);
-    });
-
-    afterEach(async () => {
-      await req.delete(`/bucket/${usersBucket._id}`);
-      await req.delete(`/bucket/${usersBucket._id}/data`, user._id);
-
-      await req.delete(`/bucket/${settingsBucket._id}`);
-      await req.delete(`/bucket/${settingsBucket._id}/data`, setting._id);
-
-      await req.delete(`/bucket/${scoresBucket._id}`);
-      await req.delete(`/bucket/${scoresBucket._id}/data`, score._id);
     });
 
     it("should delete users, update scores bucket schema and data when the users bucket deleted", async () => {

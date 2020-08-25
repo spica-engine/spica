@@ -116,7 +116,7 @@ export interface LogFilter {
 
 export interface Log {
   _id: string;
-  function: string;
+  function: Function | string;
   event_id: string;
   content: string;
   channel: "stderr" | "stdout";

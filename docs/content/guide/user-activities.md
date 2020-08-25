@@ -1,4 +1,4 @@
-## User Activity Logs
+# User Activity Logs
 
 User Activity module gives you access to control each passport identities' activity logs. You can filter activity logs by identity, action type, module, date, or even document id. In a standard build of Spica, you can see all user activities without any time limitation.
 

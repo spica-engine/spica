@@ -60,16 +60,29 @@ export class ServeCommand extends Command {
           default: false
         },
         {
-          name: "clear-volumes",
+          name: "retain-volumes",
           type: Boolean,
-          summary: "When true, the existing data will be removed.",
-          default: false
+          summary: "When false, the existing data will be removed.",
+          default: true
         },
         {
           name: "restart",
           type: Boolean,
           summary: "Restart failed containers if exits unexpectedly.",
           default: true
+        },
+        {
+          name: "image-pull-policy",
+          type: String,
+          summary:
+            "Image pull policy. when 'if-not-present' images won't be pulled in if already present on the docker.",
+          default: "if-not-present"
+        },
+        {
+          name: "database-replicas",
+          type: String,
+          summary: "Number of database nodes.",
+          default: "1"
         }
       ]
     };
@@ -95,18 +108,20 @@ export class ServeCommand extends Command {
       );
     }
 
-    let args = this.buildArgs(
-      [
-        `--database-name=${namespace}`,
-        `--database-replica-set=${namespace}`,
-        `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
-        `--public-url=${publicHost}/api`,
-        `--passport-password=${namespace}`,
-        `--passport-secret=${namespace}`,
-        `--persistent-path=/var/data`
-      ],
-      options["--"] as string[]
-    );
+    let args = options["--"] as string[];
+
+    args = [
+      ...args,
+      `--port=80`,
+      `--function-api-url=http://localhost`,
+      `--database-name=${namespace}`,
+      `--database-replica-set=${namespace}`,
+      `--database-uri="mongodb://${databaseName}-0,${databaseName}-1,${databaseName}-2"`,
+      `--public-url=${publicHost}/api`,
+      `--passport-password=${namespace}`,
+      `--passport-secret=${namespace}`,
+      `--persistent-path=/var/data`
+    ];
 
     const foundNetworks = await machine.listNetworks({
       filters: JSON.stringify({label: [`namespace=${namespace}`]})
@@ -126,7 +141,9 @@ export class ServeCommand extends Command {
 
     if (options.force && (foundNetworks.length || foundContainers.length)) {
       await this.namespace.logger.spin({
-        text: "Shutting down and removing the previous containers, networks, and volumes.",
+        text: `Shutting down and removing the previous containers, networks${
+          !options["retain-volumes"] ? ", and volumes" : ""
+        }.`,
         op: async () => {
           await Promise.all(
             foundContainers.map(async containerInfo => {
@@ -139,7 +156,7 @@ export class ServeCommand extends Command {
             })
           );
           await Promise.all(foundNetworks.map(network => machine.getNetwork(network.Id).remove()));
-          if (options["clear-volumes"]) {
+          if (!options["retain-volumes"]) {
             const foundVolumes = (await machine.listVolumes({
               filters: JSON.stringify({label: [`namespace=${namespace}`]})
             })).Volumes;
@@ -147,6 +164,13 @@ export class ServeCommand extends Command {
           }
         }
       });
+    }
+
+    async function doesImageExist(image: string, tag: string) {
+      const images = await machine.listImages({
+        filters: JSON.stringify({reference: [`${image}:${tag}`]})
+      });
+      return images.length > 0;
     }
 
     function pullImage(image: string, tag: string) {
@@ -166,23 +190,48 @@ export class ServeCommand extends Command {
     }
 
     await this.namespace.logger.spin({
-      text: `Pulling images (0/4)`,
+      text: `Pulling images.`,
       op: async spinner => {
+        const images = [
+          {
+            image: "spicaengine/api",
+            tag: options.version.toString()
+          },
+          {
+            image: "spicaengine/spica",
+            tag: options.version.toString()
+          },
+          {
+            image: "mongo",
+            tag: "4.2"
+          },
+          {
+            image: "nginx",
+            tag: "latest"
+          }
+        ];
+
+        const imagesToPull: typeof images = [];
+
+        for (const image of images) {
+          const exists = await doesImageExist(image.image, image.tag);
+          if (exists && options["image-pull-policy"] == "if-not-present") {
+            continue;
+          }
+          imagesToPull.push(image);
+        }
+
         let pulled = 0;
+
         function increasePulledCount() {
           pulled++;
-          spinner.text = `Pulling images (${pulled}/4)`;
+          spinner.text = `Pulling images (${pulled}/${imagesToPull.length})`;
         }
-        return Promise.all([
-          pullImage("spicaengine/api", options.version.toString()).then(() =>
-            increasePulledCount()
-          ),
-          pullImage("spicaengine/spica", options.version.toString()).then(() =>
-            increasePulledCount()
-          ),
-          pullImage("mongo", "4.2").then(() => increasePulledCount()),
-          pullImage("nginx", "latest").then(() => increasePulledCount())
-        ]);
+        return Promise.all(
+          imagesToPull.map(image =>
+            pullImage(image.image, image.tag).then(() => increasePulledCount())
+          )
+        );
       }
     });
 
@@ -225,39 +274,70 @@ export class ServeCommand extends Command {
       return container.start();
     }
 
+    const databaseReplicas = Number(options["database-replicas"]);
     await this.namespace.logger.spin({
-      text: `Creating database containers (1/3)`,
+      text: `Creating database containers (1/${databaseReplicas})`,
       op: async spinner => {
-        await createMongoDB(0);
-        spinner.text = `Creating database containers (2/3)`;
-        await createMongoDB(1);
-        spinner.text = `Creating database containers (3/3)`;
-        await createMongoDB(2);
+        for (let index = 0; index < databaseReplicas; index++) {
+          await createMongoDB(index);
+          spinner.text = `Creating database containers (${index + 1}/${databaseReplicas})`;
+        }
       }
     });
 
     await this.namespace.logger.spin({
       text: "Waiting the database containers to become ready.",
       op: async spinner => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        spinner.text = "Initiating replication between database containers.";
-        const replSet = `rs.initiate({
-          _id: "${namespace}",
-          members: [
-            { _id: 0, host : "${databaseName}-0" },
-            { _id: 1, host : "${databaseName}-1" },
-            { _id: 2, host : "${databaseName}-2", priority : 0, slaveDelay: 5, tags: { slaveDelay: "true" } }
-          ]
-        })`;
-        const firstContainer = machine.getContainer(`${databaseName}-0`);
-        const exec = await firstContainer.exec({
-          Cmd: ["mongo", "admin", "--eval", replSet],
-          AttachStderr: true,
-          AttachStdout: true
+        const replSetConfig = JSON.stringify({
+          _id: namespace,
+          members: new Array(databaseReplicas).fill(0).map((_, index) => {
+            return {_id: index, host: `${databaseName}-${index}`};
+          })
         });
-        const result = await exec.start().catch(e => e);
-        const output = (await this.streamToBuffer(result.output)).toString();
-        if (output.indexOf('"ok" : 1') == -1 && output.indexOf('"already initialized"') == -1) {
+
+        const firstContainer = machine.getContainer(`${databaseName}-0`);
+
+        const initiateReplication = async (reconfig = false) => {
+          spinner.text = "Initiating replication between database containers.";
+          const result = await (await firstContainer.exec({
+            Cmd: [
+              "mongo",
+              "admin",
+              "--eval",
+              reconfig
+                ? `rs.reconfig(${replSetConfig}, { force: true })`
+                : `rs.initiate(${replSetConfig})`
+            ],
+            AttachStderr: true,
+            AttachStdout: true
+          }))
+            .start()
+            .catch(e => e);
+
+          return (await this.streamToBuffer(result.output)).toString();
+        };
+
+        let output = await initiateReplication();
+        let retry = 0,
+          maxRetries = 5,
+          wait = 1000;
+
+        while (retry < maxRetries) {
+          retry++;
+          if (output.indexOf("Connection refused")) {
+            output = await initiateReplication();
+          } else {
+            break;
+          }
+          await new Promise(resolve => setTimeout(resolve, wait));
+          spinner.text = `Initiating replication between database containers. Retrying ${retry}`;
+        }
+
+        if (output.indexOf('"already initialized"') != -1) {
+          output = await initiateReplication(true);
+        }
+
+        if (output.indexOf('"ok" : 1') == -1) {
           return Promise.reject(output);
         }
       }
@@ -314,6 +394,7 @@ export class ServeCommand extends Command {
           name: `${namespace}-api`,
           Cmd: args,
           Labels: {namespace},
+          ExposedPorts: {"80/tcp": {}},
           HostConfig: {
             RestartPolicy: {
               Name: options.restart ? "unless-stopped" : "no"
@@ -373,9 +454,23 @@ export class ServeCommand extends Command {
 
           location ~ ^/api/?(.*) {
             proxy_pass http://${namespace}-api/$1$is_args$args;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Port $server_port;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
           }
           location ~ ^/spica/?(.*) {
             proxy_pass http://${namespace}-spica/$1$is_args$args;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Port $server_port;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
           }
         }
         `;
@@ -407,18 +502,5 @@ Password: ${namespace}
       stream.on("data", chunk => response.push(chunk));
       stream.on("end", () => resolve(Buffer.concat(response)));
     });
-  }
-
-  private buildArgs(defaults: string[], inputs: string[]): string[] {
-    //filter the args which won't override the default ones.
-    let args = inputs.filter(
-      arg =>
-        !defaults.find(
-          defaultArg =>
-            defaultArg.substring(0, defaultArg.indexOf("=")) == arg.substring(0, arg.indexOf("="))
-        )
-    );
-
-    return args.concat(defaults);
   }
 }

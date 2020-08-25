@@ -12,14 +12,19 @@ import {INPUT_SCHEMA, InternalPropertySchema} from "../../input";
 export class NumberComponent implements ControlValueAccessor {
   value: number;
   disabled: boolean = false;
-  _onChangeFn: Function = () => {};
-  _onTouchedFn: Function = () => {};
+  _onChangeFn = (_: number) => {};
+  _onTouchedFn = () => {};
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InternalPropertySchema) {}
 
   writeValue(val: number): void {
     this.value = val;
-    if (!Number.isFinite(this.value) && this.schema.default) {
+    if (
+      this.value !== null &&
+      !Number.isFinite(this.value) &&
+      this.schema.default !== undefined &&
+      this.schema.default !== null
+    ) {
       this.value = Number(this.schema.default);
       this._onChangeFn(this.value);
     }

@@ -185,17 +185,8 @@
       }
     }
 
-    mat-card-actions {
-      text-align: right;
-      margin: 0;
-      mat-progress-spinner {
-        display: inline-block;
-        margin-right: 5px;
-      }
-    }
-
     .remove-history {
-      padding: 30px 0px;
+      margin: 50px 0px;
       display: block;
       button {
         float: right;
