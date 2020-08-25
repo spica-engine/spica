@@ -175,7 +175,7 @@ export default async function (req,res) {
     components: [
         {
         type: "bar",
-        // Url of your dashobard function
+        // Url of your dashboard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
         key: "bardata",
       }, 
