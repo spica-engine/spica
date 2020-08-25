@@ -117,9 +117,9 @@ const args = yargs
       description:
         "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
     },
-    "function-pool-maxium-size": {
+    "function-pool-maximum-size": {
       number: true,
-      description: "Maxium number of worker processes to fork.",
+      description: "Maximum number of worker processes to fork.",
       default: 15
     },
     "function-timeout": {
@@ -292,7 +292,7 @@ const modules = [
     databaseReplicaSet: args["database-replica-set"],
     databaseUri: args["database-uri"],
     poolSize: args["function-pool-size"],
-    poolMaxSize: args["function-pool-maxium-size"],
+    poolMaxSize: args["function-pool-maximum-size"],
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],

@@ -25,6 +25,10 @@ import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {findRelations, findRemovedKeys} from "./utility";
 
+/**
+ * All APIs related to bucket schemas.
+ * @name bucket
+ */
 @Controller("bucket")
 export class BucketController {
   constructor(
@@ -33,18 +37,57 @@ export class BucketController {
     @Optional() private history: HistoryService
   ) {}
 
+  /**
+   * Returns predefined defaults
+   */
+  @Get("predefineddefaults")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
+  getPredefinedDefaults() {
+    return this.bs.getPredefinedDefaults();
+  }
+
+  /**
+   * Returns all schemas.
+   */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
   index() {
     return this.bs.find({}, {sort: {order: 1}});
   }
 
-  @Get("predefs")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
-  getPredefinedDefaults() {
-    return this.bs.getPredefinedDefaults();
+  /**
+   * Returns the schema
+   * @param id Identifier of the schema.
+   */
+  @Get(":id")
+  @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
+  async show(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.bs.findOne({_id: id});
   }
 
+  /**
+   * Replaces the current schema.
+   * @param id Identifier of the schema.
+   * @body ```json
+   * {
+   *    "icon": "basket",
+   *    "title": "Sports",
+   *    "properties": {
+   *      "name": {
+   *          "title": "Name",
+   *          "description": "Name of the sport",
+   *          "type": "string",
+   *          "default": "Basket",
+   *          "options": {
+   *              "position": "left",
+   *              "translate": true
+   *          }
+   *      }
+   *    }
+   *
+   * }
+   * ```
+   */
   @UseInterceptors(activity(createBucketActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
@@ -54,6 +97,29 @@ export class BucketController {
     return insertedDocument;
   }
 
+  /**
+   * Replaces the current schema.
+   * @param id Identifier of the schema.
+   * @body ```json
+   * {
+   *    "icon": "basket",
+   *    "title": "Sports",
+   *    "properties": {
+   *      "name": {
+   *          "title": "Name",
+   *          "description": "Name of the sport",
+   *          "type": "string",
+   *          "default": "Basket",
+   *          "options": {
+   *              "position": "left",
+   *              "translate": true
+   *          }
+   *      }
+   *    }
+   *
+   * }
+   * ```
+   */
   @UseInterceptors(activity(createBucketActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
@@ -76,6 +142,17 @@ export class BucketController {
     return currentSchema;
   }
 
+  /**
+   * Updates the schema partially. The provided body has to be a `json merge patch`.
+   * See: https://tools.ietf.org/html/rfc7386
+   * @param id Identifier of the schema.
+   * @accepts application/merge-patch+json
+   * @body ```json
+   * {
+   *    "name": "Update only the name but keep the rest as is."
+   * }
+   * ```
+   */
   @Patch(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   async updateOne(
@@ -89,12 +166,10 @@ export class BucketController {
     return this.bs.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
   }
 
-  @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:show"))
-  async show(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.bs.findOne({_id: id});
-  }
-
+  /**
+   * Removes the schema
+   * @param id Identifier of the schema
+   */
   @UseInterceptors(activity(createBucketActivity))
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -43,8 +43,8 @@ docs(
     doc_name = "bucket",
     tags = ["bucket-docs"],
     exports = [
-        "BucketController",
-        "BucketDataController",
+        "bucket",
+        "data",
     ],
     deps = [
         "//packages/database",

@@ -5,16 +5,15 @@
       Select from {{ schema?.title }}
     </button>
     <div>
-      <span *ngFor="let row of selectedRows$ | async">
-        <button
-          mat-button
-          mat-flat-button
-          [matTooltip]="schema.primary + ' of the row'"
-          [routerLink]="['/bucket', schema._id, row._id]"
-        >
-          <mat-icon>{{ schema.icon }}</mat-icon> {{ row[schema.primary] }}
-        </button>
-      </span>
+      <button
+        *ngFor="let row of selectedRows$ | async"
+        mat-button
+        mat-flat-button
+        [matTooltip]="schema.primary + ' of the row'"
+        [routerLink]="['/bucket', schema._id, row._id]"
+      >
+        <mat-icon>{{ schema.icon }}</mat-icon> {{ row[schema.primary] }}
+      </button>
     </div>
 
     <ng-container *ngIf="value?.length">

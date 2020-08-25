@@ -4,7 +4,7 @@ load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "bucket_data_test_lib",
+    name = "bucket_data_service_test_lib",
     testonly = True,
     srcs = [
         "bucket-data.service.spec.ts",
@@ -28,9 +28,9 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "bucket_data_test",
+    name = "bucket_data_service_acceptance_test",
     deps = [
-        ":bucket_data_test_lib",
+        ":bucket_data_service_test_lib",
     ],
 )
 

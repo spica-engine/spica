@@ -11,20 +11,16 @@ import {
   UPDATED_AT
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe("BucketDataController", () => {
   let app: INestApplication;
   let req: Request;
   let module: TestingModule;
-  let db: DatabaseService;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
@@ -43,9 +39,7 @@ describe("BucketDataController", () => {
         })
       ]
     }).compile();
-    db = module.get(DatabaseService);
     app = module.createNestApplication();
-    app.useWebSocketAdapter(new WsAdapter(app));
     req = module.get(Request);
     req.reject = true; /* Reject for non 2xx response codes */
     await app.listen(req.socket);
@@ -57,7 +51,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  afterAll(async () => await app.close());
+  afterEach(() => app.close());
 
   describe("index", () => {
     let bucket = {
@@ -89,7 +83,7 @@ describe("BucketDataController", () => {
 
     let rows = [];
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       bucket = await req.post("/bucket", bucket).then(response => response.body);
       rows = [
         await req.post(`/bucket/${bucket._id}/data`, {name: "Jim", age: 20}),
@@ -341,7 +335,7 @@ describe("BucketDataController", () => {
 
       describe("advanced filter", () => {
         let rows;
-        beforeAll(async () => {
+        beforeEach(async () => {
           rows = [
             await req.post(`/bucket/${bucket._id}/data`, {
               name: "Sherlock",
@@ -401,12 +395,6 @@ describe("BucketDataController", () => {
             message:
               'Could not find the constructor Throw in {"$gt":"Throw(2020-04-20T10:00:00.000Z)"}'
           });
-        });
-
-        afterAll(async () => {
-          for (const row of rows) {
-            await req.delete(`/bucket/${bucket._id}/data/${row._id}`);
-          }
         });
       });
     });
@@ -834,7 +822,7 @@ describe("BucketDataController", () => {
 
   describe("post requests", () => {
     let myBucketId: ObjectId;
-    beforeAll(async () => {
+    beforeEach(async () => {
       const myBucket = {
         title: "New Bucket",
         description: "Describe your new bucket",
@@ -857,22 +845,6 @@ describe("BucketDataController", () => {
         }
       };
       myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
-    });
-
-    afterEach(async () => {
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
-    });
-
-    afterAll(async () => {
-      await app
-        .get(DatabaseService)
-        .collection("buckets")
-        .deleteOne({_id: myBucketId})
-        .catch();
     });
 
     it("should add document to bucket and return inserted document", async () => {
@@ -971,7 +943,7 @@ describe("BucketDataController", () => {
     let myBucketId: ObjectId;
     let myBucketData;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       const myBucket = {
         title: "New Bucket",
         description: "Describe your new bucket",
@@ -994,19 +966,10 @@ describe("BucketDataController", () => {
         }
       };
       myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
-    });
-
-    beforeEach(async () => {
       myBucketData = [
         {title: "first title", description: "first description"},
         {title: "last title", description: "last description"}
       ];
-      //clear bucket-data
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
 
       //add data
       myBucketData[0]._id = new ObjectId(
@@ -1015,19 +978,6 @@ describe("BucketDataController", () => {
       myBucketData[1]._id = new ObjectId(
         (await req.post(`/bucket/${myBucketId}/data`, myBucketData[1])).body._id
       );
-    });
-
-    afterAll(async () => {
-      await app
-        .get(DatabaseService)
-        .collection(`bucket_${myBucketId}`)
-        .deleteMany({})
-        .catch();
-      await app
-        .get(DatabaseService)
-        .collection("buckets")
-        .deleteOne({_id: myBucketId})
-        .catch();
     });
 
     it("should delete document", async () => {
@@ -1070,7 +1020,7 @@ describe("BucketDataController", () => {
     let otherBucketDocumentId: ObjectId;
 
     describe("One to One", () => {
-      beforeAll(async () => {
+      beforeEach(async () => {
         usersBucketId = await req
           .post("/bucket", {
             title: "New Bucket",
@@ -1140,9 +1090,6 @@ describe("BucketDataController", () => {
             }
           })
           .then(r => new ObjectId(r.body._id));
-      });
-
-      beforeEach(async () => {
         userOneId = await req
           .post(`/bucket/${usersBucketId}/data`, {
             name: "user_one"
@@ -1238,7 +1185,7 @@ describe("BucketDataController", () => {
     });
 
     describe("One to Many", () => {
-      beforeAll(async () => {
+      beforeEach(async () => {
         usersBucketId = await req
           .post("/bucket", {
             title: "New Bucket",
@@ -1308,9 +1255,6 @@ describe("BucketDataController", () => {
             }
           })
           .then(r => new ObjectId(r.body._id));
-      });
-
-      beforeEach(async () => {
         userOneId = await req
           .post(`/bucket/${usersBucketId}/data`, {
             name: "user_one"

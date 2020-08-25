@@ -64,7 +64,7 @@ describe("Storage Acceptance", () => {
     it("should work with limit", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {limit: "2"});
+      } = await req.get("/storage", {limit: "2", sort: JSON.stringify({_id: -1})});
       expect(meta.total).toBe(20);
       expect(data.length).toBe(2);
 
@@ -78,7 +78,7 @@ describe("Storage Acceptance", () => {
     it("should work with skip query", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {skip: "3"});
+      } = await req.get("/storage", {skip: "3", sort: JSON.stringify({_id: -1})});
       expect(meta.total).toBe(20);
       expect(data.length).toBe(17);
 
@@ -92,7 +92,7 @@ describe("Storage Acceptance", () => {
     it("should work with skip and limit query", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {skip: "3", limit: "15"});
+      } = await req.get("/storage", {skip: "3", limit: "15", sort: JSON.stringify({_id: -1})});
       expect(meta.total).toBe(20);
       expect(data.length).toBe(15);
 
@@ -179,7 +179,7 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {});
+      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
       const {body: response, headers} = await req.get(`/storage/${row._id}`, {metadata: "false"});
       expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
       expect(response).toBe("content 20");
@@ -192,7 +192,7 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {});
+      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
       const {statusCode, statusText} = await req.get(
         `/storage/${row._id}/view`,
         {},
@@ -207,7 +207,7 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {});
+      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
       const {headers, body} = await req.get(
         `/storage/${row._id}/view`,
         {},
@@ -223,7 +223,7 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {});
+      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
       const {headers} = await req.get(`/storage/${row._id}/view`, {metadata: "false"});
       expect(headers["content-type"]).toBe("text/plain; charset=utf-8");
       expect(headers["etag"]).toBe(etag("content 20"));
@@ -236,7 +236,7 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {});
+      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
       row.content.data = new BSON.Binary(Buffer.from("new data"));
       await req.put(`/storage/${row._id}`, BSON.serialize(row), {
         "Content-Type": "application/bson"
@@ -252,7 +252,7 @@ describe("Storage Acceptance", () => {
         body: {
           data: [row]
         }
-      } = await req.get("/storage", {});
+      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
       const {statusCode, statusText, body: __} = await req.put(
         `/storage/${row._id}`,
         BSON.serialize(row),
@@ -474,7 +474,7 @@ describe("Storage Acceptance", () => {
           data: [row]
         },
         headers: {["etag"]: prevETag}
-      } = await req.get("/storage", {});
+      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
       row.content.data = Buffer.from("new data").toString("base64");
       await req.put(`/storage/${row._id}`, row);
       const {

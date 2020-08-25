@@ -1,15 +1,15 @@
-import {Dgeni, Package} from "dgeni";
-import {TypeFormatFlags} from "typescript";
-import {ReadTypeScriptModules} from "dgeni-packages/typescript/processors/readTypeScriptModules";
-import {Host} from "dgeni-packages/typescript/services/ts-host/host";
-import {TsParser} from "dgeni-packages/typescript/services/TsParser";
-import {join, relative} from "path";
-import {ControllerProcessor} from "./processors/controller";
-import {FilterProcessor} from "./processors/filter";
-import {ListProcessor} from "./processors/list";
-import {ReadMarkdownFiles, remarkPackage} from "./remark";
+import { Dgeni, Package } from "dgeni";
+import { ReadTypeScriptModules } from "dgeni-packages/typescript/processors/readTypeScriptModules";
+import { Host } from "dgeni-packages/typescript/services/ts-host/host";
+import { TsParser } from "dgeni-packages/typescript/services/TsParser";
+import { join, relative } from "path";
+import { TypeFormatFlags } from "typescript";
+import { AcceptsTag, BodySchemaTag, BodyTag, ControllerProcessor } from "./processors/controller";
 import { CopyDataProcessor } from "./processors/copydata";
+import { FilterProcessor } from "./processors/filter";
+import { ListProcessor } from "./processors/list";
 import { SymbolFilterProcessor } from "./processors/symbol-filter";
+import { ReadMarkdownFiles, remarkPackage } from "./remark";
 
 const jsdocPackage = require("dgeni-packages/jsdoc");
 const nunjucksPackage = require("dgeni-packages/nunjucks");
@@ -32,8 +32,14 @@ defaultPackage.config(function(
   computePathsProcessor: any,
   templateFinder: any,
   templateEngine: any,
-  log: any
+  log: any,
+  parseTagsProcessor: any,
+  getInjectables: any
 ) {
+
+  parseTagsProcessor.tagDefinitions = parseTagsProcessor.tagDefinitions.concat(
+    getInjectables([BodyTag, BodySchemaTag, AcceptsTag]));
+
   readFilesProcessor.$enabled = false;
   readTypeScriptModules.hidePrivateMembers = true;
 
@@ -101,6 +107,9 @@ defaultPackage.config(function(
   readMarkdownFiles.basePath = absoluteSourcePath;
   readTypeScriptModules.basePath = absoluteSourcePath;
   tsParser.options.baseUrl = absoluteSourcePath;
+
+
+  readTypeScriptModules.ignoreExportsMatching = [/$_/];
 
   sourceFiles.split(",").forEach(file => {
     if (file.endsWith(".ts")) {

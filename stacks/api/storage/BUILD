@@ -39,7 +39,7 @@ docs(
     doc_name = "storage",
     tags = ["storage-docs"],
     exports = [
-        "StorageController",
+        "storage",
     ],
     deps = [
         "//packages/database",

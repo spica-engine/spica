@@ -5,16 +5,37 @@
   <h3>
     <span class="method {$ member.type | lower $}">{$ member.type $}</span>
     <span class="path">{$ routeMacros.renderRoute(member.route) $}</span>
+    <api-doc-try-it definition="{$ member.tryIt | json | escape $}"></api-doc-try-it>
   </h3>
+
   {% if member.description %}
-  <p>{$ member.description | marked $}</p>
+  <section class="description">
+    {$ member.description | marked $}
+  </section>
   {% endif %}
+
   <p class="authorization">
     Authorization: <b>{$ 'Required' if member.authorization else 'Not Required' $}</b>
   </p>
+
   {% if member.actions.length %}
   <p class="actions">Required actions: {$ member.actions | join $}</p>
-  {% endif %} {% if member.param and member.param.length %}
+  {% endif %}
+
+
+  {% if member.body.length %}
+  <h4>Body</h4>
+  <section class="body">
+    <h5>Accepts: {$ member.accepts if member.accepts else 'application/json' $}</h5>
+    {% if member.bodySchema %}
+      <h5>Schema</h5>
+      {$ member.bodySchema | marked $}
+    {% endif %}
+    {$ member.body | marked $}
+  </section>
+  {% endif %}
+
+  {% if member.param and member.param.length %}
   <h4>Params</h4>
   <table>
     <thead>
@@ -22,6 +43,7 @@
         <td>Name</td>
         <td>Type</td>
         <td>Optional</td>
+        <td>Default</td>
         <td>Description</td>
       </tr>
     </thead>
@@ -31,7 +53,8 @@
         <td>{$ param.name $}</td>
         <td><code>{$ param.type $}</code></td>
         <td><code>{$ param.isOptional $}</code></td>
-        <td>{$ param.description if param.description else 'No description' $}</td>
+        <td>{$ param.defaultValue if param.defaultValue else '-' $}</td>
+        <td>{$ (param.description | marked) if param.description else 'No description' $}</td>
       </tr>
       {% endfor -%}
     </tbody>
@@ -44,6 +67,7 @@
         <td>Name</td>
         <td>Type</td>
         <td>Optional</td>
+        <td>Default</td>
         <td>Description</td>
       </tr>
     </thead>
@@ -53,12 +77,18 @@
         <td>{$ queryParam.name $}</td>
         <td><code>{$ queryParam.type $}</code></td>
         <td><code>{$ queryParam.isOptional $}</code></td>
-        <td>{$ queryParam.description if queryParam.description else 'No description' $}</td>
+        {% if queryParam.defaultValue != undefined %}
+          <td><code>{$ queryParam.defaultValue | json $}</code></td>
+        {% else %}
+          <td>-</td>
+        {% endif %}
+        <td>{$ (queryParam.description | marked) if queryParam.description else 'No description' $}</td>
       </tr>
       {% endfor -%}
     </tbody>
   </table>
-  {% endif %} {% if member.header.length %}
+  {% endif %} 
+  {% if member.headers.length %}
   <h4>Headers</h4>
   <table>
     <thead>
@@ -70,7 +100,7 @@
       </tr>
     </thead>
     <tbody>
-      {%- for header in member.header %}
+      {%- for header in member.headers %}
       <tr>
         <td>{$ header.name $}</td>
         <td><code>{$ header.type $}</code></td>
