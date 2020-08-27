@@ -17,7 +17,7 @@ div {
     }
   }
   div {
-    margin-top: -185px;
+    margin-top: -110px;
     display: block;
     div.widgets {
       display: flex;
@@ -25,12 +25,12 @@ div {
       flex-grow: 1;
       flex-wrap: wrap;
       align-items: stretch;
-      margin: 20px;
+      margin: 0px 25px 25px 25px;
       mat-card {
+        margin: 0px 5px 5px 5px;
         width: 100%;
         overflow-x: auto;
         flex-basis: calc(50% - 10px);
-        margin: 5px;
         flex-grow: 1;
         min-height: 250px;
         min-width: 250px;
