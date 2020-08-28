@@ -24,6 +24,7 @@ ts_library(
         "//stacks/api/bucket/realtime",
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
+        "//stacks/api/passport/guard",
         "//stacks/api/preference",
         "//stacks/api/preference/services",
         "@npm//@nestjs/common",

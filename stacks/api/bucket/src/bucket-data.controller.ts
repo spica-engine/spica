@@ -32,6 +32,7 @@ import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
 import {buildRelationAggregation, filterReviver, findRelations, getUpdateParams} from "./utility";
+import { StrategyType } from "@spica-server/passport/guard";
 
 /**
  * All APIs related to bucket documents.
@@ -67,6 +68,7 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @StrategyType() strategyType: string,
     @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
@@ -140,7 +142,7 @@ export class BucketDataController {
       aggregation.push({$match: filter});
     }
 
-    if (this.dispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const hookAggregation = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INDEX"},
         headers
@@ -208,6 +210,7 @@ export class BucketDataController {
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -250,7 +253,7 @@ export class BucketDataController {
       }
     }
 
-    if (this.dispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const hookAggregation = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "GET"},
         headers,
@@ -299,9 +302,10 @@ export class BucketDataController {
   async insertOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.dispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const allowed = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INSERT"},
         headers
@@ -351,9 +355,10 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.dispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const allowed = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "UPDATE"},
         headers,
@@ -397,10 +402,11 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    if (this.dispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.dispatcher && strategyType == "APIKEY") {
       const allowed = await this.dispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "DELETE"},
         headers,
@@ -456,11 +462,11 @@ export class BucketDataController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteMany(
-    @Headers() headers: any,
+    @StrategyType() strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(ARRAY(v => new ObjectId(v))) ids: ObjectId[]
   ) {
-    if (headers["strategy-type"] == "APIKEY") {
+    if (strategyType == "APIKEY") {
       throw new BadRequestException(
         "Apikey strategy does not support deleting multiple resource at once."
       );

@@ -3,9 +3,10 @@ import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {ObjectId} from "@spica-server/database";
 import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
-import {ActionGuardService, AuthGuardService} from "@spica-server/passport";
+import {AuthGuard, ActionGuard, createGuard} from "@spica-server/passport/guard";
 import {fromEvent, Observable} from "rxjs";
 import {takeUntil, tap} from "rxjs/operators";
+import { ModuleRef } from "@nestjs/core";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
@@ -15,26 +16,25 @@ export class RealtimeGateway implements OnGatewayConnection {
 
   constructor(
     private realtime: RealtimeDatabaseService,
-    private authGuardService: AuthGuardService,
-    private actionGuardService: ActionGuardService,
+    private moduleRef: ModuleRef,
     @Optional() private dispatcher: ActionDispatcher
   ) {}
 
   async handleConnection(client: WebSocket, req) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
 
-    try {
-      await this.authGuardService.check(req, client);
-      await this.actionGuardService.check(req, client, "bucket:data:stream");
-    } catch (e) {
-      client.send(JSON.stringify({code: e.status || 500, message: e.message}));
-      return client.close(1003);
-    }
+    // try {
+    //   await this.authGuardService.check(req, client);
+    //   await this.actionGuardService.check(req, client, "bucket:data:stream");
+    // } catch (e) {
+    //   client.send(JSON.stringify({code: e.status || 500, message: e.message}));
+    //   return client.close(1003);
+    // }
 
     const bucketId = req.params.id;
     const options: any = {};
 
-    if (this.dispatcher && req.headers["strategy-type"] == "APIKEY") {
+    if (this.dispatcher && req.strategyType == "APIKEY") {
       const filter = await this.dispatcher.dispatch(
         {bucket: bucketId, type: "STREAM"},
         req.headers

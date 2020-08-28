@@ -43,12 +43,12 @@ export class StorageService {
 
     return this._collection
       .aggregate(aggregation)
-      .toArray()
-      .then(async d => {
+      .next()
+      .then(async (d: any) => {
         for (const obj of (d[0] as any).data) {
           obj.url = await this.service.url(obj._id);
         }
-        return d[0] as any;
+        return d;
       });
   }
 

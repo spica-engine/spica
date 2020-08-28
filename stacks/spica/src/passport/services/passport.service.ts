@@ -44,7 +44,7 @@ export class PassportService {
   identify(identity: IdentifyParams): Observable<any> {
     return this.http.get(`api:/passport/identify`, {params: identity}).pipe(
       tap(response => {
-        this.token = response.token;
+        this.token = `${response.scheme} ${response.token}`;
         this._statements = undefined;
       })
     );

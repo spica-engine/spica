@@ -1,0 +1,24 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm_bazel_typescript//:index.bzl", "ts_library")
+load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+
+
+ts_library(
+    name = "guard_test_lib",
+    srcs = glob([
+        "*.spec.ts"
+    ]),
+    deps = [
+        "@npm//@types/jasmine",
+        "//stacks/api/passport/guard"
+    ]
+)
+
+
+jasmine_node_test(
+    name = "guard_test",
+    deps = [
+        ":guard_test_lib",
+    ],
+)
