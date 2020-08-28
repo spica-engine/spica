@@ -1,0 +1,38 @@
+<mat-card>
+  <mat-card-actions>
+    <button mat-icon-button (click)="zoom('positive')" title="Zoom In">
+      <mat-icon>zoom_in</mat-icon>
+    </button>
+    <button mat-icon-button (click)="zoom('negative')" title="Zoom Out">
+      <mat-icon>zoom_out</mat-icon>
+    </button>
+    <button mat-icon-button (click)="rotate('left')" title="Rotate Left">
+      <mat-icon>rotate_left</mat-icon>
+    </button>
+    <button mat-icon-button (click)="rotate('right')" title="Rotate Right">
+      <mat-icon>rotate_right</mat-icon>
+    </button>
+    <button mat-icon-button (click)="doneCropping()" title="Done">
+      <mat-icon>check</mat-icon>
+    </button>
+    <span class="scaleSlider">
+      <mat-label>Scale Percentage</mat-label>
+      <mat-slider [thumbLabel]="true" [(ngModel)]="scale" [max]="150" [color]="'warn'">
+      </mat-slider>
+      <mat-hint>{{ cropperRes?.width }}px x {{ cropperRes?.height }}px</mat-hint>
+    </span>
+  </mat-card-actions>
+  <mat-card-content>
+    <angular-cropper
+      *ngIf="storage?.url"
+      #cropperComponent
+      (cropend)="cropendImage()"
+      (ready)="cropperReady()"
+      (zoom)="zoomManual()"
+      class="cropperCanvas"
+      [cropperOptions]="cropperOptions"
+      [imageUrl]="storage.url"
+    ></angular-cropper>
+  </mat-card-content>
+  <canvas [hidden]="true" #canvas></canvas>
+</mat-card>

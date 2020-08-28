@@ -65,7 +65,9 @@ export class MaxValidator implements Validator, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if ("max" in changes) {
       this._createValidator();
-      if (this._onChange) this._onChange();
+      if (this._onChange) {
+        this._onChange();
+      }
     }
   }
 
@@ -98,36 +100,29 @@ export class UniqueItemsValidator implements Validator, OnChanges {
 
   @Input() uniqueItems: boolean = true;
 
-  @Input() items: Array<any>;
-
-  @Input() index: number;
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.uniqueItems || changes.items) {
-      if (this._onChange) this._onChange();
+      if (this._onChange) {
+        this._onChange();
+      }
     }
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
-    if (!Array.isArray(this.items) || !this.uniqueItems) {
+    if (!Array.isArray(control.value) || !this.uniqueItems) {
       return null;
     }
 
-    this.items[this.index] = control.value;
+    const sameItems = control.value.reduce((duplicates, value, index) => {
+      const foundIndex = control.value.indexOf(value);
+      if (foundIndex != index) {
+        duplicates.add(foundIndex);
+        duplicates.add(index);
+      }
+      return duplicates;
+    }, new Set<number>());
 
-    const sameItems = this.items
-      .map((value, index) => ({value, index}))
-      .filter(({value, index}) => this.items.indexOf(value) != index);
-
-    return sameItems.length < 1
-      ? null
-      : sameItems.reduce(
-          (error, item) => {
-            error.uniqueItems.push(item.index);
-            return error;
-          },
-          {uniqueItems: []}
-        );
+    return sameItems.size < 1 ? null : {uniqueItems: Array.from(sameItems)};
   }
 
   registerOnValidatorChange(fn: () => void): void {
@@ -151,8 +146,6 @@ export class MinItemsValidator implements Validator, OnChanges {
 
   @Input() minItems: number;
 
-  @Input() items: Array<any>;
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.minItems || changes.items) {
       if (this._onChange) this._onChange();
@@ -160,11 +153,10 @@ export class MinItemsValidator implements Validator, OnChanges {
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
-    if (!Array.isArray(this.items) || !this.minItems || this.items.length >= this.minItems) {
+    if (!Array.isArray(control.value) || !this.minItems || control.value.length >= this.minItems) {
       return null;
     }
-
-    return {minItems: {min: this.minItems, actual: this.items.length}};
+    return {minItems: {min: this.minItems, actual: control.value.length}};
   }
 
   registerOnValidatorChange(fn: () => void): void {
@@ -188,8 +180,6 @@ export class MaxItemsValidator implements Validator, OnChanges {
 
   @Input() maxItems: number;
 
-  @Input() items: Array<any>;
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.maxItems || changes.items) {
       if (this._onChange) this._onChange();
@@ -197,11 +187,11 @@ export class MaxItemsValidator implements Validator, OnChanges {
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
-    if (!Array.isArray(this.items) || !this.maxItems || this.items.length <= this.maxItems) {
+    if (!Array.isArray(control.value) || !this.maxItems || control.value.length <= this.maxItems) {
       return null;
     }
 
-    return {maxItems: {max: this.maxItems, actual: this.items.length}};
+    return {maxItems: {max: this.maxItems, actual: control.value.length}};
   }
 
   registerOnValidatorChange(fn: () => void): void {

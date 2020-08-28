@@ -3,13 +3,16 @@
     <mat-icon>http</mat-icon>
     <span>Webhook Logs</span>
   </h4>
-  <span class="space-between"></span>
-  <button mat-icon-button (click)="applyFilter()">
-    <mat-icon>refresh</mat-icon>
-  </button>
-  <button mat-icon-button canInteract="webhook:delete" (click)="clearLogs()">
-    <mat-icon>clear_all</mat-icon>
-  </button>
+  <div class="actions">
+    <button mat-button (click)="applyFilter()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+    <button mat-button canInteract="webhook:delete" (click)="clearLogs()">
+      <mat-icon>clear_all</mat-icon>
+      Clear
+    </button>
+  </div>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25">
   <mat-form-field>
@@ -82,23 +85,17 @@
             <h3>
               Message
             </h3>
-            <pre>
-              {{ log.content.error }}
-            </pre>
+            <pre>{{ log.content.error }}</pre>
           </ng-container>
           <ng-template #elseBlock>
             <h3>
               Request
             </h3>
-            <pre>
-              {{ log.content.request | json }}
-            </pre>
+            <pre>{{ log.content.request | json }}</pre>
             <h3>
               Response
             </h3>
-            <pre>
-              {{ log.content.response | json }}
-            </pre>
+            <pre>{{ log.content.response | json }}</pre>
           </ng-template>
         </mat-expansion-panel>
         <mat-progress-spinner

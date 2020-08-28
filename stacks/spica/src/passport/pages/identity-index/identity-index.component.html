@@ -9,16 +9,9 @@
       resources on Spica
     </h6>
   </span>
-  <span class="space-between"></span>
-  <button mat-icon-button (click)="refresh$.next()">
-    <mat-icon>refresh</mat-icon>
-  </button>
-  <button
-    mat-icon-button
-    canInteract="passport:identity:create"
-    routerLink="/passport/identity/add"
-  >
+  <button mat-button canInteract="passport:identity:create" routerLink="/passport/identity/add">
     <mat-icon>add</mat-icon>
+    Add New
   </button>
 </ng-template>
 <mat-card class="mat-elevation-z25">

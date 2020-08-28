@@ -668,18 +668,6 @@ describe("Bucket Add Component", () => {
           ).nativeElement.textContent
         ).toBe(" Property name is required. ");
       });
-
-      it("should show minlength error", async () => {
-        await fixture.whenStable();
-        input.control.setValue("1");
-        input.control.markAsTouched();
-        fixture.detectChanges();
-        expect(
-          fixture.debugElement.query(
-            By.css("mat-card mat-list-item.property mat-form-field mat-error")
-          ).nativeElement.textContent
-        ).toBe(" Length of the property name must be greater than 3 character. ");
-      });
     });
 
     describe("others", () => {

@@ -36,28 +36,4 @@ describe("Javascript", () => {
 
     expect(builtFileContent.toString()).toContain(content);
   });
-
-  it("should symlink @spica-devkit/database to @internal/database", async () => {
-    compilation.cwd = FunctionTestBed.initialize(
-      `export default function() {}`,
-      compilation.entrypoint
-    );
-    const devkitDatabasePath = path.join(
-      compilation.cwd,
-      "node_modules",
-      "@spica-devkit",
-      "database"
-    );
-    await fs.promises.mkdir(devkitDatabasePath, {recursive: true});
-    await fs.promises.writeFile(
-      path.join(devkitDatabasePath, "package.json"),
-      JSON.stringify({name: "@spica-devkit/database"})
-    );
-
-    await language.compile(compilation);
-    const stat = await fs.promises.lstat(
-      path.join(compilation.cwd, ".build", "node_modules", "@internal", "database")
-    );
-    expect(stat.isSymbolicLink()).toBe(true);
-  });
 });

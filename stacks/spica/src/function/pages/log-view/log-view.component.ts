@@ -1,4 +1,3 @@
-import {animate, state, style, transition, trigger} from "@angular/animations";
 import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, forkJoin} from "rxjs";
@@ -9,33 +8,26 @@ import {FunctionService} from "../../function.service";
 @Component({
   selector: "log-view",
   templateUrl: "./log-view.component.html",
-  styleUrls: ["./log-view.component.scss"],
-  animations: [
-    trigger("detail", [
-      state("collapsed", style({height: "0px", padding: "0px", minHeight: "0px"})),
-      state("expanded", style({height: "*", paddingTop: "10px", paddingBottom: "10px"})),
-      transition("expanded <=> collapsed", animate("225ms cubic-bezier(0.4, 0.0, 0.2, 1)"))
-    ])
-  ]
+  styleUrls: ["./log-view.component.scss"]
 })
 export class LogViewComponent implements OnInit {
-  displayedColumns: string[] = ["timestamp", "content"];
-
-  expandedLog: Log;
-
-  logs$: Observable<Log[]>;
+  isPending = false;
 
   functions$: Observable<Function[]>;
 
   maxDate = new Date();
-  selectedFunctions: string[];
 
   queryParams: Observable<any>;
+
+  logs$: Observable<Log[]>;
+
+  bufferSize = 500;
 
   constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {}
 
   ngOnInit() {
     this.queryParams = this.route.queryParams.pipe(
+      tap(() => (this.isPending = true)),
       map(filter => {
         filter = {...filter};
         if (filter.showErrors) {
@@ -48,6 +40,7 @@ export class LogViewComponent implements OnInit {
             filter.function = [filter.function];
           }
         }
+
         if (filter.begin) {
           filter.begin = new Date(filter.begin);
         }
@@ -57,39 +50,28 @@ export class LogViewComponent implements OnInit {
         return filter;
       })
     );
+
     this.functions$ = this.fs.getFunctions();
 
     this.logs$ = this.queryParams.pipe(
-      tap(filter => {
-        const functionColumnIndex = this.displayedColumns.indexOf("function");
-        if (filter.function.length > 1 && functionColumnIndex == -1) {
-          this.displayedColumns.splice(1, 0, "function");
-        } else if (filter.function.length <= 1 && functionColumnIndex != -1) {
-          this.displayedColumns.splice(functionColumnIndex, 1);
-        }
-      }),
       switchMap(filter =>
-        this.fs
-          .getLogs(filter)
-          .pipe(
-            map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
-          )
+        this.fs.getLogs(filter as any).pipe(
+          map(logs => logs.filter(log => !!log)),
+          map(logs => (filter.showErrors ? logs : logs.filter(log => log.channel != "stderr")))
+        )
       ),
-      switchMap(logs => {
-        return this.fs.getFunctions().pipe(
-          map(fns => {
-            logs.map(log => {
-              log.function = fns.find(fn => fn._id == log.function)
-                ? fns.find(fn => fn._id == log.function).name
-                : log.function;
-              log.created_at = this.objectIdToDate(log._id).toString();
-              return log;
-            });
-            return logs;
-          })
-        );
-      })
+      switchMap(logs => this.functions$.pipe(map(fns => this.mapLogs(logs, fns)))),
+      tap(() => (this.isPending = false))
     );
+  }
+
+  mapLogs(logs: Log[], fns: Function[]): Log[] {
+    return logs.map(log => {
+      const fn = fns.find(fn => fn._id == log.function);
+      log.function = fn ? fn : log.function;
+      log.created_at = this.objectIdToDate(log._id).toString();
+      return log;
+    });
   }
 
   objectIdToDate(id: string) {
@@ -116,5 +98,11 @@ export class LogViewComponent implements OnInit {
         begin: new Date(range.begin.setHours(0, 0, 0, 0)),
         end: new Date(range.end.setHours(23, 59, 59, 999))
       };
+  }
+
+  onExpand(height: number) {
+    if (this.bufferSize < height) {
+      this.bufferSize = height + 200;
+    }
   }
 }

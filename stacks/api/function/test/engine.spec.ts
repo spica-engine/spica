@@ -29,9 +29,16 @@ describe("Engine", () => {
           databaseName: undefined,
           databaseReplicaSet: undefined,
           databaseUri: undefined,
-          poolSize: 10,
-          publicUrl: undefined,
-          timeout: 60000
+          poolSize: 1,
+          poolMaxSize: 2,
+          apiUrl: undefined,
+          timeout: 60000,
+          corsOptions: {
+            allowedOrigins: ["*"],
+            allowedMethods: ["*"],
+            allowCredentials: true,
+            allowedHeaders: ["*"]
+          }
         }),
         DatabaseTestingModule.replicaSet()
       ]
@@ -48,7 +55,11 @@ describe("Engine", () => {
       database,
       mongo,
       scheduler,
-      {root: "test_root", timeout: 1},
+      {
+        root: "test_root",
+        timeout: 1
+      },
+      null,
       null
     );
 

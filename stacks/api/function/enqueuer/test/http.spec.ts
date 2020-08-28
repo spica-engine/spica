@@ -18,6 +18,13 @@ describe("http enqueuer", () => {
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let httpQueue: jasmine.SpyObj<HttpQueue>;
 
+  let corsOptions = {
+    allowCredentials: true,
+    allowedHeaders: ["*"],
+    allowedMethods: ["*"],
+    allowedOrigins: ["*"]
+  };
+
   beforeAll(async () => {
     noopTarget = new Event.Target();
     noopTarget.cwd = "/tmp/fn1";
@@ -30,15 +37,21 @@ describe("http enqueuer", () => {
     req = module.get(Request);
 
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue"]);
+    httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue", "dequeue"]);
 
     await app.listen(req.socket);
-    httpEnqueuer = new HttpEnqueuer(eventQueue, httpQueue, app.getHttpAdapter().getInstance());
+    httpEnqueuer = new HttpEnqueuer(
+      eventQueue,
+      httpQueue,
+      app.getHttpAdapter().getInstance(),
+      corsOptions
+    );
   });
 
   afterEach(() => {
     // Reset enqueue spy in case some of the it blocks might have their spy delegates registered onto.
     httpQueue.enqueue = jasmine.createSpy();
+    httpQueue.dequeue.calls.reset();
   });
 
   it("should not handle preflight requests on indistinct paths", async () => {
@@ -49,10 +62,10 @@ describe("http enqueuer", () => {
   it("should handle preflight requests", async () => {
     const options = {method: HttpMethod.Post, path: "/test", preflight: true};
     httpEnqueuer.subscribe(noopTarget, options);
-    let response = await req.options("/fn-execute/test");
+    let response = await req.options("/fn-execute/test", {Origin: "test"});
     expect(response.statusCode).toBe(200);
     expect(response.body).toBeUndefined();
-    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    expect(response.headers["access-control-allow-origin"]).toBe("test");
     httpEnqueuer.unsubscribe(noopTarget);
   });
 
@@ -62,7 +75,11 @@ describe("http enqueuer", () => {
       res.end(JSON.stringify({response: "back"}));
     });
 
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test", preflight: false});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/test",
+      preflight: false
+    });
 
     const response = await req.options("/fn-execute/test");
     expect(response.statusCode).toBe(404);
@@ -74,7 +91,11 @@ describe("http enqueuer", () => {
   });
 
   it("should not handle preflight requests for head method", async () => {
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Head, path: "/test2", preflight: true});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Head,
+      path: "/test2",
+      preflight: true
+    });
     let response = await req.options("/fn-execute/test2");
     expect(response.statusCode).toBe(404);
     httpEnqueuer.unsubscribe(noopTarget);
@@ -85,9 +106,13 @@ describe("http enqueuer", () => {
       res.writeHead(200, undefined, {"Content-type": "application/json"});
       res.end(JSON.stringify({}));
     });
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test1", preflight: true});
-    const response = await req.post("/fn-execute/test1");
-    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/test1",
+      preflight: true
+    });
+    const response = await req.post("/fn-execute/test1", {}, {Origin: "test"});
+    expect(response.headers["access-control-allow-origin"]).toBe("test");
     expect(response.body).toEqual({});
     httpEnqueuer.unsubscribe(noopTarget);
   });
@@ -146,9 +171,9 @@ describe("http enqueuer", () => {
     // Remove post target and test if we still have the preflight route
     httpEnqueuer.unsubscribe(postTarget);
 
-    response = await req.options("/fn-execute/sameroute");
+    response = await req.options("/fn-execute/sameroute", {Origin: "test"});
     expect(response.body).toBeUndefined();
-    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    expect(response.headers["access-control-allow-origin"]).toBe("test");
     response = await req.options("/fn-execute/sameroute");
     expect(response.statusCode).toBe(200);
   });
@@ -184,30 +209,34 @@ describe("http enqueuer", () => {
       preflight: true
     });
 
-    let response = await req.options("/fn-execute/conflictedpath");
+    let response = await req.options("/fn-execute/conflictedpath", {Origin: "test"});
     expect(response.statusCode).toBe(200);
-    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    expect(response.headers["access-control-allow-origin"]).toBe("test");
 
     // Remove Head method and see if we still have the preflight.
     httpEnqueuer.unsubscribe(headTarget);
 
-    response = await req.options("/fn-execute/conflictedpath");
+    response = await req.options("/fn-execute/conflictedpath", {Origin: "test"});
     expect(response.statusCode).toBe(200);
-    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    expect(response.headers["access-control-allow-origin"]).toBe("test");
 
     // Remove Get method and see if we still have the preflight.
     httpEnqueuer.unsubscribe(headTarget);
 
-    response = await req.options("/fn-execute/conflictedpath");
+    response = await req.options("/fn-execute/conflictedpath", {Origin: "test"});
     expect(response.statusCode).toBe(200);
-    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    expect(response.headers["access-control-allow-origin"]).toBe("test");
   });
 
   it("should forward body", async () => {
     // End the request immediately.
     httpQueue.enqueue.and.callFake((id, req, res) => res.end());
 
-    httpEnqueuer.subscribe(noopTarget, {method: HttpMethod.Post, path: "/test", preflight: false});
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Post,
+      path: "/test",
+      preflight: false
+    });
     await req.post("/fn-execute/test", {test: 1}, {"Content-type": "application/json"});
     expect(httpQueue.enqueue).toHaveBeenCalledTimes(1);
     expect(Array.from(httpQueue.enqueue.calls.mostRecent().args[1].body)).toEqual([
@@ -222,6 +251,23 @@ describe("http enqueuer", () => {
       49,
       125
     ]);
+  });
+
+  it("should dequeue when connection is closed", done => {
+    httpQueue.enqueue.and.callFake((id, req, res) => {
+      res.connection.destroy();
+    });
+    httpEnqueuer.subscribe(noopTarget, {
+      method: HttpMethod.Get,
+      path: "/test",
+      preflight: false
+    });
+    expect(httpQueue.dequeue).not.toHaveBeenCalled();
+    req.get("/fn-execute/test", {}).catch(() => {
+      expect(httpQueue.dequeue).toHaveBeenCalled();
+      httpEnqueuer.unsubscribe(noopTarget);
+      done();
+    });
   });
 
   afterAll(() => {

@@ -96,11 +96,11 @@ spec:
           imagePullPolicy: Always
           resources:
             requests:
-              memory: "100Mi"
-              cpu: "100m"
+              memory: "300Mi"
+              cpu: "400m"
             limits:
-              memory: "250Mi"
-              cpu: "150m"
+              memory: "600Mi"
+              cpu: "500m"
           ports:
             - containerPort: 4300
           args:
@@ -121,6 +121,8 @@ spec:
             - --public-url
             - https://master.spicaengine.com/api
             - --function-pool-size
+            - "3"
+            - --function-pool-max-size
             - "5"
           volumeMounts:
             - name: master-data

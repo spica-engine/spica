@@ -140,8 +140,9 @@ describe("IndexComponent", () => {
   describe("basic behavior", () => {
     it("should render bucket information", () => {
       bucket.next({
+        _id: "bucket_id",
         title: "My Bucket",
-        description: "My buckets description.",
+        description: "My bucket's description.",
         icon: "test",
         properties: {}
       });
@@ -156,7 +157,10 @@ describe("IndexComponent", () => {
       ).toBe("My Bucket");
       expect(
         fixture.debugElement.query(By.css("mat-toolbar > span > h6")).nativeElement.textContent
-      ).toBe("My buckets description.");
+      ).toContain("Bucket ID: bucket_id");
+      expect(
+        fixture.debugElement.query(By.css("mat-toolbar > span > h5")).nativeElement.textContent
+      ).toBe(" My bucket's description. ");
 
       expect(bucketService.getBucket).toHaveBeenCalledTimes(1);
     });
@@ -182,11 +186,10 @@ describe("IndexComponent", () => {
       });
       fixture.detectChanges();
 
-      // The last button is the refresh button when we remove add button
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar > button:last-of-type")).nativeElement
-          .textContent
-      ).toBe("refresh");
+        fixture.debugElement.query(By.css("mat-toolbar > div.actions >button:first-of-type"))
+          .nativeElement.textContent
+      ).toContain("refresh");
 
       expect(bucketService.getBucket).toHaveBeenCalledTimes(1);
     });
@@ -212,7 +215,7 @@ describe("IndexComponent", () => {
     describe("language", () => {
       it("should render languages", () => {
         fixture.debugElement
-          .query(By.css("mat-toolbar > button:nth-of-type(3)"))
+          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(5)"))
           .nativeElement.click();
         fixture.detectChanges();
         const options = document.body.querySelectorAll(".mat-menu-content .mat-menu-item");
@@ -223,7 +226,7 @@ describe("IndexComponent", () => {
       it("should query language", fakeAsync(() => {
         bucketDataService.find.calls.reset();
         fixture.debugElement
-          .query(By.css("mat-toolbar > button:nth-of-type(3)"))
+          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(5)"))
           .nativeElement.click();
         fixture.detectChanges();
         document.body.querySelector<HTMLButtonElement>(".mat-menu-content .mat-menu-item").click();
@@ -238,7 +241,7 @@ describe("IndexComponent", () => {
     describe("columns", () => {
       it("should render", () => {
         fixture.debugElement
-          .query(By.css("mat-toolbar > button:nth-of-type(2)"))
+          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
         fixture.detectChanges();
         expect(
@@ -294,7 +297,7 @@ describe("IndexComponent", () => {
         });
         fixture.detectChanges();
         fixture.debugElement
-          .query(By.css("mat-toolbar > button:nth-of-type(2)"))
+          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(3)"))
           .nativeElement.click();
         fixture.detectChanges();
 
@@ -330,7 +333,7 @@ describe("IndexComponent", () => {
         fixture.detectChanges();
 
         fixture.debugElement
-          .query(By.css("mat-toolbar > button:nth-of-type(2)"))
+          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(3)"))
           .nativeElement.click();
         fixture.detectChanges();
 
@@ -348,7 +351,7 @@ describe("IndexComponent", () => {
         fixture.componentInstance.displayedProperties = [];
 
         fixture.debugElement
-          .query(By.css("mat-toolbar > button:nth-of-type(2)"))
+          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(4)"))
           .nativeElement.click();
         fixture.detectChanges();
 
@@ -374,7 +377,7 @@ describe("IndexComponent", () => {
     it("should refresh", () => {
       bucketDataService.find.calls.reset();
       fixture.debugElement
-        .query(By.css("mat-toolbar > button:nth-of-type(6)"))
+        .query(By.css("mat-toolbar > div.actions > button:nth-of-type(2)"))
         .nativeElement.click();
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
@@ -383,7 +386,7 @@ describe("IndexComponent", () => {
     it("should show scheduled", () => {
       bucketDataService.find.calls.reset();
       fixture.debugElement
-        .query(By.css("mat-toolbar > button:nth-of-type(1)"))
+        .query(By.css("mat-toolbar > div.actions > button:nth-of-type(6)"))
         .nativeElement.click();
       fixture.detectChanges();
       expect(bucketDataService.find).toHaveBeenCalledTimes(1);
@@ -392,12 +395,13 @@ describe("IndexComponent", () => {
 
     it("should show guide button", () => {
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar > button:nth-of-type(5)")).nativeElement
+        fixture.debugElement.query(By.css("mat-toolbar > div.actions >button:nth-of-type(6)"))
+          .nativeElement
       ).toBeTruthy();
     });
     it("should show guide panel when clicked guide button", () => {
       fixture.debugElement
-        .query(By.css("mat-toolbar > button:nth-of-type(5)"))
+        .query(By.css("mat-toolbar > div.actions > button:nth-of-type(7)"))
         .nativeElement.click();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css("mat-card.hide"))).toBeNull();
@@ -501,9 +505,10 @@ describe("IndexComponent", () => {
         fixture.componentInstance.selectedItems.push("1");
         fixture.detectChanges();
         expect(
-          fixture.debugElement.nativeElement.querySelector("mat-toolbar > button:first-of-type")
-            .textContent
-        ).toBe("delete");
+          fixture.debugElement.nativeElement.querySelector(
+            "mat-toolbar > div.actions > button:first-of-type"
+          ).textContent
+        ).toContain("delete");
       });
     });
   });

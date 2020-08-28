@@ -1,41 +1,32 @@
-import {ComponentFixture, TestBed, fakeAsync, tick} from "@angular/core/testing";
-import {IndexComponent} from "./index.component";
-import {StorageService} from "../../storage.service";
-import {of, Subject, Observable} from "rxjs";
-import {MatDialog} from "@angular/material/dialog";
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
+import {HttpEvent, HttpEventType} from "@angular/common/http";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
+import {MatDialog} from "@angular/material/dialog";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatMenuModule} from "@angular/material/menu";
-import {MatPaginatorModule, MatPaginator} from "@angular/material/paginator";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {FormsModule} from "@angular/forms";
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {MatGridListModule} from "@angular/material/grid-list";
-import {StorageViewComponent} from "../../components/storage-view/storage-view.component";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {RouterTestingModule} from "@angular/router/testing";
-import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
-import {Location} from "@angular/common";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
-import {HttpEvent, HttpEventType} from "@angular/common/http";
+import {of} from "rxjs";
+import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
-import {Directive, HostBinding, Input} from "@angular/core";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
+import {StorageViewComponent} from "../../components/storage-view/storage-view.component";
+import {StorageService} from "../../storage.service";
+import {IndexComponent} from "./index.component";
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let storageService: jasmine.SpyObj<Partial<StorageService>>;
-  let location: Location;
 
   beforeEach(() => {
     storageService = {
@@ -120,8 +111,6 @@ describe("Storage/IndexComponent", () => {
     });
 
     fixture = TestBed.createComponent(IndexComponent);
-    location = TestBed.get(Location);
-
     fixture.detectChanges(false);
   });
 
@@ -144,6 +133,7 @@ describe("Storage/IndexComponent", () => {
 
   describe("actions", () => {
     it("show navigate edit page", fakeAsync(() => {
+      const openSpy = spyOn(fixture.componentInstance.dialog, "open").and.callThrough();
       fixture.debugElement
         .query(
           By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-actions mat-menu")
@@ -160,7 +150,20 @@ describe("Storage/IndexComponent", () => {
       tick(500);
       fixture.detectChanges();
 
-      expect(location.path()).toBe("/1", "should navigate to edit page of data");
+      expect(openSpy).toHaveBeenCalledTimes(1);
+      expect(openSpy).toHaveBeenCalledWith(ImageEditorComponent, {
+        maxWidth: "80%",
+        maxHeight: "80%",
+        panelClass: "edit-object",
+        data: {
+          _id: "1",
+          name: "test1",
+          content: {
+            type: "image/png"
+          },
+          url: "http://example/test.png"
+        }
+      });
     }));
 
     it("should show disabled add button while file uploading process in progress", () => {
@@ -233,7 +236,7 @@ describe("Storage/IndexComponent", () => {
       expect(openSpy).toHaveBeenCalledWith(StorageDialogOverviewDialog, {
         maxWidth: "80%",
         maxHeight: "80%",
-        panelClass: "preview-file",
+        panelClass: "preview-object",
         data: {
           _id: "1",
           name: "test1",

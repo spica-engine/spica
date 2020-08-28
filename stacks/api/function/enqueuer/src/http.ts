@@ -4,6 +4,7 @@ import {Event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 import bodyParser = require("body-parser");
+import {CorsOptions} from "@spica-server/core/interfaces";
 
 export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   description: Description = {
@@ -15,7 +16,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
 
   private router = express.Router({mergeParams: true});
 
-  constructor(private queue: EventQueue, private http: HttpQueue, httpServer: express.Application) {
+  constructor(
+    private queue: EventQueue,
+    private http: HttpQueue,
+    httpServer: express.Application,
+    private corsOptions: CorsOptions
+  ) {
     super();
     this.router.use(
       bodyParser.raw({
@@ -58,7 +64,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         throw new Error("Preflight option was used with HttpMethod.Options");
       }
 
-      const fn = (req, res, next) => Middlewares.Preflight(req, res, next);
+      const fn = (req, res, next) => Middlewares.Preflight(this.corsOptions)(req, res, next);
 
       Object.defineProperty(fn, "target", {writable: false, value: target});
 
@@ -99,6 +105,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         return acc;
       }, []);
       this.http.enqueue(event.id, request, res);
+      req.once("close", () => this.http.dequeue(event.id));
     };
 
     Object.defineProperty(fn, "target", {writable: false, value: target});

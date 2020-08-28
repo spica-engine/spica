@@ -16,6 +16,7 @@ import {MatSelectModule} from "@angular/material/select";
 import {MatSidenavModule} from "@angular/material/sidenav";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 import {BrowserModule} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {ServiceWorkerModule} from "@angular/service-worker";
@@ -43,11 +44,14 @@ import {SupportPolicyComponent} from "./pages/support-policy/support-policy.comp
 import {LimitPolicyComponent} from "./pages/limit-policy/limit-policy.component";
 import {FairusagePolicyComponent} from "./pages/fairusage-policy/fairusage-policy.component";
 import {CalendarComponent} from "./pages/calendar/calendar.component";
+import {DocTryItComponent} from "./components/doc-try-it/doc-try-it.component";
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    FormsModule,
     HttpClientModule,
     AppRoutingModule,
     ServiceWorkerModule.register("ngsw-worker.js", {
@@ -68,7 +72,8 @@ import {CalendarComponent} from "./pages/calendar/calendar.component";
     MatInputModule,
     MatSelectModule,
     MatOptionModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatCheckboxModule
   ],
   declarations: [
     AppComponent,
@@ -91,7 +96,8 @@ import {CalendarComponent} from "./pages/calendar/calendar.component";
     SupportPolicyComponent,
     LimitPolicyComponent,
     FairusagePolicyComponent,
-    CalendarComponent
+    CalendarComponent,
+    DocTryItComponent
   ],
   bootstrap: [AppComponent]
 })
@@ -101,5 +107,6 @@ export class AppModule {
     customElements.define("doc-toc", createCustomElement(TocComponent, {injector}));
     customElements.define("doc-card", createCustomElement(DocCardComponent, {injector}));
     customElements.define("doc-cards", createCustomElement(DocCardsComponent, {injector}));
+    customElements.define("api-doc-try-it", createCustomElement(DocTryItComponent, {injector}));
   }
 }

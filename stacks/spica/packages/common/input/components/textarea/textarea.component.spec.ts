@@ -59,19 +59,6 @@ describe("Common#textarea", () => {
       );
     });
 
-    it("should default to default value if undefined", fakeAsync(() => {
-      const inputElem = fixture.debugElement.query(By.css("textarea")).nativeElement;
-      const changeSpy = jasmine.createSpy("ngModelChange");
-      fixture.componentInstance.registerOnChange(changeSpy);
-
-      fixture.componentInstance.schema.default = "test";
-      fixture.componentInstance.writeValue(undefined);
-      fixture.detectChanges();
-      tick();
-      expect(changeSpy).toHaveBeenCalledWith("test");
-      expect(inputElem.value).toBe("test");
-    }));
-
     it("should be valid pristine and untouched", () => {
       const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
       expect(formFieldElem.classList).toContain("ng-untouched");
@@ -98,5 +85,21 @@ describe("Common#textarea", () => {
       fixture.detectChanges();
       expect(ngModelChange).toHaveBeenCalledWith("myvalue");
     }));
+
+    describe("default", () => {
+      it("should default to default value if undefined", fakeAsync(() => {
+        const inputElem = fixture.debugElement.query(By.css("textarea")).nativeElement;
+        const ngModelChange = jasmine.createSpy("ngModelChange");
+        fixture.componentInstance.registerOnChange(ngModelChange);
+
+        fixture.componentInstance.schema.default = "123";
+        fixture.componentInstance.writeValue(undefined);
+        fixture.detectChanges();
+        tick();
+
+        expect(ngModelChange).toHaveBeenCalledWith("123");
+        expect(inputElem.value).toBe("123");
+      }));
+    });
   });
 });

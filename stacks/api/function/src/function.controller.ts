@@ -249,9 +249,15 @@ export class FunctionController {
       throw new NotFoundException("Could not find the function.");
     }
 
-    const operators: OperatorFunction<unknown, unknown>[] = [];
+    let operators: OperatorFunction<unknown, unknown>[] = [
+      catchError(err => {
+        res.status(400).send({message: err.toString()});
+        return err;
+      })
+    ];
 
     if (progress) {
+      operators = [];
       operators.push(
         map(progress => {
           return {

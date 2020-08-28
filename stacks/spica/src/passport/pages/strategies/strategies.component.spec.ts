@@ -61,22 +61,6 @@ describe("StrategiesComponent", () => {
     fixture.detectChanges();
   });
 
-  describe("basic behavior", () => {
-    let toolbarFixture: ComponentFixture<ToolbarCmp>;
-
-    beforeEach(() => {
-      toolbarFixture = TestBed.createComponent(ToolbarCmp);
-      toolbarFixture.componentInstance.outlet = fixture.componentInstance.toolbar;
-      toolbarFixture.detectChanges();
-    });
-
-    it("should refresh", () => {
-      strategyService.getStrategies.calls.reset();
-      toolbarFixture.debugElement.query(By.css("button")).nativeElement.click();
-      expect(strategyService.getStrategies).toHaveBeenCalledTimes(1);
-    });
-  });
-
   describe("rows", () => {
     beforeEach(() => {
       rows.next([{name: "Test", title: "Test title", icon: "test"}]);

@@ -7,11 +7,9 @@ if [ ! -f WORKSPACE ]; then
     exit 1;
 fi
 
-yarn bazel build //stacks/cli:package
+yarn bazel build //stacks/cli:package --config=release
 
-(cd ./bazel-bin/stacks/cli/package && yarn link)
-
-yarn link @spica/cli
+yarn global add "$(pwd)/bazel-bin/stacks/cli/package"
 
 echo "###########################################"
 echo "Linking was completed successfully."

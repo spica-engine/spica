@@ -98,13 +98,17 @@
   </mat-card-content>
   <mat-card-actions>
     <button
+      class="save-button"
       [canInteract]="identity._id ? 'passport:identity:update' : 'passport:identity:create'"
       [resource]="identity._id"
       [disabled]="identityForm.invalid"
       mat-button
       (click)="upsertIdentity()"
     >
-      <mat-icon>save</mat-icon> Save
+      <mat-icon>save</mat-icon>
+      <span>
+        Save
+      </span>
     </button>
   </mat-card-actions>
 </mat-card>

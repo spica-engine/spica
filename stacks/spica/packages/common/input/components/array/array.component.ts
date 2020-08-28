@@ -26,6 +26,7 @@ export class ArrayComponent implements ControlValueAccessor {
   addItem() {
     this._values.push(this.resolver.coerce(this.schema.items["type"]));
     this._activeIndex = this._values.length - 1;
+    this.callOnChange();
   }
 
   removeItem() {
@@ -50,9 +51,6 @@ export class ArrayComponent implements ControlValueAccessor {
       this._activeIndex = this._values.length > 0 ? 0 : undefined;
     } else {
       this._values = [];
-    }
-    if (!this._values.length) {
-      this.addItem();
     }
   }
 

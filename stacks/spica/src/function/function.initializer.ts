@@ -18,17 +18,22 @@ export class FunctionInitializer {
           id: `list_all_functions`,
           icon: "format_list_numbered",
           path: `/function`,
-          display: "List all functions"
+          display: "Functions"
         })
       );
       this.routeService.dispatch(
         new Upsert({
           category: RouteCategory.Function,
           id: `list_all_logs`,
-          icon: "format_list_numbered",
+          icon: "pest_control",
           path: "/function/logs",
-          display: "List all logs",
-          queryParams: {function: funcs.map(func => func._id)}
+          display: "Logs",
+          queryParams: {
+            begin: new Date(new Date().setHours(0, 0, 0, 0)),
+            end: new Date(new Date().setHours(23, 59, 59, 999)),
+            function: funcs.map(func => func._id),
+            showErrors: true
+          }
         })
       );
       funcs.forEach(func => {

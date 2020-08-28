@@ -1,111 +1,47 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
     name = "storage",
-    srcs = glob(
-        include = ["**/*.ts"],
-        exclude = ["**/*.spec.ts"],
-    ),
+    srcs = glob([
+        "src/**/*.ts",
+        "index.ts",
+    ]),
+    data = glob(["src/schema/*.json"]),
     module_name = "@spica-server/storage",
     deps = [
         "//packages/core",
+        "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
         "//stacks/api/passport",
         "@npm//@google-cloud/storage",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",
+        "@npm//@types/body-parser",
         "@npm//@types/bson",
         "@npm//@types/mongodb",
         "@npm//@types/node",
+        "@npm//body-parser",
         "@npm//bson",
-    ],
-)
-
-ts_library(
-    name = "test_lib",
-    testonly = True,
-    srcs = [
-        "storage.acceptance.spec.ts",
-        "storage.controller.spec.ts",
-        "storage.service.spec.ts",
-    ],
-    deps = [
-        ":storage",
-        "//packages/core",
-        "//packages/core/testing",
-        "//packages/database/testing",
-        "//stacks/api/passport/testing",
-        "@npm//@nestjs/common",
-        "@npm//@nestjs/testing",
-        "@npm//@types/bson",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-        "@npm//bson",
-    ],
-)
-
-jasmine_node_test(
-    name = "test",
-    deps = [
-        ":test_lib",
+        "@npm//etag",
+        "@npm//rxjs",
     ],
 )
 
 docs(
     name = "docs",
     srcs = [
-        "storage.controller.ts",
+        "src/storage.controller.ts",
     ],
+    doc_name = "storage",
     tags = ["storage-docs"],
     exports = [
-        "StorageController",
+        "storage",
     ],
     deps = [
         "//packages/database",
-    ],
-)
-
-ts_library(
-    name = "activity_test_lib",
-    testonly = True,
-    srcs = [
-        "activity.resource.spec.ts",
-    ],
-    deps = [
-        "//stacks/api/activity/services",
-        "//stacks/api/storage",
-        "@npm//@types/jasmine",
-    ],
-)
-
-jasmine_node_test(
-    name = "activity_test",
-    deps = [
-        "activity_test_lib",
-    ],
-)
-
-ts_library(
-    name = "strategy_test_lib",
-    testonly = True,
-    srcs = [
-        "strategy.spec.ts",
-    ],
-    deps = [
-        "//stacks/api/storage",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "strategy_test",
-    deps = [
-        "strategy_test_lib",
     ],
 )

@@ -19,6 +19,11 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     this.streamMap.set(id, response);
   }
 
+  dequeue(id: string) {
+    this.queue.delete(id);
+    this.streamMap.delete(id);
+  }
+
   write(
     call: grpc.ServerUnaryCall<Http.Write, Http.Write.Result>,
     callback: grpc.sendUnaryData<Http.Write.Result>

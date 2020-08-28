@@ -1,10 +1,17 @@
 import {Compilation} from "@spica-server/function/compiler";
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import * as ts from "typescript";
 import {parentPort} from "worker_threads";
 
-const ROOT_TSCONFIG_PATH = "/tmp/_tsconfig.json";
+const ROOT_TSCONFIG_PATH = path.join(os.tmpdir(), "_tsconfig.json");
+
+let diagnosticMap = new WeakMap<ts.EmitAndSemanticDiagnosticsBuilderProgram, ts.Diagnostic[]>();
+let builder: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
+let host: ts.SolutionBuilderHost<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
+const astCache = new Map<string, ts.SourceFile>();
+const watchers = new Map<string, fs.FSWatcher>();
 
 function initializeRootTsConfig() {
   updateRootTsConfig({
@@ -22,22 +29,20 @@ function updateRootTsConfig(config: object) {
 }
 
 function readRootTsConfig(): object {
-  return require(ROOT_TSCONFIG_PATH);
+  return JSON.parse(fs.readFileSync(ROOT_TSCONFIG_PATH).toString());
 }
 
-const astCache = new Map<string, ts.SourceFile>();
-const watchers = new Map<string, void>();
 function createEmitAndSemanticDiagnosticsBuilderProgram(
   rootNames: readonly string[] | undefined,
   options: ts.CompilerOptions | undefined,
-  host?: ts.CompilerHost,
+  compilerHost?: ts.CompilerHost,
   oldProgram?: ts.EmitAndSemanticDiagnosticsBuilderProgram,
   configFileParsingDiagnostics?: readonly ts.Diagnostic[],
   projectReferences?: readonly ts.ProjectReference[]
 ) {
-  const originalGetSourceFile = host.getSourceFile;
+  const originalGetSourceFile = compilerHost.getSourceFile;
 
-  host.getSourceFile = (
+  compilerHost.getSourceFile = (
     fileName: string,
     languageVersion: ts.ScriptTarget,
     onError?: (message: string) => void,
@@ -46,82 +51,45 @@ function createEmitAndSemanticDiagnosticsBuilderProgram(
     const sourceFile = astCache.has(fileName)
       ? astCache.get(fileName)
       : originalGetSourceFile(fileName, languageVersion, onError, shouldCreateNewSourceFile);
-    setImmediate(() => {
-      if (!astCache.has(fileName)) {
-        astCache.set(fileName, sourceFile);
-      }
-      if (!watchers.has(fileName)) {
-        watchers.set(
-          fileName,
-          fs.watchFile(fileName, {persistent: false}, () => {
-            astCache.delete(fileName);
-          })
-        );
-      }
-    });
+
+    if (!astCache.has(fileName)) {
+      astCache.set(fileName, sourceFile);
+    }
+
+    if (!watchers.has(fileName) && fileName.indexOf(compilerHost.getDefaultLibLocation()) == -1) {
+      const watcher = fs.watch(fileName, {persistent: false});
+      watcher.on("change", eventType => {
+        if (eventType == "change") {
+          astCache.delete(fileName);
+        }
+      });
+      watchers.set(fileName, watcher);
+    }
     return sourceFile;
   };
 
-  return ts.createEmitAndSemanticDiagnosticsBuilderProgram(
+  const program = ts.createEmitAndSemanticDiagnosticsBuilderProgram(
     rootNames,
     options,
-    host,
+    compilerHost,
     oldProgram,
     configFileParsingDiagnostics,
     projectReferences
   );
+
+  diagnosticMap.set(program, []);
+
+  host.reportDiagnostic = diagnostic => {
+    diagnosticMap.get(program).push(diagnostic);
+  };
+
+  return program;
 }
-
-const host = ts.createSolutionBuilderWithWatchHost(
-  {
-    ...ts.sys,
-    clearScreen: () => {},
-    write: () => {}
-  },
-  createEmitAndSemanticDiagnosticsBuilderProgram
-);
-
-let diagnostics: ts.Diagnostic[] = [];
-
-host.reportDiagnostic = diagnostic => {
-  diagnostics.push(diagnostic);
-};
-
-host.reportSolutionBuilderStatus = () => {};
-
-host.afterProgramEmitAndDiagnostics = program => {
-  parentPort.postMessage({
-    baseUrl: program.getCompilerOptions().baseUrl,
-    diagnostics: diagnostics
-      .filter(d => d.file)
-      .map((diagnostic: ts.Diagnostic) => {
-        const start = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
-        const end = ts.getLineAndCharacterOfPosition(
-          diagnostic.file,
-          diagnostic.start + diagnostic.length
-        );
-        return {
-          code: diagnostic.code,
-          category: diagnostic.category,
-          text: ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine),
-          start: {
-            line: start.line + 1,
-            column: start.character + 1
-          },
-          end: {
-            line: end.line + 1,
-            column: end.character + 1
-          }
-        };
-      })
-  });
-  diagnostics = [];
-};
-
-let builder: ts.SolutionBuilder<ts.EmitAndSemanticDiagnosticsBuilderProgram>;
 
 function build(compilation: Compilation) {
   const referencedProject = `${compilation.cwd.replace(/\//g, "_")}_tsconfig.json`;
+
+  astCache.delete(path.join(compilation.cwd, compilation.entrypoint));
 
   const rootTsConfig: any = readRootTsConfig();
 
@@ -145,7 +113,7 @@ function build(compilation: Compilation) {
     };
 
     fs.writeFileSync(
-      path.join("/tmp", referencedProject),
+      path.join(os.tmpdir(), referencedProject),
       JSON.stringify({
         compilerOptions: options,
         files: [path.join(compilation.cwd, compilation.entrypoint)],
@@ -155,13 +123,41 @@ function build(compilation: Compilation) {
 
     rootTsConfig.references.push({path: refPath});
     updateRootTsConfig(rootTsConfig);
-
-    builder = ts.createSolutionBuilderWithWatch(host, [ROOT_TSCONFIG_PATH], {
-      watch: true,
-      incremental: true
-    });
-    builder.build();
   }
+
+  builder = ts.createSolutionBuilder(host, [ROOT_TSCONFIG_PATH], {
+    incremental: true
+  });
+
+  builder.build();
+}
+
+function postCompilation(baseUrl: string, diagnostics: ts.Diagnostic[]) {
+  parentPort.postMessage({
+    baseUrl: baseUrl,
+    diagnostics: diagnostics
+      .filter(d => d.file)
+      .map((diagnostic: ts.Diagnostic) => {
+        const start = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start);
+        const end = ts.getLineAndCharacterOfPosition(
+          diagnostic.file,
+          diagnostic.start + diagnostic.length
+        );
+        return {
+          code: diagnostic.code,
+          category: diagnostic.category,
+          text: ts.flattenDiagnosticMessageText(diagnostic.messageText, ts.sys.newLine),
+          start: {
+            line: start.line + 1,
+            column: start.character + 1
+          },
+          end: {
+            line: end.line + 1,
+            column: end.character + 1
+          }
+        };
+      })
+  });
 }
 
 function handleMessage(message: any) {
@@ -178,6 +174,27 @@ function cleanUp() {
   builder = undefined;
 }
 
-initializeRootTsConfig();
+function main() {
+  host = ts.createSolutionBuilderHost(
+    {
+      ...ts.sys,
+      clearScreen: () => {},
+      write: () => {}
+    },
+    createEmitAndSemanticDiagnosticsBuilderProgram
+  );
 
-parentPort.on("message", handleMessage);
+  host.reportSolutionBuilderStatus = () => {};
+
+  host.afterProgramEmitAndDiagnostics = program => {
+    postCompilation(program.getCompilerOptions().baseUrl, diagnosticMap.get(program));
+    diagnosticMap.delete(program);
+    host.reportDiagnostic = () => {};
+  };
+
+  initializeRootTsConfig();
+
+  parentPort.on("message", handleMessage);
+}
+
+main();

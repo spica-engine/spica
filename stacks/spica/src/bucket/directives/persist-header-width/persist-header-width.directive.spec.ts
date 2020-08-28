@@ -1,4 +1,4 @@
-import {Component, DebugElement} from "@angular/core";
+import {Component, DebugElement, ViewChild} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatHeaderCell, MatTableModule} from "@angular/material/table";
 import {By} from "@angular/platform-browser";
@@ -18,6 +18,7 @@ import {PersistHeaderWidthDirective} from "./persist-header-width.directive";
 })
 class TestComponent {
   bucketId: string = "test";
+  @ViewChild(PersistHeaderWidthDirective) directive: PersistHeaderWidthDirective;
 }
 
 describe("PersistHeaderWidth", () => {
@@ -53,12 +54,14 @@ describe("PersistHeaderWidth", () => {
   });
 
   it("should change the columns width to persisted value", () => {
+    let resizeSpy = spyOn(fixture.componentInstance.directive._resize, "emit");
     fixture.componentInstance.bucketId = undefined;
     fixture.detectChanges();
     setPersistedWidth(100);
     fixture.componentInstance.bucketId = "test";
     fixture.detectChanges();
-    expect(columnHeader.styles.width).toBe("100px");
+    expect(resizeSpy).toHaveBeenCalledTimes(1);
+    expect(resizeSpy).toHaveBeenCalledWith(100);
   });
 
   it("should persist the width when the column resizes", () => {

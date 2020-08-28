@@ -8,9 +8,15 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
 import {INPUT_SCHEMA} from "../../input";
 import {DateComponent} from "./date.component";
+import {DateValidatorDirective} from "./date.validator";
+import {MatFormFieldHarness} from "@angular/material/form-field/testing";
+import {HarnessLoader} from "@angular/cdk/testing";
+import {TestbedHarnessEnvironment} from "@angular/cdk/testing/testbed";
+import {MatIconModule} from "@angular/material/icon";
 
 describe("Common#date", () => {
   let fixture: ComponentFixture<DateComponent>;
+  let loader: HarnessLoader;
 
   beforeEach(() => {
     TestBed.resetTestingModule()
@@ -22,9 +28,10 @@ describe("Common#date", () => {
           MatMenuModule,
           OwlDateTimeModule,
           OwlNativeDateTimeModule,
-          NoopAnimationsModule
+          NoopAnimationsModule,
+          MatIconModule
         ],
-        declarations: [DateComponent],
+        declarations: [DateComponent, DateValidatorDirective],
         providers: [
           {
             provide: INPUT_SCHEMA,
@@ -38,6 +45,7 @@ describe("Common#date", () => {
       .compileComponents();
     fixture = TestBed.createComponent(DateComponent);
     fixture.detectChanges();
+    loader = TestbedHarnessEnvironment.loader(fixture);
   });
 
   describe("basic behavior", () => {
@@ -58,6 +66,15 @@ describe("Common#date", () => {
       const title = (fixture.componentInstance.schema.title = "my title");
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css("mat-label")).nativeElement.textContent).toBe(title);
+    });
+
+    it("should gmt date", async () => {
+      const model = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+      model.control.setValue(new Date("Aug 26, 2020, 10:23:26 AM"), {emitEvent: true});
+      fixture.detectChanges();
+      const field = await loader.getHarness(MatFormFieldHarness);
+      const [hint] = await field.getTextHints();
+      expect(hint).toBe("Aug 26, 2020, 7:23:26 AM help");
     });
 
     it("should show description if provided", () => {
@@ -81,6 +98,31 @@ describe("Common#date", () => {
       const input = fixture.debugElement.query(By.css("input"));
       input.nativeElement.click();
       expect(document.body.querySelector("owl-date-time-container")).toBeDefined();
+    });
+
+    it("should progpagate undefined when the date is not valid", () => {
+      const input = fixture.debugElement.query(By.css("input"));
+      const changeSpy = spyOn(fixture.componentInstance, "_onChangeFn");
+      expect(changeSpy).not.toHaveBeenCalled();
+      input.triggerEventHandler("keyup", {
+        keyCode: 8
+      });
+      expect(changeSpy).toHaveBeenCalledTimes(1);
+      expect(changeSpy).toHaveBeenCalledWith(undefined);
+    });
+  });
+
+  describe("errors", () => {
+    it("should show date validation errors", () => {
+      const input = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+      input.control.setValue("invalid date");
+      input.control.markAsTouched();
+      fixture.detectChanges();
+      const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
+      expect(formFieldElem.classList).toContain("ng-invalid");
+      expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
+        " Must be a valid date-time "
+      );
     });
   });
 });

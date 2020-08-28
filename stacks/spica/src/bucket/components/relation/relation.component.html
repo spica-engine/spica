@@ -5,28 +5,16 @@
       Select from {{ schema?.title }}
     </button>
     <div>
-      <span *ngFor="let row of selectedRows$ | async">
-        <button
-          mat-button
-          mat-flat-button
-          [matTooltip]="schema.primary + ' of the row'"
-          [routerLink]="['/bucket', schema._id, row._id]"
-        >
-          <mat-icon>{{ schema.icon }}</mat-icon> {{ row[schema.primary] }}
-        </button>
-        <button
-          *ngIf="_oneToManyRelation"
-          mat-icon-button
-          mat-flat-button
-          matTooltip="Remove"
-          (click)="_removeRow(row)"
-        >
-          <mat-icon>clear</mat-icon>
-        </button>
-      </span>
+      <button
+        *ngFor="let row of selectedRows$ | async"
+        mat-button
+        mat-flat-button
+        [matTooltip]="schema.primary + ' of the row'"
+        [routerLink]="['/bucket', schema._id, row._id]"
+      >
+        <mat-icon>{{ schema.icon }}</mat-icon> {{ row[schema.primary] }}
+      </button>
     </div>
-
-    <span></span>
 
     <ng-container *ngIf="value?.length">
       <button mat-icon-button mat-flat-button [matMenuTriggerFor]="selector">
@@ -43,7 +31,7 @@
 <mat-menu #selector class="mat-elevation-z24 relation-picker">
   <mat-card class="mat-elevation-z0">
     <mat-card-subtitle>
-      Select {{ _oneToManyRelation ? "some" : "a" }} {{ (schema$ | async)?.title }}
+      <span>Select {{ _oneToManyRelation ? "some" : "a" }} {{ (schema$ | async)?.title }}</span>
       <button
         mat-icon-button
         matTooltip="Filter data"
@@ -60,8 +48,9 @@
             (click)="$event.stopPropagation()"
             (filterChange)="this.filter = $event; refresh.next(undefined); filterMenu.close.emit()"
           ></bucket-filter>
-        </mat-menu></button
-    ></mat-card-subtitle>
+        </mat-menu>
+      </button>
+    </mat-card-subtitle>
     <mat-card-content>
       <mat-table [dataSource]="data$" (click)="$event.stopPropagation()">
         <ng-container

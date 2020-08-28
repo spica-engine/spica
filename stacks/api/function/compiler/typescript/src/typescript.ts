@@ -1,4 +1,4 @@
-import {Compilation, Language, Description} from "@spica-server/function/compiler";
+import {Compilation, Description, Language} from "@spica-server/function/compiler";
 import * as fs from "fs";
 import * as path from "path";
 import {fromEvent, Observable, of, throwError} from "rxjs";
@@ -19,39 +19,20 @@ export class Typescript extends Language {
 
   constructor() {
     super();
-    this.worker = new worker_threads.Worker(__dirname + "/typescript_worker.js");
-    this.worker.on("exit", exitCode => {
-      if (exitCode != 0) {
-        console.log("Compiler worker has quit with non-zero exit code.");
-      }
-    });
-    this.message$ = fromEvent<any>(this.worker, "message");
   }
 
   async compile(compilation: Compilation): Promise<void> {
-    await super.prepare(compilation);
-    const hasSpicaDevkitDatabasePackage = await fs.promises
-      .access(path.join(compilation.cwd, "node_modules", "@spica-devkit"), fs.constants.F_OK)
-      .then(() => true)
-      .catch(() => false);
-
-    if (hasSpicaDevkitDatabasePackage) {
-      const targetPath = path.join(compilation.cwd, "node_modules", "@internal");
-      await fs.promises.mkdir(targetPath, {recursive: true});
-      await fs.promises
-        .symlink(
-          path.join(compilation.cwd, "node_modules", "@spica-devkit", "database"),
-          path.join(targetPath, "database"),
-          "dir"
-        )
-        .catch(e => {
-          if (e.code == "EEXIST" || e.code == "ENOENT") {
-            // Do nothing.
-            return;
-          }
-          return Promise.reject(e);
-        });
+    if (!this.worker) {
+      this.worker = new worker_threads.Worker(path.join(__dirname, "typescript_worker.js"));
+      this.worker.once("exit", exitCode => {
+        this.worker = undefined;
+        if (exitCode != 0) {
+          console.log("Compiler worker has quit with non-zero exit code.");
+        }
+      });
+      this.message$ = fromEvent<any>(this.worker, "message");
     }
+    await super.prepare(compilation);
 
     await fs.promises
       .symlink(
@@ -67,7 +48,13 @@ export class Typescript extends Language {
         return Promise.reject(e);
       });
 
-    this.worker.postMessage(compilation);
+    setImmediate(() => {
+      // Sometimes the worker responds faster than we could capture hence
+      // the observable below just hangs indefinitely till the next message comes
+      // so we post the message after the observer subscribes
+      this.worker.postMessage(compilation);
+    });
+
     return this.message$
       .pipe(
         filter(message => message.baseUrl == compilation.cwd),
@@ -83,6 +70,9 @@ export class Typescript extends Language {
   }
 
   kill() {
-    return this.worker.terminate().then(() => {});
+    if (this.worker) {
+      return this.worker.terminate().then(() => {});
+    }
+    return Promise.resolve();
   }
 }

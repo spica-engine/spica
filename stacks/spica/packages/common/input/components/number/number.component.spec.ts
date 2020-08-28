@@ -68,19 +68,6 @@ describe("Common#number", () => {
       );
     });
 
-    it("should default to default value if undefined", fakeAsync(() => {
-      const inputElem = fixture.debugElement.query(By.css("input")).nativeElement;
-      const changeSpy = jasmine.createSpy("ngModelChange");
-      fixture.componentInstance.registerOnChange(changeSpy);
-
-      fixture.componentInstance.schema.default = 123;
-      fixture.componentInstance.writeValue(undefined);
-      fixture.detectChanges();
-      tick();
-      expect(changeSpy).toHaveBeenCalledWith(123);
-      expect(inputElem.value).toBe("123");
-    }));
-
     it("should be valid pristine and untouched", () => {
       const formFieldElem = fixture.debugElement.query(By.css("mat-form-field")).nativeElement;
       expect(formFieldElem.classList).toContain("ng-untouched");
@@ -107,6 +94,22 @@ describe("Common#number", () => {
       fixture.detectChanges();
       expect(ngModelChange).toHaveBeenCalledWith(5e1);
     }));
+
+    describe("default", () => {
+      it("should default to default value if undefined", fakeAsync(() => {
+        const inputElem = fixture.debugElement.query(By.css("input")).nativeElement;
+        const ngModelChange = jasmine.createSpy("ngModelChange");
+        fixture.componentInstance.registerOnChange(ngModelChange);
+
+        fixture.componentInstance.schema.default = 123;
+        fixture.componentInstance.writeValue(undefined);
+        fixture.detectChanges();
+        tick();
+
+        expect(ngModelChange).toHaveBeenCalledWith(123);
+        expect(inputElem.value).toBe("123");
+      }));
+    });
   });
 
   describe("with validation", () => {

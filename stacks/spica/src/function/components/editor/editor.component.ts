@@ -40,6 +40,7 @@ export class EditorComponent
 
   private editorRef: ReturnType<typeof import("monaco-editor-core").editor.create>;
   private dispose = new Subject();
+  private disposables: import("monaco-editor-core").IDisposable[] = [];
 
   private get _options(): any {
     return {
@@ -104,41 +105,45 @@ export class EditorComponent
     this.monaco = await import("monaco-editor-core");
     this.editorRef = this.monaco.editor.create(this.elementRef.nativeElement, this._options);
 
-    this.editorRef.onDidChangeModelContent(() => this.onChanged(this.editorRef.getValue()));
-    this.editorRef.onDidBlurEditorText(() => this.onTouched());
+    this.disposables.push(
+      this.editorRef.onDidChangeModelContent(() => this.onChanged(this.editorRef.getValue())),
+      this.editorRef.onDidBlurEditorText(() => this.onTouched())
+    );
 
     this.init.emit(this.editorRef);
 
-    monaco.languages.registerDocumentFormattingEditProvider("typescript", {
-      provideDocumentFormattingEdits: (model, options) => {
-        formatter.postMessage({
-          value: model.getValue(),
-          tabSize: options.tabSize,
-          useSpaces: options.insertSpaces
-        });
-        return format
-          .pipe(take(1))
-          .pipe(
-            map(formattedText => {
-              const model = this.editorRef.getModel();
-              const lastLine = model.getLineCount() - 1;
-              const lastColumn = model.getLinesContent()[lastLine].length;
-              return [
-                {
-                  range: {
-                    startLineNumber: 0,
-                    startColumn: 0,
-                    endLineNumber: lastLine + 1,
-                    endColumn: lastColumn + 1
-                  },
-                  text: formattedText
-                }
-              ];
-            })
-          )
-          .toPromise();
-      }
-    });
+    this.disposables.push(
+      monaco.languages.registerDocumentFormattingEditProvider("typescript", {
+        provideDocumentFormattingEdits: (model, options) => {
+          formatter.postMessage({
+            value: model.getValue(),
+            tabSize: options.tabSize,
+            useSpaces: options.insertSpaces
+          });
+          return format
+            .pipe(take(1))
+            .pipe(
+              map(formattedText => {
+                const model = this.editorRef.getModel();
+                const lastLine = model.getLineCount() - 1;
+                const lastColumn = model.getLinesContent()[lastLine].length;
+                return [
+                  {
+                    range: {
+                      startLineNumber: 0,
+                      startColumn: 0,
+                      endLineNumber: lastLine + 1,
+                      endColumn: lastColumn + 1
+                    },
+                    text: formattedText
+                  }
+                ];
+              })
+            )
+            .toPromise();
+        }
+      })
+    );
 
     this.editorRef.addCommand(this.monaco.KeyMod.CtrlCmd | this.monaco.KeyCode.KEY_S, () =>
       this.zone.run(() => this.save.emit())
@@ -187,7 +192,7 @@ export class EditorComponent
       if (changes.theme) {
         this.monaco.editor.setTheme(this.theme);
       }
-      if (changes.marker) {
+      if (changes.markers) {
         this.monaco.editor.setModelMarkers(this.editorRef.getModel(), this.language, this.markers);
       }
     }
@@ -196,6 +201,9 @@ export class EditorComponent
   ngOnDestroy(): void {
     if (this.editorRef) {
       this.editorRef.dispose();
+    }
+    for (const disposable of this.disposables) {
+      disposable.dispose();
     }
     this.dispose.next();
   }

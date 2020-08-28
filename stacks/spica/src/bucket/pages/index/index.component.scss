@@ -1,4 +1,6 @@
 ::ng-deep .filter-menu {
+  max-width: unset !important;
+  width: 380px;
   .mat-menu-content {
     width: 100%;
     padding: 30px 0 20px !important;
@@ -22,6 +24,7 @@
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
+    flex-direction: column;
 
     span:first-of-type {
       h4 {
@@ -48,16 +51,28 @@
       }
 
       h6 {
-        font-size: 14px;
+        margin-top: -10px;
+        font-size: 13px;
+        .mat-icon {
+          font-size: 17px;
+        }
+      }
+
+      h5 {
+        font-size: 15px;
       }
     }
 
-    .space-between {
-      flex: 1 1 auto;
-    }
+    div.actions {
+      max-width: 100%;
+      align-self: flex-end;
+      overflow-x: scroll;
 
-    button.delete {
-      margin-right: 20px;
+      -ms-overflow-style: none; /* Internet Explorer 10+ */
+      scrollbar-width: none; /* Firefox */
+      &::-webkit-scrollbar {
+        display: none; /* Safari and Chrome */
+      }
     }
   }
   ::ng-deep div.monaco-editor {

@@ -40,6 +40,7 @@ docs(
     srcs = [
         "src/function.controller.ts",
     ],
+    doc_name = "function",
     tags = ["function-docs"],
     exports = [
         "Function",

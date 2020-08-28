@@ -87,21 +87,9 @@
     }
 
     mat-card-actions {
-      margin: 0;
-      padding: 0;
-      text-align: end;
-
-      > button {
-        span,
-        mat-progress-spinner {
-          display: inline-block;
-          vertical-align: middle;
-        }
-        span {
-          margin-left: 4px;
-        }
-      }
-
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
       form {
         display: inline;
         mat-form-field {

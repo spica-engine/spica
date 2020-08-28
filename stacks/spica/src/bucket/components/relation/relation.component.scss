@@ -2,13 +2,17 @@
   .mat-menu-panel.relation-picker {
     max-width: unset !important;
     mat-card {
+      mat-card-subtitle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
       mat-table {
         mat-header-row,
         mat-row {
           mat-header-cell,
           mat-cell {
-            &:first-of-type,
-            &:nth-of-type(2) {
+            &:first-of-type {
               flex: 5;
             }
             &:last-of-type {
@@ -49,19 +53,13 @@
     div {
       overflow-x: auto;
       max-height: 180px;
-      span {
-        button:first-of-type {
-          margin: 5px;
-        }
-        button:nth-of-type(2) {
-          margin-left: -15px;
-          display: none;
-          transition: all 0.2s ease-in-out;
-        }
-        &:hover > button:nth-of-type(2) {
-          display: initial;
-        }
+      button {
+        margin: 5px;
       }
+    }
+
+    > button {
+      margin-left: 5px;
     }
 
     span {

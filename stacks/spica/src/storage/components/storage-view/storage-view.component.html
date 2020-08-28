@@ -12,6 +12,7 @@
     preload="none"
     (error)="viewError($event)"
     (loadedmetadata)="ready = true"
+    [autoplay]="autoplay"
   >
     <source [src]="content" [type]="contentType" />
     Your browser does not support the video tag.

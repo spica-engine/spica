@@ -3,137 +3,148 @@
     <h4>
       <mat-icon>{{ schema.icon }}</mat-icon>
       <span>{{ schema.title }}</span>
+
+      <mat-chip-list *ngIf="schema.readOnly">
+        <mat-chip disableRipple>Read Only</mat-chip>
+      </mat-chip-list>
+      <mat-spinner *ngIf="!loaded" color="accent" diameter="20" @smooth></mat-spinner>
+    </h4>
+
+    <h6>
+      Bucket ID: {{ schema._id }}
       <button
         mat-icon-button
         #clipboard="matClipboard"
         [matClipboard]="bucketId"
         (mouseenter)="$event.stopImmediatePropagation()"
       >
-        <mat-icon [matTooltip]="clipboard.icon == 'info' ? 'Copy to clipboard' : 'Copied!'">
+        <mat-icon [matTooltip]="clipboard.toolTip">
           {{ clipboard.icon }}
         </mat-icon>
       </button>
-      <mat-chip-list *ngIf="schema.readOnly">
-        <mat-chip disableRipple>Read Only</mat-chip>
-      </mat-chip-list>
-      <mat-spinner *ngIf="!loaded" color="accent" diameter="20" @smooth></mat-spinner>
-    </h4>
-    <h6>{{ schema.description }}</h6>
+    </h6>
+
+    <h5>
+      {{ schema.description }}
+    </h5>
   </span>
 
-  <span class="space-between"></span>
+  <div class="actions">
+    <button
+      *ngIf="selectedItems.length > 0"
+      class="delete mat-elevation-z0"
+      mat-button
+      mat-raised-button
+      color="warn"
+      [disabled]="readOnly"
+      [matTooltip]="'Delete ' + selectedItems.length + ' entries.'"
+      [matAwareDialog]="{
+        title: 'Confirmation',
+        templateOrDescription: deleteRowsDialog,
+        answer: 'agree'
+      }"
+      (confirm)="deleteSelectedItems()"
+    >
+      <mat-icon>delete</mat-icon>
+      Delete
+    </button>
+    <button
+      *ngIf="!readOnly"
+      mat-button
+      canInteract="bucket:data:create"
+      matTooltip="Add new"
+      routerLink="add"
+    >
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
+    <button mat-button matTooltip="Refresh data" (click)="refresh.next()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+    <button
+      mat-button
+      matTooltip="Filter data"
+      [matMenuTriggerFor]="filterMenu"
+      [color]="filterer.active ? 'accent' : ''"
+    >
+      <mat-icon>filter_alt</mat-icon>
+      Filter
+      <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+        <bucket-filter
+          #filterer
+          [filter]="filter"
+          [schema]="schema"
+          (filterChange)="this.filter = $event; refresh.emit()"
+        ></bucket-filter>
+      </mat-menu>
+    </button>
 
-  <button
-    *ngIf="selectedItems.length > 0"
-    class="delete mat-elevation-z0"
-    mat-icon-button
-    mat-raised-button
-    color="warn"
-    [disabled]="readOnly"
-    [matTooltip]="'Delete ' + selectedItems.length + ' entries.'"
-    [matAwareDialog]="{
-      title: 'Confirmation',
-      templateOrDescription: deleteRowsDialog,
-      answer: 'agree'
-    }"
-    (confirm)="deleteSelectedItems()"
-  >
-    <mat-icon>delete</mat-icon>
-  </button>
-
-  <button
-    mat-icon-button
-    [matTooltip]="(showScheduled ? 'Hide' : 'Show') + ' scheduled documents'"
-    [color]="showScheduled ? 'accent' : 'secondary'"
-    (click)="toggleScheduled()"
-  >
-    <mat-icon>schedule</mat-icon>
-  </button>
-
-  <button mat-icon-button matTooltip="Toggle columns" [matMenuTriggerFor]="propertiesMenu">
-    <mat-icon>view_column</mat-icon>
-    <mat-menu xPosition="before" #propertiesMenu="matMenu">
-      <button mat-menu-item (click)="$event.stopPropagation()">
-        <mat-checkbox
-          [ngModel]="properties.length == displayedProperties.length"
-          [indeterminate]="
-            displayedProperties.length > 1 && displayedProperties.length < properties.length
-          "
-          (ngModelChange)="toggleDisplayAll($event, schema)"
-        >
-          Display all
-        </mat-checkbox>
-      </button>
-      <mat-divider></mat-divider>
-      <button
-        mat-menu-item
-        disableRipple
-        *ngFor="let property of properties"
-        [disabled]="property.name == '$$spicainternal_select' && readOnly"
-        (click)="$event.stopPropagation()"
-      >
-        <mat-checkbox
-          [disabled]="property.name == '$$spicainternal_select' && readOnly"
-          [ngModel]="displayedProperties.indexOf(property.name) > -1"
-          (ngModelChange)="toggleProperty(property.name, $event)"
-        >
-          {{ property.title }}
-        </mat-checkbox>
-      </button>
-    </mat-menu>
-  </button>
-
-  <button mat-icon-button matTooltip="Change language" [matMenuTriggerFor]="languageMenu">
-    <mat-icon>translate</mat-icon>
-    <mat-menu #languageMenu="matMenu">
-      <ng-template matMenuContent>
+    <button mat-button matTooltip="Toggle columns" [matMenuTriggerFor]="propertiesMenu">
+      <mat-icon>view_column</mat-icon>
+      Columns
+      <mat-menu xPosition="before" #propertiesMenu="matMenu">
+        <button mat-menu-item (click)="$event.stopPropagation()">
+          <mat-checkbox
+            [ngModel]="properties.length == displayedProperties.length"
+            [indeterminate]="
+              displayedProperties.length > 1 && displayedProperties.length < properties.length
+            "
+            (ngModelChange)="toggleDisplayAll($event, schema)"
+          >
+            Display all
+          </mat-checkbox>
+        </button>
+        <mat-divider></mat-divider>
         <button
           mat-menu-item
-          *ngFor="let languageKv of ($preferences | async)?.language.available | keyvalue"
-          (click)="language = languageKv.key; refresh.next()"
+          disableRipple
+          *ngFor="let property of properties"
+          [disabled]="property.name == '$$spicainternal_select' && readOnly"
+          (click)="$event.stopPropagation()"
         >
-          {{ languageKv.value }} ({{ languageKv.key }})
+          <mat-checkbox
+            [disabled]="property.name == '$$spicainternal_select' && readOnly"
+            [ngModel]="displayedProperties.indexOf(property.name) > -1"
+            (ngModelChange)="toggleProperty(property.name, $event)"
+          >
+            {{ property.title }}
+          </mat-checkbox>
         </button>
-      </ng-template>
-    </mat-menu>
-  </button>
+      </mat-menu>
+    </button>
 
-  <button
-    mat-icon-button
-    matTooltip="Filter data"
-    [matMenuTriggerFor]="filterMenu"
-    [color]="filterer.active ? 'accent' : ''"
-  >
-    <mat-icon>filter_list</mat-icon>
-    <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
-      <bucket-filter
-        #filterer
-        [filter]="filter"
-        [schema]="schema"
-        (filterChange)="this.filter = $event; refresh.emit()"
-      ></bucket-filter>
-    </mat-menu>
-  </button>
-  <button
-    mat-icon-button
-    [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'"
-    (click)="guide = !guide"
-  >
-    <mat-icon>contact_support</mat-icon>
-  </button>
-  <button mat-icon-button matTooltip="Refresh data" (click)="refresh.next()">
-    <mat-icon>refresh</mat-icon>
-  </button>
+    <button mat-button matTooltip="Change language" [matMenuTriggerFor]="languageMenu">
+      <mat-icon>translate</mat-icon>
+      Translate
+      <mat-menu #languageMenu="matMenu">
+        <ng-template matMenuContent>
+          <button
+            mat-menu-item
+            *ngFor="let languageKv of ($preferences | async)?.language.available | keyvalue"
+            (click)="language = languageKv.key; refresh.next()"
+          >
+            {{ languageKv.value }} ({{ languageKv.key }})
+          </button>
+        </ng-template>
+      </mat-menu>
+    </button>
 
-  <button
-    *ngIf="!readOnly"
-    mat-icon-button
-    canInteract="bucket:data:create"
-    matTooltip="Add new"
-    routerLink="add"
-  >
-    <mat-icon>add</mat-icon>
-  </button>
+    <button
+      mat-button
+      [matTooltip]="(showScheduled ? 'Hide' : 'Show') + ' scheduled documents'"
+      [color]="showScheduled ? 'accent' : 'secondary'"
+      (click)="toggleScheduled()"
+    >
+      <mat-icon>schedule</mat-icon>
+      Schedule
+    </button>
+
+    <button mat-button [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'" (click)="guide = !guide">
+      <mat-icon>contact_support</mat-icon>
+      Guide
+    </button>
+  </div>
 </mat-toolbar>
 
 <div class="data-guide">
@@ -214,8 +225,8 @@
               mat-header-cell
               *matHeaderCellDef
               mat-sort-header
-              mat-resize-header
               [persist-header-width]="schema._id"
+              mat-resize-header
             >
               {{ property.value.title }}
             </th>

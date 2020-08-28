@@ -85,6 +85,7 @@
   </mat-card-content>
   <mat-card-actions>
     <button
+      class="save-button"
       [canInteract]="webhook._id ? 'webhook:update' : 'webhook:create'"
       [resource]="webhook._id"
       mat-button
@@ -93,7 +94,7 @@
       [disabled]="form.invalid || !!state"
       (click)="save()"
     >
-      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-icon *ngSwitchDefault>save</mat-icon>
       <mat-progress-spinner
         *ngSwitchCase="'saving'"
         [diameter]="18"

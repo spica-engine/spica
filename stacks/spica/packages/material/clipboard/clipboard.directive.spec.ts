@@ -43,22 +43,27 @@ describe("ClipboardDirective", () => {
     });
 
     it("should create component", () => {
-      expect(component).toBeDefined();
       expect(component.directive.text).toBe("test");
+      expect(component.directive.toolTip).toBe("Copy to clipboard");
+      expect(component.directive.icon).toBe("content_paste");
     });
 
-    it("should change icon as check while copying text", () => {
+    it("should change icon and toolTip while copying text", () => {
       copyButton.click();
       fixture.detectChanges();
       expect(copyButton.textContent).toBe("check");
+      expect(component.directive.icon).toBe("check");
+      expect(component.directive.toolTip).toBe("Copied!");
     });
 
-    it("should back to info icon and copied the text ", fakeAsync(async () => {
+    it("should back to content_paste icon and copied the text ", fakeAsync(async () => {
       copyButton.click();
       tick(1001);
       fixture.detectChanges();
       await fixture.whenStable();
-      expect(copyButton.textContent).toBe("info");
+      expect(copyButton.textContent).toBe("content_paste");
+      expect(component.directive.icon).toBe("content_paste");
+      expect(component.directive.toolTip).toBe("Copy to clipboard");
     }));
 
     it("should prepare input element for copying", () => {
@@ -105,7 +110,7 @@ describe("ClipboardDirective", () => {
       const copyButton = fixture.debugElement.nativeElement.querySelector("button");
       copyButton.click();
       fixture.detectChanges();
-      expect(copyButton.textContent).toBe("info");
+      expect(copyButton.textContent).toBe("content_paste");
     });
   });
 });

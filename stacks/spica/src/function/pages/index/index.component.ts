@@ -18,10 +18,6 @@ export class IndexComponent implements OnInit {
     this.$data = this.functionService.getFunctions();
   }
 
-  refresh(): void {
-    this.functionService.loadFunctions().toPromise();
-  }
-
   delete(id: string): void {
     this.functionService.delete(id).toPromise();
   }

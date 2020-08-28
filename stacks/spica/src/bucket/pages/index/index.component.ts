@@ -127,7 +127,7 @@ export class IndexComponent implements OnInit {
         this.bds.find(this.bucketId, {
           language: this.language,
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
-          sort: this.sort && Object.keys(this.sort).length > 0 && this.sort,
+          sort: Object.keys(this.sort).length > 0 ? this.sort : {_id: -1},
           limit: this.paginator.pageSize || 10,
           skip: this.paginator.pageSize * this.paginator.pageIndex,
           schedule: this.showScheduled
@@ -225,7 +225,9 @@ export class IndexComponent implements OnInit {
 
   sortChange(sort: Sort) {
     if (sort.direction) {
-      this.sort = {[sort.active]: sort.direction === "asc" ? 1 : -1};
+      this.sort = {
+        [sort.active.replace("$$spicainternal", "")]: sort.direction === "asc" ? 1 : -1
+      };
     } else {
       this.sort = {};
     }

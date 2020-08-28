@@ -27,9 +27,11 @@ export class FunctionModule {
           databaseReplicaSet: options.databaseReplicaSet,
           databaseUri: options.databaseUri,
           poolSize: options.poolSize,
-          publicUrl: options.publicUrl,
+          poolMaxSize: options.poolMaxSize,
+          apiUrl: options.apiUrl,
           timeout: options.timeout,
-          experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache
+          experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
+          corsOptions: options.corsOptions
         })
       ],
       controllers: [FunctionController],
@@ -38,7 +40,10 @@ export class FunctionModule {
         FunctionService,
         {
           provide: FUNCTION_OPTIONS,
-          useValue: {root: path.join(options.path, "functions"), timeout: options.timeout}
+          useValue: {
+            root: path.join(options.path, "functions"),
+            timeout: options.timeout
+          }
         },
         {
           provide: EnqueuerSchemaResolver,

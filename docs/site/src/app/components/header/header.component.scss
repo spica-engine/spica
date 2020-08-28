@@ -3,6 +3,7 @@
     margin-top: 15px;
     min-width: 200px;
     background: none;
+    border-radius: 10px !important;
     &::before {
       display: block;
       content: "";
@@ -33,20 +34,30 @@
   flex-flow: column;
   justify-content: space-between;
   nav {
-    max-width: 80%;
-    margin-left: 10%;
-    padding-top: 40px;
-    &.sm {
-      max-width: 90%;
-      margin-left: 12%;
+    li:focus,
+    img:focus {
+      outline: 0;
     }
-    &.xs {
-      max-width: unset;
-      margin-left: unset;
-      ul li:last-child a span {
-        padding: 2px 6px;
+    div:first-of-type {
+      margin-bottom: 20px;
+      ul:first-of-type li:first-of-type a {
+        color: white;
+        font-size: 1rem;
+        padding: 0px 20px;
+        border-radius: 15px;
+        background-color: #15bde8;
+        line-height: 28px !important;
       }
     }
+
+    div:nth-child(2) {
+      img {
+        cursor: pointer;
+        max-width: 50%;
+      }
+    }
+
+    margin: 0 10%;
     span {
       .beta {
         position: absolute;

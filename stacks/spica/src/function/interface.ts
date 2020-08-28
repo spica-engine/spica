@@ -110,11 +110,13 @@ export interface LogFilter {
   function: string[];
   begin?: Date;
   end?: Date;
+  limit: number;
+  sort: {[key: string]: 1 | -1};
 }
 
 export interface Log {
   _id: string;
-  function: string;
+  function: Function | string;
   event_id: string;
   content: string;
   channel: "stderr" | "stdout";

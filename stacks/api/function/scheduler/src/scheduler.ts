@@ -20,7 +20,7 @@ import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
-import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
+import {ENQUEUER, EnqueuerFactory, ENQUEUER1} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 
 @Injectable()
@@ -43,7 +43,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     private http: HttpAdapterHost,
     private database: DatabaseService,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
-    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
+    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
+    @Optional() @Inject(ENQUEUER1) private enqueuerFactory1: EnqueuerFactory<unknown, unknown>
   ) {
     this.output = new DatabaseOutput(database);
 
@@ -52,7 +53,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.runtimes.set("node", new Node());
     this.pkgmanagers.set("node", new Npm());
 
-    this.queue = new EventQueue(this.schedule.bind(this), this.scheduled.bind(this));
+    this.queue = new EventQueue(this.schedule.bind(this), this.yield.bind(this));
 
     this.httpQueue = new HttpQueue();
     this.queue.addQueue(this.httpQueue);
@@ -66,7 +67,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     this.enqueuers.add(
-      new HttpEnqueuer(this.queue, this.httpQueue, this.http.httpAdapter.getInstance())
+      new HttpEnqueuer(
+        this.queue,
+        this.httpQueue,
+        this.http.httpAdapter.getInstance(),
+        this.options.corsOptions
+      )
     );
 
     this.enqueuers.add(
@@ -79,8 +85,15 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
+    // TODO: find a more idiomatic way to do this.
     if (typeof this.enqueuerFactory == "function") {
       const factory = this.enqueuerFactory(this.queue);
+      this.queue.addQueue(factory.queue);
+      this.enqueuers.add(factory.enqueuer);
+    }
+
+    if (typeof this.enqueuerFactory1 == "function") {
+      const factory = this.enqueuerFactory1(this.queue);
       this.queue.addQueue(factory.queue);
       this.enqueuers.add(factory.enqueuer);
     }
@@ -93,8 +106,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    for (const worker of this.pool.values()) {
-      worker.kill();
+    for (const [id, worker] of this.pool.entries()) {
+      await worker.kill();
+      this.pool.delete(id);
     }
     for (const language of this.languages.values()) {
       await language.kill();
@@ -103,6 +117,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   private schedule() {
+    if (this.pool.size >= this.options.poolMaxSize) {
+      return;
+    }
     const id: string = uniqid();
     const worker = this.runtimes.get("node").spawn({
       id,
@@ -110,18 +127,24 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
         __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
         __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
-        __INTERNAL__SPICA__PUBLIC_URL__: this.options.publicUrl,
+        __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
         __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
           ? "true"
           : ""
       }
     });
     this.pool.set(id, worker);
+    // Do not enable autospawn under testing
+    if (!process.env.TEST_TARGET) {
+      worker.once("exit", () => {
+        this.pool.delete(id);
+        this.schedule();
+      });
+    }
   }
 
-  private scheduled(event: Event.Event, workerId: string) {
+  private yield(event: Event.Event, workerId: string) {
     const worker = this.pool.get(workerId);
-    this.pool.delete(workerId);
     const [stdout, stderr] = this.output.create({
       eventId: event.id,
       functionId: event.target.id
@@ -134,9 +157,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.kill();
     }, timeoutInSeconds * 1000);
     worker.attach(stdout, stderr);
-    worker.once("exit", () => {
-      clearTimeout(timeout);
-    });
+    worker.once("exit", () => clearTimeout(timeout));
   }
 
   /**

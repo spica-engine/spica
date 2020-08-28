@@ -15,6 +15,7 @@
         <mat-divider></mat-divider>
         <mat-list-item>
           <mat-form-field>
+            <mat-label>Name</mat-label>
             <input
               matInput
               placeholder="Name"
@@ -35,6 +36,7 @@
             </mat-error>
           </mat-form-field>
           <mat-form-field>
+            <mat-label>Description</mat-label>
             <textarea
               matInput
               placeholder="Description"
@@ -58,6 +60,7 @@
             </mat-error>
           </mat-form-field>
           <mat-form-field>
+            <mat-label>Language</mat-label>
             <mat-select
               placeholder="Language"
               [(ngModel)]="function.language"
@@ -164,6 +167,7 @@
           [ngModelGroup]="i"
         >
           <mat-form-field>
+            <mat-label>Handler</mat-label>
             <input
               matInput
               required
@@ -289,9 +293,10 @@
 
           <mat-list-item>
             <mat-form-field>
+              <mat-label>Dependency name</mat-label>
               <input
                 matInput
-                placeholder="Dependency Name"
+                placeholder="Dependency name"
                 (keyup.enter)="addDependency(dependencyModel.value)"
                 name="dependencyName"
                 required
@@ -331,13 +336,21 @@
           class="environment"
         >
           <mat-form-field>
+            <mat-label>Key</mat-label>
             <input matInput placeholder="Key" [(ngModel)]="env.key" name="key" />
           </mat-form-field>
           <mat-form-field>
-            <input matInput placeholder="Value" [(ngModel)]="env.value" name="value" />
+            <mat-label>Value</mat-label>
+            <textarea
+              matInput
+              placeholder="Value"
+              [(ngModel)]="env.value"
+              name="value"
+              rows="1"
+            ></textarea>
           </mat-form-field>
           <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
-            <mat-icon>remove</mat-icon>
+            <mat-icon>delete</mat-icon>
           </button>
         </mat-list-item>
       </mat-list>
@@ -345,6 +358,7 @@
   </mat-card-content>
   <mat-card-actions>
     <button
+      class="save-button"
       mat-button
       *matSave="$save | async; let state"
       [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
@@ -353,7 +367,7 @@
       (click)="save()"
       [ngSwitch]="state"
     >
-      <mat-icon *ngSwitchDefault>sync</mat-icon>
+      <mat-icon *ngSwitchDefault>save</mat-icon>
       <mat-progress-spinner
         *ngSwitchCase="'saving'"
         [diameter]="18"

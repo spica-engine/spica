@@ -3,20 +3,26 @@
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
+    flex-direction: column;
     h4 > * {
       margin-left: 5px;
       vertical-align: middle;
     }
-    .space-between {
-      flex: 1 1 auto;
+    button:last-of-type {
+      align-self: flex-end;
+      margin-top: 60px;
     }
+  }
+
+  .log-viewport {
+    height: 500px;
+    width: 100%;
   }
 
   mat-card {
     width: calc(100% - 60px);
     margin: 30px;
     margin-top: -110px;
-    padding: 24px;
 
     > *:first-child {
       margin-right: 5px;
@@ -25,58 +31,99 @@
     > *:not(:first-child):not(mat-table) {
       margin: 0px 10px;
     }
+  }
 
-    mat-table {
-      max-width: 100%;
-      mat-header-row mat-header-cell {
-        flex: unset;
-        &.mat-column-function {
-          padding-right: 10px;
-          text-align: center;
+  .mat-card-content {
+    height: 100%;
+    .empty-list {
+      display: flex;
+      justify-content: center;
+    }
+    .cdk-virtual-scroll-viewport {
+      div:first-of-type {
+        margin-right: 24px;
+        padding: 0px 24px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        span {
+          display: inline-block;
+          word-wrap: break-word;
         }
-        &.mat-column-timestamp {
-          min-width: 200px;
+        span:nth-child(1) {
+          width: 15%;
+          margin: 10px 5px 10px 0px;
+        }
+        span:nth-child(2) {
+          width: 15%;
+          margin: 10px 5px;
+        }
+        span:last-of-type {
+          width: 70%;
+          margin: 10px 0px 10px 5px;
         }
       }
-      mat-row:nth-child(even) {
-        cursor: pointer;
-        mat-cell {
-          white-space: nowrap;
-          flex: unset;
-          &.mat-column-function {
-            padding-right: 10px;
-            text-align: center;
+
+      ::ng-deep .mat-expansion-panel {
+        box-shadow: none;
+        border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1) !important;
+      }
+
+      .mat-expansion-panel  {
+        pre {
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+        .mat-expansion-panel-header {
+          height: 50px !important;
+        }
+        .mat-expansion-panel-header {
+          span {
+            display: flex;
+            align-items: center;
           }
-          &.mat-column-timestamp {
-            min-width: 200px;
+          span:nth-child(1) {
+            width: 15%;
+            word-break: break-word;
+            margin: 10px 5px 10px 0px;
           }
-          &.mat-column-content {
-            flex: 1;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+          span:nth-child(2) {
+            width: 15%;
+            word-break: break-word;
+            margin: 10px 5px;
+            outline: none;
             mat-icon {
-              margin-right: 5px;
+              opacity: 0;
+              will-change: opacity;
+              transition: opacity 0.1s ease-in;
+              margin-left: 15px;
+            }
+            &:hover  {
+              mat-icon {
+                opacity: 1;
+              }
+            }
+            &.active {
+              pointer-events: none;
+            }
+          }
+          span:last-of-type {
+            word-break: break-all;
+            overflow: hidden;
+            width: 70%;
+            margin: 10px 0px 10px 5px;
+            span {
+              display: inline-block;
+              width: 100%;
+              height: 30px;
+              line-height: 30px;
             }
           }
         }
       }
 
-      mat-row:nth-child(odd) {
-        min-height: 0;
-        mat-cell {
-          overflow: hidden;
-          white-space: pre-wrap;
-          line-height: 20px;
-          opacity: 0.8;
-          &[channel="stderr"] {
-            color: var(--warn-500);
-          }
-          div {
-            padding-top: 10px;
-            padding-bottom: 10px;
-          }
-        }
+      .mat-progress-spinner {
+        margin: 15px auto;
       }
     }
   }

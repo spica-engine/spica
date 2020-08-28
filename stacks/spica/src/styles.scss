@@ -68,34 +68,23 @@ body {
   padding: 0px !important;
 }
 
-.mat-form-field {
-  padding-top: 1em !important;
-  &.mat-focused {
-    .mat-form-field-infix {
-      box-shadow: 3px 3px 5px var(--foreground-base-rgb) !important;
-    }
-  }
-  .mat-form-field-flex {
+mat-form-field {
+  .mat-form-field-outline {
     background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
     border-radius: 5px;
-    .mat-form-field-infix {
-      padding: 0.875em 0.75em !important;
-      border: 0px;
+    > * {
+      visibility: hidden;
     }
   }
-  .mat-form-field-infix {
-    .mat-form-field-label {
-      transform: translate(0.75em, 0.4375em) scale(1);
-    }
+}
+
+.save-button {
+  float: right;
+  mat-icon {
+    margin-right: 5px;
   }
-  &.mat-form-field-should-float {
-    .mat-form-field-infix {
-      .mat-form-field-label {
-        transform: translate(0.75em, -1.26em) scale(0.84375em) !important;
-      }
-    }
-  }
-  .mat-form-field-underline {
-    opacity: 0 !important;
+  mat-progress-spinner {
+    display: inline-block;
+    margin-right: 5px;
   }
 }

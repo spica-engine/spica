@@ -158,13 +158,17 @@ describe("Relation Component", () => {
   it("should clear selected row(s)", () => {
     fixture.componentInstance.value = "1";
     fixture.detectChanges();
+    expect(onChangeSpy).not.toHaveBeenCalled();
+
     fixture.debugElement
       .query(By.css("section button:last-of-type"))
       .triggerEventHandler("click", undefined);
 
     fixture.detectChanges();
     const row = fixture.debugElement.query(By.css("section div span"));
+
     expect(row).not.toBeTruthy();
+    expect(onChangeSpy).toHaveBeenCalledWith(undefined);
   });
 
   describe("many to many", () => {
@@ -198,12 +202,7 @@ describe("Relation Component", () => {
       const pickButtons = document.querySelectorAll(".mat-menu-panel mat-cell button");
       pickButtons[0].dispatchEvent(new MouseEvent("click"));
       pickButtons[1].dispatchEvent(new MouseEvent("click"));
-      fixture.detectChanges();
-
-      fixture.debugElement
-        .query(By.css("section div span:first-of-type button:last-of-type"))
-        .triggerEventHandler("click", "undefined");
-
+      pickButtons[0].dispatchEvent(new MouseEvent("click"));
       fixture.detectChanges();
 
       const row = fixture.debugElement.query(By.css("section div span button"));

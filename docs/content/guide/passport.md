@@ -1,4 +1,4 @@
-## Passport
+# Passport
 
 Fundamentally, this module is used for authentication and authorization on Spica Client and API.
 
