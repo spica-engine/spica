@@ -6,7 +6,6 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatSortModule} from "@angular/material/sort";
-import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {MatCardModule} from "@angular/material/card";
@@ -26,6 +25,11 @@ import {DashboardComponent} from "./pages/dashboard/dashboard.component";
 import {DashboardInitializer} from "./services/dashboard.initializer";
 import {DashboardService} from "./services/dashboard.service";
 import * as fromDashboard from "./state/dashboard.reducer";
+import {TutorialComponent} from "./pages/tutorial/tutorial.component";
+import {MatStepperModule} from "@angular/material/stepper";
+import {MatSelectModule} from "@angular/material/select";
+import {MatTabsModule} from "@angular/material/tabs";
+import {MatTableModule} from "@angular/material/table";
 
 @NgModule({
   imports: [
@@ -43,16 +47,20 @@ import * as fromDashboard from "./state/dashboard.reducer";
     MatButtonModule,
     MatTooltipModule,
     MatSortModule,
-    MatTableModule,
     StoreModule.forFeature("dashboard", fromDashboard.reducer),
     InputModule,
-    FormsModule
+    FormsModule,
+    MatStepperModule,
+    MatSelectModule,
+    MatTabsModule,
+    MatTableModule
   ],
   declarations: [
     DashboardComponent,
     DashboardViewComponent,
     DashboardTableComponent,
-    DashboardChartComponent
+    DashboardChartComponent,
+    TutorialComponent
   ],
   providers: [
     DashboardService,
