@@ -5,10 +5,12 @@
   "description": "Full access to passport api service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "passport:apikey:*",
-      "resource": "*",
-      "service": "passport:apikey"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:apikey"
     }
   ]
 }

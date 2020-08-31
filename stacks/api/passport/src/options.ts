@@ -1,4 +1,4 @@
-import { IdentityOptions } from "@spica-server/passport/identity";
+import {IdentityOptions} from "@spica-server/passport/identity";
 
 export const PASSPORT_OPTIONS = Symbol.for("PASSPORT_OPTIONS");
 

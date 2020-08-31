@@ -5,16 +5,20 @@
 	"description": "Full access to bucket service.",
 	"statement": [
 		{
-			"effect": "allow",
 			"action": "bucket:*",
-			"resource": "*",
-			"service": "bucket"
+			"resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "bucket"
 		},
 		{
-			"effect": "allow",
 			"action": "bucket:data:*",
-			"resource": "*",
-			"service": "bucket:data"
+			"resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "bucket:data"
 		}
 	]
 }

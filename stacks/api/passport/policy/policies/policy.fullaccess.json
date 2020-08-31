@@ -5,10 +5,12 @@
   "description": "Full access to passport policy service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "passport:policy:*",
-      "resource": "*",
-      "service": "passport:policy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:policy"
     }
   ]
 }

@@ -1,10 +1,9 @@
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
 import {ObjectId} from "@spica-server/database";
 import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
-import {ActionGuard, createGuard} from "@spica-server/passport/guard";
+import {GuardService} from "@spica-server/passport";
 import {fromEvent, Observable} from "rxjs";
 import {takeUntil, tap} from "rxjs/operators";
-import { ModuleRef } from "@nestjs/core";
 
 @WebSocketGateway(31, {
   path: "/function/logs"
@@ -12,20 +11,20 @@ import { ModuleRef } from "@nestjs/core";
 export class LogGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
 
-  constructor(
-    private realtime: RealtimeDatabaseService,
-    private moduleRef: ModuleRef
-  ) {}
+  constructor(private realtime: RealtimeDatabaseService, private guardService: GuardService) {}
 
   async handleConnection(client: WebSocket, req) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
 
-    // try {
-    //   await this.authGuardService.check(req, client);
-    // } catch (e) {
-    //   client.send(JSON.stringify({code: e.status || 500, message: e.message}));
-    //   return client.close(1003);
-    // }
+    try {
+      await this.guardService.checkAuthorization({
+        request: req,
+        response: client
+      });
+    } catch (e) {
+      client.send(JSON.stringify({code: e.status || 500, message: e.message}));
+      return client.close(1003);
+    }
 
     const options: any = {};
 

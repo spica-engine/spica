@@ -5,10 +5,12 @@
   "description": "Read only access to dashboard service.",
   "statement": [
 		{
-			"effect": "allow",
 			"action": "dashboard:index",
-			"resource": "*",
-			"service": "dashboard"
+			"resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "dashboard"
 		}
 	]
 }

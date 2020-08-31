@@ -5,7 +5,7 @@ import {
   createLastDecision,
   filterAndMapStatements,
   Statement
-} from "@spica-server/passport/guard/src/operators";
+} from "@spica-server/passport/guard/src/";
 
 describe("ActionGuard Operators", () => {
   describe("wrapper", () => {

@@ -5,28 +5,37 @@
   "description": "Read only access to passport identity service and policy service.",
   "statement": [
     {
-      "effect": "allow",
+
       "action": "passport:identity:index",
-      "resource": "*",
-      "service": "passport:identity"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:identity"
     },
     {
-      "effect": "allow",
       "action": "passport:policy:index",
-      "resource": "*",
-      "service": "passport:policy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:policy"
     },
     {
-      "effect": "allow",
       "action": "passport:strategy:index",
-      "resource": "*",
-      "service": "passport:strategy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:strategy"
     },
     {
-      "effect": "allow",
       "action": "passport:apikey:index",
-      "resource": "*",
-      "service": "passport:apikey"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:apikey"
     }
   ]
 }

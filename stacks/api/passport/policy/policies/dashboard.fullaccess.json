@@ -5,10 +5,12 @@
 	"description": "Full access to dashboard service.",
 	"statement": [
 		{
-			"effect": "allow",
 			"action": "dashboard:*",
-			"resource": "*",
-			"service": "dashboard"
+			"resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "dashboard"
 		}
 	]
 }

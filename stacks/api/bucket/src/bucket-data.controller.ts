@@ -15,9 +15,9 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards,
-  UseInterceptors,
-  Req
+  UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DataChangeEmitter} from "@spica-server/bucket/change";
@@ -27,12 +27,11 @@ import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
 import {buildRelationAggregation, filterReviver, findRelations, getUpdateParams} from "./utility";
-import { StrategyType } from "@spica-server/passport/guard";
 
 /**
  * All APIs related to bucket documents.
@@ -69,6 +68,7 @@ export class BucketDataController {
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @StrategyType() strategyType: string,
+    @ResourceFilter() resourceFilter: object,
     @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
@@ -82,6 +82,7 @@ export class BucketDataController {
     @Query("sort", JSONP) sort?: object
   ) {
     let aggregation: unknown[] = [
+      resourceFilter,
       {
         $match: {
           _schedule: {

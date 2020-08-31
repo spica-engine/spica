@@ -5,10 +5,12 @@
   "description": "Full access to passport strategy service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "passport:strategy:*",
-      "resource": "*",
-      "service": "passport:strategy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:strategy"
     }
   ]
 }

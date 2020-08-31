@@ -1,7 +1,7 @@
 import {Global, Module, DynamicModule} from "@nestjs/common";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
-import {ActionResolver, ACTION_RESOLVER} from "@spica-server/passport/guard";
+import {PolicyResolver, POLICY_RESOLVER} from "@spica-server/passport/guard";
 import * as fs from "fs";
 import * as path from "path";
 import {Policy} from "./interface";
@@ -19,12 +19,12 @@ export class PolicyModule {
           schemas: [require(`./schemas/policy.json`), require(`./schemas/policy-list.json`)]
         })
       ],
-      exports: [PolicyService, ACTION_RESOLVER],
+      exports: [PolicyService, POLICY_RESOLVER],
       controllers: [PolicyController],
       providers: [
         {
-          provide: ACTION_RESOLVER,
-          useFactory: (policyService: PolicyService): ActionResolver<Policy> => {
+          provide: POLICY_RESOLVER,
+          useFactory: (policyService: PolicyService): PolicyResolver<Policy> => {
             return async (ids: string[]) => {
               const policies = await policyService._findAll();
               return policies.filter(policy => ids.indexOf(policy._id) != -1);
@@ -48,6 +48,6 @@ export class PolicyModule {
           inject: [DatabaseService]
         }
       ]
-    }
+    };
   }
 }

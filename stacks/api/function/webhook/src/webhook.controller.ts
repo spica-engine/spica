@@ -16,7 +16,7 @@ import {
 import {DEFAULT, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID, DatabaseService} from "@spica-server/database";
-import {ActionGuard, AuthGuard, policyAggregation} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Webhook} from "./interface";
 import {WebhookService} from "./webhook.service";
 import {WebhookInvoker} from "./invoker";
@@ -40,14 +40,12 @@ export class WebhookController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
   find(
-    @Headers("resource-state") resourceState,
+    @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number
   ) {
-    let policyAgg = policyAggregation(resourceState);
-
     const aggregate = [
-      ...policyAgg,
+      resourceFilter,
       {
         $facet: {
           meta: [{$count: "total"}],

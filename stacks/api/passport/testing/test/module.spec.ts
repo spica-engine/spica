@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {AuthGuard, ActionGuard} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
-import { StrategyType } from "@spica-server/passport/guard";
+import {StrategyType} from "@spica-server/passport/guard";
 
 @Controller("test")
 class TestController {

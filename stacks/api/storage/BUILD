@@ -16,7 +16,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
-        "//stacks/api/passport",
+        "//stacks/api/passport/guard",
         "@npm//@google-cloud/storage",
         "@npm//@nestjs/common",
         "@npm//@nestjs/core",

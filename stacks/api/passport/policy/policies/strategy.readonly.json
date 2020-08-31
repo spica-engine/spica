@@ -5,10 +5,12 @@
   "description": "Read only access to passport strategy service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "passport:strategy:index",
-      "resource": "*",
-      "service": "passport:strategy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:strategy"
     }
   ]
 }

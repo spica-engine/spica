@@ -20,7 +20,7 @@ import {HistoryService} from "@spica-server/bucket/history";
 import {Bucket, BucketService} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {findRelations, findRemovedKeys} from "./utility";
@@ -51,8 +51,8 @@ export class BucketController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
-  index() {
-    return this.bs.find({}, {sort: {order: 1}});
+  index(@ResourceFilter() resourceFilter: object) {
+    return this.bs.aggregate([resourceFilter, {$sort: {order: 1}}]).toArray();
   }
 
   /**

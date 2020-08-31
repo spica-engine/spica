@@ -7,9 +7,7 @@ describe("ActionParameters", () => {
     rawAction = new Action.Action({
       bucket: "test_bucket",
       type: 0,
-      headers: [
-        new Action.Header({key: "authorization", value: "APIKEY 123123"})
-      ],
+      headers: [new Action.Header({key: "authorization", value: "APIKEY 123123"})],
       document: "document_id"
     });
   });

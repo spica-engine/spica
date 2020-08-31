@@ -11,8 +11,7 @@ import {
   UseGuards
 } from "@nestjs/common";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
-import {policyAggregation} from "@spica-server/passport/policy";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as forge from "node-forge";
 import {PassportOptions, PASSPORT_OPTIONS} from "../options";
 import {Strategy} from "./interface";
@@ -27,10 +26,8 @@ export class StrategyController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:index"))
-  find(@Headers("resource-state") resourceState) {
-    let policyAgg = policyAggregation(resourceState);
-
-    return this.strategy.aggregate(policyAgg).next();
+  find(@ResourceFilter() resourceFilter: object) {
+    return this.strategy.aggregate([resourceFilter]).next();
   }
 
   @Get(":id")

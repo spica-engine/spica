@@ -24,7 +24,7 @@ import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
-import {ActionGuard, AuthGuard, policyAggregation} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as os from "os";
 import {from, of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
@@ -80,9 +80,8 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index(@Headers("resource-state") resourceState) {
-    let aggregation = policyAggregation(resourceState);
-    return this.fs.aggregate(aggregation).toArray();
+  index(@ResourceFilter() resourceFilter) {
+    return this.fs.aggregate([resourceFilter]).toArray();
   }
 
   /**

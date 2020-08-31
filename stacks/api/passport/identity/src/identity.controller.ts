@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  Headers,
   InternalServerErrorException,
   Param,
   Post,
@@ -14,17 +13,17 @@ import {
   UseGuards,
   UseInterceptors
 } from "@nestjs/common";
-import { activity } from "@spica-server/activity/services";
-import { DEFAULT, NUMBER } from "@spica-server/core";
-import { Schema } from "@spica-server/core/schema";
-import { ObjectId, OBJECT_ID } from "@spica-server/database";
-import { ActionGuard, AuthGuard } from "@spica-server/passport/guard";
-import { policyAggregation, PolicyService } from "@spica-server/passport/policy";
-import { createIdentityActivity } from "./activity.resource";
-import { hash } from "./hash";
-import { IdentityService } from "./identity.service";
-import { Identity } from "./interface";
-import { attachIdentityAccess } from "./utility";
+import {activity} from "@spica-server/activity/services";
+import {DEFAULT, NUMBER} from "@spica-server/core";
+import {Schema} from "@spica-server/core/schema";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {PolicyService} from "@spica-server/passport/policy";
+import {createIdentityActivity} from "./activity.resource";
+import {hash} from "./hash";
+import {IdentityService} from "./identity.service";
+import {Identity} from "./interface";
+import {attachIdentityAccess} from "./utility";
 
 @Controller("passport/identity")
 export class IdentityController {
@@ -48,12 +47,10 @@ export class IdentityController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
   find(
-    @Headers("resource-state") resourceState,
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
-    @Query("skip", DEFAULT(0), NUMBER) skip: number
+    @Query("skip", DEFAULT(0), NUMBER) skip: number,
+    @ResourceFilter() resourceFilter: object
   ) {
-    let policyAgg = policyAggregation(resourceState);
-
     let dataPipeline: object[] = [];
 
     dataPipeline.push({$skip: skip});
@@ -61,7 +58,7 @@ export class IdentityController {
     if (limit) dataPipeline.push({$limit: limit});
 
     const aggregate = [
-      ...policyAgg,
+      resourceFilter,
       {
         $facet: {
           meta: [{$count: "total"}],

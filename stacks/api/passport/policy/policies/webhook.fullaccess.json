@@ -5,10 +5,12 @@
   "description": "Full acess to webhook service",
   "statement": [
     {
-      "effect": "allow",
       "action": "webhook:*",
-      "resource": "*",
-      "service": "webhook"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "webhook"
     }
   ]
 }

@@ -7,22 +7,23 @@ ts_library(
     name = "passport",
     srcs = glob([
         "index.ts",
-        "src/**/*.ts"
+        "src/**/*.ts",
     ]),
     module_name = "@spica-server/passport",
     deps = [
+        "//packages/database",
+        "//stacks/api/passport/apikey",
+        "//stacks/api/passport/guard",
+        "//stacks/api/passport/identity",
+        "//stacks/api/passport/policy",
+        "//stacks/api/preference/services",
         "@npm//@nestjs/common",
+        "@npm//@nestjs/passport",
+        "@npm//@types/node-forge",
+        "@npm//node-forge",
         "@npm//rxjs",
         "@npm//saml2-js",
         "@npm//uuid",
-        "@npm//node-forge",
-        "@npm//@types/node-forge",
-        "@npm//@nestjs/passport",
-        "//packages/database",
-        "//stacks/api/preference/services",
-        "//stacks/api/passport/identity",
-        "//stacks/api/passport/policy",
-        "//stacks/api/passport/guard"
     ],
 )
 

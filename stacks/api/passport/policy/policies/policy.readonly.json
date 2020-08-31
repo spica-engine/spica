@@ -5,10 +5,12 @@
   "description": "Read only access to passport policy service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "passport:policy:index",
-      "resource": "*",
-      "service": "passport:policy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:policy"
     }
   ]
 }

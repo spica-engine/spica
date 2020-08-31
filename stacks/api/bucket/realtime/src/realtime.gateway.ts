@@ -3,10 +3,9 @@ import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
 import {ActionDispatcher} from "@spica-server/bucket/hooks";
 import {ObjectId} from "@spica-server/database";
 import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
-import {AuthGuard, ActionGuard, createGuard} from "@spica-server/passport/guard";
+import {GuardService} from "@spica-server/passport";
 import {fromEvent, Observable} from "rxjs";
 import {takeUntil, tap} from "rxjs/operators";
-import { ModuleRef } from "@nestjs/core";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
@@ -16,20 +15,27 @@ export class RealtimeGateway implements OnGatewayConnection {
 
   constructor(
     private realtime: RealtimeDatabaseService,
-    private moduleRef: ModuleRef,
+    private guardService: GuardService,
     @Optional() private dispatcher: ActionDispatcher
   ) {}
 
   async handleConnection(client: WebSocket, req) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
 
-    // try {
-    //   await this.authGuardService.check(req, client);
-    //   await this.actionGuardService.check(req, client, "bucket:data:stream");
-    // } catch (e) {
-    //   client.send(JSON.stringify({code: e.status || 500, message: e.message}));
-    //   return client.close(1003);
-    // }
+    try {
+      await this.guardService.checkAuthorization({
+        request: req,
+        response: client
+      });
+      await this.guardService.checkAction({
+        request: req,
+        response: client,
+        actions: "bucket:data:stream"
+      });
+    } catch (e) {
+      client.send(JSON.stringify({code: e.status || 500, message: e.message}));
+      return client.close(1003);
+    }
 
     const bucketId = req.params.id;
     const options: any = {};

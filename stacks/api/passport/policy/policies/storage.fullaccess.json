@@ -5,10 +5,12 @@
   "description": "Full access to storage service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "storage:*",
-      "resource": "*",
-      "service": "storage"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module":"storage"
     }
   ]
 }

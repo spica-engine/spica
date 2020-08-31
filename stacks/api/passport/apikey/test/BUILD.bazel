@@ -3,20 +3,18 @@ package(default_visibility = ["//visibility:public"])
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
 load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
 
-
 ts_library(
     name = "apikey_test_lib",
     srcs = glob([
-        "*.spec.ts"
+        "*.spec.ts",
     ]),
     deps = [
-        "@npm//@types/jasmine",
+        "//stacks/api/activity/services",
         "//stacks/api/passport/apikey",
         "//stacks/api/passport/testing",
-        "//stacks/api/activity/services"
-    ]
+        "@npm//@types/jasmine",
+    ],
 )
-
 
 jasmine_node_test(
     name = "apikey_test",

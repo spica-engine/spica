@@ -5,10 +5,12 @@
     "description": "Read only access to passport apikey service.",
     "statement": [
       {
-        "effect": "allow",
         "action": "passport:apikey:index",
-        "resource": "*",
-        "service": "passport:apikey"
+        "resource": {
+          "include": "*",
+          "exclude": []
+        },
+        "module": "passport:apikey"
       }
     ]
   }

@@ -108,6 +108,12 @@ const args = yargs
       description: "Identifier of the default identity.",
       default: "spica"
     },
+    "passport-default-strategy": {
+      string: true,
+      description: "The default startegy to authenticate identities.",
+      default: "IDENTITY",
+      choices: ["IDENTITY", "APIKEY"]
+    },
     "passport-default-identity-password": {
       string: true,
       description: "Password of the default account.",
@@ -311,6 +317,7 @@ const modules = [
     issuer: args["public-url"],
     expiresIn: args["passport-identity-token-expires-in"],
 
+    defaultStrategy: args["passport-default-strategy"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],

@@ -17,33 +17,35 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   }
 
   sign(identity: Identity) {
-    const token = this.jwt.sign({...identity, password: undefined}, {
-      header: {
-        identifier: identity.identifier,
-        policies: identity.policies
+    const token = this.jwt.sign(
+      {...identity, password: undefined},
+      {
+        header: {
+          identifier: identity.identifier,
+          policies: identity.policies
+        }
       }
-    });
+    );
 
     return {
-      scheme: 'IDENTITY',
+      scheme: "IDENTITY",
       token,
-      issuer: 'passport/identity'
-    }
+      issuer: "passport/identity"
+    };
   }
 
   async identify(identifier: string, password: string): Promise<Identity | null> {
     if (!password) {
       return null;
     }
-    const identity = await this.findOne({ identifier });
-    
+    const identity = await this.findOne({identifier});
+
     if (identity) {
       const matched = await compare(password, identity.password);
       return matched ? identity : null;
     }
     return null;
   }
-
 
   // @internal
   async default(identity: Identity): Promise<void> {

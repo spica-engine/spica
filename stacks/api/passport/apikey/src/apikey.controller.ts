@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   NotFoundException,
-  Headers,
   Param,
   Post,
   Put,
@@ -16,12 +15,11 @@ import {activity} from "@spica-server/activity/services";
 import {DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as uniqid from "uniqid";
-import {AuthGuard,ActionGuard} from "@spica-server/passport/guard";
 import {createApikeyActivity} from "./activity.resource";
 import {ApiKeyService} from "./apikey.service";
 import {ApiKey} from "./interface";
-import {policyAggregation} from "@spica-server/passport/policy";
 
 @Controller("passport/apikey")
 export class ApiKeyController {
@@ -30,28 +28,23 @@ export class ApiKeyController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:index"))
   find(
-    @Headers("resource-state") resourceState,
+    @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(0), NUMBER) limit?: number,
     @Query("skip", DEFAULT(0), NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: {[k: string]: number}
   ) {
-    let policyAgg = policyAggregation(resourceState);
-
-    let dataPipeline: object[] = [
-      {$skip: skip}
-    ];
+    let dataPipeline: object[] = [{$skip: skip}];
 
     if (limit) {
       dataPipeline.push({$limit: limit});
-    } 
-
+    }
 
     if (sort) {
       dataPipeline.push({$sort: sort});
     }
 
     const pipeline = [
-      ...policyAgg,
+      resourceFilter,
       {
         $facet: {
           meta: [{$count: "total"}],
@@ -61,10 +54,7 @@ export class ApiKeyController {
       {
         $set: {
           meta: {
-            $ifNull: [
-              {$arrayElemAt: ["$meta", 0]},
-              {$const: {total: 0}}
-            ]
+            $ifNull: [{$arrayElemAt: ["$meta", 0]}, {$const: {total: 0}}]
           }
         }
       }

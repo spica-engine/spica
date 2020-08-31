@@ -5,28 +5,36 @@
   "description": "Full access to passport identity service and  policy service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "passport:identity:*",
-      "resource": "*",
-      "service": "passport:identity"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:identity"
     },
     {
-      "effect": "allow",
       "action": "passport:policy:*",
-      "resource": "*",
-      "service": "passport:policy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:policy"
     },
     {
-      "effect": "allow",
       "action": "passport:strategy:*",
-      "resource": "*",
-      "service": "passport:strategy"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:strategy"
     },
     {
-      "effect": "allow",
       "action": "passport:apikey:*",
-      "resource": "*",
-      "service": "passport:apikey"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:apikey"
     }
   ]
 }

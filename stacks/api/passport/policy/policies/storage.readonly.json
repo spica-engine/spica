@@ -5,10 +5,12 @@
 	"description": "Read only access to storage service.",
 	"statement": [
 		{
-			"effect": "allow",
 			"action": "storage:index",
-			"resource": "*",
-			"service": "storage"
+			"resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "storage"
 		}
 	]
 }

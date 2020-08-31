@@ -10,7 +10,7 @@ import {
   Param,
   Body
 } from "@nestjs/common";
-import {AuthGuard, ActionGuard} from "@spica-server/passport";
+import {AuthGuard, ActionGuard} from "@spica-server/passport/guard";
 import {NUMBER, DATE, ARRAY, DEFAULT, JSONP} from "@spica-server/core";
 import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Log} from ".";

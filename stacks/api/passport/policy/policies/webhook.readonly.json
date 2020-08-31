@@ -5,10 +5,12 @@
     "description": "Read only access to webhook service.",
     "statement": [
       {
-        "effect": "allow",
         "action": "webhook:index",
-        "resource": "*",
-        "service": "webhook"
+        "resource": {
+          "include": "*",
+          "exclude": []
+        },
+        "module": "webhook"
       }
     ]
   }

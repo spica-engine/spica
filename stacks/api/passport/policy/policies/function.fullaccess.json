@@ -5,10 +5,12 @@
 	"description": "Full access to function service.",
 	"statement": [
 		{
-			"effect": "allow",
 			"action": "function:*",
-			"resource": "*",
-			"service": "function"
+			"resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "function"
 		}
 	]
 }

@@ -5,10 +5,12 @@
   "description": "Full access to passport identity service.",
   "statement": [
     {
-      "effect": "allow",
       "action": "passport:identity:*",
-      "resource": "*",
-      "service": "passport:identity"
+      "resource": {
+				"include": "*",
+				"exclude": []
+			},
+			"module": "passport:identity"
     }
   ]
 }

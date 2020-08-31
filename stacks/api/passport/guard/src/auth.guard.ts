@@ -12,23 +12,20 @@ import {defaultOptions} from "@nestjs/passport/dist/options";
 import {memoize} from "@nestjs/passport/dist/utils/memoize.util";
 import * as passport from "passport";
 
-export const StrategyType = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.strategyType;
-  },
-);
+export const StrategyType = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest();
+  return request.strategyType;
+});
 
 export function isAValidStrategy(type: string) {
   return type.toLowerCase() in passport._strategies;
 }
 
-
 export const AuthGuard: (type?: string) => Type<CanActivate> = memoize(createAuthGuard);
 
 export function createAuthGuard(type?: string): Type<CanActivate> {
   class MixinAuthGuard implements CanActivate {
-    constructor(@Optional() protected readonly options?: AuthModuleOptions) {}
+    constructor(@Optional() private readonly options?: AuthModuleOptions) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request = context.switchToHttp().getRequest(),
@@ -38,7 +35,7 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
         if (Array.isArray(this.options.defaultStrategy)) {
           throw "Default strategy can not be an array.";
         } else {
-          type = type || this.options.defaultStrategy;
+          type = type || this.options.defaultStrategy || "NO_STRATEGY";
         }
       }
 
@@ -52,8 +49,6 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
       } else {
         strategyType = type.toLowerCase();
       }
-
-      console.log()
 
       request.strategyType = strategyType.toUpperCase();
 

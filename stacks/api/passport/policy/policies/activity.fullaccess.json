@@ -5,10 +5,12 @@
     "description": "Full access to activity service.",
     "statement": [
       {
-        "effect": "allow",
         "action": "activity:*",
-        "resource": "*",
-        "service": "activity"
+        "resource": {
+          "include": "*",
+          "exclude": []
+        },
+        "module": "activity"
       }
     ]
   }

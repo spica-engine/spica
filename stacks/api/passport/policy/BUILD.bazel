@@ -2,28 +2,27 @@ package(default_visibility = ["//visibility:public"])
 
 load("@npm_bazel_typescript//:index.bzl", "ts_library")
 
-
 ts_library(
     name = "policy",
-    module_name = "@spica-server/passport/policy",
     srcs = glob([
         "index.ts",
-        "src/*.ts"
+        "src/*.ts",
     ]),
     data = glob([
         "src/schemas/*.json",
         "policies/*.json",
-        "services/*.json"
+        "services/*.json",
     ]),
+    module_name = "@spica-server/passport/policy",
     deps = [
-        "@npm//@nestjs/passport",
-        "@npm//@nestjs/common",
-        "//packages/database",
         "//packages/core",
         "//packages/core/schema",
-        "//stacks/api/passport/guard",
+        "//packages/database",
         "//stacks/api/activity/services",
+        "//stacks/api/passport/guard",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/passport",
+        "@npm//@types/node",
         "@npm//path-to-regexp",
-        "@npm//@types/node"
-    ]
+    ],
 )
