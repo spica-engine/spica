@@ -56,7 +56,12 @@ export const ResourceFilter = createParamDecorator((data: unknown, ctx: Executio
     });
   }
 
-  console.log(aggregation)
+
+  if (! aggregation.length ) {
+    return {
+      $match: {}
+    };
+  } 
 
   return {
     $match: {
@@ -130,19 +135,16 @@ function createActionGuard(
       const include = [];
       const exclude = [];
 
+      console.log(`${resourceAndModule.module} accepts ${resourceAndModule.resource.length} arguments.`);
+
+
       for (const action of actions) {
         for (const policy of policies) {
           for (const [index, statement] of policy.statement.entries()) {
+            
             const actionMatch = matcher.isMatch(action, statement.action);
-
             const moduleMatch = resourceAndModule.module == statement.module;
 
-            console.log(
-              resourceAndModule.module,
-              policy.name,
-              statement.module,
-              statement.resource
-            );
 
             if (actionMatch && moduleMatch) {
               let match: boolean;
@@ -175,7 +177,7 @@ function createActionGuard(
                       `The policy ${policy.name} contains invalid resource name '${resource.join(
                         "/"
                       )}'.` +
-                        ` Resource ${resourceAndModule.module} ${action} only accepts ${resourceAndModule.resource.length} positional arguments.`
+                        ` Resource ${resourceAndModule.module} ${action} accepts exactly ${resourceAndModule.resource.length} arguments.`
                     );
                   }
                   if (resource.length - resourceAndModule.resource.length == 1) {
@@ -189,11 +191,12 @@ function createActionGuard(
                 // We need parse resources that has slash in it to match them individually.
                 const includeParts = resource.include.split("/");
 
-                console.log(includeParts, resourceAndModule);
+                console.log(includeParts);
 
                 if (includeParts.length < resourceAndModule.resource.length) {
                   throw new ConflictException(
-                    `Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.`
+                    `Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.` +
+                    `Expected ${resourceAndModule.resource.length} arguments.`
                   );
                 }
 
@@ -203,30 +206,34 @@ function createActionGuard(
                   // which is usually the subresource
                   if (index == resourceAndModule.resource.length - 1) {
                     pattern.push(
-                      ...resource.exclude.map(resource => `!${resource.split("/")[index]}`)
+                      ...resource.exclude.map(resource => `!${resource}`)
                     );
                   }
 
                   return matcher.isMatch(part, pattern);
                 });
 
+
+
+                const [lastPortion] = includeParts.slice(resourceAndModule.resource.length);
+
+                console.log(lastPortion);
+
                 if (
-                  includeParts.length - resourceAndModule.resource.length == 1 &&
-                  includeParts[includeParts.length - 1] != "*"
+                  lastPortion &&
+                  lastPortion != "*"
                 ) {
-                  include.push(includeParts[includeParts.length - 1]);
+                  include.push(lastPortion);
                 }
 
-                if (statement.resource.exclude.length) {
-                  exclude.push(statement.resource.exclude);
+                if (resource.exclude.length) {
+                  exclude.push(resource.exclude);
                 }
               }
 
-              console.log(match);
-
               // If the current resource has names we have to check them explicitly
               // otherwise we just pass those to controllers to filter out in database layer
-              if (match && actionMatch && moduleMatch) {
+              if (match) {
                 result = true;
                 // Resource is allowed therefore we don't need to go further and check other policies.
                 break;
@@ -240,6 +247,8 @@ function createActionGuard(
         include,
         exclude
       };
+
+      console.log(include, exclude);
 
       if (result) {
         return true;
