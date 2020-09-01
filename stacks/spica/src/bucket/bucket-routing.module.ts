@@ -88,7 +88,7 @@ const route: Route[] = [
     category: RouteCategory.Developer,
     icon: "view_day",
     path: "/buckets",
-    display: "Bucket",
+    display: "Buckets",
     data: {
       action: "bucket:index"
     }
