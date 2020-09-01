@@ -58,14 +58,25 @@ body {
   }
 }
 
-/* Custom elevation */
-.mat-elevation-z25 {
-  box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
-}
-
-.mat-card-actions {
-  margin: 0px !important;
-  padding: 0px !important;
+mat-card {
+  &.mat-elevation-z25 {
+    box-shadow: 0 4px 16px rgba(var(--primary-default-rgb), 0.07);
+  }
+  mat-card-actions {
+    margin: 0px !important;
+    padding: 0px !important;
+    display: flex !important;
+    justify-content: flex-end;
+    .save-button {
+      mat-icon {
+        margin-right: 5px;
+      }
+      mat-progress-spinner {
+        display: inline-block;
+        margin-right: 5px;
+      }
+    }
+  }
 }
 
 mat-form-field {
@@ -75,16 +86,5 @@ mat-form-field {
     > * {
       visibility: hidden;
     }
-  }
-}
-
-.save-button {
-  float: right;
-  mat-icon {
-    margin-right: 5px;
-  }
-  mat-progress-spinner {
-    display: inline-block;
-    margin-right: 5px;
   }
 }

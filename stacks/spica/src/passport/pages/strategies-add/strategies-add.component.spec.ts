@@ -174,7 +174,7 @@ describe("Strategies Add Component", () => {
         "updateStrategy"
       ).and.returnValue(of(null));
 
-      fixture.debugElement.query(By.css("mat-card-content button")).nativeElement.click();
+      fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       tick();
       fixture.detectChanges();
 
@@ -209,7 +209,7 @@ describe("Strategies Add Component", () => {
         "updateStrategy"
       ).and.returnValue(throwError(null));
 
-      fixture.debugElement.query(By.css("mat-card-content button")).nativeElement.click();
+      fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       tick();
       fixture.detectChanges();
 
