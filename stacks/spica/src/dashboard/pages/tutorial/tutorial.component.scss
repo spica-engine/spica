@@ -40,6 +40,9 @@
     justify-content: center;
     > button:first-of-type {
       margin: 10px 0px;
+      border-style: dashed;
+      width: 418px;
+      height: 50px;
     }
   }
 
@@ -56,12 +59,16 @@
     margin: 5px 0px;
   }
 
-  div.result-wrapper {
+  div.result {
     display: flex;
     margin: 10px 0px;
     > div:nth-child(1),
     div:nth-child(3) {
       flex: 1;
+      div {
+        width: 100%;
+        text-align: center;
+      }
     }
     > mat-divider {
       margin: 0px 20px;
@@ -88,4 +95,14 @@
 
 ::ng-deep span.placer > *:first-of-type {
   width: 100% !important;
+}
+
+::ng-deep snack-bar-container {
+  width: 250px !important;
+  padding: 20px !important;
+  border-radius: 8px !important;
+  span {
+    line-height: 22px !important;
+    font-size: 16px !important;
+  }
 }

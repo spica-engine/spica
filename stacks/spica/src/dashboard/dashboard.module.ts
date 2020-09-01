@@ -30,6 +30,7 @@ import {MatStepperModule} from "@angular/material/stepper";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatTableModule} from "@angular/material/table";
+import {MatClipboardModule} from "@spica-client/material";
 
 @NgModule({
   imports: [
@@ -53,7 +54,8 @@ import {MatTableModule} from "@angular/material/table";
     MatStepperModule,
     MatSelectModule,
     MatTabsModule,
-    MatTableModule
+    MatTableModule,
+    MatClipboardModule
   ],
   declarations: [
     DashboardComponent,

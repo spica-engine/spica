@@ -5,11 +5,11 @@
   <div class="content">
     <div class="title">
       <h5>Let's create your first Restful API</h5>
-      <button color="warn" mat-raised-button (click)="hideTutorial()">Don't show this again</button>
+      <button color="warn" mat-button (click)="hideTutorial()">Don't show this again</button>
     </div>
     <mat-vertical-stepper linear #stepper>
       <mat-step editable="false">
-        <ng-template matStepLabel>Creating a bucket.</ng-template>
+        <ng-template matStepLabel>Creating a bucket</ng-template>
 
         <div class="row" *ngFor="let property of properties; index as i">
           <mat-form-field>
@@ -30,13 +30,13 @@
         </div>
 
         <div class="actions">
-          <button mat-icon-button (click)="addProperty()">
+          <button mat-stroked-button (click)="addProperty()">
             <mat-icon>add</mat-icon>
             <span>
               New property
             </span>
           </button>
-          <button mat-icon-button [disabled]="schemaIsInvalid()" (click)="saveSchema()">
+          <button mat-button [disabled]="schemaIsInvalid()" (click)="saveSchema()">
             <mat-icon>
               save
             </mat-icon>
@@ -47,7 +47,7 @@
         </div>
       </mat-step>
       <mat-step editable="false">
-        <ng-template matStepLabel>Creating an entry.</ng-template>
+        <ng-template matStepLabel>Creating an entry</ng-template>
         <div class="placers">
           <ng-container *ngFor="let property of bucket.properties | keyvalue">
             <span
@@ -59,21 +59,27 @@
             </span>
           </ng-container>
         </div>
-        <div>
-          <button mat-icon-button (click)="insertEntry()">
-            <mat-icon>save</mat-icon><span>Save</span>
-          </button>
-        </div>
+        <button mat-button (click)="insertEntry()">
+          <mat-icon>save</mat-icon>
+          <span>Save</span>
+        </button>
       </mat-step>
       <mat-step>
-        <ng-template matStepLabel>Access your endpoint.</ng-template>
-        <div class="result-wrapper">
+        <ng-template matStepLabel>Access your endpoint</ng-template>
+        <div class="result">
           <div class="example">
             <span>Headers:</span>
             <pre [innerHtml]="exampleInfo.headers | json"></pre>
             <span>Url:</span>
             <pre [innerHtml]="exampleInfo.url"></pre>
-            <button mat-raised-button (click)="showEntry = true">Send Request</button>
+            <button mat-button (click)="showEntry = true">
+              <mat-icon>
+                http
+              </mat-icon>
+              <span>
+                Send Request
+              </span>
+            </button>
             <ng-container *ngIf="showEntry">
               <span>Response:</span>
               <pre [innerHtml]="entry | json"></pre>
@@ -85,6 +91,16 @@
               Curl Command:
             </span>
             <pre [innerHtml]="curl"></pre>
+            <div>
+              <button mat-button #clipboard="matClipboard" [matClipboard]="curl">
+                <mat-icon [matTooltip]="clipboard.toolTip">
+                  {{ clipboard.icon }}
+                </mat-icon>
+                <span>
+                  Copy to clipboard
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </mat-step>

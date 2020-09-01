@@ -13,6 +13,11 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatDividerModule} from "@angular/material/divider";
 import {of} from "rxjs";
 import {environment} from "environments/environment";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
+import {MatClipboardModule} from "@spica-client/material";
+import {MatIconModule} from "@angular/material/icon";
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {FormsModule} from "@angular/forms";
 
 describe("TutorialComponent", () => {
   let fixture: ComponentFixture<TutorialComponent>;
@@ -30,7 +35,12 @@ describe("TutorialComponent", () => {
         MatFormFieldModule,
         MatTabsModule,
         MatSelectModule,
-        MatDividerModule
+        MatDividerModule,
+        MatSnackBarModule,
+        MatClipboardModule,
+        MatIconModule,
+        MatTooltipModule,
+        FormsModule
       ],
       declarations: [TutorialComponent],
       providers: [
@@ -88,45 +98,51 @@ describe("TutorialComponent", () => {
     expect(fixture.componentInstance["stepper"].selectedIndex).toBe(0);
   });
 
-  it("should add property", () => {
-    fixture.componentInstance.addProperty("test", "string");
-    expect(fixture.componentInstance.bucket.properties).toEqual({
-      test: {
-        title: "test",
-        type: "string",
-        description: `Description of test`,
-        options: {
-          position: "bottom",
-          visible: true
-        }
-      }
-    });
+  it("should return true when schema is invalid", () => {
+    fixture.componentInstance.properties = [
+      {key: "field1", type: "string"},
+      {key: "field1", type: "number"}
+    ];
+
+    expect(fixture.componentInstance.schemaIsInvalid()).toEqual(
+      true,
+      "It should return true when schema has duplicated keys"
+    );
+
+    fixture.componentInstance.properties = [
+      {key: "", type: "string"},
+      {key: "field1", type: "number"}
+    ];
+
+    expect(fixture.componentInstance.schemaIsInvalid()).toEqual(
+      true,
+      "It should return true when schema has undefined key"
+    );
   });
 
-  it("should return property length", () => {
-    fixture.componentInstance.addProperty("test", "string");
-    fixture.componentInstance.addProperty("test2", "string");
+  it("should emit emitter to hide tutorial", () => {
+    let emitSpy = spyOn(fixture.componentInstance.onDisable, "next");
+    fixture.componentInstance.hideTutorial();
+    expect(emitSpy).toHaveBeenCalledTimes(1);
+  });
 
-    expect(fixture.componentInstance.properyLength()).toEqual(2);
+  it("should add property", () => {
+    fixture.componentInstance.addProperty();
+    expect(fixture.componentInstance.properties).toEqual([
+      {key: "", type: "string"},
+      {key: "", type: "string"}
+    ]);
   });
 
   it("should remove property", () => {
-    fixture.componentInstance.addProperty("test", "string");
-    fixture.componentInstance.addProperty("test2", "string");
+    fixture.componentInstance.addProperty();
 
-    fixture.componentInstance.removeProperty("test");
+    fixture.componentInstance.properties[1].key = "test";
+    fixture.componentInstance.properties[1].type = "date";
 
-    expect(fixture.componentInstance.bucket.properties).toEqual({
-      test2: {
-        title: "test2",
-        type: "string",
-        description: `Description of test2`,
-        options: {
-          position: "bottom",
-          visible: true
-        }
-      }
-    });
+    fixture.componentInstance.removeProperty(1);
+
+    expect(fixture.componentInstance.properties).toEqual([{key: "", type: "string"}]);
   });
 
   it("should save bucket schema", fakeAsync(() => {
@@ -135,7 +151,9 @@ describe("TutorialComponent", () => {
       "insertOne"
     ).and.callThrough();
 
-    fixture.componentInstance.addProperty("test", "string");
+    fixture.componentInstance.properties[0].key = "test";
+    fixture.componentInstance.properties[0].type = "number";
+
     fixture.componentInstance.saveSchema();
 
     expect(bucketInsert).toHaveBeenCalledTimes(1);
@@ -149,7 +167,7 @@ describe("TutorialComponent", () => {
       properties: {
         test: {
           title: "test",
-          type: "string",
+          type: "number",
           description: `Description of test`,
           options: {
             position: "bottom",
@@ -208,7 +226,7 @@ describe("TutorialComponent", () => {
 
     fixture.componentInstance.insertEntry();
 
-    tick();
+    tick(100);
 
     expect(apikeyInsert).toHaveBeenCalledTimes(1);
     expect(apikeyInsert).toHaveBeenCalledWith({

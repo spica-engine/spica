@@ -8,6 +8,7 @@ import {ApiKeyService} from "@spica-client/passport/services/apikey.service";
 import {switchMap, map} from "rxjs/operators";
 import {BucketEntry} from "@spica-client/bucket/interfaces/bucket-entry";
 import {emptyApiKey} from "@spica-client/passport/interfaces/apikey";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
   selector: "tutorial",
@@ -38,6 +39,7 @@ export class TutorialComponent implements OnInit, AfterViewInit {
   @ViewChild("stepper", {static: false}) private stepper: MatStepper;
 
   constructor(
+    private _snackBar: MatSnackBar,
     _inputResolver: InputResolver,
     private bucketService: BucketService,
     private bucketDataService: BucketDataService,
@@ -56,23 +58,6 @@ export class TutorialComponent implements OnInit, AfterViewInit {
     this.stepper.steps.forEach(step => (step.completed = false));
   }
 
-  schemaIsInvalid() {
-    let undefinedKeys = [];
-    let duplicatedKeys = [];
-    this.properties.reduce((acc, curr) => {
-      if (!curr.key) {
-        undefinedKeys.push(curr.key);
-      } else if (acc.includes(curr.key)) {
-        duplicatedKeys.push(curr.key);
-      } else {
-        acc.push(curr.key);
-      }
-      return acc;
-    }, []);
-
-    return !!(undefinedKeys.length || duplicatedKeys.length);
-  }
-
   addProperty() {
     this.properties.push({key: "", type: "string"});
   }
@@ -83,7 +68,6 @@ export class TutorialComponent implements OnInit, AfterViewInit {
 
   saveSchema() {
     if (this.schemaIsInvalid()) {
-      console.log("Schema is invalid.");
       return;
     }
 
@@ -136,6 +120,13 @@ export class TutorialComponent implements OnInit, AfterViewInit {
 
         this.stepper.selected.completed = true;
         this.stepper.next();
+        this._snackBar.open(
+          "Congratulations. You have been completed the tutorial. Now, you can continue to develop your project.",
+          "",
+          {
+            duration: 5000
+          }
+        );
       });
   }
 
@@ -149,6 +140,23 @@ export class TutorialComponent implements OnInit, AfterViewInit {
     }
     let url = this.createUrl(bucketId, entryId);
     return `curl -H "Authorization:APIKEY ${apikey}" ${url}`;
+  }
+
+  schemaIsInvalid() {
+    let hasUndefinedKey = false;
+    let hasDuplicatedKey = false;
+    this.properties.reduce((acc, curr) => {
+      if (!curr.key) {
+        hasUndefinedKey = true;
+      } else if (acc.includes(curr.key)) {
+        hasDuplicatedKey = true;
+      } else {
+        acc.push(curr.key);
+      }
+      return acc;
+    }, []);
+
+    return !!(hasUndefinedKey || hasDuplicatedKey);
   }
 
   hideTutorial() {

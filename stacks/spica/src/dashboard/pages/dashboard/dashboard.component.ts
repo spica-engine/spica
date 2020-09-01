@@ -1,7 +1,7 @@
 import {Component, OnInit} from "@angular/core";
 import {BucketService} from "@spica-client/bucket";
 import {map, switchMap} from "rxjs/operators";
-import {Observable, BehaviorSubject, of} from "rxjs";
+import {Observable, BehaviorSubject} from "rxjs";
 
 @Component({
   selector: "dashboard",
@@ -15,15 +15,13 @@ export class DashboardComponent implements OnInit {
   refresh$: BehaviorSubject<any> = new BehaviorSubject("");
 
   ngOnInit() {
-    //uncomment these lines after tests
-    // this.isTutorialEnabled$ = this.refresh$.pipe(
-    //   switchMap(() =>
-    //     this.bucketService
-    //       .retrieve()
-    //       .pipe(map(buckets => buckets.length == 0 && !localStorage.getItem("hide-tutorial")))
-    //   )
-    // );
-    this.isTutorialEnabled$ = of(true);
+    this.isTutorialEnabled$ = this.refresh$.pipe(
+      switchMap(() =>
+        this.bucketService
+          .retrieve()
+          .pipe(map(buckets => buckets.length == 0 && !localStorage.getItem("hide-tutorial")))
+      )
+    );
   }
 
   onDisable() {
