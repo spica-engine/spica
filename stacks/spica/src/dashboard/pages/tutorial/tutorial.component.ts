@@ -67,7 +67,7 @@ export class TutorialComponent implements OnInit, AfterViewInit {
   }
 
   saveSchema() {
-    if (this.schemaIsInvalid()) {
+    if (this.isSchemaInvalid()) {
       return;
     }
 
@@ -142,7 +142,7 @@ export class TutorialComponent implements OnInit, AfterViewInit {
     return `curl -H "Authorization:APIKEY ${apikey}" ${url}`;
   }
 
-  schemaIsInvalid() {
+  isSchemaInvalid() {
     let hasUndefinedKey = false;
     let hasDuplicatedKey = false;
     this.properties.reduce((acc, curr) => {

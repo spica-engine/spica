@@ -104,7 +104,7 @@ describe("TutorialComponent", () => {
       {key: "field1", type: "number"}
     ];
 
-    expect(fixture.componentInstance.schemaIsInvalid()).toEqual(
+    expect(fixture.componentInstance.isSchemaInvalid()).toBe(
       true,
       "It should return true when schema has duplicated keys"
     );
@@ -114,10 +114,25 @@ describe("TutorialComponent", () => {
       {key: "field1", type: "number"}
     ];
 
-    expect(fixture.componentInstance.schemaIsInvalid()).toEqual(
+    expect(fixture.componentInstance.isSchemaInvalid()).toBe(
       true,
       "It should return true when schema has undefined key"
     );
+  });
+
+  it("should return false when schema is valid", () => {
+    fixture.componentInstance.properties = [
+      {
+        key: "field1",
+        type: "string"
+      },
+      {
+        key: "field2",
+        type: "string"
+      }
+    ];
+
+    expect(fixture.componentInstance.isSchemaInvalid()).toBe(false);
   });
 
   it("should emit emitter to hide tutorial", () => {
