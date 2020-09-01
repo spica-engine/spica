@@ -86,85 +86,97 @@ export class PassportService {
     }
 
     return this._statements.pipe(
-      map(statements =>
-        statements
-          .filter(st => action.substring(0, action.lastIndexOf(":")) == st.service)
-          .filter(
-            st =>
-              wrapArray(st.action).includes(st.service + ":*") ||
-              wrapArray(st.action).includes(action)
-          )
-          .map(st => {
-            st.resource = wrapArray(st.resource).map(res => res.replace(st.service + "/", ""));
-            return st;
-          })
-      ),
       map(statements => {
-        if (
-          (action.includes("create") ||
-            (action.includes("policy") && !action.endsWith("policy"))) &&
-          statements.length > 0
-        ) {
-          return createLastDecision(statements);
-        }
+        const actionParts = action.split(":");
 
-        let state = createLastState(statements);
+        const resourceAndModule = {
+          resource: resource ? resource.split("/") : [],
+          module: actionParts.slice(0, actionParts.length - 1).join(":")
+        };
 
-        if (!state.alloweds.length) {
-          return false;
-        } else {
-          if (action.includes("index")) {
-            return true;
-          } else {
-            return (
-              (state.alloweds.includes("*") && !state.denieds.includes(resource)) ||
-              state.alloweds.includes(resource)
-            );
+        console.log(resourceAndModule);
+
+        const include = [];
+        const exclude = [];
+        let result;
+
+        for (const statement of statements) {
+          const actionMatch = matcher.isMatch(action, statement.action);
+          const moduleMatch = resourceAndModule.module == statement.module;
+          
+          if (actionMatch && moduleMatch) {
+            let match: boolean;
+
+            if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
+              // Parse resources in such format bucketid/dataid thus we could match them individually
+              const resources = wrapArray(statement.resource).map(resource => resource.split("/"));
+
+              match = resources.some(resource =>
+                // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
+                // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
+                // where the first element is the id of the bucket while the second item is the identifier of the document
+                // hence all resources has to match in order to assume that the user has the access to a arbitrary resource
+                //
+                // IMPORTANT: when the resource definition is shorter than the resource present in the statement we only check parts
+                // that are present in the resource definition. for example,  when the resource definiton is [ '5f30fffd4a51a68d6fec4d3b']
+                // and resource in the statement is ["5f30fffd4a51a68d6fec4d3b", "5f31002e4a51a68d6fec4d3f"]
+                // we only check definition.resource[0] against resource[0] in the statement and the rest will be passed as mongodb aggregation
+                // to filter out in database layer.
+                resourceAndModule.resource.every((part, index) => part == resource[index])
+              );
+
+              const leftOverResources = [];
+
+              for (const resource of resources) {
+                const leftOver = resource.slice(resourceAndModule.resource.length);
+                // if ( leftOver.length > 1 ) {
+                //   throw new ConflictException(
+                //       `The policy ${policy.name} contains invalid resource name '${resource.join("/")}'.` +
+                //       ` Resource ${resourceAndModule.module} ${action} only accepts ${resourceAndModule.resource.length} positional arguments.`
+                //   );
+                // }
+                if (leftOver.length) {
+                  leftOverResources.push(leftOver[0]);
+                }
+              }
+
+              include.push(...leftOverResources);
+            } else {
+              const resource = statement.resource;
+              // We need parse resources that has slash in it to match them individually.
+              const includeParts = resource.include.split("/");
+
+              match = resourceAndModule.resource.every((part, index) => {
+                const pattern = [includeParts[index]];
+                // We only include the excluded items when we are checking the last portion of the resource
+                // which is usually the subresource
+                if (index == resourceAndModule.resource.length - 1) {
+                  pattern.push(
+                    ...resource.exclude.map(resource => `!${resource.split("/")[index]}`)
+                  );
+                }
+                return matcher.isMatch(part, pattern);
+              });
+
+              exclude.push(statement.resource.exclude);
+            }
+
+            // If the current resource has names we have to check them explicitly
+            // otherwise we just pass those to controllers to filter out in database layer
+            if (match && actionMatch && moduleMatch) {
+              result = true;
+              // Resource is allowed therefore we don't need to go further and check other policies.
+              break;
+            }
           }
         }
+
+        return result;
       })
     );
   }
 }
 
-export function createLastDecision(statements: Statement[]): boolean {
-  return statements[statements.length - 1].effect == "allow";
-}
-
 export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);
-}
-
-export function createLastState(statements: Statement[]) {
-  return statements.reduce(
-    (acc, curr) => {
-      let state = acc;
-
-      if (wrapArray(curr.resource).includes("*")) {
-        if (curr.effect == "allow") {
-          state.alloweds = ["*"];
-          state.denieds = [];
-        } else {
-          state.denieds = ["*"];
-          state.alloweds = [];
-        }
-      } else {
-        wrapArray(curr.resource).forEach(res => {
-          if (curr.effect == "allow") {
-            state.denieds = state.denieds.filter(rs => rs != res);
-            if (!state.alloweds.includes("*")) {
-              state.alloweds.push(res);
-            }
-          } else {
-            state.alloweds = state.alloweds.filter(rs => rs != res);
-            if (!state.denieds.includes("*")) {
-              state.denieds.push(res);
-            }
-          }
-        });
-      }
-      return state;
-    },
-    {alloweds: [], denieds: []}
-  );
 }

@@ -25,11 +25,11 @@ export class PolicyService {
   }
 
   attachPolicy(id: string, identifier: string): Observable<Identity> {
-    return this.http.put<Identity>(`api:/passport/identity/${identifier}/attach-policy`, [id]);
+    return this.http.put<Identity>(`api:/passport/identity/${identifier}/policy/${id}`, {});
   }
 
   detachPolicy(id: string, identifier: string): Observable<Identity> {
-    return this.http.put<Identity>(`api:/passport/identity/${identifier}/detach-policy`, [id]);
+    return this.http.delete<Identity>(`api:/passport/identity/${identifier}/policy/${id}`, {});
   }
 
   createPolicy(policy: Policy): Observable<Policy> {

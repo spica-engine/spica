@@ -11,6 +11,14 @@
 				"exclude": []
 			},
 			"module": "passport:identity"
+    },
+    {
+      "action": "passport:identity:policy:*",
+      "resource": {
+				"include": "*/*",
+				"exclude": []
+			},
+			"module": "passport:identity:policy"
     }
   ]
 }

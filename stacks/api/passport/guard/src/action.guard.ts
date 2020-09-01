@@ -71,7 +71,9 @@ function buildResourceAndModuleName(path: string, params: object, format?: strin
   const segments = parse(path);
   const resourceSegments = segments
     .filter(s => typeof s == "string")
-    .map((s: string) => s.replace(/^\//g, ""));
+    .map((s: string) => s.replace(/^\//g, ""))
+    .join("/")
+    .split("/");
   const paramSegments = segments.filter(s => typeof s == "object").map((s: Key) => params[s.name]);
   return {
     module: resourceSegments.join(":"),
@@ -100,6 +102,8 @@ function createActionGuard(
         return true;
       }
 
+      actions = wrapArray(actions);
+
       if (prepareUser) {
         request = prepareUser(request);
       }
@@ -124,13 +128,14 @@ function createActionGuard(
       const include = [];
       const exclude = [];
 
-      for (const action of wrapArray(actions)) {
+      for (const action of actions) {
         for (const policy of policies) {
-          for (const statement of policy.statement) {
+          for (const [index, statement] of policy.statement.entries()) {
             const actionMatch = matcher.isMatch(action, statement.action);
+
             const moduleMatch = resourceAndModule.module == statement.module;
 
-            console.log(statement.action, resourceAndModule.module, statement.module);
+            console.log(resourceAndModule.module, policy.name, statement.module, statement.resource);
 
             if (actionMatch && moduleMatch) {
               let match: boolean;
@@ -159,12 +164,12 @@ function createActionGuard(
 
                 for (const resource of resources) {
                   const leftOver = resource.slice(resourceAndModule.resource.length);
-                  // if ( leftOver.length > 1 ) {
-                  //   throw new ConflictException(
-                  //       `The policy ${policy.name} contains invalid resource name '${resource.join("/")}'.` +
-                  //       ` Resource ${resourceAndModule.module} ${action} only accepts ${resourceAndModule.resource.length} positional arguments.`
-                  //   );
-                  // }
+                  if ( leftOver.length > 1 ) {
+                    throw new ConflictException(
+                        `The policy ${policy.name} contains invalid resource name '${resource.join("/")}'.` +
+                        ` Resource ${resourceAndModule.module} ${action} only accepts ${resourceAndModule.resource.length} positional arguments.`
+                    );
+                  }
                   if (leftOver.length) {
                     leftOverResources.push(leftOver[0]);
                   }
@@ -176,18 +181,28 @@ function createActionGuard(
                 // We need parse resources that has slash in it to match them individually.
                 const includeParts = resource.include.split("/");
 
+                if ( includeParts.length < resourceAndModule.resource.length ) {
+                  throw new ConflictException(`Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.`);
+                }
+
+                console.log(includeParts, resourceAndModule);
                 match = resourceAndModule.resource.every((part, index) => {
                   const pattern = [includeParts[index]];
+                  // We only include the excluded items when we are checking the last portion of the resource
+                  // which is usually the subresource
                   if (index == resourceAndModule.resource.length - 1) {
                     pattern.push(
                       ...resource.exclude.map(resource => `!${resource.split("/")[index]}`)
                     );
                   }
+ 
                   return matcher.isMatch(part, pattern);
                 });
 
                 exclude.push(statement.resource.exclude);
               }
+
+              console.log(match);
 
               // If the current resource has names we have to check them explicitly
               // otherwise we just pass those to controllers to filter out in database layer
@@ -201,8 +216,6 @@ function createActionGuard(
         }
       }
 
-      console.log(exclude);
-
       request.resourceFilter = {
         include,
         exclude
@@ -212,7 +225,9 @@ function createActionGuard(
         return true;
       }
 
-      throw new ForbiddenException(`You do not have sufficient permissions to do this action.`);
+      throw new ForbiddenException(
+        `You do not have sufficient permissions to do this action. (${actions.join(", ")})`
+      );
     }
   }
   return mixin(MixinActionGuard);

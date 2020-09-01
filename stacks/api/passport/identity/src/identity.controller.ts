@@ -123,36 +123,40 @@ export class IdentityController {
     return this.identity.deleteOne({_id: id}).then(() => {});
   }
 
-  // TODO(thesayyn): Strictly check policies before attaching them
+
   @UseInterceptors(activity(createIdentityActivity))
-  @Put(":id/attach-policy")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
+  @Put(":id/policy/:policyId")
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
   async attachPolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
+    @Param("policyId") policyId: string | ObjectId,
   ) {
-    const identity = await this.identity.findOne({_id: id});
-    delete identity.password;
-    // Merge policies and remove duplicate policies.
-    identity.policies = new Array(...new Set([...identity.policies, ...policies]));
-    await this.identity.updateOne(id, identity);
-    return identity;
+    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
+
+    return this.identity.findOneAndUpdate({
+      _id: id
+    }, {
+      $addToSet: {policies: policyId}
+    }, {
+      returnOriginal: false
+    })
   }
 
   @UseInterceptors(activity(createIdentityActivity))
-  @Put(":id/detach-policy")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy"))
-  async detachPolicy(
+  @Delete(":id/policy/:policyId")
+  @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
+  async removePolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
+    @Param("policyId") policyId: string | ObjectId,
   ) {
-    const identity = await this.identity.findOne({_id: id});
-    delete identity.password;
-    // Filter policies that will be removed
-    identity.policies = new Array(...identity.policies).filter(
-      policy => policies.indexOf(policy) === -1
-    );
-    await this.identity.updateOne(id, identity);
-    return identity;
+    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
+
+    return this.identity.findOneAndUpdate({
+      _id: id
+    }, {
+      $pull: {policies: policyId}
+    }, {
+      returnOriginal: false
+    })
   }
 }

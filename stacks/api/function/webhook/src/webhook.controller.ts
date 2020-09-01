@@ -1,25 +1,24 @@
 import {
-  Body,
+  BadRequestException, Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
-  Headers,
+
   Post,
   Put,
   Query,
-  UseGuards,
-  BadRequestException
+  UseGuards
 } from "@nestjs/common";
-import {DEFAULT, NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID, DatabaseService} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {Webhook} from "./interface";
-import {WebhookService} from "./webhook.service";
-import {WebhookInvoker} from "./invoker";
+import { DEFAULT, NUMBER } from "@spica-server/core";
+import { Schema } from "@spica-server/core/schema";
+import { DatabaseService, ObjectId, OBJECT_ID } from "@spica-server/database";
+import { ActionGuard, AuthGuard, ResourceFilter } from "@spica-server/passport/guard";
+import { Webhook } from "./interface";
+import { WebhookInvoker } from "./invoker";
+import { WebhookService } from "./webhook.service";
 
 @Controller("webhook")
 export class WebhookController {
@@ -30,7 +29,7 @@ export class WebhookController {
   ) {}
 
   @Get("collections")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
+  @UseGuards(AuthGuard(), ActionGuard("webhook:index", "webhook"))
   collections() {
     return this.database
       .collections()
