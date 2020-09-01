@@ -56,6 +56,8 @@ export const ResourceFilter = createParamDecorator((data: unknown, ctx: Executio
     });
   }
 
+  console.log(aggregation)
+
   return {
     $match: {
       $or: aggregation
@@ -135,7 +137,12 @@ function createActionGuard(
 
             const moduleMatch = resourceAndModule.module == statement.module;
 
-            console.log(resourceAndModule.module, policy.name, statement.module, statement.resource);
+            console.log(
+              resourceAndModule.module,
+              policy.name,
+              statement.module,
+              statement.resource
+            );
 
             if (actionMatch && moduleMatch) {
               let match: boolean;
@@ -163,15 +170,16 @@ function createActionGuard(
                 const leftOverResources = [];
 
                 for (const resource of resources) {
-                  const leftOver = resource.slice(resourceAndModule.resource.length);
-                  if ( leftOver.length > 1 ) {
+                  if (resource.length - resourceAndModule.resource.length > 1) {
                     throw new ConflictException(
-                        `The policy ${policy.name} contains invalid resource name '${resource.join("/")}'.` +
+                      `The policy ${policy.name} contains invalid resource name '${resource.join(
+                        "/"
+                      )}'.` +
                         ` Resource ${resourceAndModule.module} ${action} only accepts ${resourceAndModule.resource.length} positional arguments.`
                     );
                   }
-                  if (leftOver.length) {
-                    leftOverResources.push(leftOver[0]);
+                  if (resource.length - resourceAndModule.resource.length == 1) {
+                    leftOverResources.push(resource[resource.length - 1]);
                   }
                 }
 
@@ -181,11 +189,14 @@ function createActionGuard(
                 // We need parse resources that has slash in it to match them individually.
                 const includeParts = resource.include.split("/");
 
-                if ( includeParts.length < resourceAndModule.resource.length ) {
-                  throw new ConflictException(`Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.`);
+                console.log(includeParts, resourceAndModule);
+
+                if (includeParts.length < resourceAndModule.resource.length) {
+                  throw new ConflictException(
+                    `Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.`
+                  );
                 }
 
-                console.log(includeParts, resourceAndModule);
                 match = resourceAndModule.resource.every((part, index) => {
                   const pattern = [includeParts[index]];
                   // We only include the excluded items when we are checking the last portion of the resource
@@ -195,11 +206,20 @@ function createActionGuard(
                       ...resource.exclude.map(resource => `!${resource.split("/")[index]}`)
                     );
                   }
- 
+
                   return matcher.isMatch(part, pattern);
                 });
 
-                exclude.push(statement.resource.exclude);
+                if (
+                  includeParts.length - resourceAndModule.resource.length == 1 &&
+                  includeParts[includeParts.length - 1] != "*"
+                ) {
+                  include.push(includeParts[includeParts.length - 1]);
+                }
+
+                if (statement.resource.exclude.length) {
+                  exclude.push(statement.resource.exclude);
+                }
               }
 
               console.log(match);

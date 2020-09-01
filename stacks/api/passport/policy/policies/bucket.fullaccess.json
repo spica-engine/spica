@@ -15,8 +15,8 @@
 		{
 			"action": "bucket:data:*",
 			"resource": {
-				"include": "*",
-				"exclude": []
+				"include": "*/*",
+				"exclude": ["5f4e51ae8ee60c296ad3f757","5f4e541c9c92972e255b069e"]
 			},
 			"module": "bucket:data"
 		}
