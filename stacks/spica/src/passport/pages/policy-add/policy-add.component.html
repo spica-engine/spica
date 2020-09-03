@@ -21,71 +21,163 @@
       ></textarea>
     </mat-form-field>
     <button mat-button (click)="addStatement()">Add Statement <mat-icon>add</mat-icon></button>
-    <div *ngFor="let statement of policy.statement; let i = index">
+    <div *ngFor="let statement of policy.statement; index as i">
       <mat-accordion>
         <mat-expansion-panel class="mat-elevation-z1">
           <mat-expansion-panel-header>
             <mat-panel-title>Statement: {{ i + 1 }}</mat-panel-title>
           </mat-expansion-panel-header>
           <mat-form-field>
-            <mat-select placeholder="Effect" [(ngModel)]="statement.effect">
-              <mat-option value="allow">Allow</mat-option>
-              <mat-option value="deny">Deny</mat-option>
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field>
             <mat-select
-              placeholder="Service"
-              [(ngModel)]="statement.service"
-              [(value)]="statement.service"
-              (selectionChange)="recheckArgs($event.value, i)"
-              #servicePicker
+              placeholder="Module"
+              (ngModelChange)="statement.action = undefined"
+              [(ngModel)]="statement.module"
             >
               <mat-option *ngFor="let service of services | keyvalue" [value]="service.key">
-                {{ service.value.title }}</mat-option
+                {{ service.key.replace(":", " ") | titlecase }}</mat-option
               >
             </mat-select>
           </mat-form-field>
-          <mat-form-field *ngIf="servicePicker.value">
-            <mat-select placeholder="Actions" multiple [(ngModel)]="statement.action">
+          <mat-form-field *ngIf="statement.module">
+            <mat-select
+              placeholder="Actions"
+              (ngModelChange)="statement.resource = []"
+              [(ngModel)]="statement.action"
+            >
               <mat-option
                 class="mat-accent"
-                *ngFor="let action of services[servicePicker.value]?.actions"
-                [value]="action"
-                >{{ action }}
+                *ngFor="let action of services[statement.module] | keyvalue"
+                [value]="action.key"
+                >{{ action.key | titlecase }}
               </mat-option>
             </mat-select>
           </mat-form-field>
-          <div class="resource">
-            <ng-container
-              *ngFor="let resource of statement.resource; let index = index; trackBy: _trackBy"
+          <mat-form-field
+            *ngIf="
+              statement.module &&
+              statement.action &&
+              services[statement.module][statement.action] &&
+              services[statement.module][statement.action].length > 0
+            "
+          >
+            <mat-select
+              placeholder="Resource Definition"
+              (selectionChange)="onResourceSelection(statement, $event.value)"
+              [value]="getResourceSelection(statement)"
             >
-              <ng-container
-                *ngFor="let resourceInput of services[servicePicker.value]?.parsedArguments"
+              <mat-option [value]="'only_include'">
+                Decide to which resources will be included
+              </mat-option>
+              <mat-option [value]="'include_exclude'">
+                Include all resources, decide to which resources will be excluded
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <ng-container
+            *ngIf="
+              statement.module &&
+              statement.action &&
+              services[statement.module][statement.action] &&
+              services[statement.module][statement.action].length > 0
+            "
+          >
+            <ng-container *ngIf="getResourceSelection(statement) == 'only_include'">
+              <mat-label>INCLUDED RESOURCES</mat-label>
+              <div
+                class="included-resources"
+                *ngFor="let included of statement.resource; index as j"
               >
+                <mat-form-field>
+                  <input matInput disabled [value]="statement.resource[j]" />
+                </mat-form-field>
+                <button mat-button color="warn" (click)="removeIncluded(j, statement)">
+                  <mat-icon>
+                    delete
+                  </mat-icon>
+                </button>
+              </div>
+
+              <div class="include-resource-input">
                 <mat-form-field>
                   <input
                     matInput
-                    [placeholder]="resourceInput.name"
-                    [(ngModel)]="statement.resource[index]"
+                    #includeResource
+                    placeholder="Enter the resource that will be included"
                   />
-                  <mat-hint>
-                    Enter asterisk (*) to include all of the resources under the service.
+                  <mat-hint *ngIf="services[statement.module][statement.action]">
+                    {{
+                      services[statement.module][statement.action].length == 1
+                        ? "Expected resource"
+                        : "Expected pattern"
+                    }}
+                    <br />
+                    {{ services[statement.module][statement.action].join("/") }}
                   </mat-hint>
                 </mat-form-field>
-                <button mat-button (click)="removeResource(statement.resource, index)">
-                  <mat-icon>delete</mat-icon>
+                <button
+                  [disabled]="!includeResource.value"
+                  mat-button
+                  (click)="addInclude(includeResource.value, statement); includeResource.value = ''"
+                >
+                  Add Resource
                 </button>
-              </ng-container>
+              </div>
             </ng-container>
-            <button
-              *ngIf="servicePicker.value != null && services[servicePicker.value]?.parsedArguments"
-              mat-button
-              (click)="addResource(statement)"
-            >
-              Add Resource
-            </button>
-          </div>
+            <ng-container *ngIf="getResourceSelection(statement) == 'include_exclude'">
+              <div class="excluded-resources">
+                <div class="includeds">
+                  <mat-label>INCLUDED RESOURCES</mat-label>
+                  <mat-form-field>
+                    <input disabled matInput [value]="statement.resource.include" />
+                  </mat-form-field>
+                </div>
+                <div class="excludeds">
+                  <mat-label>EXCLUDED RESOURCES</mat-label>
+                  <div
+                    class="excluded-resource"
+                    *ngFor="let excluded of statement.resource.exclude; index as z"
+                  >
+                    <mat-form-field>
+                      <input matInput disabled [value]="statement.resource.exclude[z]" />
+                    </mat-form-field>
+                    <button mat-button color="warn" (click)="removeExcluded(j, statement)">
+                      <mat-icon>
+                        delete
+                      </mat-icon>
+                    </button>
+                  </div>
+                  <div class="exclude-resource-input">
+                    <mat-form-field>
+                      <input
+                        matInput
+                        #excludeResource
+                        placeholder="Enter the resource that will be excluded"
+                      />
+                      <mat-hint *ngIf="services[statement.module][statement.action]">
+                        {{
+                          services[statement.module][statement.action].length == 1
+                            ? "Expected resource"
+                            : "Expected pattern"
+                        }}
+                        <br />
+                        {{ services[statement.module][statement.action].join("/") }}
+                      </mat-hint>
+                    </mat-form-field>
+                    <button
+                      mat-button
+                      [disabled]="!excludeResource.value"
+                      (click)="
+                        addExclude(excludeResource.value, statement); excludeResource.value = ''
+                      "
+                    >
+                      Add Resource
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+
           <button mat-button color="warn" (click)="removeStatement(i)">
             Remove Statement
           </button>
@@ -95,9 +187,8 @@
     <button
       class="save-button"
       mat-button
-      type="submit"
       [canInteract]="policy._id ? 'passport:policy:update' : 'passport:policy:create'"
-      (click)="submitForm()"
+      (click)="savePolicy()"
     >
       <mat-icon>save</mat-icon>
       <span>Save</span>

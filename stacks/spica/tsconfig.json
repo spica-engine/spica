@@ -12,7 +12,9 @@
         "./packages/*",
         "./src/*", 
       ]
-    }
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
   },
   "files": [
     "src/main.ts",

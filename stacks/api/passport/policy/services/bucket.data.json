@@ -1,14 +1,11 @@
 {
-  "$schema": "http://spica.internal/passport/service",
-  "$id": "http://spica.internal/bucket/data",
-  "$resource": "bucket:data",
-  "$arguments": "/:id",
+  "module": "bucket:data",
   "title": "Bucket Data Service",
-  "actions": [
-    "bucket:data:index",
-    "bucket:data:show",
-    "bucket:data:create",
-    "bucket:data:update",
-    "bucket:data:delete"
-  ]
+  "definitions": {
+    "bucket:data:index": ["bucketId", "id"],
+    "bucket:data:show": ["bucketId", "id"],
+    "bucket:data:create": ["bucketId"],
+    "bucket:data:update": ["bucketId", "id"],
+    "bucket:data:delete": ["bucketId", "id"]
+  }
 }

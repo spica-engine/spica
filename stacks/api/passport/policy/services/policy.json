@@ -1,13 +1,11 @@
 {
-	"$schema": "http://spica.internal/passport/service",
-	"$id": "http://spica.internal/passport/identity",
-	"$resource": "passport:policy",
-	"title": "Passport Policy",
-	"actions": [
-		"passport:policy:index",
-		"passport:policy:show",
-		"passport:policy:create",
-		"passport:policy:update",
-		"passport:policy:delete"
-	]
+  "module": "passport:policy",
+  "title": "Passport Policy",
+  "definitions": {
+    "passport:policy:index": ["id"],
+    "passport:policy:show": ["id"],
+    "passport:policy:create": [],
+    "passport:policy:update": ["id"],
+    "passport:policy:delete": ["id"]
+  }
 }

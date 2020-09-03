@@ -1,0 +1,61 @@
+{
+  "activity": {
+    "index": ["activity_id"],
+    "delete": ["activity_id"]
+  },
+  "passport:apikey": {
+    "index": ["apikey_id"],
+    "show": ["apikey_id"],
+    "create": [],
+    "update": ["apikey_id"],
+    "delete": ["apikey_id"],
+    "policy": ["apikey_id", "policy_id"]
+  },
+  "bucket": {
+    "index": ["bucket_id"],
+    "show": ["bucket_id"],
+    "create": [],
+    "update": ["bucket_id"],
+    "delete": ["bucket_id"]
+  },
+  "bucket:data": {
+    "index": ["bucket_id", "bucketdata_id"],
+    "show": ["bucket_id", "bucketdata_id"],
+    "create": ["bucket_id"],
+    "update": ["bucket_id", "bucketdata_id"],
+    "delete": ["bucket_id", "bucketdata_id"]
+  },
+  "dashboard": {
+    "index": ["dashboard_id"],
+    "show": ["dashboard_id"],
+    "update": ["dashboard_id"],
+    "delete": ["dashboard_id"]
+  },
+  "function": {
+    "index": ["function_id"],
+    "show": ["function_id"],
+    "create": [],
+    "update": ["function_id"],
+    "delete": ["function_id"],
+    "run": ["function_id"]
+  },
+  "passport:identity": {
+    "index": ["identity_id"],
+    "show": ["identity_id"],
+    "create": [],
+    "update": ["identity_id"],
+    "delete": ["identity_id"],
+    "policy": ["identity_id", "policyId"]
+  },
+  "passport:policy": {
+    "index": ["policy_id"],
+    "show": ["policy_id"],
+    "create": [],
+    "update": ["policy_id"],
+    "delete": ["policy_id"]
+  },
+  "preference": {
+    "show": ["scope"],
+    "update": ["scope"]
+  }
+}

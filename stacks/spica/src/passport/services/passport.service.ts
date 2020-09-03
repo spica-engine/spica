@@ -94,8 +94,6 @@ export class PassportService {
           module: actionParts.slice(0, actionParts.length - 1).join(":")
         };
 
-        console.log(resourceAndModule);
-
         const include = [];
         const exclude = [];
         let result;
