@@ -48,7 +48,7 @@
                 class="mat-accent"
                 *ngFor="let action of services[statement.module] | keyvalue"
                 [value]="action.key"
-                >{{ action.key | titlecase }}
+                >{{ action.key.replace(statement.module + ":", "").replace(":", " ") | titlecase }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -66,10 +66,10 @@
               [value]="getResourceSelection(statement)"
             >
               <mat-option [value]="'only_include'">
-                Decide to which resources will be included
+                Include resources
               </mat-option>
               <mat-option [value]="'include_exclude'">
-                Include all resources, decide to which resources will be excluded
+                Exclude resources
               </mat-option>
             </mat-select>
           </mat-form-field>

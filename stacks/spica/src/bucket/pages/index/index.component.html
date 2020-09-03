@@ -52,6 +52,7 @@
       *ngIf="!readOnly"
       mat-button
       canInteract="bucket:data:create"
+      [resource]="schema._id"
       matTooltip="Add new"
       routerLink="add"
     >
@@ -190,7 +191,7 @@
           <td mat-cell class="action" *matCellDef="let row">
             <button
               canInteract="bucket:data:show"
-              [resource]="schema._id"
+              [resource]="schema._id + '/' + row._id"
               mat-icon-button
               [routerLink]="row._id"
             >
@@ -200,7 +201,7 @@
               mat-icon-button
               [disabled]="readOnly"
               canInteract="bucket:data:delete"
-              [resource]="schema._id"
+              [resource]="schema._id + '/' + row._id"
               color="warn"
               [matAwareDialog]="{
                 title: 'Confirmation',
