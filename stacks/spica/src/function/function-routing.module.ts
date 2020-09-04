@@ -22,7 +22,12 @@ const routes: Routes = [
         data: {action: "index"}
       },
       {path: "add", component: AddComponent, data: {action: "create"}},
-      {canActivate: [FunctionIndexGuard], path: "logs", component: LogViewComponent},
+      {
+        canActivate: [FunctionIndexGuard],
+        path: "logs",
+        component: LogViewComponent,
+        data: {service: "function:logs", action: "index"}
+      },
       {
         canActivate: [FunctionIndexGuard],
         path: ":id",
@@ -48,7 +53,7 @@ const route: Route[] = [
     icon: "format_list_numbered",
     path: "/webhook/logs",
     display: "Webhook Logs",
-    data: {action: "webhook:index"}
+    data: {action: "webhook:logs:index"}
   }
 ];
 

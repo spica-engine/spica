@@ -1,16 +1,18 @@
 {
-    "$schema": "http://spica.internal/passport/policy",
-    "_id": "ActivityFullAccess",
-    "name": "Activity FullAccess",
-    "description": "Full access to activity service.",
-    "statement": [
-      {
-        "action": "activity:*",
-        "resource": {
-          "include": "*",
-          "exclude": []
-        },
-        "module": "activity"
-      }
-    ]
-  }
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "ActivityFullAccess",
+  "name": "Activity FullAccess",
+  "description": "Full access to activity service.",
+  "statement": [
+    {
+      "action": "activity:index",
+      "resource": [],
+      "module": "activity"
+    },
+    {
+      "action": "activity:delete",
+      "resource": [],
+      "module": "activity"
+    }
+  ]
+}

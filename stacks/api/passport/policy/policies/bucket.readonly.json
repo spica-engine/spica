@@ -23,7 +23,7 @@
     {
       "action": "bucket:data:stream",
       "resource": {
-				"include": "*",
+				"include": "*/*",
 				"exclude": []
 			},
 			"module":"bucket:data"
@@ -31,7 +31,7 @@
     {
       "action": "bucket:data:index",
       "resource": {
-				"include": "*",
+				"include": "*/*",
 				"exclude": []
 			},
 			"module":"bucket:data"
@@ -39,7 +39,7 @@
     {
       "action": "bucket:data:show",
       "resource": {
-				"include": "*",
+				"include": "*/*",
 				"exclude": []
 			},
 			"module":"bucket:data"

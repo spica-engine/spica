@@ -100,7 +100,7 @@
     <button
       class="save-button"
       [canInteract]="identity._id ? 'passport:identity:update' : 'passport:identity:create'"
-      [resource]="identity._id"
+      [resource]="identity._id ? identity._id : undefined"
       [disabled]="identityForm.invalid"
       mat-button
       (click)="upsertIdentity()"

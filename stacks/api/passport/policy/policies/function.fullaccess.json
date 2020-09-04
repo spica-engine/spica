@@ -1,16 +1,53 @@
 {
-	"$schema": "http://spica.internal/passport/policy",
-	"_id": "FunctionFullAccess",
-	"name": "Function Full Access",
-	"description": "Full access to function service.",
-	"statement": [
-		{
-			"action": "function:*",
-			"resource": {
-				"include": "*",
-				"exclude": []
-			},
-			"module": "function"
-		}
-	]
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "FunctionFullAccess",
+  "name": "Function Full Access",
+  "description": "Full access to function service.",
+  "statement": [
+    {
+      "action": "function:index",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "function"
+    },
+    {
+      "action": "function:show",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "function"
+    },
+    {
+      "action": "function:create",
+      "resource": [],
+      "module": "function"
+    },
+    {
+      "action": "function:update",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "function"
+    },
+    {
+      "action": "function:delete",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "function"
+    },
+    {
+      "action": "function:run",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "function"
+    }
+  ]
 }

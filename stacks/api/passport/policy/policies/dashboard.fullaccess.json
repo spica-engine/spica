@@ -1,16 +1,40 @@
 {
-	"$schema": "http://spica.internal/passport/policy",
-	"_id": "DashboardFullAccess",
-	"name": "Dashboard Full Access",
-	"description": "Full access to dashboard service.",
-	"statement": [
-		{
-			"action": "dashboard:*",
-			"resource": {
-				"include": "*",
-				"exclude": []
-			},
-			"module": "dashboard"
-		}
-	]
+  "$schema": "http://spica.internal/passport/policy",
+  "_id": "DashboardFullAccess",
+  "name": "Dashboard Full Access",
+  "description": "Full access to dashboard service.",
+  "statement": [
+    {
+      "action": "dashboard:index",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "dashboard"
+    },
+    {
+      "action": "dashboard:show",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "dashboard"
+    },
+    {
+      "action": "dashboard:update",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "dashboard"
+    },
+    {
+      "action": "dashboard:delete",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "dashboard"
+    }
+  ]
 }

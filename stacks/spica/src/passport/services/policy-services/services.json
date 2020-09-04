@@ -1,7 +1,7 @@
 {
   "activity": {
-    "activity:index": ["activity_id"],
-    "activity:delete": ["activity_id"]
+    "activity:index": [],
+    "activity:delete": []
   },
   "passport:apikey": {
     "passport:apikey:index": ["apikey_id"],
@@ -39,6 +39,21 @@
     "function:update": ["function_id"],
     "function:delete": ["function_id"],
     "function:run": ["function_id"]
+  },
+  "function:logs": {
+    "function:logs:index": [],
+    "function:logs:delete": []
+  },
+  "webhook": {
+    "webhook:index": ["webhook_id"],
+    "webhook:show": ["webhook_id"],
+    "webhook:create": [],
+    "webhook:update": ["webhook_id"],
+    "webhook:delete": ["webhook_id"]
+  },
+  "webhook:logs": {
+    "webhook:logs:index": [],
+    "webhook:logs:delete": []
   },
   "passport:identity": {
     "passport:identity:index": ["identity_id"],

@@ -89,7 +89,7 @@
         class="save-button"
         [disabled]="apiKeyForm.invalid"
         [canInteract]="apiKey._id ? 'passport:apikey:update' : 'passport:apikey:create'"
-        [resource]="apiKey._id"
+        [resource]="apiKey._id ? apiKey._id : undefined"
         mat-button
         type="submit"
         (click)="saveApiKey()"

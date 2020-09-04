@@ -85,6 +85,8 @@ export class PassportService {
       this._statements = this.getStatements().pipe(shareReplay());
     }
 
+    console.log(action, resource);
+
     return this._statements.pipe(
       map(statements => {
         const actionParts = action.split(":");
@@ -101,7 +103,7 @@ export class PassportService {
         for (const statement of statements) {
           const actionMatch = matcher.isMatch(action, statement.action);
           const moduleMatch = resourceAndModule.module == statement.module;
-          
+
           if (actionMatch && moduleMatch) {
             let match: boolean;
 

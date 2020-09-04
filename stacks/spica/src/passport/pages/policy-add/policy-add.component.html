@@ -188,6 +188,7 @@
       class="save-button"
       mat-button
       [canInteract]="policy._id ? 'passport:policy:update' : 'passport:policy:create'"
+      [resource]="policy._id ? policy._id : undefined"
       (click)="savePolicy()"
     >
       <mat-icon>save</mat-icon>

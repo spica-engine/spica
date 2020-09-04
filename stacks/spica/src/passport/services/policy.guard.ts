@@ -11,7 +11,9 @@ export class PolicyGuard {
     if (route.data.action && route.data.service) {
       return this.passport.checkAllowed(
         `${route.data.service}:${route.data.action}`,
-        Object.values(route.params).join("/")
+        route.data.params
+          ? Object.values(route.data.params).join("/")
+          : Object.values(route.params).join("/")
       );
     }
     return true;
