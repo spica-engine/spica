@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package hooks;
+
+message Pop {
+   string id = 1;
+}
+
+message Review {
+   Type type = 1;
+   repeated Header headers = 2;
+   string bucket = 3;
+   string documentKey = 4;
+
+   enum Type {
+      INSERT = 0;
+      UPDATE = 1;
+      INDEX = 2;
+      GET = 3;
+      DELETE = 4;
+      STREAM = 5;
+   }
+
+   message Header {
+      string key = 1;
+      string value = 2;
+   }
+
+   message Result {
+      string id = 1;
+      Type type = 3;
+      string result = 2; //JSON -> boolean or array of objects
+      message Response {}
+   }
+}
+
+message Change {
+
+   Kind kind = 1;
+
+   string bucket = 2;
+
+   string documentKey = 3;
+
+   string previous = 4;
+   
+   string current = 5;
+
+   enum Kind {
+      INSERT = 0;
+      UPDATE = 1;
+      REPLACE = 2;
+      DELETE = 3;
+   }
+}
+
+message ChangeOrReview {
+   Review review = 1;
+   Change change = 2;
+}
+
+service ChangeAndReviewQueue {
+   rpc pop(Pop) returns (ChangeOrReview);
+   rpc result (Review.Result) returns (Review.Result.Response);
+}
