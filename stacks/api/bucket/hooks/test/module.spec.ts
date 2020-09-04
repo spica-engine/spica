@@ -72,7 +72,7 @@ describe("hook module", () => {
             type: {
               title: "Operation type",
               type: "string",
-              enum: ["INSERT", "UPDATE", "DELETE"]
+              enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
             }
           }
         },
