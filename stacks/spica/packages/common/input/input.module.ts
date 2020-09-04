@@ -54,6 +54,8 @@ import {
   UniqueItemsValidator
 } from "./validators";
 
+import {ConditionalSchemaPipe} from "./conditional";
+
 export function coerceObject() {
   return {};
 }
@@ -84,7 +86,13 @@ export function coerceObject() {
     OwlDateTimeModule,
     OwlNativeDateTimeModule
   ],
-  exports: [InputPlacerComponent, InputSchemaPlacer, MaxValidator, MinValidator],
+  exports: [
+    InputPlacerComponent,
+    InputSchemaPlacer,
+    MaxValidator,
+    MinValidator,
+    ConditionalSchemaPipe
+  ],
   declarations: [
     InputSchemaPlacer,
     InputPlacerComponent,
@@ -109,7 +117,8 @@ export function coerceObject() {
     MaxItemsValidator,
     ColorComponent,
     BooleanSchemaComponent,
-    ArrayControlContainer
+    ArrayControlContainer,
+    ConditionalSchemaPipe
   ],
   providers: [
     {

@@ -79,11 +79,6 @@ const args = yargs
       boolean: true,
       description: "Whether the experimental Bucket realtime feature is enabled.",
       default: true
-    },
-    "experimental-bucket-data-change": {
-      boolean: true,
-      description: "Whether the experimental Bucket data change feature is enabled.",
-      default: true
     }
   })
   /* Passport Options  */
@@ -267,8 +262,7 @@ const modules = [
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"],
-    experimentalDataChange: args["experimental-bucket-data-change"]
+    realtime: args["experimental-bucket-realtime"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",

@@ -58,8 +58,7 @@ describe("Bucket acceptance", () => {
         BucketModule.forRoot({
           hooks: false,
           history: false,
-          realtime: false,
-          experimentalDataChange: false
+          realtime: false
         })
       ]
     }).compile();

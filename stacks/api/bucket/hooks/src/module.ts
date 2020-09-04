@@ -6,30 +6,58 @@ import {ENQUEUER} from "@spica-server/function/scheduler";
 import {EventQueue} from "@spica-server/function/queue";
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
-import {ActionDispatcher} from "./dispatcher";
-import {ActionEnqueuer} from "./enqueuer";
-import {ActionQueue} from "./queue";
+import {ReviewDispatcher} from "./dispatcher";
+import {ChangeAndReviewEnqueuer} from "./enqueuer";
+import {ChangeAndReviewQueue} from "./queue";
+import {ChangeEmitter} from "./emitter";
 
 export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
   return new Observable(observer => {
-    const bucketIds = new Set<string>();
+    const buckets = new Map<string, string>();
 
     const notifyChanges = () => {
       const schema: JSONSchema7 = {
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
-        required: ["bucket", "type"],
+        required: ["bucket", "phase", "type"],
         properties: {
           bucket: {
             title: "Bucket",
             type: "string",
-            enum: Array.from(bucketIds)
+            enum: Array.from(buckets.keys()),
+            // @ts-expect-error
+            viewEnum: Array.from(buckets.values())
+          },
+          phase: {
+            title: "Phase",
+            type: "string",
+            enum: ["BEFORE", "AFTER"]
           },
           type: {
-            title: "Operation type",
-            description: "Event Type",
-            type: "string",
-            enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
+            type: "string"
+          }
+        },
+        if: {
+          properties: {
+            phase: {const: "BEFORE"}
+          }
+        },
+        then: {
+          properties: {
+            type: {
+              title: "Operation type",
+              type: "string",
+              enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
+            }
+          }
+        },
+        else: {
+          properties: {
+            type: {
+              title: "Operation type",
+              type: "string",
+              enum: ["INSERT", "UPDATE", "DELETE"]
+            }
           }
         },
         additionalProperties: false
@@ -37,23 +65,26 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
       observer.next(schema);
     };
 
-    const stream = db.collection("buckets").watch([
-      {
-        $match: {
-          $or: [{operationType: "insert"}, {operationType: "delete"}]
+    const stream = db.collection("buckets").watch(
+      [
+        {
+          $match: {
+            $or: [{operationType: "insert"}, {operationType: "delete"}]
+          }
         }
-      }
-    ]);
+      ],
+      {fullDocument: "updateLookup"}
+    );
 
     stream.on("change", change => {
       switch (change.operationType) {
         case "delete":
-          bucketIds.delete(change.documentKey._id.toString());
+          buckets.delete(change.documentKey._id.toString());
           notifyChanges();
           break;
         case "insert":
-          if (!bucketIds.has(change.documentKey._id.toString())) {
-            bucketIds.add(change.documentKey._id.toString());
+          if (!buckets.has(change.documentKey._id.toString())) {
+            buckets.set(change.documentKey._id.toString(), change.fullDocument.title);
             notifyChanges();
           }
           break;
@@ -65,9 +96,9 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
     db.collection("buckets")
       .find({})
       .toArray()
-      .then(buckets => {
-        for (const bucket of buckets) {
-          bucketIds.add(bucket._id.toString());
+      .then(_buckets => {
+        for (const bucket of _buckets) {
+          buckets.set(bucket._id.toString(), bucket.title);
         }
         notifyChanges();
       });
@@ -78,35 +109,39 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
   });
 }
 
-export const hookModuleProviders = [
-  ActionDispatcher,
-  {
-    provide: ENQUEUER,
-    useFactory: (dispatcher: ActionDispatcher) => {
-      return (queue: EventQueue) => {
-        const actionQueue = new ActionQueue();
-        const actionEnqueuer = new ActionEnqueuer(queue, actionQueue, dispatcher);
-        return {
-          enqueuer: actionEnqueuer,
-          queue: actionQueue
-        };
-      };
-    },
-    inject: [ActionDispatcher]
-  },
-  {
-    provide: SCHEMA,
-    useFactory: (db: DatabaseService) => {
-      return {name: "bucket", schema: () => createSchema(db)};
-    },
-    inject: [DatabaseService]
-  }
-];
-
 @Global()
 @Module({
   imports: [ServicesModule],
-  providers: hookModuleProviders,
-  exports: [ENQUEUER, SCHEMA, ActionDispatcher]
+  exports: [ENQUEUER, SCHEMA, ReviewDispatcher, ChangeEmitter],
+  providers: [
+    ReviewDispatcher,
+    ChangeEmitter,
+    {
+      provide: ENQUEUER,
+      useFactory: (reviewDispatcher: ReviewDispatcher, changeEmitter: ChangeEmitter) => {
+        return (queue: EventQueue) => {
+          const changeAndReviewQueue = new ChangeAndReviewQueue();
+          const changeAndReviewEnqueuer = new ChangeAndReviewEnqueuer(
+            queue,
+            changeAndReviewQueue,
+            reviewDispatcher,
+            changeEmitter
+          );
+          return {
+            enqueuer: changeAndReviewEnqueuer,
+            queue: changeAndReviewQueue
+          };
+        };
+      },
+      inject: [ReviewDispatcher, ChangeEmitter]
+    },
+    {
+      provide: SCHEMA,
+      useFactory: (db: DatabaseService) => {
+        return {name: "bucket", schema: () => createSchema(db)};
+      },
+      inject: [DatabaseService]
+    }
+  ]
 })
 export class HookModule {}

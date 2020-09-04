@@ -27,8 +27,7 @@ describe("Scheduler", () => {
         BucketModule.forRoot({
           hooks: false,
           realtime: false,
-          history: false,
-          experimentalDataChange: false
+          history: false
         })
       ]
     })

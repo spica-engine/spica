@@ -20,7 +20,7 @@ import {Runtime, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
 import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
-import {ENQUEUER, EnqueuerFactory, ENQUEUER1} from "./enqueuer";
+import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 
 @Injectable()
@@ -43,8 +43,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     private http: HttpAdapterHost,
     private database: DatabaseService,
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
-    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>,
-    @Optional() @Inject(ENQUEUER1) private enqueuerFactory1: EnqueuerFactory<unknown, unknown>
+    @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
     this.output = new DatabaseOutput(database);
 
@@ -85,15 +84,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     this.enqueuers.add(new SystemEnqueuer(this.queue));
 
-    // TODO: find a more idiomatic way to do this.
     if (typeof this.enqueuerFactory == "function") {
       const factory = this.enqueuerFactory(this.queue);
-      this.queue.addQueue(factory.queue);
-      this.enqueuers.add(factory.enqueuer);
-    }
-
-    if (typeof this.enqueuerFactory1 == "function") {
-      const factory = this.enqueuerFactory1(this.queue);
       this.queue.addQueue(factory.queue);
       this.enqueuers.add(factory.enqueuer);
     }

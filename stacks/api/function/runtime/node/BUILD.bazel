@@ -43,8 +43,6 @@ rollup_bundle(
     output_dir = True,
     sourcemap = "true",
     deps = [
-        "//stacks/api/bucket/change/node",
-        "//stacks/api/bucket/change/proto",
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/hooks/proto/node",
         "//stacks/api/function/packages/database",
@@ -55,6 +53,5 @@ rollup_bundle(
         "@npm//rollup-plugin-commonjs",
         "@npm//rollup-plugin-node-resolve",
         "@npm//rollup-plugin-terser",
-        "@npm//v8-compile-cache",
     ],
 )
