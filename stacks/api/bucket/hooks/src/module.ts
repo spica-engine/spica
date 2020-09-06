@@ -56,7 +56,7 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
             type: {
               title: "Operation type",
               type: "string",
-              enum: ["INSERT", "UPDATE", "DELETE"]
+              enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
             }
           }
         },

@@ -374,7 +374,7 @@ export class BucketDataController {
       this.changeEmitter.emitChange(
         {
           bucket: bucketId.toHexString(),
-          type: "replace"
+          type: "UPDATE"
         },
         documentId.toHexString(),
         previousDocument,
