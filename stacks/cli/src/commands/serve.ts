@@ -333,6 +333,7 @@ export class ServeCommand extends Command {
           } else {
             break;
           }
+          
           await new Promise(resolve => setTimeout(resolve, wait));
           spinner.text = `Initiating replication between database containers. Retrying ${retry}`;
         }
