@@ -433,7 +433,6 @@ export namespace hooks {
     export enum Kind {
       INSERT = 0,
       UPDATE = 1,
-      REPLACE = 2,
       DELETE = 3
     }
   }
