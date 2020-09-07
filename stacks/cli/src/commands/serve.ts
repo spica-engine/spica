@@ -157,9 +157,11 @@ export class ServeCommand extends Command {
           );
           await Promise.all(foundNetworks.map(network => machine.getNetwork(network.Id).remove()));
           if (!options["retain-volumes"]) {
-            const foundVolumes = (await machine.listVolumes({
-              filters: JSON.stringify({label: [`namespace=${namespace}`]})
-            })).Volumes;
+            const foundVolumes = (
+              await machine.listVolumes({
+                filters: JSON.stringify({label: [`namespace=${namespace}`]})
+              })
+            ).Volumes;
             await Promise.all(foundVolumes.map(volume => machine.getVolume(volume.Name).remove()));
           }
         }
@@ -175,7 +177,7 @@ export class ServeCommand extends Command {
 
     function pullImage(image: string, tag: string) {
       return new Promise((resolve, reject) =>
-        machine.pull(`${image}:${tag}`, {}, function(err, stream) {
+        machine.pull(`${image}:${tag}`, {}, function (err, stream) {
           if (err) {
             if (err.message && err.message.indexOf(`manifest for ${image}`)) {
               reject(new ImageNotFoundError(image, tag));
@@ -299,18 +301,20 @@ export class ServeCommand extends Command {
 
         const initiateReplication = async (reconfig = false) => {
           spinner.text = "Initiating replication between database containers.";
-          const result = await (await firstContainer.exec({
-            Cmd: [
-              "mongo",
-              "admin",
-              "--eval",
-              reconfig
-                ? `rs.reconfig(${replSetConfig}, { force: true })`
-                : `rs.initiate(${replSetConfig})`
-            ],
-            AttachStderr: true,
-            AttachStdout: true
-          }))
+          const result = await (
+            await firstContainer.exec({
+              Cmd: [
+                "mongo",
+                "admin",
+                "--eval",
+                reconfig
+                  ? `rs.reconfig(${replSetConfig}, { force: true })`
+                  : `rs.initiate(${replSetConfig})`
+              ],
+              AttachStderr: true,
+              AttachStdout: true
+            })
+          )
             .start()
             .catch(e => e);
 
@@ -499,6 +503,13 @@ Password: ${namespace}
   private streamToBuffer(stream: Stream): Promise<Buffer> {
     return new Promise(resolve => {
       const response = [];
+      if (process.platform.includes("win")) {
+        stream.once("resume", () => {
+          setTimeout(() => {
+            resolve(Buffer.concat(response));
+          }, 2000);
+        });
+      }
       stream.on("data", chunk => response.push(chunk));
       stream.on("end", () => resolve(Buffer.concat(response)));
     });
