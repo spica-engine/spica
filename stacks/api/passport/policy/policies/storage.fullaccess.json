@@ -5,12 +5,41 @@
   "description": "Full access to storage service.",
   "statement": [
     {
-      "action": "storage:*",
+      "action": "storage:index",
       "resource": {
-				"include": "*",
-				"exclude": []
-			},
-			"module":"storage"
+        "include": "*",
+        "exclude": []
+      },
+      "module": "storage"
+    },
+    {
+      "action": "storage:show",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "storage"
+    },
+    {
+      "action": "storage:create",
+      "resource": [],
+      "module": "storage"
+    },
+    {
+      "action": "storage:update",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "storage"
+    },
+    {
+      "action": "storage:delete",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "storage"
     }
   ]
 }

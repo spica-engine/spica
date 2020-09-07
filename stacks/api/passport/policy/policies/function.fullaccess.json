@@ -48,6 +48,16 @@
         "exclude": []
       },
       "module": "function"
+    },
+    {
+      "action": "function:logs:index",
+      "resource": [],
+      "module": "function:logs"
+    },
+    {
+      "action": "function:logs:delete",
+      "resource": [],
+      "module": "function:logs"
     }
   ]
 }

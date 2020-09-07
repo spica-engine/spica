@@ -5,12 +5,36 @@
   "description": "Full access to passport strategy service.",
   "statement": [
     {
-      "action": "passport:strategy:*",
+      "action": "passport:strategy:index",
       "resource": {
-				"include": "*",
-				"exclude": []
-			},
-			"module": "passport:strategy"
+        "include": "*",
+        "exclude": []
+      },
+      "module": "passport:strategy"
+    },
+    {
+      "action": "passport:strategy:show",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "passport:strategy"
+    },
+    {
+      "action": "passport:strategy:update",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "passport:strategy"
+    },
+    {
+      "action": "passport:strategy:delete",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "passport:strategy"
     }
   ]
 }

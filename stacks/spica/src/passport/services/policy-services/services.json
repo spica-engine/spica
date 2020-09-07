@@ -12,6 +12,28 @@
     "passport:apikey:policy:add": ["apikey_id", "policy_id"],
     "passport:apikey:policy:remove": ["apikey_id", "policy_id"]
   },
+  "passport:identity": {
+    "passport:identity:index": ["identity_id"],
+    "passport:identity:show": ["identity_id"],
+    "passport:identity:create": [],
+    "passport:identity:update": ["identity_id"],
+    "passport:identity:delete": ["identity_id"],
+    "passport:identity:policy:add": ["identity_id", "policyId"],
+    "passport:identity:policy:remove": ["identity_id", "policyId"]
+  },
+  "passport:policy": {
+    "passport:policy:index": ["policy_id"],
+    "passport:policy:show": ["policy_id"],
+    "passport:policy:create": [],
+    "passport:policy:update": ["policy_id"],
+    "passport:policy:delete": ["policy_id"]
+  },
+  "passport:strategy": {
+    "passport:strategy:index": ["strategy_id"],
+    "passport:strategy:show": ["strategy_id"],
+    "passport:strategy:update": ["strategy_id"],
+    "passport:strategy:delete": ["strategy_id"]
+  },
   "bucket": {
     "bucket:index": ["bucket_id"],
     "bucket:show": ["bucket_id"],
@@ -55,21 +77,13 @@
     "webhook:logs:index": [],
     "webhook:logs:delete": []
   },
-  "passport:identity": {
-    "passport:identity:index": ["identity_id"],
-    "passport:identity:show": ["identity_id"],
-    "passport:identity:create": [],
-    "passport:identity:update": ["identity_id"],
-    "passport:identity:delete": ["identity_id"],
-    "passport:identity:policy:add": ["identity_id", "policyId"],
-    "passport:identity:policy:remove": ["identity_id", "policyId"]
-  },
-  "passport:policy": {
-    "passport:policy:index": ["policy_id"],
-    "passport:policy:show": ["policy_id"],
-    "passport:policy:create": [],
-    "passport:policy:update": ["policy_id"],
-    "passport:policy:delete": ["policy_id"]
+
+  "storage": {
+    "storage:index": ["storage_id"],
+    "storage:show:": ["storage_id"],
+    "storage:create": [],
+    "storage:update": ["storage_id"],
+    "storage:delete": ["storage_id"]
   },
   "preference": {
     "preference:show": ["scope"],

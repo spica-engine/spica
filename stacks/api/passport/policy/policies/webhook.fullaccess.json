@@ -5,12 +5,51 @@
   "description": "Full acess to webhook service",
   "statement": [
     {
-      "action": "webhook:*",
+      "action": "webhook:index",
       "resource": {
-				"include": "*",
-				"exclude": []
-			},
-			"module": "webhook"
+        "include": "*",
+        "exclude": []
+      },
+      "module": "webhook"
+    },
+    {
+      "action": "webhook:show",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "webhook"
+    },
+    {
+      "action": "webhook:create",
+      "resource": [],
+      "module": "webhook"
+    },
+    {
+      "action": "webhook:update",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "webhook"
+    },
+    {
+      "action": "webhook:delete",
+      "resource": {
+        "include": "*",
+        "exclude": []
+      },
+      "module": "webhook"
+    },
+    {
+      "action": "webhook:logs:index",
+      "resource": [],
+      "module": "webhook:logs"
+    },
+    {
+      "action": "webhook:logs:delete",
+      "resource": [],
+      "module": "webhook:logs"
     }
   ]
 }
