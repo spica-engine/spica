@@ -8,8 +8,6 @@ function getChangeKind(kind: hooks.Change.Kind) {
       return "delete";
     case hooks.Change.Kind.UPDATE:
       return "update";
-    case hooks.Change.Kind.REPLACE:
-      return "replace";
     default:
       throw new Error(`Invalid type received. ${hooks.Change.Kind[kind]}`);
   }

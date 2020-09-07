@@ -46,14 +46,12 @@ export function getReviewType(type: string) {
 
 function getChangeType(type: string): hooks.Change.Kind {
   switch (type) {
-    case "insert":
+    case "INSERT":
       return hooks.Change.Kind.INSERT;
-    case "delete":
+    case "DELETE":
       return hooks.Change.Kind.DELETE;
-    case "update":
+    case "UPDATE":
       return hooks.Change.Kind.UPDATE;
-    case "replace":
-      return hooks.Change.Kind.REPLACE;
     default:
       throw new Error(`Invalid type received. ${type}`);
   }
