@@ -56,12 +56,11 @@ export const ResourceFilter = createParamDecorator((data: unknown, ctx: Executio
     });
   }
 
-
-  if (! aggregation.length ) {
+  if (!aggregation.length) {
     return {
       $match: {}
     };
-  } 
+  }
 
   return {
     $match: {
@@ -135,16 +134,15 @@ function createActionGuard(
       const include = [];
       const exclude = [];
 
-      console.log(`${resourceAndModule.module} accepts ${resourceAndModule.resource.length} arguments.`);
-
+      console.log(
+        `${resourceAndModule.module} accepts ${resourceAndModule.resource.length} arguments.`
+      );
 
       for (const action of actions) {
         for (const policy of policies) {
           for (const [index, statement] of policy.statement.entries()) {
-            
             const actionMatch = matcher.isMatch(action, statement.action);
             const moduleMatch = resourceAndModule.module == statement.module;
-
 
             if (actionMatch && moduleMatch) {
               let match: boolean;
@@ -196,7 +194,7 @@ function createActionGuard(
                 if (includeParts.length < resourceAndModule.resource.length) {
                   throw new ConflictException(
                     `Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.` +
-                    `Expected ${resourceAndModule.resource.length} arguments.`
+                      `Expected ${resourceAndModule.resource.length} arguments.`
                   );
                 }
 
@@ -205,24 +203,17 @@ function createActionGuard(
                   // We only include the excluded items when we are checking the last portion of the resource
                   // which is usually the subresource
                   if (index == resourceAndModule.resource.length - 1) {
-                    pattern.push(
-                      ...resource.exclude.map(resource => `!${resource}`)
-                    );
+                    pattern.push(...resource.exclude.map(resource => `!${resource}`));
                   }
 
                   return matcher.isMatch(part, pattern);
                 });
 
-
-
                 const [lastPortion] = includeParts.slice(resourceAndModule.resource.length);
 
                 console.log(lastPortion);
 
-                if (
-                  lastPortion &&
-                  lastPortion != "*"
-                ) {
+                if (lastPortion && lastPortion != "*") {
                   include.push(lastPortion);
                 }
 

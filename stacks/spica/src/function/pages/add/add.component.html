@@ -363,7 +363,7 @@
       *matSave="$save | async; let state"
       [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
       [canInteract]="function._id ? 'function:update' : 'function:create'"
-      [resource]="function._id ? function._id : undefined "
+      [resource]="function._id ? function._id : undefined"
       (click)="save()"
       [ngSwitch]="state"
     >

@@ -24,34 +24,27 @@ export class PolicyController {
   constructor(private policy: PolicyService) {}
 
   @Get()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("passport:policy:index"))
   find(@Query("limit", NUMBER) limit?: number, @Query("skip", NUMBER) skip?: number) {
     return this.policy.find(limit, skip);
   }
 
-  // TODO: use special action for this
-  @Get("services")
-  @UseGuards(AuthGuard())
-  findPermissions() {
-    return this.policy.services;
-  }
-
   @Get(":id")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("passport:policy:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.policy.findOne(id);
   }
 
   @UseInterceptors(activity(createPolicyActivity))
   @Post()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("passport:policy:create"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy) {
     return this.policy.insertOne(body);
   }
 
   @UseInterceptors(activity(createPolicyActivity))
   @Put(":id")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("passport:policy:update"))
   replaceOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
@@ -61,7 +54,7 @@ export class PolicyController {
 
   @UseInterceptors(activity(createPolicyActivity))
   @Delete(":id")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.policy.deleteOne(id);
   }

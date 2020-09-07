@@ -50,16 +50,16 @@ const routes: Routes = [
     children: [
       {
         path: "welcome",
-        component: WelcomeComponent,
+        component: WelcomeComponent
       },
       {
         path: "settings",
         component: SettingsComponent,
-        data:{
-          service:"preference",
-          action:"show",
-          params:{
-            scope:"bucket"
+        data: {
+          service: "preference",
+          action: "show",
+          params: {
+            scope: "bucket"
           }
         }
       },

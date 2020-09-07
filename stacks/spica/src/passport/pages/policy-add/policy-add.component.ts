@@ -5,7 +5,7 @@ import {emptyPolicy, Policy} from "../../interfaces/policy";
 import {Services} from "../../interfaces/service";
 import {Statement} from "../../interfaces/statement";
 import {PolicyService} from "../../services/policy.service";
-import {race} from "rxjs";
+import {merge} from "rxjs";
 
 @Component({
   selector: "passport-policy-add",
@@ -25,7 +25,7 @@ export class PolicyAddComponent implements OnInit {
   ngOnInit() {
     this.services = this.policyService.getServices();
 
-    race(
+    merge(
       this.activatedRoute.queryParams.pipe(
         filter(params => params.template),
         map(params => JSON.parse(params.template))
@@ -33,11 +33,10 @@ export class PolicyAddComponent implements OnInit {
       this.activatedRoute.params.pipe(
         filter(params => params.id),
         map(params => params.id),
-        switchMap(id => this.policyService.findOne(id).pipe(tap(console.log)))
+        switchMap(id => this.policyService.findOne(id))
       )
     )
       .pipe(
-        tap(console.log),
         take(1),
         tap(policy => (this.policy = policy))
       )

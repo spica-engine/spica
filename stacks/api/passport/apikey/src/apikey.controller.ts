@@ -112,7 +112,7 @@ export class ApiKeyController {
 
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/attach-policy")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:add"))
   async attachPolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
@@ -134,7 +134,7 @@ export class ApiKeyController {
 
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/detach-policy")
-  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy"))
+  @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:remove"))
   async detachPolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]

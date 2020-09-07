@@ -123,23 +123,26 @@ export class IdentityController {
     return this.identity.deleteOne({_id: id}).then(() => {});
   }
 
-
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
   async attachPolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId,
+    @Param("policyId") policyId: string | ObjectId
   ) {
     policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    return this.identity.findOneAndUpdate({
-      _id: id
-    }, {
-      $addToSet: {policies: policyId}
-    }, {
-      returnOriginal: false
-    })
+    return this.identity.findOneAndUpdate(
+      {
+        _id: id
+      },
+      {
+        $addToSet: {policies: policyId}
+      },
+      {
+        returnOriginal: false
+      }
+    );
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -147,16 +150,20 @@ export class IdentityController {
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
   async removePolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId,
+    @Param("policyId") policyId: string | ObjectId
   ) {
     policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    return this.identity.findOneAndUpdate({
-      _id: id
-    }, {
-      $pull: {policies: policyId}
-    }, {
-      returnOriginal: false
-    })
+    return this.identity.findOneAndUpdate(
+      {
+        _id: id
+      },
+      {
+        $pull: {policies: policyId}
+      },
+      {
+        returnOriginal: false
+      }
+    );
   }
 }
