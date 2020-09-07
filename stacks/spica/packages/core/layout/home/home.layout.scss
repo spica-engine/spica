@@ -141,9 +141,11 @@
 }
 
 :root:not(.dark) :host {
-  mat-sidenav,
-  mat-nav-list {
+  mat-sidenav {
     background-image: linear-gradient(0deg, #3a2e80, #19113c) !important;
+  }
+
+  mat-nav-list {
     color: white !important;
   }
 
