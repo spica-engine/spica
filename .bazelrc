@@ -2,9 +2,6 @@
 # prints "ts_library rule //foo:bar" instead of just "//foo:bar".
 query --output=label_kind
 
-# This allows us to avoid installing a second copy of node_modules
-common --experimental_allow_incremental_repository_updates
-
 
 # Turn off legacy external runfiles
 build --nolegacy_external_runfiles
@@ -46,5 +43,3 @@ build:release --stamp --workspace_status_command="./scripts/current_version.sh"
 # Use phyton 2 instead of 3
 build --host_force_python=PY2
 run --host_force_python=PY2
-
-common --experimental_allow_incremental_repository_updates
