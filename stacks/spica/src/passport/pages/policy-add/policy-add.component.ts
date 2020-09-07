@@ -13,7 +13,7 @@ import {race} from "rxjs";
   styleUrls: ["./policy-add.component.scss"]
 })
 export class PolicyAddComponent implements OnInit {
-  public policy: Policy = emptyPolicy();
+  policy: Policy = emptyPolicy();
   services: Services;
 
   constructor(
@@ -33,10 +33,11 @@ export class PolicyAddComponent implements OnInit {
       this.activatedRoute.params.pipe(
         filter(params => params.id),
         map(params => params.id),
-        switchMap(id => this.policyService.findOne(id))
+        switchMap(id => this.policyService.findOne(id).pipe(tap(console.log)))
       )
     )
       .pipe(
+        tap(console.log),
         take(1),
         tap(policy => (this.policy = policy))
       )
@@ -49,9 +50,7 @@ export class PolicyAddComponent implements OnInit {
     } else if (selection == "include_exclude") {
       statement.resource = {
         //put * for each param, and build resource like '*/*'
-        include: this.services[statement.module][statement.action]
-          .map(_ => "*")
-          .join("/"),
+        include: this.services[statement.module][statement.action].map(_ => "*").join("/"),
         exclude: []
       };
     }
@@ -83,11 +82,7 @@ export class PolicyAddComponent implements OnInit {
     }
   }
 
-  
-
-  savePolicy(): void {
-    console.log(this.policy);
-    return;
+  savePolicy() {
     (this.policy._id
       ? this.policyService.updatePolicy(this.policy)
       : this.policyService.createPolicy(this.policy)
@@ -96,7 +91,7 @@ export class PolicyAddComponent implements OnInit {
       .then(() => this.router.navigate(["passport/policy"]));
   }
 
-  addStatement(): void {
+  addStatement() {
     this.policy.statement.push({
       action: undefined,
       resource: [],
@@ -104,7 +99,7 @@ export class PolicyAddComponent implements OnInit {
     });
   }
 
-  removeStatement(index): void {
+  removeStatement(index: number) {
     this.policy.statement.splice(index, 1);
   }
 }
