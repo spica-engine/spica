@@ -5,14 +5,14 @@
   &:not(.expanded) {
     mat-sidenav-container {
       mat-sidenav {
-        max-width: 60px;
+        max-width: 66px;
         min-width: 0;
         mat-nav-list:nth-child(2) {
           opacity: 0;
         }
       }
       mat-sidenav-content {
-        margin-left: 60px !important;
+        margin-left: 66px !important;
       }
     }
   }
@@ -45,12 +45,16 @@
         }
         mat-nav-list {
           &:first-of-type {
+            padding: 0px 3px;
             background: rgba(var(--background-background-rgb), 0.9);
             mat-list-item {
-              height: 90px;
+              margin: 10px 0px;
+              padding: 15px 0px;
+              height: unset;
+
               &.active {
-                border-left: 2px solid var(--accent-700);
-                background: var(--background-card);
+                background: rgba(255, 255, 255, 0.17);
+                border-radius: 5px;
               }
               &:first-of-type {
                 pointer-events: none;
@@ -104,6 +108,7 @@
       mat-toolbar {
         padding: 0 30px;
         background-color: var(--current-color, var(--primary-default, black));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         button[mat-icon-button] {
           margin-left: -10px;
         }
@@ -113,6 +118,9 @@
         ::ng-deep > *:not(span):not(:first-child) {
           margin-right: 5px;
         }
+      }
+      ::ng-deep div.slot mat-toolbar {
+        padding-top: 30px;
       }
     }
   }
@@ -129,5 +137,25 @@
         }
       }
     }
+  }
+}
+
+:root:not(.dark) :host {
+  mat-sidenav,
+  mat-nav-list {
+    background-image: linear-gradient(0deg, #3a2e80, #19113c) !important;
+    color: white !important;
+  }
+
+  mat-nav-list:first-of-type {
+    background-image: linear-gradient(0deg, #271f57, #0e0922) !important;
+  }
+
+  mat-list-item {
+    color: white !important;
+  }
+
+  mat-toolbar {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
   }
 }
