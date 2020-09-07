@@ -88,3 +88,9 @@ mat-form-field {
     }
   }
 }
+
+:root:not(.dark) {
+  mat-toolbar {
+    background-color: #fafafa !important;
+  }
+}
