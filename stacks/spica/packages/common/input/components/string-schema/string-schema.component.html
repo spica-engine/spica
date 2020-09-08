@@ -11,3 +11,14 @@
   >Make field enumerated</mat-slide-toggle
 >
 <enum-schema *ngIf="isEnum.checked"></enum-schema>
+<mat-slide-toggle
+  #hasPattern
+  [ngModel]="schema.pattern ? schema.pattern : undefined"
+  (ngModelChange)="schema.pattern ? removePattern() : (schema.pattern = '')"
+  >Define pattern</mat-slide-toggle
+>
+<ng-container *ngIf="hasPattern.checked">
+  <mat-form-field>
+    <input matInput placeholder="Regular expression" type="text" [(ngModel)]="schema.pattern" />
+  </mat-form-field>
+</ng-container>
