@@ -56,13 +56,13 @@
       }
     }
 
-    .includes{
+    .includes {
       padding: 15px 0px;
-      >div{
+      > div {
         padding: 25px 80px 30px 40px;
         border: 1px solid #10102f;
         border-radius: 15px;
-        width: calc( 100% + 40px );
+        width: calc(100% + 40px);
         box-sizing: border-box;
       }
       ul li {
@@ -72,45 +72,46 @@
         margin: 10px 0px;
         display: flex;
         align-items: center;
-  
+
         mat-icon {
           color: #1abde7;
           margin-right: 5px;
         }
       }
-    } 
-    mat-card.free-trial{
+    }
+    mat-card.free-trial {
       margin: 0px;
       background: #10102f;
       padding: 40px;
-      mat-card-content{
-        p,h3{
+      mat-card-content {
+        p,
+        h3 {
           padding: 0px;
           text-align: left;
           color: #fff;
           margin: 15px 0px;
         }
-        h3{
+        h3 {
           font-size: 2.5rem;
           line-height: 3rem;
         }
-        a{
+        a {
           justify-content: flex-start;
-          button{
+          button {
             background: #f5487f;
             color: #fff;
             padding: 0px 24px;
           }
         }
-        ul{
-          li{
+        ul {
+          li {
             text-align: left;
             display: flex;
             align-items: center;
             color: #fff;
             font-size: 1.15rem;
             line-height: 2rem;
-            mat-icon{
+            mat-icon {
               margin: 0px 10px 0px 20px;
               color: #f5487f;
             }
