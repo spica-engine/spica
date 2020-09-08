@@ -27,7 +27,6 @@ export class LogViewComponent implements OnInit {
 
   ngOnInit() {
     this.queryParams = this.route.queryParams.pipe(
-      tap(() => (this.isPending = true)),
       map(filter => {
         filter = {...filter};
         if (filter.showErrors) {
@@ -54,6 +53,7 @@ export class LogViewComponent implements OnInit {
     this.functions$ = this.fs.getFunctions();
 
     this.logs$ = this.queryParams.pipe(
+      tap(() => (this.isPending = true)),
       switchMap(filter =>
         this.fs.getLogs(filter as any).pipe(
           map(logs => logs.filter(log => !!log)),
@@ -81,9 +81,11 @@ export class LogViewComponent implements OnInit {
   clearLogs() {
     this.queryParams
       .pipe(
-        filter(filter => filter.function),
+        filter(filter => filter.function.length > 0),
+        tap(() => (this.isPending = true)),
         flatMap(filter => forkJoin(filter.function.map(fn => this.fs.clearLogs(fn)))),
-        take(1)
+        take(1),
+        tap(() => (this.isPending = false))
       )
       .toPromise();
   }
