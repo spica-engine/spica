@@ -75,7 +75,7 @@
           #filterer
           [filter]="filter"
           [schema]="schema"
-          (filterChange)="this.filter = $event; refresh.emit()"
+          (filterChange)="onFilterChange($event)"
         ></bucket-filter>
       </mat-menu>
     </button>
@@ -122,7 +122,7 @@
           <button
             mat-menu-item
             *ngFor="let languageKv of ($preferences | async)?.language.available | keyvalue"
-            (click)="language = languageKv.key; refresh.next()"
+            (click)="onLanguageChange(languageKv.key)"
           >
             {{ languageKv.value }} ({{ languageKv.key }})
           </button>
@@ -238,7 +238,11 @@
         <tr mat-row *matRowDef="let row; columns: displayedProperties"></tr>
       </table>
 
-      <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+      <mat-paginator
+        (page)="onPaginatorChange($event)"
+        [pageSize]="paginator.pageSize"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+      ></mat-paginator>
     </mat-card-content>
   </mat-card>
 
