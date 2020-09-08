@@ -110,47 +110,50 @@ export class ApiKeyController {
     });
   }
 
+
+  /**
+   * Add the policy to an API Key.
+   * @param id identifier of the api key.
+   * @param policyId identifier of the policy. Example: `BucketFullAccess` or `5f31002e4a51a68d6fec4d3f`
+   */
   @UseInterceptors(activity(createApikeyActivity))
-  @Put(":id/attach-policy")
+  @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:add"))
-  async attachPolicy(
+  async addPolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
+    @Param("policyId") policyId: string | ObjectId,
   ) {
-    const apiKey = await this.apiKeyService.findOne({_id: id});
-    if (!apiKey) throw new NotFoundException();
+    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    apiKey.policies = new Array(...apiKey.policies, ...policies).filter((policy, index, array) => {
-      return array.indexOf(policy) === index;
+    return this.apiKeyService.findOneAndUpdate({
+      _id: id
+    }, {
+      $addToSet: {policies: policyId}
+    }, {
+      returnOriginal: false
     });
-
-    delete apiKey._id;
-    return this.apiKeyService.findOneAndUpdate(
-      {_id: id},
-      {$set: {policies: apiKey.policies}},
-      {returnOriginal: false}
-    );
   }
 
+  /**
+   * Removes the policy from an API Key.
+   * @param id identifier of the api key.
+   * @param policyId identifier of the policy. Example: `BucketFullAccess` or `5f31002e4a51a68d6fec4d3f`
+   */
   @UseInterceptors(activity(createApikeyActivity))
-  @Put(":id/detach-policy")
+  @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:remove"))
-  async detachPolicy(
+  async removePolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body(Schema.validate("http://spica.internal/passport/policy-list")) policies: string[]
+    @Param("policyId") policyId: string | ObjectId,
   ) {
-    const apiKey = await this.apiKeyService.findOne({_id: id});
-    if (!apiKey) throw new NotFoundException();
+    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    apiKey.policies = new Array(...apiKey.policies).filter(
-      policy => policies.indexOf(policy) === -1
-    );
-
-    delete apiKey._id;
-    return this.apiKeyService.findOneAndUpdate(
-      {_id: id},
-      {$set: {policies: apiKey.policies}},
-      {returnOriginal: false}
-    );
+    return this.apiKeyService.findOneAndUpdate({
+      _id: id
+    }, {
+      $pull: {policies: policyId}
+    }, {
+      returnOriginal: false
+    });
   }
 }

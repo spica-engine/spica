@@ -7,7 +7,8 @@ import {
   FilterQuery,
   FindOneAndReplaceOption
 } from "@spica-server/database";
-import {Policy, Service} from "./interface";
+import {Policy} from "./interface";
+import managedPolicies from "./policies";
 
 @Injectable()
 export class PolicyService {
@@ -20,12 +21,10 @@ export class PolicyService {
     return [...this.managedPolicies, ...this.customerManagedPolicies];
   }
 
-  services: Array<Service> = [];
 
-  constructor(db: DatabaseService, policies: Policy[], services: Service[]) {
+  constructor(db: DatabaseService) {
     this._policyCollection = db.collection("policies");
-    this.managedPolicies = policies.map(p => ({...p, system: true}));
-    this.services = services;
+    this.managedPolicies = managedPolicies.map(p => ({...p, system: true}));
   }
 
   _findAll(): Promise<Policy[]> {

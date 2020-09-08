@@ -6,15 +6,10 @@ export interface Policy {
 }
 
 export interface Statement {
-  effect: "allow" | "deny";
-  action: string | string[];
-  resource: string | string[];
-  service: string;
-}
-
-export interface Service {
-  $resource: string;
-  $format?: string;
-  title: string;
-  actions: string[];
+  action: string;
+  resource?: string | string[] | {
+    include: string,
+    exclude: string;
+  }
+  module: string;
 }

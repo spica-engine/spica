@@ -6,7 +6,7 @@ ts_library(
     name = "policy",
     srcs = glob([
         "index.ts",
-        "src/*.ts",
+        "src/**/*.ts",
     ]),
     data = glob([
         "src/schemas/*.json",

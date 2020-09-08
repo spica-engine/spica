@@ -85,8 +85,6 @@ export class PassportService {
       this._statements = this.getStatements().pipe(shareReplay());
     }
 
-    console.log(action, resource);
-
     return this._statements.pipe(
       map(statements => {
         const actionParts = action.split(":");
@@ -109,13 +107,15 @@ export class PassportService {
 
             if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
               // Parse resources in such format bucketid/dataid thus we could match them individually
-              const resources = wrapArray(statement.resource).map(resource => resource.split("/"));
+              const resources = wrapArray(statement.resource).map(resource =>
+                resource.split("/")
+              );
 
               match = resources.some(resource =>
                 // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
                 // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
-                // where the first element is the id of the bucket while the second item is the identifier of the document
-                // hence all resources has to match in order to assume that the user has the access to a arbitrary resource
+                // and the first element is the id of the bucket while the second item is the identifier of the document
+                // hence all resources has to match in order to assume that the user has the access to an arbitrary resource
                 //
                 // IMPORTANT: when the resource definition is shorter than the resource present in the statement we only check parts
                 // that are present in the resource definition. for example,  when the resource definiton is [ '5f30fffd4a51a68d6fec4d3b']
@@ -128,20 +128,13 @@ export class PassportService {
               const leftOverResources = [];
 
               for (const resource of resources) {
-                const leftOver = resource.slice(resourceAndModule.resource.length);
-                // if ( leftOver.length > 1 ) {
-                //   throw new ConflictException(
-                //       `The policy ${policy.name} contains invalid resource name '${resource.join("/")}'.` +
-                //       ` Resource ${resourceAndModule.module} ${action} only accepts ${resourceAndModule.resource.length} positional arguments.`
-                //   );
-                // }
-                if (leftOver.length) {
-                  leftOverResources.push(leftOver[0]);
+                if (resource.length - resourceAndModule.resource.length == 1) {
+                  leftOverResources.push(resource[resource.length - 1]);
                 }
               }
 
               include.push(...leftOverResources);
-            } else {
+            } else if ( typeof statement.resource == "object" ) {
               const resource = statement.resource;
               // We need parse resources that has slash in it to match them individually.
               const includeParts = resource.include.split("/");
@@ -151,14 +144,21 @@ export class PassportService {
                 // We only include the excluded items when we are checking the last portion of the resource
                 // which is usually the subresource
                 if (index == resourceAndModule.resource.length - 1) {
-                  pattern.push(
-                    ...resource.exclude.map(resource => `!${resource.split("/")[index]}`)
-                  );
+                  pattern.push(...resource.exclude.map(resource => `!${resource}`));
                 }
+
                 return matcher.isMatch(part, pattern);
               });
 
-              exclude.push(statement.resource.exclude);
+              const [lastPortion] = includeParts.slice(resourceAndModule.resource.length);
+
+              if (lastPortion && lastPortion != "*") {
+                include.push(lastPortion);
+              }
+
+              if (resource.exclude.length) {
+                exclude.push(resource.exclude);
+              }
             }
 
             // If the current resource has names we have to check them explicitly

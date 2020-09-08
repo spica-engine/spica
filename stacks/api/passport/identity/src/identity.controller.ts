@@ -76,7 +76,7 @@ export class IdentityController {
     return this.identity.aggregate(aggregate).next();
   }
   @Get("predefs")
-  @UseGuards(AuthGuard(), ActionGuard("passport:identity:show"))
+  @UseGuards(AuthGuard())
   getPredefinedDefaults() {
     return this.identity.getPredefinedDefaults();
   }
@@ -113,7 +113,7 @@ export class IdentityController {
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
     identity: Identity
   ) {
-    return this.identity.updateOne(id, identity);
+    return this.identity.findOneAndUpdate(id, {$set: identity});
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -126,7 +126,7 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
-  async attachPolicy(
+  async addPolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Param("policyId") policyId: string | ObjectId
   ) {
@@ -154,16 +154,12 @@ export class IdentityController {
   ) {
     policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    return this.identity.findOneAndUpdate(
-      {
-        _id: id
-      },
-      {
-        $pull: {policies: policyId}
-      },
-      {
-        returnOriginal: false
-      }
-    );
+    return this.identity.findOneAndUpdate({
+      _id: id
+    }, {
+      $pull: {policies: policyId}
+    }, {
+      returnOriginal: false
+    });
   }
 }

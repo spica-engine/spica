@@ -126,7 +126,10 @@ function createActionGuard(
 
       if (response.header) {
         response.header("X-Policy-Module", resourceAndModule.module);
-        response.header("X-Policy-Resource", resourceAndModule.resource || "partial");
+        response.header(
+          "X-Policy-Resource",
+          resourceAndModule.resource.length ? resourceAndModule.resource.join("/") : "partial"
+        );
       }
 
       let result = false;
@@ -141,7 +144,7 @@ function createActionGuard(
       for (const action of actions) {
         for (const policy of policies) {
           for (const [index, statement] of policy.statement.entries()) {
-            const actionMatch = matcher.isMatch(action, statement.action);
+            const actionMatch = action == statement.action;
             const moduleMatch = resourceAndModule.module == statement.module;
 
             if (actionMatch && moduleMatch) {
@@ -156,8 +159,8 @@ function createActionGuard(
                 match = resources.some(resource =>
                   // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
                   // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
-                  // where the first element is the id of the bucket while the second item is the identifier of the document
-                  // hence all resources has to match in order to assume that the user has the access to a arbitrary resource
+                  // and the first element is the id of the bucket while the second item is the identifier of the document
+                  // hence all resources has to match in order to assume that the user has the access to an arbitrary resource
                   //
                   // IMPORTANT: when the resource definition is shorter than the resource present in the statement we only check parts
                   // that are present in the resource definition. for example,  when the resource definiton is [ '5f30fffd4a51a68d6fec4d3b']
@@ -184,12 +187,10 @@ function createActionGuard(
                 }
 
                 include.push(...leftOverResources);
-              } else {
+              } else if ( typeof statement.resource == "object" ) {
                 const resource = statement.resource;
                 // We need parse resources that has slash in it to match them individually.
                 const includeParts = resource.include.split("/");
-
-                console.log(includeParts);
 
                 if (includeParts.length < resourceAndModule.resource.length) {
                   throw new ConflictException(
@@ -211,8 +212,6 @@ function createActionGuard(
 
                 const [lastPortion] = includeParts.slice(resourceAndModule.resource.length);
 
-                console.log(lastPortion);
-
                 if (lastPortion && lastPortion != "*") {
                   include.push(lastPortion);
                 }
@@ -220,6 +219,13 @@ function createActionGuard(
                 if (resource.exclude.length) {
                   exclude.push(resource.exclude);
                 }
+              } else if (typeof statement.resource == "undefined" && resourceAndModule.resource.length) {
+              
+                throw new ConflictException(
+                  `Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.` +
+                    `Expected ${resourceAndModule.resource.length} arguments.`
+                );
+                
               }
 
               // If the current resource has names we have to check them explicitly
@@ -239,14 +245,12 @@ function createActionGuard(
         exclude
       };
 
-      console.log(include, exclude);
-
       if (result) {
         return true;
       }
 
       throw new ForbiddenException(
-        `You do not have sufficient permissions to do this action. (${actions.join(", ")})`
+        `You do not have sufficient permissions to do ${actions.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
       );
     }
   }

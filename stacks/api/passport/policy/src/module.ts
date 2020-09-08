@@ -22,6 +22,7 @@ export class PolicyModule {
       exports: [PolicyService, POLICY_RESOLVER],
       controllers: [PolicyController],
       providers: [
+        PolicyService,
         {
           provide: POLICY_RESOLVER,
           useFactory: (policyService: PolicyService): PolicyResolver<Policy> => {
@@ -31,21 +32,6 @@ export class PolicyModule {
             };
           },
           inject: [PolicyService]
-        },
-        {
-          provide: PolicyService,
-          useFactory: db => {
-            return new PolicyService(
-              db,
-              fs
-                .readdirSync(`${path.join(__dirname, "..")}/policies`)
-                .map(f => require(`${path.join(__dirname, "..")}/policies/${f}`)),
-              fs
-                .readdirSync(`${path.join(__dirname, "..")}/services`)
-                .map(f => require(`${path.join(__dirname, "..")}/services/${f}`))
-            );
-          },
-          inject: [DatabaseService]
         }
       ]
     };
