@@ -115,22 +115,22 @@ export class FunctionController {
       for (const handler in fn.triggers) {
         if (fn.triggers.hasOwnProperty(handler)) {
           const trigger = fn.triggers[handler];
-          acc.push(trigger);
+          if (trigger.type == "bucket" && trigger.options["phase"] == "BEFORE") {
+            acc.push(trigger);
+          }
         }
       }
       return acc;
     }, new Array<Trigger>());
 
-    return triggers
-      .filter(trigger => trigger.type == "bucket")
-      .some((trigger, index, triggers) => {
-        const foundIndex = triggers.findIndex(
-          t =>
-            t.options["bucket"] == trigger.options["bucket"] &&
-            t.options["type"] == trigger.options["type"]
-        );
-        return foundIndex != index;
-      });
+    return triggers.some((trigger, index, triggers) => {
+      const foundIndex = triggers.findIndex(
+        t =>
+          t.options["bucket"] == trigger.options["bucket"] &&
+          t.options["type"] == trigger.options["type"]
+      );
+      return foundIndex != index;
+    });
   }
 
   /**
@@ -149,7 +149,7 @@ export class FunctionController {
     const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
     if (hasDuplicatedHandlers) {
       throw new BadRequestException(
-        "Multiple handlers on same bucket and event type are not supported."
+        "Multiple handlers on same bucket and event type in before phase are not supported."
       );
     }
     delete fn._id;
@@ -169,7 +169,7 @@ export class FunctionController {
     const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
     if (hasDuplicatedHandlers) {
       throw new BadRequestException(
-        "Multiple handlers on same bucket and event type are not supported."
+        "Multiple handlers on same bucket and event type in before phase are not supported."
       );
     }
     fn = await this.fs.insertOne(fn);

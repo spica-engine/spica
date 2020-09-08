@@ -1,5 +1,4 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {hookModuleProviders} from "@spica-server/bucket/hooks";
 import {createSchema} from "@spica-server/bucket/hooks/src/module";
 import {ServicesModule} from "@spica-server/bucket/services";
 import {
@@ -19,12 +18,11 @@ describe("hook module", () => {
 
     beforeEach(async () => {
       module = await Test.createTestingModule({
-        imports: [ServicesModule, DatabaseTestingModule.replicaSet(), PreferenceTestingModule],
-        providers: hookModuleProviders
+        imports: [ServicesModule, DatabaseTestingModule.replicaSet(), PreferenceTestingModule]
       }).compile();
 
       database = module.get(DatabaseService);
-    }, 120000);
+    });
 
     afterEach(async () => {
       await module.close();
@@ -37,18 +35,45 @@ describe("hook module", () => {
       expect(schema).toEqual({
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
-        required: ["bucket", "type"],
+        required: ["bucket", "phase", "type"],
         properties: {
           bucket: {
             title: "Bucket",
             type: "string",
-            enum: []
+            enum: [],
+            // @ts-expect-error
+            viewEnum: []
+          },
+          phase: {
+            title: "Phase",
+            type: "string",
+            enum: ["BEFORE", "AFTER"]
           },
           type: {
-            title: "Operation type",
-            description: "Event Type",
-            type: "string",
-            enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
+            type: "string"
+          }
+        },
+        if: {
+          properties: {
+            phase: {const: "BEFORE"}
+          }
+        },
+        then: {
+          properties: {
+            type: {
+              title: "Operation type",
+              type: "string",
+              enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
+            }
+          }
+        },
+        else: {
+          properties: {
+            type: {
+              title: "Operation type",
+              type: "string",
+              enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
+            }
           }
         },
         additionalProperties: false

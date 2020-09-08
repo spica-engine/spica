@@ -9,6 +9,6 @@ export class EnqueuerPipe implements PipeTransform {
     if (Array.isArray(enqueuers)) {
       return enqueuers.find(e => e.description.name == name);
     }
-    return enqueuers;
+    return null;
   }
 }

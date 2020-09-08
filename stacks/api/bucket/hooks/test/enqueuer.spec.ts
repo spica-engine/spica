@@ -1,74 +1,81 @@
 import {EventQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import {ActionEnqueuer, ActionDispatcher, mapHeaders} from "@spica-server/bucket/hooks";
-import {Action} from "../proto";
+import {ChangeAndReviewEnqueuer} from "@spica-server/bucket/hooks/src/enqueuer";
+import {ReviewDispatcher} from "@spica-server/bucket/hooks/src/dispatcher";
+import {ChangeEmitter} from "@spica-server/bucket/hooks/src/emitter";
 
-describe("enqueuer", () => {
-  let actionEnqueuer: ActionEnqueuer;
+describe("ChangeAndReviewEnqueuer", () => {
+  let changeOrReviewEnqeuer: ChangeAndReviewEnqueuer;
   let noopTarget: Event.Target;
   let noopTarget2: Event.Target;
   let eventQueue: jasmine.SpyObj<EventQueue>;
-  let dispatch: jasmine.SpyObj<ActionDispatcher>;
+  let reviewDispatcher: jasmine.SpyObj<ReviewDispatcher>;
+  let changeEmitter: jasmine.SpyObj<ChangeEmitter>;
 
   beforeEach(() => {
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
-    dispatch = jasmine.createSpyObj("dispatch", ["on", "off"]);
+    reviewDispatcher = jasmine.createSpyObj("dispatch", ["on", "off"]);
+    changeEmitter = jasmine.createSpyObj("dispatch", ["on", "off"]);
 
-    actionEnqueuer = new ActionEnqueuer(eventQueue, null, dispatch);
+    changeOrReviewEnqeuer = new ChangeAndReviewEnqueuer(
+      eventQueue,
+      null,
+      reviewDispatcher,
+      changeEmitter
+    );
 
-    noopTarget = new Event.Target();
-    noopTarget.cwd = "/tmp/fn1";
-    noopTarget.handler = "default";
-
-    noopTarget2 = new Event.Target();
-    noopTarget2.cwd = "/tmp/fn2";
-    noopTarget2.handler = "default";
-  });
-
-  afterEach(() => {
-    eventQueue.enqueue.calls.reset();
-  });
-
-  it("should map headers", () => {
-    const headers: Action.Header[] = mapHeaders({
-      authorization: "APIKEY 12345",
-      strategy: "APIKEY"
+    noopTarget = new Event.Target({
+      cwd: "/tmp/fn1",
+      handler: "default"
     });
 
-    expect([headers[0].key, headers[0].value]).toEqual(["authorization", "APIKEY 12345"]);
-    expect([headers[1].key, headers[1].value]).toEqual(["strategy", "APIKEY"]);
+    noopTarget2 = new Event.Target({
+      cwd: "/tmp/fn2",
+      handler: "default"
+    });
   });
 
   it("should add action to targets", () => {
-    actionEnqueuer.subscribe(noopTarget, {
+    changeOrReviewEnqeuer.subscribe(noopTarget, {
       bucket: "test_collection",
+      type: "INSERT",
+      phase: "BEFORE"
+    });
+
+    expect(changeOrReviewEnqeuer["reviewTargets"].get(noopTarget).options).toEqual({
+      bucket: "test_collection",
+      phase: "BEFORE",
       type: "INSERT"
     });
 
-    expect(actionEnqueuer["targets"].get(noopTarget).options).toEqual({
-      bucket: "test_collection",
-      type: "INSERT"
-    });
+    expect(reviewDispatcher.on).toHaveBeenCalledTimes(1);
 
-    expect(dispatch.on).toHaveBeenCalledTimes(1);
-
-    expect(dispatch.on.calls.first().args[0]).toEqual("test_collection_INSERT");
+    expect(reviewDispatcher.on.calls.first().args[0]).toEqual("test_collection_INSERT");
   });
 
-  it("should unsubscribe from action", () => {
-    actionEnqueuer.subscribe(noopTarget, {bucket: "test_collection", type: "INSERT"});
-    actionEnqueuer.subscribe(noopTarget2, {bucket: "test_collection", type: "GET"});
-
-    actionEnqueuer.unsubscribe(noopTarget);
-
-    expect(actionEnqueuer["targets"].get(noopTarget)).toEqual(undefined);
-    expect(actionEnqueuer["targets"].get(noopTarget2).options).toEqual({
+  it("should unsubscribe", () => {
+    changeOrReviewEnqeuer.subscribe(noopTarget, {
       bucket: "test_collection",
+      type: "INSERT",
+      phase: "BEFORE"
+    });
+    changeOrReviewEnqeuer.subscribe(noopTarget2, {
+      bucket: "test_collection",
+      type: "GET",
+      phase: "BEFORE"
+    });
+
+    changeOrReviewEnqeuer.unsubscribe(noopTarget);
+
+    expect(changeOrReviewEnqeuer["reviewTargets"].get(noopTarget)).toEqual(undefined);
+    expect(changeOrReviewEnqeuer["reviewTargets"].get(noopTarget2).options).toEqual({
+      bucket: "test_collection",
+      phase: "BEFORE",
       type: "GET"
     });
 
-    expect(dispatch.off).toHaveBeenCalledTimes(1);
+    expect(reviewDispatcher.off).toHaveBeenCalledTimes(1);
 
-    expect(dispatch.off.calls.first().args[0]).toEqual("test_collection_INSERT");
+    expect(reviewDispatcher.off.calls.first().args[0]).toEqual("test_collection_INSERT");
   });
 });

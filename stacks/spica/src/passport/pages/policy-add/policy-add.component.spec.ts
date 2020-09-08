@@ -325,7 +325,7 @@ describe("Policy Add Component", () => {
       ).and.returnValue(of(null));
 
       fixture.debugElement
-        .query(By.css("mat-card mat-card-content > button:last-of-type"))
+        .query(By.css("mat-card mat-card-actions > button"))
         .nativeElement.click();
 
       tick();
@@ -356,7 +356,7 @@ describe("Policy Add Component", () => {
       expect(navigateSpy).toHaveBeenCalledWith(["passport/policy"]);
     }));
 
-    it("should create policy which hasn't id", fakeAsync(() => {
+    it("should create policy which has no id", fakeAsync(() => {
       const createSpy = spyOn(
         fixture.componentInstance["policyService"],
         "createPolicy"
@@ -367,7 +367,7 @@ describe("Policy Add Component", () => {
       fixture.detectChanges();
 
       fixture.debugElement
-        .query(By.css("mat-card mat-card-content > button:last-of-type"))
+        .query(By.css("mat-card mat-card-actions > button"))
         .nativeElement.click();
       tick();
       fixture.detectChanges();

@@ -1,15 +1,14 @@
 import {Injectable} from "@nestjs/common";
 import {EventEmitter} from "events";
-import {ChangeOptions} from "./enqueuer";
 
 export function changeKey(bucket: string, type: string) {
   return `${bucket}_${type.toLowerCase()}`;
 }
 
 @Injectable()
-export class DataChangeEmitter extends EventEmitter {
+export class ChangeEmitter extends EventEmitter {
   emitChange(
-    options: ChangeOptions,
+    options: {bucket: string; type: string},
     documentKey: string,
     previous?: Object,
     current?: Object

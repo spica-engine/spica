@@ -23,14 +23,15 @@
       }
     }
 
-    button:last-of-type {
+    > button:last-of-type,
+    > span:not(:first-of-type):last-of-type {
       align-self: flex-end;
       margin-top: 30px;
     }
   }
   mat-card:first-of-type {
     margin: 30px;
-    margin-top: -110px;
+    margin-top: -85px;
     overflow: hidden;
     min-height: 156px;
   }
