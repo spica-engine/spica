@@ -27,13 +27,17 @@
 
 :host {
   app-header {
+    margin-bottom: 250px;
     .headline {
+      align-items: center !important;
       max-width: 80%;
       margin-left: 10%;
+      text-align: center;
       > div {
         &:first-of-type {
           h1 {
-            font-size: 4rem;
+            margin-top: 200px;
+            font-size: 4.5rem;
             font-weight: 100;
           }
           p {
@@ -73,6 +77,58 @@
             animation-duration: 1.3s;
             animation-iteration-count: infinite;
             animation-timing-function: ease-in-out;
+          }
+        }
+      }
+    }
+
+    .modules{
+      div{
+        position: relative;
+        width: 300px;
+        margin-top: 140px;
+        font-size: 1.25rem;
+        cursor: pointer;
+        &.active{
+          color: #15bde8;
+          &:after{
+            background: #15bde8;
+          }
+        }
+        &:after{
+          content: "";
+          position: absolute;
+          left: calc(50% - 12px);
+          top: 40px;
+          width: 14px;
+          height: 14px;
+          background: #fff;
+          border-radius: 15px;
+        }
+      }
+    }
+    .images{
+    margin: 80px auto 0px;
+    width: 80%;
+    position: relative;
+    text-align: left;
+      div{
+        position: relative;
+        top: 0px;
+        width: 400%;
+        transition: all 0.4s cubic-bezier(.02,.48,.37,.99);
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: -35%;
+        img{
+          width: 25%;
+          border-radius: 15px;
+          margin: 0px;
+          box-shadow: 0px 0px 10px rgba(0,0,0,.8);
+          transition: all 0.4s cubic-bezier(.02,.48,.37,.99);
+          transform: scale(0.75);
+          &.active{
+            transform: unset;
           }
         }
       }

@@ -56,37 +56,86 @@
       }
     }
 
-    .includes ul li {
-      font-size: 16px;
-      color: #78909c;
-      font-weight: 400;
-      margin: 10px 0px;
-      display: flex;
-      align-items: center;
-
-      mat-icon {
-        color: #1abde7;
-        margin-right: 5px;
+    .includes{
+      padding: 15px 0px;
+      >div{
+        padding: 25px 80px 30px 40px;
+        border: 1px solid #10102f;
+        border-radius: 15px;
+        width: calc( 100% + 40px );
+        box-sizing: border-box;
       }
+      ul li {
+        font-size: 17px;
+        color: #4d5c63;
+        font-weight: 400;
+        margin: 10px 0px;
+        display: flex;
+        align-items: center;
+  
+        mat-icon {
+          color: #1abde7;
+          margin-right: 5px;
+        }
+      }
+    } 
+    mat-card.free-trial{
+      margin: 0px;
+      background: #10102f;
+      padding: 40px;
+      mat-card-content{
+        p,h3{
+          padding: 0px;
+          text-align: left;
+          color: #fff;
+          margin: 15px 0px;
+        }
+        h3{
+          font-size: 2.5rem;
+          line-height: 3rem;
+        }
+        a{
+          justify-content: flex-start;
+          button{
+            background: #f5487f;
+            color: #fff;
+            padding: 0px 24px;
+          }
+        }
+        ul{
+          li{
+            text-align: left;
+            display: flex;
+            align-items: center;
+            color: #fff;
+            font-size: 1.15rem;
+            line-height: 2rem;
+            mat-icon{
+              margin: 0px 10px 0px 20px;
+              color: #f5487f;
+            }
+          }
+        }
+      }
+      color: #fff;
     }
 
     mat-card {
-      padding: 0px;
+      padding: 0px 0px 20px 0px;
       margin: 10px;
 
       border-radius: 15px;
-      height: 410px;
       box-shadow: 0 6px 12px -2px rgba(50, 50, 93, 0.25), 0 3px 7px -3px rgba(0, 0, 0, 0.3);
 
       mat-toolbar {
-        background-color: #1abde7;
+        background-color: transparent;
         border-top-left-radius: 15px;
         border-top-right-radius: 15px;
         p {
           width: 100%;
           text-align: center;
-          color: white;
-          font-size: 18px;
+          color: #222222;
+          font-size: 22px;
           font-weight: 500;
         }
       }
@@ -96,8 +145,8 @@
           margin-top: 15px;
           li {
             font-size: 16px;
-            padding: 12px 0px;
-            color: #78909c;
+            padding: 8px 15px;
+            color: #627680;
             font-weight: 400;
             text-align: center;
           }
@@ -107,13 +156,6 @@
           display: flex;
           justify-content: center;
         }
-      }
-    }
-
-    mat-card:first-of-type,
-    mat-card:last-of-type {
-      mat-toolbar {
-        background-color: #1c1c50;
       }
     }
 
