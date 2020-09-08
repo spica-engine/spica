@@ -6,22 +6,20 @@ export default {
     {
       action: "webhook:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "webhook"
     },
     {
       action: "webhook:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "webhook"
     },
     {
       action: "webhook:logs:index",
       module: "webhook:logs"
-    },
+    }
   ]
 };

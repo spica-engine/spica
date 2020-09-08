@@ -110,7 +110,6 @@ export class ApiKeyController {
     });
   }
 
-
   /**
    * Add the policy to an API Key.
    * @param id identifier of the api key.
@@ -121,17 +120,21 @@ export class ApiKeyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:add"))
   async addPolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId,
+    @Param("policyId") policyId: string | ObjectId
   ) {
     policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    return this.apiKeyService.findOneAndUpdate({
-      _id: id
-    }, {
-      $addToSet: {policies: policyId}
-    }, {
-      returnOriginal: false
-    });
+    return this.apiKeyService.findOneAndUpdate(
+      {
+        _id: id
+      },
+      {
+        $addToSet: {policies: policyId}
+      },
+      {
+        returnOriginal: false
+      }
+    );
   }
 
   /**
@@ -144,16 +147,20 @@ export class ApiKeyController {
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:remove"))
   async removePolicy(
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId,
+    @Param("policyId") policyId: string | ObjectId
   ) {
     policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    return this.apiKeyService.findOneAndUpdate({
-      _id: id
-    }, {
-      $pull: {policies: policyId}
-    }, {
-      returnOriginal: false
-    });
+    return this.apiKeyService.findOneAndUpdate(
+      {
+        _id: id
+      },
+      {
+        $pull: {policies: policyId}
+      },
+      {
+        returnOriginal: false
+      }
+    );
   }
 }

@@ -6,18 +6,16 @@ export default {
     {
       action: "storage:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "storage"
     },
     {
       action: "storage:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "storage"
-    },
+    }
   ]
 };

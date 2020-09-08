@@ -113,7 +113,7 @@ export class IdentityController {
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
     identity: Identity
   ) {
-    return this.identity.findOneAndUpdate(id, {$set: identity});
+    return this.identity.findOneAndUpdate({_id: id}, {$set: identity});
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -154,12 +154,16 @@ export class IdentityController {
   ) {
     policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
 
-    return this.identity.findOneAndUpdate({
-      _id: id
-    }, {
-      $pull: {policies: policyId}
-    }, {
-      returnOriginal: false
-    });
+    return this.identity.findOneAndUpdate(
+      {
+        _id: id
+      },
+      {
+        $pull: {policies: policyId}
+      },
+      {
+        returnOriginal: false
+      }
+    );
   }
 }

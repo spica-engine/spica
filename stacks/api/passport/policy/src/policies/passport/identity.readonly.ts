@@ -6,16 +6,14 @@ export default {
     {
       action: "passport:identity:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:identity"
     },
     {
       action: "passport:identity:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:identity"
     },

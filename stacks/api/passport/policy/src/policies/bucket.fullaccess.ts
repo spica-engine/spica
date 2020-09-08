@@ -13,40 +13,35 @@ export default {
     {
       action: "bucket:update",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "bucket"
     },
     {
       action: "bucket:delete",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "bucket"
     },
     {
       action: "bucket:data:create",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "bucket:data"
     },
     {
       action: "bucket:data:update",
       resource: {
-        include: "*/*",
-        exclude: []
+        include: "*/*"
       },
       module: "bucket:data"
     },
     {
       action: "bucket:data:delete",
       resource: {
-        include: "*/*",
-        exclude: []
+        include: "*/*"
       },
       module: "bucket:data"
     }

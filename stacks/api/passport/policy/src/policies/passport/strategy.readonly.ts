@@ -6,18 +6,16 @@ export default {
     {
       action: "passport:strategy:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:strategy"
     },
     {
       action: "passport:strategy:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:strategy"
-    },
+    }
   ]
 };

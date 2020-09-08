@@ -6,18 +6,16 @@ export default {
     {
       action: "dashboard:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "dashboard"
     },
     {
       action: "dashboard:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "dashboard"
-    },
+    }
   ]
 };

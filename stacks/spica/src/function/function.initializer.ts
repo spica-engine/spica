@@ -1,5 +1,11 @@
 import {Injectable} from "@angular/core";
-import {RemoveCategory, RouteCategory, RouteService, Upsert} from "@spica-client/core/route";
+import {
+  CherryPickAndRemove,
+  RemoveCategory,
+  RouteCategory,
+  RouteService,
+  Upsert
+} from "@spica-client/core/route";
 import {PassportService} from "@spica-client/passport";
 import {FunctionService} from "./function.service";
 
@@ -11,30 +17,8 @@ export class FunctionInitializer {
     private passport: PassportService
   ) {
     functionService.getFunctions().subscribe(funcs => {
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Function));
       this.routeService.dispatch(
-        new Upsert({
-          category: RouteCategory.Function,
-          id: `list_all_functions`,
-          icon: "format_list_numbered",
-          path: `/function`,
-          display: "Functions"
-        })
-      );
-      this.routeService.dispatch(
-        new Upsert({
-          category: RouteCategory.Function,
-          id: `list_all_logs`,
-          icon: "pest_control",
-          path: "/function/logs",
-          display: "Logs",
-          queryParams: {
-            begin: new Date(new Date().setHours(0, 0, 0, 0)),
-            end: new Date(new Date().setHours(23, 59, 59, 999)),
-            function: funcs.map(func => func._id),
-            showErrors: true
-          }
-        })
+        new CherryPickAndRemove(e => e.category == RouteCategory.Function)
       );
       funcs.forEach(func => {
         this.routeService.dispatch(
@@ -49,6 +33,7 @@ export class FunctionInitializer {
       });
     });
   }
+
   async appInitializer() {
     if (
       this.passport.identified &&

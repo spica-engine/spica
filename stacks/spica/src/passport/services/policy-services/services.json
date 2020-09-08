@@ -18,8 +18,8 @@
     "passport:identity:create": [],
     "passport:identity:update": ["identity_id"],
     "passport:identity:delete": ["identity_id"],
-    "passport:identity:policy:add": ["identity_id", "policyId"],
-    "passport:identity:policy:remove": ["identity_id", "policyId"]
+    "passport:identity:policy:add": ["identity_id", "policy_id"],
+    "passport:identity:policy:remove": ["identity_id", "policy_id"]
   },
   "passport:policy": {
     "passport:policy:index": ["policy_id"],
@@ -42,11 +42,11 @@
     "bucket:delete": ["bucket_id"]
   },
   "bucket:data": {
-    "bucket:data:index": ["bucket_id", "bucketdata_id"],
-    "bucket:data:show": ["bucket_id", "bucketdata_id"],
+    "bucket:data:index": ["bucket_id", "document_id"],
+    "bucket:data:show": ["bucket_id", "document_id"],
     "bucket:data:create": ["bucket_id"],
-    "bucket:data:update": ["bucket_id", "bucketdata_id"],
-    "bucket:data:delete": ["bucket_id", "bucketdata_id"]
+    "bucket:data:update": ["bucket_id", "document_id"],
+    "bucket:data:delete": ["bucket_id", "document_id"]
   },
   "dashboard": {
     "dashboard:index": ["dashboard_id"],
@@ -59,8 +59,7 @@
     "function:show": ["function_id"],
     "function:create": [],
     "function:update": ["function_id"],
-    "function:delete": ["function_id"],
-    "function:run": ["function_id"]
+    "function:delete": ["function_id"]
   },
   "function:logs": {
     "function:logs:index": [],
@@ -79,11 +78,11 @@
   },
 
   "storage": {
-    "storage:index": ["storage_id"],
-    "storage:show:": ["storage_id"],
+    "storage:index": ["object_id"],
+    "storage:show:": ["object_id"],
     "storage:create": [],
-    "storage:update": ["storage_id"],
-    "storage:delete": ["storage_id"]
+    "storage:update": ["object_id"],
+    "storage:delete": ["object_id"]
   },
   "preference": {
     "preference:show": ["scope"],

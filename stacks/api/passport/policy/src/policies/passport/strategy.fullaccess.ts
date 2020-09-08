@@ -9,16 +9,14 @@ export default {
     {
       action: "passport:strategy:update",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:strategy"
     },
     {
       action: "passport:strategy:delete",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:strategy"
     }

@@ -34,40 +34,47 @@ export interface PrepareUser {
   (request: any): any;
 }
 
-export const ResourceFilter = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
-  const request = ctx.switchToHttp().getRequest();
-  const {include, exclude: excluded} = request.resourceFilter;
+export const ResourceFilter = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    const {include, exclude: excluded} = request.resourceFilter;
 
-  let aggregation = [];
+    let aggregation = [];
 
-  for (const exclude of excluded) {
-    aggregation.push({
-      _id: {
-        $nin: Array.from<string>(new Set(exclude)).map(id => new ObjectId(id))
-      }
-    });
-  }
-
-  if (include.length) {
-    aggregation.push({
-      _id: {
-        $in: Array.from<string>(new Set(include)).map(id => new ObjectId(id))
-      }
-    });
-  }
-
-  if (!aggregation.length) {
-    return {
-      $match: {}
-    };
-  }
-
-  return {
-    $match: {
-      $or: aggregation
+    for (const exclude of excluded) {
+      aggregation.push({
+        _id: {
+          $nin: Array.from<string>(new Set(exclude)).map(id => new ObjectId(id))
+        }
+      });
     }
-  };
-});
+
+    if (include.length) {
+      aggregation.push({
+        _id: {
+          $in: Array.from<string>(new Set(include)).map(id => new ObjectId(id))
+        }
+      });
+    }
+
+    if (!aggregation.length) {
+      return {
+        $match: {}
+      };
+    }
+
+    return {
+      $match: {
+        $or: aggregation
+      }
+    };
+  },
+  [
+    (target, key, index) => {
+      Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
+    }
+  ]
+);
 
 function buildResourceAndModuleName(path: string, params: object, format?: string) {
   if (format) {
@@ -104,9 +111,18 @@ function createActionGuard(
     async canActivate(context: ExecutionContext): Promise<boolean> {
       let request = context.switchToHttp().getRequest(),
         response = context.switchToHttp().getResponse();
+
       if (request.TESTING_SKIP_CHECK) {
+        request.resourceFilter = {
+          include: [],
+          exclude: []
+        };
         return true;
       }
+
+      const resourceFilterMetadata =
+        Reflect.getMetadata("resourceFilter", context.getClass()) || {};
+      const hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
 
       actions = wrapArray(actions);
 
@@ -128,7 +144,7 @@ function createActionGuard(
         response.header("X-Policy-Module", resourceAndModule.module);
         response.header(
           "X-Policy-Resource",
-          resourceAndModule.resource.length ? resourceAndModule.resource.join("/") : "partial"
+          !hasResourceFilter ? resourceAndModule.resource.join("/") : "partial"
         );
       }
 
@@ -136,10 +152,6 @@ function createActionGuard(
 
       const include = [];
       const exclude = [];
-
-      console.log(
-        `${resourceAndModule.module} accepts ${resourceAndModule.resource.length} arguments.`
-      );
 
       for (const action of actions) {
         for (const policy of policies) {
@@ -150,11 +162,31 @@ function createActionGuard(
             if (actionMatch && moduleMatch) {
               let match: boolean;
 
+              function assertResourceAgainstDefinition(resource: string[]) {
+                const expectedResourceLength = hasResourceFilter
+                  ? resourceAndModule.resource.length + 1
+                  : resourceAndModule.resource.length;
+                if (resource.length != expectedResourceLength) {
+                  throw new ConflictException(
+                    `Policy "${policy.name}" contains a statement [${index}] whose resource does not match the resource definition.` +
+                      ` Expected ${expectedResourceLength} arguments.`
+                  );
+                }
+              }
+
               if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
                 // Parse resources in such format bucketid/dataid thus we could match them individually
                 const resources = wrapArray(statement.resource).map(resource =>
                   resource.split("/")
                 );
+
+                for (const resource of resources) {
+                  assertResourceAgainstDefinition(resource);
+                  if (resource.length - resourceAndModule.resource.length == 1) {
+                    const [lastPortion] = resource.slice(resourceAndModule.resource.length);
+                    include.push(lastPortion);
+                  }
+                }
 
                 match = resources.some(resource =>
                   // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
@@ -169,71 +201,55 @@ function createActionGuard(
                   // to filter out in database layer.
                   resourceAndModule.resource.every((part, index) => part == resource[index])
                 );
-
-                const leftOverResources = [];
-
-                for (const resource of resources) {
-                  if (resource.length - resourceAndModule.resource.length > 1) {
-                    throw new ConflictException(
-                      `The policy ${policy.name} contains invalid resource name '${resource.join(
-                        "/"
-                      )}'.` +
-                        ` Resource ${resourceAndModule.module} ${action} accepts exactly ${resourceAndModule.resource.length} arguments.`
-                    );
-                  }
-                  if (resource.length - resourceAndModule.resource.length == 1) {
-                    leftOverResources.push(resource[resource.length - 1]);
-                  }
-                }
-
-                include.push(...leftOverResources);
-              } else if ( typeof statement.resource == "object" ) {
+              } else if (typeof statement.resource == "object") {
                 const resource = statement.resource;
                 // We need parse resources that has slash in it to match them individually.
-                const includeParts = resource.include.split("/");
+                const includeResource = resource.include.split("/");
 
-                if (includeParts.length < resourceAndModule.resource.length) {
-                  throw new ConflictException(
-                    `Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.` +
-                      `Expected ${resourceAndModule.resource.length} arguments.`
-                  );
-                }
+                assertResourceAgainstDefinition(includeResource);
+
+                const hasExcludedResources = resource.exclude && resource.exclude.length;
 
                 match = resourceAndModule.resource.every((part, index) => {
-                  const pattern = [includeParts[index]];
+                  const pattern = [includeResource[index]];
                   // We only include the excluded items when we are checking the last portion of the resource
                   // which is usually the subresource
-                  if (index == resourceAndModule.resource.length - 1) {
+                  if (index == resourceAndModule.resource.length - 1 && hasExcludedResources) {
                     pattern.push(...resource.exclude.map(resource => `!${resource}`));
                   }
 
                   return matcher.isMatch(part, pattern);
                 });
 
-                const [lastPortion] = includeParts.slice(resourceAndModule.resource.length);
+                const [lastPortion] = includeResource.slice(resourceAndModule.resource.length);
 
+                // If the resource looks like this ["resource_id/*"] where it has a wildcard segments
+                // we can't and should not try to put it into include array since the database ought to
+                // include it implicitly
                 if (lastPortion && lastPortion != "*") {
                   include.push(lastPortion);
                 }
 
-                if (resource.exclude.length) {
+                if (hasExcludedResources) {
                   exclude.push(resource.exclude);
                 }
-              } else if (typeof statement.resource == "undefined" && resourceAndModule.resource.length) {
-              
-                throw new ConflictException(
-                  `Policy "${policy.name}" contains a statement [${index}]  whose resource does not match the resource definition.` +
-                    `Expected ${resourceAndModule.resource.length} arguments.`
-                );
-                
+              } else if (typeof statement.resource == "undefined") {
+                // If the resource is not present then check against an empty array
+                // which should be the equivalent of an undefined resource
+                assertResourceAgainstDefinition([]);
+                // If matches the definition then it is safe to mark this statement
+                //  as the action and the module matches
+                match = true;
               }
 
               // If the current resource has names we have to check them explicitly
               // otherwise we just pass those to controllers to filter out in database layer
               if (match) {
                 result = true;
-                // Resource is allowed therefore we don't need to go further and check other policies.
-                break;
+                if (!hasResourceFilter) {
+                  // Resource is allowed therefore we don't need to go further and check other policies.
+                  break;
+                }
               }
             }
           }
@@ -250,7 +266,9 @@ function createActionGuard(
       }
 
       throw new ForbiddenException(
-        `You do not have sufficient permissions to do ${actions.join(", ")} on resource ${resourceAndModule.resource.join("/")}`
+        `You do not have sufficient permissions to do ${actions.join(
+          ", "
+        )} on resource ${resourceAndModule.resource.join("/")}`
       );
     }
   }

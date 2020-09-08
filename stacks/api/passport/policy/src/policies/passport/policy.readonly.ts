@@ -6,18 +6,16 @@ export default {
     {
       action: "passport:policy:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:policy"
     },
     {
       action: "passport:policy:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:policy"
-    },
+    }
   ]
 };

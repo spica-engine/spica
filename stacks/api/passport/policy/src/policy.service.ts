@@ -21,7 +21,6 @@ export class PolicyService {
     return [...this.managedPolicies, ...this.customerManagedPolicies];
   }
 
-
   constructor(db: DatabaseService) {
     this._policyCollection = db.collection("policies");
     this.managedPolicies = managedPolicies.map(p => ({...p, system: true}));

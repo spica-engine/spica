@@ -44,11 +44,11 @@ export class StorageService {
     return this._collection
       .aggregate(aggregation)
       .next()
-      .then(async (d: any) => {
-        for (const obj of (d[0] as any).data) {
-          obj.url = await this.service.url(obj._id);
+      .then(async (result: any) => {
+        for (const object of result.data) {
+          object.url = await this.service.url(object._id);
         }
-        return d;
+        return result;
       });
   }
 

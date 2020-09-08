@@ -82,7 +82,7 @@
             "
           >
             <ng-container *ngIf="getResourceSelection(statement) == 'only_include'">
-              <mat-label>INCLUDED RESOURCES</mat-label>
+              <mat-label>Included resources</mat-label>
               <div
                 class="included-resources"
                 *ngFor="let included of statement.resource; index as j"
@@ -105,13 +105,10 @@
                     placeholder="Enter the resource that will be included"
                   />
                   <mat-hint *ngIf="services[statement.module][statement.action]">
-                    {{
-                      services[statement.module][statement.action].length == 1
-                        ? "Expected resource"
-                        : "Expected pattern"
-                    }}
-                    <br />
-                    {{ services[statement.module][statement.action].join("/") }}
+                    Expected resource format: "<b>{{
+                      services[statement.module][statement.action].join("/")
+                    }}</b
+                    >"
                   </mat-hint>
                 </mat-form-field>
                 <button

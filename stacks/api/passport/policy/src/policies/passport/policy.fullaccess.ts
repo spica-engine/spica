@@ -13,8 +13,7 @@ export default {
     {
       action: "passport:policy:update",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:policy"
     },

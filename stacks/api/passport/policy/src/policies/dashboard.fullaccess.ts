@@ -9,16 +9,14 @@ export default {
     {
       action: "dashboard:update",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "dashboard"
     },
     {
       action: "dashboard:delete",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "dashboard"
     }

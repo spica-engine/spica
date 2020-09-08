@@ -4,6 +4,7 @@ import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {ApiKeyModule} from "@spica-server/passport/apikey";
 
 describe("ApiKey", () => {
   let req: Request;
@@ -12,10 +13,11 @@ describe("ApiKey", () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
-        DatabaseTestingModule.create(),
+        DatabaseTestingModule.standalone(),
         CoreTestingModule,
         PreferenceTestingModule,
-        PassportTestingModule.initialize()
+        PassportTestingModule.initialize(),
+        ApiKeyModule.forRoot()
       ]
     }).compile();
 
@@ -26,7 +28,7 @@ describe("ApiKey", () => {
     await app.listen(req.socket);
   });
 
-  afterEach(async () => await app.close());
+  afterEach(() => app.close());
 
   describe("find", () => {
     it("should return empty index", async () => {
@@ -226,17 +228,14 @@ describe("ApiKey", () => {
         name: "test"
       })).body;
 
-      const response = await req.put(`/passport/apikey/${insertedApiKey._id}/attach-policy`, [
-        "test policy",
-        "another policy"
-      ]);
+      const response = await req.put(`/passport/apikey/${insertedApiKey._id}/policy/test_policy`);
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         _id: insertedApiKey._id,
         key: insertedApiKey.key,
         name: "test",
         active: true,
-        policies: ["test policy", "another policy"]
+        policies: ["test_policy"]
       });
     });
 
@@ -245,83 +244,19 @@ describe("ApiKey", () => {
         name: "test"
       })).body;
 
-      await req.put(`/passport/apikey/${insertedApiKey._id}/attach-policy`, [
-        "test policy",
-        "another policy"
-      ]);
+      await req.put(`/passport/apikey/${insertedApiKey._id}/policy/test_policy`);
 
-      const response = await req.put(`/passport/apikey/${insertedApiKey._id}/detach-policy`, [
-        "test policy"
-      ]);
+      const response = await req.delete(
+        `/passport/apikey/${insertedApiKey._id}/policy/test_policy`
+      );
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         _id: insertedApiKey._id,
         key: insertedApiKey.key,
         name: "test",
         active: true,
-        policies: ["another policy"]
+        policies: []
       });
-    });
-
-    it("should throw error if policies which will be attached are duplicated", async () => {
-      const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test"
-      })).body;
-
-      const responseBody = (await req.put(`/passport/apikey/${insertedApiKey._id}/attach-policy`, [
-        "test policy",
-        "test policy",
-        "another policy"
-      ])).body;
-
-      expect([responseBody.statusCode, responseBody.message, responseBody.error]).toEqual([
-        400,
-        " should NOT have duplicate items (items ## 1 and 0 are identical)",
-        "validation failed"
-      ]);
-    });
-
-    it("should throw error if policies which will be detached are duplicated", async () => {
-      const insertedApiKey = (await req.post("/passport/apikey", {
-        name: "test"
-      })).body;
-
-      const responseBody = (await req.put(`/passport/apikey/${insertedApiKey._id}/detach-policy`, [
-        "test policy",
-        "test policy",
-        "another policy"
-      ])).body;
-
-      expect([responseBody.statusCode, responseBody.message, responseBody.error]).toEqual([
-        400,
-        " should NOT have duplicate items (items ## 1 and 0 are identical)",
-        "validation failed"
-      ]);
-    });
-
-    it("should throw error if apikey id on attach request is nonexist", async () => {
-      await req.post("/passport/apikey", {
-        name: "test"
-      });
-
-      const responseBody = (await req.put(`/passport/apikey/${new ObjectId()}/attach-policy`, [
-        "another policy"
-      ])).body;
-
-      expect([responseBody.statusCode, responseBody.message]).toEqual([404, "Not Found"]);
-    });
-
-    it("should throw error if apikey id on detach request is nonexist", async () => {
-      await req.post("/passport/apikey", {
-        name: "test",
-        policies: ["test policy"]
-      });
-
-      const responseBody = (await req.put(`/passport/apikey/${new ObjectId()}/detach-policy`, [
-        "another policy"
-      ])).body;
-
-      expect([responseBody.statusCode, responseBody.message]).toEqual([404, "Not Found"]);
     });
   });
 });

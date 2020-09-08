@@ -3,7 +3,7 @@ import {Injectable} from "@angular/core";
 import {Omit} from "@spica-client/core";
 import * as jwt_decode from "jwt-decode";
 import * as matcher from "matcher";
-import {Observable, of} from "rxjs";
+import {Observable} from "rxjs";
 import {concatMap, map, shareReplay, tap} from "rxjs/operators";
 import {Identity} from "../interfaces/identity";
 import {Statement} from "../interfaces/statement";
@@ -94,12 +94,10 @@ export class PassportService {
           module: actionParts.slice(0, actionParts.length - 1).join(":")
         };
 
-        const include = [];
-        const exclude = [];
         let result;
 
         for (const statement of statements) {
-          const actionMatch = matcher.isMatch(action, statement.action);
+          const actionMatch = action == statement.action;
           const moduleMatch = resourceAndModule.module == statement.module;
 
           if (actionMatch && moduleMatch) {
@@ -107,9 +105,7 @@ export class PassportService {
 
             if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
               // Parse resources in such format bucketid/dataid thus we could match them individually
-              const resources = wrapArray(statement.resource).map(resource =>
-                resource.split("/")
-              );
+              const resources = wrapArray(statement.resource).map(resource => resource.split("/"));
 
               match = resources.some(resource =>
                 // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
@@ -124,49 +120,34 @@ export class PassportService {
                 // to filter out in database layer.
                 resourceAndModule.resource.every((part, index) => part == resource[index])
               );
-
-              const leftOverResources = [];
-
-              for (const resource of resources) {
-                if (resource.length - resourceAndModule.resource.length == 1) {
-                  leftOverResources.push(resource[resource.length - 1]);
-                }
-              }
-
-              include.push(...leftOverResources);
-            } else if ( typeof statement.resource == "object" ) {
+            } else if (typeof statement.resource == "object") {
               const resource = statement.resource;
               // We need parse resources that has slash in it to match them individually.
-              const includeParts = resource.include.split("/");
+              const includeResource = resource.include.split("/");
+
+              const hasExcludedResources = resource.exclude && resource.exclude.length;
 
               match = resourceAndModule.resource.every((part, index) => {
-                const pattern = [includeParts[index]];
+                const pattern = [includeResource[index]];
                 // We only include the excluded items when we are checking the last portion of the resource
                 // which is usually the subresource
-                if (index == resourceAndModule.resource.length - 1) {
+                if (index == resourceAndModule.resource.length - 1 && hasExcludedResources) {
                   pattern.push(...resource.exclude.map(resource => `!${resource}`));
                 }
 
                 return matcher.isMatch(part, pattern);
               });
-
-              const [lastPortion] = includeParts.slice(resourceAndModule.resource.length);
-
-              if (lastPortion && lastPortion != "*") {
-                include.push(lastPortion);
-              }
-
-              if (resource.exclude.length) {
-                exclude.push(resource.exclude);
-              }
+            } else if (
+              typeof statement.resource == "undefined" &&
+              !resourceAndModule.resource.length
+            ) {
+              match = true;
             }
 
             // If the current resource has names we have to check them explicitly
             // otherwise we just pass those to controllers to filter out in database layer
-            if (match && actionMatch && moduleMatch) {
+            if (match) {
               result = true;
-              // Resource is allowed therefore we don't need to go further and check other policies.
-              break;
             }
           }
         }

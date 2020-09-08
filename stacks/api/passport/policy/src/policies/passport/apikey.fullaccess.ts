@@ -13,32 +13,28 @@ export default {
     {
       action: "passport:apikey:update",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:apikey"
     },
     {
       action: "passport:apikey:delete",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:apikey"
     },
     {
       action: "passport:apikey:policy:add",
       resource: {
-        include: "*/*",
-        exclude: []
+        include: "*/*"
       },
       module: "passport:apikey:policy"
     },
     {
       action: "passport:apikey:policy:remove",
       resource: {
-        include: "*/*",
-        exclude: []
+        include: "*/*"
       },
       module: "passport:apikey:policy"
     }

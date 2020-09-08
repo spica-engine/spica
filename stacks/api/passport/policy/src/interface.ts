@@ -7,9 +7,12 @@ export interface Policy {
 
 export interface Statement {
   action: string;
-  resource?: string | string[] | {
-    include: string,
-    exclude: string;
-  }
+  resource?:
+    | string
+    | string[]
+    | {
+        include: string;
+        exclude: string;
+      };
   module: string;
 }

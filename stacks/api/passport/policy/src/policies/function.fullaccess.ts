@@ -6,16 +6,14 @@ export default {
     {
       action: "function:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "function"
     },
     {
       action: "function:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "function"
     },
@@ -26,16 +24,14 @@ export default {
     {
       action: "function:update",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "function"
     },
     {
       action: "function:delete",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "function"
     },

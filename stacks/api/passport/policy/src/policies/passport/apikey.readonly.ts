@@ -6,16 +6,14 @@ export default {
     {
       action: "passport:apikey:index",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:apikey"
     },
     {
       action: "passport:apikey:show",
       resource: {
-        include: "*",
-        exclude: []
+        include: "*"
       },
       module: "passport:apikey"
     }

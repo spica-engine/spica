@@ -26,18 +26,25 @@ yarn_install(
 # Setup docker workspace
 git_repository(
     name = "io_bazel_rules_docker",
-    commit = "f1557ebc5381e2a662314e21585aa8080e9508be",
+    commit = "faaa10a72fa9abde070e2a20d6046e9f9b849e9a",
     remote = "https://github.com/bazelbuild/rules_docker.git",
-    shallow_since = "1591115913 -0400",
+    shallow_since = "1592582964 -0400",
 )
 
-# Load container repositories
 load(
     "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",
 )
 
 container_repositories()
+
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+
+container_deps()
+
+load("@io_bazel_rules_docker//repositories:pip_repositories.bzl", "pip_deps")
+
+pip_deps()
 
 # Download base images, etc
 load("@io_bazel_rules_docker//container:container.bzl", "container_pull")
