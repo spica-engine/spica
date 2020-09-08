@@ -73,6 +73,7 @@ export class IndexComponent implements OnInit {
         this.guideResponse = {};
         this.readOnly = schema.readOnly;
         this.properties = [
+          {name: "$$spicainternal_id", title: "id"},
           ...Object.entries(schema.properties).map(([name, value]) => ({
             name,
             title: value.title
@@ -94,6 +95,7 @@ export class IndexComponent implements OnInit {
           ? cachedDisplayedProperties.filter(dispProps =>
               Object.keys(schema.properties)
                 .concat([
+                  "$$spicainternal_id",
                   "$$spicainternal_schedule",
                   "$$spicainternal_actions",
                   "$$spicainternal_select"
@@ -173,16 +175,13 @@ export class IndexComponent implements OnInit {
     if (display) {
       this.displayedProperties = [
         "$$spicainternal_select",
+        "$$spicainternal_id",
         ...Object.keys(schema.properties),
         "$$spicainternal_schedule",
         "$$spicainternal_actions"
       ];
     } else {
-      this.displayedProperties = [
-        "$$spicainternal_select",
-        schema.primary,
-        "$$spicainternal_actions"
-      ];
+      this.displayedProperties = [schema.primary, "$$spicainternal_actions"];
     }
     localStorage.setItem(
       `${this.bucketId}-displayedProperties`,

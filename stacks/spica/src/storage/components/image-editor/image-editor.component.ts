@@ -80,7 +80,7 @@ export class ImageEditorComponent implements OnInit {
     this.scaleImage().toBlob(blob => {
       const file = new File([blob], this.storage.name, {type: blob.type});
       this.storageService
-        .updateOne(this.storage._id, file)
+        .updateOne(this.storage, file)
         .toPromise()
         .then(() => {
           this.dialogRef.close();
