@@ -10,7 +10,7 @@ import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
-import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
   selector: "bucket-index",
@@ -70,10 +70,11 @@ export class IndexComponent implements OnInit {
     this.schema$ = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
-        this.filter = undefined;
         this.showScheduled = false;
-        this.sort = {};
 
+        //reset this values when bucket changed
+        this.filter = {};
+        this.sort = {};
         this.paginator.pageIndex = this.defaultPaginatorOptions.pageIndex;
         this.paginator.pageSize = this.defaultPaginatorOptions.pageSize;
         this.paginator.length = this.defaultPaginatorOptions.length;
@@ -258,13 +259,13 @@ export class IndexComponent implements OnInit {
 
     this.router.navigate([], {
       queryParams: {
-        filter: JSON.stringify(this.filter ? this.filter : null),
+        filter: JSON.stringify(this.filter),
         paginator: JSON.stringify({
           pageSize: this.paginator.pageSize,
           pageIndex: this.paginator.pageIndex,
           length: this.paginator.length
         }),
-        sort: JSON.stringify(this.sort ? this.sort : null),
+        sort: JSON.stringify(this.sort),
         language: this.language
       }
     });
@@ -274,8 +275,8 @@ export class IndexComponent implements OnInit {
     this.router.navigate([], {
       queryParams: {
         paginator: JSON.stringify(changes),
-        filter: JSON.stringify(this.filter ? this.filter : null),
-        sort: JSON.stringify(this.sort ? this.sort : null),
+        filter: JSON.stringify(this.filter),
+        sort: JSON.stringify(this.sort),
         language: this.language
       }
     });
@@ -284,9 +285,9 @@ export class IndexComponent implements OnInit {
   onFilterChange(changes: object) {
     this.router.navigate([], {
       queryParams: {
-        filter: JSON.stringify(changes ? changes : null),
+        filter: JSON.stringify(changes),
         paginator: JSON.stringify(this.defaultPaginatorOptions),
-        sort: JSON.stringify(this.sort ? this.sort : null),
+        sort: JSON.stringify(this.sort),
         language: this.language
       }
     });
@@ -295,9 +296,9 @@ export class IndexComponent implements OnInit {
   onLanguageChange(language: string) {
     this.router.navigate([], {
       queryParams: {
-        filter: JSON.stringify(this.filter ? this.filter : null),
+        filter: JSON.stringify(this.filter),
         paginator: JSON.stringify(this.defaultPaginatorOptions),
-        sort: JSON.stringify(this.sort ? this.sort : null),
+        sort: JSON.stringify(this.sort),
         language: language
       }
     });

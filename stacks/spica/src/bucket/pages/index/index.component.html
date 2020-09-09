@@ -75,7 +75,7 @@
           #filterer
           [filter]="filter"
           [schema]="schema"
-          (filterChange)="onFilterChange($event)"
+          (filterChange)="onFilterChange($event ? $event : {})"
         ></bucket-filter>
       </mat-menu>
     </button>
