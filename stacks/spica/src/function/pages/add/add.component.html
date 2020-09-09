@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar>
   <h4 class="mat-h4">
     <mat-icon>memory</mat-icon>
     <span>
@@ -215,7 +215,11 @@
 
             <ng-container
               ngModelGroup="triggerOptions"
-              *ngIf="(information.enqueuers | enqueuer: trigger.type)?.options; let options"
+              *ngIf="
+                (information.enqueuers | enqueuer: trigger.type)?.options
+                  | conditionalSchema: trigger.options;
+                let options
+              "
             >
               <span
                 *ngFor="let propertyKv of options.properties | keyvalue"

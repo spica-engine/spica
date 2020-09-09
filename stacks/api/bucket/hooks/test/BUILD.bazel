@@ -10,7 +10,7 @@ ts_library(
         "dispatcher.spec.ts",
         "enqueuer.spec.ts",
         "module.spec.ts",
-        "proto/node/action.spec.ts",
+        "proto/node/review.spec.ts",
     ],
     deps = [
         "//packages/core/schema",

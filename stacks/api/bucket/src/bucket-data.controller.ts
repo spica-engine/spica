@@ -20,9 +20,8 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {DataChangeEmitter} from "@spica-server/bucket/change";
 import {HistoryService} from "@spica-server/bucket/history";
-import {ActionDispatcher} from "@spica-server/bucket/hooks";
+import {ChangeEmitter, ReviewDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
@@ -42,9 +41,9 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    @Optional() private dispatcher: ActionDispatcher,
-    @Optional() private history: HistoryService,
-    @Optional() private changes: DataChangeEmitter
+    @Optional() private reviewDispatcher: ReviewDispatcher,
+    @Optional() private changeEmitter: ChangeEmitter,
+    @Optional() private history: HistoryService
   ) {}
 
   /**
@@ -143,8 +142,8 @@ export class BucketDataController {
       aggregation.push({$match: filter});
     }
 
-    if (this.dispatcher && strategyType == "APIKEY") {
-      const hookAggregation = await this.dispatcher.dispatch(
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
+      const hookAggregation = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INDEX"},
         headers
       );
@@ -254,8 +253,8 @@ export class BucketDataController {
       }
     }
 
-    if (this.dispatcher && strategyType == "APIKEY") {
-      const hookAggregation = await this.dispatcher.dispatch(
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
+      const hookAggregation = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "GET"},
         headers,
         documentId.toHexString()
@@ -306,8 +305,8 @@ export class BucketDataController {
     @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.dispatcher && strategyType == "APIKEY") {
-      const allowed = await this.dispatcher.dispatch(
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
+      const allowed = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INSERT"},
         headers
       );
@@ -320,8 +319,8 @@ export class BucketDataController {
       insertedId
     } = await this.bds.insertOne(bucketId, body);
 
-    if (this.changes) {
-      this.changes.emitChange(
+    if (this.changeEmitter) {
+      this.changeEmitter.emitChange(
         {
           bucket: bucketId.toHexString(),
           type: "insert"
@@ -359,8 +358,8 @@ export class BucketDataController {
     @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.dispatcher && strategyType == "APIKEY") {
-      const allowed = await this.dispatcher.dispatch(
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
+      const allowed = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "UPDATE"},
         headers,
         documentId.toHexString()
@@ -377,11 +376,11 @@ export class BucketDataController {
     const currentDocument = {...body, _id: documentId};
     const _ = this.createHistory(bucketId, previousDocument, currentDocument);
 
-    if (this.changes) {
-      this.changes.emitChange(
+    if (this.changeEmitter) {
+      this.changeEmitter.emitChange(
         {
           bucket: bucketId.toHexString(),
-          type: "replace"
+          type: "UPDATE"
         },
         documentId.toHexString(),
         previousDocument,
@@ -407,8 +406,8 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    if (this.dispatcher && strategyType == "APIKEY") {
-      const allowed = await this.dispatcher.dispatch(
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
+      const allowed = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "DELETE"},
         headers,
         documentId.toHexString()
@@ -420,14 +419,14 @@ export class BucketDataController {
 
     let deletedDocument: BucketDocument;
 
-    if (this.changes) {
+    if (this.changeEmitter) {
       deletedDocument = await this.bds.findOne(bucketId, {_id: documentId});
     }
     const {deletedCount} = await this.bds.deleteOne(bucketId, {_id: documentId});
 
     if (deletedCount > 0) {
-      if (this.changes) {
-        this.changes.emitChange(
+      if (this.changeEmitter) {
+        this.changeEmitter.emitChange(
           {
             bucket: bucketId.toHexString(),
             type: "delete"
@@ -475,15 +474,15 @@ export class BucketDataController {
 
     let documents: BucketDocument[];
 
-    if (this.changes) {
+    if (this.changeEmitter) {
       documents = await this.bds.find(bucketId, {$match: {_id: {$in: ids}}});
     }
     const {deletedCount} = await this.bds.deleteMany(bucketId, ids);
 
     if (deletedCount > 0) {
-      if (this.changes) {
+      if (this.changeEmitter) {
         for (const document of documents) {
-          this.changes.emitChange(
+          this.changeEmitter.emitChange(
             {bucket: bucketId.toHexString(), type: "delete"},
             document._id.toHexString(),
             document,

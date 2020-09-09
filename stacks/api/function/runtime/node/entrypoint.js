@@ -1,7 +1,5 @@
-import {Change as BucketDataChange, DataChangeQueue} from "@spica-server/bucket/change/node";
-import {DataChange} from "@spica-server/bucket/change/proto";
-import {Action} from "@spica-server/bucket/hooks/proto";
-import {ActionParameters, ActionQueue} from "@spica-server/bucket/hooks/proto/node";
+import * as Bucket from "@spica-server/bucket/hooks/proto/node";
+import {hooks as BucketHooks} from "@spica-server/bucket/hooks/proto";
 import {
   Change,
   DatabaseQueue,
@@ -17,7 +15,6 @@ import {
 import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {createRequire} from "module";
 import * as path from "path";
-import "v8-compile-cache";
 
 if (!process.env.FUNCTION_GRPC_ADDRESS) {
   exitAbnormally("Environment variable FUNCTION_GRPC_ADDRESS was not set.");
@@ -46,7 +43,7 @@ if (!process.env.WORKER_ID) {
     id: process.env.WORKER_ID
   });
   const event = await queue.pop(pop).catch(e => {
-    console.log(e);
+    console.error(e);
     return undefined;
   });
 
@@ -134,7 +131,6 @@ if (!process.env.WORKER_ID) {
         ),
         pool: new FirehosePool(poolDescription, message => firehose.sendAll(message))
       };
-
       break;
     case Event.Type.SCHEDULE:
     case Event.Type.SYSTEM:
@@ -142,31 +138,35 @@ if (!process.env.WORKER_ID) {
       // NO OP
       break;
     case Event.Type.BUCKET:
-      const actionQueue = new ActionQueue();
-      const actionParams = await actionQueue.pop(
-        new Action.Action.Pop({
+      const reviewAndChangeQueue = new Bucket.ReviewAndChangeQueue();
+      const reviewOrChange = await reviewAndChangeQueue.pop(
+        new BucketHooks.Pop({
           id: event.id
         })
       );
-      callArguments[0] = new ActionParameters(actionParams);
-      callback = async result => {
-        result = await result;
-        await actionQueue.result(
-          new Action.Result({
-            id: event.id,
-            result: JSON.stringify(result)
-          })
-        );
-      };
-      break;
-    case Event.Type.BUCKET_DATA:
-      const dataChangeQueue = new DataChangeQueue();
-      const dataChange = await dataChangeQueue.pop(
-        new DataChange.Change.Pop({
-          id: event.id
-        })
-      );
-      callArguments[0] = new BucketDataChange(dataChange);
+
+      if (reviewOrChange.review) {
+        callArguments[0] = new Bucket.Review(reviewOrChange.review);
+        callback = async result => {
+          result = await result;
+          if (result == undefined || result == null) {
+            console.error(
+              `Function (${
+                event.target.handler
+              }) did not return any review response. Expected a review response but got ${typeof result}`
+            );
+          }
+          await reviewAndChangeQueue.result(
+            new BucketHooks.Review.Result({
+              id: event.id,
+              result: JSON.stringify(result),
+              type: reviewOrChange.review.type
+            })
+          );
+        };
+      } else {
+        callArguments[0] = new Bucket.Change(reviewOrChange.change);
+      }
       break;
     default:
       exitAbnormally(`Invalid event type received. (${event.type})`);

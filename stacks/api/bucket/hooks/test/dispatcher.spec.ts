@@ -1,26 +1,25 @@
-import {ActionDispatcher} from "../src";
-import {actionKey} from "../src/dispatcher";
+import {ReviewDispatcher, reviewKey} from "@spica-server/bucket/hooks/src/dispatcher";
 
-describe("Dispatcher", () => {
-  let actionDispatcher: ActionDispatcher;
+describe("Review Dispatcher", () => {
+  let reviewDispatcher: ReviewDispatcher;
   beforeEach(() => {
-    actionDispatcher = new ActionDispatcher();
+    reviewDispatcher = new ReviewDispatcher();
   });
 
   afterEach(() => {
-    actionDispatcher.removeAllListeners();
+    reviewDispatcher.removeAllListeners();
   });
 
-  it("should return actionKey", () => {
-    expect(actionKey("test_bucket", "GET")).toEqual("test_bucket_GET");
+  it("should return an actionKey", () => {
+    expect(reviewKey("test_bucket", "GET")).toEqual("test_bucket_GET");
   });
 
   it("should emit given parameters to listener", () => {
-    actionDispatcher.on("test_bucket_GET", () => {});
+    reviewDispatcher.on("test_bucket_GET", () => {});
 
-    const emitSpy = spyOn(actionDispatcher, "emit");
+    const emitSpy = spyOn(reviewDispatcher, "emit");
 
-    actionDispatcher.dispatch(
+    reviewDispatcher.dispatch(
       {bucket: "test_bucket", type: "GET"},
       {
         authorization: "APIKEY 12345",
@@ -41,8 +40,8 @@ describe("Dispatcher", () => {
     ]);
   });
 
-  it("should resolve promise false if there is no listeners for that action", () => {
-    actionDispatcher
+  it("should resolve the promise to false if there is no listeners for the arbitrary review", () => {
+    reviewDispatcher
       .dispatch(
         {bucket: "test_bucket", type: "GET"},
         {

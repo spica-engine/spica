@@ -84,21 +84,21 @@
           </ng-container>
         </mat-list>
       </div>
-
-      <button
-        class="save-button"
-        [disabled]="apiKeyForm.invalid"
-        [canInteract]="apiKey._id ? 'passport:apikey:update' : 'passport:apikey:create'"
-        [resource]="apiKey._id ? apiKey._id : undefined"
-        mat-button
-        type="submit"
-        (click)="saveApiKey()"
-      >
-        <mat-icon>save</mat-icon>
-        <span>
-          Save
-        </span>
-      </button>
     </form>
   </mat-card-content>
+  <mat-card-actions>
+    <button
+      class="save-button"
+      [disabled]="apiKeyForm.invalid"
+      [canInteract]="apiKey._id ? 'passport:apikey:update' : 'passport:apikey:create'"
+      [resource]="apiKey._id ? apiKey._id : undefined"
+      mat-button
+      (click)="saveApiKey()"
+    >
+      <mat-icon>save</mat-icon>
+      <span>
+        Save
+      </span>
+    </button>
+  </mat-card-actions>
 </mat-card>

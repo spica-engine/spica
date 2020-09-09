@@ -1,6 +1,6 @@
 import {Optional} from "@nestjs/common";
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
-import {ActionDispatcher} from "@spica-server/bucket/hooks";
+import {ReviewDispatcher} from "@spica-server/bucket/hooks";
 import {ObjectId} from "@spica-server/database";
 import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
@@ -16,7 +16,7 @@ export class RealtimeGateway implements OnGatewayConnection {
   constructor(
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
-    @Optional() private dispatcher: ActionDispatcher
+    @Optional() private reviewDispatcher: ReviewDispatcher
   ) {}
 
   async handleConnection(client: WebSocket, req) {
@@ -40,8 +40,8 @@ export class RealtimeGateway implements OnGatewayConnection {
     const bucketId = req.params.id;
     const options: any = {};
 
-    if (this.dispatcher && req.strategyType == "APIKEY") {
-      const filter = await this.dispatcher.dispatch(
+    if (this.reviewDispatcher && req.strategyType == "APIKEY") {
+      const filter = await this.reviewDispatcher.dispatch(
         {bucket: bucketId, type: "STREAM"},
         req.headers
       );

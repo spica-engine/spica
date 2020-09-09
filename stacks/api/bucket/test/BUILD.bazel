@@ -154,7 +154,6 @@ ts_library(
         "//packages/core/schema",
         "//packages/database/testing",
         "//stacks/api/bucket",
-        "//stacks/api/bucket/change",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/passport/testing",

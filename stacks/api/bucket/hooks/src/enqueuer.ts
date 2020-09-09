@@ -1,79 +1,154 @@
 import {Description, Enqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import {Action} from "../proto";
-import {ActionDispatcher, actionKey} from "./dispatcher";
-import {ActionQueue} from "./queue";
+import {hooks} from "@spica-server/bucket/hooks/proto";
+import {ReviewDispatcher, reviewKey} from "./dispatcher";
+import {ChangeAndReviewQueue} from "./queue";
+import {ChangeEmitter, changeKey} from "./emitter";
 
-export interface ActionOptions {
+export interface ReviewOrChangeOptions {
   bucket: string;
+  phase: "BEFORE" | "AFTER";
   type: string;
 }
 
-export function mapHeaders(data: Object) {
-  let headers: Action.Header[] = [];
-  Object.keys(data).forEach(key => {
+export function mapHeaders(rawHeaders: Object) {
+  const headers: hooks.Review.Header[] = [];
+  for (const header in rawHeaders) {
     headers.push(
-      new Action.Header({
-        key: key,
-        value: data[key]
+      new hooks.Review.Header({
+        key: header,
+        value: rawHeaders[header]
       })
     );
-  });
+  }
   return headers;
 }
 
-export class ActionEnqueuer extends Enqueuer<ActionOptions> {
+export function getReviewType(type: string) {
+  switch (type) {
+    case "INSERT":
+      return hooks.Review.Type.INSERT;
+    case "UPDATE":
+      return hooks.Review.Type.UPDATE;
+    case "DELETE":
+      return hooks.Review.Type.DELETE;
+    case "INDEX":
+      return hooks.Review.Type.INDEX;
+    case "GET":
+      return hooks.Review.Type.GET;
+    case "STREAM":
+      return hooks.Review.Type.STREAM;
+    default:
+      throw new Error(`Invalid type received. ${type}`);
+  }
+}
+
+function getChangeType(type: string): hooks.Change.Kind {
+  switch (type) {
+    case "INSERT":
+      return hooks.Change.Kind.INSERT;
+    case "DELETE":
+      return hooks.Change.Kind.DELETE;
+    case "UPDATE":
+      return hooks.Change.Kind.UPDATE;
+    default:
+      throw new Error(`Invalid type received. ${type}`);
+  }
+}
+
+export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
   description: Description = {
     icon: "view_agenda",
     name: "bucket",
     title: "Bucket",
-    description: "Control the things that happen in data endpoints."
+    description: "Review and capture the things that happen in data endpoints."
   };
 
-  private targets = new Map<
+  private reviewTargets = new Map<
     Event.Target,
-    {options: ActionOptions; handler: (callback, headers, document) => void}
+    {options: ReviewOrChangeOptions; handler: (callback, headers, document) => void}
+  >();
+
+  private changeTargets = new Map<
+    Event.Target,
+    {options: ReviewOrChangeOptions; handler: (type, documentKey, previous, current) => void}
   >();
 
   constructor(
     private queue: EventQueue,
-    private actionQueue: ActionQueue,
-    private dispatcher: ActionDispatcher
+    private reviewAndChangeQueue: ChangeAndReviewQueue,
+    private reviewDispatcher: ReviewDispatcher,
+    private changeEmitter: ChangeEmitter
   ) {
     super();
   }
 
-  subscribe(target: Event.Target, options: ActionOptions) {
-    const handler = (callback, headers, document) => {
-      const event = new Event.Event({
-        target,
-        type: Event.Type.BUCKET
-      });
-      this.queue.enqueue(event);
-      this.actionQueue.enqueue(
-        event.id,
-        new Action.Action({
-          headers: mapHeaders(headers),
-          bucket: options.bucket,
-          type: Action.Action.Type[options.type],
-          document: document
-        }),
-        callback
-      );
-    };
-    this.targets.set(target, {options, handler: handler});
-    this.dispatcher.on(actionKey(options.bucket, options.type), handler);
+  subscribe(target: Event.Target, options: ReviewOrChangeOptions) {
+    if (options.phase == "BEFORE") {
+      const handler = (callback, headers, document) => {
+        const event = new Event.Event({
+          target,
+          type: Event.Type.BUCKET
+        });
+        this.queue.enqueue(event);
+        this.reviewAndChangeQueue.enqueue(
+          event.id,
+          new hooks.ChangeOrReview({
+            review: new hooks.Review({
+              headers: mapHeaders(headers),
+              bucket: options.bucket,
+              type: getReviewType(options.type),
+              documentKey: document
+            })
+          }),
+          callback
+        );
+      };
+      this.reviewTargets.set(target, {options, handler: handler});
+      this.reviewDispatcher.on(reviewKey(options.bucket, options.type), handler);
+    } else {
+      const enqueuer = (type, documentKey, previous, current) => {
+        const event = new Event.Event({
+          target,
+          type: Event.Type.BUCKET
+        });
+        this.queue.enqueue(event);
+        this.reviewAndChangeQueue.enqueue(
+          event.id,
+          new hooks.ChangeOrReview({
+            change: new hooks.Change({
+              bucket: options.bucket,
+              kind: getChangeType(type),
+              documentKey: documentKey,
+              previous: JSON.stringify(previous),
+              current: JSON.stringify(current)
+            })
+          })
+        );
+      };
+      this.changeTargets.set(target, {options, handler: enqueuer});
+      this.changeEmitter.on(changeKey(options.bucket, options.type), enqueuer);
+    }
   }
 
   unsubscribe(target: Event.Target) {
-    for (const [actionTarget, {handler, options}] of this.targets) {
+    for (const [actionTarget, {handler, options}] of this.reviewTargets) {
       if (
         (!target.handler && actionTarget.cwd == target.cwd) ||
         (target.handler && actionTarget.cwd == target.cwd && actionTarget.handler == target.handler)
       ) {
-        this.targets.delete(actionTarget);
-        this.dispatcher.off(actionKey(options.bucket, options.type), handler);
+        this.reviewTargets.delete(actionTarget);
+        this.reviewDispatcher.off(reviewKey(options.bucket, options.type), handler);
+      }
+    }
+    for (const [actionTarget, {handler, options}] of this.changeTargets) {
+      if (
+        (!target.handler && actionTarget.cwd == target.cwd) ||
+        (target.handler && actionTarget.cwd == target.cwd && actionTarget.handler == target.handler)
+      ) {
+        this.changeTargets.delete(actionTarget);
+        this.changeEmitter.off(changeKey(options.bucket, options.type), handler);
       }
     }
   }

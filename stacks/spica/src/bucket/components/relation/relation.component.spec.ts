@@ -136,7 +136,7 @@ describe("Relation Component", () => {
     pickButton.dispatchEvent(new MouseEvent("click"));
     fixture.detectChanges();
 
-    const row = fixture.debugElement.query(By.css("section div span button"));
+    const row = fixture.debugElement.query(By.css("section div button"));
     const tooltip = row.injector.get(MatTooltip);
 
     expect(tooltip.message).toBe("name of the row");
@@ -151,7 +151,7 @@ describe("Relation Component", () => {
       .querySelector(".mat-menu-panel mat-cell button")
       .dispatchEvent(new MouseEvent("click"));
 
-    const buttons = fixture.debugElement.queryAll(By.css("section div span button"));
+    const buttons = fixture.debugElement.queryAll(By.css("section div button"));
     expect(buttons.length).toBe(0);
   });
 
@@ -165,7 +165,7 @@ describe("Relation Component", () => {
       .triggerEventHandler("click", undefined);
 
     fixture.detectChanges();
-    const row = fixture.debugElement.query(By.css("section div span"));
+    const row = fixture.debugElement.query(By.css("section div button"));
 
     expect(row).not.toBeTruthy();
     expect(onChangeSpy).toHaveBeenCalledWith(undefined);
@@ -187,8 +187,8 @@ describe("Relation Component", () => {
       pickButtons[1].dispatchEvent(new MouseEvent("click"));
       fixture.detectChanges();
 
-      const firstRow = fixture.debugElement.query(By.css("section div span button"));
-      const secondRow = fixture.debugElement.query(By.css("section div span:last-of-type button"));
+      const firstRow = fixture.debugElement.query(By.css("section div button"));
+      const secondRow = fixture.debugElement.query(By.css("section div button:last-of-type"));
 
       expect(firstRow.nativeElement.textContent).toBe("anicon Wallet 1 ");
       expect(secondRow.nativeElement.textContent).toBe("anicon Wallet 2 ");
@@ -205,7 +205,7 @@ describe("Relation Component", () => {
       pickButtons[0].dispatchEvent(new MouseEvent("click"));
       fixture.detectChanges();
 
-      const row = fixture.debugElement.query(By.css("section div span button"));
+      const row = fixture.debugElement.query(By.css("section div button"));
 
       expect(row.nativeElement.textContent).toBe("anicon Wallet 2 ");
     });

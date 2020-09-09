@@ -1,4 +1,3 @@
-export {ActionDispatcher} from "./dispatcher";
-export {ActionEnqueuer, mapHeaders} from "./enqueuer";
-export {HookModule, hookModuleProviders} from "./module";
-export {ActionQueue} from "./queue";
+export {HookModule} from "./module";
+export {ReviewDispatcher} from "./dispatcher";
+export {ChangeEmitter} from "./emitter";

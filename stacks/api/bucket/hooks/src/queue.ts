@@ -1,76 +1,95 @@
-import {Action} from "@spica-server/bucket/hooks/proto";
+import {hooks} from "@spica-server/bucket/hooks/proto";
 import {Queue} from "@spica-server/function/queue";
 import * as grpc from "@grpc/grpc-js";
 
-export class ActionQueue implements Queue<typeof Action.Queue> {
-  TYPE = Action.Queue;
+export class ChangeAndReviewQueue implements Queue<typeof hooks.ChangeAndReviewQueue> {
+  TYPE = hooks.ChangeAndReviewQueue;
 
   callbacks = new Map<string, Function>();
-  queue = new Map<string, Action.Action>();
-  actions = new Map<string, Action.Action.Type>();
+  queue = new Map<string, hooks.ChangeOrReview>();
 
   get size() {
     return this.queue.size;
   }
 
   pop(
-    call: grpc.ServerUnaryCall<Action.Action.Pop, Action.Action>,
-    callback: grpc.sendUnaryData<Action.Action>
+    call: grpc.ServerUnaryCall<hooks.Pop, hooks.ChangeOrReview>,
+    callback: grpc.sendUnaryData<hooks.ChangeOrReview>
   ) {
     const action = this.queue.get(call.request.id);
     if (!this.queue.has(call.request.id)) {
-      return callback(new Error(`Queue has no item with id ${call.request.id}`), null);
+      return callback(
+        new Error(`ChangeAndReviewQueue has no item with id ${call.request.id}`),
+        null
+      );
     }
     this.queue.delete(call.request.id);
-    this.actions.set(call.request.id, action.type);
     callback(null, action);
   }
 
   result(
-    call: grpc.ServerUnaryCall<Action.Result, Action.Result.Response>,
-    callback: grpc.sendUnaryData<Action.Result.Response>
+    call: grpc.ServerUnaryCall<hooks.Review.Result, hooks.Review.Result.Response>,
+    callback: grpc.sendUnaryData<hooks.Review.Result.Response>
   ) {
-    const _callback = this.callbacks.get(call.request.id);
-
     if (!this.callbacks.has(call.request.id)) {
-      return callback(new Error(`Queue has no callback with id ${call.request.id}`), null);
+      return callback(
+        new Error(`ChangeAndReviewQueue has no callback with id ${call.request.id}`),
+        null
+      );
     }
-    const action = this.actions.get(call.request.id);
 
-    this.actions.delete(call.request.id);
+    const _callback = this.callbacks.get(call.request.id);
     this.callbacks.delete(call.request.id);
 
-    let result = true;
+    const type = call.request.type;
 
-    try {
-      result = JSON.parse(call.request.result);
-    } catch (error) {
-      callback(new Error(error), null);
+    let result: object | Array<unknown> | boolean;
+    let error: Error;
+
+    if (call.request.result == undefined || call.request.result == null) {
+      error = new Error(
+        `Function did not return any review response. Expected a review response but got ${typeof call
+          .request.result}`
+      );
+    }
+
+    if (!error) {
+      try {
+        result = JSON.parse(call.request.result);
+      } catch (parseError) {
+        error = new Error(parseError);
+      }
     }
 
     if (
-      (action == Action.Action.Type.INSERT ||
-        action == Action.Action.Type.UPDATE ||
-        action == Action.Action.Type.DELETE) &&
+      (type == hooks.Review.Type.INSERT ||
+        type == hooks.Review.Type.UPDATE ||
+        type == hooks.Review.Type.DELETE) &&
       typeof result != "boolean"
     ) {
-      callback(new Error("Return value type must be boolean."), null);
+      error = new Error("The returned Review object type must be a boolean.");
     } else if (
-      (action == Action.Action.Type.GET || action == Action.Action.Type.INDEX) &&
+      (type == hooks.Review.Type.GET || type == hooks.Review.Type.INDEX) &&
       !Array.isArray(result)
     ) {
-      callback(new Error("Return value type must be array."), null);
-    } else if (action == Action.Action.Type.STREAM && typeof result != "object") {
-      callback(new Error("Return value type must be object."), null);
+      error = new Error("The returned Review object must be an array.");
+    } else if (type == hooks.Review.Type.STREAM && typeof result != "object") {
+      error = new Error("The returned Review object must be an object.");
     }
 
-    callback(null, new Action.Result.Response());
+    if (error) {
+      callback(error, null);
+    } else {
+      callback(null, new hooks.Review.Result.Response());
+    }
 
     _callback(result);
   }
 
-  enqueue(id: string, action: Action.Action, callback: Function) {
-    this.callbacks.set(id, callback);
+  enqueue(id: string, action: hooks.ChangeOrReview, callback?: Function) {
+    if (callback) {
+      this.callbacks.set(id, callback);
+    }
     this.queue.set(id, action);
   }
 

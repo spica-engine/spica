@@ -351,9 +351,9 @@ export namespace Event {
     SCHEDULE = 3,
     FIREHOSE = 4,
     SYSTEM = 5,
-    BUCKET = 6,
-    BUCKET_DATA = 7
+    BUCKET = 6
   }
+
   export var Queue = {
     pop: {
       path: "/Event.Queue/pop",

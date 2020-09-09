@@ -5,7 +5,7 @@ import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {Middlewares} from "@spica-server/core";
 import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {FunctionModule} from "@spica-server/function";
 import {Function} from "@spica-server/function/src/interface";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -50,8 +50,7 @@ describe("Hooks Integration", () => {
         BucketModule.forRoot({
           hooks: true,
           history: false,
-          realtime: true,
-          experimentalDataChange: false
+          realtime: true
         }),
         FunctionModule.forRoot({
           path: os.tmpdir(),
@@ -131,6 +130,7 @@ describe("Hooks Integration", () => {
           get: {
             options: {
               bucket: bucket._id,
+              phase: "BEFORE",
               type: "GET"
             },
             type: "bucket",
@@ -139,6 +139,7 @@ describe("Hooks Integration", () => {
           index: {
             options: {
               bucket: bucket._id,
+              phase: "BEFORE",
               type: "INDEX"
             },
             type: "bucket",
@@ -147,6 +148,7 @@ describe("Hooks Integration", () => {
           update: {
             options: {
               bucket: bucket._id,
+              phase: "BEFORE",
               type: "UPDATE"
             },
             type: "bucket",
@@ -155,6 +157,7 @@ describe("Hooks Integration", () => {
           insert: {
             options: {
               bucket: bucket._id,
+              phase: "BEFORE",
               type: "INSERT"
             },
             type: "bucket",
@@ -163,6 +166,7 @@ describe("Hooks Integration", () => {
           del: {
             options: {
               bucket: bucket._id,
+              phase: "BEFORE",
               type: "DELETE"
             },
             type: "bucket",
@@ -171,6 +175,7 @@ describe("Hooks Integration", () => {
           stream: {
             options: {
               bucket: bucket._id,
+              phase: "BEFORE",
               type: "STREAM"
             },
             type: "bucket",
@@ -182,6 +187,8 @@ describe("Hooks Integration", () => {
         language: "javascript"
       })
       .then(res => res.body);
+
+    await stream.change.wait();
 
     await updateIndex(`export function insert(){ return true; }`);
   });
@@ -205,11 +212,11 @@ describe("Hooks Integration", () => {
     });
 
     it("should hide password field of bucket-data for specific apikey", async () => {
-      await updateIndex(`export function get(req){
-        if(req.headers.authorization === 'MY_SECRET_TOKEN' ){
+      await updateIndex(`export function get(review){
+        if(review.headers.get("authorization") === 'MY_SECRET_TOKEN' ){
           return [{ $unset: ["password"] }];
         }
-        return []
+        return [{ $unset: ["password"] }];
       }`);
       const {body: document} = await req.get(
         `/bucket/${bucket._id}/data/${user1._id}`,
@@ -246,7 +253,9 @@ describe("Hooks Integration", () => {
 
   describe("UPDATE", () => {
     beforeEach(async () => {
-      await updateIndex(`export function update(req){ return req.document != '${user1._id}'; }`);
+      await updateIndex(
+        `export function update(review){ return review.documentKey != '${user1._id}'; }`
+      );
     });
     it("should not allow to update to the user1's data", async () => {
       const response = await req.put(
@@ -275,7 +284,7 @@ describe("Hooks Integration", () => {
   describe("INSERT", () => {
     it("should not allow to insert for specific apikey", async () => {
       await updateIndex(
-        `export const insert = (req) => req.headers.authorization != 'MY_SECRET_TOKEN';`
+        `export const insert = (review) => review.headers.get("authorization") != 'MY_SECRET_TOKEN';`
       );
       const response = await req.post(
         `/bucket/${bucket._id}/data`,
@@ -299,8 +308,8 @@ describe("Hooks Integration", () => {
   describe("DELETE", () => {
     beforeEach(async () => {
       await updateIndex(
-        `export function del(action) {
-          return action.document == action.headers["x-authorized-user-to-delete"];
+        `export function del(review) {
+          return review.documentKey == review.headers.get("x-authorized-user-to-delete");
         }`
       );
       headers["X-Authorized-User-To-Delete"] = user2._id;
@@ -334,7 +343,7 @@ describe("Hooks Integration", () => {
     });
 
     it("should not fail when an empty object returned", async done => {
-      await updateIndex(`export function stream(action) {
+      await updateIndex(`export function stream() {
         return {};
       }`);
       const ws = wsc.get(`/bucket/${bucket._id}/data`);
@@ -357,8 +366,8 @@ describe("Hooks Integration", () => {
     });
 
     it("should filter by incoming headers", async done => {
-      await updateIndex(`export function stream(action) {
-        return {username: action.headers.user};
+      await updateIndex(`export function stream(review) {
+        return {username: review.headers.get("user")};
       }`);
       const ws = wsc.get(`/bucket/${bucket._id}/data`, {
         headers: {
