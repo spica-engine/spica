@@ -72,7 +72,6 @@ export class IndexComponent implements OnInit {
         this.bucketId = params.id;
         this.showScheduled = false;
 
-        //reset this values when bucket changed
         this.filter = {};
         this.sort = {};
         this.paginator.pageIndex = this.defaultPaginatorOptions.pageIndex;
