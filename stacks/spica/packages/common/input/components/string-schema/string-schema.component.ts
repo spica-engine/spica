@@ -11,4 +11,7 @@ export class StringSchemaComponent {
   removeEnum() {
     delete this.schema.enum;
   }
+  removePattern() {
+    delete this.schema.pattern;
+  }
 }

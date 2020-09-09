@@ -88,6 +88,7 @@
       list-style-type: none;
       padding-left: 0;
       li {
+        height: 24px;
         cursor: pointer;
         &:not(:first-child) {
           margin-left: 35px;

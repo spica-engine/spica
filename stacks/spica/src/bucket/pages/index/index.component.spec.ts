@@ -244,7 +244,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "Select", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "Select", "id", "test", "Scheduled", "Actions"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -301,7 +301,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "id", "test", "Scheduled", "Actions"]);
       });
 
       it("should check visible columns by default", fakeAsync(() => {
@@ -339,8 +339,8 @@ describe("IndexComponent", () => {
         const columns = document.body.querySelectorAll<HTMLInputElement>(
           ".mat-menu-content .mat-menu-item mat-checkbox"
         );
-        expect(columns.item(1).classList).toContain("mat-checkbox-checked");
-        expect(columns.item(2).classList).not.toContain("mat-checkbox-checked");
+        expect(columns.item(2).classList).toContain("mat-checkbox-checked");
+        expect(columns.item(3).classList).not.toContain("mat-checkbox-checked");
       }));
 
       it("should display later checked properties", fakeAsync(() => {
@@ -353,7 +353,7 @@ describe("IndexComponent", () => {
 
         document.body
           .querySelector<HTMLButtonElement>(
-            ".mat-menu-content .mat-menu-item:nth-of-type(3) .mat-checkbox-label"
+            ".mat-menu-content .mat-menu-item:nth-of-type(4) .mat-checkbox-label"
           )
           .click();
         tick(1);
