@@ -53,22 +53,16 @@
       mat-button
       canInteract="bucket:data:create"
       [resource]="schema._id"
-      matTooltip="Add new"
       routerLink="add"
     >
       <mat-icon>add</mat-icon>
       Add New
     </button>
-    <button mat-button matTooltip="Refresh data" (click)="refresh.next()">
+    <button mat-button (click)="refresh.next()">
       <mat-icon>refresh</mat-icon>
       Refresh
     </button>
-    <button
-      mat-button
-      matTooltip="Filter data"
-      [matMenuTriggerFor]="filterMenu"
-      [color]="filterer.active ? 'accent' : ''"
-    >
+    <button mat-button [matMenuTriggerFor]="filterMenu" [color]="filterer.active ? 'accent' : ''">
       <mat-icon>filter_alt</mat-icon>
       Filter
       <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
@@ -81,7 +75,7 @@
       </mat-menu>
     </button>
 
-    <button mat-button matTooltip="Toggle columns" [matMenuTriggerFor]="propertiesMenu">
+    <button mat-button [matMenuTriggerFor]="propertiesMenu">
       <mat-icon>view_column</mat-icon>
       Columns
       <mat-menu xPosition="before" #propertiesMenu="matMenu">
@@ -115,7 +109,7 @@
       </mat-menu>
     </button>
 
-    <button mat-button matTooltip="Change language" [matMenuTriggerFor]="languageMenu">
+    <button mat-button [matMenuTriggerFor]="languageMenu">
       <mat-icon>translate</mat-icon>
       Translate
       <mat-menu #languageMenu="matMenu">
@@ -170,6 +164,20 @@
               "
               [ngModel]="selectedItems.indexOf(row._id) > -1"
             ></mat-checkbox>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            mat-resize-header
+            [persist-header-width]="schema._id"
+          >
+            id
+          </th>
+          <td mat-cell *matCellDef="let row">
+            {{ row._id }}
           </td>
         </ng-container>
         <ng-container matColumnDef="$$spicainternal_schedule" *ngIf="schema$ | async; let schema">
