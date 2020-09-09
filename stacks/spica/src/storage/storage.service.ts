@@ -36,17 +36,17 @@ export class StorageService {
     return this.http.delete<void>(`api:/storage/${id}`);
   }
 
-  updateOne(id: string, file: File): Observable<HttpEvent<Storage>> {
+  updateOne(storageObject: Storage, file: File): Observable<HttpEvent<Storage>> {
     return from(fileToBuffer(file)).pipe(
       flatMap(content => {
         const schema = {
-          _id: id,
+          ...storageObject,
           content: {data: new BSON.Binary(content), type: file.type}
         };
         const data = BSON.serialize(schema, {
           minInternalBufferSize: BSON.calculateObjectSize(schema)
         });
-        const request = new HttpRequest("PUT", `api:/storage/${id}`, data.buffer, {
+        const request = new HttpRequest("PUT", `api:/storage/${storageObject._id}`, data.buffer, {
           reportProgress: true,
           headers: new HttpHeaders({"Content-Type": "application/bson"})
         });
