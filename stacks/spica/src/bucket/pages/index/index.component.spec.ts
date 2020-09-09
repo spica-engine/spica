@@ -34,7 +34,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
 
-fdescribe("IndexComponent", () => {
+describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let bucket = new Subject<Partial<Bucket>>();
   let rows = new Subject<BucketRow[]>();
@@ -777,7 +777,7 @@ fdescribe("IndexComponent", () => {
       fixture.componentInstance.paginator.length = 20;
       fixture.componentInstance.language = "tr_TR";
 
-      fixture.componentInstance.sortChange({active: "title", direction: "asc"});
+      fixture.componentInstance.onSortChange({active: "title", direction: "asc"});
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith([], {
         queryParams: {
