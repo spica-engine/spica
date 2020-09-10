@@ -105,7 +105,9 @@ export class PassportService {
 
             if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
               // Parse resources in such format bucketid/dataid thus we could match them individually
-              const resources = wrapArray(statement.resource).map(resource => resource.split("/"));
+              const resources = wrapArray(statement.resource).map(resource =>
+                resource.split("/")
+              );
 
               match = resources.some(resource =>
                 // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
@@ -120,6 +122,7 @@ export class PassportService {
                 // to filter out in database layer.
                 resourceAndModule.resource.every((part, index) => part == resource[index])
               );
+
             } else if (typeof statement.resource == "object") {
               const resource = statement.resource;
               // We need parse resources that has slash in it to match them individually.
@@ -127,20 +130,37 @@ export class PassportService {
 
               const hasExcludedResources = resource.exclude && resource.exclude.length;
 
+              const excluded: string[][] = [];
+
+              if (hasExcludedResources) {
+                for (const excludeResource of resource.exclude) {
+                  const excludedResource = excludeResource.split("/");
+                  excluded.push(excludedResource);
+                }
+              }
+
               match = resourceAndModule.resource.every((part, index) => {
                 const pattern = [includeResource[index]];
-                // We only include the excluded items when we are checking the last portion of the resource
-                // which is usually the subresource
-                if (index == resourceAndModule.resource.length - 1 && hasExcludedResources) {
-                  pattern.push(...resource.exclude.map(resource => `!${resource}`));
+
+                // Since the exclude is optional we have check if it is present
+                if (hasExcludedResources) {
+                  pattern.push(
+                    ...excluded.map(resource => {
+                      let negate = "";
+                      if (getLastSegment(resource) == "*") {
+                        negate = "!";
+                      }
+                      return `${negate}${resource[index]}`;
+                    })
+                  );
                 }
 
                 return matcher.isMatch(part, pattern);
               });
-            } else if (
-              typeof statement.resource == "undefined" &&
-              !resourceAndModule.resource.length
-            ) {
+
+            } else if (typeof statement.resource == "undefined") {
+              // If matches the definition then it is safe to mark this statement
+              //  as the action and the module matches
               match = true;
             }
 
@@ -160,4 +180,12 @@ export class PassportService {
 
 export function wrapArray(val: string | string[]) {
   return Array.isArray(val) ? val : Array(val);
+}
+
+function getLastSegment(resource: string[]) {
+  return resource[resource.length - 1];
+}
+
+function isWildcard(segment: string): segment is "*" {
+  return segment == "*";
 }

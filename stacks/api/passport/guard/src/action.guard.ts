@@ -94,6 +94,14 @@ function buildResourceAndModuleName(path: string, params: object, format?: strin
   };
 }
 
+function getLastSegment(resource: string[]) {
+  return resource[resource.length - 1];
+}
+
+function isWildcard(segment: string): segment is "*" {
+  return segment == "*";
+}
+
 export const ActionGuard: (
   actions: string | string[],
   format?: string,
@@ -182,10 +190,6 @@ function createActionGuard(
 
                 for (const resource of resources) {
                   assertResourceAgainstDefinition(resource);
-                  if (resource.length - resourceAndModule.resource.length == 1) {
-                    const [lastPortion] = resource.slice(resourceAndModule.resource.length);
-                    include.push(lastPortion);
-                  }
                 }
 
                 match = resources.some(resource =>
@@ -201,37 +205,75 @@ function createActionGuard(
                   // to filter out in database layer.
                   resourceAndModule.resource.every((part, index) => part == resource[index])
                 );
+
+                if ( match && hasResourceFilter ) {
+                    
+                  for (const resource of resources) {
+                    include.push(getLastSegment(resource));
+                  }
+                }
+
               } else if (typeof statement.resource == "object") {
                 const resource = statement.resource;
                 // We need parse resources that has slash in it to match them individually.
                 const includeResource = resource.include.split("/");
+          
 
                 assertResourceAgainstDefinition(includeResource);
 
                 const hasExcludedResources = resource.exclude && resource.exclude.length;
 
+                const excluded: string[][] = [];
+
+                if (hasExcludedResources) {
+                  for (const excludeResource of resource.exclude) {
+                    const excludedResource = excludeResource.split("/");
+                    assertResourceAgainstDefinition(excludedResource);
+                    excluded.push(excludedResource);
+                  }
+                }
+
                 match = resourceAndModule.resource.every((part, index) => {
                   const pattern = [includeResource[index]];
-                  // We only include the excluded items when we are checking the last portion of the resource
-                  // which is usually the subresource
-                  if (index == resourceAndModule.resource.length - 1 && hasExcludedResources) {
-                    pattern.push(...resource.exclude.map(resource => `!${resource}`));
+
+                  // Since the exclude is optional we have check if it is present
+                  if (hasExcludedResources) {
+                    pattern.push(
+                      ...excluded.map(resource => {
+                        let negate = "";
+                        if (getLastSegment(resource) == "*") {
+                          negate = "!";
+                        }
+                        return `${negate}${resource[index]}`;
+                      })
+                    );
                   }
 
                   return matcher.isMatch(part, pattern);
                 });
 
-                const [lastPortion] = includeResource.slice(resourceAndModule.resource.length);
+                if (hasResourceFilter && match) {
 
-                // If the resource looks like this ["resource_id/*"] where it has a wildcard segments
-                // we can't and should not try to put it into include array since the database ought to
-                // include it implicitly
-                if (lastPortion && lastPortion != "*") {
-                  include.push(lastPortion);
-                }
+                  include.push(getLastSegment(includeResource));
 
-                if (hasExcludedResources) {
-                  exclude.push(resource.exclude);
+                  if (hasExcludedResources) {
+                    const excludedResources = [];
+                    for (const excludedResource of excluded) {
+                      const lastSegment = getLastSegment(excludedResource);
+                      // We don't need to put the wildcard segment into exclude array since
+                      // the request will be rejected before reaching to the controller
+                      // To clarify, lets say we have excluded all resources in the "base_resource"
+                      // "base_resource/*" while allowing all of the other resources */*
+                      // in this case the user has no to any resources under "base_resource" therefore
+                      // the user gets rejected before reaching to the controller.
+                      if (!isWildcard(lastSegment)) {
+                        excludedResources.push(lastSegment);
+                      }
+                    }
+                    if (excludedResources.length) {
+                      exclude.push(excludedResources);
+                    }
+                  }
                 }
               } else if (typeof statement.resource == "undefined") {
                 // If the resource is not present then check against an empty array
@@ -242,7 +284,7 @@ function createActionGuard(
                 match = true;
               }
 
-              // If the current resource has names we have to check them explicitly
+              // If the current resource has names, we have to check them explicitly.
               // otherwise we just pass those to controllers to filter out in database layer
               if (match) {
                 result = true;
@@ -256,10 +298,16 @@ function createActionGuard(
         }
       }
 
-      request.resourceFilter = {
-        include,
-        exclude
-      };
+      if ( hasResourceFilter ) {
+        // If the include array has a wildcard resource that means we have to let all resources
+        // to be present which can be accomplished by an empty array. See resource filter decorator
+        // for more context.
+        request.resourceFilter = {
+          include: include.indexOf("*") != -1 ? [] : include,
+          exclude
+        };  
+      }
+
 
       if (result) {
         return true;

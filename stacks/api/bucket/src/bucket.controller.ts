@@ -41,7 +41,7 @@ export class BucketController {
    * Returns predefined defaults
    */
   @Get("predefineddefaults")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:index"))
+  @UseGuards(AuthGuard())
   getPredefinedDefaults() {
     return this.bs.getPredefinedDefaults();
   }

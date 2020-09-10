@@ -34,11 +34,11 @@ export class ApiKeyService {
   }
 
   attachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
-    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKeyId}/attach-policy`, [policyId]);
+    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKeyId}/policy/${policyId}`, {});
   }
 
   detachPolicy(policyId: string, apiKeyId: string): Observable<ApiKey> {
-    return this.http.put<ApiKey>(`api:/passport/apikey/${apiKeyId}/detach-policy`, [policyId]);
+    return this.http.delete<ApiKey>(`api:/passport/apikey/${apiKeyId}/policy/${policyId}`);
   }
 }
 
