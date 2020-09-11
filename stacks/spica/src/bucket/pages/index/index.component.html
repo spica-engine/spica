@@ -1,4 +1,4 @@
-<mat-toolbar color="primary" *ngIf="schema$ | async; let schema">
+<mat-toolbar *ngIf="schema$ | async; let schema">
   <span>
     <h4>
       <mat-icon>{{ schema.icon }}</mat-icon>
@@ -48,26 +48,15 @@
       <mat-icon>delete</mat-icon>
       Delete
     </button>
-    <button
-      *ngIf="!readOnly"
-      mat-button
-      canInteract="bucket:data:create"
-      matTooltip="Add new"
-      routerLink="add"
-    >
+    <button *ngIf="!readOnly" mat-button canInteract="bucket:data:create" routerLink="add">
       <mat-icon>add</mat-icon>
       Add New
     </button>
-    <button mat-button matTooltip="Refresh data" (click)="refresh.next()">
+    <button mat-button (click)="refresh.next()">
       <mat-icon>refresh</mat-icon>
       Refresh
     </button>
-    <button
-      mat-button
-      matTooltip="Filter data"
-      [matMenuTriggerFor]="filterMenu"
-      [color]="filterer.active ? 'accent' : ''"
-    >
+    <button mat-button [matMenuTriggerFor]="filterMenu" [color]="filterer.active ? 'accent' : ''">
       <mat-icon>filter_alt</mat-icon>
       Filter
       <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
@@ -75,12 +64,12 @@
           #filterer
           [filter]="filter"
           [schema]="schema"
-          (filterChange)="this.filter = $event; refresh.emit()"
+          (filterChange)="onFilterChange($event ? $event : {})"
         ></bucket-filter>
       </mat-menu>
     </button>
 
-    <button mat-button matTooltip="Toggle columns" [matMenuTriggerFor]="propertiesMenu">
+    <button mat-button [matMenuTriggerFor]="propertiesMenu">
       <mat-icon>view_column</mat-icon>
       Columns
       <mat-menu xPosition="before" #propertiesMenu="matMenu">
@@ -114,7 +103,7 @@
       </mat-menu>
     </button>
 
-    <button mat-button matTooltip="Change language" [matMenuTriggerFor]="languageMenu">
+    <button mat-button [matMenuTriggerFor]="languageMenu">
       <mat-icon>translate</mat-icon>
       Translate
       <mat-menu #languageMenu="matMenu">
@@ -122,7 +111,7 @@
           <button
             mat-menu-item
             *ngFor="let languageKv of ($preferences | async)?.language.available | keyvalue"
-            (click)="language = languageKv.key; refresh.next()"
+            (click)="onLanguageChange(languageKv.key)"
           >
             {{ languageKv.value }} ({{ languageKv.key }})
           </button>
@@ -150,7 +139,7 @@
 <div class="data-guide">
   <mat-card class="mat-elevation-z25" [class.with-examples]="guide">
     <mat-card-content>
-      <table mat-table [dataSource]="data$ | async" matSort (matSortChange)="sortChange($event)">
+      <table mat-table [dataSource]="data$ | async" matSort (matSortChange)="onSortChange($event)">
         <ng-container matColumnDef="$$spicainternal_select">
           <th class="select" mat-header-cell *matHeaderCellDef>
             <mat-checkbox
@@ -169,6 +158,20 @@
               "
               [ngModel]="selectedItems.indexOf(row._id) > -1"
             ></mat-checkbox>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="$$spicainternal_id" *ngIf="schema$ | async; let schema">
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header
+            mat-resize-header
+            [persist-header-width]="schema._id"
+          >
+            id
+          </th>
+          <td mat-cell *matCellDef="let row">
+            {{ row._id }}
           </td>
         </ng-container>
         <ng-container matColumnDef="$$spicainternal_schedule" *ngIf="schema$ | async; let schema">
@@ -238,7 +241,11 @@
         <tr mat-row *matRowDef="let row; columns: displayedProperties"></tr>
       </table>
 
-      <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+      <mat-paginator
+        (page)="onPaginatorChange($event)"
+        [pageSize]="paginator.pageSize"
+        [pageSizeOptions]="[5, 10, 25, 100]"
+      ></mat-paginator>
     </mat-card-content>
   </mat-card>
 
