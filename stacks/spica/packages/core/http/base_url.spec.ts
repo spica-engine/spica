@@ -32,16 +32,22 @@ describe(`HttpInterceptor`, () => {
 
   it("should replace base url", () => {
     service.get("api:/myurl").toPromise();
-    expect(httpTesting.expectOne("http://customdomain/myurl")).toBeTruthy();
+    let testRequest = httpTesting.expectOne("http://customdomain/myurl");
+    expect(testRequest).toBeTruthy();
+    expect(testRequest.request.headers.get("X-Not-Api")).toBe(null);
   });
 
   it("should not replace base url if theres no match", () => {
     service.get("microapi:/mydoamin/te").toPromise();
-    expect(httpTesting.expectOne("microapi:/mydoamin/te")).toBeTruthy();
+    let testRequest = httpTesting.expectOne("microapi:/mydoamin/te");
+    expect(testRequest).toBeTruthy();
+    expect(testRequest.request.headers.get("X-Not-Api")).toBe("true");
   });
 
   it("should not replace base url", () => {
     service.get("http://customdomain/test123").toPromise();
-    expect(httpTesting.expectOne("http://customdomain/test123")).toBeTruthy();
+    let testRequest = httpTesting.expectOne("http://customdomain/test123");
+    expect(testRequest).toBeTruthy();
+    expect(testRequest.request.headers.get("X-Not-Api")).toBe("true");
   });
 });
