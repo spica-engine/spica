@@ -23,7 +23,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
-import {findRelations, findRemovedKeys} from "./utility";
+import {findRelations, findUpdatedFields} from "./utility";
 
 /**
  * All APIs related to bucket schemas.
@@ -133,7 +133,7 @@ export class BucketController {
       returnOriginal: false
     });
 
-    await this.clearRemovedFields(this.bds, previousSchema, currentSchema);
+    await this.clearUpdatedFields(this.bds, previousSchema, currentSchema);
 
     if (this.history) {
       await this.history.updateHistories(previousSchema, currentSchema);
@@ -217,16 +217,21 @@ export class BucketController {
       await bucketDataService.updateMany(bucket._id, {}, {$unset: unsetFieldsBucketData});
     }
   }
-  async clearRemovedFields(
+  async clearUpdatedFields(
     bucketDataService: BucketDataService,
     previousSchema: Bucket,
     currentSchema: Bucket
   ) {
-    let removedKeys = findRemovedKeys(previousSchema.properties, currentSchema.properties, [], "");
-    if (removedKeys.length < 1) return;
+    let updatedFields = findUpdatedFields(
+      previousSchema.properties,
+      currentSchema.properties,
+      [],
+      ""
+    );
+    if (updatedFields.length < 1) return;
 
-    let unsetFields = removedKeys.reduce((pre, acc: any, index, array) => {
-      acc = {...pre, [array[index]]: ""};
+    let unsetFields = updatedFields.reduce((acc, current) => {
+      acc = {...acc, [current]: ""};
       return acc;
     }, {});
 

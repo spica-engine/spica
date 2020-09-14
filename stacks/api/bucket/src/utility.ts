@@ -9,58 +9,61 @@ export function findRelations(
   targets: Map<string, "onetoone" | "onetomany">
 ) {
   path = path ? `${path}.` : ``;
-  for (const key of Object.keys(schema)) {
-    if (isObject(schema[key])) {
-      findRelations(schema[key].properties, bucketId, `${path}${key}`, targets);
-    } else if (isRelation(schema[key], bucketId)) {
-      targets.set(`${path}${key}`, schema[key].relationType);
+  for (const field of Object.keys(schema)) {
+    if (isObject(schema[field])) {
+      findRelations(schema[field].properties, bucketId, `${path}${field}`, targets);
+    } else if (isRelation(schema[field], bucketId)) {
+      targets.set(`${path}${field}`, schema[field].relationType);
     }
   }
   return targets;
 }
 
-export function findRemovedKeys(
+export function findUpdatedFields(
   previousSchema: any,
   currentSchema: any,
-  removedKeys: string[],
+  updatedFields: string[],
   path: string
 ) {
-  for (const key of Object.keys(previousSchema)) {
-    if (!currentSchema.hasOwnProperty(key)) {
-      removedKeys.push(path ? `${path}.${key}` : key);
+  for (const field of Object.keys(previousSchema)) {
+    if (
+      !currentSchema.hasOwnProperty(field) ||
+      currentSchema[field].type != previousSchema[field].type
+    ) {
+      updatedFields.push(path ? `${path}.${field}` : field);
       //we dont need to check child keys of this key anymore
       continue;
     }
-    if (isObject(previousSchema[key]) && isObject(currentSchema[key])) {
-      findRemovedKeys(
-        previousSchema[key].properties,
-        currentSchema[key].properties,
-        removedKeys,
-        path ? `${path}.${key}` : key
+    if (isObject(previousSchema[field]) && isObject(currentSchema[field])) {
+      findUpdatedFields(
+        previousSchema[field].properties,
+        currentSchema[field].properties,
+        updatedFields,
+        path ? `${path}.${field}` : field
       );
-    } else if (isArray(previousSchema[key]) && isArray(currentSchema[key])) {
+    } else if (isArray(previousSchema[field]) && isArray(currentSchema[field])) {
       addArrayPattern(
-        previousSchema[key].items,
-        currentSchema[key].items,
-        removedKeys,
-        path ? `${path}.${key}` : key
+        previousSchema[field].items,
+        currentSchema[field].items,
+        updatedFields,
+        path ? `${path}.${field}` : field
       );
     }
   }
-  return removedKeys;
+  return updatedFields;
 }
 
 export function addArrayPattern(
   previousSchema: any,
   currentSchema: any,
-  removedKeys: string[],
+  updatedFields: string[],
   path: string
 ) {
   path = `${path}.$[]`;
   if (isArray(previousSchema) && isArray(currentSchema)) {
-    addArrayPattern(previousSchema.items, currentSchema.items, removedKeys, path);
+    addArrayPattern(previousSchema.items, currentSchema.items, updatedFields, path);
   } else if (isObject(previousSchema) && isObject(currentSchema)) {
-    findRemovedKeys(previousSchema.properties, currentSchema.properties, removedKeys, path);
+    findUpdatedFields(previousSchema.properties, currentSchema.properties, updatedFields, path);
   }
 }
 
