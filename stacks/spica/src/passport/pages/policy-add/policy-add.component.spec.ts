@@ -22,7 +22,7 @@ export class CanInteractDirectiveTest {
   @Input("resource") resource: string;
 }
 
-fdescribe("Policy Add Component", () => {
+describe("Policy Add Component", () => {
   describe("Policy Add", () => {
     let fixture: ComponentFixture<PolicyAddComponent>;
 
