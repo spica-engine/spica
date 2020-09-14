@@ -121,7 +121,6 @@ describe("ActionGuard", () => {
     });
   });
 
-
   describe("exclude", () => {
     it("should reject if all resource is excluded and should not be filtered out", async () => {
       const {guard} = createGuardAndRequest({
@@ -142,8 +141,12 @@ describe("ActionGuard", () => {
         ],
         resourceFilter: true
       });
-  
-      await expectAsync(guard()).toBeRejectedWith(new Error("You do not have sufficient permissions to do bucket:data:index on resource test1"))
+
+      await expectAsync(guard()).toBeRejectedWith(
+        new Error(
+          "You do not have sufficient permissions to do bucket:data:index on resource test1"
+        )
+      );
     });
 
     it("should reject if all resource is excluded and has no resource filter", async () => {
@@ -165,10 +168,14 @@ describe("ActionGuard", () => {
           }
         ]
       });
-  
-      await expectAsync(guard()).toBeRejectedWith(new Error("You do not have sufficient permissions to do bucket:data:show on resource bucket/row"))
+
+      await expectAsync(guard()).toBeRejectedWith(
+        new Error(
+          "You do not have sufficient permissions to do bucket:data:show on resource bucket/row"
+        )
+      );
     });
-  
+
     it("should not reject if all resource is excluded but another statement allows it", async () => {
       const {guard, request} = createGuardAndRequest({
         actions: "bucket:data:index",
@@ -189,19 +196,19 @@ describe("ActionGuard", () => {
             action: "bucket:data:index",
             resource: {
               include: "*/*",
-              exclude: ["test1/test2","test1/test3"]
+              exclude: ["test1/test2", "test1/test3"]
             },
             module: "bucket:data"
           }
         ],
         resourceFilter: true
       });
-  
+
       await guard();
       expect(request.resourceFilter).toEqual({
         include: [],
         exclude: [["test2", "test3"]]
-      })
+      });
     });
 
     it("should reject if the resource is excluded", async () => {
@@ -223,7 +230,7 @@ describe("ActionGuard", () => {
           }
         ]
       });
-  
+
       await expectAsync(guard()).toBeRejectedWith(
         new Error(
           "You do not have sufficient permissions to do bucket:data:show on resource test1/test2"
@@ -266,7 +273,7 @@ describe("ActionGuard", () => {
         exclude: [["test1"], ["test2"]]
       });
     });
-  })
+  });
 
   it("should generate included resources correctly", async () => {
     const {guard, request} = createGuardAndRequest({

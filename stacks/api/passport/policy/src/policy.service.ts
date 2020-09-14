@@ -23,7 +23,7 @@ export class PolicyService {
 
   constructor(db: DatabaseService) {
     this._policyCollection = db.collection("policies");
-    this.managedPolicies = managedPolicies.map(p => ({...p, system: true}) as PolicyWithType);
+    this.managedPolicies = managedPolicies.map(p => ({...p, system: true} as PolicyWithType));
   }
 
   _findAll(): Promise<Policy[]> {

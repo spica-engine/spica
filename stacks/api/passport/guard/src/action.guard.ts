@@ -206,18 +206,15 @@ function createActionGuard(
                   resourceAndModule.resource.every((part, index) => part == resource[index])
                 );
 
-                if ( match && hasResourceFilter ) {
-                    
+                if (match && hasResourceFilter) {
                   for (const resource of resources) {
                     include.push(getLastSegment(resource));
                   }
                 }
-
               } else if (typeof statement.resource == "object") {
                 const resource = statement.resource;
                 // We need parse resources that has slash in it to match them individually.
                 const includeResource = resource.include.split("/");
-          
 
                 assertResourceAgainstDefinition(includeResource);
 
@@ -253,7 +250,6 @@ function createActionGuard(
                 });
 
                 if (hasResourceFilter && match) {
-
                   include.push(getLastSegment(includeResource));
 
                   if (hasExcludedResources) {
@@ -298,16 +294,15 @@ function createActionGuard(
         }
       }
 
-      if ( hasResourceFilter ) {
+      if (hasResourceFilter) {
         // If the include array has a wildcard resource that means we have to let all resources
         // to be present which can be accomplished by an empty array. See resource filter decorator
         // for more context.
         request.resourceFilter = {
           include: include.indexOf("*") != -1 ? [] : include,
           exclude
-        };  
+        };
       }
-
 
       if (result) {
         return true;

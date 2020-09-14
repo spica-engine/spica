@@ -13,6 +13,7 @@ import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {DashboardService} from "./dashboard.service";
 import {Dashboard} from "./dashboard";
 import {Schema} from "@spica-server/core/schema";
+import {ResourceFilter} from "@spica-server/passport/guard";
 
 @Controller("dashboard")
 export class DashboardController {
@@ -20,7 +21,7 @@ export class DashboardController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
-  findAll() {
+  findAll(@ResourceFilter() filter: object) {
     return this.dashboardService.findAll();
   }
 
