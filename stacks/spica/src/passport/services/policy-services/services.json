@@ -8,7 +8,9 @@
     "passport:apikey:show": ["apikey_id"],
     "passport:apikey:create": [],
     "passport:apikey:update": ["apikey_id"],
-    "passport:apikey:delete": ["apikey_id"],
+    "passport:apikey:delete": ["apikey_id"]
+  },
+  "passport:apikey:policy": {
     "passport:apikey:policy:add": ["apikey_id", "policy_id"],
     "passport:apikey:policy:remove": ["apikey_id", "policy_id"]
   },
@@ -17,7 +19,9 @@
     "passport:identity:show": ["identity_id"],
     "passport:identity:create": [],
     "passport:identity:update": ["identity_id"],
-    "passport:identity:delete": ["identity_id"],
+    "passport:identity:delete": ["identity_id"]
+  },
+  "passport:identity:policy": {
     "passport:identity:policy:add": ["identity_id", "policy_id"],
     "passport:identity:policy:remove": ["identity_id", "policy_id"]
   },
@@ -46,7 +50,8 @@
     "bucket:data:show": ["bucket_id", "document_id"],
     "bucket:data:create": ["bucket_id"],
     "bucket:data:update": ["bucket_id", "document_id"],
-    "bucket:data:delete": ["bucket_id", "document_id"]
+    "bucket:data:delete": ["bucket_id", "document_id"],
+    "bucket:data:stream": ["bucket_id", "document_id"]
   },
   "dashboard": {
     "dashboard:index": ["dashboard_id"],

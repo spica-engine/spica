@@ -34,10 +34,18 @@ describe("AuthorizationInterceptor", () => {
     expect(req.request.headers.get("authorization")).toBe("test");
   });
 
-  it("should not set authorization header", () => {
+  it("should not set authorization header if token is undefined", () => {
     passportService.token = undefined;
     httpClient.get("api:/test").toPromise();
     const req = httpTesting.expectOne("api:/test");
     expect(req.request.headers.get("authorization")).toBe(null);
+  });
+
+  it("should not set authorization header if request headers has X-Not-Api, and remove the X-Not-Api", () => {
+    passportService.token = "test";
+    httpClient.get("different_domain/test", {headers: {"X-Not-Api": "true"}}).toPromise();
+    const req = httpTesting.expectOne("different_domain/test");
+    expect(req.request.headers.get("authorization")).toBe(null);
+    expect(req.request.headers.get("X-Not-Api")).toBe(null);
   });
 });

@@ -1,8 +1,8 @@
 import {animate, style, transition, trigger} from "@angular/animations";
 import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
-import {MatPaginator} from "@angular/material/paginator";
+import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {merge, Observable} from "rxjs";
 import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
@@ -10,7 +10,7 @@ import {BucketData} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
-import {DomSanitizer, SafeHtml} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
   selector: "bucket-index",
@@ -50,10 +50,17 @@ export class IndexComponent implements OnInit {
   guideResponse: {[key: string]: string};
   guideUrls: any;
 
+  readonly defaultPaginatorOptions = {
+    pageSize: 10,
+    pageIndex: 0,
+    length: 0
+  };
+
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
     private route: ActivatedRoute,
+    private router: Router,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -63,10 +70,13 @@ export class IndexComponent implements OnInit {
     this.schema$ = this.route.params.pipe(
       tap(params => {
         this.bucketId = params.id;
-        this.paginator.pageIndex = 0;
-        this.filter = undefined;
         this.showScheduled = false;
+
+        this.filter = {};
         this.sort = {};
+        this.paginator.pageIndex = this.defaultPaginatorOptions.pageIndex;
+        this.paginator.pageSize = this.defaultPaginatorOptions.pageSize;
+        this.paginator.length = this.defaultPaginatorOptions.length;
       }),
       flatMap(() => this.bs.getBucket(this.bucketId)),
       tap(schema => {
@@ -123,18 +133,32 @@ export class IndexComponent implements OnInit {
       refCount()
     );
 
-    this.data$ = merge(this.route.params, this.paginator.page, this.refresh).pipe(
+    this.data$ = merge(this.route.params, this.route.queryParams, this.refresh).pipe(
       tap(() => (this.loaded = false)),
-      switchMap(() =>
-        this.bds.find(this.bucketId, {
+      switchMap(params => {
+        if (
+          params &&
+          (params["filter"] || params["paginator"] || params["sort"] || params["language"])
+        ) {
+          let paginationChanges: PageEvent = JSON.parse(params["paginator"]);
+          this.paginator.pageIndex = paginationChanges.pageIndex;
+          this.paginator.pageSize = paginationChanges.pageSize;
+          this.paginator.length = paginationChanges.length;
+
+          this.filter = JSON.parse(params["filter"]);
+          this.sort = JSON.parse(params["sort"]);
+          this.language = params["language"];
+        }
+
+        return this.bds.find(this.bucketId, {
           language: this.language,
           filter: this.filter && Object.keys(this.filter).length > 0 && this.filter,
           sort: Object.keys(this.sort).length > 0 ? this.sort : {_id: -1},
           limit: this.paginator.pageSize || 10,
           skip: this.paginator.pageSize * this.paginator.pageIndex,
           schedule: this.showScheduled
-        })
-      ),
+        });
+      }),
       map(response => {
         this.selectedItems = [];
         this.paginator.length = (response.meta && response.meta.total) || 0;
@@ -222,7 +246,7 @@ export class IndexComponent implements OnInit {
     this.refresh.next();
   }
 
-  sortChange(sort: Sort) {
+  onSortChange(sort: Sort) {
     if (sort.direction) {
       this.sort = {
         [sort.active.replace("$$spicainternal", "")]: sort.direction === "asc" ? 1 : -1
@@ -231,7 +255,51 @@ export class IndexComponent implements OnInit {
       this.sort = {};
     }
 
-    this.refresh.emit();
+    this.router.navigate([], {
+      queryParams: {
+        filter: JSON.stringify(this.filter),
+        paginator: JSON.stringify({
+          pageSize: this.paginator.pageSize,
+          pageIndex: this.paginator.pageIndex,
+          length: this.paginator.length
+        }),
+        sort: JSON.stringify(this.sort),
+        language: this.language
+      }
+    });
+  }
+
+  onPaginatorChange(changes: PageEvent) {
+    this.router.navigate([], {
+      queryParams: {
+        paginator: JSON.stringify(changes),
+        filter: JSON.stringify(this.filter),
+        sort: JSON.stringify(this.sort),
+        language: this.language
+      }
+    });
+  }
+
+  onFilterChange(changes: object) {
+    this.router.navigate([], {
+      queryParams: {
+        filter: JSON.stringify(changes),
+        paginator: JSON.stringify(this.defaultPaginatorOptions),
+        sort: JSON.stringify(this.sort),
+        language: this.language
+      }
+    });
+  }
+
+  onLanguageChange(language: string) {
+    this.router.navigate([], {
+      queryParams: {
+        filter: JSON.stringify(this.filter),
+        paginator: JSON.stringify(this.defaultPaginatorOptions),
+        sort: JSON.stringify(this.sort),
+        language: language
+      }
+    });
   }
 
   delete(id: string): void {

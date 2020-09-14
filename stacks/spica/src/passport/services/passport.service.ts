@@ -105,9 +105,7 @@ export class PassportService {
 
             if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
               // Parse resources in such format bucketid/dataid thus we could match them individually
-              const resources = wrapArray(statement.resource).map(resource =>
-                resource.split("/")
-              );
+              const resources = wrapArray(statement.resource).map(resource => resource.split("/"));
 
               match = resources.some(resource =>
                 // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
@@ -122,7 +120,6 @@ export class PassportService {
                 // to filter out in database layer.
                 resourceAndModule.resource.every((part, index) => part == resource[index])
               );
-
             } else if (typeof statement.resource == "object") {
               const resource = statement.resource;
               // We need parse resources that has slash in it to match them individually.
@@ -157,7 +154,6 @@ export class PassportService {
 
                 return matcher.isMatch(part, pattern);
               });
-
             } else if (typeof statement.resource == "undefined") {
               // If matches the definition then it is safe to mark this statement
               //  as the action and the module matches

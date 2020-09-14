@@ -12,16 +12,24 @@ export class BucketInitializer {
   ) {
     bs.getBuckets().subscribe(buckets => {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Content));
+
       buckets.forEach(bucket => {
-        this.routeService.dispatch(
-          new Upsert({
-            category: RouteCategory.Content,
-            id: `bucket_${bucket._id}`,
-            icon: bucket.icon,
-            path: `/bucket/${bucket._id}`,
-            display: bucket.title
-          })
-        );
+        this.passport
+          .checkAllowed("bucket:data:index", `${bucket._id}/*`)
+          .toPromise()
+          .then(isAllowed => {
+            if (isAllowed) {
+              this.routeService.dispatch(
+                new Upsert({
+                  category: RouteCategory.Content,
+                  id: `bucket_${bucket._id}`,
+                  icon: bucket.icon,
+                  path: `/bucket/${bucket._id}`,
+                  display: bucket.title
+                })
+              );
+            }
+          });
       });
     });
   }

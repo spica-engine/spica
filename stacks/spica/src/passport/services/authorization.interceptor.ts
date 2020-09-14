@@ -16,10 +16,10 @@ import {PassportService} from "./passport.service";
 export class AuthorizationInterceptor implements HttpInterceptor {
   constructor(private passport: PassportService) {}
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    if (this.passport.token) {
+    if (this.passport.token && !request.headers.has("X-Not-Api")) {
       request = request.clone({setHeaders: {Authorization: `${this.passport.token}`}});
     }
-    return next.handle(request).pipe(
+    return next.handle(request.clone({headers: request.headers.delete("X-Not-Api")})).pipe(
       tap({
         error: (err: any) => {
           if (err instanceof HttpErrorResponse && err.status === 401) {
