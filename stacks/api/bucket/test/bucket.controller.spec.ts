@@ -572,7 +572,7 @@ describe("Bucket acceptance", () => {
     });
   });
 
-  describe("clear removed fields", () => {
+  describe("clear removed and updated fields", () => {
     let bucketId;
     let bucketDataId;
     let previousSchema = {
@@ -587,7 +587,8 @@ describe("Bucket acceptance", () => {
               type: "object",
               properties: {
                 removed: {type: "string"},
-                not_removed: {type: "string"}
+                updated: {type: "string"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -601,7 +602,8 @@ describe("Bucket acceptance", () => {
               type: "object",
               properties: {
                 removed: {type: "string"},
-                not_removed: {type: "string"}
+                updated: {type: "string"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -609,6 +611,30 @@ describe("Bucket acceptance", () => {
         root_removed: {
           type: "string",
           options: {}
+        },
+        root_updated: {
+          type: "string",
+          options: {}
+        },
+        root_not_removed_or_updated: {
+          type: "string",
+          options: {}
+        },
+        nested_root_removed: {
+          type: "object",
+          properties: {
+            dont_check_me: {
+              type: "string"
+            }
+          }
+        },
+        nested_root_updated: {
+          type: "object",
+          properties: {
+            dont_check_me: {
+              type: "string"
+            }
+          }
         }
       }
     };
@@ -624,7 +650,8 @@ describe("Bucket acceptance", () => {
             nested_object_child: {
               type: "object",
               properties: {
-                not_removed: {type: "string"}
+                updated: {type: "boolean"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -637,10 +664,22 @@ describe("Bucket acceptance", () => {
             items: {
               type: "object",
               properties: {
-                not_removed: {type: "string"}
+                updated: {type: "date"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
+        },
+        root_updated: {
+          type: "relation",
+          options: {}
+        },
+        root_not_removed_or_updated: {
+          type: "string",
+          options: {}
+        },
+        nested_root_updated: {
+          type: "number"
         }
       }
     };
@@ -649,22 +688,27 @@ describe("Bucket acceptance", () => {
       nested_object: {
         nested_object_child: {
           removed: "removed",
-          not_removed: "not_removed"
+          updated: "updated",
+          not_removed_or_updated: "not_removed_or_updated"
         }
       },
       nested_array_object: [
         [
           {
             removed: "removed",
-            not_removed: "not_removed"
+            updated: "updated",
+            not_removed_or_updated: "not_removed_or_updated"
           },
           {
-            removed: "removed_also",
-            not_removed: "not_removed_also"
+            removed: "removed",
+            updated: "updated",
+            not_removed_or_updated: "not_removed_or_updated"
           }
         ]
       ],
-      root_removed: "removed"
+      root_removed: "removed",
+      root_updated: "updated",
+      root_not_removed_or_updated: "root_not_removed_or_updated"
     };
     beforeEach(async () => {
       bucketId = (await req.post("/bucket", previousSchema)).body._id;
@@ -681,19 +725,20 @@ describe("Bucket acceptance", () => {
         _id: bucketDataId,
         nested_object: {
           nested_object_child: {
-            not_removed: "not_removed"
+            not_removed_or_updated: "not_removed_or_updated"
           }
         },
         nested_array_object: [
           [
             {
-              not_removed: "not_removed"
+              not_removed_or_updated: "not_removed_or_updated"
             },
             {
-              not_removed: "not_removed_also"
+              not_removed_or_updated: "not_removed_or_updated"
             }
           ]
-        ]
+        ],
+        root_not_removed_or_updated: "root_not_removed_or_updated"
       });
     });
   });
