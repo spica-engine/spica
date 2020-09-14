@@ -85,14 +85,15 @@ export class PolicyAddComponent implements OnInit {
     return this.policy.statement
       .map(
         statement =>
-          this.getResourceSelection(statement) == "only_include" &&
+          this.services[statement.module] &&
+          this.services[statement.module][statement.action] &&
+          this.services[statement.module][statement.action].length > 0 &&
           (statement.resource as string[]).length == 0
       )
       .some(invalid => invalid);
   }
 
   savePolicy() {
-    console.log(this.policy);
     (this.policy._id
       ? this.policyService.updatePolicy(this.policy)
       : this.policyService.createPolicy(this.policy)
