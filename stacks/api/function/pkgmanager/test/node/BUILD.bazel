@@ -17,10 +17,13 @@ ts_library(
     ],
 )
 
-jasmine_node_test(
-    name = "test",
-    srcs = [":specs"],
-    tags = [
-        "flaky",
-    ],
-)
+# Disabled due to a regression in version 2.1.0
+# See: https://dreamharvesters.atlassian.net/secure/RapidBoard.jspa?rapidView=39&modal=detail&selectedIssue=SP-462
+#      https://github.com/bazelbuild/rules_nodejs/issues/2197
+# jasmine_node_test(
+#     name = "test",
+#     srcs = [":specs"],
+#     tags = [
+#         "flaky",
+#     ],
+# )
