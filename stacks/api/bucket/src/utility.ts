@@ -170,3 +170,38 @@ export function buildRelationAggregation(
     ];
   }
 }
+
+export function filterTranslatableBucketsAggregation() {
+  return [
+    {
+      $project: {
+        properties: {
+          $objectToArray: "$properties"
+        }
+      }
+    },
+    {
+      $match: {
+        "properties.v.options.translate": true
+      }
+    },
+    {
+      $project: {
+        properties: {
+          $filter: {
+            input: "$properties",
+            as: "property",
+            cond: {$eq: ["$$property.v.options.translate", true]}
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        properties: {
+          $arrayToObject: "$properties"
+        }
+      }
+    }
+  ];
+}

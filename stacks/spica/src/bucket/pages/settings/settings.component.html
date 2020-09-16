@@ -18,6 +18,13 @@
           >language
         </mat-icon>
         <h4 mat-line>{{ languageKv.value }} ({{ languageKv.key }})</h4>
+        <button
+          [disabled]="settings?.language.default == languageKv.key"
+          mat-icon-button
+          (click)="remove(languageKv.key)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
       </mat-list-item>
     </mat-list>
 

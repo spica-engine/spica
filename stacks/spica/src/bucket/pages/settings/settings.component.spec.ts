@@ -1,6 +1,6 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule, NgModel} from "@angular/forms";
-import {MatButtonModule} from "@angular/material/button";
+import {MatButtonModule, MatButton} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
@@ -76,6 +76,12 @@ describe("SettingsComponent", () => {
     ).toBe(false);
 
     expect(
+      fixture.debugElement
+        .query(By.css("mat-list mat-list-item:last-of-type button"))
+        .injector.get(MatButton).disabled
+    ).toBe(true,"should work when default language is immutable");
+
+    expect(
       fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type h4")).nativeElement
         .textContent
     ).toBe("English (en_US)");
@@ -88,6 +94,11 @@ describe("SettingsComponent", () => {
         .query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
         .injector.get(MatTooltip).disabled
     ).toBe(true);
+    expect(
+      fixture.debugElement
+        .query(By.css("mat-list mat-list-item:first-of-type button"))
+        .injector.get(MatButton).disabled
+    ).toBe(false,"should work when languages are removable except default one");
 
     expect(preferenceService.get).toHaveBeenCalledTimes(1);
     expect(preferenceService.get).toHaveBeenCalledWith("bucket");
@@ -98,13 +109,15 @@ describe("SettingsComponent", () => {
     model.reset("tr_TR");
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-card-content button")).nativeElement.disabled
+      fixture.debugElement.query(By.css("mat-card-content > button:last-of-type")).nativeElement
+        .disabled
     ).toBe(true);
 
     model.reset("ar");
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-card-content button")).nativeElement.disabled
+      fixture.debugElement.query(By.css("mat-card-content > button:last-of-type")).nativeElement
+        .disabled
     ).toBe(false);
   });
 
@@ -125,6 +138,26 @@ describe("SettingsComponent", () => {
         .query(By.css("mat-list mat-list-item:first-of-type mat-icon"))
         .injector.get(MatTooltip).disabled
     ).toBe(true);
+  });
+
+  it("should remove language", () => {
+    fixture.componentInstance.addLanguage("af");
+    fixture.detectChanges();
+
+    let removeButton = fixture.debugElement.query(
+      By.css("mat-list mat-list-item:first-of-type button")
+    ).nativeElement as HTMLElement;
+    removeButton.click();
+
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.settings.language).toEqual({
+      available: {
+        tr_TR: "Turkish",
+        en_US: "English"
+      },
+      default: "tr_TR"
+    });
   });
 
   it("should update settings", () => {
