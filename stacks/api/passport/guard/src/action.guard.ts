@@ -78,8 +78,7 @@ export const ResourceFilter = createParamDecorator(
 
 function buildResourceAndModuleName(path: string, params: object, format?: string) {
   if (format) {
-    const compiledFormat = compile(format);
-    path = compiledFormat(params);
+    path = format;
   }
   const segments = parse(path);
   const resourceSegments = segments
@@ -215,7 +214,6 @@ function createActionGuard(
                 const resource = statement.resource;
                 // We need parse resources that has slash in it to match them individually.
                 const includeResource = resource.include.split("/");
-
                 assertResourceAgainstDefinition(includeResource);
 
                 const hasExcludedResources = resource.exclude && resource.exclude.length;
@@ -235,15 +233,16 @@ function createActionGuard(
 
                   // Since the exclude is optional we have check if it is present
                   if (hasExcludedResources) {
-                    pattern.push(
-                      ...excluded.map(resource => {
-                        let negate = "";
-                        if (getLastSegment(resource) == "*") {
-                          negate = "!";
-                        }
-                        return `${negate}${resource[index]}`;
-                      })
-                    );
+                    for (const resource of excluded) {
+                      if (hasResourceFilter && getLastSegment(resource) == "*") {
+                        pattern.push(`!${resource[index]}`);
+                      } else if (
+                        !hasResourceFilter &&
+                        index == resourceAndModule.resource.length - 1
+                      ) {
+                        pattern.push(`!${resource[index]}`);
+                      }
+                    }
                   }
 
                   return matcher.isMatch(part, pattern);

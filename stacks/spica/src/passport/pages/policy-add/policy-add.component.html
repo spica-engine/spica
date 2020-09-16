@@ -115,36 +115,22 @@
                     </mat-icon>
                   </button>
                 </div>
-
-                <div class="include-resource-input">
-                  <mat-form-field>
-                    <input
-                      matInput
-                      #includeResource
-                      placeholder="Enter the resource that will be included"
-                    />
-                    <mat-hint *ngIf="services[statement.module][statement.action]">
-                      Expected resource format: "<b>{{
-                        services[statement.module][statement.action].join("/")
-                      }}</b
-                      >"
-                    </mat-hint>
-                  </mat-form-field>
-                  <button
-                    [disabled]="!includeResource.value"
-                    mat-button
-                    (click)="
-                      addInclude(includeResource.value, statement); includeResource.value = ''
-                    "
+                <div class="excludeds">
+                  <mat-label>EXCLUDED RESOURCES</mat-label>
+                  <div
+                    class="excluded-resource"
+                    *ngFor="let excluded of statement.resource.exclude; let i = index"
                   >
-                    Add Resource
-                  </button>
-                </div>
-              </ng-container>
-              <ng-container *ngIf="getResourceSelection(statement) == 'include_exclude'">
-                <div class="excluded-resources">
-                  <div class="includeds">
-                    <mat-label>Included Resources</mat-label>
+                    <mat-form-field>
+                      <input matInput disabled [ngModel]="excluded" />
+                    </mat-form-field>
+                    <button mat-button color="warn" (click)="removeExcluded(i, statement)">
+                      <mat-icon>
+                        delete
+                      </mat-icon>
+                    </button>
+                  </div>
+                  <div class="exclude-resource-input">
                     <mat-form-field>
                       <input
                         matInput
@@ -152,12 +138,10 @@
                         #includeModel="ngModel"
                         [(ngModel)]="statement.resource.include"
                       />
-                      <mat-hint
-                        >Expected resource format: "<b>{{
-                          services[statement.module][statement.action].join("/")
-                        }}</b
-                        >"</mat-hint
-                      >
+                      <mat-hint *ngIf="services[statement.module][statement.action]">
+                        Expected resource format:
+                        <b>"{{ services[statement.module][statement.action].join("/") }}"</b>
+                      </mat-hint>
                     </mat-form-field>
                   </div>
                   <div class="excludeds">

@@ -273,6 +273,31 @@ describe("ActionGuard", () => {
         exclude: [["test1"], ["test2"]]
       });
     });
+
+    it("should reject if the resource does not match", async () => {
+      const {guard} = createGuardAndRequest({
+        actions: "custom",
+        path: "/:id/:row",
+        params: {
+          id: "test",
+          row: "row1"
+        },
+        statements: [
+          {
+            action: "custom",
+            resource: {
+              include: "*/*",
+              exclude: ["test/row1"]
+            },
+            module: ""
+          }
+        ]
+      });
+
+      await expectAsync(guard()).toBeRejectedWith(
+        new Error("You do not have sufficient permissions to do custom on resource test/row1")
+      );
+    });
   });
 
   it("should generate included resources correctly", async () => {

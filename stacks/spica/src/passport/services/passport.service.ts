@@ -94,6 +94,13 @@ export class PassportService {
           module: actionParts.slice(0, actionParts.length - 1).join(":")
         };
 
+        let hasResourceFilter =
+          resourceAndModule.resource.lastIndexOf("*") == resourceAndModule.resource.length - 1;
+
+        if (hasResourceFilter) {
+          resourceAndModule.resource.splice(resourceAndModule.resource.length - 1, 1);
+        }
+
         let result;
 
         for (const statement of statements) {
@@ -141,15 +148,16 @@ export class PassportService {
 
                 // Since the exclude is optional we have check if it is present
                 if (hasExcludedResources) {
-                  pattern.push(
-                    ...excluded.map(resource => {
-                      let negate = "";
-                      if (getLastSegment(resource) == "*") {
-                        negate = "!";
-                      }
-                      return `${negate}${resource[index]}`;
-                    })
-                  );
+                  for (const resource of excluded) {
+                    if (hasResourceFilter && getLastSegment(resource) == "*") {
+                      pattern.push(`!${resource[index]}`);
+                    } else if (
+                      !hasResourceFilter &&
+                      index == resourceAndModule.resource.length - 1
+                    ) {
+                      pattern.push(`!${resource[index]}`);
+                    }
+                  }
                 }
 
                 return matcher.isMatch(part, pattern);

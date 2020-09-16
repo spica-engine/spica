@@ -18,13 +18,13 @@ export class FunctionInitializer {
   ) {
     functionService.getFunctions().subscribe(funcs => {
       this.routeService.dispatch(
-        new CherryPickAndRemove(e => e.category == RouteCategory.Function)
+        new CherryPickAndRemove(e => e.icon == "memory" && /\/function\//.test(e.path))
       );
       funcs.forEach(func => {
         this.routeService.dispatch(
           new Upsert({
             category: RouteCategory.Function,
-            id: `${func._id}`,
+            id: func._id,
             icon: "memory",
             path: `/function/${func._id}`,
             display: func.name
@@ -35,10 +35,8 @@ export class FunctionInitializer {
   }
 
   async appInitializer() {
-    if (
-      this.passport.identified &&
-      (await this.passport.checkAllowed("function:index").toPromise())
-    ) {
+    const allowed = await this.passport.checkAllowed("function:index", "*").toPromise();
+    if (this.passport.identified && allowed) {
       this.functionService.loadFunctions().toPromise();
     } else {
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Function));

@@ -73,7 +73,7 @@ container_image(
     },
     legacy_run_behavior = False,
     symlinks = {
-        "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/nodejs/bin/npm": "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/npm",
+        "/bin/npm": "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/npm",
     },
 )
 
