@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { blue, bold, green, red, yellow } from "colorette";
 import * as columnify from "columnify";
 import * as ora from "ora";
 import * as util from "util";
@@ -42,26 +42,30 @@ export class Logger extends console.Console {
   }
 
   error(message?: any, ...optionalParams: any[]) {
-    super.warn(chalk.bold(chalk.red(util.format(message, ...optionalParams))));
+    super.error(bold(red(util.format(message, ...optionalParams))));
   }
 
   warn(message?: any, ...optionalParams: any[]) {
-    super.warn(chalk.bold(chalk.yellow(util.format(message, ...optionalParams))));
+    super.warn(bold(yellow(util.format(message, ...optionalParams))));
   }
 
   info(message?: any, ...optionalParams: any[]) {
-    super.info(chalk.bold(chalk.blue(util.format(message, ...optionalParams))));
+    super.info(bold(blue(util.format(message, ...optionalParams))));
   }
 
   success(message?: any, ...optionalParams: any[]) {
-    super.log(chalk.bold(chalk.green(util.format(message, ...optionalParams))));
+    super.log(bold(green(util.format(message, ...optionalParams))));
   }
 
-  table(tabularData: any, properties?: string[]) {
-    if (!properties) {
-      super.log(columnify(tabularData, {columnSplitter: "    "}));
+  table(tabularData: any, columns?: string[]) {
+    if (!columns) {
+      super.log(columnify(tabularData, {columnSplitter: "       "}));
     } else {
-      super.log(columnify(tabularData, {columns: properties, columnSplitter: "    "}));
+      super.log(columnify(tabularData, {columns, columnSplitter: "       "}));
     }
+  }
+
+  disableColors() {
+    process.env.NO_COLOR="1";
   }
 }

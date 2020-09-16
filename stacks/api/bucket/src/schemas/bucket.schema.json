@@ -2,10 +2,48 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://spica.internal/bucket/schema",
   "type": "object",
-  "title": "The Bucket Core Schema",
-  "description": "This schema used for validating bucket schemas.",
-  "$comment": "This schema still in draft state. Probably there is a lot optimization that we can make on this schema.",
   "required": ["title", "description", "properties"],
+  "definitions": {
+    "property": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "storage",
+            "richtext",
+            "string",
+            "object",
+            "number",
+            "boolean",
+            "date",
+            "textarea",
+            "array",
+            "color",
+            "relation",
+            "location"
+          ]
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "visible": {
+              "type": "boolean"
+            },
+            "translate": {
+              "type": "boolean"
+            },
+            "history": {
+              "type": "boolean"
+            },
+            "position": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
   "properties": {
     "history": {
       "type": "boolean",
@@ -56,7 +94,7 @@
     "properties": {
       "type": "object",
       "additionalProperties": {
-        "$ref": "http://spica.internal/bucket/schema/property-options"
+        "$ref": "#/definitions/property"
       }
     }
   },

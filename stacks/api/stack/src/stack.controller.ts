@@ -1,21 +1,23 @@
 import {Controller, Get, Param} from "@nestjs/common";
+import {definitions} from "./definitions";
 
-@Controller("stacks/:version")
+@Controller("apis")
 export class StackController {
   @Get()
-  find(@Param("version") version: string) {
-    return [
-      {
-        version
-      }
-    ];
+  definitions() {
+    return definitions;
   }
 
-  @Get(":name")
-  get(@Param("version") version: string, @Param("name") name: string) {
+  @Get(":group/:version/:name")
+  find(
+    @Param("group") group: string,
+    @Param("version") version: string,
+    @Param("name") name: string
+  ) {
     return {
+      group,
       version,
       name
-    };
+    }
   }
 }

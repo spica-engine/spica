@@ -2,25 +2,25 @@
   "name": "@spica/cli",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
-  "description": "CLI Framework for Spica",
+  "description": "Command line interface for Spica",
   "author": "spica",
   "main": "index.js",
   "bin": {
     "spica": "bin/spica"
   },
   "dependencies": {
-    "@ionic/cli-framework": "^4.1.0",
-    "ora": "^3.4.0",
-    "dockerode": "^2.5.8",
-    "get-port": "^5.0.0",
-    "chalk": "^2.4.2",
-    "open": "^6.4.0",
+    "colorette": "^1.2.1",
+    "ora": "^5.1.0",
+    "duration": "^0.2.2",
+    "@caporal/core": "^2.0.2",
     "columnify": "^1.5.4",
+    "dockerode": "^3.2.1",
+    "get-port": "^5.0.0", 
     "node-fetch": "^2.6.0",
     "yaml": "^1.8.3"
   },
   "devDependencies": {
-    "@types/dockerode": "^2.5.4",
+    "@types/dockerode": "^2.5.34",
     "@types/node-fetch": "^2.5.5"
   }
 }

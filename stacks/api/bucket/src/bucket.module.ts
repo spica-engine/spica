@@ -20,8 +20,7 @@ export class BucketModule {
       SchemaModule.forChild({
         schemas: [
           require("./schemas/bucket.schema.json"),
-          require("./schemas/buckets.schema.json"),
-          require("./schemas/property-options.schema.json")
+          require("./schemas/buckets.schema.json")
         ]
       }),
       ServicesModule
