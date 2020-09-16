@@ -64,7 +64,7 @@ export class IndexComponent implements OnInit {
         if (storages.meta && storages.meta.total) {
           this.paginator.length = storages.meta.total;
         }
-        this.isEmpty = !storages.data.length;
+        this.isEmpty = !storages.meta.total;
         return storages.data;
       })
     );
