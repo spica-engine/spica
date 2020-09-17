@@ -6,4 +6,7 @@ export interface Preference {
 
 export const LANGUAGE_CHANGE_UPDATER = Symbol.for("LANGUAGE_CHANGE_UPDATER");
 
-export type LanguageChangeUpdater = (previousSchema: object, currentSchema: Object) => Promise<unknown>;
+export type LanguageChangeUpdater = (
+  previousSchema: object,
+  currentSchema: Object
+) => Promise<unknown>;

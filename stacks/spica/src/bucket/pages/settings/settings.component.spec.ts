@@ -79,7 +79,7 @@ describe("SettingsComponent", () => {
       fixture.debugElement
         .query(By.css("mat-list mat-list-item:last-of-type button"))
         .injector.get(MatButton).disabled
-    ).toBe(true,"should work when default language is immutable");
+    ).toBe(true, "should work when default language is immutable");
 
     expect(
       fixture.debugElement.query(By.css("mat-list mat-list-item:first-of-type h4")).nativeElement
@@ -98,7 +98,7 @@ describe("SettingsComponent", () => {
       fixture.debugElement
         .query(By.css("mat-list mat-list-item:first-of-type button"))
         .injector.get(MatButton).disabled
-    ).toBe(false,"should work when languages are removable except default one");
+    ).toBe(false, "should work when languages are removable except default one");
 
     expect(preferenceService.get).toHaveBeenCalledTimes(1);
     expect(preferenceService.get).toHaveBeenCalledWith("bucket");
