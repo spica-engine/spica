@@ -18,7 +18,6 @@ ts_library(
         "//stacks/api/bucket",
         "//stacks/api/passport/testing",
         "//stacks/api/preference",
-        "//stacks/api/preference/services",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
         "@npm//@types/bson",
