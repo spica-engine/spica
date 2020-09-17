@@ -1,12 +1,32 @@
-import {Body, Controller, Get, Param, Put, UseGuards, UseInterceptors} from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Put,
+  UseGuards,
+  UseInterceptors,
+  Optional,
+  Inject
+} from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {AuthGuard} from "@spica-server/passport";
-import {Preference, PreferenceService} from "../services";
+import {
+  Preference,
+  PreferenceService,
+  LANGUAGE_CHANGE_UPDATER,
+  LanguageChangeUpdater
+} from "../services";
 import {createPreferenceActivity} from "./activity.resource";
 
 @Controller("preference")
 export class PreferenceController {
-  constructor(private preference: PreferenceService) {}
+  constructor(
+    private preference: PreferenceService,
+    @Optional()
+    @Inject(LANGUAGE_CHANGE_UPDATER)
+    private updaterFactory: LanguageChangeUpdater
+  ) {}
 
   @Get(":scope")
   find(@Param("scope") scope: string) {
@@ -17,6 +37,11 @@ export class PreferenceController {
   @Put(":scope")
   @UseGuards(AuthGuard())
   replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
+    if (scope == "bucket" && this.updaterFactory) {
+      this.preference
+        .get("bucket")
+        .then(previousSchema => this.updaterFactory(previousSchema, preference));
+    }
     delete preference._id;
     preference.scope = scope;
     return this.preference.replaceOne({scope}, preference, {upsert: true, returnOriginal: false});

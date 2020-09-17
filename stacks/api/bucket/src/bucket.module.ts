@@ -1,4 +1,4 @@
-import {DynamicModule, Module, Type} from "@nestjs/common";
+import {DynamicModule, Module, Type, Global} from "@nestjs/common";
 import {BucketCache, provideBucketCache} from "./cache";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
@@ -6,12 +6,13 @@ import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService} from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService, LANGUAGE_CHANGE_UPDATER} from "@spica-server/preference/services";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {DocumentScheduler} from "./scheduler";
+import {provideLanguageChangeUpdater} from "./utility";
 
 @Module({})
 export class BucketModule {
@@ -38,6 +39,8 @@ export class BucketModule {
     if (options.realtime) {
       imports.push(RealtimeModule);
     }
+
+    imports.push(PreferencesListenerModule);
 
     return {
       module: BucketModule,
@@ -74,6 +77,21 @@ export class BucketModule {
     });
   }
 }
+
+@Global()
+@Module({
+  imports: [ServicesModule],
+  providers: [
+    BucketDataService,
+    {
+      provide: LANGUAGE_CHANGE_UPDATER,
+      useFactory: provideLanguageChangeUpdater,
+      inject: [BucketService, BucketDataService]
+    }
+  ],
+  exports: [LANGUAGE_CHANGE_UPDATER]
+})
+export class PreferencesListenerModule {}
 
 export interface BucketOptions {
   hooks: boolean;

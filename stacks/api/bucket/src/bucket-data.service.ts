@@ -11,64 +11,10 @@ import {
   ObjectId,
   UpdateQuery
 } from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference/services";
-import {diff, ChangeKind} from "../history/differ";
-import {filterTranslatableBucketsAggregation} from "./utility";
 
 @Injectable()
 export class BucketDataService {
-  constructor(private db: DatabaseService, private preferenceService: PreferenceService) {
-    //find a better starting point
-    this.removeDataOnLanguageRemoved();
-  }
-
-  private removeDataOnLanguageRemoved() {
-    let oldPrefs = {};
-    let initialState = true;
-    this.preferenceService.watch("bucket", {propagateOnStart: true}).subscribe(newPrefs => {
-      if (initialState) {
-        oldPrefs = newPrefs;
-        initialState = false;
-        return;
-      }
-
-      let changes = diff(oldPrefs, newPrefs as any);
-      let deletedLanguages = changes
-        .filter(
-          change =>
-            change.kind == ChangeKind.Delete &&
-            change.path[0] == "language" &&
-            change.path[1] == "available"
-        )
-        .map(change => change.path[2]);
-
-      if (!deletedLanguages.length) {
-        oldPrefs = newPrefs;
-        return;
-      }
-
-      this.db
-        .collection("buckets")
-        .aggregate(filterTranslatableBucketsAggregation())
-        .toArray()
-        .then(buckets => {
-          buckets.forEach(bucket => {
-            let targets = {};
-
-            Object.keys(bucket.properties).forEach(field => {
-              targets = deletedLanguages.reduce((acc, language) => {
-                acc = {...acc, [`${field}.${language}`]: ""};
-                return acc;
-              }, targets);
-            });
-
-            this.updateMany(bucket._id, {}, {$unset: targets}).catch(console.log);
-          });
-        });
-
-      oldPrefs = newPrefs;
-    });
-  }
+  constructor(private db: DatabaseService) {}
 
   documentCount(bucketId: string | ObjectId) {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
