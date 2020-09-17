@@ -5,7 +5,7 @@
 
 load("@build_bazel_rules_nodejs//internal/providers:npm_package_info.bzl", "NpmPackageInfo", "node_modules_aspect")
 load("@build_bazel_rules_nodejs//internal/providers:declaration_info.bzl", "DeclarationInfo")
-load("@npm_bazel_typescript//internal:common/compilation.bzl", "DEPS_ASPECTS")
+load("@npm//@bazel/typescript/internal:common/compilation.bzl", "DEPS_ASPECTS")
 
 DocumentationInfo = provider(
     doc = "Provides sources for docs",

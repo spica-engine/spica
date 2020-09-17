@@ -26,7 +26,7 @@ import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
@@ -66,6 +66,8 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @StrategyType() strategyType: string,
+    @ResourceFilter() resourceFilter: object,
     @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
@@ -79,6 +81,7 @@ export class BucketDataController {
     @Query("sort", JSONP) sort?: object
   ) {
     let aggregation: unknown[] = [
+      resourceFilter,
       {
         $match: {
           _schedule: {
@@ -139,7 +142,7 @@ export class BucketDataController {
       aggregation.push({$match: filter});
     }
 
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const hookAggregation = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INDEX"},
         headers
@@ -207,6 +210,7 @@ export class BucketDataController {
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -249,7 +253,7 @@ export class BucketDataController {
       }
     }
 
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const hookAggregation = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "GET"},
         headers,
@@ -298,9 +302,10 @@ export class BucketDataController {
   async insertOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const allowed = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "INSERT"},
         headers
@@ -350,9 +355,10 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const allowed = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "UPDATE"},
         headers,
@@ -396,10 +402,11 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const allowed = await this.reviewDispatcher.dispatch(
         {bucket: bucketId.toHexString(), type: "DELETE"},
         headers,
@@ -455,11 +462,11 @@ export class BucketDataController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteMany(
-    @Headers() headers: any,
+    @StrategyType() strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Body(ARRAY(v => new ObjectId(v))) ids: ObjectId[]
   ) {
-    if (headers["strategy-type"] == "APIKEY") {
+    if (strategyType == "APIKEY") {
       throw new BadRequestException(
         "Apikey strategy does not support deleting multiple resource at once."
       );

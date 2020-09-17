@@ -9,12 +9,12 @@ describe("schema pipe", () => {
       pipe = new validatorMixin(new Validator());
     });
 
-    it("should fail with validation errors", () => {
-      expectAsync(pipe.transform({})).toBeRejected();
+    it("should fail with validation errors", async () => {
+      await expectAsync(pipe.transform({})).toBeRejected();
     });
 
-    it("should pass the validation", () => {
-      expectAsync(pipe.transform("")).toBeResolvedTo("");
+    it("should pass the validation", async () => {
+      await expectAsync(pipe.transform("")).toBeResolvedTo("");
     });
   });
 
@@ -28,12 +28,12 @@ describe("schema pipe", () => {
       validator.registerUriResolver(() => Promise.resolve({type: "string"}));
     });
 
-    it("should fail with validation errors", () => {
-      expectAsync(pipe.transform({})).toBeRejected();
+    it("should fail with validation errors", async () => {
+      await expectAsync(pipe.transform({})).toBeRejected();
     });
 
-    it("should pass the validation", () => {
-      expectAsync(pipe.transform("")).toBeResolvedTo("");
+    it("should pass the validation", async () => {
+      await expectAsync(pipe.transform("")).toBeResolvedTo("");
     });
   });
 
@@ -77,12 +77,12 @@ describe("schema pipe", () => {
       pipe = new validatorMixin(validator, req);
     });
 
-    it("should fail with validation errors", () => {
-      expectAsync(pipe.transform({})).toBeRejected();
+    it("should fail with validation errors", async () => {
+      await expectAsync(pipe.transform({})).toBeRejected();
     });
 
-    it("should pass the validation", () => {
-      expectAsync(pipe.transform("")).toBeResolvedTo("");
+    it("should pass the validation", async () => {
+      await expectAsync(pipe.transform("")).toBeResolvedTo("");
     });
 
     it("should call dynamic uri function", async () => {

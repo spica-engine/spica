@@ -400,6 +400,7 @@
       class="save-button"
       mat-button
       [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
+      [resource]="bucket._id ? bucket._id : undefined"
       form="describeForm"
       *matSave="$save | async; let state"
       [disabled]="
@@ -424,7 +425,12 @@
       <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
-  <mat-list-item *ngIf="bucket._id" class="remove-history">
+  <mat-list-item
+    *ngIf="bucket._id"
+    canInteract="bucket:update"
+    [resource]="bucket._id"
+    class="remove-history"
+  >
     <mat-divider></mat-divider>
     <h3>
       DANGER ZONE

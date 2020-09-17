@@ -176,7 +176,13 @@
     </mat-list-item>
   </mat-card-content>
   <mat-card-actions>
-    <button class="save-button" mat-button (click)="saveSettings()">
+    <button
+      class="save-button"
+      canInteract="preference:update"
+      resource="passport"
+      mat-button
+      (click)="saveSettings()"
+    >
       <mat-icon>save</mat-icon>
       <span>
         Save

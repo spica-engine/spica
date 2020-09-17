@@ -54,7 +54,14 @@ const routes: Routes = [
       },
       {
         path: "settings",
-        component: SettingsComponent
+        component: SettingsComponent,
+        data: {
+          service: "preference",
+          action: "show",
+          params: {
+            scope: "bucket"
+          }
+        }
       },
       {
         canActivate: [BucketIndexGuard],

@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "test_lib",
@@ -12,6 +12,7 @@ ts_library(
     deps = [
         "//packages/core/testing",
         "//stacks/api/passport",
+        "//stacks/api/passport/guard",
         "//stacks/api/passport/testing",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",

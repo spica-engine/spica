@@ -1,11 +1,12 @@
 import {Component, OnInit, TemplateRef, ViewChild, OnDestroy} from "@angular/core";
 import {ApiKey, emptyApiKey} from "src/passport/interfaces/apikey";
 import {Router, ActivatedRoute} from "@angular/router";
-import {filter, switchMap, takeUntil, tap} from "rxjs/operators";
+import {filter, switchMap, takeUntil, tap, map, take, switchMapTo} from "rxjs/operators";
 import {ApiKeyService} from "src/passport/services/apikey.service";
-import {Subject} from "rxjs";
+import {Subject, of} from "rxjs";
 import {Policy} from "src/passport/interfaces/policy";
 import {PolicyService} from "src/passport/services/policy.service";
+import {PassportService} from "@spica-client/passport/services/passport.service";
 
 @Component({
   selector: "passport-apikey-add",
@@ -26,7 +27,8 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private apiKeyService: ApiKeyService,
-    private policyService: PolicyService
+    private policyService: PolicyService,
+    private passportService: PassportService
   ) {}
 
   ngOnInit() {
@@ -34,18 +36,19 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
       .pipe(
         filter(params => params.id),
         switchMap(params => this.apiKeyService.get(params.id)),
+        tap(apiKey => (this.apiKey = apiKey)),
+        switchMapTo(
+          this.passportService
+            .checkAllowed("passport:policy:index")
+            .pipe(switchMap(result => (result ? this.policyService.find() : of({data: []}))))
+        ),
+        tap(policies => {
+          this.allPolicies = policies.data;
+          this.filterPolicies(this.allPolicies);
+        }),
         takeUntil(this.onDestroy)
       )
-      .subscribe(apiKey => {
-        this.apiKey = apiKey;
-        this.policyService
-          .find()
-          .toPromise()
-          .then(policies => {
-            this.allPolicies = policies.data;
-            this.filterPolicies(this.allPolicies);
-          });
-      });
+      .subscribe();
   }
 
   filterPolicies(policies: Policy[]) {

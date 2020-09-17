@@ -42,7 +42,13 @@
     </button>
   </mat-card-content>
   <mat-card-actions>
-    <button class="save-button" mat-button (click)="updateSettings()">
+    <button
+      class="save-button"
+      canInteract="preference:update"
+      resource="bucket"
+      mat-button
+      (click)="updateSettings()"
+    >
       <mat-icon>save</mat-icon><span>Save</span>
     </button>
   </mat-card-actions>

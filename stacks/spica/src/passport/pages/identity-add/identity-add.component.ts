@@ -1,13 +1,14 @@
 import {Component, OnDestroy, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {PreferencesService} from "@spica-client/core";
-import {Subject} from "rxjs";
-import {filter, switchMap, takeUntil} from "rxjs/operators";
+import {Subject, of} from "rxjs";
+import {filter, switchMap, takeUntil, tap} from "rxjs/operators";
 import {emptyIdentity, Identity} from "../../interfaces/identity";
 import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {PassportPreference} from "../identity-settings/identity-settings.component";
+import {PassportService} from "@spica-client/passport/services/passport.service";
 
 @Component({
   selector: "passport-identity-add",
@@ -29,6 +30,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     private policyService: PolicyService,
     private identityService: IdentityService,
     private preferencesService: PreferencesService,
+    private passportService: PassportService,
     private router: Router
   ) {}
 
@@ -49,12 +51,14 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       )
       .subscribe(identity => (this.identity = identity));
 
-    this.policyService
-      .find()
-      .toPromise()
-      .then(policies => {
-        this.policies = policies.data;
-      });
+    this.passportService
+      .checkAllowed("passport:policy:index")
+      .pipe(
+        switchMap(result => (result ? this.policyService.find() : of({data: []}))),
+        tap(policies => (this.policies = policies.data)),
+        takeUntil(this.onDestroy)
+      )
+      .subscribe();
 
     this.preferencesService
       .get("passport")

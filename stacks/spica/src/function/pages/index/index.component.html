@@ -35,6 +35,7 @@
         <mat-cell class="action" *matCellDef="let function">
           <button
             canInteract="function:update"
+            [resource]="function._id"
             mat-icon-button
             [routerLink]="function._id"
             matTooltip="Edit"
@@ -51,6 +52,7 @@
           </button>
           <button
             canInteract="function:delete"
+            [resource]="function._id"
             mat-icon-button
             color="warn"
             matTooltip="Delete"
