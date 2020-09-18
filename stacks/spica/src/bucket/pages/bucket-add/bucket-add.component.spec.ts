@@ -22,6 +22,7 @@ import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
 import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
+import {MatButtonModule} from "@angular/material/button";
 
 import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
@@ -37,6 +38,7 @@ import {Directive, HostBinding, Input} from "@angular/core";
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
+  @Input("resource") resource: string;
 }
 
 describe("Bucket Add Component", () => {
@@ -84,6 +86,7 @@ describe("Bucket Add Component", () => {
         MatGridListModule,
         MatSelectModule,
         MatOptionModule,
+        MatButtonModule,
         MatCheckboxModule,
         MatExpansionModule,
         MatIconModule,
@@ -196,7 +199,7 @@ describe("Bucket Add Component", () => {
 
     it("should render component", () => {
       expect(
-        fixture.debugElement.query(By.css("h4 > button > mat-icon")).nativeElement.textContent
+        fixture.debugElement.query(By.css("h4 > button mat-icon")).nativeElement.textContent
       ).toBe("myIcon");
       expect(fixture.debugElement.query(By.css("h4 > span")).nativeElement.textContent).toBe(
         "my bucket"

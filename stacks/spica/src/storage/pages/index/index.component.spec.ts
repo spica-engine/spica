@@ -23,6 +23,14 @@ import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overv
 import {StorageViewComponent} from "../../components/storage-view/storage-view.component";
 import {StorageService} from "../../storage.service";
 import {IndexComponent} from "./index.component";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -107,7 +115,7 @@ describe("Storage/IndexComponent", () => {
           useValue: storageService
         }
       ],
-      declarations: [IndexComponent, StorageViewComponent]
+      declarations: [IndexComponent, StorageViewComponent, CanInteractDirectiveTest]
     });
 
     fixture = TestBed.createComponent(IndexComponent);

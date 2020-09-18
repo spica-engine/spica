@@ -37,6 +37,7 @@
         <mat-cell *matCellDef="let policy">
           <button
             canInteract="passport:policy:update"
+            [resource]="policy._id"
             mat-icon-button
             [routerLink]="policy._id + '/edit'"
             *ngIf="policy.system !== true"
@@ -45,6 +46,7 @@
           </button>
           <button
             canInteract="passport:policy:delete"
+            [resource]="policy._id"
             mat-icon-button
             color="warn"
             [matAwareDialog]="{

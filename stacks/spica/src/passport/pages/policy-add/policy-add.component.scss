@@ -1,6 +1,6 @@
 :host {
   mat-card {
-    mat-card-content  {
+    mat-card-content  > form {
       > *:not(mat-form-field) {
         margin-top: 1em;
       }
@@ -12,17 +12,39 @@
   mat-form-field {
     width: 100%;
   }
-  .resource {
-    margin-bottom: 1em;
-    padding-left: 30px;
-    width: 70%;
-    mat-form-field {
-      width: 80%;
+
+  div.included-resources,
+  div.include-resource-input {
+    display: flex;
+    width: 50%;
+    align-items: baseline;
+
+    > mat-form-field {
+      width: 90%;
       margin-right: 10px;
     }
-    > button:last-of-type {
-      margin-top: 1em;
-      display: block;
+  }
+
+  div.excluded-resources {
+    display: flex;
+    align-items: baseline;
+    div.includeds,
+    div.excludeds {
+      flex: 1;
+    }
+
+    div.includeds {
+      margin-right: 10px;
+    }
+
+    div.excluded-resource,
+    div.exclude-resource-input {
+      align-items: baseline;
+      display: flex;
+      > mat-form-field {
+        width: 90%;
+        margin-right: 10px;
+      }
     }
   }
 }

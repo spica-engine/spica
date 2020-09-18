@@ -88,6 +88,7 @@
             </button>
             <button
               canInteract="storage:update"
+              [resource]="storage._id"
               *ngIf="storage.content?.type?.startsWith('image/')"
               mat-menu-item
               (click)="openEdit(storage)"
@@ -97,6 +98,7 @@
             </button>
             <button
               canInteract="storage:delete"
+              [resource]="storage._id"
               mat-menu-item
               color="warn"
               [matAwareDialog]="{

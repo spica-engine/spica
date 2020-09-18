@@ -578,8 +578,7 @@ INSERT request object:
     host: 'localhost:4300',
     'accept-encoding': 'gzip, deflate, br',
     connection: 'keep-alive',
-    'content-length': '5',
-    'strategy-type': 'APIKEY'
+    'content-length': '5'
   }
 }
 ```
@@ -610,8 +609,7 @@ ActionParameters {
     host: 'localhost:4300',
     'accept-encoding': 'gzip, deflate, br',
     connection: 'keep-alive',
-    'content-length': '5',
-    'strategy-type': 'APIKEY'
+    'content-length': '5'
   }
 }
 ```
@@ -642,8 +640,7 @@ GET request object:
     host: 'localhost:4300',
     'accept-encoding': 'gzip, deflate, br',
     connection: 'keep-alive',
-    'content-length': '5',
-    'strategy-type': 'APIKEY'
+    'content-length': '5'
   }
 }
 ```
@@ -678,8 +675,7 @@ INDEX request object:
     host: 'localhost:4300',
     'accept-encoding': 'gzip, deflate, br',
     connection: 'keep-alive',
-    'content-length': '5',
-    'strategy-type': 'APIKEY'
+    'content-length': '5'
   }
 }
 ```

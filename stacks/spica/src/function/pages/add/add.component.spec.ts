@@ -23,11 +23,13 @@ import {FunctionService} from "../../function.service";
 import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {LayoutModule} from "@spica-client/core/layout";
+import {MatButtonModule} from "@angular/material/button";
 
 @Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
+  @Input("resource") resource: string;
 }
 
 @Directive({
@@ -47,7 +49,7 @@ describe("Function Add", () => {
         RouterTestingModule,
         HttpClientTestingModule,
         FormsModule,
-
+        MatButtonModule,
         MatIconModule,
         MatToolbarModule,
         MatFormFieldModule,

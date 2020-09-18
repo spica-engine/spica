@@ -63,7 +63,8 @@
             <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
             <button
               mat-icon-button
-              canInteract="passport:identity:policy"
+              canInteract="passport:identity:policy:remove"
+              [resource]="identity._id + '/' + policy._id"
               matTooltip="Detach this policy"
               (click)="detachPolicy(policy._id)"
               color="warn"
@@ -81,7 +82,8 @@
               <label mat-line [matTooltip]="policy.description">{{ policy.name }}</label>
               <button
                 mat-icon-button
-                canInteract="passport:identity:policy"
+                canInteract="passport:identity:policy:add"
+                [resource]="identity._id + '/' + policy._id"
                 matTooltip="Attach this policy"
                 (click)="attachPolicy(policy._id)"
               >
@@ -98,6 +100,7 @@
     <button
       class="save-button"
       [canInteract]="identity._id ? 'passport:identity:update' : 'passport:identity:create'"
+      [resource]="identity._id ? identity._id : undefined"
       [disabled]="identityForm.invalid"
       mat-button
       (click)="upsertIdentity()"

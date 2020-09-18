@@ -48,7 +48,13 @@
       <mat-icon>delete</mat-icon>
       Delete
     </button>
-    <button *ngIf="!readOnly" mat-button canInteract="bucket:data:create" routerLink="add">
+    <button
+      *ngIf="!readOnly"
+      mat-button
+      canInteract="bucket:data:create"
+      [resource]="schema._id"
+      routerLink="add"
+    >
       <mat-icon>add</mat-icon>
       Add New
     </button>
@@ -191,13 +197,19 @@
         <ng-container matColumnDef="$$spicainternal_actions" *ngIf="schema$ | async; let schema">
           <th mat-header-cell class="action" *matHeaderCellDef>Actions</th>
           <td mat-cell class="action" *matCellDef="let row">
-            <button canInteract="bucket:data:show" mat-icon-button [routerLink]="row._id">
+            <button
+              canInteract="bucket:data:show"
+              [resource]="schema._id + '/' + row._id"
+              mat-icon-button
+              [routerLink]="row._id"
+            >
               <mat-icon>{{ readOnly ? "remove_red_eye" : "edit" }}</mat-icon>
             </button>
             <button
               mat-icon-button
               [disabled]="readOnly"
               canInteract="bucket:data:delete"
+              [resource]="schema._id + '/' + row._id"
               color="warn"
               [matAwareDialog]="{
                 title: 'Confirmation',

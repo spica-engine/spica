@@ -33,6 +33,14 @@ import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -111,7 +119,12 @@ describe("IndexComponent", () => {
           useValue: activatedRoute
         }
       ],
-      declarations: [IndexComponent, FilterComponent, PersistHeaderWidthDirective]
+      declarations: [
+        IndexComponent,
+        FilterComponent,
+        PersistHeaderWidthDirective,
+        CanInteractDirectiveTest
+      ]
     }).compileComponents();
 
     getItem = spyOn(localStorage, "getItem").and.callFake(() => null);

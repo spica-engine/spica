@@ -18,7 +18,7 @@ class _NoopStrategy extends passport.Strategy {
       } else {
         this["success"](user, reason);
         if (this.options.overriddenStrategyType) {
-          req.headers["strategy-type"] = this.options.overriddenStrategyType;
+          req.strategyType = this.options.overriddenStrategyType;
         }
       }
     });

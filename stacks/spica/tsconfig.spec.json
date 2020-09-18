@@ -12,7 +12,9 @@
         "./packages/*",
         "./src/*", 
       ]
-    }
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
   },
   "files": ["test.ts", "src/polyfills.ts"],
   "include": ["./packages/**/*.spec.ts", "./src/**/*.spec.ts","./src/**/*.d.ts"]

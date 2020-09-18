@@ -4,14 +4,14 @@ import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {ActionGuardService, AuthGuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Realtime Authorization", () => {
   let wsc: Websocket;
   let app: INestApplication;
-  let authGuardCheck: jasmine.Spy<typeof AuthGuardService.prototype.check>;
-  let actionGuardCheck: jasmine.Spy<typeof ActionGuardService.prototype.check>;
+  let authGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAuthorization>;
+  let actionGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAction>;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -29,8 +29,9 @@ describe("Realtime Authorization", () => {
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
-    authGuardCheck = spyOn(module.get(AuthGuardService), "check");
-    actionGuardCheck = spyOn(module.get(ActionGuardService), "check");
+    const guardService = module.get(GuardService);
+    authGuardCheck = spyOn(guardService, "checkAuthorization");
+    actionGuardCheck = spyOn(guardService, "checkAction");
   });
 
   afterAll(() => app.close());

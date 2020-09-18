@@ -1,13 +1,15 @@
 export interface Statement {
-  service: string;
-  effect: "allow" | "deny";
-  action: string[] | string;
-  resource: string[];
+  action: string;
+  resource:
+    | string[]
+    | {
+        include: string;
+        exclude: string[];
+      };
+  module: string;
 }
-
 export const EMPTY_STATEMENT: Statement = {
-  service: undefined,
-  effect: undefined,
+  module: undefined,
   action: undefined,
-  resource: []
+  resource: undefined
 };

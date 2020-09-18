@@ -1,4 +1,4 @@
-import {Component, TemplateRef} from "@angular/core";
+import {Component, TemplateRef, HostBinding, Input, Directive} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -15,6 +15,13 @@ import {map} from "rxjs/operators";
 import {Identity} from "../../interfaces/identity";
 import {IdentityService} from "../../services/identity.service";
 import {IdentityIndexComponent} from "./identity-index.component";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 @Component({
   template: `
@@ -43,7 +50,7 @@ describe("IdentityIndexComponent", () => {
         NoopAnimationsModule,
         RouterTestingModule
       ],
-      declarations: [IdentityIndexComponent, ToolbarCmp]
+      declarations: [IdentityIndexComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
     identityService = {
       find: jasmine

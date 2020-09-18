@@ -1,6 +1,6 @@
 import {DynamicModule, Global, Module} from "@nestjs/common";
 import {PassportModule} from "@nestjs/passport";
-import {ActionGuardService, AuthGuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport";
 import {TestingOptions} from "./interface";
 import {NoopStrategy} from "./noop.strategy";
 
@@ -13,14 +13,13 @@ export class PassportTestingModule {
     return {
       module: PassportTestingModule,
       imports: [PassportModule.register({defaultStrategy: "noop", session: false})],
-      exports: [PassportModule, NoopStrategy, AuthGuardService, ActionGuardService],
+      exports: [PassportModule, NoopStrategy, GuardService],
       providers: [
         {
           provide: NoopStrategy,
           useFactory: () => new NoopStrategy(options || {})
         },
-        AuthGuardService,
-        ActionGuardService
+        GuardService
       ]
     };
   }
