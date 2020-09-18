@@ -64,7 +64,6 @@ export class StorageController {
    * @param ifNoneMatch When present and matches objects checksum, status code will be 304.
    */
   @Get(":id/view")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show"))
   async view(
     @Res() res,
     @Param("id", OBJECT_ID) id: ObjectId,
@@ -91,7 +90,6 @@ export class StorageController {
    * @param metadata When true, it will respond with the metadata instead of object itself.
    */
   @Get(":id")
-  @UseGuards(AuthGuard(), ActionGuard("storage:show"))
   async findOne(
     @Res() res,
     @Param("id", OBJECT_ID) id: ObjectId,
