@@ -3,12 +3,39 @@ import {BucketService} from "@spica-server/bucket/services";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {BucketSchemaResolver} from "@spica-server/bucket/src/bucket.schema.resolver";
+import {
+  BucketSchemaResolver,
+  registerPreferenceWatcher
+} from "@spica-server/bucket/src/bucket.schema.resolver";
+import {of, Subject, Observable} from "rxjs";
 
 describe("Bucket Schema Resolver", () => {
   let module: TestingModule;
   let schemaResolver: BucketSchemaResolver;
   let bs: BucketService;
+
+  let bucketIds = [new ObjectId(), new ObjectId()];
+
+  class MockBucketService {
+    onLanguageUpdated = new Subject();
+    constructor() {}
+    findOne() {}
+    getPreferences() {}
+    watchPreferences() {
+      return new Observable(observer => {
+        this.onLanguageUpdated.subscribe(prefs => {
+          observer.next(prefs);
+        });
+      });
+    }
+    aggregate() {
+      return {
+        toArray: () => {
+          return Promise.resolve([{_id: bucketIds[0]}, {_id: bucketIds[1]}]);
+        }
+      };
+    }
+  }
 
   const bucket = {
     _id: new ObjectId(),
@@ -49,12 +76,11 @@ describe("Bucket Schema Resolver", () => {
     }
   };
 
+  let validator;
+
   beforeAll(async () => {
-    const mockBucketService = {
-      findOne: jasmine.createSpy("findOne").and.returnValue(Promise.resolve({...bucket})),
-      getPreferences: jasmine
-        .createSpy("getPreferences")
-        .and.returnValue(Promise.resolve(preference))
+    validator = {
+      removeSchema: jasmine.createSpy("removeSchema")
     };
 
     module = await Test.createTestingModule({
@@ -62,12 +88,15 @@ describe("Bucket Schema Resolver", () => {
       providers: [
         {
           provide: BucketService,
-          useValue: mockBucketService
+          useClass: MockBucketService
         }
       ]
     }).compile();
     bs = module.get(BucketService);
     schemaResolver = new BucketSchemaResolver(bs);
+
+    spyOn(bs, "findOne").and.returnValue(Promise.resolve({...bucket}) as any);
+    spyOn(bs, "getPreferences").and.returnValue(Promise.resolve(preference) as any);
   });
 
   afterAll(async () => await module.close());
@@ -118,5 +147,54 @@ describe("Bucket Schema Resolver", () => {
   it("should not return anything if invalid objectid is passed", async () => {
     const jsonSchema = await schemaResolver.resolve("absolutely_not_an_objectid");
     expect(jsonSchema).not.toBeTruthy();
+  });
+
+  describe("registerPreferenceWatcher", () => {
+    let watchSpy: jasmine.Spy<any>;
+    let aggregateSpy: jasmine.Spy<any>;
+
+    beforeAll(() => {
+      watchSpy = spyOn(bs, "watchPreferences").and.callThrough();
+      aggregateSpy = spyOn(bs, "aggregate").and.callThrough();
+      registerPreferenceWatcher(bs, validator);
+    });
+
+    afterEach(() => {
+      watchSpy.calls.reset();
+      aggregateSpy.calls.reset();
+    });
+
+    it("should handle preference updates", async () => {
+      expect(watchSpy).toHaveBeenCalledTimes(1);
+      expect(watchSpy).toHaveBeenCalledWith(true);
+
+      //should not remove schemas for initial preferences
+      bs["onLanguageUpdated"].next({
+        scope: "bucket",
+        language: {available: {en_US: "English", tr_TR: "Turkish"}}
+      });
+      expect(aggregateSpy).toHaveBeenCalledTimes(0);
+
+      //should not remove schemas when there is no change
+      bs["onLanguageUpdated"].next({
+        scope: "bucket",
+        language: {available: {en_US: "English", tr_TR: "Turkish"}}
+      });
+      expect(aggregateSpy).toHaveBeenCalledTimes(0);
+
+      bs["onLanguageUpdated"].next({
+        scope: "bucket",
+        language: {available: {en_US: "English"}}
+      });
+      expect(aggregateSpy).toHaveBeenCalledTimes(1);
+
+      await Promise.resolve();
+
+      expect(validator.removeSchema).toHaveBeenCalledTimes(2);
+      expect(validator.removeSchema.calls.allArgs()).toEqual([
+        [bucketIds[0].toHexString()],
+        [bucketIds[1].toHexString()]
+      ]);
+    });
   });
 });

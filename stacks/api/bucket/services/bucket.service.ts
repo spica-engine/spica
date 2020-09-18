@@ -4,6 +4,7 @@ import {BaseCollection, Collection, DatabaseService} from "@spica-server/databas
 import {PreferenceService} from "@spica-server/preference/services";
 import * as fs from "fs";
 import {Bucket, BucketPreferences} from "./bucket";
+import {Observable} from "rxjs";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
@@ -15,6 +16,10 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
   getPreferences() {
     return this.pref.get<BucketPreferences>("bucket");
+  }
+
+  watchPreferences(propagateOnStart): Observable<BucketPreferences> {
+    return this.pref.watch("bucket", {propagateOnStart});
   }
 
   getPredefinedDefaults(): Default[] {
