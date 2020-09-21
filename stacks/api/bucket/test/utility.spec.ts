@@ -5,8 +5,7 @@ import {
   isArray,
   findUpdatedFields,
   getUpdateParams,
-  provideLanguageChangeUpdater,
-  getUpdatedLanguages
+  provideLanguageChangeUpdater
 } from "@spica-server/bucket/src/utility";
 import {ChangeKind} from "../history/differ";
 
@@ -334,39 +333,6 @@ describe("Utilities", () => {
         ],
         ["bucket2", {}, {$unset: {"name.fr": "", "name.de": ""}}]
       ]);
-    });
-  });
-
-  describe("getUpdatedLanguages", () => {
-    let previousPrefs = {
-      language: {
-        available: {
-          en_US: "English",
-          tr_TR: "Turkish"
-        }
-      }
-    };
-    let currentPrefs = {
-      language: {
-        available: {
-          en_US: "English",
-          fr: "French"
-        }
-      }
-    };
-    it("should get all updated languages", () => {
-      let updatedLanguages = getUpdatedLanguages(previousPrefs, currentPrefs);
-      expect(updatedLanguages).toEqual(["tr_TR", "fr"]);
-    });
-
-    it("should get only removed languages", () => {
-      let updatedLanguages = getUpdatedLanguages(previousPrefs, currentPrefs, ChangeKind.Delete);
-      expect(updatedLanguages).toEqual(["tr_TR"]);
-    });
-
-    it("should get only added languages", () => {
-      let updatedLanguages = getUpdatedLanguages(previousPrefs, currentPrefs, ChangeKind.Add);
-      expect(updatedLanguages).toEqual(["fr"]);
     });
   });
 });

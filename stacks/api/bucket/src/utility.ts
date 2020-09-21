@@ -178,7 +178,14 @@ export function provideLanguageChangeUpdater(
   bucketDataService: BucketDataService
 ) {
   return (previousSchema: object, currentSchema: object) => {
-    let deletedLanguages = getUpdatedLanguages(previousSchema, currentSchema, ChangeKind.Delete);
+    let deletedLanguages = diff(previousSchema, currentSchema)
+      .filter(
+        change =>
+          change.kind == ChangeKind.Delete &&
+          change.path[0] == "language" &&
+          change.path[1] == "available"
+      )
+      .map(change => change.path[2]);
 
     if (!deletedLanguages.length) {
       return Promise.resolve();
@@ -233,18 +240,4 @@ export function provideLanguageChangeUpdater(
         })
       );
   };
-}
-
-export function getUpdatedLanguages(
-  previousSchema: object,
-  currentSchema: object,
-  changeKind?: ChangeKind
-) {
-  let changes = diff(previousSchema, currentSchema).filter(
-    change => change.path[0] == "language" && change.path[1] == "available"
-  );
-  if (changeKind != undefined) {
-    changes = changes.filter(change => change.kind == changeKind);
-  }
-  return changes.map(change => change.path[2]);
 }
