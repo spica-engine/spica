@@ -128,7 +128,8 @@ const args = yargs
         "FunctionFullAccess",
         "BucketFullAccess",
         "DashboardFullAccess",
-        "WebhookFullAccess"
+        "WebhookFullAccess",
+        "PreferenceFullAccess"
       ]
     }
   })

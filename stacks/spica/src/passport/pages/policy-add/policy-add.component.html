@@ -8,7 +8,6 @@
 </ng-template>
 
 <mat-card>
-  {{ policy | json }}
   <mat-card-content>
     <form #policyForm="ngForm">
       <mat-form-field>
@@ -67,36 +66,22 @@
                 </mat-option>
               </mat-select>
             </mat-form-field>
-            <mat-form-field
-              *ngIf="
-                statement.module &&
-                statement.action &&
-                services[statement.module][statement.action] &&
-                services[statement.module][statement.action].length > 0
-              "
-            >
+            <mat-form-field *ngIf="serviceAndParamsExist(statement)">
               <mat-select
                 placeholder="Resource Definition"
                 (selectionChange)="onResourceSelection(statement, $event.value)"
                 [value]="getResourceSelection(statement)"
               >
-                <mat-option [value]="'only_include'">
+                <mat-option value="include">
                   Include resources
                 </mat-option>
-                <mat-option [value]="'include_exclude'">
+                <mat-option value="exclude">
                   Exclude resources
                 </mat-option>
               </mat-select>
             </mat-form-field>
-            <ng-container
-              *ngIf="
-                statement.module &&
-                statement.action &&
-                services[statement.module][statement.action] &&
-                services[statement.module][statement.action].length > 0
-              "
-            >
-              <ng-container *ngIf="getResourceSelection(statement) == 'only_include'">
+            <ng-container *ngIf="serviceAndParamsExist(statement)">
+              <ng-container *ngIf="getResourceSelection(statement) == 'include'">
                 <mat-label>Included resources</mat-label>
                 <div
                   class="included-resources"
@@ -115,33 +100,50 @@
                     </mat-icon>
                   </button>
                 </div>
-                <div class="excludeds">
-                  <mat-label>EXCLUDED RESOURCES</mat-label>
-                  <div
-                    class="excluded-resource"
-                    *ngFor="let excluded of statement.resource.exclude; let i = index"
+
+                <div class="include-resource-input">
+                  <mat-form-field>
+                    <input
+                      matInput
+                      #includeResource="ngModel"
+                      ngModel
+                      [name]="statementIndex + 'includeResource'"
+                      placeholder="Enter the resource that will be included"
+                    />
+                    <mat-hint>
+                      Expected resource format: "<b>{{
+                        services[statement.module][statement.action].join("/")
+                      }}</b
+                      >"
+                    </mat-hint>
+                  </mat-form-field>
+                  <button
+                    [disabled]="!includeResource.value"
+                    mat-button
+                    (click)="addInclude(includeResource.value, statement); includeResource.reset()"
                   >
-                    <mat-form-field>
-                      <input matInput disabled [ngModel]="excluded" />
-                    </mat-form-field>
-                    <button mat-button color="warn" (click)="removeExcluded(i, statement)">
-                      <mat-icon>
-                        delete
-                      </mat-icon>
-                    </button>
-                  </div>
-                  <div class="exclude-resource-input">
+                    Add Resource
+                  </button>
+                </div>
+              </ng-container>
+              <ng-container *ngIf="getResourceSelection(statement) == 'exclude'">
+                <div class="excluded-resources">
+                  <div class="includeds">
+                    <mat-label>Included Resources</mat-label>
                     <mat-form-field>
                       <input
                         matInput
-                        [name]="statementIndex + 'include'"
-                        #includeModel="ngModel"
+                        [name]="statementIndex + 'includedResource'"
+                        #includedResource="ngModel"
                         [(ngModel)]="statement.resource.include"
+                        required
                       />
-                      <mat-hint *ngIf="services[statement.module][statement.action]">
-                        Expected resource format:
-                        <b>"{{ services[statement.module][statement.action].join("/") }}"</b>
-                      </mat-hint>
+                      <mat-hint
+                        >Expected resource format: "<b>{{
+                          services[statement.module][statement.action].join("/")
+                        }}</b
+                        >"</mat-hint
+                      >
                     </mat-form-field>
                   </div>
                   <div class="excludeds">
@@ -174,10 +176,13 @@
                       <mat-form-field>
                         <input
                           matInput
-                          #excludeResource
+                          #excludeResource="ngModel"
+                          ngModel
+                          [name]="statementIndex + 'excludeResource'"
                           placeholder="Enter the resource that will be excluded"
+                          [pattern]="getPattern(statement)"
                         />
-                        <mat-hint *ngIf="services[statement.module][statement.action]">
+                        <mat-hint>
                           Expected resource format: "<b>{{
                             services[statement.module][statement.action].join("/")
                           }}</b
@@ -188,7 +193,7 @@
                         mat-button
                         [disabled]="!excludeResource.value"
                         (click)="
-                          addExclude(excludeResource.value, statement); excludeResource.value = ''
+                          addExclude(excludeResource.value, statement); excludeResource.reset()
                         "
                       >
                         Add Resource

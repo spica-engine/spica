@@ -30,6 +30,9 @@ import StrategyReadOnlyAccess from "./passport/strategy.readonly";
 import PassportFullAccess from "./passport/passport.fullaccess";
 import PassportReadOnlyAccess from "./passport/passport.readonly";
 
+import PreferenceFullAccess from "./preference.fullaccess";
+import PreferenceReadOnlyAccess from "./preference.readonly";
+
 export default [
   ApiKeyFullAccess,
   ApiKeyReadOnlyAccess,
@@ -61,5 +64,8 @@ export default [
   DashboardReadOnlyAccess,
 
   BucketFullAccess,
-  BucketReadOnlyAccess
+  BucketReadOnlyAccess,
+
+  PreferenceFullAccess,
+  PreferenceReadOnlyAccess
 ];

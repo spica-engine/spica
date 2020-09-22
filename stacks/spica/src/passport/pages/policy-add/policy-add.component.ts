@@ -43,12 +43,36 @@ export class PolicyAddComponent implements OnInit {
       .subscribe();
   }
 
-  onResourceSelection(statement: Statement, selection: "only_include" | "include_exclude") {
-    if (selection == "only_include") {
+  getPattern(statement: Statement) {
+    if (this.serviceAndParamsExist(statement)) {
+      let objectIdOrAsteriks = "([a-f\\d]{24}|\\*)";
+      let scopes = "(bucket|passport)";
+
+      let param = statement.module == "preference" ? scopes : objectIdOrAsteriks;
+
+      let pattern = this.services[statement.module][statement.action].reduce(
+        (acc, _, index, array) => {
+          acc = acc + param;
+          if (index != array.length - 1) {
+            acc = acc + "\\/";
+          }
+          return acc;
+        },
+        "^"
+      );
+
+      pattern = pattern + "$";
+
+      return pattern;
+    }
+  }
+
+  onResourceSelection(statement: Statement, selection: "include" | "exclude") {
+    if (selection == "include") {
       statement.resource = [];
-    } else if (selection == "include_exclude") {
+    } else if (selection == "exclude") {
       statement.resource = {
-        //put * for each param, and build resource like '*/*'
+        //put * for each params, and build resource like '*/*'
         include: this.services[statement.module][statement.action].map(_ => "*").join("/"),
         exclude: []
       };
@@ -73,22 +97,27 @@ export class PolicyAddComponent implements OnInit {
 
   getResourceSelection(statement: Statement) {
     if (statement.resource instanceof Array) {
-      return "only_include";
+      return "include";
     } else if (statement.resource instanceof Object) {
-      return "include_exclude";
+      return "exclude";
     } else {
       return undefined;
     }
+  }
+
+  serviceAndParamsExist(statement: Statement) {
+    return (
+      this.services[statement.module] &&
+      this.services[statement.module][statement.action] &&
+      this.services[statement.module][statement.action].length > 0
+    );
   }
 
   noResourceInserted() {
     return this.policy.statement
       .map(
         statement =>
-          this.services[statement.module] &&
-          this.services[statement.module][statement.action] &&
-          this.services[statement.module][statement.action].length > 0 &&
-          (statement.resource as string[]).length == 0
+          this.serviceAndParamsExist(statement) && (statement.resource as string[]).length == 0
       )
       .some(invalid => invalid);
   }

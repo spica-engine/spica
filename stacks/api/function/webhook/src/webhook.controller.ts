@@ -29,7 +29,7 @@ export class WebhookController {
   ) {}
 
   @Get("collections")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:index", "webhook"))
+  @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
   collections() {
     return this.database
       .collections()
