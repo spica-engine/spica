@@ -1,6 +1,6 @@
-<mat-toolbar color="primary">
+<mat-toolbar>
   <h4 class="mat-h4">
-    <mat-icon>http</mat-icon>
+    <mat-icon>pest_control</mat-icon>
     <span>Webhook Logs</span>
   </h4>
   <div class="actions">
@@ -8,7 +8,7 @@
       <mat-icon>refresh</mat-icon>
       Refresh
     </button>
-    <button mat-button canInteract="webhook:delete" (click)="clearLogs()">
+    <button mat-button canInteract="webhook:logs:delete" (click)="clearLogs()">
       <mat-icon>clear_all</mat-icon>
       Clear
     </button>

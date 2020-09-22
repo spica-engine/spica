@@ -1,6 +1,5 @@
 import {DynamicModule, Module, Type} from "@nestjs/common";
 import {BucketCache, provideBucketCache} from "./cache";
-import {DataChangeModule} from "@spica-server/bucket/change";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
@@ -38,10 +37,6 @@ export class BucketModule {
 
     if (options.realtime) {
       imports.push(RealtimeModule);
-    }
-
-    if (options.experimentalDataChange) {
-      imports.push(DataChangeModule);
     }
 
     return {
@@ -84,5 +79,4 @@ export interface BucketOptions {
   hooks: boolean;
   history: boolean;
   realtime: boolean;
-  experimentalDataChange: boolean;
 }

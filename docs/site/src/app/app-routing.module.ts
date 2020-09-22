@@ -50,7 +50,7 @@ const routes: Routes = [
     component: FeaturesComponent
   },
   {
-    path: "services",
+    path: "pricing",
     component: EnterpriseComponent
   },
   {

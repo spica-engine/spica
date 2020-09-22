@@ -13,13 +13,14 @@
           <img src="assets/dark-icon.svg" />
         </mat-list-item>
         <mat-list-item
+          disableRipple
           *ngFor="let category of categories"
           [class.active]="(currentCategory | async) == category.category"
           (click)="currentCategory.next(category.category)"
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
-        <mat-list-item *ngIf="!(isHandset$ | async)" (click)="toggle()">
+        <mat-list-item disableRipple *ngIf="!(isHandset$ | async)" (click)="toggle()">
           <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
       </mat-nav-list>
@@ -38,7 +39,7 @@
     </section>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar color="primary">
+    <mat-toolbar>
       <button
         type="button"
         mat-icon-button
@@ -53,6 +54,6 @@
         <ng-container *ngComponentOutlet="component"></ng-container>
       </ng-container>
     </mat-toolbar>
-    <div slot="content"></div>
+    <div class="slot" slot="content"></div>
   </mat-sidenav-content>
 </mat-sidenav-container>

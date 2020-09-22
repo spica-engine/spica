@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar>
   <h4 class="mat-h4">
     <mat-icon>settings</mat-icon>
     Settings
@@ -42,7 +42,13 @@
     </button>
   </mat-card-content>
   <mat-card-actions>
-    <button class="save-button" mat-button (click)="updateSettings()">
+    <button
+      class="save-button"
+      canInteract="preference:update"
+      resource="bucket"
+      mat-button
+      (click)="updateSettings()"
+    >
       <mat-icon>save</mat-icon><span>Save</span>
     </button>
   </mat-card-actions>

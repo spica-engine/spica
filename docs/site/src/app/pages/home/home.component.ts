@@ -8,5 +8,6 @@ import {fly, flyOne} from "../animations";
   animations: [fly("fly"), flyOne("flyOne")]
 })
 export class HomeComponent {
+  slideIndex: number = 0;
   constructor() {}
 }

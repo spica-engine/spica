@@ -79,11 +79,6 @@ const args = yargs
       boolean: true,
       description: "Whether the experimental Bucket realtime feature is enabled.",
       default: true
-    },
-    "experimental-bucket-data-change": {
-      boolean: true,
-      description: "Whether the experimental Bucket data change feature is enabled.",
-      default: true
     }
   })
   /* Passport Options  */
@@ -98,10 +93,43 @@ const args = yargs
       description: "Lifespan of the self-signed certificate in seconds.",
       default: Number.MAX_SAFE_INTEGER
     },
-    "passport-password": {
+    "passport-identity-token-expires-in": {
       string: true,
-      description: "Password of the default 'spica' account.",
+      description: "Lifespan of the issued JWT tokens.",
+      default: "2days"
+    },
+    "passport-default-identity-identifier": {
+      string: true,
+      description: "Identifier of the default identity.",
       default: "spica"
+    },
+    "passport-default-strategy": {
+      string: true,
+      description: "The default startegy to authenticate identities.",
+      default: "IDENTITY",
+      choices: ["IDENTITY", "APIKEY"]
+    },
+    "passport-default-identity-password": {
+      string: true,
+      description: "Password of the default account.",
+      default: "spica"
+    },
+    "passport-default-identity-policies": {
+      array: true,
+      description: "Policies to attach to the default identity.",
+      default: [
+        "ApiKeyFullAccess",
+        "IdentityFullAccess",
+        "StrategyFullAccess",
+        "PolicyFullAccess",
+        "PassportFullAccess",
+        "ActivityFullAccess",
+        "StorageFullAccess",
+        "FunctionFullAccess",
+        "BucketFullAccess",
+        "DashboardFullAccess",
+        "WebhookFullAccess"
+      ]
     }
   })
   .demandOption("passport-secret")
@@ -267,8 +295,7 @@ const modules = [
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"],
-    experimentalDataChange: args["experimental-bucket-data-change"]
+    realtime: args["experimental-bucket-realtime"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",
@@ -282,7 +309,12 @@ const modules = [
     publicUrl: args["public-url"],
     secretOrKey: args["passport-secret"],
     issuer: args["public-url"],
-    defaultPassword: args["passport-password"],
+    expiresIn: args["passport-identity-token-expires-in"],
+
+    defaultStrategy: args["passport-default-strategy"],
+    defaultIdentityPolicies: args["passport-default-identity-policies"],
+    defaultIdentityIdentifier: args["passport-default-identity-identifier"],
+    defaultIdentityPassword: args["passport-default-identity-password"],
     audience: "spica.io",
     samlCertificateTTL: args["passport-saml-certificate-ttl"]
   }),

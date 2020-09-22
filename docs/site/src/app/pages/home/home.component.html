@@ -5,17 +5,14 @@
     fxLayoutAlign="space-between flex-start"
     ngClass.gt-md="desktop"
   >
-    <div fxFlex.xl="30" fxFlex.lg="45" fxFlex.md="60" fxFlex.sm="90" fxFlex.xs="100">
+    <div fxFlex="100">
       <h1>
-        Go beyond, <br />
-        your dreams!
+        The first web and mobile, <br />
+        application development engine!
       </h1>
-      <p>
-        Now, you don’t need to spend tons of hours and money to make your projects.
-      </p>
       <div
         fxLayout="row"
-        fxLayoutAlign="space-between center"
+        fxLayoutAlign="center center"
         fxLayout.lt-sm="column"
         class="button-group"
       >
@@ -42,15 +39,27 @@
           <a mat-flat-button href="/calendar">Book a free call</a>
         </div>
       </div>
+      <div fxLayout="row" fxLayoutAlign="center" class="modules">
+        <div (click)="slideIndex = 0" [class.active]="slideIndex == 0">Data Management</div>
+        <div (click)="slideIndex = 1" [class.active]="slideIndex == 1">
+          Data Model Customization
+        </div>
+        <div (click)="slideIndex = 2" [class.active]="slideIndex == 2">Custom Functions</div>
+        <div (click)="slideIndex = 3" [class.active]="slideIndex == 3">Access Management</div>
+      </div>
+      <div class="images">
+        <div [ngStyle]="{transform: 'translateX(' + -1 * slideIndex * 25 + '%)'}">
+          <img [class.active]="slideIndex == 0" src="../../../assets/images/featured_image_1.png" />
+          <img [class.active]="slideIndex == 1" src="../../../assets/images/featured_image_2.png" />
+          <img [class.active]="slideIndex == 2" src="../../../assets/images/featured_image_3.png" />
+          <img [class.active]="slideIndex == 3" src="../../../assets/images/featured_image_4.png" />
+        </div>
+      </div>
     </div>
-    <div fxLayout="column" fxLayoutAlign="center center" fxShow.lt-lg="false">
-      <img class="logo" src="assets/images/spica.svg" alt="Spica logo" />
-      <img class="shadow" src="assets/images/shadow.svg" alt="Shadow" />
-    </div>
+    <div fxLayout="column" fxLayoutAlign="center center" fxShow.lt-lg="false"></div>
   </section>
   <div class="wave" inlineSVG="/assets/images/wave-white.svg"></div>
 </app-header>
-
 <home-section
   class="major-features"
   title="Major Features"

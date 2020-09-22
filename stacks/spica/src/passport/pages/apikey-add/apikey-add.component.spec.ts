@@ -17,14 +17,17 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {IndexResult} from "@spica-client/core";
 import {ApiKey} from "../../interfaces/apikey";
 import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
+import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {PolicyService} from "../../services/policy.service";
 import {By} from "@angular/platform-browser";
 import {Directive, HostBinding, Input} from "@angular/core";
+import {MatButtonModule} from "@angular/material/button";
 
 @Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
+  @Input("resource") resource: string;
 }
 
 describe("ApiKeyAddComponent", () => {
@@ -41,6 +44,7 @@ describe("ApiKeyAddComponent", () => {
         MatCardModule,
         MatFormFieldModule,
         MatInputModule,
+        MatButtonModule,
         MatSlideToggleModule,
         FormsModule,
         RouterTestingModule,
@@ -51,6 +55,14 @@ describe("ApiKeyAddComponent", () => {
         {
           provide: ApiKeyService,
           useValue: new MockApiKeyService()
+        },
+        {
+          provide: PassportService,
+          useValue: {
+            checkAllowed: () => {
+              return of(true);
+            }
+          }
         },
         {
           provide: PolicyService,

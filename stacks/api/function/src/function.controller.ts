@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Header,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -23,7 +24,7 @@ import {ARRAY, BOOLEAN, DEFAULT} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as os from "os";
 import {from, of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
@@ -79,8 +80,8 @@ export class FunctionController {
    */
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("function:index"))
-  index() {
-    return this.fs.find();
+  index(@ResourceFilter() resourceFilter) {
+    return this.fs.aggregate([resourceFilter]).toArray();
   }
 
   /**
@@ -115,22 +116,22 @@ export class FunctionController {
       for (const handler in fn.triggers) {
         if (fn.triggers.hasOwnProperty(handler)) {
           const trigger = fn.triggers[handler];
-          acc.push(trigger);
+          if (trigger.type == "bucket" && trigger.options["phase"] == "BEFORE") {
+            acc.push(trigger);
+          }
         }
       }
       return acc;
     }, new Array<Trigger>());
 
-    return triggers
-      .filter(trigger => trigger.type == "bucket")
-      .some((trigger, index, triggers) => {
-        const foundIndex = triggers.findIndex(
-          t =>
-            t.options["bucket"] == trigger.options["bucket"] &&
-            t.options["type"] == trigger.options["type"]
-        );
-        return foundIndex != index;
-      });
+    return triggers.some((trigger, index, triggers) => {
+      const foundIndex = triggers.findIndex(
+        t =>
+          t.options["bucket"] == trigger.options["bucket"] &&
+          t.options["type"] == trigger.options["type"]
+      );
+      return foundIndex != index;
+    });
   }
 
   /**
@@ -149,7 +150,7 @@ export class FunctionController {
     const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
     if (hasDuplicatedHandlers) {
       throw new BadRequestException(
-        "Multiple handlers on same bucket and event type are not supported."
+        "Multiple handlers on same bucket and event type in before phase are not supported."
       );
     }
     delete fn._id;
@@ -169,7 +170,7 @@ export class FunctionController {
     const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
     if (hasDuplicatedHandlers) {
       throw new BadRequestException(
-        "Multiple handlers on same bucket and event type are not supported."
+        "Multiple handlers on same bucket and event type in before phase are not supported."
       );
     }
     fn = await this.fs.insertOne(fn);

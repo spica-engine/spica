@@ -54,7 +54,14 @@ const routes: Routes = [
       },
       {
         path: "settings",
-        component: SettingsComponent
+        component: SettingsComponent,
+        data: {
+          service: "preference",
+          action: "show",
+          params: {
+            scope: "bucket"
+          }
+        }
       },
       {
         canActivate: [BucketIndexGuard],
@@ -88,7 +95,7 @@ const route: Route[] = [
     category: RouteCategory.Developer,
     icon: "view_day",
     path: "/buckets",
-    display: "Bucket",
+    display: "Buckets",
     data: {
       action: "bucket:index"
     }

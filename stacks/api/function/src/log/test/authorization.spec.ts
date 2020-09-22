@@ -4,13 +4,13 @@ import {LogModule} from "@spica-server/function/src/log";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {AuthGuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Realtime Authorization", () => {
   let wsc: Websocket;
   let app: INestApplication;
-  let authGuardCheck: jasmine.Spy<typeof AuthGuardService.prototype.check>;
+  let authGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAuthorization>;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -27,7 +27,7 @@ describe("Realtime Authorization", () => {
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
-    authGuardCheck = spyOn(module.get(AuthGuardService), "check");
+    authGuardCheck = spyOn(module.get(GuardService), "checkAuthorization");
   });
 
   afterAll(() => app.close());

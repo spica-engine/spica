@@ -1,9 +1,9 @@
 import {Optional} from "@nestjs/common";
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
-import {ActionDispatcher} from "@spica-server/bucket/hooks";
+import {ReviewDispatcher} from "@spica-server/bucket/hooks";
 import {ObjectId} from "@spica-server/database";
 import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
-import {ActionGuardService, AuthGuardService} from "@spica-server/passport";
+import {GuardService} from "@spica-server/passport";
 import {fromEvent, Observable} from "rxjs";
 import {takeUntil, tap} from "rxjs/operators";
 
@@ -15,17 +15,23 @@ export class RealtimeGateway implements OnGatewayConnection {
 
   constructor(
     private realtime: RealtimeDatabaseService,
-    private authGuardService: AuthGuardService,
-    private actionGuardService: ActionGuardService,
-    @Optional() private dispatcher: ActionDispatcher
+    private guardService: GuardService,
+    @Optional() private reviewDispatcher: ReviewDispatcher
   ) {}
 
   async handleConnection(client: WebSocket, req) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
 
     try {
-      await this.authGuardService.check(req, client);
-      await this.actionGuardService.check(req, client, "bucket:data:stream");
+      await this.guardService.checkAuthorization({
+        request: req,
+        response: client
+      });
+      await this.guardService.checkAction({
+        request: req,
+        response: client,
+        actions: "bucket:data:stream"
+      });
     } catch (e) {
       client.send(JSON.stringify({code: e.status || 500, message: e.message}));
       return client.close(1003);
@@ -34,8 +40,8 @@ export class RealtimeGateway implements OnGatewayConnection {
     const bucketId = req.params.id;
     const options: any = {};
 
-    if (this.dispatcher && req.headers["strategy-type"] == "APIKEY") {
-      const filter = await this.dispatcher.dispatch(
+    if (this.reviewDispatcher && req.strategyType == "APIKEY") {
+      const filter = await this.reviewDispatcher.dispatch(
         {bucket: bucketId, type: "STREAM"},
         req.headers
       );

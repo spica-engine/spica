@@ -30,8 +30,8 @@ export class HomeLayoutComponent implements OnInit {
   private _categories = new Map([
     [RouteCategory.Primary, {icon: "stars", index: 0}],
     [RouteCategory.Content, {icon: "view_stream", index: 1}],
-    [RouteCategory.System, {icon: "apps", index: 2}],
-    [RouteCategory.Developer, {icon: "double_arrow", index: 3}],
+    [RouteCategory.System, {icon: "supervisor_account", index: 2}],
+    [RouteCategory.Developer, {icon: "settings", index: 3}],
     [RouteCategory.Function, {icon: "memory", index: 4}]
   ]);
 

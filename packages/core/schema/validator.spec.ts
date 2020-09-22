@@ -10,9 +10,9 @@ describe("schema validator", () => {
     validator = new Validator();
   });
 
-  it("should fail with invalid format", () => {
+  it("should fail with invalid format", async () => {
     const schema: JSONSchema7 = {type: "string", format: "unknownformat"};
-    expectAsync(validator.validate(schema, {})).toBeRejected();
+    await expectAsync(validator.validate(schema, {})).toBeRejected();
   });
 
   it("should assign defaults", async () => {
@@ -120,8 +120,8 @@ describe("schema validator", () => {
     expect(data.property2).toBeUndefined();
   });
 
-  it("should fail when trying to resolve unknown schema", () => {
-    expectAsync(validator.validate({$ref: "unknown-schema"})).toBeRejected("unknown-schema");
+  it("should fail when trying to resolve unknown schema", async () => {
+    await expectAsync(validator.validate({$ref: "unknown-schema"})).toBeRejected("unknown-schema");
   });
 
   describe("with format", () => {

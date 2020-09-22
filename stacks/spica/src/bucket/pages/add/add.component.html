@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar>
   <span *ngIf="bucket$ | async; let bucket" @smooth>
     <h4>
       <mat-icon>{{ bucket.icon }}</mat-icon>
@@ -127,6 +127,7 @@
     <button
       class="save-button"
       [canInteract]="data._id ? 'bucket:data:update' : 'bucket:data:create'"
+      [resource]="data._id ? bucketId + '/' + data._id : bucketId"
       *matSave="$save | async; let state"
       [disabled]="form.invalid || scheduleForm?.invalid || bucket.readOnly || !!state"
       mat-button

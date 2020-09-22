@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar>
   <h4 class="mat-h4">
     <mat-icon>memory</mat-icon>
     <span>
@@ -215,7 +215,11 @@
 
             <ng-container
               ngModelGroup="triggerOptions"
-              *ngIf="(information.enqueuers | enqueuer: trigger.type)?.options; let options"
+              *ngIf="
+                (information.enqueuers | enqueuer: trigger.type)?.options
+                  | conditionalSchema: trigger.options;
+                let options
+              "
             >
               <span
                 *ngFor="let propertyKv of options.properties | keyvalue"
@@ -363,6 +367,7 @@
       *matSave="$save | async; let state"
       [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
       [canInteract]="function._id ? 'function:update' : 'function:create'"
+      [resource]="function._id ? function._id : undefined"
       (click)="save()"
       [ngSwitch]="state"
     >

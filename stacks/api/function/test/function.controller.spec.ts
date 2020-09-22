@@ -12,7 +12,7 @@ describe("FunctionController", () => {
   let functionEngine: jasmine.SpyObj<FunctionEngine>;
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.standalone()],
       providers: [FunctionService]
     }).compile();
     functionService = module.get(FunctionService);
@@ -35,6 +35,7 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
+              phase: "BEFORE",
               type: "GET"
             }
           },
@@ -42,6 +43,7 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
+              phase: "BEFORE",
               type: "GET"
             }
           }
@@ -53,7 +55,7 @@ describe("FunctionController", () => {
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
     expect(result.message).toBe(
-      "Multiple handlers on same bucket and event type are not supported."
+      "Multiple handlers on same bucket and event type in before phase are not supported."
     );
   });
 
@@ -64,6 +66,7 @@ describe("FunctionController", () => {
           type: "bucket",
           options: {
             bucket: "test",
+            phase: "BEFORE",
             type: "GET"
           }
         }
@@ -79,6 +82,7 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
+              phase: "BEFORE",
               type: "GET"
             }
           }
@@ -90,7 +94,7 @@ describe("FunctionController", () => {
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
     expect(result.message).toBe(
-      "Multiple handlers on same bucket and event type are not supported."
+      "Multiple handlers on same bucket and event type in before phase are not supported."
     );
   });
 
@@ -108,6 +112,7 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
+              phase: "BEFORE",
               type: "GET"
             }
           },
@@ -115,6 +120,7 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
+              phase: "BEFORE",
               type: "GET"
             }
           }
@@ -126,7 +132,7 @@ describe("FunctionController", () => {
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
     expect(result.message).toBe(
-      "Multiple handlers on same bucket and event type are not supported."
+      "Multiple handlers on same bucket and event type in before phase are not supported."
     );
   });
 
@@ -137,6 +143,7 @@ describe("FunctionController", () => {
           type: "bucket",
           options: {
             bucket: "test",
+            phase: "BEFORE",
             type: "GET"
           }
         }
@@ -153,6 +160,7 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
+              phase: "BEFORE",
               type: "GET"
             }
           }

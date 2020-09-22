@@ -1,7 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("//tools/dgeni:index.bzl", "docs")
 
 ts_library(
@@ -17,13 +16,12 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
-        "//stacks/api/bucket/change",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/realtime",
         "//stacks/api/bucket/services",
-        "//stacks/api/passport",
+        "//stacks/api/passport/guard",
         "//stacks/api/preference",
         "//stacks/api/preference/services",
         "@npm//@nestjs/common",

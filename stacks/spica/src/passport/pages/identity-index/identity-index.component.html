@@ -9,10 +9,16 @@
       resources on Spica
     </h6>
   </span>
-  <button mat-button canInteract="passport:identity:create" routerLink="/passport/identity/add">
-    <mat-icon>add</mat-icon>
-    Add New
-  </button>
+  <span>
+    <button mat-button canInteract="passport:identity:create" routerLink="/passport/identity/add">
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
+    <button mat-button routerLink="/passport/settings">
+      <mat-icon>settings</mat-icon>
+      Settings
+    </button>
+  </span>
 </ng-template>
 <mat-card class="mat-elevation-z25">
   <mat-card-content>
@@ -32,7 +38,8 @@
         <mat-cell *matCellDef="let identity">
           <button
             mat-icon-button
-            canInteract="passport:identity:update"
+            canInteract="passport:identity:show"
+            [resource]="identity._id"
             [routerLink]="identity._id + '/edit'"
           >
             <mat-icon>edit</mat-icon>
@@ -40,6 +47,7 @@
           <button
             *ngIf="identity.system !== true"
             canInteract="passport:identity:delete"
+            [resource]="identity._id"
             mat-icon-button
             color="warn"
             [matAwareDialog]="{

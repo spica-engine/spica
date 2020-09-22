@@ -33,6 +33,14 @@ import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -58,11 +66,14 @@ describe("IndexComponent", () => {
     )
   };
   let activatedRoute = {
-    params: new Subject()
+    params: new Subject(),
+    queryParams: of()
   };
 
   let getItem: jasmine.Spy;
   let setItem: jasmine.Spy;
+
+  let navigateSpy: jasmine.Spy;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -108,17 +119,23 @@ describe("IndexComponent", () => {
           useValue: activatedRoute
         }
       ],
-      declarations: [IndexComponent, FilterComponent, PersistHeaderWidthDirective]
+      declarations: [
+        IndexComponent,
+        FilterComponent,
+        PersistHeaderWidthDirective,
+        CanInteractDirectiveTest
+      ]
     }).compileComponents();
 
     getItem = spyOn(localStorage, "getItem").and.callFake(() => null);
     setItem = spyOn(localStorage, "setItem");
 
     fixture = TestBed.createComponent(IndexComponent);
-    fixture.detectChanges();
+    fixture.detectChanges(false);
 
     bucketDataService.find.calls.reset();
     bucketService.getBucket.calls.reset();
+    navigateSpy = spyOn(fixture.componentInstance["router"], "navigate");
 
     activatedRoute.params.next({id: 1});
     fixture.detectChanges();
@@ -210,19 +227,24 @@ describe("IndexComponent", () => {
         expect(options[0].textContent).toBe(" English (en_US) ");
       });
 
-      it("should query language", fakeAsync(() => {
+      it("should change language", () => {
         bucketDataService.find.calls.reset();
         fixture.debugElement
           .query(By.css("mat-toolbar > div.actions > button:nth-of-type(5)"))
           .nativeElement.click();
         fixture.detectChanges();
         document.body.querySelector<HTMLButtonElement>(".mat-menu-content .mat-menu-item").click();
-        tick(500);
 
-        expect(fixture.componentInstance.language).toBe("en_US");
-        expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-        expect(bucketDataService.find.calls.mostRecent().args[1].language).toBe("en_US");
-      }));
+        expect(navigateSpy).toHaveBeenCalledTimes(1);
+        expect(navigateSpy).toHaveBeenCalledWith([], {
+          queryParams: {
+            filter: "{}",
+            paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+            sort: "{}",
+            language: "en_US"
+          }
+        });
+      });
     });
 
     describe("columns", () => {
@@ -235,7 +257,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "Select", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "Select", "id", "test", "Scheduled", "Actions"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -292,7 +314,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "id", "test", "Scheduled", "Actions"]);
       });
 
       it("should check visible columns by default", fakeAsync(() => {
@@ -330,8 +352,8 @@ describe("IndexComponent", () => {
         const columns = document.body.querySelectorAll<HTMLInputElement>(
           ".mat-menu-content .mat-menu-item mat-checkbox"
         );
-        expect(columns.item(1).classList).toContain("mat-checkbox-checked");
-        expect(columns.item(2).classList).not.toContain("mat-checkbox-checked");
+        expect(columns.item(2).classList).toContain("mat-checkbox-checked");
+        expect(columns.item(3).classList).not.toContain("mat-checkbox-checked");
       }));
 
       it("should display later checked properties", fakeAsync(() => {
@@ -344,7 +366,7 @@ describe("IndexComponent", () => {
 
         document.body
           .querySelector<HTMLButtonElement>(
-            ".mat-menu-content .mat-menu-item:nth-of-type(3) .mat-checkbox-label"
+            ".mat-menu-content .mat-menu-item:nth-of-type(4) .mat-checkbox-label"
           )
           .click();
         tick(1);
@@ -627,8 +649,16 @@ describe("IndexComponent", () => {
       fixture.debugElement.nativeElement
         .querySelector("table[mat-table] th[mat-header-cell]")
         .click();
-      expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-      expect(bucketDataService.find.calls.mostRecent().args[1].sort).toEqual({test: 1});
+
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          filter: "{}",
+          paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+          sort: JSON.stringify({test: 1}),
+          language: undefined
+        }
+      });
     });
 
     it("should sort descending", () => {
@@ -637,8 +667,19 @@ describe("IndexComponent", () => {
       );
       sort.click();
       sort.click();
-      expect(bucketDataService.find).toHaveBeenCalledTimes(2);
-      expect(bucketDataService.find.calls.mostRecent().args[1].sort).toEqual({test: -1});
+
+      expect(navigateSpy).toHaveBeenCalledTimes(2);
+      expect(navigateSpy.calls.mostRecent().args).toEqual([
+        [],
+        {
+          queryParams: {
+            filter: "{}",
+            paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+            sort: JSON.stringify({test: -1}),
+            language: undefined
+          }
+        }
+      ]);
     });
   });
 
@@ -658,16 +699,111 @@ describe("IndexComponent", () => {
 
     it("should change page", () => {
       paginator.nextPage();
-      expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-      expect(bucketDataService.find.calls.mostRecent().args[1].skip).toBe(10);
-      expect(bucketDataService.find.calls.mostRecent().args[1].limit).toBe(10);
+
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 1, pageSize: 10, length: 20}),
+          filter: "{}",
+          sort: "{}",
+          language: undefined
+        }
+      });
     });
 
     it("should handle pageSize changes", () => {
       paginator._changePageSize(5);
-      expect(bucketDataService.find).toHaveBeenCalledTimes(1);
-      expect(bucketDataService.find.calls.mostRecent().args[1].skip).toBe(0);
-      expect(bucketDataService.find.calls.mostRecent().args[1].limit).toBe(5);
+
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          paginator: JSON.stringify({previousPageIndex: 0, pageIndex: 0, pageSize: 5, length: 20}),
+          filter: "{}",
+          sort: "{}",
+          language: undefined
+        }
+      });
+    });
+  });
+
+  describe("queryParams", () => {
+    it("should navigate with queryparams which includes old ones when paginator changes", () => {
+      fixture.componentInstance.filter = {test: "test"};
+      fixture.componentInstance.sort = {test: -1};
+      fixture.componentInstance.language = "tr_TR";
+
+      fixture.componentInstance.onPaginatorChange({length: 10, pageIndex: 1, pageSize: 5});
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          paginator: JSON.stringify({length: 10, pageIndex: 1, pageSize: 5}),
+          filter: JSON.stringify({test: "test"}),
+          sort: JSON.stringify({test: -1}),
+          language: "tr_TR"
+        }
+      });
+    });
+
+    it("should navigate with queryparams which includes old ones except paginator's when filter changes", () => {
+      fixture.componentInstance.paginator.length = 10;
+      fixture.componentInstance.paginator.pageSize = 5;
+      fixture.componentInstance.paginator.pageIndex = 1;
+
+      fixture.componentInstance.sort = {test: -1};
+      fixture.componentInstance.language = "tr_TR";
+
+      fixture.componentInstance.onFilterChange({title: "test"});
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+          filter: JSON.stringify({title: "test"}),
+          sort: JSON.stringify({test: -1}),
+          language: "tr_TR"
+        }
+      });
+    });
+
+    it("should navigate with queryparams which includes old ones except paginator's when language changes", () => {
+      fixture.componentInstance.filter = {test: "test"};
+      fixture.componentInstance.sort = {test: 1};
+      fixture.componentInstance.paginator.length = 10;
+      fixture.componentInstance.paginator.pageSize = 5;
+      fixture.componentInstance.paginator.pageIndex = 1;
+
+      fixture.componentInstance.onLanguageChange("en_US");
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          paginator: JSON.stringify(fixture.componentInstance.defaultPaginatorOptions),
+          filter: JSON.stringify({test: "test"}),
+          sort: JSON.stringify({test: 1}),
+          language: "en_US"
+        }
+      });
+    });
+
+    it("should navigate with queryparams which includes old ones when sort changes", () => {
+      fixture.componentInstance.filter = {test: "test"};
+      fixture.componentInstance.paginator.pageSize = 10;
+      fixture.componentInstance.paginator.pageIndex = 1;
+      fixture.componentInstance.paginator.length = 20;
+      fixture.componentInstance.language = "tr_TR";
+
+      fixture.componentInstance.onSortChange({active: "title", direction: "asc"});
+      expect(navigateSpy).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith([], {
+        queryParams: {
+          filter: JSON.stringify({test: "test"}),
+          paginator: JSON.stringify({
+            pageSize: 10,
+            pageIndex: 1,
+            length: 20
+          }),
+          sort: JSON.stringify({title: 1}),
+          language: "tr_TR"
+        }
+      });
     });
   });
 });

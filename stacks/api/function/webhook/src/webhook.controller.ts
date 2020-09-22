@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,16 +10,15 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
-  BadRequestException
+  UseGuards
 } from "@nestjs/common";
 import {DEFAULT, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {ObjectId, OBJECT_ID, DatabaseService} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {DatabaseService, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {Webhook} from "./interface";
-import {WebhookService} from "./webhook.service";
 import {WebhookInvoker} from "./invoker";
+import {WebhookService} from "./webhook.service";
 
 @Controller("webhook")
 export class WebhookController {
@@ -29,7 +29,7 @@ export class WebhookController {
   ) {}
 
   @Get("collections")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
+  @UseGuards(AuthGuard(), ActionGuard("webhook:index", "webhook"))
   collections() {
     return this.database
       .collections()
@@ -39,10 +39,12 @@ export class WebhookController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
   find(
+    @ResourceFilter() resourceFilter: object,
     @Query("limit", DEFAULT(10), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number
   ) {
     const aggregate = [
+      resourceFilter,
       {
         $facet: {
           meta: [{$count: "total"}],

@@ -23,11 +23,13 @@ import {WebhookService} from "../../webhook.service";
 import {WebhookAddComponent} from "./webhook-add.component";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSaveModule} from "@spica-client/material";
+import {MatButtonModule} from "@angular/material/button";
 
 @Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
+  @Input("resource") resource: string;
 }
 
 describe("Webhook", () => {
@@ -54,6 +56,7 @@ describe("Webhook", () => {
         MatFormFieldModule,
         MatListModule,
         MatSelectModule,
+        MatButtonModule,
         MatCardModule,
         MatInputModule,
         MatSlideToggleModule,

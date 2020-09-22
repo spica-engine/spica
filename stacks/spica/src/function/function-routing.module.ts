@@ -22,12 +22,17 @@ const routes: Routes = [
         data: {action: "index"}
       },
       {path: "add", component: AddComponent, data: {action: "create"}},
-      {canActivate: [FunctionIndexGuard], path: "logs", component: LogViewComponent},
+      {
+        canActivate: [FunctionIndexGuard],
+        path: "logs",
+        component: LogViewComponent,
+        data: {service: "function:logs", action: "index"}
+      },
       {
         canActivate: [FunctionIndexGuard],
         path: ":id",
         component: AddComponent,
-        data: {action: "update"}
+        data: {action: "show"}
       }
     ]
   }
@@ -39,15 +44,35 @@ const route: Route[] = [
     category: RouteCategory.Developer,
     icon: "http",
     path: "/webhook",
-    display: "Webhook",
+    display: "Webhooks",
     data: {action: "webhook:index"}
   },
   {
     id: "webhook_logs",
     category: RouteCategory.Developer,
-    icon: "format_list_numbered",
+    icon: "pest_control",
     path: "/webhook/logs",
-    display: "Webhook Logs"
+    display: "Webhook Logs",
+    data: {action: "webhook:logs:index"}
+  },
+  {
+    category: RouteCategory.Function,
+    id: `list_all_functions`,
+    icon: "format_list_numbered",
+    path: `/function`,
+    display: "Functions"
+  },
+  {
+    category: RouteCategory.Function,
+    id: `list_all_logs`,
+    icon: "pest_control",
+    path: "/function/logs",
+    display: "Logs",
+    queryParams: {
+      begin: new Date(new Date().setHours(0, 0, 0, 0)),
+      end: new Date(new Date().setHours(23, 59, 59, 999)),
+      showErrors: true
+    }
   }
 ];
 

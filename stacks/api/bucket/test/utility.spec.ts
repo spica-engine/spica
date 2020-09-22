@@ -3,7 +3,7 @@ import {
   isObject,
   findRelations,
   isArray,
-  findRemovedKeys,
+  findUpdatedFields,
   getUpdateParams
 } from "@spica-server/bucket/src/utility";
 
@@ -66,7 +66,7 @@ describe("Utilities", () => {
     );
   });
 
-  it("should find removed keys", () => {
+  it("should find removed and updated keys", () => {
     let previousSchema = {
       title: "test_title",
       description: "test_desc",
@@ -79,7 +79,8 @@ describe("Utilities", () => {
               type: "object",
               properties: {
                 removed: {type: "string"},
-                not_removed: {type: "string"}
+                updated: {type: "string"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -93,7 +94,8 @@ describe("Utilities", () => {
               type: "object",
               properties: {
                 removed: {type: "string"},
-                not_removed: {type: "string"}
+                updated: {type: "string"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -102,7 +104,23 @@ describe("Utilities", () => {
           type: "string",
           options: {}
         },
+        root_updated: {
+          type: "string",
+          options: {}
+        },
+        root_not_removed_or_updated: {
+          type: "string",
+          options: {}
+        },
         nested_root_removed: {
+          type: "object",
+          properties: {
+            dont_check_me: {
+              type: "string"
+            }
+          }
+        },
+        nested_root_updated: {
           type: "object",
           properties: {
             dont_check_me: {
@@ -124,7 +142,8 @@ describe("Utilities", () => {
             nested_object_child: {
               type: "object",
               properties: {
-                not_removed: {type: "string"}
+                updated: {type: "boolean"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -137,20 +156,44 @@ describe("Utilities", () => {
             items: {
               type: "object",
               properties: {
-                not_removed: {type: "string"}
+                updated: {type: "date"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
+        },
+        root_updated: {
+          type: "relation",
+          options: {}
+        },
+        root_not_removed_or_updated: {
+          type: "string",
+          options: {}
+        },
+        nested_root_updated: {
+          type: "number"
         }
       }
     };
 
-    let removedKeys = findRemovedKeys(previousSchema.properties, updatedSchema.properties, [], "");
-    expect(removedKeys).toEqual([
+    let targetFields = findUpdatedFields(
+      previousSchema.properties,
+      updatedSchema.properties,
+      [],
+      ""
+    );
+    expect(targetFields).toEqual([
       "nested_object.nested_object_child.removed",
+      "nested_object.nested_object_child.updated",
+
       "nested_array_object.$[].$[].removed",
+      "nested_array_object.$[].$[].updated",
+
       "root_removed",
-      "nested_root_removed"
+      "root_updated",
+
+      "nested_root_removed",
+      "nested_root_updated"
     ]);
   });
 

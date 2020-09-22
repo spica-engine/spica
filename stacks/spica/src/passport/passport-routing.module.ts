@@ -52,7 +52,12 @@ const routes: Routes = [
           {path: ":id/edit", component: StrategiesAddComponent, data: {action: "show"}}
         ]
       },
-      {path: "settings", component: IdentitySettingsComponent},
+      {
+        path: "settings",
+        canActivate: [PolicyGuard],
+        data: {serivce: "preference", action: "show", params: {scope: "passport"}},
+        component: IdentitySettingsComponent
+      },
       {
         path: "apikey",
         canActivateChild: [PolicyGuard],
@@ -105,7 +110,8 @@ const route: Route[] = [
     category: RouteCategory.System,
     display: "Settings",
     path: "/passport/settings",
-    icon: "settings"
+    icon: "settings",
+    data: {action: "preference:show", params: {scope: "passport"}}
   }
 ];
 

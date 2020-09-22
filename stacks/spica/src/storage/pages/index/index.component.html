@@ -1,4 +1,4 @@
-<mat-toolbar *ngIf="storages$ | async" color="primary">
+<mat-toolbar *ngIf="storages$ | async">
   <div>
     <h4 class="mat-h4">
       <mat-icon>filter_drama</mat-icon>
@@ -88,6 +88,7 @@
             </button>
             <button
               canInteract="storage:update"
+              [resource]="storage._id"
               *ngIf="storage.content?.type?.startsWith('image/')"
               mat-menu-item
               (click)="openEdit(storage)"
@@ -97,6 +98,7 @@
             </button>
             <button
               canInteract="storage:delete"
+              [resource]="storage._id"
               mat-menu-item
               color="warn"
               [matAwareDialog]="{

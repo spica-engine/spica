@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar>
   <span>
     <h4 class="mat-h4">
       <mat-icon>view_day</mat-icon>
@@ -10,7 +10,7 @@
       <mat-icon>add</mat-icon>
       Add New
     </button>
-    <button mat-button routerLink="settings">
+    <button mat-button canInteract="preference:show" resource="bucket" routerLink="settings">
       <mat-icon>settings</mat-icon>
       Settings
     </button>
@@ -39,11 +39,17 @@
         <p>{{ bucket.description }}</p>
       </mat-card-content>
       <mat-card-actions>
-        <button canInteract="bucket:show" mat-icon-button [routerLink]="bucket._id">
+        <button
+          canInteract="bucket:show"
+          [resource]="bucket._id"
+          mat-icon-button
+          [routerLink]="bucket._id"
+        >
           <mat-icon>edit</mat-icon>
         </button>
         <button
           canInteract="bucket:delete"
+          [resource]="bucket._id"
           mat-icon-button
           color="warn"
           [matAwareDialog]="{

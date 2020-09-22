@@ -1,2 +1,1 @@
-export * from "./interface";
-export * from "./identity.service";
+export * from "./src/index";

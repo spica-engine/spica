@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "hook_test_lib",
@@ -10,7 +10,7 @@ ts_library(
         "dispatcher.spec.ts",
         "enqueuer.spec.ts",
         "module.spec.ts",
-        "proto/node/action.spec.ts",
+        "proto/node/review.spec.ts",
     ],
     deps = [
         "//packages/core/schema",

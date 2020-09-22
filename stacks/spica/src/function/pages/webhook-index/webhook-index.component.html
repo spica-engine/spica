@@ -1,4 +1,4 @@
-<mat-toolbar color="primary">
+<mat-toolbar>
   <h4 class="mat-h4">
     <mat-icon>http</mat-icon>
     <span>Webhooks</span>
@@ -26,6 +26,7 @@
         <mat-cell *matCellDef="let webhook">
           <button
             canInteract="webhook:show"
+            [resource]="webhook._id"
             mat-icon-button
             [routerLink]="webhook._id"
             matTooltip="Edit"
@@ -34,6 +35,7 @@
           </button>
           <button
             canInteract="webhook:delete"
+            [resource]="webhook._id"
             mat-icon-button
             color="warn"
             [matAwareDialog]="{
