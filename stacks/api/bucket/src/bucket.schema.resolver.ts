@@ -1,35 +1,40 @@
 import {Injectable} from "@nestjs/common";
 import {BucketService, compile} from "@spica-server/bucket/services";
-import {BucketPreferences} from "@spica-server/bucket/services/bucket";
+import {BucketPreferences, Bucket} from "@spica-server/bucket/services/bucket";
 import {Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {map} from "rxjs/operators";
-import {from, combineLatest, Observable} from "rxjs";
+import {combineLatest, Observable} from "rxjs";
 
 @Injectable()
 export class BucketSchemaResolver {
   preferenceWatcher: Observable<BucketPreferences>;
+  bucketWatchers: Map<string, Observable<Bucket>> = new Map();
   constructor(private bucketService: BucketService) {
     this.preferenceWatcher = this.bucketService.watchPreferences(true);
   }
 
   resolve(uri: string): Observable<object> {
-    return combineLatest(
-      this.preferenceWatcher,
-      from(this.bucketService.findOne({_id: new ObjectId(uri)}))
-    ).pipe(
-      map(([prefs, schema]) => {
-        let jsonSchema = compile(JSON.parse(JSON.stringify(schema)), prefs);
-        jsonSchema.$id = uri;
-        jsonSchema.$schema = "http://spica.internal/bucket/schema";
-        jsonSchema.additionalProperties = false;
-        jsonSchema.properties._schedule = {
-          type: "string",
-          format: "date-time"
-        };
-        return jsonSchema || {type: true};
-      })
-    );
+    if (ObjectId.isValid(uri)) {
+      let bucketWatcher = this.bucketWatchers.get(uri);
+      if (!bucketWatcher) {
+        bucketWatcher = this.bucketService.watch(uri, true);
+        this.bucketWatchers.set(uri, bucketWatcher);
+      }
+      return combineLatest(this.preferenceWatcher, bucketWatcher).pipe(
+        map(([prefs, schema]) => {
+          let jsonSchema = compile(JSON.parse(JSON.stringify(schema)), prefs);
+          jsonSchema.$id = uri;
+          jsonSchema.$schema = "http://spica.internal/bucket/schema";
+          jsonSchema.additionalProperties = false;
+          jsonSchema.properties._schedule = {
+            type: "string",
+            format: "date-time"
+          };
+          return jsonSchema || {type: true};
+        })
+      );
+    }
   }
 }
 

@@ -177,7 +177,7 @@ export function provideLanguageChangeUpdater(
   bucketService: BucketService,
   bucketDataService: BucketDataService
 ) {
-  return (previousSchema: object, currentSchema: object) => {
+  return async (previousSchema: object, currentSchema: object) => {
     let deletedLanguages = diff(previousSchema, currentSchema)
       .filter(
         change =>
@@ -191,7 +191,7 @@ export function provideLanguageChangeUpdater(
       return Promise.resolve();
     }
 
-    return bucketService
+    let buckets = await bucketService
       .aggregate([
         {
           $project: {
@@ -224,20 +224,21 @@ export function provideLanguageChangeUpdater(
           }
         }
       ])
-      .toArray()
-      .then(buckets =>
-        buckets.map(bucket => {
-          let targets = {};
+      .toArray();
 
-          Object.keys(bucket.properties).forEach(field => {
-            targets = deletedLanguages.reduce((acc, language) => {
-              acc = {...acc, [`${field}.${language}`]: ""};
-              return acc;
-            }, targets);
-          });
+    let promises = buckets.map(bucket => {
+      let targets = {};
 
-          return bucketDataService.updateMany(bucket._id, {}, {$unset: targets});
-        })
-      );
+      Object.keys(bucket.properties).forEach(field => {
+        targets = deletedLanguages.reduce((acc, language) => {
+          acc = {...acc, [`${field}.${language}`]: ""};
+          return acc;
+        }, targets);
+      });
+
+      return bucketDataService.updateMany(bucket._id, {}, {$unset: targets});
+    });
+
+    return Promise.all(promises);
   };
 }

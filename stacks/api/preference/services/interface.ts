@@ -4,7 +4,7 @@ export interface Preference {
   [key: string]: any;
 }
 
-export const LANGUAGE_CHANGE_UPDATER = Symbol.for("LANGUAGE_CHANGE_UPDATER");
+export const PREFERENCE_CHANGE_FINALIZER = Symbol.for("PREFERENCE_CHANGE_FINALIZER");
 
 export type LanguageChangeUpdater = (
   previousSchema: object,
