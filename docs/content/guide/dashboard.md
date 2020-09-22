@@ -166,7 +166,7 @@ import * as Dashboard from "@spica-devkit/dashboard";
 export default async function (req,res) {
   // Create an API key and initialize dashboards with it
 
-  Dashboard.initialize({apikey:"1i7z1kcoxehci"})
+  Dashboard.initialize({apikey:"<APIKEY>})
   await Dashboard.remove('unique_key');
   let dashboard = await Dashboard.create({
     key: "unique_key",
