@@ -6,20 +6,20 @@ The dashboard module allows you to create a new custom dashboard including custo
 
 Define a dashboard:
 
-```typescript
-export default function(req, res) {
-  const linedata: Charts.Response = {
+```javascript
+export function line(req, res) {
+  var linedata = {
     linedata: {
       title:"line title",
       options: {legend: {display: true}, responsive: true},
       label: ["1", "2", "3", "4", "5", "6"],
-      datasets: [{data: [65, 59, 90, 81, 56, 55, 40], label: "linedata"}],,
+      datasets: [{data: [65, 59, 90, 81, 56, 55, 40], label: "linedata"}],
       legend: true,
       width:70,
       filters:[{key:'line_data_filter',title:'Please enter filter',type:"string"}]
     }
   };
-  const radardata: Charts.Response = {
+  var radardata = {
     radardata: {
       title:"radar title",
       options: {legend: {display: true}, responsive: true},
@@ -32,7 +32,7 @@ export default function(req, res) {
       width:30
     }
   };
-  const bardata: Charts.Response = {
+  var bardata = {
     bardata: {
       title:"bar title",
       options: {legend: {display: true}, responsive: true},
@@ -44,7 +44,7 @@ export default function(req, res) {
       legend: true
     }
   };
-  const piedata: Charts.Response = {
+  var piedata = {
     piedata: {
       title:"pie title",
       options: {legend: {display: true}, responsive: true},
@@ -53,7 +53,7 @@ export default function(req, res) {
       legend: true
     }
   };
-  const doughnutdata: Charts.Response = {
+  var doughnutdata = {
     doughnutdata: {
       title:"doughnot title",
       options: {legend: {display: true}, responsive: true},
@@ -62,7 +62,7 @@ export default function(req, res) {
       legend: true
     }
   };
-  const bubbledata: Charts.Response = {
+  var bubbledata = {
     bubbledata: {
       title:"buble title",
       options: {
@@ -100,7 +100,7 @@ export default function(req, res) {
       legend: true
     }
   };
-  const scatterdata: Charts.Response = {
+  var scatterdata = {
     scatterdata: {
        title:"scatter title",
       options: {
@@ -116,7 +116,7 @@ export default function(req, res) {
       legend: true
     }
   };
-  const polarAreadata: Charts.Response = {
+  var polarAreadata = {
     polarAreadata: {
        title:"polar title",
       options: {
@@ -126,7 +126,7 @@ export default function(req, res) {
       legend: true
     }
   };
-  const tabledata: Table.Response = {
+  var tabledata = {
     tabledata: {
        title:"table title",
       data: [
@@ -144,41 +144,86 @@ export default function(req, res) {
       displayedColumns: ["position", "name", "weight", "symbol"]
     }
   };
-  response.send([
+  res.send([
+    linedata,
     bubbledata,
     scatterdata,
-    linedata,
     piedata,
     radardata,
     doughnutdata,
     polarAreadata,
     bardata,
-    tabledata
-  ]);
+    tabledata]
+  );
 }
 ```
 
 And initialize dashboards on another function:
 
-```typescript
+```javascript
 // Add `@spica-devkit/dashboard` to your dependencies and import it
 import * as Dashboard from "@spica-devkit/dashboard";
-export default async function () {
+export default async function (req,res) {
   // Create an API key and initialize dashboards with it
-  Dashboard.initialize(<APIKEY>);
+
+  Dashboard.initialize({apikey:"<APIKEY>})
+  await Dashboard.remove('unique_key');
   let dashboard = await Dashboard.create({
     key: "unique_key",
     name: "Line Chart", // This name will be shown on Spica Client
     icon: "none",
     components: [
+        {
+        type: "bar",
+        // Url of your dashboard function
+        url: "https://master.spicaengine.com/api/fn-execute/line",
+        key: "bardata",
+      }, 
+      {
+        type: "table",
+        // Url of your dashobard function
+        url: "https://master.spicaengine.com/api/fn-execute/line",
+        key: "tabledata",
+      }, 
+        {
+        type: "polarArea",
+        // Url of your dashobard function
+        url: "https://master.spicaengine.com/api/fn-execute/line",
+        key: "polarAreadata",
+      }, 
       {
         type: "line",
         // Url of your dashobard function
-        url: "http://localhost:4300/fn-execute/line",
+        url: "https://master.spicaengine.com/api/fn-execute/line",
         key: "linedata",
+      },      
+      {
+        type: "bubble",
+        // Url of your dashobard function
+        url: "https://master.spicaengine.com/api/fn-execute/line",
+        key: "bubbledata",
+      },      
+      {
+        type: "pie",
+        // Url of your dashobard function
+        url: "https://master.spicaengine.com/api/fn-execute/line",
+        key: "piedata",
+      },      
+      {
+        type: "doughnut",
+        // Url of your dashobard function
+        url: "https://master.spicaengine.com/api/fn-execute/line",
+        key: "doughnutdata",
+      },      
+      {
+        type: "radar",
+        // Url of your dashobard function
+        url: "https://master.spicaengine.com/api/fn-execute/line",
+        key: "radardata",
       },
     ],
   });
+  res.status(200).send(true);
 }
 ```
 
