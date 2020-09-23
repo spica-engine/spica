@@ -5,7 +5,7 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {BucketSchemaResolver} from "@spica-server/bucket/src/bucket.schema.resolver";
 import {Subject, Observable, Subscription} from "rxjs";
-import {take, skip} from "rxjs/operators";
+import {take, bufferCount} from "rxjs/operators";
 
 describe("Bucket Schema Resolver", () => {
   class MockBucketService {
@@ -95,133 +95,7 @@ describe("Bucket Schema Resolver", () => {
 
   afterEach(async () => await module.close());
 
-  it("should resolve schema when uri provided", () => {
-    expectAsync(
-      schemaResolver
-        .resolve(bucket._id.toHexString())
-        .pipe(take(1))
-        .toPromise()
-    ).toBeResolvedTo({
-      $schema: "http://spica.internal/bucket/schema",
-      $id: String(bucket._id),
-      title: "New Bucket",
-      description: "Describe your new bucket",
-      readOnly: false,
-      additionalProperties: false,
-      properties: {
-        _schedule: {type: "string", format: "date-time"},
-        title: {
-          type: "string",
-          title: "title",
-          description: "Title of the row"
-        },
-        description: {
-          type: "string",
-          title: "description",
-          description: "Description of the row"
-        },
-        text: {
-          additionalProperties: false,
-          type: "object",
-          required: ["en_US"],
-          properties: {
-            tr_TR: {
-              type: "string",
-              title: "translatable text",
-              description: "Text of the row"
-            },
-            en_US: {
-              type: "string",
-              title: "translatable text",
-              description: "Text of the row"
-            }
-          }
-        }
-      }
-    } as any);
-    // IMPORTANT: Do not remove "as any" otherwise the compiler will hang forever.
-  });
-
-  it("should update schema when bucket updated", () => {
-    expectAsync(
-      schemaResolver
-        .resolve(bucket._id.toHexString())
-        .pipe(
-          take(2),
-          skip(1)
-        )
-        .toPromise()
-    ).toBeResolvedTo({
-      $schema: "http://spica.internal/bucket/schema",
-      $id: String(bucket._id),
-      title: "New Bucket",
-      description: "Describe your new bucket",
-      readOnly: false,
-      additionalProperties: false,
-      properties: {
-        _schedule: {type: "string", format: "date-time"},
-        title: {
-          type: "string",
-          title: "title",
-          description: "Title of the row"
-        },
-        description: {
-          type: "string",
-          title: "description",
-          description: "Description of the row"
-        }
-      }
-    } as any);
-
-    let updatedBucket = bucket;
-    delete updatedBucket.properties.text;
-
-    bs["onBucketUpdated"].next(updatedBucket);
-  });
-
-  it("should update schema when language removed", () => {
-    expectAsync(
-      schemaResolver
-        .resolve(bucket._id.toHexString())
-        .pipe(
-          take(2),
-          skip(1)
-        )
-        .toPromise()
-    ).toBeResolvedTo({
-      $schema: "http://spica.internal/bucket/schema",
-      $id: String(bucket._id),
-      title: "New Bucket",
-      description: "Describe your new bucket",
-      readOnly: false,
-      additionalProperties: false,
-      properties: {
-        _schedule: {type: "string", format: "date-time"},
-        title: {
-          type: "string",
-          title: "title",
-          description: "Title of the row"
-        },
-        description: {
-          type: "string",
-          title: "description",
-          description: "Description of the row"
-        },
-        text: {
-          additionalProperties: false,
-          type: "object",
-          required: ["en_US"],
-          properties: {
-            en_US: {
-              type: "string",
-              title: "translatable text",
-              description: "Text of the row"
-            }
-          }
-        }
-      }
-    } as any);
-
+  it("should resolve initial schema and update schema when preference and bucket changed", () => {
     bs["onLanguageUpdated"].next({
       language: {
         available: {
@@ -230,5 +104,116 @@ describe("Bucket Schema Resolver", () => {
         default: "en_US"
       }
     });
+
+    let updatedBucket = bucket;
+    delete updatedBucket.properties.text;
+    bs["onBucketUpdated"].next(updatedBucket);
+
+    expectAsync(
+      schemaResolver
+        .resolve(bucket._id.toHexString())
+        .pipe(
+          take(3),
+          bufferCount(3)
+        )
+        .toPromise()
+    ).toBeResolvedTo([
+      //initial schema
+      {
+        $schema: "http://spica.internal/bucket/schema",
+        $id: String(bucket._id),
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        readOnly: false,
+        additionalProperties: false,
+        properties: {
+          _schedule: {type: "string", format: "date-time"},
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row"
+          },
+          description: {
+            type: "string",
+            title: "description",
+            description: "Description of the row"
+          },
+          text: {
+            additionalProperties: false,
+            type: "object",
+            required: ["en_US"],
+            properties: {
+              tr_TR: {
+                type: "string",
+                title: "translatable text",
+                description: "Text of the row"
+              },
+              en_US: {
+                type: "string",
+                title: "translatable text",
+                description: "Text of the row"
+              }
+            }
+          }
+        }
+      } as any,
+      //preference updates
+      {
+        $schema: "http://spica.internal/bucket/schema",
+        $id: String(bucket._id),
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        readOnly: false,
+        additionalProperties: false,
+        properties: {
+          _schedule: {type: "string", format: "date-time"},
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row"
+          },
+          description: {
+            type: "string",
+            title: "description",
+            description: "Description of the row"
+          },
+          text: {
+            additionalProperties: false,
+            type: "object",
+            required: ["en_US"],
+            properties: {
+              en_US: {
+                type: "string",
+                title: "translatable text",
+                description: "Text of the row"
+              }
+            }
+          }
+        }
+      } as any,
+      //bucket updates
+      {
+        $schema: "http://spica.internal/bucket/schema",
+        $id: String(bucket._id),
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        readOnly: false,
+        additionalProperties: false,
+        properties: {
+          _schedule: {type: "string", format: "date-time"},
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row"
+          },
+          description: {
+            type: "string",
+            title: "description",
+            description: "Description of the row"
+          }
+        }
+      } as any
+    ]);
+    // IMPORTANT: Do not remove "as any" otherwise the compiler will hang forever.
   });
 });
