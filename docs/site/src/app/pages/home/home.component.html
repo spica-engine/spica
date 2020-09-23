@@ -40,21 +40,6 @@
         </div>
       </div>
       <div fxLayout="row" fxLayoutAlign="center" class="modules">
-<<<<<<< Updated upstream
-        <div (click)="slideIndex = 0" [class.active]="slideIndex == 0">Data Management</div>
-        <div (click)="slideIndex = 1" [class.active]="slideIndex == 1">
-          Data Model Customization
-        </div>
-        <div (click)="slideIndex = 2" [class.active]="slideIndex == 2">Custom Functions</div>
-        <div (click)="slideIndex = 3" [class.active]="slideIndex == 3">Access Management</div>
-      </div>
-      <div class="images">
-        <div [ngStyle]="{transform: 'translateX(' + -1 * slideIndex * 25 + '%)'}">
-          <img [class.active]="slideIndex == 0" src="../../../assets/images/featured_image_1.png" />
-          <img [class.active]="slideIndex == 1" src="../../../assets/images/featured_image_2.png" />
-          <img [class.active]="slideIndex == 2" src="../../../assets/images/featured_image_3.png" />
-          <img [class.active]="slideIndex == 3" src="../../../assets/images/featured_image_4.png" />
-=======
         <div (click)="slideIndex = 0;" [class.active]="slideIndex == 0">Data Management</div>
         <div (click)="slideIndex = 1;" [class.active]="slideIndex == 1">Data Model Customization</div>
         <div (click)="slideIndex = 2;" [class.active]="slideIndex == 2">Flexibility & Extendibility</div>
@@ -66,7 +51,6 @@
           <img (click)="slideIndex = 1;" [class.active]="slideIndex == 1" src="../../../assets/images/featured_image_2.png">
           <img (click)="slideIndex = 2;" [class.active]="slideIndex == 2" src="../../../assets/images/featured_image_3.png">
           <img (click)="slideIndex = 3;" [class.active]="slideIndex == 3" src="../../../assets/images/featured_image_4.png">
->>>>>>> Stashed changes
         </div>
       </div>
     </div>
