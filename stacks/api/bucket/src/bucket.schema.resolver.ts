@@ -38,8 +38,43 @@ export class BucketSchemaResolver {
   }
 }
 
-export async function provideBucketSchemaResolver(validator: Validator, bs: BucketService) {
+export function provideBucketSchemaResolver(validator: Validator, bs: BucketService) {
   const resolver = new BucketSchemaResolver(bs);
   validator.registerUriResolver(uri => resolver.resolve(uri));
+  let keywords = getCustomKeywords(validator);
+  keywords.forEach(keyword => validator.registerKeyword(keyword.name, keyword.def));
   return resolver;
+}
+
+export function getCustomKeywords(validator: Validator) {
+  let keywords = [
+    {
+      name: "default",
+      def: {
+        modifying: true,
+        compile: (schema, parentSchema, it) => {
+          return (data, dataPath, parentData) => {
+            console.log(schema, parentSchema);
+
+            console.log(data, dataPath, parentData);
+
+            const defaultValueHandler = validator["_defaults"].get(schema);
+            const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
+
+            if (defaultValueHandler) {
+              parentData[propertyName] = defaultValueHandler.create(
+                data == defaultValueHandler.keyword ? undefined : data
+              );
+            } else if (!defaultValueHandler && parentSchema["readOnly"]) {
+              parentData[propertyName] = schema;
+            }
+
+            return true;
+          };
+        }
+      }
+    }
+  ];
+
+  return keywords;
 }
