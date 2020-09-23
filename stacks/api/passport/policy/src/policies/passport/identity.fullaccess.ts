@@ -37,6 +37,11 @@ export default {
         include: "*/*"
       },
       module: "passport:identity:policy"
+    },
+    {
+      action: "preference:update",
+      module: "preference",
+      resource: ["passport"]
     }
   ]
 };
