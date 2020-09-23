@@ -18,7 +18,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["action", "resource", "module"],
+        "required": ["action", "module"],
         "properties": {
           "resource": {
             "anyOf": [
