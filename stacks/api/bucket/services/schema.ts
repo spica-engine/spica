@@ -68,7 +68,7 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
   delete bucket.primary;
 
   bucket.properties = Object.keys(bucket.properties).reduce((accumulator, key) => {
-    const property = schema.properties[key];
+    let property = schema.properties[key];
     if (property.options && property.options.translate) {
       accumulator[key] = {
         type: "object",
@@ -85,6 +85,5 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
     delete property.options;
     return accumulator;
   }, {});
-
   return bucket;
 }

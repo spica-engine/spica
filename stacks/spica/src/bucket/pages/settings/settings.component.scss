@@ -21,9 +21,12 @@
     mat-card-content {
       margin-bottom: 10px;
       mat-list {
+        width: max-content;
         padding-top: 0px;
-        mat-list-item  {
+        mat-list-item {
+          display: flex;
           ::ng-deep .mat-list-item-content {
+            width: 100%;
             padding: 0px;
           }
         }
