@@ -11,11 +11,6 @@ export default {
     ...IdentityReadOnly.statement,
     ...ApiKeyReadOnly.statement,
     ...PolicyReadOnly.statement,
-    ...StrategyReadOnly.statement,
-    {
-      action: "preference:show",
-      resource: "passport",
-      module: "preference"
-    }
+    ...StrategyReadOnly.statement
   ]
 };
