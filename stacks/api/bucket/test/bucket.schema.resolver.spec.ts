@@ -237,7 +237,7 @@ describe("Bucket Schema Resolver", () => {
         watch: jasmine.createSpy("watch")
       };
     });
-    it("should register uri resolver", () => {
+    it("should register uri resolver and keyword", () => {
       let resolver = provideBucketSchemaResolver(validator as any, bucketService as any);
 
       expect(resolver).toEqual(jasmine.any(BucketSchemaResolver));
