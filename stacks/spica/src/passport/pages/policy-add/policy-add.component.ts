@@ -43,30 +43,6 @@ export class PolicyAddComponent implements OnInit {
       .subscribe();
   }
 
-  getPattern(statement: Statement) {
-    if (this.serviceAndParamsExist(statement)) {
-      let objectIdOrAsteriks = "([a-f\\d]{24}|\\*)";
-      let scopes = "(bucket|passport)";
-
-      let param = statement.module == "preference" ? scopes : objectIdOrAsteriks;
-
-      let pattern = this.services[statement.module][statement.action].reduce(
-        (acc, _, index, array) => {
-          acc = acc + param;
-          if (index != array.length - 1) {
-            acc = acc + "\\/";
-          }
-          return acc;
-        },
-        "^"
-      );
-
-      pattern = pattern + "$";
-
-      return pattern;
-    }
-  }
-
   onResourceSelection(statement: Statement, selection: "include" | "exclude") {
     if (selection == "include") {
       statement.resource = [];
