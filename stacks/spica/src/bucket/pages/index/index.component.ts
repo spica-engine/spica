@@ -174,9 +174,9 @@ export class IndexComponent implements OnInit {
           const firstProp = usableProperties[0] ? usableProperties[0].name : undefined;
           const secondProp = usableProperties[1] ? usableProperties[1].name : undefined;
           const firstPropValue =
-            response.data.length > 0 && firstProp ? response.data[0][firstProp] : "";
+            response.data.length && firstProp ? response.data[0][firstProp] : "";
           const secondPropValue =
-            response.data.length > 0 && secondProp ? response.data[0][secondProp] : "";
+            response.data.length && secondProp ? response.data[0][secondProp] : "";
           this.guideUrls = {
             getAllWithLimit: `${bucketUrl}limit=3`,
             getAllWithSort: `${bucketUrl}limit=3&sort={"${firstProp}":1}`,
