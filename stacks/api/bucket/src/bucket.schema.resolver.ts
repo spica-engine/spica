@@ -1,19 +1,29 @@
 import {Injectable} from "@nestjs/common";
 import {BucketService, compile} from "@spica-server/bucket/services";
-import {Bucket} from "@spica-server/bucket/services/bucket";
+import {BucketPreferences, Bucket} from "@spica-server/bucket/services/bucket";
 import {Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
+import {map} from "rxjs/operators";
+import {combineLatest, Observable} from "rxjs";
 
 @Injectable()
 export class BucketSchemaResolver {
-  constructor(private bucketService: BucketService) {}
+  preferenceWatcher: Observable<BucketPreferences>;
+  bucketWatchers: Map<string, Observable<Bucket>> = new Map();
+  constructor(private bucketService: BucketService) {
+    this.preferenceWatcher = this.bucketService.watchPreferences(true);
+  }
 
-  resolve(uri: string): Promise<Bucket | object> | undefined {
+  resolve(uri: string): Observable<object> {
     if (ObjectId.isValid(uri)) {
-      return this.bucketService.findOne({_id: new ObjectId(uri)}).then(async schema => {
-        const prefs = await this.bucketService.getPreferences();
-        if (schema) {
-          const jsonSchema = compile(schema, prefs);
+      let bucketWatcher = this.bucketWatchers.get(uri);
+      if (!bucketWatcher) {
+        bucketWatcher = this.bucketService.watch(uri, true);
+        this.bucketWatchers.set(uri, bucketWatcher);
+      }
+      return combineLatest(this.preferenceWatcher, bucketWatcher).pipe(
+        map(([prefs, schema]) => {
+          let jsonSchema = compile(JSON.parse(JSON.stringify(schema)), prefs);
           jsonSchema.$id = uri;
           jsonSchema.$schema = "http://spica.internal/bucket/schema";
           jsonSchema.additionalProperties = false;
@@ -21,9 +31,9 @@ export class BucketSchemaResolver {
             type: "string",
             format: "date-time"
           };
-        }
-        return schema || {type: true};
-      });
+          return jsonSchema || {type: true};
+        })
+      );
     }
   }
 }

@@ -32,8 +32,10 @@ export interface BucketDocument {
 
 export interface BucketPreferences extends Preference {
   _id?: any;
-  available: {
-    [code: string]: string;
+  language: {
+    available: {
+      [code: string]: string;
+    };
+    default: string;
   };
-  default: string;
 }
