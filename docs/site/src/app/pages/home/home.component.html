@@ -7,8 +7,8 @@
   >
     <div fxFlex="100">
       <h1>
-        The first backend <br />
-        development engine!
+        The first open source <br />
+        backend development engine!
       </h1>
       <div
         fxLayout="row"
@@ -46,7 +46,7 @@
         <div (click)="slideIndex = 3;" [class.active]="slideIndex == 3">Access Management</div>
       </div>
       <div class="images">
-        <div [ngStyle]="{'transform': 'translateX(' + (-1 * slideIndex * 25) + '%)'}">
+        <div [style.transform]="'translateX(' + (-1 * slideIndex * 25) + '%)'">
           <img (click)="slideIndex = 0;" [class.active]="slideIndex == 0" src="../../../assets/images/featured_image_1.png">
           <img (click)="slideIndex = 1;" [class.active]="slideIndex == 1" src="../../../assets/images/featured_image_2.png">
           <img (click)="slideIndex = 2;" [class.active]="slideIndex == 2" src="../../../assets/images/featured_image_3.png">
@@ -101,12 +101,10 @@
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
     <img src="assets/artboard/agnostic.svg" alt="Agnostic" />
-    <h2>Platform Agnostic</h2>
+    <h2>No Vendor Lock-In</h2>
     <p>
-      As the nature of Headless CMS concept, once you set your calls and data models, you should use
-      it with any kind of frontend. Well… we’ll take this a step forward by making the
-      platform-agnostic not just the CMS’ itself but also the frontend you are going to design on
-      our Composer module.
+      Well… we’ll take this a step forward by making the
+      no vendor lock-in and cloud solutions. Run Spica in any cloud provider or your own servers.
     </p>
   </div>
 
@@ -132,7 +130,7 @@
   />
   <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
     <li>
-      <h3>Startups which don't want any borders from low-code tools</h3>
+      <h3>Start-ups who want to exceed the limits of low-code tools</h3>
       <p>
         Everything in Spica has been designed to save time and cost without losing flexibility. 
         You will have full control as a project owner and create the most flexible project
@@ -149,7 +147,7 @@
     <li>
       <h3>For the complex projects owners</h3>
       <p>
-        To give a life to your ideas, Spica is the best environment for your developers with the 3rd parties designed to your needs.
+        To shape your ideas, Spica is the best environment for your developers with the 3rd parties, designed for your needs.
       </p>
     </li>
   </ul>
