@@ -83,7 +83,7 @@ export class IndexComponent implements OnInit {
         this.guideResponse = {};
         this.readOnly = schema.readOnly;
         this.properties = [
-          {name: "$$spicainternal_id", title: "id"},
+          {name: "$$spicainternal_id", title: "_id"},
           ...Object.entries(schema.properties).map(([name, value]) => ({
             name,
             title: value.title
@@ -167,24 +167,22 @@ export class IndexComponent implements OnInit {
         let bucketUrl = `/bucket/${this.bucketId}/data?`;
 
         setTimeout(() => {
-          const propertyNameFirst =
-            this.properties.length >= 2 ? this.properties[1].name : undefined;
-          const propertyNameSecond =
-            this.properties.length >= 3 ? this.properties[2].name : undefined;
-          const propertyDataFirst =
-            response.data.length > 0 && this.properties.length >= 2
-              ? response.data[0][this.properties[1].name]
-              : "";
-          const propertyDataSecond =
-            response.data.length > 0 && this.properties.length >= 3
-              ? response.data[0][this.properties[2].name]
-              : "";
+          let usableProperties = this.properties.filter(
+            prop => !prop.name.startsWith("$$spicainternal_")
+          );
+
+          const firstProp = usableProperties[0] ? usableProperties[0].name : undefined;
+          const secondProp = usableProperties[1] ? usableProperties[1].name : undefined;
+          const firstPropValue =
+            response.data.length > 0 && firstProp ? response.data[0][firstProp] : "";
+          const secondPropValue =
+            response.data.length > 0 && secondProp ? response.data[0][secondProp] : "";
           this.guideUrls = {
             getAllWithLimit: `${bucketUrl}limit=3`,
-            getAllWithSort: `${bucketUrl}limit=3&sort={"${propertyNameFirst}":1}`,
-            getWithFilter: `${bucketUrl}limit=3&filter={"${propertyNameFirst}":{"$regex":"${propertyDataFirst}"}}`,
-            getWithLike: `${bucketUrl}limit=3&filter={"${propertyNameFirst}":{"$regex":"${propertyDataFirst}"}}`,
-            getWithDoubleFilter: `${bucketUrl}limit=1&filter={"${propertyNameFirst}":{"$regex":"${propertyDataFirst}"},"${propertyNameSecond}":{"$regex":"${propertyDataSecond}"}}`,
+            getAllWithSort: `${bucketUrl}limit=3&sort={"${firstProp}":1}`,
+            getWithFilter: `${bucketUrl}limit=3&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}`,
+            getWithLike: `${bucketUrl}limit=3&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}`,
+            getWithDoubleFilter: `${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"},"${secondProp}":{"$regex":"${secondPropValue}"}}`,
             getOnlyScheduled: `${bucketUrl}paginate=true&limit=3&schedule=true`,
             getDataWithLang: `${bucketUrl}limit=3`
           };
