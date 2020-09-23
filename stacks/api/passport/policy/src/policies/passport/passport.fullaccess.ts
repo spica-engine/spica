@@ -11,11 +11,6 @@ export default {
     ...IdentityFullAccess.statement,
     ...ApiKeyFullAccess.statement,
     ...PolicyFullAccess.statement,
-    ...StrategyFullAccess.statement,
-    {
-      action: "preference:update",
-      resource: "passport",
-      module: "preference"
-    }
+    ...StrategyFullAccess.statement
   ]
 };
