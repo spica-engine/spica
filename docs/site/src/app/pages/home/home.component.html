@@ -7,8 +7,8 @@
   >
     <div fxFlex="100">
       <h1>
-        The first web and mobile, <br />
-        application development engine!
+        The first backend <br />
+        development engine!
       </h1>
       <div
         fxLayout="row"
@@ -40,6 +40,7 @@
         </div>
       </div>
       <div fxLayout="row" fxLayoutAlign="center" class="modules">
+<<<<<<< Updated upstream
         <div (click)="slideIndex = 0" [class.active]="slideIndex == 0">Data Management</div>
         <div (click)="slideIndex = 1" [class.active]="slideIndex == 1">
           Data Model Customization
@@ -53,6 +54,19 @@
           <img [class.active]="slideIndex == 1" src="../../../assets/images/featured_image_2.png" />
           <img [class.active]="slideIndex == 2" src="../../../assets/images/featured_image_3.png" />
           <img [class.active]="slideIndex == 3" src="../../../assets/images/featured_image_4.png" />
+=======
+        <div (click)="slideIndex = 0;" [class.active]="slideIndex == 0">Data Management</div>
+        <div (click)="slideIndex = 1;" [class.active]="slideIndex == 1">Data Model Customization</div>
+        <div (click)="slideIndex = 2;" [class.active]="slideIndex == 2">Flexibility & Extendibility</div>
+        <div (click)="slideIndex = 3;" [class.active]="slideIndex == 3">Access Management</div>
+      </div>
+      <div class="images">
+        <div [ngStyle]="{'transform': 'translateX(' + (-1 * slideIndex * 25) + '%)'}">
+          <img (click)="slideIndex = 0;" [class.active]="slideIndex == 0" src="../../../assets/images/featured_image_1.png">
+          <img (click)="slideIndex = 1;" [class.active]="slideIndex == 1" src="../../../assets/images/featured_image_2.png">
+          <img (click)="slideIndex = 2;" [class.active]="slideIndex == 2" src="../../../assets/images/featured_image_3.png">
+          <img (click)="slideIndex = 3;" [class.active]="slideIndex == 3" src="../../../assets/images/featured_image_4.png">
+>>>>>>> Stashed changes
         </div>
       </div>
     </div>
@@ -79,7 +93,7 @@
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
     <img src="assets/artboard/policy.svg" alt="Policy" />
-    <h2>Policy-Based Management</h2>
+    <h2>Access Management</h2>
     <p>
       Instead of using pre-built roles, you can create your own ones now! Encapsulate your users
       with the in-depth policy creation tool.
@@ -87,7 +101,7 @@
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
     <img src="assets/artboard/bucket.svg" alt="Bucket" />
-    <h2>Bucket Architecture</h2>
+    <h2>Data Model Customization</h2>
     <p>
       Every project is unique and they need unique approaches. For this, we’ve developed the Bucket
       data modeling system to fulfill the needs of development.
@@ -117,8 +131,8 @@
 
 <home-section
   class="discover"
-  title="Discover a New Type of Development"
-  description="It has many features that allows you to create contents simply."
+  title="Who Is This For?"
+  description="Feature sets for powerfull applications and startups"
   cnFxLayout.gt-sm="row nowrap"
   cnFxLayoutAlign.gt-sm="space-around center"
 >
@@ -134,23 +148,24 @@
   />
   <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
     <li>
-      <h3>Feel flexibility and have control</h3>
+      <h3>Startups which don't want any borders from low-code tools</h3>
       <p>
-        You will have full control as a developer and provide the most flexible project
-        infrastructure.
+        Everything in Spica has been designed to save time and cost without losing flexibility. 
+        You will have full control as a project owner and create the most flexible project
+        infrastructure in a few minutes.
       </p>
     </li>
     <li>
-      <h3>Save time and money</h3>
+      <h3>Freelancers & consultancies</h3>
       <p>
-        Everything in Spica has been designed to save time and cost without losing quality. With
-        easy-to-use composer, you can display your data in sweet harmony.
+        Spica designed for developers and technical teams. You can double your speed with the first backend engine.
+        <!--With easy-to-use composer, you can display your data in sweet harmony.--> 
       </p>
     </li>
     <li>
-      <h3>Focus on your product designs</h3>
+      <h3>For the complex projects owners</h3>
       <p>
-        You can develop any kind of project in any shape. It is time to focus on the product now.
+        To give a life to your ideas, Spica is the best environment for your developers with the 3rd parties designed to your needs.
       </p>
     </li>
   </ul>
@@ -159,19 +174,19 @@
 <section class="projects" fxLayoutAlign.gt-md="space-evenly" fxLayoutAlign.lt-lg="center">
   <span fxFlex.lt-lg="85%">
     <h1>
-      Feel The Energy, <br />
-      Join Our Creator World
+      Join Our, <br />
+      Growing Community
     </h1>
     <p>Powered by Spica Community &trade;</p>
   </span>
 
   <div class="github">
-    <button mat-button fxShow.lt-lg="false">
-      <a class="url" href="https://github.com/spica-engine/spica">
+    <a class="url" href="https://github.com/spica-engine/spica">
+      <button mat-flat-button fxShow.lt-lg="false" color="primary">
         <mat-icon svgIcon="github"></mat-icon>
         Github
-      </a>
-    </button>
+      </button>
+    </a>
   </div>
 </section>
 
@@ -295,19 +310,19 @@
   <ul>
     <li>
       <h3>Define your data models</h3>
-      <p>Make a control panel for content creators</p>
+      <p>Create your data models, rules and customize the panel for the managers</p>
     </li>
     <li>
-      <h3>Import component sets</h3>
-      <p>There are tons of component sets you can use or you can import your own components</p>
+      <h3>Apply your custom logic</h3>
+      <p>Use the cloud-functions and manuplate your data. Spica users have the full access to project logic</p>
     </li>
     <li>
       <h3>Design your own interface</h3>
-      <p>You can connect UI and data models easily</p>
+      <p>Make data connection with your custom UI. You can use any technology for your presentation layer such as smart-watches and IOT devices</p>
     </li>
     <li>
       <h3>Deploy your project</h3>
-      <p>Get a build in any shape you would like to use. We support even PWA built-in</p>
+      <p>Get a build in any shape you would like to use. Let Spica to handle the backend maintenance</p>
     </li>
   </ul>
 </home-section>
