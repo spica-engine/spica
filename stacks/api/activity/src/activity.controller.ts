@@ -11,12 +11,12 @@ import {
 } from "@nestjs/common";
 import {Activity, ActivityService} from "@spica-server/activity/services";
 import {DATE, JSONP, NUMBER, DEFAULT, ARRAY} from "@spica-server/core";
-import {DatabaseService, FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 
 @Controller("activity")
 export class ActivityController {
-  constructor(private activityService: ActivityService, private database: DatabaseService) {}
+  constructor(private activityService: ActivityService) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("activity:index"))

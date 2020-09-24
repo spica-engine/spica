@@ -20,7 +20,8 @@ export class DatabaseOutput extends StandartStream {
               channel,
               content: Buffer.from(data)
                 .toString()
-                .trim()
+                .trim(),
+              created_at: new Date()
             })
             .then(() => callback(undefined, data))
             .catch(error => callback(error));

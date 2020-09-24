@@ -21,3 +21,9 @@ export enum Action {
   PUT = 2,
   DELETE = 3
 }
+
+export interface ActivityOptions {
+  expireAfterSeconds: number;
+}
+
+export const ACTIVITY_OPTIONS = Symbol.for("ACTIVITY_OPTIONS");

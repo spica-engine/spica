@@ -17,11 +17,11 @@ export class FunctionModule {
     return {
       module: FunctionModule,
       imports: [
-        LogModule,
+        LogModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchemaModule.forChild({
           schemas: [require("./schema/function.json")]
         }),
-        WebhookModule.forRoot(),
+        WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchedulerModule.forRoot({
           databaseName: options.databaseName,
           databaseReplicaSet: options.databaseReplicaSet,

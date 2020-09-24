@@ -9,7 +9,7 @@ import {
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
-import {Action, Activity, Predict} from "./interface";
+import {Action, Predict} from "./interface";
 
 export abstract class ActivityInterceptor implements NestInterceptor {
   constructor(private service: ActivityService, private predict: Predict) {}
@@ -31,7 +31,9 @@ export abstract class ActivityInterceptor implements NestInterceptor {
           return;
         }
         const action = getAction(req.method);
-        const activities: Activity[] = this.predict({identifier, action}, req, res);
+        const activities = this.predict({identifier, action}, req, res).map(activity => {
+          return {...activity, created_at: new Date()};
+        });
 
         this.service.insertMany(activities);
       })
