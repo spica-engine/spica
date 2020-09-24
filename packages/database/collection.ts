@@ -110,7 +110,7 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
         .then(indexes => {
           let ttlIndex = indexes.find(index => index.name == "created_at_1");
           if (!ttlIndex) {
-            this._coll.createIndex({created_at: 1}, {expireAfterSeconds: expireAfterSeconds});
+            return this._coll.createIndex({created_at: 1}, {expireAfterSeconds: expireAfterSeconds});
           } else if (ttlIndex && ttlIndex.expireAfterSeconds != expireAfterSeconds) {
             return this.db.command({
               collMod: collection,
