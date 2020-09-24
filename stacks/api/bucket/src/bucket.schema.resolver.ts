@@ -54,10 +54,6 @@ export function getCustomKeywords(validator: Validator) {
         modifying: true,
         compile: (schema, parentSchema, it) => {
           return (data, dataPath, parentData) => {
-            console.log(schema, parentSchema);
-
-            console.log(data, dataPath, parentData);
-
             const defaultValueHandler = validator["_defaults"].get(schema);
             const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
 
