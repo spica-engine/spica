@@ -21,7 +21,12 @@
         <button
           [disabled]="settings?.language.default == languageKv.key"
           mat-icon-button
-          (click)="remove(languageKv.key)"
+          [matAwareDialog]="{
+            title: 'Confirmation',
+            templateOrDescription: deleteLanguageDialog,
+            answer: 'agree'
+          }"
+          (confirm)="remove(languageKv.key)"
         >
           <mat-icon>delete</mat-icon>
         </button>
@@ -60,3 +65,12 @@
     </button>
   </mat-card-actions>
 </mat-card>
+
+<ng-template #deleteLanguageDialog let-answer="answer">
+  <p>
+    This action will remove the language from bucket entries.
+  </p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>

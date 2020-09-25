@@ -261,7 +261,13 @@
                 <button
                   mat-icon-button
                   color="warn"
-                  (click)="$event.stopImmediatePropagation(); deleteProperty(propertyKv.key)"
+                  (click)="$event.stopImmediatePropagation()"
+                  (confirm)="deleteProperty(propertyKv.key)"
+                  [matAwareDialog]="{
+                    title: 'Confirmation',
+                    templateOrDescription: deleteFieldDialog,
+                    answer: 'agree'
+                  }"
                 >
                   <mat-icon>delete</mat-icon>
                 </button>
@@ -486,3 +492,12 @@
     </p>
   </mat-list-item>
 </mat-card>
+
+<ng-template #deleteFieldDialog let-answer="answer">
+  <p>
+    This action will remove the field from bucket entries.
+  </p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
