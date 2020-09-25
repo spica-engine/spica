@@ -9,6 +9,7 @@ import {WebhookController} from "@spica-server/function/webhook/src/webhook.cont
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
+import {WEBHOOK_OPTIONS} from "../src";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
@@ -26,7 +27,13 @@ describe("Webhook Controller", () => {
         SchemaModule.forChild()
       ],
       controllers: [WebhookController],
-      providers: [WebhookService, SchemaResolver, WebhookInvoker, WebhookLogService]
+      providers: [
+        WebhookService,
+        SchemaResolver,
+        WebhookInvoker,
+        WebhookLogService,
+        {provide: WEBHOOK_OPTIONS, useValue: {expireAfterSeconds: 60}}
+      ]
     }).compile();
     req = module.get(Request);
     app = module.createNestApplication();
@@ -160,7 +167,11 @@ describe("Webhook Controller", () => {
 
   it("should list collections", async () => {
     const {body: collections} = await req.get("/webhook/collections", undefined);
-    expect(collections.sort((a, b) => a.localeCompare(b))).toEqual(["coll1", "coll2"]);
+    expect(collections.sort((a, b) => a.localeCompare(b))).toEqual([
+      "coll1",
+      "coll2",
+      "webhook_logs"
+    ]);
   });
 
   describe("validation", () => {

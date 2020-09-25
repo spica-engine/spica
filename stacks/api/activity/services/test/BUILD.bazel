@@ -4,7 +4,7 @@ load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "interceptor_unit_testlib",
+    name = "interceptor_unit_test_lib",
     testonly = True,
     srcs = ["activity.interceptor.spec.ts"],
     deps = [
@@ -16,12 +16,12 @@ ts_library(
 jasmine_node_test(
     name = "interceptor_unit_test",
     deps = [
-        ":interceptor_unit_testlib",
+        ":interceptor_unit_test_lib",
     ],
 )
 
 ts_library(
-    name = "interceptor_integration_testlib",
+    name = "interceptor_integration_test_lib",
     testonly = True,
     srcs = ["activity.interceptor.integration.spec.ts"],
     deps = [
@@ -37,6 +37,29 @@ ts_library(
 jasmine_node_test(
     name = "interceptor_integration_test",
     deps = [
-        ":interceptor_integration_testlib",
+        ":interceptor_integration_test_lib",
+    ],
+)
+
+ts_library(
+    name = "service_test_lib",
+    testonly = True,
+    srcs = [
+        "service.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/activity/services",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "service_test",
+    deps = [
+        ":service_test_lib",
     ],
 )

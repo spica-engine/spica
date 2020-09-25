@@ -102,6 +102,30 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
       return this._coll.findOneAndUpdate(filter, update, options).then(r => r.value);
     }
 
+    //Time to live index
+    upsertTTLIndex(expireAfterSeconds: number) {
+      return this._coll
+        .listIndexes()
+        .toArray()
+        .then(indexes => {
+          let ttlIndex = indexes.find(index => index.name == "created_at_1");
+          if (!ttlIndex) {
+            return this._coll.createIndex(
+              {created_at: 1},
+              {expireAfterSeconds: expireAfterSeconds}
+            );
+          } else if (ttlIndex && ttlIndex.expireAfterSeconds != expireAfterSeconds) {
+            return this.db.command({
+              collMod: collection,
+              index: {
+                keyPattern: {created_at: 1},
+                expireAfterSeconds: expireAfterSeconds
+              }
+            });
+          }
+        });
+    }
+
     collection(collection: string) {
       return new MixinCollection(this.db, collection);
     }

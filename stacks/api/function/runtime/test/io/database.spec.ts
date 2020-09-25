@@ -24,7 +24,16 @@ describe("IO Database", () => {
     const [stdout] = dbOutput.create({eventId: "event", functionId: "1"});
     stdout.write(Buffer.from("this is my message"), async err => {
       expect(err).toBeUndefined();
-      expect(await db.collection("function_logs").findOne({})).toEqual({
+      expect(
+        await db
+          .collection("function_logs")
+          .findOne({})
+          .then(log => {
+            expect(log.created_at).toEqual(jasmine.any(Date));
+            delete log.created_at;
+            return log;
+          })
+      ).toEqual({
         _id: "__skip",
         content: "this is my message",
         channel: "stdout",
@@ -39,7 +48,16 @@ describe("IO Database", () => {
     const [, stderr] = dbOutput.create({eventId: "event", functionId: "1"});
     stderr.write(Buffer.from("this is my message"), async err => {
       expect(err).toBeUndefined();
-      expect(await db.collection("function_logs").findOne({})).toEqual({
+      expect(
+        await db
+          .collection("function_logs")
+          .findOne({})
+          .then(log => {
+            expect(log.created_at).toEqual(jasmine.any(Date));
+            delete log.created_at;
+            return log;
+          })
+      ).toEqual({
         _id: "__skip",
         content: "this is my message",
         channel: "stderr",

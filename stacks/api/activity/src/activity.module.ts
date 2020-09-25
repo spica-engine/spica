@@ -1,13 +1,13 @@
 import {DynamicModule, Module} from "@nestjs/common";
-import {ActivityServicesModule} from "@spica-server/activity/services";
+import {ActivityServicesModule, ActivityOptions} from "@spica-server/activity/services";
 import {ActivityController} from "./activity.controller";
 
 @Module({})
 export class ActivityModule {
-  static forRoot(): DynamicModule {
+  static forRoot(options: ActivityOptions): DynamicModule {
     return {
       module: ActivityModule,
-      imports: [ActivityServicesModule.forRoot()],
+      imports: [ActivityServicesModule.forRoot(options)],
       controllers: [ActivityController]
     };
   }
