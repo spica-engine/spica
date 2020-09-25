@@ -45,7 +45,6 @@ describe("Realtime Authorization", () => {
 
     ws.onclose = done;
     ws.onmessage = e => {
-      console.log(e);
       expect(e.data).toEqual(`{"kind":1}`);
     };
     await ws.connect;
