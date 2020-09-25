@@ -43,11 +43,6 @@ export class ActivityController {
         $set: {
           identifier: "$identifier.identifier"
         }
-      },
-      {
-        $addFields: {
-          date: {$toDate: "$_id"}
-        }
       }
     ];
 

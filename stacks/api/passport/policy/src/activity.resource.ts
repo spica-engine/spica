@@ -1,7 +1,11 @@
-import {Action, PreActivity, Activity} from "@spica-server/activity/services";
+import {Action, PreActivity, ModuleActivity} from "@spica-server/activity/services";
 
-export function createPolicyActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
-  let activities: Activity[] = [];
+export function createPolicyActivity(
+  preActivity: PreActivity,
+  req: any,
+  res: any
+): ModuleActivity[] {
+  let activities: ModuleActivity[] = [];
 
   switch (preActivity.action) {
     case Action.POST:

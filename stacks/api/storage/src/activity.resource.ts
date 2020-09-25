@@ -1,7 +1,11 @@
-import {Action, Activity, PreActivity} from "@spica-server/activity/services";
+import {Action, ModuleActivity, PreActivity} from "@spica-server/activity/services";
 
-export function createStorageActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
-  let activities: Activity[] = [];
+export function createStorageActivity(
+  preActivity: PreActivity,
+  req: any,
+  res: any
+): ModuleActivity[] {
+  let activities: ModuleActivity[] = [];
 
   switch (preActivity.action) {
     case Action.POST:

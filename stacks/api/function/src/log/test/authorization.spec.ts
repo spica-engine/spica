@@ -17,7 +17,7 @@ describe("Realtime Authorization", () => {
       imports: [
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        LogModule,
+        LogModule.forRoot({expireAfterSeconds: 60}),
         PassportTestingModule.initialize({
           overriddenStrategyType: "JWT"
         })
@@ -45,6 +45,7 @@ describe("Realtime Authorization", () => {
 
     ws.onclose = done;
     ws.onmessage = e => {
+      console.log(e);
       expect(e.data).toEqual(`{"kind":1}`);
     };
     await ws.connect;

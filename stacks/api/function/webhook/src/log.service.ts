@@ -8,7 +8,7 @@ const COLLECTION_NAME = "webhook_logs";
 export class WebhookLogService extends BaseCollection<Log>(COLLECTION_NAME) {
   constructor(db: DatabaseService, @Inject(WEBHOOK_OPTIONS) options: WebhookOptions) {
     super(db);
-    this.createCollection(COLLECTION_NAME).then(_ =>
+    this.createCollection(COLLECTION_NAME).then(() =>
       this.upsertTTLIndex(options.expireAfterSeconds)
     );
   }

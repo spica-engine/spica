@@ -8,7 +8,7 @@ const COLLECTION_NAME = "activity";
 export class ActivityService extends BaseCollection<Activity>(COLLECTION_NAME) {
   constructor(db: DatabaseService, @Inject(ACTIVITY_OPTIONS) options: ActivityOptions) {
     super(db);
-    this.createCollection(COLLECTION_NAME).then(_ =>
+    this.createCollection(COLLECTION_NAME).then(() =>
       this.upsertTTLIndex(options.expireAfterSeconds)
     );
   }

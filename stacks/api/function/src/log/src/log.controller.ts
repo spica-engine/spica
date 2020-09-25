@@ -47,7 +47,7 @@ export class LogController {
           }
         },
         {$unwind: "$fn"},
-        {$set: {created_at: {$toDate: "$_id"}, function: "$fn.name"}},
+        {$set: {function: "$fn.name"}},
         {$unset: ["fn"]}
       ])
       .toArray();

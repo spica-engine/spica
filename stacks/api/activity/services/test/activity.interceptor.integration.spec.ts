@@ -1,10 +1,17 @@
 import {Controller, INestApplication, Post, Req, UseInterceptors} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
-import {activity, ActivityService, Predict, Activity} from "@spica-server/activity/services";
+import {
+  activity,
+  ActivityService,
+  Predict,
+  Activity,
+  ModuleActivity,
+  ACTIVITY_OPTIONS
+} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 
-const TestPredict: Predict = (): Activity[] => {
+const TestPredict: Predict = (): ModuleActivity[] => {
   return [
     {
       identifier: "test",
@@ -44,7 +51,15 @@ describe("Interceptor with a proper activity handler", () => {
     const module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create(), CoreTestingModule],
       controllers: [TestController],
-      providers: [ActivityService]
+      providers: [
+        ActivityService,
+        {
+          provide: ACTIVITY_OPTIONS,
+          useValue: {
+            expireAfterSeconds: 60
+          }
+        }
+      ]
     }).compile();
 
     service = module.get(ActivityService);
@@ -71,13 +86,17 @@ describe("Interceptor with a proper activity handler", () => {
 
   it("should insert an activity", async () => {
     await request.post("/test/withuser");
-    expect(insertSpy).toHaveBeenCalledWith([
-      {
-        identifier: "test",
-        action: 1,
-        resource: ["test_module", "test_id"]
-      }
-    ]);
+
+    let expectedArg = insertSpy.calls.argsFor(0)[0][0];
+    expect(expectedArg.created_at).toEqual(jasmine.any(Date));
+
+    delete expectedArg.created_at;
+
+    expect(expectedArg).toEqual({
+      identifier: "test",
+      action: 1,
+      resource: ["test_module", "test_id"]
+    });
   });
 });
 

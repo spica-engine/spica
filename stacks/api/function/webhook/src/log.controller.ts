@@ -29,14 +29,6 @@ export class WebhookLogController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    let aggregation: object[] = [
-      {
-        $addFields: {
-          execution_time: {$toDate: "$_id"}
-        }
-      }
-    ];
-
     let filter: FilterQuery<Log> = {};
 
     if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
@@ -54,7 +46,7 @@ export class WebhookLogController {
       filter.succeed = {$eq: succeed};
     }
 
-    aggregation.push({$match: filter});
+    let aggregation: object[] = [{$match: filter}];
 
     aggregation.push({$sort: {_id: -1}});
 

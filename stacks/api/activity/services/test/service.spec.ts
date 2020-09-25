@@ -1,25 +1,25 @@
-import {LogService} from "../src/log.service";
+import {ActivityService} from "../src/activity.service";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {FUNCTION_LOG_OPTIONS} from "../src/interface";
+import {ACTIVITY_OPTIONS} from "../src/interface";
 
-describe("Function Log Service", () => {
+describe("Activity Service", () => {
   let module: TestingModule;
-  let logService: LogService;
+  let service: ActivityService;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
       providers: [
-        LogService,
+        ActivityService,
         {
-          provide: FUNCTION_LOG_OPTIONS,
+          provide: ACTIVITY_OPTIONS,
           useValue: {
             expireAfterSeconds: 5
           }
         }
       ]
     }).compile();
-    logService = module.get(LogService);
+    service = module.get(ActivityService);
     await new Promise(resolve => setTimeout(() => resolve(), 2000));
   }, 10000);
 
@@ -28,7 +28,7 @@ describe("Function Log Service", () => {
   });
 
   it("should create ttl index", async () => {
-    let indexes = await logService._coll.listIndexes().toArray();
+    let indexes = await service._coll.listIndexes().toArray();
     expect(indexes.length).toEqual(2);
 
     let ttlIndex = indexes.find(index => index.name == "created_at_1");
@@ -36,9 +36,9 @@ describe("Function Log Service", () => {
   });
 
   it("should update existing ttl index expireAfterSeconds value", async () => {
-    await logService.upsertTTLIndex(10);
+    await service.upsertTTLIndex(10);
 
-    let indexes = await logService._coll.listIndexes().toArray();
+    let indexes = await service._coll.listIndexes().toArray();
     expect(indexes.length).toEqual(2);
 
     let ttlIndex = indexes.find(index => index.name == "created_at_1");

@@ -1,25 +1,25 @@
-import {LogService} from "../src/log.service";
+import {WebhookLogService} from "../src/log.service";
 import {TestingModule, Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {FUNCTION_LOG_OPTIONS} from "../src/interface";
+import {WEBHOOK_OPTIONS} from "../src/interface";
 
-describe("Function Log Service", () => {
+describe("Webhook Log Service", () => {
   let module: TestingModule;
-  let logService: LogService;
+  let logService: WebhookLogService;
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.create()],
       providers: [
-        LogService,
+        WebhookLogService,
         {
-          provide: FUNCTION_LOG_OPTIONS,
+          provide: WEBHOOK_OPTIONS,
           useValue: {
             expireAfterSeconds: 5
           }
         }
       ]
     }).compile();
-    logService = module.get(LogService);
+    logService = module.get(WebhookLogService);
     await new Promise(resolve => setTimeout(() => resolve(), 2000));
   }, 10000);
 
