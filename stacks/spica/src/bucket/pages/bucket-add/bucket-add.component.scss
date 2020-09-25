@@ -23,6 +23,20 @@
       flex-grow: initial !important;
     }
   }
+
+  .readonly {
+    mat-divider {
+      margin-bottom: 20px !important;
+    }
+    > div {
+      display: flex;
+      margin-top: 20px;
+      mat-hint {
+        margin-left: 5px;
+        align-self: center;
+      }
+    }
+  }
 }
 
 :root.dark :host {
