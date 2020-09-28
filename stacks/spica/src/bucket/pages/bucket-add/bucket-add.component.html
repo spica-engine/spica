@@ -266,7 +266,8 @@
                   [matAwareDialog]="{
                     title: 'Confirmation',
                     templateOrDescription: deleteFieldDialog,
-                    answer: 'agree'
+                    answer: '',
+                    noAnswer: true
                   }"
                 >
                   <mat-icon>delete</mat-icon>
@@ -498,6 +499,6 @@
     This action will remove the field from bucket entries.
   </p>
   <p>
-    Please type in <code>{{ answer }}</code> to confirm.
+    Please confirm this action to continue.
   </p>
 </ng-template>

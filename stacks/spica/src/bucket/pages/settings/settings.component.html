@@ -24,7 +24,8 @@
           [matAwareDialog]="{
             title: 'Confirmation',
             templateOrDescription: deleteLanguageDialog,
-            answer: 'agree'
+            answer: '',
+            noAnswer: true
           }"
           (confirm)="remove(languageKv.key)"
         >
@@ -71,6 +72,6 @@
     This action will remove the language from bucket entries.
   </p>
   <p>
-    Please type in <code>{{ answer }}</code> to confirm.
+    Please confirm this action to continue.
   </p>
 </ng-template>
