@@ -40,17 +40,37 @@
         </div>
       </div>
       <div fxLayout="row" fxLayoutAlign="center" class="modules">
-        <div (click)="slideIndex = 0;" [class.active]="slideIndex == 0">Data Management</div>
-        <div (click)="slideIndex = 1;" [class.active]="slideIndex == 1">Data Model Customization</div>
-        <div (click)="slideIndex = 2;" [class.active]="slideIndex == 2">Flexibility & Extendibility</div>
-        <div (click)="slideIndex = 3;" [class.active]="slideIndex == 3">Access Management</div>
+        <div (click)="slideIndex = 0" [class.active]="slideIndex == 0">Data Management</div>
+        <div (click)="slideIndex = 1" [class.active]="slideIndex == 1">
+          Data Model Customization
+        </div>
+        <div (click)="slideIndex = 2" [class.active]="slideIndex == 2">
+          Flexibility & Extendibility
+        </div>
+        <div (click)="slideIndex = 3" [class.active]="slideIndex == 3">Access Management</div>
       </div>
       <div class="images">
-        <div [style.transform]="'translateX(' + (-1 * slideIndex * 25) + '%)'">
-          <img (click)="slideIndex = 0;" [class.active]="slideIndex == 0" src="../../../assets/images/featured_image_1.png">
-          <img (click)="slideIndex = 1;" [class.active]="slideIndex == 1" src="../../../assets/images/featured_image_2.png">
-          <img (click)="slideIndex = 2;" [class.active]="slideIndex == 2" src="../../../assets/images/featured_image_3.png">
-          <img (click)="slideIndex = 3;" [class.active]="slideIndex == 3" src="../../../assets/images/featured_image_4.png">
+        <div [style.transform]="'translateX(' + -1 * slideIndex * 25 + '%)'">
+          <img
+            (click)="slideIndex = 0"
+            [class.active]="slideIndex == 0"
+            src="../../../assets/images/featured_image_1.png"
+          />
+          <img
+            (click)="slideIndex = 1"
+            [class.active]="slideIndex == 1"
+            src="../../../assets/images/featured_image_2.png"
+          />
+          <img
+            (click)="slideIndex = 2"
+            [class.active]="slideIndex == 2"
+            src="../../../assets/images/featured_image_3.png"
+          />
+          <img
+            (click)="slideIndex = 3"
+            [class.active]="slideIndex == 3"
+            src="../../../assets/images/featured_image_4.png"
+          />
         </div>
       </div>
     </div>
@@ -103,8 +123,8 @@
     <img src="assets/artboard/agnostic.svg" alt="Agnostic" />
     <h2>No Vendor Lock-In</h2>
     <p>
-      Well… we’ll take this a step forward by making the
-      no vendor lock-in and cloud solutions. Run Spica in any cloud provider or your own servers.
+      Well… we’ll take this a step forward by making the no vendor lock-in and cloud solutions. Run
+      Spica in any cloud provider or your own servers.
     </p>
   </div>
 
@@ -132,22 +152,24 @@
     <li>
       <h3>Start-ups who want to exceed the limits of low-code tools</h3>
       <p>
-        Everything in Spica has been designed to save time and cost without losing flexibility. 
-        You will have full control as a project owner and create the most flexible project
+        Everything in Spica has been designed to save time and cost without losing flexibility. You
+        will have full control as a project owner and create the most flexible project
         infrastructure in a few minutes.
       </p>
     </li>
     <li>
       <h3>Freelancers & consultancies</h3>
       <p>
-        Spica designed for developers and technical teams. You can double your speed with the first backend engine.
-        <!--With easy-to-use composer, you can display your data in sweet harmony.--> 
+        Spica designed for developers and technical teams. You can double your speed with the first
+        backend engine.
+        <!--With easy-to-use composer, you can display your data in sweet harmony.-->
       </p>
     </li>
     <li>
       <h3>For the complex projects owners</h3>
       <p>
-        To shape your ideas, Spica is the best environment for your developers with the 3rd parties, designed for your needs.
+        To shape your ideas, Spica is the best environment for your developers with the 3rd parties,
+        designed for your needs.
       </p>
     </li>
   </ul>
@@ -296,15 +318,23 @@
     </li>
     <li>
       <h3>Apply your custom logic</h3>
-      <p>Use the cloud-functions and manuplate your data. Spica users have the full access to project logic</p>
+      <p>
+        Use the cloud-functions and manuplate your data. Spica users have the full access to project
+        logic
+      </p>
     </li>
     <li>
       <h3>Design your own interface</h3>
-      <p>Make data connection with your custom UI. You can use any technology for your presentation layer such as smart-watches and IOT devices</p>
+      <p>
+        Make data connection with your custom UI. You can use any technology for your presentation
+        layer such as smart-watches and IOT devices
+      </p>
     </li>
     <li>
       <h3>Deploy your project</h3>
-      <p>Get a build in any shape you would like to use. Let Spica to handle the backend maintenance</p>
+      <p>
+        Get a build in any shape you would like to use. Let Spica to handle the backend maintenance
+      </p>
     </li>
   </ul>
 </home-section>
