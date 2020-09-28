@@ -1,7 +1,11 @@
-import {Action, Activity, PreActivity} from "@spica-server/activity/services";
+import {Action, PreActivity, ModuleActivity} from "@spica-server/activity/services";
 
-export function createBucketActivity(preActivity: PreActivity, req: any, res: any): Activity[] {
-  let activities: Activity[] = [];
+export function createBucketActivity(
+  preActivity: PreActivity,
+  req: any,
+  res: any
+): ModuleActivity[] {
+  let activities: ModuleActivity[] = [];
 
   switch (preActivity.action) {
     case Action.POST:
@@ -22,8 +26,8 @@ export function createBucketDataActivity(
   preActivity: {identifier: string; action: Action},
   req: any,
   res: any
-): Activity[] {
-  let activities: Activity[] = [];
+): ModuleActivity[] {
+  let activities: ModuleActivity[] = [];
 
   switch (preActivity.action) {
     case Action.POST:

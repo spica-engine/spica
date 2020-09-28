@@ -31,7 +31,7 @@ describe("Realtime", () => {
       imports: [
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        LogModule,
+        LogModule.forRoot({expireAfterSeconds: 60}),
         PassportTestingModule.initialize()
       ]
     }).compile();
@@ -40,6 +40,8 @@ describe("Realtime", () => {
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
+
+    await new Promise(resolve => setTimeout(() => resolve(), 2000));
   });
 
   afterAll(() => app.close());

@@ -128,7 +128,8 @@ const args = yargs
         "FunctionFullAccess",
         "BucketFullAccess",
         "DashboardFullAccess",
-        "WebhookFullAccess"
+        "WebhookFullAccess",
+        "PreferenceFullAccess"
       ]
     }
   })
@@ -223,6 +224,11 @@ const args = yargs
     number: true,
     description: "Maximum size in Mi that a body could be.",
     default: 15
+  })
+  .option("common-log-lifespan", {
+    number: true,
+    description: "Seconds that need to be passed to expire logs. Default value is one month.",
+    default: 2629743
   })
   .option("port", {
     number: true,
@@ -319,6 +325,7 @@ const modules = [
     samlCertificateTTL: args["passport-saml-certificate-ttl"]
   }),
   FunctionModule.forRoot({
+    logExpireAfterSeconds: args["common-log-lifespan"],
     path: args["persistent-path"],
     databaseName: args["database-name"],
     databaseReplicaSet: args["database-replica-set"],
@@ -338,7 +345,7 @@ const modules = [
 ];
 
 if (args["activity-stream"]) {
-  modules.push(ActivityModule.forRoot());
+  modules.push(ActivityModule.forRoot({expireAfterSeconds: args["common-log-lifespan"]}));
 }
 
 @Module({

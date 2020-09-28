@@ -37,6 +37,11 @@ export default {
         include: "*/*"
       },
       module: "bucket:data"
+    },
+    {
+      action: "preference:show",
+      module: "preference",
+      resource: ["bucket"]
     }
   ]
 };

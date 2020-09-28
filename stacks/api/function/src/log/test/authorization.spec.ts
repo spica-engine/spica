@@ -17,7 +17,7 @@ describe("Realtime Authorization", () => {
       imports: [
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        LogModule,
+        LogModule.forRoot({expireAfterSeconds: 60}),
         PassportTestingModule.initialize({
           overriddenStrategyType: "JWT"
         })

@@ -78,7 +78,7 @@
               <span [style.color]="log.succeed ? 'green' : 'red'">
                 {{ log.succeed ? "SUCCEEDED" : "FAILED" }}
               </span>
-              <span>{{ log.execution_time | date: "MM/dd/yyyy HH:mm:ss" }}</span>
+              <span>{{ log.created_at | date: "MM/dd/yyyy HH:mm:ss" }}</span>
             </mat-panel-title>
           </mat-expansion-panel-header>
           <ng-container *ngIf="log.content.error; else elseBlock">

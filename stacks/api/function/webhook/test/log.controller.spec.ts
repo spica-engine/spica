@@ -5,6 +5,7 @@ import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {WebhookLogController} from "@spica-server/function/webhook/src/log.controller";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {WEBHOOK_OPTIONS} from "..";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
@@ -16,6 +17,8 @@ describe("Activity Controller", () => {
   let yesterday: Date;
   let logIds: ObjectId[];
 
+  let created_at = new Date();
+
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [
@@ -24,7 +27,15 @@ describe("Activity Controller", () => {
         PassportTestingModule.initialize()
       ],
       controllers: [WebhookLogController],
-      providers: [WebhookLogService]
+      providers: [
+        WebhookLogService,
+        {
+          provide: WEBHOOK_OPTIONS,
+          useValue: {
+            expireAfterSeconds: 5
+          }
+        }
+      ]
     }).compile();
 
     request = module.get(Request);
@@ -34,6 +45,8 @@ describe("Activity Controller", () => {
     await app.listen(request.socket);
 
     service = module.get(WebhookLogService);
+
+    await new Promise(resolve => setTimeout(() => resolve(), 2000));
   });
 
   beforeEach(async () => {
@@ -57,7 +70,8 @@ describe("Activity Controller", () => {
           }
         },
         succeed: false,
-        webhook: "test_webhook_id"
+        webhook: "test_webhook_id",
+        created_at
       },
       {
         _id: ObjectId.createFromTime(yesterday.getTime() / 1000),
@@ -75,7 +89,8 @@ describe("Activity Controller", () => {
           }
         },
         succeed: true,
-        webhook: "test_webhook_id2"
+        webhook: "test_webhook_id2",
+        created_at
       }
     ]);
   });
@@ -83,10 +98,6 @@ describe("Activity Controller", () => {
   afterEach(async () => {
     await service.deleteMany({});
   });
-
-  function objectIdToDate(id: string): string {
-    return new Date(parseInt(id.substring(0, 8), 16) * 1000).toISOString();
-  }
 
   it("should get all logs", async () => {
     const response = await request.get("/webhook/logs", {});
@@ -110,7 +121,7 @@ describe("Activity Controller", () => {
         },
         succeed: false,
         webhook: "test_webhook_id",
-        execution_time: objectIdToDate(logIds[0].toHexString())
+        created_at: created_at.toISOString()
       },
       {
         _id: logIds[1].toHexString(),
@@ -129,7 +140,7 @@ describe("Activity Controller", () => {
         },
         succeed: true,
         webhook: "test_webhook_id2",
-        execution_time: objectIdToDate(logIds[1].toHexString())
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -156,7 +167,7 @@ describe("Activity Controller", () => {
         },
         succeed: true,
         webhook: "test_webhook_id2",
-        execution_time: objectIdToDate(logIds[1].toHexString())
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -183,7 +194,7 @@ describe("Activity Controller", () => {
         },
         succeed: false,
         webhook: "test_webhook_id",
-        execution_time: objectIdToDate(logIds[0].toHexString())
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -210,7 +221,7 @@ describe("Activity Controller", () => {
         },
         succeed: true,
         webhook: "test_webhook_id2",
-        execution_time: objectIdToDate(logIds[1].toHexString())
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -243,7 +254,7 @@ describe("Activity Controller", () => {
         },
         succeed: false,
         webhook: "test_webhook_id",
-        execution_time: objectIdToDate(logIds[0].toHexString())
+        created_at: created_at.toISOString()
       }
     ]);
   });

@@ -1,6 +1,6 @@
 import {Global, Module} from "@nestjs/common";
 import {PreferenceService} from "@spica-server/preference/services";
-import {empty} from "rxjs";
+import {Observable} from "rxjs";
 
 class PartialPreferenceService {
   private defaults = new Map<string, any>();
@@ -15,7 +15,20 @@ class PartialPreferenceService {
       return Promise.resolve(this.defaults.get(scope));
     });
   update = jasmine.createSpy("PreferenceService.update");
-  watch = jasmine.createSpy("PreferenceService.watch").and.returnValue(empty());
+  watch = jasmine
+    .createSpy("PreferenceService.watch")
+    .and.callFake(
+      (
+        scope: string,
+        {propagateOnStart}: {propagateOnStart: boolean} = {propagateOnStart: false}
+      ) => {
+        return new Observable(observer => {
+          if (propagateOnStart) {
+            observer.next(this.defaults.get(scope));
+          }
+        });
+      }
+    );
 }
 
 @Global()
