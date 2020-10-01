@@ -302,7 +302,7 @@ export class IndexComponent implements OnInit {
 
   delete(id: string): void {
     this.bds
-      .findOneAndDelete(this.bucketId, id)
+      .delete(this.bucketId, id)
       .toPromise()
       .then(() => this.refresh.emit());
   }
