@@ -310,7 +310,6 @@ export class BucketDataController {
         {bucket: bucketId.toHexString(), type: "insert"},
         headers
       );
-      console.log(allowed);
       if (!allowed) {
         throw new ForbiddenException("Forbidden action.");
       }
