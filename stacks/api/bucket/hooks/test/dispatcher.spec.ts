@@ -11,11 +11,11 @@ describe("Review Dispatcher", () => {
   });
 
   it("should return an actionKey", () => {
-    expect(reviewKey("test_bucket", "GET")).toEqual("test_bucket_GET");
+    expect(reviewKey("test_bucket", "GET")).toEqual("test_bucket_get");
   });
 
   it("should emit given parameters to listener", () => {
-    reviewDispatcher.on("test_bucket_GET", () => {});
+    reviewDispatcher.on("test_bucket_get", () => {});
 
     const emitSpy = spyOn(reviewDispatcher, "emit");
 
@@ -32,7 +32,7 @@ describe("Review Dispatcher", () => {
     expect(typeof emitSpy.calls.first().args[1]).toEqual("function");
 
     expect([emitSpy.calls.first().args[0], emitSpy.calls.first().args[2]]).toEqual([
-      "test_bucket_GET",
+      "test_bucket_get",
       {
         authorization: "APIKEY 12345",
         strategy: "APIKEY"
