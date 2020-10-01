@@ -990,20 +990,6 @@ describe("BucketDataController", () => {
       expect(bucketData[0].title).toBe("first title");
       expect(bucketData[0].description).toBe("first description");
     });
-
-    it("should delete multiple document", async () => {
-      const response = await req.delete(`/bucket/${myBucketId}/data`, [
-        myBucketData[0]._id.toHexString(),
-        myBucketData[1]._id.toHexString()
-      ]);
-
-      expect(response.statusCode).toBe(204);
-      expect(response.body).toBe(undefined);
-
-      const bucketData = (await req.get(`/bucket/${myBucketId}/data`, {})).body;
-
-      expect(bucketData).toEqual([]);
-    });
   });
 
   describe("clear relations", () => {
@@ -1129,10 +1115,15 @@ describe("BucketDataController", () => {
       });
 
       afterEach(async () => {
-        await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
-        await req.delete(`/bucket/${relationBucketId}/data`, [documentOneId, documentTwoId]);
+        await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+        await req.delete(`/bucket/${usersBucketId}/data/${userTwoId}`);
+
+        await req.delete(`/bucket/${relationBucketId}/data/${documentOneId}`);
+        await req.delete(`/bucket/${relationBucketId}/data/${documentTwoId}`);
+
         await req.delete(`/bucket/${otherBucketId}/data/${otherBucketDocumentId}`);
       });
+
       it("should clear relations of documentOne when userOne deleted", async () => {
         let response = await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
         expect(response.statusCode).toEqual(204);
@@ -1159,9 +1150,8 @@ describe("BucketDataController", () => {
       });
 
       it("should clear relations for both documents when userOne and userTwo deleted", async () => {
-        let response = await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
-        expect(response.statusCode).toEqual(204);
-        expect(response.body).toEqual(undefined);
+        await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+        await req.delete(`/bucket/${usersBucketId}/data/${userTwoId}`);
 
         let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
         expect(relationDocuments).toEqual([
@@ -1294,8 +1284,12 @@ describe("BucketDataController", () => {
       });
 
       afterEach(async () => {
-        await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
-        await req.delete(`/bucket/${relationBucketId}/data`, [documentOneId, documentTwoId]);
+        await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+        await req.delete(`/bucket/${usersBucketId}/data/${userTwoId}`);
+
+        await req.delete(`/bucket/${relationBucketId}/data/${documentOneId}`);
+        await req.delete(`/bucket/${relationBucketId}/data/${documentTwoId}`);
+
         await req.delete(`/bucket/${otherBucketId}/data/${otherBucketDocumentId}`);
       });
 
@@ -1326,9 +1320,8 @@ describe("BucketDataController", () => {
       });
 
       it("should clear relations when userOne and userTwo deleted", async () => {
-        let response = await req.delete(`/bucket/${usersBucketId}/data`, [userOneId, userTwoId]);
-        expect(response.statusCode).toEqual(204);
-        expect(response.body).toEqual(undefined);
+        await req.delete(`/bucket/${usersBucketId}/data/${userOneId}`);
+        await req.delete(`/bucket/${usersBucketId}/data/${userTwoId}`);
 
         let {body: relationDocuments} = await req.get(`/bucket/${relationBucketId}/data`, {});
         expect(relationDocuments).toEqual([

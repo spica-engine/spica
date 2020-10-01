@@ -50,7 +50,7 @@ describe("ChangeAndReviewEnqueuer", () => {
 
     expect(reviewDispatcher.on).toHaveBeenCalledTimes(1);
 
-    expect(reviewDispatcher.on.calls.first().args[0]).toEqual("test_collection_INSERT");
+    expect(reviewDispatcher.on.calls.first().args[0]).toEqual("test_collection_insert");
   });
 
   it("should unsubscribe", () => {
@@ -76,6 +76,6 @@ describe("ChangeAndReviewEnqueuer", () => {
 
     expect(reviewDispatcher.off).toHaveBeenCalledTimes(1);
 
-    expect(reviewDispatcher.off.calls.first().args[0]).toEqual("test_collection_INSERT");
+    expect(reviewDispatcher.off.calls.first().args[0]).toEqual("test_collection_insert");
   });
 });

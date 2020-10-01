@@ -2,7 +2,7 @@ import {Injectable} from "@nestjs/common";
 import {EventEmitter} from "events";
 
 export function reviewKey(bucket: string, type: string) {
-  return `${bucket}_${type}`;
+  return `${bucket}_${type.toLowerCase()}`;
 }
 
 @Injectable()
