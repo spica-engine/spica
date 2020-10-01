@@ -1,6 +1,6 @@
 
-kind: Bucket
-apiVersion: v1
+apiVersion: bucket/v1
+kind: Schema
 metadata:
   name: email
 spec:
@@ -19,24 +19,24 @@ spec:
       default: :updated_at
     delivered_at:
       type: date
-# ---
-# kind: Bucket
-# apiVersion: v1
-# metadata:
-#   name: email
-# spec:
-#   title: Emails
-#   description: Email Queue
-#   required:
-#     - email
-#   properties:
-#     email:
-#       type: string
-#     created_at:
-#       type: date
-#       default: :created_at
-#     updated_at:
-#       type: date
-#       default: :updated_at
-#     delivered_at:
-#       type: date
+---
+apiVersion: bucket/v1
+kind: Schema
+metadata:
+  name: email
+spec:
+  title: Emails
+  description: Email Queue
+  required:
+    - email
+  properties:
+    email:
+      type: string
+    created_at:
+      type: date
+      default: :created_at
+    updated_at:
+      type: date
+      default: :updated_at
+    delivered_at:
+      type: date

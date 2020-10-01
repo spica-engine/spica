@@ -14,6 +14,10 @@ export interface ObjectMeta {
   };
 }
 
+export interface ResourceSpec<T = unknown> extends ObjectMeta, TypeMeta {
+  spec: T
+}
+
 export interface ResourceDefinition {
   group: string;
   versions: ResourceDefinitionVersion[];
@@ -29,6 +33,7 @@ export interface ResourceDefinitionNames {
 
 export interface ResourceDefinitionVersion {
   name: string;
+  current: boolean;
   schema: JSONSchema7;
   additionalPrinterColumns?: AdditionalPrinterColumn[];
 }

@@ -12,5 +12,7 @@ ts_library(
     deps = [
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
+        "@npm//rxjs",
+        "@npm//body-parser"
     ],
 )

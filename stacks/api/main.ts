@@ -331,7 +331,12 @@ NestFactory.create(RootModule, {
       allowedHeaders: args["cors-allowed-headers"],
       allowCredentials: args["cors-allow-credentials"]
     }),
-    Middlewares.JsonBodyParser(args["payload-size-limit"]),
+    Middlewares.JsonBodyParser({
+      limit: args["payload-size-limit"],
+      ignoreUrls: [
+        /$\/storage/
+      ]
+    }),
     Middlewares.MergePatchJsonParser(args["payload-size-limit"])
   );
   app.listen(args.port);

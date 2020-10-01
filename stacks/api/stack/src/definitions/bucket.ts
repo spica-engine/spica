@@ -95,17 +95,26 @@ const SchemaV1: JSONSchema7 = {
 };
 
 export const Bucket: ResourceDefinition = {
-  group: "",
+  group: "bucket",
   names: {
-    kind: "Bucket",
-    plural: "buckets",
-    singular: "bucket",
+    kind: "Schema",
+    plural: "schemas",
+    singular: "schema",
     shortnames: ["b", "bkt"]
   },
   versions: [
     {
       name: "v1",
-      schema: SchemaV1
+      schema: SchemaV1,
+      current: true,
+      additionalPrinterColumns: [
+        {
+          name: 'icon',
+          type: 'string',
+          description: '',
+          jsonPath: '.spec.icon'
+        }
+      ]
     }
   ]
 };

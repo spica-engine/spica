@@ -26,6 +26,7 @@ export interface ResourceDefinitionNames {
 
 export interface ResourceDefinitionVersion {
   name: string;
+  current: boolean;
   schema: JSONSchema7;
   additionalPrinterColumns?: AdditionalPrinterColumn[];
 }
