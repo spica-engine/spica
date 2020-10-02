@@ -35,7 +35,7 @@ export class StrategiesAddComponent implements OnInit, OnDestroy {
       .pipe(
         filter(params => params.id),
         takeUntil(this.onDestroy),
-        switchMap(params => this.strategyService.getStrategy(params.id).toPromise())
+        switchMap(params => this.strategyService.getStrategy(params.id))
       )
       .subscribe(strategy => {
         this.callbackUrl = strategy.callbackUrl;
@@ -45,8 +45,10 @@ export class StrategiesAddComponent implements OnInit, OnDestroy {
   }
 
   submitForm(certificate: NgModel) {
-    this.strategyService
-      .updateStrategy(this.strategy)
+    (this.strategy._id
+      ? this.strategyService.updateStrategy(this.strategy._id, this.strategy)
+      : this.strategyService.addStrategy(this.strategy)
+    )
       .toPromise()
       .then(() => this.router.navigate(["passport/strategies"]))
       .catch(() => {
