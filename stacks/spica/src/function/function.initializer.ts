@@ -36,11 +36,9 @@ export class FunctionInitializer {
 
   async appInitializer() {
     const allowed = await this.passport.checkAllowed("function:index", "*").toPromise();
-    console.log(allowed);
     if (this.passport.identified && allowed) {
       this.functionService.loadFunctions().toPromise();
     } else {
-      console.log(allowed);
       this.routeService.dispatch(new RemoveCategory(RouteCategory.Function));
     }
   }
