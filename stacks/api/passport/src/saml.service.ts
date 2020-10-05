@@ -41,7 +41,7 @@ export class SamlService {
     );
   }
 
-  async assert(name: string, body: string) {
+  async assert(name: string, body: unknown) {
     const strategy = await this.getStrategy(name);
     if (!strategy) {
       return null;

@@ -95,10 +95,10 @@ describe("Policy Add Component", () => {
     });
 
     describe("onResourceSelection", () => {
-      it("should set statement resource as empty array when selection is only_include", () => {
+      it("should set statement resource as empty array when selection is include", () => {
         let statement = {resource: undefined, action: "bucket:show", module: "bucket"};
 
-        fixture.componentInstance.onResourceSelection(statement, "only_include");
+        fixture.componentInstance.onResourceSelection(statement, "include");
         expect(statement).toEqual({resource: [], action: "bucket:show", module: "bucket"});
       });
 
@@ -116,7 +116,7 @@ describe("Policy Add Component", () => {
           module: "bucket:data"
         };
 
-        fixture.componentInstance.onResourceSelection(statement, "include_exclude");
+        fixture.componentInstance.onResourceSelection(statement, "exclude");
         expect(statement).toEqual(
           {
             resource: {include: "*", exclude: []},
@@ -132,7 +132,7 @@ describe("Policy Add Component", () => {
           module: "bucket:data"
         };
 
-        fixture.componentInstance.onResourceSelection(statement, "include_exclude");
+        fixture.componentInstance.onResourceSelection(statement, "exclude");
         expect(statement).toEqual(
           {
             resource: {include: "*/*", exclude: []},
@@ -151,7 +151,7 @@ describe("Policy Add Component", () => {
           module: undefined,
           resource: []
         })
-      ).toEqual("only_include");
+      ).toEqual("include");
 
       expect(
         fixture.componentInstance.getResourceSelection({
@@ -159,7 +159,7 @@ describe("Policy Add Component", () => {
           module: undefined,
           resource: {include: "", exclude: []}
         })
-      ).toEqual("include_exclude");
+      ).toEqual("exclude");
     });
 
     it("should add resource to includes", () => {
