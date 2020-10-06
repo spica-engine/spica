@@ -18,6 +18,29 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return this.pref.get<BucketPreferences>("bucket");
   }
 
+  watchCollection(propagateOnStart: boolean): Observable<Bucket[]> {
+    return new Observable(observer => {
+      if (propagateOnStart) {
+        this.buckets
+          .find()
+          .toArray()
+          .then(buckets => observer.next(buckets));
+      }
+      const stream = this.buckets.watch();
+      stream.on("change", () => {
+        this.buckets
+          .find()
+          .toArray()
+          .then(buckets => observer.next(buckets));
+      });
+      return () => {
+        if (!stream.isClosed()) {
+          stream.close();
+        }
+      };
+    });
+  }
+
   watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
     return new Observable(observer => {
       if (propagateOnStart) {
