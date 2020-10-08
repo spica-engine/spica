@@ -2,7 +2,7 @@ export interface Status {
   metadata?: StatusMetadata;
   status: "Success" | "Failure";
   message: string;
-  reason: "BadRequest" | "Unauthorized" | "Forbidden" | "NotFound" | "AlreadyExists";
+  reason: "BadRequest" | "Unauthorized" | "Forbidden" | "NotFound" | "AlreadyExists" | "Conflict" | "Invalid" | "Timeout" | "ServerTimeout" | "MethodNotAllowed" | "InternalError";
   details?: StatusDetails;
   code: number;
 }
@@ -25,12 +25,16 @@ export function status({metadata, code, message, reason, status, details}: Statu
     reason,
     details,
     code,
-    [Symbol.for('kind')]: "Status"
+    [Symbol.for("kind")]: "Status"
   };
 }
 
 export function isStatusKind(object: unknown): object is Status {
-    return typeof object == "object" && Symbol.for("kind") in object && object[Symbol.for("kind")] == "Status";
+  return (
+    typeof object == "object" &&
+    Symbol.for("kind") in object &&
+    object[Symbol.for("kind")] == "Status"
+  );
 }
 
 export function alreadyExists({
@@ -48,3 +52,20 @@ export function alreadyExists({
     details
   });
 }
+
+export function notFound({
+  message,
+  details
+}: {
+  message: string;
+  details: {kind: string; name: string};
+}) {
+  return status({
+    code: 409,
+    reason: "NotFound",
+    status: "Failure",
+    message,
+    details
+  });
+}
+

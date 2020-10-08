@@ -29,9 +29,10 @@ ts_library(
         "@npm//dockerode",
         "@npm//get-port",
         "@npm//node-fetch",
-        "@npm//duration",
+        "@npm//pretty-ms",
         "@npm//@caporal/core",
         "@npm//yaml",
+        "@npm//jsonpath",
     ],
 )
 

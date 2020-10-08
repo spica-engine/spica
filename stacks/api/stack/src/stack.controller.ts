@@ -5,17 +5,17 @@ import {
   Controller,
   ExceptionFilter,
   Get,
-  HttpException,
   Param,
   Patch,
   Post,
   Put,
+  UseFilters,
   UseInterceptors
 } from "@nestjs/common";
-import {ResourceDefinition} from "./definition";
+import {Resource, ResourceDefinition} from "./definition";
 import {definitions} from "./definitions";
 import {PatchBodyParser} from "./patch";
-import {alreadyExists, isStatusKind, Status} from "./status";
+import {alreadyExists, isStatusKind, notFound, status} from "./status";
 
 function doesTheNameMatchDefinition(name: string, definition: ResourceDefinition) {
   return definition.names.plural == name;
@@ -25,12 +25,62 @@ function getVersion(version: string, definition: ResourceDefinition) {
   return definition.versions.find(def => def.name == version);
 }
 
-@Catch(HttpException)
-export class HttpExceptionFilter implements ExceptionFilter {
+function setMetadataFields(resource: Resource) {
+  if (! resource.metadata.creationTimestamp ) {
+    resource.metadata.creationTimestamp = new Date().toISOString();
+  }
+}
+
+function callNotifiers(resource: Resource, objects: Map<string, Resource<unknown>>) {
+  return globalThis['notify'](resource, objects);
+}
+
+
+function reviewBucketSchema(definition: ResourceDefinition, objects: Map<string, Resource<unknown>>, resource: Resource<any>) {
+  const {spec, metadata} = resource;
+  for (const propertyName in spec.properties) {
+    const property = spec.properties[propertyName];
+    if ( property.type == "relation" && typeof property.bucket == 'object' ) {
+      const bucketName = property.bucket.valueFrom.resourceFieldRef.bucketName;
+      // TODO: handle downwards resources via generic function
+      if (!objects.has(bucketName)) {
+        throw notFound({
+          message: `${definition.names.plural} "${bucketName}" could not be found.`,
+          details: {
+            kind: definition.names.kind,
+            name: bucketName
+          }
+        });
+      }
+    }
+  }
+
+  console.log('end');
+}
+
+function getResourceDefinitionAndVersionAndKey(definitions: ResourceDefinition[],  group: string, versionName: string, resourceName: string) {
+  console.log(group, versionName, resourceName);
+  const definition = definitions.find(def => doesTheNameMatchDefinition(resourceName, def));
+  const key = `${definition.group}/${definition.names.plural}`;
+  return {
+    definition,
+    key
+  }
+}
+
+
+@Catch()
+export class StatusFilter implements ExceptionFilter {
   catch(exceptionOrStatus: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<any>();
-    const request = ctx.getRequest<any>();
+    const response = host.switchToHttp().getResponse<any>();
+    if ( !isStatusKind(exceptionOrStatus) ) {
+      exceptionOrStatus = status({
+        code: 500,
+        message: exceptionOrStatus['message'] ? exceptionOrStatus['message'] : "unknown error",
+        status: 'Failure',
+        reason: "InternalError"
+      }) 
+    }
 
     if (isStatusKind(exceptionOrStatus)) {
       response.status(exceptionOrStatus.code).json(exceptionOrStatus);
@@ -38,9 +88,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 }
 
+@UseFilters(new StatusFilter())
 @Controller("apis")
 export class StackController {
-  store = new Map<string, Map<string, unknown>>();
+
+
+  store = new Map<string, Map<string, Resource<unknown>>>();
+
+  // healthz
+  // version
+  // metrics
 
   @Get()
   definitions() {
@@ -53,13 +110,10 @@ export class StackController {
     @Param("version") versionName: string,
     @Param("resource") resourceName: string
   ) {
-    console.log(group, versionName, resourceName);
-    const definition = definitions.find(def => doesTheNameMatchDefinition(resourceName, def));
-    const key = `${definition.group}/${definition.names.plural}`;
+    const {key} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
 
     const objects = this.store.has(key) ? this.store.get(key) : new Map();
 
-    console.log(objects);
     return Array.from(objects.values());
   }
 
@@ -70,36 +124,25 @@ export class StackController {
     @Param("resource") resourceName: string,
     @Param("name") objectName: string
   ) {
-    console.log(group, versionName, resourceName);
-    const definition = definitions.find(def => doesTheNameMatchDefinition(resourceName, def));
-    const key = `${definition.group}/${definition.names.plural}`;
+    const {key} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
 
-    if (!this.store.has(key)) {
-      this.store.set(key, new Map());
-    }
-    const objects = this.store.get(key);
+    const objects = this.store.has(key) ? this.store.get(key) : new Map();
 
     return objects.get(objectName);
   }
 
   @Post(":group/:version/:resource")
-  add(
+  async add(
     @Param("group") group: string,
     @Param("version") versionName: string,
     @Param("resource") resourceName: string,
-    @Body() object: unknown
+    @Body() object: Resource
   ) {
-    console.log(group, versionName, resourceName);
-    const definition = definitions.find(def => doesTheNameMatchDefinition(resourceName, def));
-    const key = `${definition.group}/${definition.names.plural}`;
+    const {key, definition} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
 
-    if (!this.store.has(key)) {
-      this.store.set(key, new Map());
-    }
+    const objects = this.store.has(key) ? this.store.get(key) : this.store.set(key, new Map<string, Resource<unknown>>()).get(key);
 
-    const objects = this.store.get(key);
-
-    const objectName = object["metadata"].name;
+    const objectName = object.metadata.name;
 
     if (objects.has(objectName)) {
       throw alreadyExists({
@@ -110,6 +153,12 @@ export class StackController {
         }
       });
     }
+
+    setMetadataFields(object);
+
+    reviewBucketSchema(definition, objects, object);
+
+    await callNotifiers(object, objects);
 
     objects.set(objectName, object);
 
@@ -117,26 +166,20 @@ export class StackController {
   }
 
   @Put(":group/:version/:resource/:name")
-  replace(
+  async replace(
     @Param("group") group: string,
     @Param("version") versionName: string,
     @Param("resource") resourceName: string,
     @Param("name") objectName: string,
-    @Body() object: unknown
+    @Body() object: Resource
   ) {
-    console.log(group, versionName, resourceName);
-    const definition = definitions.find(def => doesTheNameMatchDefinition(resourceName, def));
-    const key = `${definition.group}/${definition.names.plural}`;
+    const {key, definition} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
 
-    if (!this.store.has(key)) {
-      this.store.set(key, new Map());
-    }
+    const objects = this.store.has(key) ? this.store.get(key) : this.store.set(key, new Map<string, Resource<unknown>>()).get(key);
 
-    const objects = this.store.get(key);
-
-    if (objects.has(objectName)) {
-      throw alreadyExists({
-        message: `${definition.names.plural} "${objectName}" already exists.`,
+    if (!objects.has(objectName)) {
+      throw notFound({
+        message: `${definition.names.plural} "${objectName}" could not be found.`,
         details: {
           kind: definition.names.kind,
           name: objectName
@@ -144,7 +187,17 @@ export class StackController {
       });
     }
 
-    objects.set(objectName, object);
+    reviewBucketSchema(definition, objects, object);
+
+    const obj = objects.get(objectName);
+
+    obj.spec = object.spec;
+
+    console.log(obj);
+
+    await callNotifiers(obj, objects);
+
+    objects.set(objectName, obj);
 
     return objects;
   }
@@ -156,17 +209,11 @@ export class StackController {
     @Param("version") versionName: string,
     @Param("resource") resourceName: string,
     @Param("name") objectName: string,
-    @Body() object: unknown
+    @Body() object: Resource
   ) {
-    console.log(group, versionName, resourceName);
-    const definition = definitions.find(def => doesTheNameMatchDefinition(resourceName, def));
-    const key = `${definition.group}/${definition.names.plural}`;
+    const {key, definition} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
 
-    if (!this.store.has(key)) {
-      this.store.set(key, new Map());
-    }
-
-    const objects = this.store.get(key);
+    const objects = this.store.has(key) ? this.store.get(key) : new Map();
 
     if (objects.has(objectName)) {
       throw alreadyExists({

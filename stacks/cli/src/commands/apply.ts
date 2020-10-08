@@ -3,7 +3,8 @@ import { ActionParameters } from "../interface";
 import * as YAML from "yaml";
 import * as fs from "fs";
 import { request } from "../request";
-import { ResourceDefinition } from "./api-resources";
+import { Resource, ResourceDefinition } from "./api-resources";
+import { formatFailureStatus, isFailureStatus, isStatusKind } from "../status";
 
 async function apply({args, logger, options}: ActionParameters) {
     const documents = YAML.parseAllDocuments(fs.readFileSync(options.filename as string).toString());
@@ -12,6 +13,7 @@ async function apply({args, logger, options}: ActionParameters) {
         const {apiVersion, kind, metadata, spec} = document.toJSON();
         const resources = await request.get<ResourceDefinition[]>("http://localhost:4300/apis");
         let definition: ResourceDefinition;
+
         for (const resource of resources) {
           if ( resource.names.kind == kind) {
             definition = resource;
@@ -24,9 +26,28 @@ async function apply({args, logger, options}: ActionParameters) {
       
         const version = definition.versions.find(version => version.current);
         
-        const r = await request.post(`http://localhost:4300/apis/${definition.group}/${version.name}/${definition.names.plural}`, {metadata, spec});
-        console.log(r);
-        logger.info(`${definition.group}/${definition.names.singular} "${metadata.name}" replaced.`);
+        let result = await request.post(`http://localhost:4300/apis/${definition.group}/${version.name}/${definition.names.plural}`, {metadata, spec}); 
+
+        let type: string = "created";
+
+        if ( isFailureStatus(result) && result.reason == "AlreadyExists" ) {
+
+          const upstream  = await request.get<Resource>(`http://localhost:4300/apis/${definition.group}/${version.name}/${definition.names.plural}/${metadata.name}`); 
+
+          if ( JSON.stringify(upstream.spec) == JSON.stringify(spec) ) {
+            type = "up-to date"
+            result = {};
+          } else {
+            result = await request.put(`http://localhost:4300/apis/${definition.group}/${version.name}/${definition.names.plural}/${metadata.name}`, {metadata, spec}); 
+            type = "replaced";
+          }
+        }
+
+        if ( isFailureStatus(result) ) {
+          return logger.error(formatFailureStatus(result));
+        }
+
+        logger.info(`${definition.group}/${definition.names.singular} "${metadata.name}" ${type}.`);
     }
 }
 

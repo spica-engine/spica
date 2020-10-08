@@ -11,12 +11,15 @@ export interface TypeMeta {
 export interface ObjectMeta {
   metadata: {
     name: string;
+    creationTimestamp: string;
   };
 }
 
-export interface ResourceSpec<T = unknown> extends ObjectMeta, TypeMeta {
-  spec: T
+
+export interface Resource<SpecType = unknown> extends TypeMeta, ObjectMeta {
+  spec: SpecType
 }
+
 
 export interface ResourceDefinition {
   group: string;

@@ -1,7 +1,9 @@
 import { Action, Command, CreateCommandParameters } from "@caporal/core";
 import { ActionParameters } from "../interface";
 import { request } from "../request";
-import { ResourceDefinition, ResourceDefinitionVersion, ResourceSpec } from "./api-resources";
+import { ResourceDefinition, ResourceDefinitionVersion, Resource } from "./api-resources";
+import * as jsonpath from "jsonpath";
+import * as duration from "pretty-ms";
 
 async function get({args, logger}: ActionParameters) {
   const resources = await request.get<ResourceDefinition[]>("http://localhost:4300/apis");
@@ -19,15 +21,35 @@ async function get({args, logger}: ActionParameters) {
 
   const version = definition.versions.find(version => version.current);
   
-  const objects = await request.get<ResourceSpec[]>(`http://localhost:4300/apis/${definition.group}/${version.name}/${definition.names.plural}`);
+  const objects = await request.get<Resource[]>(`http://localhost:4300/apis/${definition.group}/${version.name}/${definition.names.plural}`);
 
-  logger.table(objects.map(object => {
+  const results = [];
+  const columns = ['NAME', 'AGE'];
+
+
+  for (const column of version.additionalPrinterColumns) {
+    columns.push(column.name.toLocaleUpperCase());
+  }
+
+
+  for (const object of objects) {
     const {spec, metadata} = object;
-    return {
+
+    const result: any = {
       NAME: metadata.name,
-      AGE: '12d'
+      AGE: duration( Date.now() - new Date(metadata.creationTimestamp).getTime(), {compact: true})
     }
-  }), ['NAME', 'STATUS', 'AGE']);
+
+    for (const column of version.additionalPrinterColumns) {
+      const name =  column.name.toLocaleUpperCase();
+      result[name] = jsonpath.query(object, `$${column.jsonPath}`);
+    }
+
+    results.push(result);
+  }
+
+  
+  logger.table(results, columns);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {

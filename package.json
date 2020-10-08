@@ -46,7 +46,7 @@
     "diff-match-patch": "^1.0.4",
     "dockerode": "^2.5.8",
     "@caporal/core": "^2.0.2",
-    "duration": "^0.2.2",
+    "pretty-ms": "^7.0.1",
     "fast-glob": "^2.2.6",
     "get-port": "^5.0.0",
     "semver": "^7.3.2",
@@ -130,6 +130,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "which": "^2.0.2",
     "got": "^11.3.0",
-    "@types/got": "^9.6.11"
+    "@types/got": "^9.6.11",
+    "jsonpath": "^1.0.2"
   }
 }

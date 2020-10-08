@@ -1,15 +1,15 @@
-
 apiVersion: bucket/v1
 kind: Schema
 metadata:
-  name: email
+  name: roles
 spec:
-  title: Emails
-  description: Email Queue
+  title: Roles
+  description: User roles
+  icon: outbond
   required:
-    - email
+    - name
   properties:
-    email:
+    name:
       type: string
     created_at:
       type: date
@@ -17,26 +17,41 @@ spec:
     updated_at:
       type: date
       default: :updated_at
-    delivered_at:
-      type: date
 ---
 apiVersion: bucket/v1
 kind: Schema
 metadata:
-  name: email
+  name: user
 spec:
-  title: Emails
-  description: Email Queue
+  title: Userss
+  description: Users
+  icon: perm_identity
   required:
     - email
   properties:
     email:
-      type: string
+      type: string  
+    role:
+      type: relation
+      bucket: 
+        valueFrom:
+          resourceFieldRef:
+            bucketName: roles
     created_at:
       type: date
       default: :created_at
     updated_at:
       type: date
       default: :updated_at
-    delivered_at:
+    activated_at:
       type: date
+---
+apiVersion: computing/v1
+kind: Function
+metadata:
+  name: test
+spec:
+  title: Email
+  description: Users
+  language: Javascript
+  code: ./functions/test.js

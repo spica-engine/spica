@@ -1,7 +1,7 @@
 import * as docker from "dockerode";
 import {Action, Command, CreateCommandParameters} from "@caporal/core";
 import {ActionParameters} from "../../interface";
-import Duration = require("duration");
+import * as duration from "pretty-ms";
 
 async function list({logger}: ActionParameters) {
 
@@ -38,7 +38,7 @@ async function list({logger}: ActionParameters) {
 
     if (api && spica && ingress) {
       instance.VERSION = api.Image.split(":")[1];
-      instance.AGE = new Duration(new Date(api.Created * 1000), new Date()).toString(1, 3);
+      instance.AGE = duration(new Date(api.Created * 1000).getTime())
 
       if (ingress.State == "running" && ingress.Ports.length) {
         const [port] = ingress.Ports;

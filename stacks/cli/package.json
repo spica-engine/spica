@@ -11,13 +11,14 @@
   "dependencies": {
     "colorette": "^1.2.1",
     "ora": "^5.1.0",
-    "duration": "^0.2.2",
+    "pretty-ms": "^7.0.1",
     "@caporal/core": "^2.0.2",
     "columnify": "^1.5.4",
     "dockerode": "^3.2.1",
     "get-port": "^5.0.0", 
     "node-fetch": "^2.6.0",
-    "yaml": "^1.8.3"
+    "yaml": "^1.8.3",
+    "jsonpath": "^1.0.2"
   },
   "devDependencies": {
     "@types/dockerode": "^2.5.34",

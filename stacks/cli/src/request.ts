@@ -57,6 +57,26 @@ export namespace request {
     );
   }
 
+
+  export async function put<T>(url: string, body?: object, headers?: HeaderInit): Promise<T> {
+    headers = headers || {};
+    headers["Content-type"] = "application/json";
+
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify(body),
+      headers: headers
+    };
+    return fetch(url, options).then(r =>
+      r.json().catch(e => {
+        if (e.type == "invalid-json") {
+          return Promise.resolve(r);
+        }
+        return Promise.reject(e);
+      })
+    );
+  }
+
   export async function del<T>(url: string, headers?: HeaderInit): Promise<T> {
     headers = headers || {};
     headers["Content-type"] = "application/json";
