@@ -11,7 +11,7 @@
     </ng-template>
   </ng-container>
   <ng-container *ngIf="!isTemplate">{{ options.templateOrDescription }}</ng-container>
-  <mat-form-field>
+  <mat-form-field [style.visibility]="options.noAnswer ? 'hidden' : 'visible'">
     <input
       matInput
       [placeholder]="options.answerHint || 'Answer'"
@@ -25,7 +25,11 @@
   <button mat-button [mat-dialog-close]="false">
     {{ options.cancelText || "Cancel" }}
   </button>
-  <button mat-button [disabled]="answerModel.value != options.answer" [mat-dialog-close]="true">
+  <button
+    mat-button
+    [disabled]="!options.noAnswer && answerModel.value != options.answer"
+    [mat-dialog-close]="true"
+  >
     {{ options.confirmText || "Confirm" }}
   </button>
 </mat-dialog-actions>
