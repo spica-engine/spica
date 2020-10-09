@@ -15,7 +15,7 @@ export class HttpQueue {
     return new Promise((resolve, reject) => {
       this.client.end(e, (error, event) => {
         if (error) {
-          reject(error.details);
+          reject(error);
         } else {
           resolve(event);
         }
@@ -51,7 +51,7 @@ export class HttpQueue {
     return new Promise((resolve, reject) => {
       this.client.pop(e, (error, event) => {
         if (error) {
-          reject(new Error(error.details));
+          reject(error);
         } else {
           resolve(event);
         }
@@ -157,9 +157,10 @@ export class Response {
   }
 
   write(chunk: string | Buffer, encoding?: BufferEncoding): Promise<void> {
-    const write = new Http.Write();
-    write.encoding = encoding;
-    write.data = new Uint8Array(chunk instanceof Buffer ? chunk : Buffer.from(chunk, encoding));
+    const write = new Http.Write({
+      encoding,
+      data: new Uint8Array(chunk instanceof Buffer ? chunk : Buffer.from(chunk, encoding))
+    });
     return this._write(write);
   }
 
@@ -201,10 +202,14 @@ export class Response {
     return this._writeHead(writeHead);
   }
 
-  end(data: string | Buffer, encoding?: BufferEncoding): Promise<void> {
-    const end = new Http.End();
-    end.encoding = encoding;
-    end.data = new Uint8Array(data instanceof Buffer ? data : Buffer.from(data, encoding));
+  end(data?: string | Buffer, encoding?: BufferEncoding): Promise<void> {
+    const end = new Http.End({
+      encoding,
+      data:
+        data != undefined
+          ? new Uint8Array(data instanceof Buffer ? data : Buffer.from(data, encoding))
+          : undefined
+    });
     return this._end(end);
   }
 }
