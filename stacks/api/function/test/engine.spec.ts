@@ -50,6 +50,8 @@ describe("Engine", () => {
     database = module.get(DatabaseService);
     mongo = module.get(MongoClient);
 
+
+
     engine = new FunctionEngine(
       new FunctionService(database),
       database,
@@ -136,6 +138,27 @@ describe("Engine", () => {
     expect(subscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[0]], [changes[1]]]);
   });
 
+  it("should set the handler when a handler is disabled", () => {
+    let changes: TargetChange[] = [
+      {
+        kind: ChangeKind.Updated,
+        target: {
+          id: "test_id",
+          handler: "test_handler"
+        }
+      },
+      {
+        kind: ChangeKind.Removed,
+        target: {
+          id: "test_id",
+          handler: "test_handler2"
+        }
+      }
+    ];
+    expect(unsubscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[1]]]);
+  })
+
+
   it("should create the scheduling context when subscribing", () => {
     const changes: TargetChange = {
       kind: ChangeKind.Added,
@@ -169,7 +192,6 @@ describe("Engine", () => {
       context: {env: [{key: "TEST", value: "true"}], timeout: 60}
     });
   });
-
   describe("Database Schema", () => {
     it("should get initial schema", async () => {
       let schema = await from(engine.getSchema("database"))

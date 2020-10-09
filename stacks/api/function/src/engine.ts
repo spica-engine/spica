@@ -15,6 +15,7 @@ import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
 
+
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
   readonly schemas = new Map<string, Schema>([
@@ -66,12 +67,12 @@ export class FunctionEngine implements OnModuleDestroy {
           break;
         case ChangeKind.Updated:
           if (changes.findIndex(c => c.target.id == change.target.id) == index) {
-            this.unsubscribe(path.join(this.options.root, change.target.id));
+            this.unsubscribe(change);
           }
           this.subscribe(change);
           break;
         case ChangeKind.Removed:
-          this.unsubscribe(path.join(this.options.root, change.target.id));
+          this.unsubscribe(change);
           break;
       }
     }
@@ -189,10 +190,12 @@ export class FunctionEngine implements OnModuleDestroy {
     }
   }
 
-  private unsubscribe(cwd: string) {
+  private unsubscribe(change: TargetChange) {
     for (const enqueuer of this.scheduler.enqueuers) {
       const target = new Event.Target({
-        cwd
+        id: change.target.id,
+        cwd: path.join(this.options.root, change.target.id),
+        handler: change.target.handler
       });
       enqueuer.unsubscribe(target);
     }
