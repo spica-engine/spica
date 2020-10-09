@@ -29,10 +29,10 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     callback: grpc.sendUnaryData<Http.Write.Result>
   ) {
     if (!this.streamMap.has(call.request.id)) {
-      callback(new Error(`write: Queue has no item with id ${call.request.id}`), undefined);
+      callback({code: 1}, undefined);
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
-      serverResponse.write(call.request.data, call.request.encoding, error =>
+      serverResponse.write(Buffer.from(call.request.data), call.request.encoding, error =>
         callback(error, error ? undefined : new Http.Write.Result())
       );
     }
@@ -43,7 +43,7 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     callback: grpc.sendUnaryData<Http.WriteHead.Result>
   ) {
     if (!this.streamMap.has(call.request.id)) {
-      callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
+      callback({code: 1}, undefined);
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
       serverResponse.writeHead(
@@ -71,13 +71,17 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     callback: grpc.sendUnaryData<Http.End.Result>
   ) {
     if (!this.streamMap.has(call.request.id)) {
-      callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
+      callback({code: 1}, undefined);
     } else {
       const serverResponse = this.streamMap.get(call.request.id);
       this.queue.delete(call.request.id);
-      serverResponse.end(Buffer.from(call.request.data), call.request.encoding, () => {
-        callback(undefined, new Http.End.Result());
-      });
+      if (call.request.data) {
+        serverResponse.end(Buffer.from(call.request.data), call.request.encoding, () => {
+          callback(undefined, new Http.End.Result());
+        });
+      } else {
+        serverResponse.end(() => callback(undefined, new Http.End.Result()));
+      }
     }
   }
 
@@ -86,7 +90,7 @@ export class HttpQueue extends Queue<typeof Http.Queue> {
     callback: grpc.sendUnaryData<Http.Request>
   ) {
     if (!this.queue.has(call.request.id)) {
-      callback(new Error(`Queue has no item with id ${call.request.id}`), undefined);
+      callback({code: 1}, undefined);
     } else {
       callback(undefined, this.queue.get(call.request.id));
       this.queue.delete(call.request.id);

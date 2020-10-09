@@ -28,7 +28,7 @@ describe("HttpQueue", () => {
     pop.id = "1";
     httpQueueClient.pop(pop, (e, req) => {
       expect(e).not.toBeUndefined();
-      expect(e.message).toBe("2 UNKNOWN: Queue has no item with id 1");
+      expect(e.message).toBe("1 CANCELLED: Unknown Error");
       expect(req).toBeUndefined();
       done();
     });
