@@ -50,8 +50,6 @@ describe("Engine", () => {
     database = module.get(DatabaseService);
     mongo = module.get(MongoClient);
 
-
-
     engine = new FunctionEngine(
       new FunctionService(database),
       database,
@@ -156,8 +154,7 @@ describe("Engine", () => {
       }
     ];
     expect(unsubscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[1]]]);
-  })
-
+  });
 
   it("should create the scheduling context when subscribing", () => {
     const changes: TargetChange = {

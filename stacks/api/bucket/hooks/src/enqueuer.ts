@@ -85,7 +85,6 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
   }
 
   subscribe(target: Event.Target, options: ReviewOrChangeOptions) {
-    console.log(target.toObject());
     if (options.phase == "BEFORE") {
       const handler = (callback, headers, document) => {
         const event = new Event.Event({
@@ -134,7 +133,6 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
   }
 
   unsubscribe(target: Event.Target) {
-    console.log("unsb",target.toObject());
     for (const [actionTarget, {handler, options}] of this.reviewTargets) {
       if (
         (!target.handler && actionTarget.cwd == target.cwd) ||
