@@ -65,7 +65,7 @@ export class PassportService {
           return this.http.get(`api:/passport/identify`, {params: {state: res.state}});
         }),
         tap(response => {
-          this.token = response.token;
+          this.token = `${response.scheme} ${response.token}`;
           this._statements = undefined;
         })
       );

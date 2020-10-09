@@ -26,6 +26,7 @@ describe("Strategies Add Component", () => {
     strategiesService = {
       getStrategy: jasmine.createSpy("getStrategies").and.returnValue(
         of({
+          _id: "1",
           type: "strategy type",
           name: "strategy name",
           title: "strategy title",
@@ -179,7 +180,8 @@ describe("Strategies Add Component", () => {
       fixture.detectChanges();
 
       expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith({
+      expect(updateSpy).toHaveBeenCalledWith("1", {
+        _id: "1",
         type: "strategy type",
         name: "new name",
         title: "new title",
@@ -204,10 +206,9 @@ describe("Strategies Add Component", () => {
 
   describe("errors", () => {
     it("should show certificate error", fakeAsync(() => {
-      const updateSpy = spyOn(
-        fixture.componentInstance["strategyService"],
-        "updateStrategy"
-      ).and.returnValue(throwError(null));
+      spyOn(fixture.componentInstance["strategyService"], "updateStrategy").and.returnValue(
+        throwError(null)
+      );
 
       fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
       tick();

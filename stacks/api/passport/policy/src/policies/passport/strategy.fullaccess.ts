@@ -14,6 +14,10 @@ export default {
       module: "passport:strategy"
     },
     {
+      action: "passport:strategy:insert",
+      module: "passport:strategy"
+    },
+    {
       action: "passport:strategy:delete",
       resource: {
         include: "*"

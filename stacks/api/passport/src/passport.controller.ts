@@ -12,11 +12,13 @@ import {
   Param,
   Post,
   Query,
-  UnauthorizedException
+  UnauthorizedException,
+  UseInterceptors
 } from "@nestjs/common";
 import {Identity, IdentityService} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
+import {UrlEncodedBodyParser} from "./body";
 import {SamlService} from "./saml.service";
 import {StrategyService} from "./strategy/strategy.service";
 
@@ -88,12 +90,9 @@ export class PassportController {
   }
 
   @Get("strategies")
-  findAllStrategies() {
-    return this.strategy
-      .find()
-      .then(strategies =>
-        strategies.map(({_id, name, icon, type, title}) => ({_id, name, icon, type, title}))
-      );
+  async strategies() {
+    const strategies = await this.strategy.find();
+    return strategies.map(({_id, name, icon, type, title}) => ({_id, name, icon, type, title}));
   }
 
   @Get("strategy/:name/url")
@@ -120,8 +119,13 @@ export class PassportController {
   }
 
   @Post("strategy/:name/complete")
+  @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
-  complete(@Param("name") name: string, @Body() body, @Query("state") stateId: string) {
+  async complete(
+    @Param("name") name: string,
+    @Body() body: unknown,
+    @Query("state") stateId: string
+  ) {
     if (!stateId) {
       throw new BadRequestException("state query parameter is required.");
     }
@@ -129,9 +133,11 @@ export class PassportController {
       throw new BadRequestException("Authentication has failed due to invalid state.");
     }
     const observer = this.assertObservers.get(stateId);
-    return this.saml
-      .assert(name, body)
-      .then(identity => observer.next(identity))
-      .catch(error => observer.error(error));
+    try {
+      const identity = await this.saml.assert(name, body);
+      return observer.next(identity);
+    } catch (error) {
+      return observer.error(error);
+    }
   }
 }
