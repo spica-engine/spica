@@ -102,7 +102,7 @@ describe("Policy Add Component", () => {
         expect(statement).toEqual({resource: [], action: "bucket:show", module: "bucket"});
       });
 
-      it("should set statement resource with include and exclude fields when selection is include_exclude", () => {
+      it("should set statement resource with include and exclude fields when selection is exclude", () => {
         fixture.componentInstance.services = {
           "bucket:data": {
             "bucket:data:create": ["bucket_id"],

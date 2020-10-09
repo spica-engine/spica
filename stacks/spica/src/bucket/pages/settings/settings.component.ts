@@ -28,7 +28,9 @@ export class SettingsComponent implements OnInit {
   }
 
   remove(code: string) {
-    delete this.settings.language.available[code];
+    if (this.settings.language.default != code) {
+      delete this.settings.language.available[code];
+    }
   }
 
   updateSettings(): void {
