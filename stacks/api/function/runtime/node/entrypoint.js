@@ -67,27 +67,43 @@ if (!process.env.WORKER_ID) {
   switch (event.type) {
     case Event.Type.HTTP:
       const httpQueue = new HttpQueue();
-      const httpPop = new Http.Request.Pop();
-      httpPop.id = event.id;
-      const request = await httpQueue.pop(httpPop);
-      callArguments[0] = new Request(request);
-      const response = (callArguments[1] = new Response(
-        async e => {
-          e.id = event.id;
-          await httpQueue.writeHead(e);
-        },
-        async e => {
-          e.id = event.id;
-          await httpQueue.write(e);
-        },
-        async e => {
-          e.id = event.id;
-          await httpQueue.end(e);
+      const httpPop = new Http.Request.Pop({
+        id: event.id
+      });
+
+      const handleRejection = error => {
+        if (error && "code" in error && error.code == 1) {
+          error.details = `The http request "${event.id}" handled through "${event.target.handler}" has been cancelled by the user.`;
+          console.error(error.details);
+          return Promise.reject(error.details);
         }
-      ));
+        return Promise.reject(error);
+      };
+
+      const request = await httpQueue.pop(httpPop).catch(handleRejection);
+      const response = new Response(
+        e => {
+          e.id = event.id;
+          return httpQueue.writeHead(e).catch(handleRejection);
+        },
+        e => {
+          e.id = event.id;
+          return httpQueue.write(e).catch(handleRejection);
+        },
+        e => {
+          e.id = event.id;
+          return httpQueue.end(e).catch(handleRejection);
+        }
+      );
+
+      callArguments[0] = new Request(request);
+      callArguments[1] = response;
+
       callback = async result => {
         if (!response.headersSent && result != undefined) {
-          result = await result;
+          if (result instanceof Promise) {
+            result = await result;
+          }
           if (result != undefined && !response.headersSent) {
             response.send(result);
           }
