@@ -26,7 +26,6 @@
     margin: 0px 24px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
   }
 
   div.row {
@@ -90,6 +89,10 @@
         align-self: center;
       }
     }
+  }
+
+  .dismiss-button {
+    float: right;
   }
 }
 

@@ -134,7 +134,7 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
   }
 
   unsubscribe(target: Event.Target) {
-    console.log("unsb",target.toObject());
+    console.log("unsb", target.toObject());
     for (const [actionTarget, {handler, options}] of this.reviewTargets) {
       if (
         (!target.handler && actionTarget.cwd == target.cwd) ||
