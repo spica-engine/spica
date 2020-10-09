@@ -7,6 +7,7 @@ ts_library(
     name = "bucket",
     srcs = glob([
         "src/*.ts",
+        "src/graphql/graphql.ts",
         "index.ts",
     ]),
     data = glob(["src/schemas/*.json"]),
@@ -33,10 +34,10 @@ ts_library(
         "@npm//cron",
         "@npm//locale",
         "@npm//rxjs",
-        "@npm//express-graphql",
         "@npm//graphql",
-        "@npm//express",
         "@npm//graphql-tools",
+        "@npm//express-graphql",
+        "@npm//json-merge-patch"
     ],
 )
 
