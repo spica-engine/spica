@@ -149,10 +149,15 @@ function createActionGuard(
 
       if (response.header) {
         response.header("X-Policy-Module", resourceAndModule.module);
-        response.header(
-          "X-Policy-Resource",
-          !hasResourceFilter ? resourceAndModule.resource.join("/") : "partial"
-        );
+        response.header("X-Policy-Action", actions.join(", "));
+
+        if (resourceAndModule.resource.length) {
+          response.header("X-Policy-Resource", resourceAndModule.resource.join("/"));
+        }
+
+        if (hasResourceFilter) {
+          response.header("X-Policy-Resource", "partial");
+        }
       }
 
       let result = false;

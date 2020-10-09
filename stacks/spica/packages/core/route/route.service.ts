@@ -13,18 +13,20 @@ import {
 import {Route, RouteFilter} from "./route";
 import {RouteAction, RouteState, selectRoutes} from "./route.reducer";
 
+function wrap<T>(value: T | Promise<T> | Observable<T>) {
+  if (isObservable(value)) {
+    return value.pipe(first());
+  }
+  if (value instanceof Promise) {
+    return from(Promise.resolve(value));
+  }
+  return of(value);
+}
+
 export class RouteService {
-  public readonly routes: Observable<Route[]>;
+  readonly routes: Observable<Route[]>;
+
   constructor(private store: Store<RouteState>, private filters: RouteFilter[]) {
-    function wrap<T>(value: T | Promise<T> | Observable<T>) {
-      if (isObservable(value)) {
-        return value.pipe(first());
-      }
-      if (value instanceof Promise) {
-        return from(Promise.resolve(value));
-      }
-      return of(value);
-    }
     this.routes = store.select(selectRoutes).pipe(
       switchMap(routes =>
         from(routes).pipe(

@@ -14,7 +14,11 @@ export class StrategyService {
     return this.http.get<Strategy>(`api:/passport/strategy/${id}`);
   }
 
-  updateStrategy(strategy: Strategy) {
+  updateStrategy(id: string, strategy: Strategy) {
+    return this.http.put<Strategy>(`api:/passport/strategy/${id}`, strategy);
+  }
+
+  addStrategy(strategy: Strategy) {
     return this.http.post<Strategy>(`api:/passport/strategy`, strategy);
   }
 

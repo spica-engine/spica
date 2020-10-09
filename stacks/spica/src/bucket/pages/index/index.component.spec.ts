@@ -257,7 +257,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "Select", "id", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "Select", "_id", "test", "Scheduled", "Actions"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -314,7 +314,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "id", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "_id", "test", "Scheduled", "Actions"]);
       });
 
       it("should check visible columns by default", fakeAsync(() => {
