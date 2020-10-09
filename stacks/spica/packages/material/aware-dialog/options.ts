@@ -8,4 +8,5 @@ export interface MatAwareDialogOptions {
   answerHint?: string;
   confirmText?: string;
   cancelText?: string;
+  noAnswer?: boolean;
 }
