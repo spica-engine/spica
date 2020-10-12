@@ -1,19 +1,21 @@
 import {graphqlHTTP} from "express-graphql";
 import {HttpAdapterHost} from "@nestjs/core";
 import {Injectable, UnauthorizedException, Optional, PipeTransform} from "@nestjs/common";
-import {BucketDataService} from "../bucket-data.service";
 import {ObjectID, ObjectId} from "@spica-server/database";
 import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {GraphQLScalarType, GraphQLSchema, ValueNode} from "graphql";
 
 import {makeExecutableSchema, mergeTypeDefs, mergeResolvers} from "graphql-tools";
-import {hasTranslatedProperties, findLocale, buildI18nAggregation, Locale} from "../locale";
-import {buildRelationAggregation, clearRelations, createHistory} from "../utility";
 import {GuardService} from "@spica-server/passport";
 import {HistoryService} from "@spica-server/bucket/history";
 import {createActivity, ActivityService} from "@spica-server/activity/services";
 import {createBucketDataActivity} from "../activity.resource";
 import {Schema, Validator} from "@spica-server/core/schema";
+import {getBucketName, createSchema} from "./schema";
+import {BucketDataService} from "../bucket-data.service";
+import {Locale, hasTranslatedProperties, findLocale, buildI18nAggregation} from "../locale";
+import {buildRelationAggregation, createHistory, clearRelations} from "../utility";
+import {diff, Change, ChangeKind} from "@spica-server/bucket/history/differ";
 
 const JsonMergePatch = require("json-merge-patch");
 
@@ -101,8 +103,6 @@ export class GraphqlEnpointHandler {
     }
   });
 
-  extraInterfaces = "";
-
   constructor(
     private adapterHost: HttpAdapterHost,
     private bs: BucketService,
@@ -119,7 +119,7 @@ export class GraphqlEnpointHandler {
 
       if (buckets.length) {
         //typeDefs
-        this.typeDefs = buckets.map(bucket => this.createSchema(bucket));
+        this.typeDefs = buckets.map(bucket => createSchema(bucket));
         this.typeDefs.push(this.staticTypes);
 
         //resolvers
@@ -164,190 +164,19 @@ export class GraphqlEnpointHandler {
     );
   }
 
-  //schema methods
-  createSchema(bucket: Bucket) {
-    this.extraInterfaces = "";
-    let name = this.getBucketName(bucket._id);
-    let schema = `
-
-      type ${name}FindResponse{
-        meta: Meta
-        entries: [${name}Entry]
-      }
-
-      type ${name}Entry{
-        _id: ObjectID
-        ${this.createProperties(bucket, Definition.Type)}
-      }
-
-      type Query{
-        ${name}Find(limit: Int, skip: Int, sort: JSON ,language: String, query: JSON): ${name}FindResponse
-        ${name}FindById(_id: ObjectID!, language: String):${name}Entry
-      }
-
-      type Mutation{
-        insert${name}Entry(input: ${name}Input): ${name}Entry
-        replace${name}Entry(_id: ObjectID!, input: ${name}Input): ${name}Entry
-        patch${name}Entry(_id: ObjectID!, input: JSON): ${name}Entry
-        delete${name}Entry(_id: ObjectID!): Boolean
-      }
-
-      input ${name}Input{
-        ${this.createProperties(bucket, Definition.Input)}
-      }
-    `;
-
-    schema = schema + this.extraInterfaces;
-
-    return schema;
-  }
-
-  createProperties(bucket: Bucket, definition: Definition) {
-    return Object.keys(bucket.properties).reduce((acc, key) => {
-      let requiredSymbol = "";
-      if (bucket.required && bucket.required.includes(key)) {
-        requiredSymbol = "!";
-      }
-      acc =
-        acc +
-        `
-      ${key}: ${this.createType(
-          bucket._id,
-          bucket.properties[key],
-          key,
-          definition
-        )}${requiredSymbol}
-      `;
-      return acc;
-    }, "");
-  }
-
-  createObjectSchema(
-    bucketId: ObjectId,
-    property: any,
-    propertyKey: string,
-    definition: Definition
-  ) {
-    let defName = this.getBucketName(bucketId) + "_" + propertyKey;
-
-    if (definition == Definition.Input) {
-      defName = defName + "Input";
-    }
-
-    let schema = `
-      ${definition} ${defName}{
-        ${this.createObjectProperties(bucketId, property, propertyKey, definition)}
-      }
-    `;
-    this.extraInterfaces = this.extraInterfaces + schema;
-  }
-
-  createObjectProperties(
-    bucketId: ObjectId,
-    property: any,
-    propertyKey: string,
-    definition: Definition
-  ) {
-    return Object.keys(property.properties).reduce((acc, key) => {
-      let requiredSymbol = "";
-      if (property.required && property.required.includes(key)) {
-        requiredSymbol = "!";
-      }
-      acc =
-        acc +
-        `
-      ${key}: ${this.createType(
-          bucketId,
-          property.properties[key],
-          propertyKey + "_" + key,
-          definition
-        )}${requiredSymbol}
-      `;
-      return acc;
-    }, "");
-  }
-
-  createEnum(bucketId: ObjectId, propertyKey: string, values: string[]) {
-    let defName = this.getBucketName(bucketId) + "_" + propertyKey;
-    let schema = `
-      enum ${defName}{
-        ${values.join(",")}
-      }
-    `;
-    this.extraInterfaces = this.extraInterfaces + schema;
-  }
-
-  createType(bucketId: ObjectID, property: any, propertyKey: string, definition: Definition) {
-    if (property.enum && property.enum.length) {
-      //we dont need to create enum for inputs
-      if (definition == Definition.Type) {
-        this.createEnum(bucketId, propertyKey, property.enum);
-      }
-      return this.getBucketName(bucketId) + "_" + propertyKey;
-    }
-    switch (property.type) {
-      case "array":
-        return `[${this.createType(bucketId, property.items, propertyKey, definition)}]`;
-
-      case "object":
-        this.createObjectSchema(bucketId, property, propertyKey, definition);
-
-        let defName = this.getBucketName(bucketId) + "_" + propertyKey;
-
-        //inputs cannot include type, it must be input
-        if (definition == Definition.Input) {
-          defName = defName + "Input";
-        }
-
-        return defName;
-
-      case "date":
-        return "Date";
-
-      case "number":
-        return "Int";
-
-      case "boolean":
-        return "Boolean";
-
-      case "location":
-        return definition == Definition.Type ? "Location" : "LocationInput";
-
-      case "relation":
-        let relatedBucket = this.buckets.find(bucket => bucket._id == property.bucketId);
-        let relatedDefName = "String";
-
-        if (relatedBucket) {
-          //mutations inputs should be string or string array for relation fields
-          relatedDefName =
-            definition == Definition.Type
-              ? `${this.getBucketName(relatedBucket._id)}Entry`
-              : "String";
-        }
-
-        return property.relationType == "onetoone" ? relatedDefName : `[${relatedDefName}]`;
-
-      case "string":
-        return "String";
-
-      default:
-        return "String";
-    }
-  }
-
   createResolver(bucket: Bucket) {
-    let name = this.getBucketName(bucket._id);
+    let name = getBucketName(bucket._id);
     let resolver = {
       Query: {
-        [`${name}Find`]: this.find(bucket),
-        [`${name}FindById`]: this.findById(bucket)
+        [`Find${name}`]: this.find(bucket),
+        [`FindBy${name}Id`]: this.findById(bucket)
       },
 
       Mutation: {
-        [`insert${name}Entry`]: this.insertEntry(bucket),
-        [`replace${name}Entry`]: this.replaceEntry(bucket),
-        [`patch${name}Entry`]: this.patchEntry(bucket),
-        [`delete${name}Entry`]: this.deleteEntry(bucket)
+        [`insert${name}`]: this.insert(bucket),
+        [`replace${name}`]: this.replace(bucket),
+        [`patch${name}`]: this.patch(bucket),
+        [`delete${name}`]: this.delete(bucket)
       }
     };
 
@@ -384,7 +213,7 @@ export class GraphqlEnpointHandler {
       }
 
       if (query && Object.keys(query).length) {
-        let matchExpression = this.extractExpressionFromQuery(bucket, query);
+        let matchExpression = AggregationExtractor.extract(bucket, query);
         if (matchExpression && Object.keys(matchExpression).length) {
           subAggregation.push({$match: matchExpression});
         }
@@ -452,7 +281,7 @@ export class GraphqlEnpointHandler {
     };
   }
 
-  insertEntry(bucket: Bucket): Function {
+  insert(bucket: Bucket): Function {
     return async (root, {input}, context): Promise<BucketDocument> => {
       // await this.guardService.checkAuthorization({
       //   request: context,
@@ -479,7 +308,7 @@ export class GraphqlEnpointHandler {
     };
   }
 
-  replaceEntry(bucket: Bucket): Function {
+  replace(bucket: Bucket): Function {
     return async (root, {_id, input}, context): Promise<BucketDocument> => {
       // await this.guardService.checkAuthorization({
       //   request: context,
@@ -519,7 +348,7 @@ export class GraphqlEnpointHandler {
     };
   }
 
-  patchEntry(bucket: Bucket): Function {
+  patch(bucket: Bucket): Function {
     return async (root, {_id, input}, context) => {
       // await this.guardService.checkAuthorization({
       //   request: context,
@@ -527,15 +356,58 @@ export class GraphqlEnpointHandler {
       // });
       let document = await this.bds.findOne(bucket._id, {_id});
 
-      let patchedDocument = JsonMergePatch.apply(document, input);
+      //ignore id changes
+      delete document._id;
+      delete input._id;
 
-      let replace = this.replaceEntry(bucket);
+      let copiedDocument = JSON.parse(JSON.stringify(document));
+      let copiedInput = JSON.parse(JSON.stringify(input));
 
-      return replace(root, {_id, input: patchedDocument}, context);
+      let patchedDocument = JsonMergePatch.apply(copiedDocument, copiedInput);
+
+      //console.log(document);
+      //console.log(patchedDocument);
+
+      let changes = diff(document, patchedDocument);
+
+      let unsets = changes
+        .filter(change => change.kind == ChangeKind.Delete)
+        .map(change => change.path.join("."));
+
+        
+
+      console.log(unsets);
+      //console.log(changes);
+
+      //console.log(patchedDocument);
+
+      let sets = [];
+
+      changes
+        .filter(change => change.kind != ChangeKind.Delete)
+        .map(change => change.path)
+        .forEach(path => {
+          let result = path.reduce((acc, curr) => {
+            acc = acc[curr];
+            return acc;
+          }, patchedDocument);
+
+          sets.push({
+            $set: {
+              [path.join(".")]: result
+            }
+          });
+        });
+
+        this.bds.updateOne(bucket._id,{_id},)
+
+      let replace = this.replace(bucket);
+
+      return replace(root, {_id, input: document}, context);
     };
   }
 
-  deleteEntry(bucket: Bucket): Function {
+  delete(bucket: Bucket): Function {
     return async (root, {_id}, context): Promise<Boolean> => {
       // await this.guardService.checkAuthorization({
       //   request: context,
@@ -584,9 +456,22 @@ export class GraphqlEnpointHandler {
     );
   }
 
-  //aggregation helpers
-  extractExpressionFromQuery(bucket: Bucket, query: object) {
-    //example query => { OR: [ { title:"my_title" } , { age_gt : 21 }  ] }
+  validateInput(bucketId: ObjectId, input: BucketDocument) {
+    let pipe: any = this.validatorPipes.get(bucketId);
+
+    if (!pipe) {
+      let validatorMixin = Schema.validate(bucketId.toHexString());
+      pipe = new validatorMixin(this.validator);
+      this.validatorPipes.set(bucketId, pipe);
+    }
+
+    return pipe.transform(input);
+  }
+}
+
+export namespace AggregationExtractor {
+  export function extract(bucket: Bucket, query: object): object {
+    //example query => { OR: [ { title: "my_title" } , { age_gt : 21 }  ] }
     //expected aggregation => { $or: [ { title:"my_title" } , $gt: { age: 21 } ] }
     let bucketProperties = {...bucket.properties, _id: {type: "objectid"}};
 
@@ -598,7 +483,7 @@ export class GraphqlEnpointHandler {
         let operator = `$${key.toLowerCase()}`;
         query[key].forEach(condition => {
           //each condition is query, for example, it may include or operator inside of or
-          let conditionExpression = this.extractExpressionFromQuery(bucket, condition);
+          let conditionExpression = extract(bucket, condition);
 
           if (conditionExpression && Object.keys(conditionExpression).length) {
             conditions.push(conditionExpression);
@@ -611,7 +496,7 @@ export class GraphqlEnpointHandler {
           };
         }
       } else {
-        let inner_expression = this.createExpression(key, query[key], bucketProperties);
+        let inner_expression = createExpression(key, query[key], bucketProperties);
         if (inner_expression) {
           expression = inner_expression;
         }
@@ -623,32 +508,7 @@ export class GraphqlEnpointHandler {
     return matchExpression;
   }
 
-  validateInput(bucketId: ObjectId, input: BucketDocument) {
-    let pipe: any = this.validatorPipes.get(bucketId);
-
-    if (!pipe) {
-      let validatorMixin = Schema.validate(bucketId.toHexString());
-      pipe = new validatorMixin(this.validator);
-      this.validatorPipes.set(bucketId, pipe);
-    }
-
-    return pipe.transform(input);
-  }
-
-  castToOriginalType(value: any, property: any): unknown {
-    switch (property.type) {
-      case "date":
-        return new Date(value);
-      case "objectid":
-        return new ObjectID(value);
-      case "array":
-        return value.map(val => this.castToOriginalType(val, property.items));
-      default:
-        return value;
-    }
-  }
-
-  createExpression(key: string, value: any, bucketProperties: any): object {
+  export function createExpression(key: string, value: any, bucketProperties: any): object {
     //case => { title:"test" }
     //output => { title:"test" }
     let desiredProperty = Object.keys(bucketProperties).find(
@@ -656,7 +516,7 @@ export class GraphqlEnpointHandler {
     );
 
     if (desiredProperty) {
-      value = this.castToOriginalType(value, bucketProperties[desiredProperty]);
+      value = castToOriginalType(value, bucketProperties[desiredProperty]);
       return {
         [desiredProperty]: value
       };
@@ -670,7 +530,7 @@ export class GraphqlEnpointHandler {
       );
 
       if (desiredProperty && operator) {
-        value = this.castToOriginalType(value, bucketProperties[desiredProperty]);
+        value = castToOriginalType(value, bucketProperties[desiredProperty]);
         return {
           [desiredProperty]: {
             [`$${operator}`]: value
@@ -680,8 +540,17 @@ export class GraphqlEnpointHandler {
     }
   }
 
-  getBucketName(uniqueField: string | ObjectId): string {
-    return `Bucket_${uniqueField.toString()}`;
+  export function castToOriginalType(value: any, property: any): unknown {
+    switch (property.type) {
+      case "date":
+        return new Date(value);
+      case "objectid":
+        return new ObjectID(value);
+      case "array":
+        return value.map(val => castToOriginalType(val, property.items));
+      default:
+        return value;
+    }
   }
 }
 

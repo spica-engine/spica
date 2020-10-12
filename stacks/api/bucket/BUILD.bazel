@@ -8,6 +8,7 @@ ts_library(
     srcs = glob([
         "src/*.ts",
         "src/graphql/graphql.ts",
+        "src/graphql/schema.ts",
         "index.ts",
     ]),
     data = glob(["src/schemas/*.json"]),
