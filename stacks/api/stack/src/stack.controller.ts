@@ -13,34 +13,30 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {Resource, ResourceDefinition} from "./definition";
-import {definitions} from "./definitions";
 import {PatchBodyParser} from "./patch";
+import { findSchemeByGroupAndResource, makeKey } from "./scheme";
 import {alreadyExists, isStatusKind, notFound, status} from "./status";
 
-function doesTheNameMatchDefinition(name: string, definition: ResourceDefinition) {
-  return definition.names.plural == name;
-}
-
-function getVersion(version: string, definition: ResourceDefinition) {
-  return definition.versions.find(def => def.name == version);
-}
 
 function setMetadataFields(resource: Resource) {
-  if (! resource.metadata.creationTimestamp ) {
+  if (!resource.metadata.creationTimestamp) {
     resource.metadata.creationTimestamp = new Date().toISOString();
   }
 }
 
 function callNotifiers(resource: Resource, objects: Map<string, Resource<unknown>>) {
-  return globalThis['notify'](resource, objects);
+  return globalThis["notify"](resource, objects);
 }
 
-
-function reviewBucketSchema(definition: ResourceDefinition, objects: Map<string, Resource<unknown>>, resource: Resource<any>) {
+function reviewBucketSchema(
+  definition: ResourceDefinition,
+  objects: Map<string, Resource<unknown>>,
+  resource: Resource<any>
+) {
   const {spec, metadata} = resource;
   for (const propertyName in spec.properties) {
     const property = spec.properties[propertyName];
-    if ( property.type == "relation" && typeof property.bucket == 'object' ) {
+    if (property.type == "relation" && typeof property.bucket == "object") {
       const bucketName = property.bucket.valueFrom.resourceFieldRef.bucketName;
       // TODO: handle downwards resources via generic function
       if (!objects.has(bucketName)) {
@@ -54,18 +50,6 @@ function reviewBucketSchema(definition: ResourceDefinition, objects: Map<string,
       }
     }
   }
-
-  console.log('end');
-}
-
-function getResourceDefinitionAndVersionAndKey(definitions: ResourceDefinition[],  group: string, versionName: string, resourceName: string) {
-  console.log(group, versionName, resourceName);
-  const definition = definitions.find(def => doesTheNameMatchDefinition(resourceName, def));
-  const key = `${definition.group}/${definition.names.plural}`;
-  return {
-    definition,
-    key
-  }
 }
 
 
@@ -73,13 +57,13 @@ function getResourceDefinitionAndVersionAndKey(definitions: ResourceDefinition[]
 export class StatusFilter implements ExceptionFilter {
   catch(exceptionOrStatus: unknown, host: ArgumentsHost) {
     const response = host.switchToHttp().getResponse<any>();
-    if ( !isStatusKind(exceptionOrStatus) ) {
+    if (!isStatusKind(exceptionOrStatus)) {
       exceptionOrStatus = status({
         code: 500,
-        message: exceptionOrStatus['message'] ? exceptionOrStatus['message'] : "unknown error",
-        status: 'Failure',
+        message: exceptionOrStatus["message"] ? exceptionOrStatus["message"] : "unknown error",
+        status: "Failure",
         reason: "InternalError"
-      }) 
+      });
     }
 
     if (isStatusKind(exceptionOrStatus)) {
@@ -91,8 +75,6 @@ export class StatusFilter implements ExceptionFilter {
 @UseFilters(new StatusFilter())
 @Controller("apis")
 export class StackController {
-
-
   store = new Map<string, Map<string, Resource<unknown>>>();
 
   // healthz
@@ -100,9 +82,36 @@ export class StackController {
   // metrics
 
   @Get()
-  definitions() {
+  apiGroups() {
     return definitions;
   }
+
+  // @Get(":group")
+  // apiGroup(@Param("group") groupName: string) {
+  //   return {
+  //     kind: "APIGroup",
+  //     apiVersion: "v1",
+  //     name: groupName,
+  //     versions: ["v1beta2"]
+  //   };
+  // }
+
+  // @Get(":group/:version")
+  // apiResources(@Param("group") groupName: string, @Param("version") version: string) {
+  //   return {
+  //     kind: "APIResourceList",
+  //     apiVersion: "v1",
+  //     groupVersion: version,
+  //     resources: [
+  //       {
+  //         name: "managedcertificates",
+  //         singularName: "managedcertificate",
+  //         kind: "ManagedCertificate",
+  //         shortNames: ["mcrt"]
+  //       }
+  //     ]
+  //   };
+  // }
 
   @Get(":group/:version/:resource")
   list(
@@ -110,7 +119,7 @@ export class StackController {
     @Param("version") versionName: string,
     @Param("resource") resourceName: string
   ) {
-    const {key} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
+    const key = makeKey(group, resourceName)
 
     const objects = this.store.has(key) ? this.store.get(key) : new Map();
 
@@ -124,7 +133,13 @@ export class StackController {
     @Param("resource") resourceName: string,
     @Param("name") objectName: string
   ) {
-    const {key} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
+    const groupAndResource = {
+      group,
+      resource: resourceName
+    };
+
+    const key = makeKey(groupAndResource)
+
 
     const objects = this.store.has(key) ? this.store.get(key) : new Map();
 
@@ -134,13 +149,23 @@ export class StackController {
   @Post(":group/:version/:resource")
   async add(
     @Param("group") group: string,
-    @Param("version") versionName: string,
+    @Param("version") version: string,
     @Param("resource") resourceName: string,
     @Body() object: Resource
   ) {
-    const {key, definition} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
 
-    const objects = this.store.has(key) ? this.store.get(key) : this.store.set(key, new Map<string, Resource<unknown>>()).get(key);
+    const groupAndResource = {
+      group,
+      resource: resourceName
+    };
+
+    const key = makeKey(groupAndResource)
+
+    const {definition} = findSchemeByGroupAndResource(groupAndResource);
+
+    const objects = this.store.has(key)
+      ? this.store.get(key)
+      : this.store.set(key, new Map<string, Resource<unknown>>()).get(key);
 
     const objectName = object.metadata.name;
 
@@ -173,9 +198,18 @@ export class StackController {
     @Param("name") objectName: string,
     @Body() object: Resource
   ) {
-    const {key, definition} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
+    const groupAndResource = {
+      group,
+      resource: resourceName
+    };
 
-    const objects = this.store.has(key) ? this.store.get(key) : this.store.set(key, new Map<string, Resource<unknown>>()).get(key);
+    const key = makeKey(groupAndResource)
+
+    const {definition} = findSchemeByGroupAndResource(groupAndResource);
+
+    const objects = this.store.has(key)
+      ? this.store.get(key)
+      : this.store.set(key, new Map<string, Resource<unknown>>()).get(key);
 
     if (!objects.has(objectName)) {
       throw notFound({
@@ -211,7 +245,14 @@ export class StackController {
     @Param("name") objectName: string,
     @Body() object: Resource
   ) {
-    const {key, definition} = getResourceDefinitionAndVersionAndKey(definitions, group, versionName, resourceName);
+    const groupAndResource = {
+      group,
+      resource: resourceName
+    };
+
+    const key = makeKey(groupAndResource)
+
+    const {definition} = findSchemeByGroupAndResource(groupAndResource);
 
     const objects = this.store.has(key) ? this.store.get(key) : new Map();
 

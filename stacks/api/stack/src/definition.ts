@@ -1,5 +1,4 @@
 import {JSONSchema7} from "json-schema";
-import { DefinitionInfo } from "typescript";
 
 export interface TypeMeta {
   kind: string;
@@ -42,11 +41,4 @@ export interface AdditionalPrinterColumn {
   type: string;
   description: string;
   jsonPath: string;
-}
-
-
-export interface Scheme {
-  definition: ResourceDefinition;
-  prepareForUpdate(): void;
-  prepareForCreate(): void;
 }
