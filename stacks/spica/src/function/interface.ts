@@ -156,7 +156,7 @@ export interface WebhookLog {
     response?: object;
     error?: string;
   };
-  execution_time: Date;
+  created_at: Date;
 }
 
 export interface WebhookLogFilter {

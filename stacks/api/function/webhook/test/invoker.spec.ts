@@ -1,6 +1,6 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
-import {WebhookService} from "@spica-server/function/webhook";
+import {WebhookService, WEBHOOK_OPTIONS} from "@spica-server/function/webhook";
 import {WebhookInvoker} from "@spica-server/function/webhook/src/invoker";
 import {WebhookLogService} from "@spica-server/function/webhook/src/log.service";
 import * as __fetch__ from "node-fetch";
@@ -31,7 +31,17 @@ describe("Webhook Invoker", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
-      providers: [WebhookInvoker, WebhookService, WebhookLogService]
+      providers: [
+        WebhookInvoker,
+        WebhookService,
+        WebhookLogService,
+        {
+          provide: WEBHOOK_OPTIONS,
+          useValue: {
+            expireAfterSeconds: 5
+          }
+        }
+      ]
     }).compile();
 
     service = module.get(WebhookService);
@@ -43,6 +53,8 @@ describe("Webhook Invoker", () => {
     subscribeSpy = spyOn(invoker, "subscribe" as never).and.callThrough();
     unsubscribeSpy = spyOn(invoker, "unsubscribe" as never).and.callThrough();
     fetchSpy = spyOn(__fetch__, "default").and.returnValue(Promise.resolve(mockHttpResponse));
+
+    await new Promise(resolve => setTimeout(() => resolve(), 2000));
   }, 20000);
 
   afterEach(async () => await module.close());
@@ -193,7 +205,12 @@ describe("Webhook Invoker", () => {
     await stream.change.wait();
 
     expect(insertLog).toHaveBeenCalledTimes(1);
-    expect(insertLog).toHaveBeenCalledWith({
+
+    let expectedArg = insertLog.calls.argsFor(0)[0];
+    expect(expectedArg.created_at).toEqual(jasmine.any(Date));
+
+    delete expectedArg.created_at;
+    expect(expectedArg).toEqual({
       content: {
         request: {
           body: JSON.stringify({
@@ -216,7 +233,7 @@ describe("Webhook Invoker", () => {
       },
       webhook: hook._id.toHexString(),
       succeed: false
-    });
+    } as any);
   });
 
   it("should insert log when webhook body compilation failed", async () => {
@@ -239,12 +256,17 @@ describe("Webhook Invoker", () => {
     await stream.change.wait();
 
     expect(insertLog).toHaveBeenCalledTimes(1);
-    expect(insertLog).toHaveBeenCalledWith({
+
+    let expectedArg = insertLog.calls.argsFor(0)[0];
+    expect(expectedArg.created_at).toEqual(jasmine.any(Date));
+
+    delete expectedArg.created_at;
+    expect(expectedArg).toEqual({
       content: {
         error: '"title" not defined in [object Object] - 1:3'
       },
       webhook: hook._id.toHexString(),
       succeed: false
-    });
+    } as any);
   });
 });

@@ -7,6 +7,12 @@ export interface Webhook {
   trigger: Trigger;
 }
 
+export interface WebhookOptions {
+  expireAfterSeconds: number;
+}
+
+export const WEBHOOK_OPTIONS = Symbol.for("WEBHOOK_OPTIONS");
+
 export interface Trigger {
   name: "database";
   active?: boolean;
@@ -25,6 +31,7 @@ export interface Log {
     request?: Request;
     response?: Response;
   };
+  created_at: Date;
 }
 
 export interface Request {

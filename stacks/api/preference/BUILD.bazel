@@ -1,0 +1,22 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+
+ts_library(
+    name = "preference",
+    srcs = glob([
+        "src/*.ts",
+        "index.ts",
+    ]),
+    module_name = "@spica-server/preference",
+    deps = [
+        "//packages/database",
+        "//stacks/api/activity/services",
+        "//stacks/api/passport",
+        "//stacks/api/preference/services",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/core",
+        "@npm//@types/mongodb",
+        "@npm//rxjs",
+    ],
+)

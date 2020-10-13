@@ -18,6 +18,19 @@
           >language
         </mat-icon>
         <h4 mat-line>{{ languageKv.value }} ({{ languageKv.key }})</h4>
+        <button
+          [disabled]="settings?.language.default == languageKv.key"
+          mat-icon-button
+          [matAwareDialog]="{
+            title: 'Confirmation',
+            templateOrDescription: deleteLanguageDialog,
+            answer: '',
+            noAnswer: true
+          }"
+          (confirm)="remove(languageKv.key)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
       </mat-list-item>
     </mat-list>
 
@@ -42,8 +55,23 @@
     </button>
   </mat-card-content>
   <mat-card-actions>
-    <button class="save-button" mat-button (click)="updateSettings()">
+    <button
+      class="save-button"
+      canInteract="preference:update"
+      resource="bucket"
+      mat-button
+      (click)="updateSettings()"
+    >
       <mat-icon>save</mat-icon><span>Save</span>
     </button>
   </mat-card-actions>
 </mat-card>
+
+<ng-template #deleteLanguageDialog let-answer="answer">
+  <p>
+    This action will remove the language from bucket entries.
+  </p>
+  <p>
+    Please confirm this action to continue.
+  </p>
+</ng-template>

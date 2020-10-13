@@ -1,12 +1,11 @@
-import {Component, OnInit, ViewChild} from "@angular/core";
+import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {parse as pathParse} from "path-to-regexp";
-import {iif, of, Subject} from "rxjs";
-import {filter, mergeMap, switchMap, takeUntil, tap} from "rxjs/operators";
-import {emptyPolicy, EMPTY_POLICY, Policy} from "../../interfaces/policy";
-import {Service} from "../../interfaces/service";
-import {EMPTY_STATEMENT, Statement} from "../../interfaces/statement";
+import {switchMap, tap, take, filter, map} from "rxjs/operators";
+import {emptyPolicy, Policy} from "../../interfaces/policy";
+import {Services} from "../../interfaces/service";
+import {Statement} from "../../interfaces/statement";
 import {PolicyService} from "../../services/policy.service";
+import {merge} from "rxjs";
 
 @Component({
   selector: "passport-policy-add",
@@ -14,14 +13,8 @@ import {PolicyService} from "../../services/policy.service";
   styleUrls: ["./policy-add.component.scss"]
 })
 export class PolicyAddComponent implements OnInit {
-  @ViewChild("toolbar", {static: true}) toolbar;
-  public policy: Policy = emptyPolicy();
-  public nStatement: Statement = {...EMPTY_STATEMENT};
-  public services: {[key: string]: Service};
-  public args: any;
-  private onDestroy: Subject<void> = new Subject<void>();
-
-  _trackBy: (i) => any = i => i;
+  policy: Policy = emptyPolicy();
+  services: Services;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -30,148 +23,99 @@ export class PolicyAddComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const createFromTemplate$ = this.activatedRoute.queryParams.pipe(
-      filter(queryParams => queryParams.template),
-      takeUntil(this.onDestroy),
-      switchMap(queryParams => {
-        const templatePolicy: Policy = (({name, description, statement}) => ({
-          name,
-          description,
-          statement
-        }))(JSON.parse(queryParams.template));
-        return of(templatePolicy);
-      })
-    );
+    this.services = this.policyService.getServices();
 
-    const editExisted$ = this.activatedRoute.params.pipe(
-      filter(params => params.id),
-      takeUntil(this.onDestroy),
-      switchMap(params => this.policyService.findOne(params.id))
-    );
-
-    this.policyService
-      .getServices()
-      .pipe(
-        tap(services => {
-          this.services = services
-            .filter(s => !!s)
-            .reduce((obj, item) => {
-              obj[item.$resource] = item;
-              obj[item.$resource].parsedArguments = this.parseResourceFormat(item.$arguments);
-              return obj;
-            }, {});
-        }),
-        switchMap(() => this.activatedRoute.params),
-        mergeMap(params => iif(() => !params.id, createFromTemplate$, editExisted$))
+    merge(
+      this.activatedRoute.queryParams.pipe(
+        filter(params => params.template),
+        map(params => JSON.parse(params.template))
+      ),
+      this.activatedRoute.params.pipe(
+        filter(params => params.id),
+        map(params => params.id),
+        switchMap(id => this.policyService.findOne(id))
       )
-      .subscribe(policyData => {
-        policyData.statement = this.normalizeStatement(policyData.statement);
-        this.policy = {...EMPTY_POLICY, ...policyData};
-      });
+    )
+      .pipe(
+        take(1),
+        tap(policy => (this.policy = policy))
+      )
+      .subscribe();
   }
 
-  submitForm(): void {
+  onResourceSelection(statement: Statement, selection: "include" | "exclude") {
+    if (selection == "include") {
+      statement.resource = [];
+    } else if (selection == "exclude") {
+      statement.resource = {
+        //put * for each params, and build resource like '*/*'
+        include: this.services[statement.module][statement.action].map(_ => "*").join("/"),
+        exclude: []
+      };
+    }
+  }
+
+  addInclude(resource: string, statement: Statement) {
+    (statement.resource as string[]).push(resource);
+  }
+
+  addExclude(resource: string, statement: Statement) {
+    (statement.resource as {include: string; exclude: string[]}).exclude.push(resource);
+  }
+
+  removeIncluded(resourceIndex: number, statement: Statement) {
+    (statement.resource as string[]).splice(resourceIndex, 1);
+  }
+
+  removeExcluded(resourceIndex: number, statement: Statement) {
+    (statement.resource as {include: string; exclude: string[]}).exclude.splice(resourceIndex, 1);
+  }
+
+  getResourceSelection(statement: Statement) {
+    if (statement.resource instanceof Array) {
+      return "include";
+    } else if (statement.resource instanceof Object) {
+      return "exclude";
+    } else {
+      return undefined;
+    }
+  }
+
+  serviceAndParamsExist(statement: Statement) {
+    return (
+      this.services[statement.module] &&
+      this.services[statement.module][statement.action] &&
+      this.services[statement.module][statement.action].length > 0
+    );
+  }
+
+  noResourceInserted() {
+    return this.policy.statement
+      .map(
+        statement =>
+          this.serviceAndParamsExist(statement) && (statement.resource as string[]).length == 0
+      )
+      .some(invalid => invalid);
+  }
+
+  savePolicy() {
     (this.policy._id
-      ? this.policyService.updatePolicy(this.tidyUpStatements(this.policy))
-      : this.policyService.createPolicy(this.tidyUpStatements(this.policy))
+      ? this.policyService.updatePolicy(this.policy)
+      : this.policyService.createPolicy(this.policy)
     )
       .toPromise()
       .then(() => this.router.navigate(["passport/policy"]));
   }
 
-  addStatement(): void {
+  addStatement() {
     this.policy.statement.push({
-      service: undefined,
-      effect: undefined,
       action: undefined,
-      resource: []
+      resource: [],
+      module: undefined
     });
   }
 
-  removeStatement(index): void {
+  removeStatement(index: number) {
     this.policy.statement.splice(index, 1);
-  }
-
-  addResource(statement: Statement): void {
-    statement.resource.push(undefined);
-  }
-
-  removeResource(array, index): void {
-    array.splice(index, 1);
-  }
-
-  recheckArgs(sName: string, index: number): void {
-    this.policy.statement[index].resource = [];
-    this.policy.statement[index].action = [];
-    if (!this.services[sName].$arguments) {
-      this.policy.statement[index].resource = null;
-    }
-  }
-
-  private normalizeStatement(statementArr: Statement[]): Statement[] {
-    return statementArr.map(statement => {
-      statement.action = Array.isArray(statement.action) ? statement.action : [statement.action];
-
-      if (statement.resource !== null) {
-        statement.resource = Array.isArray(statement.resource)
-          ? statement.resource
-          : [statement.resource];
-        statement.resource = statement.resource.map(resource => {
-          return resource ? resource.split(statement.service + "/").pop() : "";
-        });
-      }
-
-      statement.action.forEach(action => {
-        const actionLastSegment = action.split(statement.service + ":").pop();
-        if (actionLastSegment === "*") {
-          statement.action = this.services[statement.service].actions;
-        }
-      });
-
-      return statement;
-    });
-  }
-
-  compareActions(serviceActions: string | string[], selectedActions: string | string[]): boolean {
-    if (!Array.isArray(serviceActions)) {
-      serviceActions = [serviceActions];
-    }
-    if (!Array.isArray(selectedActions)) {
-      selectedActions = [selectedActions];
-    }
-
-    return serviceActions.every(action => selectedActions.includes(action));
-  }
-
-  private tidyUpStatements(policy: Policy): Policy {
-    const nStatement = policy.statement.map(statement => {
-      const isSelectedAll = this.compareActions(
-        this.services[statement.service].actions,
-        statement.action
-      );
-
-      const shrinkedAction = isSelectedAll
-        ? this.services[statement.service].$resource + ":*"
-        : statement.action;
-
-      let formattedResource = [];
-
-      if (Array.isArray(statement.resource)) {
-        formattedResource = statement.resource.map(resource => {
-          if (resource !== "") {
-            return statement.service + "/" + resource;
-          }
-          return resource;
-        });
-      }
-
-      return {...statement, action: shrinkedAction, resource: formattedResource};
-    });
-
-    return {...policy, statement: nStatement};
-  }
-
-  private parseResourceFormat(args: string) {
-    return args ? pathParse(args) : null;
   }
 }

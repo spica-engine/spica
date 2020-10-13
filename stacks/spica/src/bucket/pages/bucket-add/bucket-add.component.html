@@ -261,7 +261,14 @@
                 <button
                   mat-icon-button
                   color="warn"
-                  (click)="$event.stopImmediatePropagation(); deleteProperty(propertyKv.key)"
+                  (click)="$event.stopImmediatePropagation()"
+                  (confirm)="deleteProperty(propertyKv.key)"
+                  [matAwareDialog]="{
+                    title: 'Confirmation',
+                    templateOrDescription: deleteFieldDialog,
+                    answer: '',
+                    noAnswer: true
+                  }"
                 >
                   <mat-icon>delete</mat-icon>
                 </button>
@@ -276,6 +283,23 @@
               [(ngModel)]="bucket.properties[propertyKv.key]"
             >
             </span>
+
+            <div class="readonly" *ngIf="bucket.properties[propertyKv.key].readOnly">
+              <mat-divider></mat-divider>
+              <span
+                [inputPlacer]="propertyKv.value"
+                [(ngModel)]="bucket.properties[propertyKv.key].default"
+              >
+              </span>
+              <div>
+                <mat-icon>
+                  info
+                </mat-icon>
+                <mat-hint>
+                  No one will be able to insert or change this field.
+                </mat-hint>
+              </div>
+            </div>
 
             <div
               class="input-defaults"
@@ -400,6 +424,7 @@
       class="save-button"
       mat-button
       [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
+      [resource]="bucket._id ? bucket._id : undefined"
       form="describeForm"
       *matSave="$save | async; let state"
       [disabled]="
@@ -424,7 +449,12 @@
       <span>{{ (!state ? "save" : state) | titlecase }}</span>
     </button>
   </mat-card-actions>
-  <mat-list-item *ngIf="bucket._id" class="remove-history">
+  <mat-list-item
+    *ngIf="bucket._id"
+    canInteract="bucket:update"
+    [resource]="bucket._id"
+    class="remove-history"
+  >
     <mat-divider></mat-divider>
     <h3>
       DANGER ZONE
@@ -463,3 +493,12 @@
     </p>
   </mat-list-item>
 </mat-card>
+
+<ng-template #deleteFieldDialog let-answer="answer">
+  <p>
+    This action will remove the field from bucket entries.
+  </p>
+  <p>
+    Please confirm this action to continue.
+  </p>
+</ng-template>

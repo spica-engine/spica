@@ -3,7 +3,7 @@
     <mat-icon>bug_report</mat-icon>
     <span>Logs</span>
   </h4>
-  <button mat-button (click)="clearLogs()">
+  <button mat-button canInteract="function:logs:delete" (click)="clearLogs()">
     <mat-icon>clear_all</mat-icon>
     Clear
   </button>

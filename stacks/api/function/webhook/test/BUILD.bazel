@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@npm_bazel_typescript//:index.bzl", "ts_library")
-load("@npm_bazel_jasmine//:index.bzl", "jasmine_node_test")
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "service_test_lib",
@@ -132,5 +132,28 @@ jasmine_node_test(
     ],
     deps = [
         ":log_controller_test_lib",
+    ],
+)
+
+ts_library(
+    name = "log_service_test_lib",
+    testonly = True,
+    srcs = [
+        "log.service.spec.ts",
+    ],
+    deps = [
+        "//packages/core/testing",
+        "//packages/database/testing",
+        "//stacks/api/function/webhook",
+        "@npm//@nestjs/common",
+        "@npm//@nestjs/testing",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "log_service_test",
+    deps = [
+        ":log_service_test_lib",
     ],
 )

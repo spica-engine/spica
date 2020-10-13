@@ -1,12 +1,25 @@
-import {Module} from "@nestjs/common";
+import {Module, DynamicModule} from "@nestjs/common";
 import {LogController} from "./log.controller";
-import {LogService} from "./log.service";
+import {FUNCTION_LOG_OPTIONS, LogOptions} from "./interface";
 import {LogGateway} from "./realtime.gateway";
 import {RealtimeDatabaseModule} from "@spica-server/database/realtime";
+import {LogService} from "./log.service";
 
-@Module({
-  imports: [RealtimeDatabaseModule],
-  controllers: [LogController],
-  providers: [LogService, LogGateway]
-})
-export class LogModule {}
+@Module({})
+export class LogModule {
+  static forRoot(options: LogOptions): DynamicModule {
+    return {
+      module: LogModule,
+      imports: [RealtimeDatabaseModule],
+      controllers: [LogController],
+      providers: [
+        LogService,
+        LogGateway,
+        {
+          provide: FUNCTION_LOG_OPTIONS,
+          useValue: options
+        }
+      ]
+    };
+  }
+}

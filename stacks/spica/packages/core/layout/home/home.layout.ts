@@ -2,7 +2,7 @@ import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, Inject, OnInit, Optional, Type, ViewChild} from "@angular/core";
 import {MatSidenavContainer} from "@angular/material/sidenav";
 import {BehaviorSubject, Observable} from "rxjs";
-import {debounceTime, map, switchMap} from "rxjs/operators";
+import {debounceTime, map, shareReplay, switchMap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 
@@ -35,7 +35,7 @@ export class HomeLayoutComponent implements OnInit {
     [RouteCategory.Function, {icon: "memory", index: 4}]
   ]);
 
-  categories: Array<{icon: string; category: RouteCategory; index: number}> = [];
+  categories$: Observable<Array<{icon: string; category: RouteCategory; index: number}>>;
 
   currentCategory = new BehaviorSubject(null);
 
@@ -45,29 +45,40 @@ export class HomeLayoutComponent implements OnInit {
     @Optional() @Inject(LAYOUT_ACTIONS) public components: Type<any>[],
     @Optional() @Inject(LAYOUT_INITIALIZER) private initializer: Function[]
   ) {
+    this.categories$ = this.routeService.routes.pipe(
+      map(routes => {
+        const categoryNames = Array.from(
+          routes.reduce((prev, current) => {
+            prev.add(current.category);
+            return prev;
+          }, new Set<RouteCategory>())
+        );
+
+        const categories = categoryNames
+          .map(categoryName => {
+            const category = this._categories.get(categoryName);
+            return {
+              icon: category.icon,
+              category: categoryName,
+              index: category.index
+            };
+          })
+          .sort((a, b) => a.index - b.index);
+
+        if (!this.currentCategory.value) {
+          this.currentCategory.next(categories[0].category);
+        }
+
+        return categories;
+      })
+    );
     this.routes$ = this.currentCategory.pipe(
-      switchMap(category => {
+      switchMap(currentCategory => {
         if (!this.expanded) {
           this.toggle();
         }
         return this.routeService.routes.pipe(
-          map(routes => {
-            for (const route of routes) {
-              if (!this.categories.find(c => c.category == route.category)) {
-                this.categories.push({
-                  icon: this._categories.get(route.category).icon,
-                  category: route.category,
-                  index: this._categories.get(route.category).index
-                });
-              }
-            }
-
-            this.categories = this.categories.sort((a, b) => a.index - b.index);
-
-            !this.currentCategory.value && this.currentCategory.next(this.categories[0].category);
-
-            return routes.filter(r => r.category == category);
-          })
+          map(routes => routes.filter(r => r.category == currentCategory))
         );
       })
     );

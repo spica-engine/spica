@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,14 +13,13 @@ import {
   Query,
   Res,
   UseGuards,
-  UseInterceptors,
-  BadRequestException
+  UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {BOOLEAN, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
+import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as etag from "etag";
 import {createStorageActivity} from "./activity.resource";
 import {
@@ -48,11 +48,12 @@ export class StorageController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("storage:index"))
   async find(
+    @ResourceFilter() resourceFilter: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
   ) {
-    return this.storage.getAll(limit, skip, sort);
+    return this.storage.getAll([resourceFilter], limit, skip, sort);
   }
 
   /**

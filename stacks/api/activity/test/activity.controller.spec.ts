@@ -10,13 +10,15 @@ describe("Activity Acceptance", () => {
   let request: Request;
   let app: INestApplication;
   let service: ActivityService;
+  let created_at: Date;
   beforeAll(async () => {
+    created_at = new Date();
     const module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.create(),
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        ActivityModule.forRoot()
+        ActivityModule.forRoot({expireAfterSeconds: 60})
       ]
     }).compile();
 
@@ -47,21 +49,19 @@ describe("Activity Acceptance", () => {
     await service.deleteMany({});
   });
 
-  function objectIdToDate(id: string): string {
-    return new Date(parseInt(id.substring(0, 8), 16) * 1000).toISOString();
-  }
-
   it("should return all activities", async () => {
     await service.insertMany([
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
 
@@ -72,14 +72,14 @@ describe("Activity Acceptance", () => {
         action: Action.POST,
         identifier: "test_user2",
         resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[1]._id)
+        created_at: created_at.toISOString()
       },
       {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
         resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[0]._id)
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -89,12 +89,14 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
 
@@ -105,7 +107,7 @@ describe("Activity Acceptance", () => {
         action: Action.DELETE,
         identifier: "test_user",
         resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[0]._id)
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -115,12 +117,14 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
 
@@ -131,7 +135,7 @@ describe("Activity Acceptance", () => {
         action: Action.POST,
         identifier: "test_user2",
         resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[0]._id)
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -141,17 +145,20 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "test_user_id2",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.PUT,
         identifier: "test_user_id2",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
 
@@ -164,14 +171,14 @@ describe("Activity Acceptance", () => {
         action: Action.POST,
         identifier: "test_user2",
         resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[1]._id)
+        created_at: created_at.toISOString()
       },
       {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
         resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[0]._id)
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -181,22 +188,26 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id1"]
+        resource: ["test_module", "test_id1"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "test_user_id",
-        resource: ["test_module2", "test_id2"]
+        resource: ["test_module2", "test_id2"],
+        created_at
       },
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id3"]
+        resource: ["test_module", "test_id3"],
+        created_at
       },
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id4"]
+        resource: ["test_module", "test_id4"],
+        created_at
       }
     ]);
 
@@ -209,14 +220,14 @@ describe("Activity Acceptance", () => {
         action: Action.DELETE,
         identifier: "test_user",
         resource: ["test_module", "test_id3"],
-        date: objectIdToDate(activities[1]._id)
+        created_at: created_at.toISOString()
       },
       {
         _id: "object_id",
         action: Action.DELETE,
         identifier: "test_user",
         resource: ["test_module", "test_id1"],
-        date: objectIdToDate(activities[0]._id)
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -226,17 +237,20 @@ describe("Activity Acceptance", () => {
       {
         action: Action.DELETE,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.PUT,
         identifier: "test_user_id",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
 
@@ -250,7 +264,7 @@ describe("Activity Acceptance", () => {
         action: Action.POST,
         identifier: "test_user",
         resource: ["test_module", "test_id"],
-        date: objectIdToDate(activities[0]._id)
+        created_at: created_at.toISOString()
       }
     ]);
   });
@@ -260,12 +274,14 @@ describe("Activity Acceptance", () => {
       {
         action: Action.PUT,
         identifier: "spica",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "spica",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
 
@@ -280,7 +296,8 @@ describe("Activity Acceptance", () => {
         _id: insertedIds[0],
         action: Action.PUT,
         identifier: "spica",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
   });
@@ -290,12 +307,14 @@ describe("Activity Acceptance", () => {
       {
         action: Action.PUT,
         identifier: "spica",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       },
       {
         action: Action.POST,
         identifier: "spica",
-        resource: ["test_module", "test_id"]
+        resource: ["test_module", "test_id"],
+        created_at
       }
     ]);
 

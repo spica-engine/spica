@@ -26,7 +26,7 @@ import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard} from "@spica-server/passport";
+import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
@@ -66,6 +66,8 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @StrategyType() strategyType: string,
+    @ResourceFilter() resourceFilter: object,
     @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
@@ -79,6 +81,7 @@ export class BucketDataController {
     @Query("sort", JSONP) sort?: object
   ) {
     let aggregation: unknown[] = [
+      resourceFilter,
       {
         $match: {
           _schedule: {
@@ -139,9 +142,9 @@ export class BucketDataController {
       aggregation.push({$match: filter});
     }
 
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const hookAggregation = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "INDEX"},
+        {bucket: bucketId.toHexString(), type: "index"},
         headers
       );
       if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
@@ -207,6 +210,7 @@ export class BucketDataController {
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -249,9 +253,9 @@ export class BucketDataController {
       }
     }
 
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const hookAggregation = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "GET"},
+        {bucket: bucketId.toHexString(), type: "get"},
         headers,
         documentId.toHexString()
       );
@@ -298,11 +302,12 @@ export class BucketDataController {
   async insertOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "INSERT"},
+        {bucket: bucketId.toHexString(), type: "insert"},
         headers
       );
       if (!allowed) {
@@ -350,11 +355,12 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "UPDATE"},
+        {bucket: bucketId.toHexString(), type: "update"},
         headers,
         documentId.toHexString()
       );
@@ -374,7 +380,7 @@ export class BucketDataController {
       this.changeEmitter.emitChange(
         {
           bucket: bucketId.toHexString(),
-          type: "UPDATE"
+          type: "update"
         },
         documentId.toHexString(),
         previousDocument,
@@ -396,12 +402,13 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
     @Headers() headers: object,
+    @StrategyType() strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    if (this.reviewDispatcher && headers["strategy-type"] == "APIKEY") {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
       const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "DELETE"},
+        {bucket: bucketId.toHexString(), type: "delete"},
         headers,
         documentId.toHexString()
       );
@@ -435,58 +442,6 @@ export class BucketDataController {
         });
       }
       await this.clearRelations(this.bs, bucketId, documentId);
-    }
-  }
-
-  /**
-   * Removes one or more documents from the bucket.
-   * > Deprecated: This resource is deprecated and will be removed in upcoming releases.
-   * @param bucketId Identifier of the bucket.
-   * @body ```json
-   * [
-   *   "identifier_of_the_first_document",
-   *   "identifier_of_the_second_document",
-   *   "identifier_of_the_last_document"
-   * ]
-   * ```
-   */
-  @UseInterceptors(activity(createBucketDataActivity))
-  @Delete()
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
-  async deleteMany(
-    @Headers() headers: any,
-    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Body(ARRAY(v => new ObjectId(v))) ids: ObjectId[]
-  ) {
-    if (headers["strategy-type"] == "APIKEY") {
-      throw new BadRequestException(
-        "Apikey strategy does not support deleting multiple resource at once."
-      );
-    }
-
-    let documents: BucketDocument[];
-
-    if (this.changeEmitter) {
-      documents = await this.bds.find(bucketId, {$match: {_id: {$in: ids}}});
-    }
-    const {deletedCount} = await this.bds.deleteMany(bucketId, ids);
-
-    if (deletedCount > 0) {
-      if (this.changeEmitter) {
-        for (const document of documents) {
-          this.changeEmitter.emitChange(
-            {bucket: bucketId.toHexString(), type: "delete"},
-            document._id.toHexString(),
-            document,
-            null
-          );
-        }
-      }
-      await Promise.all(ids.map(id => this.clearRelations(this.bs, bucketId, id)));
-      if (this.history) {
-        await Promise.all(ids.map(id => this.history.deleteMany({document_id: id})));
-      }
     }
   }
 

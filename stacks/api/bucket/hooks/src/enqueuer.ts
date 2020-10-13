@@ -27,17 +27,17 @@ export function mapHeaders(rawHeaders: Object) {
 
 export function getReviewType(type: string) {
   switch (type) {
-    case "INSERT":
+    case "insert":
       return hooks.Review.Type.INSERT;
-    case "UPDATE":
+    case "update":
       return hooks.Review.Type.UPDATE;
-    case "DELETE":
+    case "delete":
       return hooks.Review.Type.DELETE;
-    case "INDEX":
+    case "index":
       return hooks.Review.Type.INDEX;
-    case "GET":
+    case "get":
       return hooks.Review.Type.GET;
-    case "STREAM":
+    case "stream":
       return hooks.Review.Type.STREAM;
     default:
       throw new Error(`Invalid type received. ${type}`);
@@ -46,11 +46,11 @@ export function getReviewType(type: string) {
 
 function getChangeType(type: string): hooks.Change.Kind {
   switch (type) {
-    case "INSERT":
+    case "insert":
       return hooks.Change.Kind.INSERT;
-    case "DELETE":
+    case "delete":
       return hooks.Change.Kind.DELETE;
-    case "UPDATE":
+    case "update":
       return hooks.Change.Kind.UPDATE;
     default:
       throw new Error(`Invalid type received. ${type}`);
@@ -98,7 +98,7 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
             review: new hooks.Review({
               headers: mapHeaders(headers),
               bucket: options.bucket,
-              type: getReviewType(options.type),
+              type: getReviewType(options.type.toLowerCase()),
               documentKey: document
             })
           }),

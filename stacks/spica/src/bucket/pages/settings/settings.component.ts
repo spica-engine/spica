@@ -27,6 +27,12 @@ export class SettingsComponent implements OnInit {
     this.settings.language.available[code] = this.languages.find(l => l.code == code).name;
   }
 
+  remove(code: string) {
+    if (this.settings.language.default != code) {
+      delete this.settings.language.available[code];
+    }
+  }
+
   updateSettings(): void {
     this.pref
       .replaceOne(this.settings)

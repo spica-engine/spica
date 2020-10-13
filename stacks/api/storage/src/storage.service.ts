@@ -11,7 +11,12 @@ export class StorageService {
     this._collection = database.collection("storage");
   }
 
-  getAll(limit: number, skip: number = 0, sort?: any): Promise<StorageResponse> {
+  getAll(
+    policyAgg: object[],
+    limit: number,
+    skip: number = 0,
+    sort?: any
+  ): Promise<StorageResponse> {
     let dataPipeline: object[] = [];
 
     dataPipeline.push({$skip: skip});
@@ -21,6 +26,7 @@ export class StorageService {
     if (sort) dataPipeline.push({$sort: sort});
 
     const aggregation = [
+      ...policyAgg,
       {
         $facet: {
           meta: [{$count: "total"}],
@@ -37,12 +43,12 @@ export class StorageService {
 
     return this._collection
       .aggregate(aggregation)
-      .toArray()
-      .then(async d => {
-        for (const obj of (d[0] as any).data) {
-          obj.url = await this.service.url(obj._id);
+      .next()
+      .then(async (result: any) => {
+        for (const object of result.data) {
+          object.url = await this.service.url(object._id);
         }
-        return d[0] as any;
+        return result;
       });
   }
 

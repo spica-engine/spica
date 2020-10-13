@@ -3,9 +3,11 @@ import {
   isObject,
   findRelations,
   isArray,
-  findRemovedKeys,
-  getUpdateParams
+  findUpdatedFields,
+  getUpdateParams,
+  provideLanguageChangeUpdater
 } from "@spica-server/bucket/src/utility";
+import {ChangeKind} from "../history/differ";
 
 describe("Utilities", () => {
   it("should check whether schema is object or not", () => {
@@ -66,7 +68,7 @@ describe("Utilities", () => {
     );
   });
 
-  it("should find removed keys", () => {
+  it("should find removed and updated keys", () => {
     let previousSchema = {
       title: "test_title",
       description: "test_desc",
@@ -79,7 +81,8 @@ describe("Utilities", () => {
               type: "object",
               properties: {
                 removed: {type: "string"},
-                not_removed: {type: "string"}
+                updated: {type: "string"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -93,7 +96,8 @@ describe("Utilities", () => {
               type: "object",
               properties: {
                 removed: {type: "string"},
-                not_removed: {type: "string"}
+                updated: {type: "string"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -102,7 +106,23 @@ describe("Utilities", () => {
           type: "string",
           options: {}
         },
+        root_updated: {
+          type: "string",
+          options: {}
+        },
+        root_not_removed_or_updated: {
+          type: "string",
+          options: {}
+        },
         nested_root_removed: {
+          type: "object",
+          properties: {
+            dont_check_me: {
+              type: "string"
+            }
+          }
+        },
+        nested_root_updated: {
           type: "object",
           properties: {
             dont_check_me: {
@@ -124,7 +144,8 @@ describe("Utilities", () => {
             nested_object_child: {
               type: "object",
               properties: {
-                not_removed: {type: "string"}
+                updated: {type: "boolean"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
@@ -137,20 +158,44 @@ describe("Utilities", () => {
             items: {
               type: "object",
               properties: {
-                not_removed: {type: "string"}
+                updated: {type: "date"},
+                not_removed_or_updated: {type: "string"}
               }
             }
           }
+        },
+        root_updated: {
+          type: "relation",
+          options: {}
+        },
+        root_not_removed_or_updated: {
+          type: "string",
+          options: {}
+        },
+        nested_root_updated: {
+          type: "number"
         }
       }
     };
 
-    let removedKeys = findRemovedKeys(previousSchema.properties, updatedSchema.properties, [], "");
-    expect(removedKeys).toEqual([
+    let targetFields = findUpdatedFields(
+      previousSchema.properties,
+      updatedSchema.properties,
+      [],
+      ""
+    );
+    expect(targetFields).toEqual([
       "nested_object.nested_object_child.removed",
+      "nested_object.nested_object_child.updated",
+
       "nested_array_object.$[].$[].removed",
+      "nested_array_object.$[].$[].updated",
+
       "root_removed",
-      "nested_root_removed"
+      "root_updated",
+
+      "nested_root_removed",
+      "nested_root_updated"
     ]);
   });
 
@@ -167,6 +212,127 @@ describe("Utilities", () => {
     expect(updateParams).toEqual({
       filter: {test_key: {$in: ["document_id"]}},
       update: {$pull: {test_key: "document_id"}}
+    });
+  });
+
+  describe("provideLanguageChangeUpdater", () => {
+    let updaterFactory;
+    let bucketService;
+    let bucketDataService;
+    let translatableBuckets;
+
+    let aggregate: jasmine.Spy = jasmine.createSpy("aggregate").and.returnValue({
+      toArray: () => Promise.resolve(translatableBuckets)
+    });
+    let updateMany: jasmine.Spy = jasmine
+      .createSpy("updateMany")
+      .and.returnValue(Promise.resolve());
+
+    beforeAll(() => {
+      translatableBuckets = [
+        {_id: "bucket1", properties: {title: {}, description: {}}},
+        {_id: "bucket2", properties: {name: {}}}
+      ];
+
+      bucketService = {
+        aggregate
+      };
+      bucketDataService = {
+        updateMany
+      };
+
+      updaterFactory = provideLanguageChangeUpdater(bucketService, bucketDataService);
+    });
+
+    it("should return updater function", () => {
+      expect(typeof updaterFactory == "function").toBe(true);
+    });
+
+    it("should return empty promise when language added", () => {
+      updaterFactory(
+        {
+          language: {
+            available: {
+              en_US: "English"
+            }
+          }
+        },
+        {
+          language: {
+            available: {
+              en_US: "English",
+              tr_TR: "Turkish"
+            }
+          }
+        }
+      ).then(result => expect(result).toBeUndefined());
+    });
+
+    it("should return update bucket entries when language removed", async () => {
+      await updaterFactory(
+        {
+          language: {
+            available: {
+              en_US: "English",
+              tr_TR: "Turkish",
+              fr: "French",
+              de: "Deutschland"
+            }
+          }
+        },
+        {
+          language: {
+            available: {
+              en_US: "English",
+              tr_TR: "Turkish"
+            }
+          }
+        }
+      );
+
+      expect(aggregate).toHaveBeenCalledTimes(1);
+      expect(aggregate).toHaveBeenCalledWith([
+        {
+          $project: {
+            properties: {
+              $objectToArray: "$properties"
+            }
+          }
+        },
+        {
+          $match: {
+            "properties.v.options.translate": true
+          }
+        },
+        {
+          $project: {
+            properties: {
+              $filter: {
+                input: "$properties",
+                as: "property",
+                cond: {$eq: ["$$property.v.options.translate", true]}
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            properties: {
+              $arrayToObject: "$properties"
+            }
+          }
+        }
+      ]);
+
+      expect(updateMany).toHaveBeenCalledTimes(2);
+      expect(updateMany.calls.allArgs()).toEqual([
+        [
+          "bucket1",
+          {},
+          {$unset: {"title.fr": "", "title.de": "", "description.fr": "", "description.de": ""}}
+        ],
+        ["bucket2", {}, {$unset: {"name.fr": "", "name.de": ""}}]
+      ]);
     });
   });
 });

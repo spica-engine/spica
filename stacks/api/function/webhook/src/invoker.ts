@@ -75,7 +75,8 @@ export class WebhookInvoker {
           content: {
             error: error.message
           },
-          webhook: target
+          webhook: target,
+          created_at: new Date()
         });
         return;
       }
@@ -105,7 +106,8 @@ export class WebhookInvoker {
               request: {body: request.body, headers: request.headers, url: url},
               response: response
             },
-            webhook: target
+            webhook: target,
+            created_at: new Date()
           });
         })
         .catch(() => {});

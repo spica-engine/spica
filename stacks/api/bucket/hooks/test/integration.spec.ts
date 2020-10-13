@@ -66,7 +66,8 @@ describe("Hooks Integration", () => {
             allowedHeaders: ["*"],
             allowedMethods: ["*"],
             allowedOrigins: ["*"]
-          }
+          },
+          logExpireAfterSeconds: 60
         })
       ]
     }).compile();

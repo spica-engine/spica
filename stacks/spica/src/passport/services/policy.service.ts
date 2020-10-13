@@ -3,8 +3,9 @@ import {Injectable} from "@angular/core";
 import {Observable} from "rxjs";
 import {Identity} from "../interfaces/identity";
 import {Policy} from "../interfaces/policy";
-import {Service} from "../interfaces/service";
+import {Services} from "../interfaces/service";
 import {IndexResult} from "@spica-client/core/interfaces";
+import services from "./policy-services/services.json";
 
 @Injectable({providedIn: "root"})
 export class PolicyService {
@@ -20,16 +21,16 @@ export class PolicyService {
     return this.http.get<Policy>(`api:/passport/policy/${id}`);
   }
 
-  getServices(): Observable<Service[]> {
-    return this.http.get<Service[]>(`api:/passport/policy/services`);
+  getServices(): Services {
+    return services;
   }
 
   attachPolicy(id: string, identifier: string): Observable<Identity> {
-    return this.http.put<Identity>(`api:/passport/identity/${identifier}/attach-policy`, [id]);
+    return this.http.put<Identity>(`api:/passport/identity/${identifier}/policy/${id}`, {});
   }
 
   detachPolicy(id: string, identifier: string): Observable<Identity> {
-    return this.http.put<Identity>(`api:/passport/identity/${identifier}/detach-policy`, [id]);
+    return this.http.delete<Identity>(`api:/passport/identity/${identifier}/policy/${id}`, {});
   }
 
   createPolicy(policy: Policy): Observable<Policy> {

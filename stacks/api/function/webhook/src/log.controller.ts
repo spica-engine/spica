@@ -1,26 +1,26 @@
-import {WebhookLogService} from "./log.service";
 import {
+  Body,
   Controller,
-  Get,
-  Query,
-  UseGuards,
-  HttpCode,
   Delete,
+  Get,
+  HttpCode,
   HttpStatus,
   Param,
-  Body
+  Query,
+  UseGuards
 } from "@nestjs/common";
-import {AuthGuard, ActionGuard} from "@spica-server/passport";
-import {NUMBER, DATE, ARRAY, DEFAULT, JSONP} from "@spica-server/core";
+import {ARRAY, DATE, DEFAULT, JSONP, NUMBER} from "@spica-server/core";
 import {FilterQuery, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {Log} from ".";
+import {ActionGuard, AuthGuard} from "@spica-server/passport/guard";
+import {Log} from "./interface";
+import {WebhookLogService} from "./log.service";
 
 @Controller("webhook/logs")
 export class WebhookLogController {
   constructor(private logService: WebhookLogService) {}
 
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("webhook:index"))
+  @UseGuards(AuthGuard(), ActionGuard("webhook:logs:index"))
   getLogs(
     @Query("webhook", DEFAULT([]), ARRAY(String)) webhook: string[],
     @Query("begin", DATE) begin: Date,
@@ -29,14 +29,6 @@ export class WebhookLogController {
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
   ) {
-    let aggregation: object[] = [
-      {
-        $addFields: {
-          execution_time: {$toDate: "$_id"}
-        }
-      }
-    ];
-
     let filter: FilterQuery<Log> = {};
 
     if (!isNaN(begin.getTime()) && !isNaN(end.getTime())) {
@@ -54,7 +46,7 @@ export class WebhookLogController {
       filter.succeed = {$eq: succeed};
     }
 
-    aggregation.push({$match: filter});
+    let aggregation: object[] = [{$match: filter}];
 
     aggregation.push({$sort: {_id: -1}});
 
@@ -66,14 +58,14 @@ export class WebhookLogController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard(), ActionGuard("webhook:delete"))
+  @UseGuards(AuthGuard(), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.logService.deleteOne({_id: id});
   }
 
   @Delete()
-  @UseGuards(AuthGuard(), ActionGuard("webhook:delete"))
+  @UseGuards(AuthGuard(), ActionGuard("webhook:logs:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteMany(@Body(DEFAULT([]), ARRAY(value => new ObjectId(value))) ids: ObjectId[]) {
     return this.logService.deleteMany({_id: {$in: ids}});

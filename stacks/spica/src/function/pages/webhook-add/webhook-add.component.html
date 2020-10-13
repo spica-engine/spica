@@ -87,6 +87,7 @@
     <button
       class="save-button"
       [canInteract]="webhook._id ? 'webhook:update' : 'webhook:create'"
+      [resource]="webhook._id ? webhook._id : undefined"
       mat-button
       *matSave="$save | async; let state"
       [ngSwitch]="state"

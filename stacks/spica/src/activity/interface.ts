@@ -3,6 +3,7 @@ export interface Activity {
   identifier: string;
   resource: string[];
   action: string;
+  created_at: Date;
 }
 
 export interface ActivityFilter {

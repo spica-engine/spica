@@ -1,7 +1,8 @@
 import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
-import {Observable} from "rxjs";
+import {forkJoin, Observable, zip} from "rxjs";
+import {map} from "rxjs/operators";
 import {BucketEntry, BucketRow} from "../interfaces/bucket-entry";
 
 interface FindOptions {
@@ -69,12 +70,12 @@ export class BucketDataService {
     return this.http.get<T>(`api:/bucket/${bucketId}/data/${documentId}`, {params: params});
   }
 
-  findOneAndDelete(bucketId: string, id: string): Observable<any> {
+  delete(bucketId: string, id: string): Observable<any> {
     return this.http.delete(`api:/bucket/${bucketId}/data/${id}`);
   }
 
-  deleteMany(bucketId: string, idArray: Array<string>): Observable<any> {
-    return this.http.request("delete", `api:/bucket/${bucketId}/data`, {body: idArray});
+  deleteMany(bucketId: string, idArray: Array<string>): Observable<void> {
+    return forkJoin(idArray.map(id => this.delete(bucketId, id))).pipe(map(() => {}));
   }
 
   insertOne(bucketId: string, data: any): Observable<any> {

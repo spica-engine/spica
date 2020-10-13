@@ -1,17 +1,17 @@
-import {DynamicModule, Module, Type} from "@nestjs/common";
-import {BucketCache, provideBucketCache} from "./cache";
+import {DynamicModule, Module, Type, Global} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {DatabaseService, ObjectId} from "@spica-server/database";
-import {PreferenceService} from "@spica-server/preference/services";
+import {PreferenceService, PREFERENCE_CHANGE_FINALIZER} from "@spica-server/preference/services";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {DocumentScheduler} from "./scheduler";
+import {provideLanguageChangeUpdater} from "./utility";
 
 @Module({})
 export class BucketModule {
@@ -38,6 +38,8 @@ export class BucketModule {
       imports.push(RealtimeModule);
     }
 
+    imports.push(BucketCoreModule);
+
     return {
       module: BucketModule,
       controllers: [BucketController, BucketDataController],
@@ -45,11 +47,6 @@ export class BucketModule {
       providers: [
         BucketDataService,
         DocumentScheduler,
-        {
-          provide: BucketCache,
-          useFactory: provideBucketCache,
-          inject: [DatabaseService, Validator]
-        },
         {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
@@ -131,6 +128,21 @@ export class BucketModule {
 
   }
 }
+
+@Global()
+@Module({
+  imports: [ServicesModule],
+  providers: [
+    BucketDataService,
+    {
+      provide: PREFERENCE_CHANGE_FINALIZER,
+      useFactory: provideLanguageChangeUpdater,
+      inject: [BucketService, BucketDataService]
+    }
+  ],
+  exports: [PREFERENCE_CHANGE_FINALIZER]
+})
+export class BucketCoreModule {}
 
 export interface BucketOptions {
   hooks: boolean;

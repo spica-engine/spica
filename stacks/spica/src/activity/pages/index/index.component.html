@@ -153,7 +153,7 @@
             </a>
             on {{ activity.resource[0] | titlecase }} module.
           </span>
-          <span class="date">{{ activity.date | date: "MM/dd/yyyy HH:mm:ss" }}</span>
+          <span class="date">{{ activity.created_at | date: "MM/dd/yyyy HH:mm:ss" }}</span>
           <mat-divider></mat-divider>
         </mat-list-item>
       </mat-list>

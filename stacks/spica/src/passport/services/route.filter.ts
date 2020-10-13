@@ -8,7 +8,8 @@ export class PassportRouteFilter implements RouteFilter {
 
   filter(route: Route) {
     if (route.data && route.data.action) {
-      return this.passport.checkAllowed(route.data.action);
+      let resource = route.data.params ? Object.values(route.data.params).join("/") : undefined;
+      return this.passport.checkAllowed(route.data.action, resource);
     }
     return true;
   }

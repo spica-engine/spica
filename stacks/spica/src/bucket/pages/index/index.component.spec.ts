@@ -33,6 +33,14 @@ import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
+import {Directive, HostBinding, Input} from "@angular/core";
+
+@Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -111,7 +119,12 @@ describe("IndexComponent", () => {
           useValue: activatedRoute
         }
       ],
-      declarations: [IndexComponent, FilterComponent, PersistHeaderWidthDirective]
+      declarations: [
+        IndexComponent,
+        FilterComponent,
+        PersistHeaderWidthDirective,
+        CanInteractDirectiveTest
+      ]
     }).compileComponents();
 
     getItem = spyOn(localStorage, "getItem").and.callFake(() => null);
@@ -244,7 +257,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "Select", "id", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "Select", "_id", "test", "Scheduled", "Actions"]);
       });
 
       it("should set displayed properties from local storage", async () => {
@@ -301,7 +314,7 @@ describe("IndexComponent", () => {
           Array.from(document.body.querySelectorAll(".mat-menu-content .mat-menu-item")).map(e =>
             e.textContent.trim()
           )
-        ).toEqual(["Display all", "id", "test", "Scheduled", "Actions"]);
+        ).toEqual(["Display all", "_id", "test", "Scheduled", "Actions"]);
       });
 
       it("should check visible columns by default", fakeAsync(() => {

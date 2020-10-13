@@ -9,5 +9,4 @@ nodejs_binary(
         "@build_bazel_rules_nodejs//third_party/github.com/gjtorikian/isBinaryFile",
     ],
     entry_point = ":bundler.js",
-    install_source_map_support = False,
 )
