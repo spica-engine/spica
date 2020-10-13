@@ -118,7 +118,7 @@ export const Function: ResourceDefinition = {
     kind: "Function",
     plural: "functions",
     singular: "function",
-    shortnames: ["fn", "function"]
+    shortNames: ["fn", "function"]
   },
   versions: [
     {

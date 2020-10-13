@@ -12,8 +12,9 @@ export interface ObjectMeta {
   };
 }
 
-export interface Resource<SpecType = unknown> extends TypeMeta, ObjectMeta {
-  spec: SpecType
+export interface Resource<SpecType = unknown, StatusType = unknown> extends TypeMeta, ObjectMeta {
+  spec: SpecType,
+  status?: StatusType
 }
 
 export interface ResourceDefinition {
@@ -26,7 +27,7 @@ export interface ResourceDefinitionNames {
   plural: string;
   singular: string;
   kind: string;
-  shortnames: string[];
+  shortNames: string[];
 }
 
 export interface ResourceDefinitionVersion {

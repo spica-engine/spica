@@ -30,10 +30,10 @@ spec:
     - email
   properties:
     email:
-      type: string  
+      type: string
     role:
       type: relation
-      bucket: 
+      bucket:
         valueFrom:
           resourceFieldRef:
             bucketName: roles
@@ -46,7 +46,7 @@ spec:
     activated_at:
       type: date
 ---
-apiVersion: computing/v1
+apiVersion: function/v1
 kind: Function
 metadata:
   name: test
@@ -54,4 +54,20 @@ spec:
   title: Email
   description: Users
   language: Javascript
-  code: ./functions/test.js
+  code: ./test.js
+  trigger:
+    default:
+      type: http
+      active: True
+      options:
+        method: Get
+        path: "/test"
+
+  environment:
+    - key: TEST
+      value: "LITERAL"
+
+    - key: BUCKET_ID
+      valueFrom:
+        resourceFieldRef:
+          bucketName: roles

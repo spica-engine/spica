@@ -74,7 +74,7 @@ export class BucketModule {
 
     bs.deleteMany({});
 
-    globalThis['notify'] = async (resource, objects) => {
+    globalThis['liftBucket'] = async (resource, objects) => {
       const {spec, metadata} = resource;
 
       const raw = {...spec, properties: {...spec.properties}};

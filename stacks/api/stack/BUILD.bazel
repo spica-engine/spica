@@ -10,6 +10,7 @@ ts_library(
     ]),
     module_name = "@spica-server/stack",
     deps = [
+        "//packages/database",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//rxjs",

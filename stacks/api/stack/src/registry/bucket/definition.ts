@@ -197,7 +197,7 @@ const SchemaV1: JSONSchema7 = {
       kind: "Schema",
       plural: "schemas",
       singular: "schema",
-      shortnames: ["b", "bkt"]
+      shortNames: ["b", "bkt"]
     },
     versions: [
       {

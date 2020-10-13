@@ -10,9 +10,47 @@ import {FUNCTION_OPTIONS} from "./options";
 import {FunctionOptions} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 import {LogModule} from "./log";
+import { ObjectId } from "@spica-server/database";
+import { Function } from "./interface";
 
 @Module({})
 export class FunctionModule {
+  constructor(fs: FunctionService, fe: FunctionEngine) {
+    fs.deleteMany({});
+
+    globalThis["liftFunction"] = async (object, env, store) => {
+      const { spec, metadata } = object; 
+      const raw: Function = {
+        name: spec.title,
+        description: spec.description,
+        language: spec.language.toLowerCase(),
+        timeout: spec.timeout || 10,
+        triggers: spec.trigger,
+        env
+      };
+
+
+
+      if ( metadata.uid ) {
+        object.status = "Updating";
+        const fn = await fs.findOneAndUpdate({_id: new ObjectId(metadata.uid)}, {$set: raw}, {returnOriginal: false});
+        await fe.update(fn, spec.code);
+        await fe.compile(fn);
+        console.log('updating', fn);
+      } else {
+        object.status = "Creating";
+        const fn = await fs.insertOne(raw);
+        await fe.createFunction(fn);
+        await fe.update(fn, spec.code);
+        await fe.compile(fn);
+        metadata.uid = String(fn._id);
+        console.log('creating', fn);
+      }
+
+
+      object.status = "Ready";
+    }
+  }
   static forRoot(options: FunctionOptions): DynamicModule {
     return {
       module: FunctionModule,

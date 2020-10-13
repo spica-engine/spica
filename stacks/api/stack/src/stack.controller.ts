@@ -12,46 +12,11 @@ import {
   UseFilters,
   UseInterceptors
 } from "@nestjs/common";
-import {Resource, ResourceDefinition} from "./definition";
-import {PatchBodyParser} from "./patch";
-import { findSchemeByGroupAndResource, makeKey } from "./scheme";
-import {alreadyExists, isStatusKind, notFound, status} from "./status";
-
-
-function setMetadataFields(resource: Resource) {
-  if (!resource.metadata.creationTimestamp) {
-    resource.metadata.creationTimestamp = new Date().toISOString();
-  }
-}
-
-function callNotifiers(resource: Resource, objects: Map<string, Resource<unknown>>) {
-  return globalThis["notify"](resource, objects);
-}
-
-function reviewBucketSchema(
-  definition: ResourceDefinition,
-  objects: Map<string, Resource<unknown>>,
-  resource: Resource<any>
-) {
-  const {spec, metadata} = resource;
-  for (const propertyName in spec.properties) {
-    const property = spec.properties[propertyName];
-    if (property.type == "relation" && typeof property.bucket == "object") {
-      const bucketName = property.bucket.valueFrom.resourceFieldRef.bucketName;
-      // TODO: handle downwards resources via generic function
-      if (!objects.has(bucketName)) {
-        throw notFound({
-          message: `${definition.names.plural} "${bucketName}" could not be found.`,
-          details: {
-            kind: definition.names.kind,
-            name: bucketName
-          }
-        });
-      }
-    }
-  }
-}
-
+import { Resource } from "./definition";
+import { PatchBodyParser } from "./patch";
+import "./registry";
+import { findSchemeByGroup, findSchemeByGroupAndResource, findSchemeByGroupAndVersion, makeKey, schemes } from "./scheme";
+import { alreadyExists, isStatusKind, notFound, status } from "./status";
 
 @Catch()
 export class StatusFilter implements ExceptionFilter {
@@ -83,43 +48,98 @@ export class StackController {
 
   @Get()
   apiGroups() {
-    return definitions;
+    const groups = [];
+
+    for (const scheme of schemes()) {
+      const versions = [];
+
+      for (const version of scheme.definition.versions) {
+        versions.push(version.name);
+      }
+
+      groups.push({
+        name: scheme.definition.group,
+        versions
+      });
+    }
+
+    return {
+      kind: "APIGroupList",
+      apiVersion: "v1",
+      groups
+    };
   }
 
-  // @Get(":group")
-  // apiGroup(@Param("group") groupName: string) {
-  //   return {
-  //     kind: "APIGroup",
-  //     apiVersion: "v1",
-  //     name: groupName,
-  //     versions: ["v1beta2"]
-  //   };
-  // }
+  @Get(":group")
+  apiGroup(@Param("group") groupName: string) {
+    const scheme = findSchemeByGroup(groupName);
 
-  // @Get(":group/:version")
-  // apiResources(@Param("group") groupName: string, @Param("version") version: string) {
-  //   return {
-  //     kind: "APIResourceList",
-  //     apiVersion: "v1",
-  //     groupVersion: version,
-  //     resources: [
-  //       {
-  //         name: "managedcertificates",
-  //         singularName: "managedcertificate",
-  //         kind: "ManagedCertificate",
-  //         shortNames: ["mcrt"]
-  //       }
-  //     ]
-  //   };
-  // }
+    if ( !scheme ) {
+      return notFound({
+        message: 'the server could not find the requested resource'
+      })
+    }
+
+    const versions = [];
+
+    for (const version of scheme.definition.versions) {
+      versions.push(version.name);
+    }
+
+    return {
+      kind: "APIGroup",
+      apiVersion: "v1",
+      name: scheme.definition.group,
+      versions
+    };
+  }
+
+  @Get(":group/:version")
+  apiResources(@Param("group") groupName: string, @Param("version") versionName: string) {
+
+    const scheme = findSchemeByGroupAndVersion({
+      group: groupName,
+      version: versionName
+    });
+
+    if ( !scheme ) {
+      return notFound({
+        message: 'the server could not find the requested resource'
+      })
+    }
+    
+    const resources = [scheme.definition.names];
+
+    return {
+      kind: "APIResourceList",
+      apiVersion: "v1",
+      version: versionName,
+      resources
+    };
+  }
 
   @Get(":group/:version/:resource")
   list(
-    @Param("group") group: string,
+    @Param("group") groupName: string,
     @Param("version") versionName: string,
     @Param("resource") resourceName: string
   ) {
-    const key = makeKey(group, resourceName)
+
+    const scheme = findSchemeByGroupAndVersion({
+      group: groupName,
+      version: versionName
+    });
+
+    if ( !scheme ) {
+      return notFound({
+        message: 'the server could not find the requested resource'
+      })
+    }
+
+    const key = makeKey({
+      group: groupName,
+      resource: resourceName
+    });
 
     const objects = this.store.has(key) ? this.store.get(key) : new Map();
 
@@ -128,17 +148,27 @@ export class StackController {
 
   @Get(":group/:version/:resource/:name")
   get(
-    @Param("group") group: string,
+    @Param("group") groupName: string,
     @Param("version") versionName: string,
     @Param("resource") resourceName: string,
     @Param("name") objectName: string
   ) {
-    const groupAndResource = {
-      group,
-      resource: resourceName
-    };
 
-    const key = makeKey(groupAndResource)
+    const scheme = findSchemeByGroupAndVersion({
+      group: groupName,
+      version: versionName
+    });
+
+    if ( !scheme ) {
+      return notFound({
+        message: 'the server could not find the requested resource'
+      })
+    }
+
+    const key = makeKey({
+      group: groupName,
+      resource: resourceName
+    });
 
 
     const objects = this.store.has(key) ? this.store.get(key) : new Map();
@@ -153,15 +183,14 @@ export class StackController {
     @Param("resource") resourceName: string,
     @Body() object: Resource
   ) {
-
     const groupAndResource = {
       group,
       resource: resourceName
     };
 
-    const key = makeKey(groupAndResource)
+    const key = makeKey(groupAndResource);
 
-    const {definition} = findSchemeByGroupAndResource(groupAndResource);
+    const {definition, lift} = findSchemeByGroupAndResource(groupAndResource);
 
     const objects = this.store.has(key)
       ? this.store.get(key)
@@ -179,13 +208,15 @@ export class StackController {
       });
     }
 
-    setMetadataFields(object);
-
-    reviewBucketSchema(definition, objects, object);
-
-    await callNotifiers(object, objects);
+    if (!object.metadata.creationTimestamp) {
+      object.metadata.creationTimestamp = new Date().toISOString();
+    }
 
     objects.set(objectName, object);
+
+    if ( lift ) {
+      lift(this.store, object);
+    }
 
     return objects;
   }
@@ -203,9 +234,9 @@ export class StackController {
       resource: resourceName
     };
 
-    const key = makeKey(groupAndResource)
+    const key = makeKey(groupAndResource);
 
-    const {definition} = findSchemeByGroupAndResource(groupAndResource);
+    const {definition, lift} = findSchemeByGroupAndResource(groupAndResource);
 
     const objects = this.store.has(key)
       ? this.store.get(key)
@@ -221,17 +252,15 @@ export class StackController {
       });
     }
 
-    reviewBucketSchema(definition, objects, object);
-
     const obj = objects.get(objectName);
 
     obj.spec = object.spec;
 
-    console.log(obj);
-
-    await callNotifiers(obj, objects);
-
     objects.set(objectName, obj);
+
+    if ( lift ) {
+      lift(this.store, obj);
+    }
 
     return objects;
   }
@@ -250,7 +279,7 @@ export class StackController {
       resource: resourceName
     };
 
-    const key = makeKey(groupAndResource)
+    const key = makeKey(groupAndResource);
 
     const {definition} = findSchemeByGroupAndResource(groupAndResource);
 

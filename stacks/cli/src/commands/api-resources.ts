@@ -17,7 +17,8 @@ export interface ObjectMeta {
 
 
 export interface Resource<SpecType = unknown> extends TypeMeta, ObjectMeta {
-  spec: SpecType
+  spec: SpecType,
+  status?: unknown
 }
 
 

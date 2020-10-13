@@ -58,7 +58,7 @@ export function notFound({
   details
 }: {
   message: string;
-  details: {kind: string; name: string};
+  details?: {kind: string; name: string};
 }) {
   return status({
     code: 409,

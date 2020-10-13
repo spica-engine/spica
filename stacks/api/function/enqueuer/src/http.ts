@@ -56,6 +56,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
   }
 
   subscribe(target: Event.Target, options: HttpOptions): void {
+    console.log(target.toObject());
     const method = options.method.toLowerCase();
     const path = options.path.replace(/^\/?(.*?)\/?$/, "/$1");
 
