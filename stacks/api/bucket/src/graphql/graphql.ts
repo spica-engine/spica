@@ -10,19 +10,18 @@ import {GuardService} from "@spica-server/passport";
 import {HistoryService} from "@spica-server/bucket/history";
 import {createActivity, ActivityService} from "@spica-server/activity/services";
 import {createBucketDataActivity} from "../activity.resource";
-import {Schema, Validator} from "@spica-server/core/schema";
-import {getBucketName, createSchema} from "./schema";
+import {Validator} from "@spica-server/core/schema";
+import {
+  getBucketName,
+  createSchema,
+  extractAggregationFromQuery,
+  getPatchedDocument,
+  getUpdateQuery,
+  validateInput
+} from "./schema";
 import {BucketDataService} from "../bucket-data.service";
 import {Locale, hasTranslatedProperties, findLocale, buildI18nAggregation} from "../locale";
 import {buildRelationAggregation, createHistory, clearRelations} from "../utility";
-import {diff, Change, ChangeKind} from "@spica-server/bucket/history/differ";
-
-const JsonMergePatch = require("json-merge-patch");
-
-enum Definition {
-  Type = "type",
-  Input = "input"
-}
 
 interface FindResponse {
   meta: {total: number};
@@ -30,7 +29,7 @@ interface FindResponse {
 }
 
 @Injectable()
-export class GraphqlEnpointHandler {
+export class GraphqlController {
   schema: GraphQLSchema;
 
   buckets: Bucket[] = [];
@@ -119,9 +118,8 @@ export class GraphqlEnpointHandler {
 
       if (buckets.length) {
         //typeDefs
-        this.typeDefs = buckets.map(bucket => createSchema(bucket));
-        this.typeDefs.push(this.staticTypes);
-
+        this.typeDefs = buckets.map(bucket => createSchema(bucket,this.staticTypes));
+        
         //resolvers
         this.resolvers = buckets.map(bucket => this.createResolver(bucket));
         this.resolvers.push({
@@ -213,7 +211,7 @@ export class GraphqlEnpointHandler {
       }
 
       if (query && Object.keys(query).length) {
-        let matchExpression = AggregationExtractor.extract(bucket, query);
+        let matchExpression = extractAggregationFromQuery(bucket, query);
         if (matchExpression && Object.keys(matchExpression).length) {
           subAggregation.push({$match: matchExpression});
         }
@@ -288,7 +286,7 @@ export class GraphqlEnpointHandler {
       //   response: {}
       // });
 
-      await this.validateInput(bucket._id, input);
+      await validateInput(bucket._id, input, this.validator);
 
       let insertResult = await this.bds.insertOne(bucket._id, input);
 
@@ -315,7 +313,7 @@ export class GraphqlEnpointHandler {
       //   response: {}
       // });
 
-      await this.validateInput(bucket._id, input);
+      await validateInput(bucket._id, input, this.validator);
 
       const {value: previousDocument} = await this.bds.replaceOne(bucket._id, {_id: _id}, input, {
         returnOriginal: true
@@ -354,56 +352,21 @@ export class GraphqlEnpointHandler {
       //   request: context,
       //   response: {}
       // });
+
       let document = await this.bds.findOne(bucket._id, {_id});
 
-      //ignore id changes
-      delete document._id;
-      delete input._id;
+      let patchedDocument = getPatchedDocument(document, input);
 
-      let copiedDocument = JSON.parse(JSON.stringify(document));
-      let copiedInput = JSON.parse(JSON.stringify(input));
+      await validateInput(bucket._id, patchedDocument, this.validator);
 
-      let patchedDocument = JsonMergePatch.apply(copiedDocument, copiedInput);
+      let updateQuery = getUpdateQuery(document, patchedDocument);
 
-      //console.log(document);
-      //console.log(patchedDocument);
+      //throwing error is another option
+      if (!updateQuery || !Object.keys(updateQuery).length) {
+        return Promise.resolve(patchedDocument);
+      }
 
-      let changes = diff(document, patchedDocument);
-
-      let unsets = changes
-        .filter(change => change.kind == ChangeKind.Delete)
-        .map(change => change.path.join("."));
-
-        
-
-      console.log(unsets);
-      //console.log(changes);
-
-      //console.log(patchedDocument);
-
-      let sets = [];
-
-      changes
-        .filter(change => change.kind != ChangeKind.Delete)
-        .map(change => change.path)
-        .forEach(path => {
-          let result = path.reduce((acc, curr) => {
-            acc = acc[curr];
-            return acc;
-          }, patchedDocument);
-
-          sets.push({
-            $set: {
-              [path.join(".")]: result
-            }
-          });
-        });
-
-        this.bds.updateOne(bucket._id,{_id},)
-
-      let replace = this.replace(bucket);
-
-      return replace(root, {_id, input: document}, context);
+      return this.bds.findOneAndUpdate(bucket._id, {_id}, updateQuery, {returnOriginal: false});
     };
   }
 
@@ -454,103 +417,6 @@ export class GraphqlEnpointHandler {
       createBucketDataActivity,
       this.activity
     );
-  }
-
-  validateInput(bucketId: ObjectId, input: BucketDocument) {
-    let pipe: any = this.validatorPipes.get(bucketId);
-
-    if (!pipe) {
-      let validatorMixin = Schema.validate(bucketId.toHexString());
-      pipe = new validatorMixin(this.validator);
-      this.validatorPipes.set(bucketId, pipe);
-    }
-
-    return pipe.transform(input);
-  }
-}
-
-export namespace AggregationExtractor {
-  export function extract(bucket: Bucket, query: object): object {
-    //example query => { OR: [ { title: "my_title" } , { age_gt : 21 }  ] }
-    //expected aggregation => { $or: [ { title:"my_title" } , $gt: { age: 21 } ] }
-    let bucketProperties = {...bucket.properties, _id: {type: "objectid"}};
-
-    let matchExpression = {};
-    Object.keys(query).forEach(key => {
-      let expression;
-      if (key == "OR" || key == "AND") {
-        let conditions = [];
-        let operator = `$${key.toLowerCase()}`;
-        query[key].forEach(condition => {
-          //each condition is query, for example, it may include or operator inside of or
-          let conditionExpression = extract(bucket, condition);
-
-          if (conditionExpression && Object.keys(conditionExpression).length) {
-            conditions.push(conditionExpression);
-          }
-        });
-
-        if (conditions.length) {
-          expression = {
-            [operator]: conditions
-          };
-        }
-      } else {
-        let inner_expression = createExpression(key, query[key], bucketProperties);
-        if (inner_expression) {
-          expression = inner_expression;
-        }
-      }
-
-      matchExpression = {...matchExpression, ...expression};
-    });
-
-    return matchExpression;
-  }
-
-  export function createExpression(key: string, value: any, bucketProperties: any): object {
-    //case => { title:"test" }
-    //output => { title:"test" }
-    let desiredProperty = Object.keys(bucketProperties).find(
-      bucketProperty => bucketProperty == key
-    );
-
-    if (desiredProperty) {
-      value = castToOriginalType(value, bucketProperties[desiredProperty]);
-      return {
-        [desiredProperty]: value
-      };
-    } else {
-      //case => { title_ne:"test" }
-      //output => { $ne: { title: "test" } }
-      let property = key.substring(0, key.lastIndexOf("_"));
-      let operator = key.substring(key.lastIndexOf("_") + 1);
-      let desiredProperty = Object.keys(bucketProperties).find(
-        bucketProperty => bucketProperty == property
-      );
-
-      if (desiredProperty && operator) {
-        value = castToOriginalType(value, bucketProperties[desiredProperty]);
-        return {
-          [desiredProperty]: {
-            [`$${operator}`]: value
-          }
-        };
-      }
-    }
-  }
-
-  export function castToOriginalType(value: any, property: any): unknown {
-    switch (property.type) {
-      case "date":
-        return new Date(value);
-      case "objectid":
-        return new ObjectID(value);
-      case "array":
-        return value.map(val => castToOriginalType(val, property.items));
-      default:
-        return value;
-    }
   }
 }
 
