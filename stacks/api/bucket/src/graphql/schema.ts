@@ -1,7 +1,6 @@
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {ObjectId, ObjectID} from "@spica-server/database";
 import {diff, ChangeKind, ChangePaths} from "@spica-server/bucket/history/differ";
-import {Schema, Validator} from "@spica-server/core/schema";
 const JsonMergePatch = require("json-merge-patch");
 
 enum Prefix {
@@ -12,6 +11,11 @@ enum Prefix {
 enum Suffix {
   Type = "",
   Input = "Input"
+}
+
+enum UpdateType {
+  Set,
+  Unset
 }
 
 //schema
@@ -201,7 +205,7 @@ export function extractAggregationFromQuery(bucket: Bucket, query: object): obje
       query[key].forEach(condition => {
         let conditionExpression = extractAggregationFromQuery(bucket, condition);
 
-        if (conditionExpression && Object.keys(conditionExpression).length) {
+        if (Object.keys(conditionExpression).length) {
           conditions.push(conditionExpression);
         }
       });
@@ -282,7 +286,7 @@ export function getUpdateQuery(previousDocument: BucketDocument, currentDocument
     //we must put given array directly
     if (numIndex > 0) {
       //we dont need to track paths which is number and comes after number.
-      //["test",0,"inner_test"] => ["test"] only test arra
+      //["test",0,"inner_test"] => ["test"]
       change.path = change.path.slice(0, numIndex);
       //array updates will be handled with set operator.
       change.kind = ChangeKind.Edit;
@@ -290,21 +294,23 @@ export function getUpdateQuery(previousDocument: BucketDocument, currentDocument
     return change;
   });
 
-  //update and inserts
   const setTargets = changes
     .filter(change => change.kind != ChangeKind.Delete)
     .map(change => change.path);
-  let setExpressions = createExpressionFromChange(currentDocument, setTargets, "set");
-  if (setExpressions && Object.keys(setExpressions).length) {
+  let setExpressions = createExpressionFromChange(currentDocument, setTargets, UpdateType.Set);
+  if (Object.keys(setExpressions).length) {
     updateQuery.$set = setExpressions;
   }
 
-  //removed
   const unsetTargets = changes
     .filter(change => change.kind == ChangeKind.Delete)
     .map(change => change.path);
-  let unsetExpressions = createExpressionFromChange(currentDocument, unsetTargets, "unset");
-  if (unsetExpressions && Object.keys(unsetExpressions).length) {
+  let unsetExpressions = createExpressionFromChange(
+    currentDocument,
+    unsetTargets,
+    UpdateType.Unset
+  );
+  if (Object.keys(unsetExpressions).length) {
     updateQuery.$unset = unsetExpressions;
   }
 
@@ -314,14 +320,14 @@ export function getUpdateQuery(previousDocument: BucketDocument, currentDocument
 function createExpressionFromChange(
   document: BucketDocument,
   targets: ChangePaths[],
-  operation: "set" | "unset"
+  operation: UpdateType
 ) {
   let expressions = {};
   targets.forEach(target => {
     let key = target.join(".");
     let value = "";
 
-    if (operation == "set") {
+    if (operation == UpdateType.Set) {
       value = findValueOfPath(target, document);
     }
 
@@ -333,21 +339,4 @@ function createExpressionFromChange(
 
 function findValueOfPath(path: (string | number)[], document: BucketDocument) {
   return path.reduce((acc, curr) => acc[curr], document);
-}
-
-//document validation
-export function validateInput(
-  bucketId: ObjectId,
-  input: BucketDocument,
-  validator: Validator
-): Promise<any> {
-  let pipe: any = this.validatorPipes.get(bucketId);
-
-  if (!pipe) {
-    let validatorMixin = Schema.validate(bucketId.toHexString());
-    pipe = new validatorMixin(validator);
-    this.validatorPipes.set(bucketId, pipe);
-  }
-
-  return pipe.transform(input);
 }

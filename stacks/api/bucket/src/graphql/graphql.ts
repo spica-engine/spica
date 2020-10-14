@@ -1,6 +1,12 @@
 import {graphqlHTTP} from "express-graphql";
 import {HttpAdapterHost} from "@nestjs/core";
-import {Injectable, UnauthorizedException, Optional, PipeTransform} from "@nestjs/common";
+import {
+  Injectable,
+  UnauthorizedException,
+  Optional,
+  PipeTransform,
+  OnModuleInit
+} from "@nestjs/common";
 import {ObjectID, ObjectId} from "@spica-server/database";
 import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {GraphQLScalarType, GraphQLSchema, ValueNode} from "graphql";
@@ -8,16 +14,15 @@ import {GraphQLScalarType, GraphQLSchema, ValueNode} from "graphql";
 import {makeExecutableSchema, mergeTypeDefs, mergeResolvers} from "graphql-tools";
 import {GuardService} from "@spica-server/passport";
 import {HistoryService} from "@spica-server/bucket/history";
-import {createActivity, ActivityService} from "@spica-server/activity/services";
+import {createActivity, ActivityService, Action} from "@spica-server/activity/services";
 import {createBucketDataActivity} from "../activity.resource";
-import {Validator} from "@spica-server/core/schema";
+import {Validator, Schema} from "@spica-server/core/schema";
 import {
   getBucketName,
   createSchema,
   extractAggregationFromQuery,
   getPatchedDocument,
-  getUpdateQuery,
-  validateInput
+  getUpdateQuery
 } from "./schema";
 import {BucketDataService} from "../bucket-data.service";
 import {Locale, hasTranslatedProperties, findLocale, buildI18nAggregation} from "../locale";
@@ -29,13 +34,7 @@ interface FindResponse {
 }
 
 @Injectable()
-export class GraphqlController {
-  schema: GraphQLSchema;
-
-  buckets: Bucket[] = [];
-
-  validatorPipes: Map<ObjectId, PipeTransform<any, any>> = new Map();
-
+export class GraphqlController implements OnModuleInit {
   //graphql needs a default schema that includes one type and resolver at least
   typeDefs = [
     `type Query{
@@ -50,6 +49,15 @@ export class GraphqlController {
       }
     }
   ];
+
+  schema: GraphQLSchema = makeExecutableSchema({
+    typeDefs: mergeTypeDefs(this.typeDefs),
+    resolvers: mergeResolvers(this.resolvers)
+  });
+
+  buckets: Bucket[] = [];
+
+  validatorPipes: Map<ObjectId, PipeTransform<any, any>> = new Map();
 
   staticTypes = `
     scalar Date
@@ -73,34 +81,36 @@ export class GraphqlController {
     }
   `;
 
-  dateScalar = new GraphQLScalarType({
-    name: "Date",
-    description: "JavaScript Date object. Value will be passed to Date constructor."
-  });
+  staticResolvers = {
+    Date: new GraphQLScalarType({
+      name: "Date",
+      description: "JavaScript Date object. Value will be passed to Date constructor."
+    }),
 
-  JSONScalar = new GraphQLScalarType({
-    name: "JSON",
-    description: "JavaScript Object Notation."
-  });
+    JSON: new GraphQLScalarType({
+      name: "JSON",
+      description: "JavaScript Object Notation."
+    }),
 
-  objectIdScalar = new GraphQLScalarType({
-    name: "ObjectID",
-    description:
-      "BSON ObjectId type. Can be a 24 byte hex string, 12 byte binary string or a Number.",
-    parseValue(value) {
-      return new ObjectID(value);
-    },
-    serialize(value) {
-      return value.toString();
-    },
-    parseLiteral(ast: ValueNode) {
-      let value = ast["value"];
-      if (ObjectID.isValid(value)) {
+    ObjectID: new GraphQLScalarType({
+      name: "ObjectID",
+      description:
+        "BSON ObjectId type. Can be a 24 byte hex string, 12 byte binary string or a Number.",
+      parseValue(value) {
         return new ObjectID(value);
+      },
+      serialize(value) {
+        return value.toString();
+      },
+      parseLiteral(ast: ValueNode) {
+        let value = ast["value"];
+        if (ObjectID.isValid(value)) {
+          return new ObjectID(value);
+        }
+        return null;
       }
-      return null;
-    }
-  });
+    })
+  };
 
   constructor(
     private adapterHost: HttpAdapterHost,
@@ -110,23 +120,32 @@ export class GraphqlController {
     private activity: ActivityService,
     private validator: Validator,
     @Optional() private history: HistoryService
-  ) {
+  ) {}
+
+  onModuleInit() {
     let app = this.adapterHost.httpAdapter.getInstance();
 
     this.bs.watchCollection(true).subscribe(buckets => {
       this.buckets = buckets;
 
       if (buckets.length) {
-        //typeDefs
-        this.typeDefs = buckets.map(bucket => createSchema(bucket,this.staticTypes));
-        
-        //resolvers
-        this.resolvers = buckets.map(bucket => this.createResolver(bucket));
-        this.resolvers.push({
-          Date: this.dateScalar,
-          ObjectID: this.objectIdScalar,
-          JSON: this.JSONScalar
-        });
+        this.typeDefs = buckets.map(bucket => createSchema(bucket, this.staticTypes));
+
+        this.resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
+      } else {
+        this.typeDefs = [
+          `type Query{
+            spica: String
+          }`
+        ];
+
+        this.resolvers = [
+          {
+            Query: {
+              spica: () => "Spica"
+            }
+          }
+        ];
       }
 
       this.schema = makeExecutableSchema({
@@ -162,9 +181,11 @@ export class GraphqlController {
     );
   }
 
-  createResolver(bucket: Bucket) {
+  createResolver(bucket: Bucket, staticResolvers: object) {
     let name = getBucketName(bucket._id);
     let resolver = {
+      ...staticResolvers,
+
       Query: {
         [`Find${name}`]: this.find(bucket),
         [`FindBy${name}Id`]: this.findById(bucket)
@@ -212,7 +233,7 @@ export class GraphqlController {
 
       if (query && Object.keys(query).length) {
         let matchExpression = extractAggregationFromQuery(bucket, query);
-        if (matchExpression && Object.keys(matchExpression).length) {
+        if (Object.keys(matchExpression).length) {
           subAggregation.push({$match: matchExpression});
         }
       }
@@ -242,12 +263,12 @@ export class GraphqlController {
   }
 
   findById(bucket: Bucket): Function {
-    return async (root, {_id, language}, context): Promise<BucketDocument> => {
+    return async (root, {_id: documentId, language}, context): Promise<BucketDocument> => {
       let aggregation = [];
 
       aggregation.push({
         $match: {
-          _id: _id
+          _id: documentId
         }
       });
 
@@ -275,7 +296,7 @@ export class GraphqlController {
         }
       }
 
-      return this.bds.find(bucket._id, aggregation).then(entries => entries[0]);
+      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
     };
   }
 
@@ -286,11 +307,11 @@ export class GraphqlController {
       //   response: {}
       // });
 
-      await validateInput(bucket._id, input, this.validator);
+      await this.validateInput(bucket._id, input);
 
       let insertResult = await this.bds.insertOne(bucket._id, input);
 
-      const _ = this.insertActivity(context, "POST", bucket._id, insertResult.insertedId);
+      const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
 
       //resolve relations if bucket has relation field
       if (
@@ -307,21 +328,26 @@ export class GraphqlController {
   }
 
   replace(bucket: Bucket): Function {
-    return async (root, {_id, input}, context): Promise<BucketDocument> => {
+    return async (root, {_id: documentId, input}, context): Promise<BucketDocument> => {
       // await this.guardService.checkAuthorization({
       //   request: context,
       //   response: {}
       // });
 
-      await validateInput(bucket._id, input, this.validator);
+      await this.validateInput(bucket._id, input);
 
-      const {value: previousDocument} = await this.bds.replaceOne(bucket._id, {_id: _id}, input, {
-        returnOriginal: true
-      });
+      const {value: previousDocument} = await this.bds.replaceOne(
+        bucket._id,
+        {_id: documentId},
+        input,
+        {
+          returnOriginal: true
+        }
+      );
 
-      const currentDocument = {...input, _id: _id};
+      const currentDocument = {...input, _id: documentId};
 
-      const _ = this.insertActivity(context, "PUT", bucket._id, _id);
+      const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
 
       if (this.history) {
         const promise = createHistory(
@@ -339,7 +365,7 @@ export class GraphqlController {
         )
       ) {
         let findById = this.findById(bucket);
-        return findById(root, {_id, language: undefined}, context);
+        return findById(root, {_id: documentId, language: undefined}, context);
       }
 
       return currentDocument;
@@ -347,46 +373,51 @@ export class GraphqlController {
   }
 
   patch(bucket: Bucket): Function {
-    return async (root, {_id, input}, context) => {
+    return async (root, {_id: documentId, input}, context) => {
       // await this.guardService.checkAuthorization({
       //   request: context,
       //   response: {}
       // });
 
-      let document = await this.bds.findOne(bucket._id, {_id});
+      let document = await this.bds.findOne(bucket._id, {_id: documentId});
 
       let patchedDocument = getPatchedDocument(document, input);
 
-      await validateInput(bucket._id, patchedDocument, this.validator);
+      await this.validateInput(bucket._id, patchedDocument);
 
       let updateQuery = getUpdateQuery(document, patchedDocument);
 
-      //throwing error is another option
-      if (!updateQuery || !Object.keys(updateQuery).length) {
-        return Promise.resolve(patchedDocument);
+      if (!Object.keys(updateQuery).length) {
+        throw Error("There is no difference between previous and current documents.");
       }
 
-      return this.bds.findOneAndUpdate(bucket._id, {_id}, updateQuery, {returnOriginal: false});
+      const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+
+      return this.bds.findOneAndUpdate(bucket._id, {_id: documentId}, updateQuery, {
+        returnOriginal: false
+      });
     };
   }
 
   delete(bucket: Bucket): Function {
-    return async (root, {_id}, context): Promise<Boolean> => {
+    return async (root, {_id: documentId}, context): Promise<Boolean> => {
       // await this.guardService.checkAuthorization({
       //   request: context,
       //   response: {}
       // });
 
-      await clearRelations(this.bs, bucket._id, _id);
+      await clearRelations(this.bs, bucket._id, documentId);
       if (this.history) {
         const promise = this.history.deleteMany({
-          document_id: _id
+          document_id: documentId
         });
       }
 
-      let result = await this.bds.deleteOne(bucket._id, {_id: _id}).then(res => !!res.deletedCount);
+      let result = await this.bds
+        .deleteOne(bucket._id, {_id: documentId})
+        .then(res => !!res.deletedCount);
 
-      const _ = this.insertActivity(context, "DELETE", bucket._id, _id);
+      const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
 
       return result;
     };
@@ -395,7 +426,7 @@ export class GraphqlController {
   //activity logs
   insertActivity(
     context: any,
-    method: "POST" | "PUT" | "DELETE",
+    method: Action,
     bucketId: string | ObjectId,
     documentId: string | ObjectId
   ) {
@@ -417,6 +448,19 @@ export class GraphqlController {
       createBucketDataActivity,
       this.activity
     );
+  }
+
+  //document validation
+  validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {
+    let pipe: any = this.validatorPipes.get(bucketId);
+
+    if (!pipe) {
+      let validatorMixin = Schema.validate(bucketId.toHexString());
+      pipe = new validatorMixin(this.validator);
+      this.validatorPipes.set(bucketId, pipe);
+    }
+
+    return pipe.transform(input);
   }
 }
 

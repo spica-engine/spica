@@ -439,21 +439,5 @@ describe("Schema", () => {
         $set: {strings: ["new_value"]}
       });
     });
-
-    it("should get update query for arrays", () => {
-      let previousDocument = {
-        strings: ["value1", "value2"]
-      };
-
-      let currentDocument = {
-        strings: ["new_value"]
-      };
-
-      let query = getUpdateQuery(previousDocument, currentDocument);
-
-      expect(query).toEqual({
-        $set: {strings: ["new_value"]}
-      });
-    });
   });
 });

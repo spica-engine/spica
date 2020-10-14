@@ -245,6 +245,7 @@ ts_library(
         "//packages/core/testing",
         "//packages/core/websocket",
         "//packages/database/testing",
+        "//stacks/api/activity",
         "//stacks/api/bucket",
         "//stacks/api/bucket/services",
         "//stacks/api/passport/testing",
