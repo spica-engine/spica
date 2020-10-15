@@ -1,20 +1,22 @@
 <div>
-
   <input-schema-placer
     [inputSchemaPlacer]="schema.items['type']"
-    [forbiddenTypes]="['relation','object','array']"
+    [forbiddenTypes]="['relation', 'object', 'array']"
     [(ngModel)]="schema.items"
     (ngModelChange)="getOrigin()"
   ></input-schema-placer>
 
-
   <div *ngIf="origin == 'string' || origin == 'number' || origin == 'boolean'">
     <mat-slide-toggle [(ngModel)]="schema.uniqueItems">
       Item should be unique
-      <button mat-icon-button matSuffix matTooltip="Whether all items must be different from each other.">
+      <button
+        mat-icon-button
+        matSuffix
+        matTooltip="Whether all items must be different from each other."
+      >
         <mat-icon>info</mat-icon>
       </button>
-    </mat-slide-toggle> 
+    </mat-slide-toggle>
 
     <mat-form-field>
       <input matInput type="number" placeholder="Minimum items" [(ngModel)]="schema.minItems" />

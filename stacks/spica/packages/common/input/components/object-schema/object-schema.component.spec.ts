@@ -2,7 +2,7 @@ import {async, ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/t
 import {FormsModule} from "@angular/forms";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatOptionModule} from "@angular/material/core";
-import { MatDialogModule } from "@angular/material/dialog";
+import {MatDialogModule} from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
@@ -74,7 +74,7 @@ describe("Common#object-schema", () => {
   }));
 
   it("Should be working remove button", fakeAsync(async () => {
-    component.schema.properties = {'test': true}
+    component.schema.properties = {test: true};
     fixture.detectChanges();
     const removeButton = fixture.debugElement.query(By.css(".meta-info button:last-of-type"));
     fixture.detectChanges();

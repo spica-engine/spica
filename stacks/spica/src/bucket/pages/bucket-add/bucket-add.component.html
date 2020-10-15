@@ -5,21 +5,36 @@
   <mat-toolbar>
     <span>
       <h4 class="mat-h4 bucket-title">
-        <button mat-icon-button menu-icon class="mat-elevation-z25" matTooltip="You can select a icon by clicking here."
-          [matMenuTriggerFor]="iconSelector">
+        <button
+          mat-icon-button
+          menu-icon
+          class="mat-elevation-z25"
+          matTooltip="You can select a icon by clicking here."
+          [matMenuTriggerFor]="iconSelector"
+        >
           <mat-icon>{{ bucket?.icon }}</mat-icon>
           <mat-menu #iconSelector="matMenu">
             <ng-container matMenuContent>
-              <button *ngFor="let icon of visibleIcons" mat-icon-button mat-flat-button [matTooltip]="icon"
-                (click)="bucket.icon = icon">
+              <button
+                *ngFor="let icon of visibleIcons"
+                mat-icon-button
+                mat-flat-button
+                [matTooltip]="icon"
+                (click)="bucket.icon = icon"
+              >
                 <mat-icon>{{ icon }}</mat-icon>
               </button>
-              <mat-paginator (page)="
+              <mat-paginator
+                (page)="
                   this.visibleIcons = this.icons.slice(
                     $event.pageIndex * $event.pageSize,
                     ($event.pageIndex + 1) * $event.pageSize
                   )
-                " (click)="$event.stopPropagation()" [length]="icons.length" [pageSize]="iconPageSize">
+                "
+                (click)="$event.stopPropagation()"
+                [length]="icons.length"
+                [pageSize]="iconPageSize"
+              >
               </mat-paginator>
             </ng-container>
           </mat-menu>
@@ -28,9 +43,9 @@
       </h4>
     </span>
     <div class="actions">
-      <button mat-button (click)="configureView = !configureView ;configureMeta = !configureMeta ;">
-        <mat-icon>{{(configureView) ? "text_fields" : "view_module"}}</mat-icon>
-        {{(configureView) ? "Configure the meta" : "Configure the view"}}
+      <button mat-button (click)="configureView = !configureView; configureMeta = !configureMeta">
+        <mat-icon>{{ configureView ? "text_fields" : "view_module" }}</mat-icon>
+        {{ configureView ? "Configure the meta" : "Configure the view" }}
       </button>
     </div>
   </mat-toolbar>
@@ -49,8 +64,16 @@
           <mat-list-item>
             <form #describeForm="ngForm">
               <mat-form-field>
-                <input matInput name="title" placeholder="Title" #tm="ngModel" [(ngModel)]="bucket.title" required
-                  minlength="4" maxlength="100" />
+                <input
+                  matInput
+                  name="title"
+                  placeholder="Title"
+                  #tm="ngModel"
+                  [(ngModel)]="bucket.title"
+                  required
+                  minlength="4"
+                  maxlength="100"
+                />
                 <mat-hint align="end">{{ tm.value?.length || 0 }} / 100</mat-hint>
                 <mat-error *ngIf="tm?.errors?.required">This field is required.</mat-error>
                 <mat-error *ngIf="tm?.errors?.minlength">
@@ -62,10 +85,19 @@
                   {{ tm?.errors?.maxlength?.requiredLength }} character.
                 </mat-error>
               </mat-form-field>
-  
+
               <mat-form-field>
-                <textarea matInput name="description" placeholder="Description" #dm="ngModel"
-                  [(ngModel)]="bucket.description" required minlength="5" maxlength="250" rows="3"></textarea>
+                <textarea
+                  matInput
+                  name="description"
+                  placeholder="Description"
+                  #dm="ngModel"
+                  [(ngModel)]="bucket.description"
+                  required
+                  minlength="5"
+                  maxlength="250"
+                  rows="3"
+                ></textarea>
                 <mat-hint align="end"> {{ dm.value?.length || 0 }} / 250 </mat-hint>
                 <mat-error *ngIf="dm?.errors?.required">This field is required.</mat-error>
                 <mat-error *ngIf="dm?.errors?.minlength">
@@ -77,35 +109,53 @@
                   {{ dm?.errors.maxlength?.requiredLength }} character.
                 </mat-error>
               </mat-form-field>
-  
+
               <div class="toggles">
                 <div class="read-only">
-                  <mat-slide-toggle matInput name="readOnly" placeholder="Read Only" [(ngModel)]="bucket.readOnly">
+                  <mat-slide-toggle
+                    matInput
+                    name="readOnly"
+                    placeholder="Read Only"
+                    [(ngModel)]="bucket.readOnly"
+                  >
                     Read Only
                   </mat-slide-toggle>
-                  <button mat-icon-button color="accent" disableRipple
-                    matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket.">
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    disableRipple
+                    matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
+                  >
                     <mat-icon>info</mat-icon>
                   </button>
                 </div>
                 <div class="history">
-                  <mat-slide-toggle [disabled]="!(isHistoryEndpointEnabled$ | async)" matInput name="history"
-                    placeholder="History" [(ngModel)]="bucket.history">
+                  <mat-slide-toggle
+                    [disabled]="!(isHistoryEndpointEnabled$ | async)"
+                    matInput
+                    name="history"
+                    placeholder="History"
+                    [(ngModel)]="bucket.history"
+                  >
                     History
                   </mat-slide-toggle>
-                  <button mat-icon-button color="accent" disableRipple
-                    matTooltip="When enabled, the history of the data inside this bucket will be kept.">
+                  <button
+                    mat-icon-button
+                    color="accent"
+                    disableRipple
+                    matTooltip="When enabled, the history of the data inside this bucket will be kept."
+                  >
                     <mat-icon>info</mat-icon>
                   </button>
                 </div>
-                <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">This feature is unavailable.</mat-error>
+                <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)"
+                  >This feature is unavailable.</mat-error
+                >
               </div>
             </form>
           </mat-list-item>
           <span>
-            <h4 mat-subheader>
-              <mat-icon>text_fields</mat-icon> Properties
-            </h4>
+            <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
             <span class="errors">
               <mat-error *ngIf="(bucket.properties | keyvalue)?.length < 1">
                 Please add at least one property.
@@ -121,10 +171,17 @@
 
           <mat-list-item class="properties">
             <div class="fields" cdkDropList (cdkDropListDropped)="cardDrop($event)">
-              <div class="property" *ngFor="let propertyKv of bucket.properties | propertyKv" cdkDrag>
+              <div
+                class="property"
+                *ngFor="let propertyKv of bucket.properties | propertyKv"
+                cdkDrag
+              >
                 <div class="property-meta">
                   <div class="property-title">
-                    <div class="icon" [style.background]="_inputResolver.resolve(propertyKv.value.type).color">
+                    <div
+                      class="icon"
+                      [style.background]="_inputResolver.resolve(propertyKv.value.type).color"
+                    >
                       <mat-icon>{{ _inputResolver.resolve(propertyKv.value.type).icon }}</mat-icon>
                     </div>
                     <mat-label>{{ propertyKv.value.title }}</mat-label>
@@ -133,8 +190,7 @@
                     <button mat-icon-button (click)="createNewField(propertyKv.key)">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn"
-                      (click)=" deleteProperty(propertyKv.key)">
+                    <button mat-icon-button color="warn" (click)="deleteProperty(propertyKv.key)">
                       <mat-icon>delete</mat-icon>
                     </button>
                     <button mat-icon-button disableRipple cdkDragHandle>
@@ -143,15 +199,19 @@
                   </div>
                 </div>
                 <span
-                *ngIf="propertyKv.value.type == 'object'"
-                class="input-placer-area"
-                [advanceOnly]="true"
-                [inputSchemaPlacer]="propertyKv.value.type"
-                [(ngModel)]="bucket.properties[propertyKv.key]">
+                  *ngIf="propertyKv.value.type == 'object'"
+                  class="input-placer-area"
+                  [advanceOnly]="true"
+                  [inputSchemaPlacer]="propertyKv.value.type"
+                  [(ngModel)]="bucket.properties[propertyKv.key]"
+                >
                 </span>
                 <div class="readonly" *ngIf="bucket.properties[propertyKv.key].readOnly">
                   <mat-divider></mat-divider>
-                  <span [inputPlacer]="propertyKv.value" [(ngModel)]="bucket.properties[propertyKv.key].default">
+                  <span
+                    [inputPlacer]="propertyKv.value"
+                    [(ngModel)]="bucket.properties[propertyKv.key].default"
+                  >
                   </span>
                   <div>
                     <mat-icon>
@@ -165,43 +225,70 @@
               </div>
             </div>
 
-            <button class="add-property" (click)="createNewField()" mat-button><mat-icon>add</mat-icon> Add new property</button>
+            <button class="add-property" (click)="createNewField()" mat-button>
+              <mat-icon>add</mat-icon> Add new property
+            </button>
           </mat-list-item>
         </div>
         <div [class.hide]="!configureView">
           <span>
-            <h4 mat-subheader>
-              <mat-icon>view_module</mat-icon> View
-            </h4>
+            <h4 mat-subheader><mat-icon>view_module</mat-icon> View</h4>
           </span>
           <mat-divider></mat-divider>
           <mat-list-item class="padding-24">
             <mat-grid-list [cols]="4" gutterSize="10px" rowHeight="200px">
-              <mat-grid-tile [colspan]="2" #leftList="cdkDropList" cdkDropList cdkDropListSortingDisabled
+              <mat-grid-tile
+                [colspan]="2"
+                #leftList="cdkDropList"
+                cdkDropList
+                cdkDropListSortingDisabled
                 [cdkDropListData]="propertyPositionMap.left"
                 [cdkDropListConnectedTo]="[rightList, bottomList, nonPositioned]"
-                (cdkDropListDropped)="setPosition($event, 'left')">
-                <mat-card class="mat-elevation-z0" *ngFor="let propertyKv of propertyPositionMap.left" cdkDrag>
+                (cdkDropListDropped)="setPosition($event, 'left')"
+              >
+                <mat-card
+                  class="mat-elevation-z0"
+                  *ngFor="let propertyKv of propertyPositionMap.left"
+                  cdkDrag
+                >
                   <mat-icon>{{ _inputResolver.resolve(propertyKv.value.type).icon }}</mat-icon>
                   <span>{{ propertyKv.value.title }}</span>
                 </mat-card>
                 <span>Left</span>
               </mat-grid-tile>
-              <mat-grid-tile [colspan]="2" #rightList="cdkDropList" cdkDropList cdkDropListSortingDisabled
+              <mat-grid-tile
+                [colspan]="2"
+                #rightList="cdkDropList"
+                cdkDropList
+                cdkDropListSortingDisabled
                 [cdkDropListData]="propertyPositionMap.right"
                 [cdkDropListConnectedTo]="[leftList, bottomList, nonPositioned]"
-                (cdkDropListDropped)="setPosition($event, 'right')">
-                <mat-card class="mat-elevation-z0" *ngFor="let propertyKv of propertyPositionMap.right" cdkDrag>
+                (cdkDropListDropped)="setPosition($event, 'right')"
+              >
+                <mat-card
+                  class="mat-elevation-z0"
+                  *ngFor="let propertyKv of propertyPositionMap.right"
+                  cdkDrag
+                >
                   <mat-icon>{{ _inputResolver.resolve(propertyKv.value.type).icon }}</mat-icon>
                   <span>{{ propertyKv.value.title }}</span>
                 </mat-card>
                 <span>Right</span>
               </mat-grid-tile>
-              <mat-grid-tile [colspan]="4" #bottomList="cdkDropList" cdkDropList cdkDropListSortingDisabled
+              <mat-grid-tile
+                [colspan]="4"
+                #bottomList="cdkDropList"
+                cdkDropList
+                cdkDropListSortingDisabled
                 [cdkDropListData]="propertyPositionMap.bottom"
                 [cdkDropListConnectedTo]="[rightList, leftList, nonPositioned]"
-                (cdkDropListDropped)="setPosition($event, 'bottom')">
-                <mat-card class="mat-elevation-z0" *ngFor="let propertyKv of propertyPositionMap.bottom" cdkDrag>
+                (cdkDropListDropped)="setPosition($event, 'bottom')"
+              >
+                <mat-card
+                  class="mat-elevation-z0"
+                  *ngFor="let propertyKv of propertyPositionMap.bottom"
+                  cdkDrag
+                >
                   <mat-icon>{{ _inputResolver.resolve(propertyKv.value.type).icon }}</mat-icon>
                   <span>{{ propertyKv.value.title }}</span>
                 </mat-card>
@@ -210,40 +297,67 @@
             </mat-grid-list>
           </mat-list-item>
         </div>
-  
       </mat-list>
     </mat-card-content>
     <mat-card-actions>
-      <button class="save-button" mat-button [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
-        [resource]="bucket._id ? bucket._id : undefined" form="describeForm" *matSave="$save | async; let state"
+      <button
+        class="save-button"
+        mat-button
+        [canInteract]="bucket._id ? 'bucket:update' : 'bucket:create'"
+        [resource]="bucket._id ? bucket._id : undefined"
+        form="describeForm"
+        *matSave="$save | async; let state"
         [disabled]="
           describeForm.invalid ||
           (bucket.properties | keyvalue)?.length < 1 ||
           !isThereVisible ||
           bucket.primary == undefined ||
           !!state
-        " (click)="saveBucket()" [ngSwitch]="state">
+        "
+        (click)="saveBucket()"
+        [ngSwitch]="state"
+      >
         <mat-icon *ngSwitchDefault>save</mat-icon>
-        <mat-progress-spinner *ngSwitchCase="'saving'" [diameter]="18" color="primary" mode="indeterminate">
+        <mat-progress-spinner
+          *ngSwitchCase="'saving'"
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        >
         </mat-progress-spinner>
         <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
         <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
         <span>{{ (!state ? "save" : state) | titlecase }}</span>
       </button>
     </mat-card-actions>
-    <mat-list-item *ngIf="bucket._id" canInteract="bucket:update" [resource]="bucket._id" class="remove-history">
+    <mat-list-item
+      *ngIf="bucket._id"
+      canInteract="bucket:update"
+      [resource]="bucket._id"
+      class="remove-history"
+    >
       <mat-divider></mat-divider>
       <h3>
         DANGER ZONE
       </h3>
-      <button (click)="clearHistories()" mat-raised-button color="warn" *matSave="$remove | async; let state"
-        [disabled]="!!state" [ngSwitch]="state">
+      <button
+        (click)="clearHistories()"
+        mat-raised-button
+        color="warn"
+        *matSave="$remove | async; let state"
+        [disabled]="!!state"
+        [ngSwitch]="state"
+      >
         <ng-container *ngSwitchDefault>
           <mat-icon>delete</mat-icon>
           <span>Remove</span>
         </ng-container>
         <ng-container *ngSwitchCase="'saving'">
-          <mat-progress-spinner [diameter]="18" color="primary" mode="indeterminate"></mat-progress-spinner>
+          <mat-progress-spinner
+            [diameter]="18"
+            color="primary"
+            mode="indeterminate"
+          ></mat-progress-spinner>
           <span>Removing..</span>
         </ng-container>
         <ng-container *ngSwitchCase="'saved'">

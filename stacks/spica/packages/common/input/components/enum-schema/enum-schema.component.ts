@@ -1,8 +1,8 @@
 import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
-import { FormControl } from "@angular/forms";
-import { MatChipInputEvent } from "@angular/material/chips";
+import {FormControl} from "@angular/forms";
+import {MatChipInputEvent} from "@angular/material/chips";
 import {InputSchema, INPUT_SCHEMA} from "../../input";
-import {COMMA, ENTER} from '@angular/cdk/keycodes';
+import {COMMA, ENTER} from "@angular/cdk/keycodes";
 
 @Component({
   templateUrl: "./enum-schema.component.html",
@@ -17,8 +17,7 @@ export class EnumSchemaComponent {
   separatorKeysCodes: number[] = [ENTER, COMMA];
 
   schemaWithoutEnum: InputSchema;
-  @ViewChild('enumInput') enumInput: ElementRef<HTMLInputElement>;
-
+  @ViewChild("enumInput") enumInput: ElementRef<HTMLInputElement>;
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
     this.schema.enum = this.schema.enum || [];
@@ -26,18 +25,17 @@ export class EnumSchemaComponent {
   }
 
   addItem(event: MatChipInputEvent) {
-
     const input = event.input;
     const value = event.value;
 
     // Add our fruit
-    if ((value || '').trim()) {
+    if ((value || "").trim()) {
       this.schema.enum.push(value.trim());
     }
 
     // Reset the input value
     if (input) {
-      input.value = '';
+      input.value = "";
     }
 
     this.enumCtrl.setValue(null);

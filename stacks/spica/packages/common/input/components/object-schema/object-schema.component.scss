@@ -19,55 +19,55 @@
 :host {
   margin-left: 30px;
   display: block;
-  .indent{
-    border-left: 1px solid rgba(0,0,0,0.08);
+  .indent {
+    border-left: 1px solid rgba(0, 0, 0, 0.08);
   }
   .property {
     padding-left: 10px;
     border-radius: 4px;
     margin-bottom: 15px;
     border-bottom: unset !important;
-    .meta-info{
+    .meta-info {
       position: relative;
       display: flex;
       justify-content: space-between;
       width: 100%;
-      &:before{
+      &:before {
         content: "";
-        position:absolute;
+        position: absolute;
         left: -10px;
         top: 50%;
         width: 15px;
         height: 1px;
-        background: rgba(0,0,0,0.08);
+        background: rgba(0, 0, 0, 0.08);
       }
     }
   }
 
-  button.add-new-property{
+  button.add-new-property {
     width: 100%;
     padding: 5px;
-    border: 1px dashed rgba(0,0,0,.08);
+    border: 1px dashed rgba(0, 0, 0, 0.08);
   }
 
-  .object-field{
+  .object-field {
     margin-left: 10px;
     display: flex;
     align-items: center;
-    .icon{
+    .icon {
       border-radius: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 5px;
-      mat-icon{
-          color: white;  
-          font-size: 1rem; 
-          display: flex;
-          align-items: center;
-          justify-content: center;    
-          width: 20px;
-          height: 20px;
+      mat-icon {
+        color: white;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
       }
       margin-right: 10px;
     }

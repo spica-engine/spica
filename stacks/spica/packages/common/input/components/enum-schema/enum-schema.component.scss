@@ -4,7 +4,7 @@
     display: flex;
     flex-wrap: wrap;
     width: 100%;
-    &:first-of-type{
+    &:first-of-type {
       margin-top: 15px;
     }
     .field-container {
@@ -25,14 +25,14 @@
       margin-top: -20px;
       padding-left: 0px;
     }
-    button{
+    button {
       margin-top: 15px;
     }
   }
-  button.add-new-value{
+  button.add-new-value {
     margin-top: 15px;
     width: 100%;
-    border: 1px dashed rgba(0,0,0,.08);
+    border: 1px dashed rgba(0, 0, 0, 0.08);
     padding: 10px;
   }
 }

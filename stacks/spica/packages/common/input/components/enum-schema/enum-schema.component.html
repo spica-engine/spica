@@ -5,8 +5,9 @@
         *ngFor="let value of schema.enum; let index = index; trackBy: _trackBy"
         [selectable]="selectable"
         [removable]="removable"
-        (removed)="removeItem(index)">
-        {{schema.enum[index]}}
+        (removed)="removeItem(index)"
+      >
+        {{ schema.enum[index] }}
         <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
       </mat-chip>
       <input
@@ -15,7 +16,8 @@
         [formControl]="enumCtrl"
         [matChipInputFor]="chipList"
         [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-        (matChipInputTokenEnd)="addItem($event)">
+        (matChipInputTokenEnd)="addItem($event)"
+      />
     </mat-chip-list>
   </mat-form-field>
 </div>

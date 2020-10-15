@@ -23,8 +23,8 @@ import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
-import { MatDialog } from "@angular/material/dialog";
-import { AddFieldModalComponent } from "../add-field-modal/add-field-modal.component";
+import {MatDialog} from "@angular/material/dialog";
+import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
 
 @Component({
   selector: "bucket-add",
@@ -143,7 +143,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-
   setDefault(event: MatCheckboxChange, propertyKey) {
     if (event.checked) {
       this.bucket.properties[propertyKey].default = undefined;
@@ -194,7 +193,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     );
   }
 
-  createNewField(propertyKey: string = null){
+  createNewField(propertyKey: string = null) {
     let dialogRef = this.dialog.open(AddFieldModalComponent, {
       width: "800px",
       maxHeight: "800px",
@@ -207,7 +206,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(data => {
       this.updatePositionProperties();
-    })
+    });
   }
 
   ngOnDestroy() {

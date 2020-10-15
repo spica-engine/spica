@@ -1,68 +1,68 @@
-::ng-deep{
-    mat-label{
-        margin: 0px !important;
-    }
-    mat-form-field{
-        width: 100%;
-        margin: 0px !important;
-    }
+::ng-deep {
+  mat-label {
+    margin: 0px !important;
+  }
+  mat-form-field {
+    width: 100%;
+    margin: 0px !important;
+  }
 }
-:host{
-    .field{
+:host {
+  .field {
+    display: flex;
+    width: calc(50% - 5px);
+    align-items: center;
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+    padding: 10px;
+    float: left;
+    text-transform: capitalize;
+    margin-bottom: 10px;
+    cursor: pointer;
+    &:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    .icon {
+      border-radius: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px;
+      mat-icon {
+        color: white;
+        font-size: 1rem;
         display: flex;
-        width: calc(50% - 5px);
         align-items: center;
-        border: 1px dashed rgba(0,0,0,.08);
-        padding: 10px;
-        float: left;
-        text-transform: capitalize;
-        margin-bottom: 10px;
-        cursor: pointer;
-        &:hover{
-            background: rgba(0,0,0,.03);
-        }
-        .icon{
-            border-radius: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5px;
-            mat-icon{
-                color: white;  
-                font-size: 1rem; 
-                display: flex;
-                align-items: center;
-                justify-content: center;    
-                width: 20px;
-                height: 20px;
-            }
-            margin-right: 10px;
-        }
-
-        &:nth-child(2n){
-            margin-left: 5px;
-        }
-        &:nth-child(2n + 1){
-            margin-right: 5px;
-        }
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+      }
+      margin-right: 10px;
     }
 
-    .advance-settings{
-        font-size: 0.85rem;
-        .input-placer-area{
-            margin-bottom: 15px;
-        }
+    &:nth-child(2n) {
+      margin-left: 5px;
     }
-    
-    mat-divider{
-        margin: 15px 0px;
+    &:nth-child(2n + 1) {
+      margin-right: 5px;
     }
+  }
 
-    mat-label{
-        font-size: 0.7rem;
+  .advance-settings {
+    font-size: 0.85rem;
+    .input-placer-area {
+      margin-bottom: 15px;
     }
+  }
 
-    button{
-        float: right;
-    }
+  mat-divider {
+    margin: 15px 0px;
+  }
+
+  mat-label {
+    font-size: 0.7rem;
+  }
+
+  button {
+    float: right;
+  }
 }

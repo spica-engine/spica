@@ -1,35 +1,35 @@
-import { TestBed, ComponentFixture, tick, fakeAsync } from "@angular/core/testing";
-import { MatCardModule } from "@angular/material/card";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatOptionModule } from "@angular/material/core";
-import { MatDividerModule } from "@angular/material/divider";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatIconModule } from "@angular/material/icon";
-import { MatInputModule } from "@angular/material/input";
-import { MatListModule } from "@angular/material/list";
-import { MatMenuModule, _MatMenuDirectivesModule } from "@angular/material/menu";
-import { MatPaginatorModule } from "@angular/material/paginator";
-import { MatSelectModule } from "@angular/material/select";
-import { MatSlideToggleModule } from "@angular/material/slide-toggle";
-import { MatToolbarModule } from "@angular/material/toolbar";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { PropertyKvPipe } from "../../../../packages/common/property_keyvalue.pipe";
-import { InputModule } from "@spica-client/common";
-import { MatSaveModule } from "@spica-client/material";
-import { MatButtonModule } from "@angular/material/button";
+import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
+import {MatCardModule} from "@angular/material/card";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatOptionModule} from "@angular/material/core";
+import {MatDividerModule} from "@angular/material/divider";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import {MatListModule} from "@angular/material/list";
+import {MatMenuModule, _MatMenuDirectivesModule} from "@angular/material/menu";
+import {MatPaginatorModule} from "@angular/material/paginator";
+import {MatSelectModule} from "@angular/material/select";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {InputModule} from "@spica-client/common";
+import {MatSaveModule} from "@spica-client/material";
+import {MatButtonModule} from "@angular/material/button";
 
-import { ActivatedRoute, Router } from "@angular/router";
-import { BucketService } from "src/bucket/services/bucket.service";
-import { AddFieldModalComponent } from "./add-field-modal.component";
+import {ActivatedRoute, Router} from "@angular/router";
+import {BucketService} from "src/bucket/services/bucket.service";
+import {AddFieldModalComponent} from "./add-field-modal.component";
 
-import { of } from "rxjs";
-import { NoopAnimationsModule } from "@angular/platform-browser/animations";
-import { By } from "@angular/platform-browser";
-import { Directive, HostBinding, Input } from "@angular/core";
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
-import { FormsModule } from "@angular/forms";
+import {of} from "rxjs";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {By} from "@angular/platform-browser";
+import {Directive, HostBinding, Input} from "@angular/core";
+import {MatDialogModule, MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
+import {FormsModule} from "@angular/forms";
 
-@Directive({ selector: "[canInteract]" })
+@Directive({selector: "[canInteract]"})
 export class CanInteractDirectiveTest {
   @HostBinding("style.visibility") _visible = "visible";
   @Input("canInteract") action: string;
@@ -111,7 +111,7 @@ describe("Add Field Component", () => {
             getPredefinedDefaults: jasmine
               .createSpy("getPredefinedDefaults")
               .and.returnValues(
-                of([{ keyword: "keyword", type: "type" }, { keyword: "keyword2", type: "type2" }])
+                of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "type2"}])
               )
           }
         },
@@ -120,13 +120,13 @@ describe("Add Field Component", () => {
           useValue: {}
         },
         {
-          provide: MAT_DIALOG_DATA, 
+          provide: MAT_DIALOG_DATA,
           useValue: {
             parentSchema: sampleSchema,
             propertyKey: "prop1",
-            predefinedDefaults: {'date': [{ keyword: "created_at", type: "true" }] }
+            predefinedDefaults: {date: [{keyword: "created_at", type: "true"}]}
           }
-        },
+        }
       ],
       declarations: [AddFieldModalComponent, PropertyKvPipe, CanInteractDirectiveTest]
     }).compileComponents();
@@ -154,22 +154,23 @@ describe("Add Field Component", () => {
       fixture.componentInstance.propertyKey = "prop1";
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css(".field-configuration"))).toBeTruthy();
-    })
+    });
 
     it("should hide advanced settings if the field is object", () => {
       fixture.componentInstance.step = 1;
-      fixture.componentInstance.field = 'object';
+      fixture.componentInstance.field = "object";
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css(".input-placer-area"))).toBeFalsy();
 
-      fixture.componentInstance.field = 'string'
+      fixture.componentInstance.field = "string";
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css(".input-placer-area"))).toBeTruthy();
-    })
+    });
 
     it("should open default value selection if the field is date", () => {
       fixture.componentInstance.step = 1;
-      fixture.componentInstance.propertyKv = fixture.componentInstance.parentSchema.properties["prop3"];
+      fixture.componentInstance.propertyKv =
+        fixture.componentInstance.parentSchema.properties["prop3"];
       fixture.componentInstance.propertyKv.value = {type: "date"};
       fixture.componentInstance.field = "date";
       fixture.detectChanges();
@@ -182,7 +183,9 @@ describe("Add Field Component", () => {
       expect(fixture.componentInstance.field).toBe("date");
       expect(fixture.componentInstance.step).toBe(1);
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css(".field-name-settings button[disabled]"))).toBeTruthy();
+      expect(
+        fixture.debugElement.query(By.css(".field-name-settings button[disabled]"))
+      ).toBeTruthy();
     });
 
     it("should hide general settings if parent schema is not the bucket", () => {
@@ -194,7 +197,6 @@ describe("Add Field Component", () => {
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css(".general-settings"))).toBeTruthy();
     });
-
   });
 
   describe("actions", () => {

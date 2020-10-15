@@ -1,7 +1,6 @@
 ::ng-deep {
-
-  .cdk-drag{
-    .property-meta{
+  .cdk-drag {
+    .property-meta {
       width: 100%;
       display: flex;
       justify-content: space-between;
@@ -18,14 +17,13 @@
       display: none;
     }
   }
-  .property{
+  .property {
     width: 100%;
     padding: 5px 0px;
-    &:not(:last-of-type){
-      border-bottom: 1px solid rgba(0,0,0,.08);
+    &:not(:last-of-type) {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     }
   }
-
 
   .readonly {
     mat-divider {
@@ -49,17 +47,17 @@
 :host {
   display: flex;
   --opacity: 0.5;
-  .left-content{
+  .left-content {
     display: block;
     width: 50%;
     min-width: 300px;
     max-width: 400px;
-    border-right: 1px solid rgba(0,0,0,.08);
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
   }
-  .right-content{
+  .right-content {
     flex: 1;
   }
-  .hide{
+  .hide {
     display: none;
   }
   mat-toolbar {
@@ -77,7 +75,7 @@
       align-self: flex-end;
       overflow-x: scroll;
       margin-top: 56px;
-  
+
       -ms-overflow-style: none; /* Internet Explorer 10+ */
       scrollbar-width: none; /* Firefox */
       &::-webkit-scrollbar {
@@ -146,45 +144,44 @@
 
         &.properties {
           padding: 0px 20px;
-          .property-meta{
+          .property-meta {
             display: flex;
             justify-content: space-between;
             width: 100%;
             .property-title {
               align-items: center;
               display: flex;
-              .icon{
+              .icon {
                 border-radius: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 padding: 5px;
-                mat-icon{
-                    color: white;  
-                    font-size: 1rem; 
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;    
-                    width: 20px;
-                    height: 20px;
+                mat-icon {
+                  color: white;
+                  font-size: 1rem;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 20px;
+                  height: 20px;
                 }
                 margin-right: 10px;
               }
             }
-  
+
             .property-description {
               button {
                 flex-shrink: 0;
                 line-height: 0px;
                 margin-right: 5px;
               }
-  
+
               button.cdk-drag-handle {
                 cursor: move;
               }
             }
           }
-          
         }
 
         &.property {
@@ -198,11 +195,11 @@
           padding: 0;
         }
 
-        .add-property{
-          border: 1px dashed rgba(0,0,0,.08);
+        .add-property {
+          border: 1px dashed rgba(0, 0, 0, 0.08);
           width: 100%;
           padding: 20px;
-          margin-top: 10px
+          margin-top: 10px;
         }
       }
     }

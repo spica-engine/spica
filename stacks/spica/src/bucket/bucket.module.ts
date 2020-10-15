@@ -60,7 +60,7 @@ import {BucketInitializer} from "./services/bucket.initializer";
 import {BucketService} from "./services/bucket.service";
 import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
-import { AddFieldModalComponent } from './pages/add-field-modal/add-field-modal.component';
+import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.component";
 
 @NgModule({
   imports: [
@@ -69,7 +69,7 @@ import { AddFieldModalComponent } from './pages/add-field-modal/add-field-modal.
         origin: "string",
         type: "relation",
         icon: "call_merge",
-        color: "#d71ada", 
+        color: "#d71ada",
         placer: RelationComponent,
         metaPlacer: RelationSchemaComponent
       },
@@ -77,14 +77,14 @@ import { AddFieldModalComponent } from './pages/add-field-modal/add-field-modal.
         origin: "string",
         type: "richtext",
         icon: "format_align_center",
-        color: "#da1a4f", 
+        color: "#da1a4f",
         placer: RichTextEditorComponent
       },
       {
         origin: "object",
         type: "location",
         icon: "location_on",
-        color: "#da7b1a", 
+        color: "#da7b1a",
         placer: LocationComponent,
         coerce: createLocation
       }

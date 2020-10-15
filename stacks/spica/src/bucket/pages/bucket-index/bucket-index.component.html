@@ -11,13 +11,18 @@
         <mat-icon>add</mat-icon>
         Add New
       </button>
-      <button mat-button canInteract="preference:show" resource="bucket" [routerLink]="['../settings']">
+      <button
+        mat-button
+        canInteract="preference:show"
+        resource="bucket"
+        [routerLink]="['../settings']"
+      >
         <mat-icon>settings</mat-icon>
         Settings
       </button>
     </div>
   </mat-toolbar>
-  
+
   <div class="drag-container" cdkDropListGroup>
     <div
       cdkDropList
@@ -62,11 +67,11 @@
       </div>
     </div>
   </div>
-  
+
   <ng-template #dialogTemplate let-answer="answer">
     <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
     <p>
       Please type in <code>{{ answer }}</code> to confirm.
     </p>
-  </ng-template>  
+  </ng-template>
 </div>

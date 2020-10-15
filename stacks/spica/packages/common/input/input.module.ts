@@ -1,5 +1,5 @@
-import { DragDropModule } from "@angular/cdk/drag-drop";
-import { CommonModule } from "@angular/common";
+import {DragDropModule} from "@angular/cdk/drag-drop";
+import {CommonModule} from "@angular/common";
 import {
   ANALYZE_FOR_ENTRY_COMPONENTS,
   Inject,
@@ -7,46 +7,45 @@ import {
   NgModule,
   Optional
 } from "@angular/core";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { MatBadgeModule } from "@angular/material/badge";
-import { MatButtonModule } from "@angular/material/button";
-import { MatCardModule } from "@angular/material/card";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatChipsModule } from "@angular/material/chips";
-import { MatNativeDateModule } from "@angular/material/core";
-import { MatDatepickerModule } from "@angular/material/datepicker";
-import { MatExpansionModule } from "@angular/material/expansion";
-import { MatGridListModule } from "@angular/material/grid-list";
-import { MatIconModule } from "@angular/material/icon";
-import { MatInputModule } from "@angular/material/input";
-import { MatListModule } from "@angular/material/list";
-import { MatMenuModule } from "@angular/material/menu";
-import { MatSelectModule } from "@angular/material/select";
-import { MatSlideToggleModule } from "@angular/material/slide-toggle";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { OwlDateTimeModule, OwlNativeDateTimeModule } from "ng-pick-datetime";
-import { ArraySchemaComponent } from "./components/array-schema/array-schema.component";
-import { ArrayComponent } from "./components/array/array.component";
-import { ArrayControlContainer } from "./components/array/array.container";
-import { BooleanSchemaComponent } from "./components/boolean-schema/boolean-schema.component";
-import { BooleanComponent } from "./components/boolean/boolean.component";
-import { ColorComponent } from "./components/color/color.component";
-import { DateComponent } from "./components/date/date.component";
-import { DateValidatorDirective } from "./components/date/date.validator";
-import { EnumSchemaComponent } from "./components/enum-schema/enum-schema.component";
-import { NumberSchemaComponent } from "./components/number-schema/number-schema.component";
-import { NumberComponent } from "./components/number/number.component";
-import { ObjectSchemaComponent } from "./components/object-schema/object-schema.component";
-import { ObjectComponent } from "./components/object/object.component";
-import { StringSchemaComponent } from "./components/string-schema/string-schema.component";
-import { StringComponent } from "./components/string/string.component";
-import { TextAreaComponent } from "./components/textarea/textarea.component";
-import { InputPlacerWithMetaPlacer, INPUT_PLACERS } from "./input";
-import { InputSchemaPlacer } from "./input-schema-placer/input.schema.placer";
-import { InputPlacerComponent } from "./input.placer";
-import { InputResolver } from "./input.resolver";
-import { NgModelParentDirective } from "./ngmodel.parent";
-
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {MatBadgeModule} from "@angular/material/badge";
+import {MatButtonModule} from "@angular/material/button";
+import {MatCardModule} from "@angular/material/card";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatChipsModule} from "@angular/material/chips";
+import {MatNativeDateModule} from "@angular/material/core";
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {MatExpansionModule} from "@angular/material/expansion";
+import {MatGridListModule} from "@angular/material/grid-list";
+import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
+import {MatListModule} from "@angular/material/list";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatSelectModule} from "@angular/material/select";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
+import {ArraySchemaComponent} from "./components/array-schema/array-schema.component";
+import {ArrayComponent} from "./components/array/array.component";
+import {ArrayControlContainer} from "./components/array/array.container";
+import {BooleanSchemaComponent} from "./components/boolean-schema/boolean-schema.component";
+import {BooleanComponent} from "./components/boolean/boolean.component";
+import {ColorComponent} from "./components/color/color.component";
+import {DateComponent} from "./components/date/date.component";
+import {DateValidatorDirective} from "./components/date/date.validator";
+import {EnumSchemaComponent} from "./components/enum-schema/enum-schema.component";
+import {NumberSchemaComponent} from "./components/number-schema/number-schema.component";
+import {NumberComponent} from "./components/number/number.component";
+import {ObjectSchemaComponent} from "./components/object-schema/object-schema.component";
+import {ObjectComponent} from "./components/object/object.component";
+import {StringSchemaComponent} from "./components/string-schema/string-schema.component";
+import {StringComponent} from "./components/string/string.component";
+import {TextAreaComponent} from "./components/textarea/textarea.component";
+import {InputPlacerWithMetaPlacer, INPUT_PLACERS} from "./input";
+import {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
+import {InputPlacerComponent} from "./input.placer";
+import {InputResolver} from "./input.resolver";
+import {NgModelParentDirective} from "./ngmodel.parent";
 
 import {
   MaxItemsValidator,
@@ -56,7 +55,7 @@ import {
   UniqueItemsValidator
 } from "./validators";
 
-import { ConditionalSchemaPipe } from "./conditional";
+import {ConditionalSchemaPipe} from "./conditional";
 
 export function coerceObject() {
   return {};
@@ -139,10 +138,10 @@ export function coerceObject() {
         metaPlacer: StringSchemaComponent
       },
       {
-        origin: "string", 
+        origin: "string",
         type: "date",
         icon: "calendar_today",
-        color: "#01b4bc", 
+        color: "#01b4bc",
         placer: DateComponent
       },
       {
@@ -162,18 +161,18 @@ export function coerceObject() {
         metaPlacer: BooleanSchemaComponent
       },
       {
-        origin: "string", 
+        origin: "string",
         type: "textarea",
         icon: "format_size",
-        color: "#fa5457", 
+        color: "#fa5457",
         placer: TextAreaComponent
       },
       {
-        origin: "array", 
+        origin: "array",
         type: "array",
         icon: "ballot",
-        color: "#17a98e", 
-        placer: ArrayComponent, 
+        color: "#17a98e",
+        placer: ArrayComponent,
         metaPlacer: ArraySchemaComponent
       },
       {
@@ -197,7 +196,7 @@ export function coerceObject() {
 })
 export class InputModule {
   static withPlacers(placers: InputPlacerWithMetaPlacer[]): ModuleWithProviders<InputModule> {
-    return { ngModule: InputModule, providers: providePlacers(placers) };
+    return {ngModule: InputModule, providers: providePlacers(placers)};
   }
 }
 
@@ -207,7 +206,7 @@ export function provideInputResolver(placers: InputPlacerWithMetaPlacer[]) {
 
 export function providePlacers(placers: InputPlacerWithMetaPlacer[]): any {
   return [
-    { provide: ANALYZE_FOR_ENTRY_COMPONENTS, multi: true, useValue: placers },
-    { provide: INPUT_PLACERS, multi: true, useValue: placers }
+    {provide: ANALYZE_FOR_ENTRY_COMPONENTS, multi: true, useValue: placers},
+    {provide: INPUT_PLACERS, multi: true, useValue: placers}
   ];
 }

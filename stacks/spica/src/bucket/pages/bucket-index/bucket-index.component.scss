@@ -1,5 +1,4 @@
-
-::ng-deep{
+::ng-deep {
   .bucket-card {
     user-select: none;
     display: flex;
@@ -28,7 +27,6 @@
 }
 
 :host {
-
   .drag-list {
     list-style-type: none;
     padding: 0;
@@ -109,5 +107,4 @@
       margin-top: 50px;
     }
   }
-
 }
