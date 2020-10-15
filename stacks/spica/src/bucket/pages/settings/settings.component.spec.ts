@@ -140,21 +140,38 @@ describe("SettingsComponent", () => {
     ).toBe(true);
   });
 
-  it("should remove language", () => {
-    fixture.componentInstance.addLanguage("af");
-    fixture.detectChanges();
+  it("should remove the language", async () => {
+    fixture.componentInstance.settings.language.available = {
+      tr_TR: "Turkish",
+      en_US: "English",
+      af: "Afrikaans"
+    };
 
-    let removeButton = fixture.debugElement.query(
-      By.css("mat-list mat-list-item:first-of-type button")
-    ).nativeElement as HTMLElement;
-    removeButton.click();
-
-    fixture.detectChanges();
+    fixture.componentInstance.remove("af");
 
     expect(fixture.componentInstance.settings.language).toEqual({
       available: {
         tr_TR: "Turkish",
         en_US: "English"
+      },
+      default: "tr_TR"
+    });
+  });
+
+  it("should not remove the default language", async () => {
+    fixture.componentInstance.settings.language.available = {
+      tr_TR: "Turkish",
+      en_US: "English",
+      af: "Afrikaans"
+    };
+
+    fixture.componentInstance.remove("tr_TR");
+
+    expect(fixture.componentInstance.settings.language).toEqual({
+      available: {
+        tr_TR: "Turkish",
+        en_US: "English",
+        af: "Afrikaans"
       },
       default: "tr_TR"
     });

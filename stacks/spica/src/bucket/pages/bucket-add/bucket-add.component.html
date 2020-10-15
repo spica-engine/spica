@@ -190,7 +190,18 @@
                     <button mat-icon-button (click)="createNewField(propertyKv.key)">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" (click)="deleteProperty(propertyKv.key)">
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      (click)="$event.stopImmediatePropagation()"
+                      (confirm)="deleteProperty(propertyKv.key)"
+                      [matAwareDialog]="{
+                        title: 'Confirmation',
+                        templateOrDescription: deleteFieldDialog,
+                        answer: '',
+                        noAnswer: true
+                      }"
+                    >
                       <mat-icon>delete</mat-icon>
                     </button>
                     <button mat-icon-button disableRipple cdkDragHandle>
@@ -374,4 +385,13 @@
       </p>
     </mat-list-item>
   </mat-card>
+
+  <ng-template #deleteFieldDialog let-answer="answer">
+    <p>
+      This action will remove the field from bucket entries.
+    </p>
+    <p>
+      Please confirm this action to continue.
+    </p>
+  </ng-template>
 </div>
