@@ -109,14 +109,14 @@ describe("SettingsComponent", () => {
     model.reset("tr_TR");
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-card-content > button:last-of-type")).nativeElement
+      fixture.debugElement.query(By.css("mat-card-content > form > button:last-of-type")).nativeElement
         .disabled
     ).toBe(true);
 
     model.reset("ar");
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-card-content > button:last-of-type")).nativeElement
+      fixture.debugElement.query(By.css("mat-card-content > form > button:last-of-type")).nativeElement
         .disabled
     ).toBe(false);
   });

@@ -2,6 +2,7 @@ import {async, ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/t
 import {FormsModule} from "@angular/forms";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatOptionModule} from "@angular/material/core";
+import { MatDialogModule } from "@angular/material/dialog";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
@@ -27,6 +28,7 @@ describe("Common#object-schema", () => {
         MatIconModule,
         MatCheckboxModule,
         MatInputModule,
+        MatDialogModule,
         FormsModule,
         MatOptionModule,
         MatSelectModule,
@@ -66,65 +68,15 @@ describe("Common#object-schema", () => {
     tick(10);
     fixture.detectChanges();
     tick(10);
-    fixture.detectChanges();
-    const titleInput = fixture.debugElement.queryAll(By.css("input"))[0];
-    const descriptionTextarea = fixture.debugElement.queryAll(By.css("textarea"))[0];
-    tick(10);
-    fixture.detectChanges();
-    expect(descriptionTextarea.nativeElement.value).toEqual(
-      component.schema.properties.test.description
-    );
-    expect(titleInput.nativeElement.value).toEqual(component.schema.properties.test.title);
+    const firstItem = fixture.debugElement.query(By.css(".property:first-of-type"));
 
-    tick(10);
-    fixture.detectChanges();
-
-    titleInput.nativeElement.value = titleInput.nativeElement.value + "-test";
-    descriptionTextarea.nativeElement.value = descriptionTextarea.nativeElement.value + "-test";
-
-    titleInput.nativeElement.dispatchEvent(new Event("input"));
-
-    descriptionTextarea.nativeElement.dispatchEvent(new Event("input"));
-
-    tick(10);
-    fixture.detectChanges();
-    tick(10);
-    fixture.detectChanges();
-
-    expect(titleInput.nativeElement.value).toEqual(component.schema.properties.test.title);
-    expect(descriptionTextarea.nativeElement.value).toEqual(
-      component.schema.properties.test.description
-    );
+    expect(firstItem).toBeTruthy();
   }));
 
-  it("Should be working add and remove button", fakeAsync(async () => {
-    const fieldName = fixture.debugElement.queryAll(By.css("input"))[0];
-    const addButton = fixture.debugElement.queryAll(By.css("button"))[1];
+  it("Should be working remove button", fakeAsync(async () => {
+    component.schema.properties = {'test': true}
     fixture.detectChanges();
-    tick(10);
-    fieldName.nativeElement.value = "Test";
-    fixture.detectChanges();
-    tick(10);
-    fieldName.nativeElement.dispatchEvent(new Event("input"));
-
-    fixture.detectChanges();
-    tick(10);
-    addButton.nativeElement.click();
-
-    fixture.detectChanges();
-    tick(10);
-    fixture.detectChanges();
-    tick(10);
-    const titleInput = fixture.debugElement.queryAll(By.css("input"))[0];
-    const descriptionTextarea = fixture.debugElement.queryAll(By.css("textarea"))[0];
-
-    expect(component.schema.properties.test["title"]).toEqual(titleInput.nativeElement.value);
-    expect(component.schema.properties.test["description"]).toEqual(
-      descriptionTextarea.nativeElement.value
-    );
-    const removeButton = fixture.debugElement.queryAll(By.css("button"))[1];
-    fixture.detectChanges();
-    tick(10);
+    const removeButton = fixture.debugElement.query(By.css(".meta-info button:last-of-type"));
     fixture.detectChanges();
     tick(10);
     removeButton.nativeElement.click();

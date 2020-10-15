@@ -1,74 +1,72 @@
-<mat-toolbar>
-  <span>
-    <h4 class="mat-h4">
-      <mat-icon>view_day</mat-icon>
-      <span>Buckets</span>
-    </h4>
-  </span>
-  <div class="actions">
-    <button canInteract="bucket:create" mat-button routerLink="add">
-      <mat-icon>add</mat-icon>
-      Add New
-    </button>
-    <button mat-button canInteract="preference:show" resource="bucket" routerLink="settings">
-      <mat-icon>settings</mat-icon>
-      Settings
-    </button>
+<div>
+  <mat-toolbar>
+    <span>
+      <h4 class="mat-h4">
+        <mat-icon>view_day</mat-icon>
+        <span>Buckets</span>
+      </h4>
+    </span>
+    <div class="actions">
+      <button canInteract="bucket:create" mat-button [routerLink]="['../add']">
+        <mat-icon>add</mat-icon>
+        Add New
+      </button>
+      <button mat-button canInteract="preference:show" resource="bucket" [routerLink]="['../settings']">
+        <mat-icon>settings</mat-icon>
+        Settings
+      </button>
+    </div>
+  </mat-toolbar>
+  
+  <div class="drag-container" cdkDropListGroup>
+    <div
+      cdkDropList
+      [cdkDropListEnterPredicate]="dropListEnterPredicate"
+      (cdkDropListDropped)="dropListDropped()"
+    ></div>
+    <div
+      cdkDropList
+      *ngFor="let bucket of buckets"
+      [cdkDropListEnterPredicate]="dropListEnterPredicate"
+      (cdkDropListDropped)="dropListDropped()"
+    >
+      <div class="bucket-card drag-box mat-elevation-1" cdkDrag (cdkDragMoved)="dragMoved($event)">
+        <div class="bucket-title">
+          <mat-icon>{{ bucket.icon }}</mat-icon>
+          <span>{{ bucket.title }}</span>
+        </div>
+        <div class="actions">
+          <button
+            canInteract="bucket:show"
+            [resource]="bucket._id"
+            mat-icon-button
+            [routerLink]="['../' + bucket._id]"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
+            canInteract="bucket:delete"
+            [resource]="bucket._id"
+            mat-icon-button
+            color="warn"
+            [matAwareDialog]="{
+              title: 'Confirmation',
+              templateOrDescription: dialogTemplate,
+              answer: bucket.title
+            }"
+            (confirm)="delete(bucket)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-</mat-toolbar>
-
-<div class="drag-container" cdkDropListGroup>
-  <div
-    cdkDropList
-    [cdkDropListEnterPredicate]="dropListEnterPredicate"
-    (cdkDropListDropped)="dropListDropped()"
-  ></div>
-  <div
-    cdkDropList
-    *ngFor="let bucket of buckets"
-    [cdkDropListEnterPredicate]="dropListEnterPredicate"
-    (cdkDropListDropped)="dropListDropped()"
-  >
-    <mat-card class="drag-box mat-elevation-1" cdkDrag (cdkDragMoved)="dragMoved($event)">
-      <mat-card-title>
-        <mat-icon>{{ bucket.icon }}</mat-icon>
-        <span>{{ bucket.title }}</span>
-        <span class="space-between"></span>
-      </mat-card-title>
-      <mat-card-content>
-        <p>{{ bucket.description }}</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button
-          canInteract="bucket:show"
-          [resource]="bucket._id"
-          mat-icon-button
-          [routerLink]="bucket._id"
-        >
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button
-          canInteract="bucket:delete"
-          [resource]="bucket._id"
-          mat-icon-button
-          color="warn"
-          [matAwareDialog]="{
-            title: 'Confirmation',
-            templateOrDescription: dialogTemplate,
-            answer: bucket.title
-          }"
-          (confirm)="delete(bucket)"
-        >
-          <mat-icon>delete</mat-icon>
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
+  
+  <ng-template #dialogTemplate let-answer="answer">
+    <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
+    <p>
+      Please type in <code>{{ answer }}</code> to confirm.
+    </p>
+  </ng-template>  
 </div>
-
-<ng-template #dialogTemplate let-answer="answer">
-  <p>This action will <b>permanently</b> delete this bucket and break all relations.</p>
-  <p>
-    Please type in <code>{{ answer }}</code> to confirm.
-  </p>
-</ng-template>

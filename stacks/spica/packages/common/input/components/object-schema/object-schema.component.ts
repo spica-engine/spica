@@ -1,31 +1,33 @@
-import {Component, Inject} from "@angular/core";
-import {InputSchema, INPUT_SCHEMA} from "../../input";
+import { Component, Inject } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { AddFieldModalComponent } from "@spica-client/bucket/pages/add-field-modal/add-field-modal.component";
+import { InputPlacerWithMetaPlacer, InputSchema, INPUT_SCHEMA } from "../../input";
+import { InputResolver } from "../../input.resolver";
 
 @Component({
   templateUrl: "./object-schema.component.html",
   styleUrls: ["./object-schema.component.scss"]
 })
 export class ObjectSchemaComponent {
-  constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
+  systemFields: InputPlacerWithMetaPlacer[] = [];
+
+  constructor(public _inputResolver: InputResolver,
+    @Inject(INPUT_SCHEMA) public schema: InputSchema, 
+  private dialog: MatDialog
+  ) {
     this.schema.properties = this.schema.properties || {};
   }
 
-  addProperty(propertyName: string): void {
-    propertyName = propertyName.toLowerCase();
-    if (propertyName && !this.schema.properties[propertyName]) {
-      this.schema.properties[propertyName] = {
-        type: "string",
-        title: propertyName,
-        description: `Description of '${propertyName}'`
-      };
-    }
-  }
 
-  toggleRequired(key: string, required: boolean) {
-    this.schema.required = this.schema.required || [];
-    required
-      ? this.schema.required.push(key)
-      : this.schema.required.splice(this.schema.required.indexOf(key), 1);
+  createNewField(parentSchema: any, propertyKey: string = null) {
+    let dialogRef = this.dialog.open(AddFieldModalComponent, {
+      width: "800px",
+      maxHeight: "800px",
+      data: {
+        parentSchema: parentSchema,
+        propertyKey: propertyKey
+      }
+    });
   }
 
   removeProperty(name: string) {

@@ -6,6 +6,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatSelectModule} from "@angular/material/select";
+import { MatSlideToggle, MatSlideToggleModule } from "@angular/material/slide-toggle";
 import {By} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {InputResolver} from "../..";
@@ -29,9 +30,10 @@ describe("Common#array-schema", () => {
         FormsModule,
         MatIconModule,
         MatCheckboxModule,
+        MatSelectModule,
         MatFormFieldModule,
         MatMenuModule,
-        MatSelectModule,
+        MatSlideToggleModule,
         MatInputModule,
         BrowserAnimationsModule
       ],
@@ -63,21 +65,17 @@ describe("Common#array-schema", () => {
   it("should checked uniqueItem input ", fakeAsync(() => {
     component.origin = "string";
     fixture.detectChanges();
-    fixture.debugElement.query(By.css("button mat-menu")).nativeElement.click();
     component.schema["uniqueItems"] = true;
     fixture.detectChanges();
     tick(10);
     fixture.detectChanges();
     expect(
-      fixture.debugElement.query(By.css("mat-checkbox")).classes["mat-checkbox-checked"]
+      fixture.debugElement.query(By.css("mat-slide-toggle")).classes["mat-checked"]
     ).toBeTruthy();
-    expect(fixture.debugElement.query(By.css(".validators > div ")).childNodes.length).toEqual(3);
   }));
 
   it("entered values must be verified", fakeAsync(() => {
     component.origin = "string";
-    fixture.detectChanges();
-    fixture.debugElement.query(By.css("button mat-menu")).nativeElement.click();
     fixture.detectChanges();
     tick(10);
     document.querySelectorAll("input").forEach(element => {

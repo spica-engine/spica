@@ -41,27 +41,15 @@ describe("Common#number-schema", () => {
   }));
 
   it("Should visible items", fakeAsync(() => {
-    const button = fixture.debugElement.query(By.css("button"));
-    component.showOptions = true;
     tick(1);
     fixture.detectChanges();
 
     expect(fixture.debugElement.query(By.css("div.min-max"))).toBeTruthy();
     expect(fixture.debugElement.query(By.css("div.default"))).toBeTruthy();
     expect(fixture.debugElement.query(By.css("div.enum"))).toBeTruthy();
-    tick(1);
-    fixture.detectChanges();
-    button.nativeElement.click();
-    tick(1);
-    fixture.detectChanges();
-
-    expect(fixture.debugElement.query(By.css("div.min-max"))).toBeFalsy();
-    expect(fixture.debugElement.query(By.css("div.default"))).toBeFalsy();
-    expect(fixture.debugElement.query(By.css("div.enum"))).toBeFalsy();
   }));
 
   it("The value entered must be the same as the variable value", fakeAsync(() => {
-    component.showOptions = true;
     component.schema.minimum = 1;
     component.schema.maximum = 3;
     component.schema.default = 2;

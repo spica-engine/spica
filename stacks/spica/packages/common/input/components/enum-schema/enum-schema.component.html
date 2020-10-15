@@ -1,24 +1,21 @@
 <div>
-  <span>
-    Items
-    <button mat-icon-button (click)="addItem()" matTooltip="Add Item">
-      <mat-icon>add</mat-icon>
-    </button>
-  </span>
-  <div>
-    <div *ngFor="let value of schema.enum; let index = index; trackBy: _trackBy" class="enum-item">
-      <div
-        [inputPlacer]="schemaWithoutEnum"
-        [(ngModel)]="schema.enum[index]"
-        [name]="index"
-        class="field-container"
-        required
-      ></div>
-      <button mat-icon-button color="warn" (click)="removeItem(index)">
-        <mat-icon>remove</mat-icon>
-      </button>
-      <mat-error *ngIf="!schema.enum[index]" class="null-option">Please fill the input.</mat-error>
-    </div>
-    <mat-error *ngIf="schema.enum?.length == 0">You have to add at least an item.</mat-error>
-  </div>
+  <mat-form-field>
+    <mat-chip-list #chipList aria-label="Enum values">
+      <mat-chip
+        *ngFor="let value of schema.enum; let index = index; trackBy: _trackBy"
+        [selectable]="selectable"
+        [removable]="removable"
+        (removed)="removeItem(index)">
+        {{schema.enum[index]}}
+        <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+      </mat-chip>
+      <input
+        placeholder="New value..."
+        #enumInput
+        [formControl]="enumCtrl"
+        [matChipInputFor]="chipList"
+        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+        (matChipInputTokenEnd)="addItem($event)">
+    </mat-chip-list>
+  </mat-form-field>
 </div>
