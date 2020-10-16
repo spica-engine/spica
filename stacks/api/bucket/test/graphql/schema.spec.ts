@@ -52,7 +52,7 @@ describe("Schema", () => {
       insertBucket_id(input: Bucket_idInput): Bucket_id
       replaceBucket_id(_id: ObjectID!, input: Bucket_idInput): Bucket_id
       patchBucket_id(_id: ObjectID!, input: JSON): Bucket_id
-      deleteBucket_id(_id: ObjectID!): Boolean
+      deleteBucket_id(_id: ObjectID!): String
     }
 `;
 
@@ -280,13 +280,13 @@ describe("Schema", () => {
 
     it("should extract aggregation from query that includes basic equality", () => {
       query = {title: "test"};
-      let aggregation = extractAggregationFromQuery(bucket, query);
+      let aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({title: "test"});
     });
 
     it("should extract aggregation from query that includes comparision operators", () => {
       query = {title_ne: "test", age_gte: 15};
-      let aggregation = extractAggregationFromQuery(bucket, query);
+      let aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({title: {$ne: "test"}, age: {$gte: 15}});
     });
 
@@ -305,7 +305,7 @@ describe("Schema", () => {
           }
         ]
       };
-      let aggregation = extractAggregationFromQuery(bucket, query);
+      let aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({
         $or: [
           {
@@ -326,9 +326,43 @@ describe("Schema", () => {
       });
     });
 
+    it("should extract aggregation from nested object query", () => {
+      bucket.properties = {
+        name: {
+          type: "string"
+        },
+        address: {
+          type: "object",
+          properties: {
+            city: {
+              type: "string"
+            },
+            no: {
+              type: "string"
+            }
+          }
+        }
+      };
+      query = {
+        name: "Jim",
+        address: {
+          city: "Antalya",
+          no_gt: "50",
+          no_lte: "100"
+        }
+      };
+      let aggregation = extractAggregationFromQuery(bucket, query, []);
+      console.dir(aggregation,{depth:Infinity})
+      expect(aggregation).toEqual({
+        name: "Jim",
+        "address.city": "Antalya",
+        "address.no": {$gt: "50", $lte: "100"}
+      });
+    });
+
     it("should ignore part of query that does not match with any bucket property", () => {
       query = {title_ne: "test", country: "some_country"};
-      let aggregation = extractAggregationFromQuery(bucket, query);
+      let aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({title: {$ne: "test"}});
     });
 
@@ -356,7 +390,7 @@ describe("Schema", () => {
         created_at_lt: date,
         dates_in: [date]
       };
-      let aggregation = extractAggregationFromQuery(bucket, query);
+      let aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({
         _id: new ObjectId(id),
         created_at: {

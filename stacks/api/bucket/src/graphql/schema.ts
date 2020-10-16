@@ -20,6 +20,8 @@ enum UpdateType {
 
 //schema
 export function createSchema(bucket: Bucket, staticTypes: string) {
+  console.log(bucket);
+
   let name = getBucketName(bucket._id);
 
   let schema = `
@@ -39,7 +41,7 @@ export function createSchema(bucket: Bucket, staticTypes: string) {
         insert${name}(input: ${name}Input): ${name}
         replace${name}(_id: ObjectID!, input: ${name}Input): ${name}
         patch${name}(_id: ObjectID!, input: JSON): ${name}
-        delete${name}(_id: ObjectID!): Boolean
+        delete${name}(_id: ObjectID!): String
       }
     `;
 
@@ -193,17 +195,16 @@ export function getBucketName(uniqueField: string | ObjectId): string {
 }
 
 //query to aggregation
-export function extractAggregationFromQuery(bucket: Bucket, query: object): object {
+export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
   let bucketProperties = {...bucket.properties, _id: {type: "objectid"}};
 
-  let matchExpression = {};
-  Object.keys(query).forEach(key => {
-    let expression;
+  let finalExpression = {};
+  for (const [key, value] of Object.entries(query)) {
     if (key == "OR" || key == "AND") {
       let conditions = [];
       let operator = `$${key.toLowerCase()}`;
-      query[key].forEach(condition => {
-        let conditionExpression = extractAggregationFromQuery(bucket, condition);
+      value.forEach(condition => {
+        let conditionExpression = extractAggregationFromQuery(bucket, condition, buckets);
 
         if (Object.keys(conditionExpression).length) {
           conditions.push(conditionExpression);
@@ -211,21 +212,78 @@ export function extractAggregationFromQuery(bucket: Bucket, query: object): obje
       });
 
       if (conditions.length) {
-        expression = {
+        let expression = {
           [operator]: conditions
         };
-      }
-    } else {
-      let inner_expression = createExpression(key, query[key], bucketProperties);
-      if (inner_expression) {
-        expression = inner_expression;
+        finalExpression = {
+          ...finalExpression,
+          ...expression
+        };
       }
     }
+    //arrays are object
+    else if (typeof value == "object" && !Array.isArray(value)) {
+      //if bucket property is relation, put the related bucket here
+      if (bucket.properties[key].type == "relation") {
+        let relatedBucketId = bucket.properties[key].bucketId;
+        let relatedBucket = buckets.find(bucket => bucket._id == relatedBucketId);
 
-    matchExpression = {...matchExpression, ...expression};
-  });
+        bucket.properties[key] = {
+          type: "object",
+          properties: relatedBucket.properties
+        };
+      }
 
-  return matchExpression;
+      let expression = extractAggregationFromQuery(bucket.properties[key], value, buckets);
+
+      expression = mergeNestedExpression({[key]: expression}, []);
+
+      if (Object.keys(expression).length) {
+        finalExpression = {...finalExpression, ...expression};
+      }
+    } else {
+      let expression = createExpression(key, value, bucketProperties);
+
+      if (expression) {
+        //deep merge
+        //for example => details: { age: { $gt:12 } } , details: { age: { $lt:23 } }
+        for (const [key, value] of Object.entries(expression)) {
+          if (finalExpression[key]) {
+            finalExpression[key] = {...finalExpression[key], ...value};
+            delete expression[key];
+          }
+        }
+        finalExpression = {...finalExpression, ...expression};
+      }
+    }
+  }
+
+  return finalExpression;
+}
+
+function mergeNestedExpression(expression: any, path: string[]) {
+  let finalResult = {};
+  if (typeof expression == "object" && Object.keys(expression).length) {
+    for (const [key, value] of Object.entries(expression)) {
+      if (key.startsWith("$")) {
+        let expPath = path.join(".");
+        let result = {[expPath]: expression};
+        //example query => age:{ gt:12 , lt: 25}
+        finalResult = {...finalResult, ...result};
+        continue;
+      }
+
+      let result = mergeNestedExpression(value, path.concat([key]));
+      if (typeof expression == "object" && Object.keys(expression).length) {
+        finalResult = {...finalResult, ...result};
+      }
+    }
+  } else {
+    let expPath = path.join(".");
+    let result = {[expPath]: expression};
+    finalResult = {...finalResult, ...result};
+  }
+  return finalResult;
 }
 
 function createExpression(key: string, value: any, bucketProperties: any): object {

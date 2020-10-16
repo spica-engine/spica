@@ -9,7 +9,7 @@ import {
 } from "@nestjs/common";
 import {ObjectID, ObjectId} from "@spica-server/database";
 import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {GraphQLScalarType, GraphQLSchema, ValueNode} from "graphql";
+import {GraphQLScalarType, GraphQLSchema, ValueNode, GraphQLError} from "graphql";
 
 import {makeExecutableSchema, mergeTypeDefs, mergeResolvers} from "graphql-tools";
 import {GuardService} from "@spica-server/passport";
@@ -117,8 +117,8 @@ export class GraphqlController implements OnModuleInit {
     private bs: BucketService,
     private bds: BucketDataService,
     private guardService: GuardService,
-    private activity: ActivityService,
     private validator: Validator,
+    @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService
   ) {}
 
@@ -175,7 +175,14 @@ export class GraphqlController implements OnModuleInit {
 
         return {
           schema: this.schema,
-          graphiql: true
+          graphiql: true,
+          customFormatErrorFn: err => {
+            if (err.extensions && err.extensions.reason == "Validation") {
+              response.statusCode = 400;
+              delete err.extensions.reason;
+            }
+            return err;
+          }
         };
       })
     );
@@ -205,14 +212,14 @@ export class GraphqlController implements OnModuleInit {
   //resolver methods
   find(bucket: Bucket): Function {
     return async (root, {limit, skip, sort, language, query}, context): Promise<FindResponse> => {
-      let subAggregation = [];
+      let aggregation = [];
 
       let locale: Locale;
       if (hasTranslatedProperties(bucket.properties)) {
         const preferences = await this.bs.getPreferences();
         locale = findLocale(language ? language : preferences.language.default, preferences);
 
-        subAggregation.push({
+        aggregation.push({
           $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
         });
       }
@@ -220,7 +227,7 @@ export class GraphqlController implements OnModuleInit {
       for (const propertyKey in bucket.properties) {
         const property = bucket.properties[propertyKey];
         if (property.type == "relation") {
-          subAggregation.push(
+          aggregation.push(
             ...buildRelationAggregation(
               propertyKey,
               property["bucketId"],
@@ -232,10 +239,19 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (query && Object.keys(query).length) {
-        let matchExpression = extractAggregationFromQuery(bucket, query);
+        let matchExpression = extractAggregationFromQuery(
+          JSON.parse(JSON.stringify(bucket)),
+          query,
+          this.buckets
+        );
         if (Object.keys(matchExpression).length) {
-          subAggregation.push({$match: matchExpression});
+          aggregation.push({$match: matchExpression});
         }
+      }
+
+      let subAggregation = [];
+      if (sort && Object.keys(sort).length) {
+        subAggregation.push({$sort: sort});
       }
 
       subAggregation.push({$skip: skip | 0});
@@ -244,11 +260,7 @@ export class GraphqlController implements OnModuleInit {
         subAggregation.push({$limit: limit});
       }
 
-      if (sort && Object.keys(sort).length) {
-        subAggregation.push({$sort: sort});
-      }
-
-      let aggregation = [
+      aggregation.push(
         {
           $facet: {
             meta: [{$count: "total"}],
@@ -256,9 +268,16 @@ export class GraphqlController implements OnModuleInit {
           }
         },
         {$unwind: "$meta"}
-      ];
+      );
 
-      return this.bds.find(bucket._id, aggregation).then(response => response[0] as FindResponse);
+      console.dir(aggregation, {depth: Infinity});
+      return this.bds.find(bucket._id, aggregation).then(response => {
+        console.dir(response, {depth: Infinity});
+        if (!response.length) {
+          return {meta: {total: 0}, entries: []};
+        }
+        return response[0] as FindResponse;
+      });
     };
   }
 
@@ -307,11 +326,18 @@ export class GraphqlController implements OnModuleInit {
       //   response: {}
       // });
 
-      await this.validateInput(bucket._id, input);
+      await this.validateInput(bucket._id, input).catch(error => {
+        throw new GraphQLError(error.message, null, null, null, null, null, {
+          reason: "Validation"
+        });
+      });
 
       let insertResult = await this.bds.insertOne(bucket._id, input);
 
-      const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
+      if(this.activity){
+        const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
+      }
+      
 
       //resolve relations if bucket has relation field
       if (
@@ -334,7 +360,11 @@ export class GraphqlController implements OnModuleInit {
       //   response: {}
       // });
 
-      await this.validateInput(bucket._id, input);
+      await this.validateInput(bucket._id, input).catch(error => {
+        throw new GraphQLError(error.message, null, null, null, null, null, {
+          reason: "Validation"
+        });
+      });
 
       const {value: previousDocument} = await this.bds.replaceOne(
         bucket._id,
@@ -347,7 +377,9 @@ export class GraphqlController implements OnModuleInit {
 
       const currentDocument = {...input, _id: documentId};
 
-      const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+      if(this.activity){
+        const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+      }
 
       if (this.history) {
         const promise = createHistory(
@@ -383,7 +415,11 @@ export class GraphqlController implements OnModuleInit {
 
       let patchedDocument = getPatchedDocument(document, input);
 
-      await this.validateInput(bucket._id, patchedDocument);
+      await this.validateInput(bucket._id, patchedDocument).catch(error => {
+        throw new GraphQLError(error.message, null, null, null, null, null, {
+          reason: "Validation"
+        });
+      });
 
       let updateQuery = getUpdateQuery(document, patchedDocument);
 
@@ -391,7 +427,9 @@ export class GraphqlController implements OnModuleInit {
         throw Error("There is no difference between previous and current documents.");
       }
 
-      const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+      if(this.activity){
+        const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+      }
 
       return this.bds.findOneAndUpdate(bucket._id, {_id: documentId}, updateQuery, {
         returnOriginal: false
@@ -400,7 +438,7 @@ export class GraphqlController implements OnModuleInit {
   }
 
   delete(bucket: Bucket): Function {
-    return async (root, {_id: documentId}, context): Promise<Boolean> => {
+    return async (root, {_id: documentId}, context): Promise<string> => {
       // await this.guardService.checkAuthorization({
       //   request: context,
       //   response: {}
@@ -413,13 +451,13 @@ export class GraphqlController implements OnModuleInit {
         });
       }
 
-      let result = await this.bds
-        .deleteOne(bucket._id, {_id: documentId})
-        .then(res => !!res.deletedCount);
+      let result = await this.bds.deleteOne(bucket._id, {_id: documentId}).then(res => res.result);
 
-      const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
+      if(this.activity){
+        const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
+      }
 
-      return result;
+      return "";
     };
   }
 

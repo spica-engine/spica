@@ -50,7 +50,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  afterEach(() => app.close());
+  afterEach(async () => await app.close());
 
   describe("index", () => {
     let bucket = {
