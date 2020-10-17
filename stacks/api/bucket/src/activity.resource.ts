@@ -39,14 +39,24 @@ export function createBucketDataActivity(
     case Action.PUT:
       activities.push({
         ...preActivity,
-        resource: ["bucket", req.params.bucketId.toString(), "data", req.params.documentId.toString()]
+        resource: [
+          "bucket",
+          req.params.bucketId.toString(),
+          "data",
+          req.params.documentId.toString()
+        ]
       });
       break;
     case Action.DELETE:
       if (req.params.documentId) {
         activities.push({
           ...preActivity,
-          resource: ["bucket", req.params.bucketId.toString(), "data", req.params.documentId.toString()]
+          resource: [
+            "bucket",
+            req.params.bucketId.toString(),
+            "data",
+            req.params.documentId.toString()
+          ]
         });
       } else {
         req.body.forEach(id =>

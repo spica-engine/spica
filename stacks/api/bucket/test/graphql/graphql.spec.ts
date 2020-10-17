@@ -65,7 +65,7 @@ describe("GraphQLController", () => {
         await Promise.all(deletes);
 
         //wait until bucket watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     });
 
@@ -116,7 +116,7 @@ describe("GraphQLController", () => {
         ].map(r => r.body);
 
         //wait until bucket watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
       it("should return document that matches with given id", async () => {
@@ -571,7 +571,7 @@ describe("GraphQLController", () => {
           ].map(r => r.body);
 
           //wait until bucket watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 100));
         });
 
         it("should return documents with english titles", async () => {
@@ -825,7 +825,7 @@ describe("GraphQLController", () => {
           ]);
 
           //wait until bucket watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 100));
         });
 
         it("should get book with its own publisher", async () => {
@@ -1090,7 +1090,7 @@ describe("GraphQLController", () => {
         bucketName = getBucketName(bucket._id);
 
         //wait until bucket watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
       afterEach(async () => {

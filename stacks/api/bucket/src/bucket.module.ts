@@ -11,7 +11,7 @@ import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {DocumentScheduler} from "./scheduler";
 import {provideLanguageChangeUpdater} from "./utility";
-import { GraphqlController } from "./graphql/graphql";
+import {GraphqlController} from "./graphql/graphql";
 
 @Module({})
 export class BucketModule {

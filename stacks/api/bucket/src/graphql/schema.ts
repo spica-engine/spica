@@ -20,8 +20,6 @@ enum UpdateType {
 
 //schema
 export function createSchema(bucket: Bucket, staticTypes: string) {
-  console.log(bucket);
-
   let name = getBucketName(bucket._id);
 
   let schema = `
@@ -173,6 +171,10 @@ function createPropertyValue(
       break;
 
     case "relation":
+      if (!value.bucketId) {
+        throw Error(`Related bucket must be provided for ${key} field of ${name}.`);
+      }
+
       let relatedBucketName = getBucketName(value.bucketId);
       result = prefix == Prefix.Type ? relatedBucketName : "String";
       result = value.relationType == "onetoone" ? result : `[${result}]`;

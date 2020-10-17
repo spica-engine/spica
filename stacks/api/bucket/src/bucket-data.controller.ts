@@ -30,12 +30,7 @@ import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-serve
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
-import {
-  buildRelationAggregation,
-  filterReviver,
-  clearRelations,
-  createHistory
-} from "./utility";
+import {buildRelationAggregation, filterReviver, clearRelations, createHistory} from "./utility";
 
 /**
  * All APIs related to bucket documents.

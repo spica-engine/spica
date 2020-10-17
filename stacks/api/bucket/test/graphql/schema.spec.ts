@@ -352,7 +352,6 @@ describe("Schema", () => {
         }
       };
       let aggregation = extractAggregationFromQuery(bucket, query, []);
-      console.dir(aggregation,{depth:Infinity})
       expect(aggregation).toEqual({
         name: "Jim",
         "address.city": "Antalya",

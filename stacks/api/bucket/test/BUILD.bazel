@@ -221,8 +221,8 @@ ts_library(
         "//packages/database",
         "//stacks/api/bucket",
         "@npm//@types/jasmine",
+        "@npm//@types/prettier",
         "@npm//prettier",
-        "@npm//@types/prettier"
     ],
 )
 

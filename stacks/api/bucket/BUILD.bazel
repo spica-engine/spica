@@ -23,8 +23,8 @@ ts_library(
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/realtime",
         "//stacks/api/bucket/services",
-        "//stacks/api/passport/guard",
         "//stacks/api/passport",
+        "//stacks/api/passport/guard",
         "//stacks/api/preference",
         "//stacks/api/preference/services",
         "@npm//@nestjs/common",
@@ -33,12 +33,12 @@ ts_library(
         "@npm//@types/mongodb",
         "@npm//@types/node",
         "@npm//cron",
-        "@npm//locale",
-        "@npm//rxjs",
+        "@npm//express-graphql",
         "@npm//graphql",
         "@npm//graphql-tools",
-        "@npm//express-graphql",
-        "@npm//json-merge-patch"
+        "@npm//json-merge-patch",
+        "@npm//locale",
+        "@npm//rxjs",
     ],
 )
 

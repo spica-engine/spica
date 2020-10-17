@@ -334,10 +334,9 @@ export class GraphqlController implements OnModuleInit {
 
       let insertResult = await this.bds.insertOne(bucket._id, input);
 
-      if(this.activity){
+      if (this.activity) {
         const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
       }
-      
 
       //resolve relations if bucket has relation field
       if (
@@ -377,7 +376,7 @@ export class GraphqlController implements OnModuleInit {
 
       const currentDocument = {...input, _id: documentId};
 
-      if(this.activity){
+      if (this.activity) {
         const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
       }
 
@@ -427,7 +426,7 @@ export class GraphqlController implements OnModuleInit {
         throw Error("There is no difference between previous and current documents.");
       }
 
-      if(this.activity){
+      if (this.activity) {
         const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
       }
 
@@ -453,7 +452,7 @@ export class GraphqlController implements OnModuleInit {
 
       let result = await this.bds.deleteOne(bucket._id, {_id: documentId}).then(res => res.result);
 
-      if(this.activity){
+      if (this.activity) {
         const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
       }
 
