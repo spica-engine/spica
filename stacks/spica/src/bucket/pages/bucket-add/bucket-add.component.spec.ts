@@ -451,13 +451,7 @@ describe("Bucket Add Component", () => {
     });
 
     it("should delete prop1", () => {
-      fixture.debugElement
-        .query(
-          By.css(
-            "mat-list-item.properties mat-expansion-panel:nth-child(1) mat-panel-description button:nth-child(2)"
-          )
-        )
-        .nativeElement.click();
+      fixture.componentInstance.deleteProperty("prop1");
       fixture.detectChanges();
       expect(fixture.componentInstance.bucket.properties).toEqual({
         prop2: {
