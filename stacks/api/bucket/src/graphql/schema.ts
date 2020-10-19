@@ -18,7 +18,6 @@ enum UpdateType {
   Unset
 }
 
-//schema
 export function createSchema(bucket: Bucket, staticTypes: string) {
   let name = getBucketName(bucket._id);
 
@@ -114,7 +113,6 @@ function createPropertyValue(
 ) {
   let result;
 
-  //enums can be used by types and inputs
   if (value.enum) {
     if (prefix == Prefix.Type) {
       let extra = createEnum(`${name}_${key}`, value.enum);
@@ -141,6 +139,10 @@ function createPropertyValue(
       break;
 
     case "textarea":
+      result = "String";
+      break;
+
+    case "richtext":
       result = "String";
       break;
 
@@ -181,8 +183,7 @@ function createPropertyValue(
       break;
 
     default:
-      //for development
-      throw Error("Invalid Type!");
+      throw Error(`Unknown type ${value.type} on ${key} field of ${name}.`);
   }
 
   if (isRequired) {
@@ -196,9 +197,13 @@ export function getBucketName(uniqueField: string | ObjectId): string {
   return `Bucket_${uniqueField.toString()}`;
 }
 
-//query to aggregation
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
-  let bucketProperties = {...bucket.properties, _id: {type: "objectid"}};
+  let bucketProperties = bucket.properties;
+  if (ObjectId.isValid(bucket._id)) {
+    bucketProperties._id = {
+      type: "objectid"
+    };
+  }
 
   let finalExpression = {};
   for (const [key, value] of Object.entries(query)) {
@@ -222,22 +227,18 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
           ...expression
         };
       }
-    }
-    //arrays are object
-    else if (typeof value == "object" && !Array.isArray(value)) {
-      //if bucket property is relation, put the related bucket here
+    } else if (isParsableObject(value)) {
       if (bucket.properties[key].type == "relation") {
         let relatedBucketId = bucket.properties[key].bucketId;
         let relatedBucket = buckets.find(bucket => bucket._id == relatedBucketId);
 
         bucket.properties[key] = {
-          type: "object",
+          _id: relatedBucketId,
           properties: relatedBucket.properties
         };
       }
 
       let expression = extractAggregationFromQuery(bucket.properties[key], value, buckets);
-
       expression = mergeNestedExpression({[key]: expression}, []);
 
       if (Object.keys(expression).length) {
@@ -248,44 +249,18 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
 
       if (expression) {
         //deep merge
-        //for example => details: { age: { $gt:12 } } , details: { age: { $lt:23 } }
         for (const [key, value] of Object.entries(expression)) {
-          if (finalExpression[key]) {
+          if (finalExpression[key] && isParsableObject(value)) {
             finalExpression[key] = {...finalExpression[key], ...value};
-            delete expression[key];
+          } else {
+            finalExpression[key] = value;
           }
         }
-        finalExpression = {...finalExpression, ...expression};
       }
     }
   }
 
   return finalExpression;
-}
-
-function mergeNestedExpression(expression: any, path: string[]) {
-  let finalResult = {};
-  if (typeof expression == "object" && Object.keys(expression).length) {
-    for (const [key, value] of Object.entries(expression)) {
-      if (key.startsWith("$")) {
-        let expPath = path.join(".");
-        let result = {[expPath]: expression};
-        //example query => age:{ gt:12 , lt: 25}
-        finalResult = {...finalResult, ...result};
-        continue;
-      }
-
-      let result = mergeNestedExpression(value, path.concat([key]));
-      if (typeof expression == "object" && Object.keys(expression).length) {
-        finalResult = {...finalResult, ...result};
-      }
-    }
-  } else {
-    let expPath = path.join(".");
-    let result = {[expPath]: expression};
-    finalResult = {...finalResult, ...result};
-  }
-  return finalResult;
 }
 
 function createExpression(key: string, value: any, bucketProperties: any): object {
@@ -327,7 +302,39 @@ function castToOriginalType(value: any, property: any): unknown {
   }
 }
 
-//patch
+function mergeNestedExpression(expression: any, path: string[]) {
+  let finalResult = {};
+  if (isParsableObject(expression)) {
+    for (const [key, value] of Object.entries(expression)) {
+      if (key.startsWith("$")) {
+        let expPath = path.join(".");
+        let result = {[expPath]: expression};
+        finalResult = {...finalResult, ...result};
+        continue;
+      }
+
+      let result = mergeNestedExpression(value, path.concat([key]));
+      if (isParsableObject(expression)) {
+        finalResult = {...finalResult, ...result};
+      }
+    }
+  } else {
+    let expPath = path.join(".");
+    let result = {[expPath]: expression};
+    finalResult = {...finalResult, ...result};
+  }
+  return finalResult;
+}
+
+function isParsableObject(object: any): boolean {
+  return (
+    typeof object == "object" &&
+    !Array.isArray(object) &&
+    !ObjectId.isValid(object) &&
+    !!Object.keys(object).length
+  );
+}
+
 export function getPatchedDocument(previousDocument: BucketDocument, patchQuery: any) {
   delete previousDocument._id;
   delete patchQuery._id;

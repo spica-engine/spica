@@ -232,7 +232,8 @@ export class GraphqlController implements OnModuleInit {
               propertyKey,
               property["bucketId"],
               property["relationType"],
-              locale
+              locale,
+              false
             )
           );
         }
@@ -270,9 +271,7 @@ export class GraphqlController implements OnModuleInit {
         {$unwind: "$meta"}
       );
 
-      console.dir(aggregation, {depth: Infinity});
       return this.bds.find(bucket._id, aggregation).then(response => {
-        console.dir(response, {depth: Infinity});
         if (!response.length) {
           return {meta: {total: 0}, entries: []};
         }
@@ -309,7 +308,8 @@ export class GraphqlController implements OnModuleInit {
               propertyKey,
               property["bucketId"],
               property["relationType"],
-              locale
+              locale,
+              false
             )
           );
         }

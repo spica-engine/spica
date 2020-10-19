@@ -118,7 +118,8 @@ export function buildRelationAggregation(
   property: string,
   bucketId: string,
   type: "onetomany" | "onetoone",
-  locale: Locale
+  locale: Locale,
+  castObjectIdToString = true
 ) {
   if (type == "onetomany") {
     return [
@@ -143,7 +144,7 @@ export function buildRelationAggregation(
             locale
               ? {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)}
               : undefined,
-            {$set: {_id: {$toString: "$_id"}}}
+            castObjectIdToString ? {$set: {_id: {$toString: "$_id"}}} : undefined
           ].filter(Boolean),
           as: property
         }
@@ -164,7 +165,7 @@ export function buildRelationAggregation(
             locale
               ? {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)}
               : undefined,
-            {$set: {_id: {$toString: "$_id"}}}
+            castObjectIdToString ? {$set: {_id: {$toString: "$_id"}}} : undefined
           ].filter(Boolean),
           as: property
         }

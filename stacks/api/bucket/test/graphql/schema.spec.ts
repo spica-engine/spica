@@ -37,7 +37,7 @@ describe("Schema", () => {
     }
     `;
 
-    let staticPartOfSchema = `
+    let commonDefinitions = `
     type Bucket_idFindResponse{
       meta: Meta
       entries: [Bucket_id]
@@ -79,7 +79,7 @@ describe("Schema", () => {
           `
           ${staticTypes}
 
-          ${staticPartOfSchema}
+          ${commonDefinitions}
 
           type Bucket_id{
             _id: ObjectID
@@ -112,7 +112,7 @@ describe("Schema", () => {
       expect(format(schema)).toEqual(
         format(
           `
-          ${staticPartOfSchema}
+          ${commonDefinitions}
 
           type Bucket_id{
             _id: ObjectID
@@ -148,7 +148,7 @@ describe("Schema", () => {
       expect(format(schema)).toEqual(
         format(
           `
-          ${staticPartOfSchema}
+          ${commonDefinitions}
 
           type Bucket_id{
             _id: ObjectID
@@ -187,7 +187,7 @@ describe("Schema", () => {
 
       expect(format(schema)).toEqual(
         format(`
-          ${staticPartOfSchema}
+          ${commonDefinitions}
 
           type Bucket_id{
             _id: ObjectID
@@ -235,7 +235,7 @@ describe("Schema", () => {
 
       expect(format(schema)).toEqual(
         format(`
-        ${staticPartOfSchema}
+        ${commonDefinitions}
 
         type Bucket_id{
           _id: ObjectID

@@ -297,7 +297,7 @@ describe("GraphQLController", () => {
       });
 
       describe("sort", () => {
-        it("should return documents with sorted as ascend by id", async () => {
+        it("should return documents sorted as ascend by id", async () => {
           const params = {
             query: `{
                 Find${bucketName}(sort:{_id:1}){
@@ -330,7 +330,7 @@ describe("GraphQLController", () => {
             }
           });
         });
-        it("should return documents with sorted as descend by id", async () => {
+        it("should return documents sorted as descend by id", async () => {
           const params = {
             query: `{
               Find${bucketName}(sort:{_id:-1}){
@@ -364,7 +364,7 @@ describe("GraphQLController", () => {
           });
         });
 
-        it("should return documents with sorted as ascend by name", async () => {
+        it("should return documents sorted as ascend by name", async () => {
           const params = {
             query: `{
                 Find${bucketName}(sort:{name:1}){
@@ -398,7 +398,7 @@ describe("GraphQLController", () => {
           });
         });
 
-        it("should return documents with sorted as descend by name", async () => {
+        it("should return documents sorted as descend by name", async () => {
           const params = {
             query: `{
                 Find${bucketName}(sort:{name:-1}){
@@ -450,10 +450,7 @@ describe("GraphQLController", () => {
               }`
           };
 
-          const {body} = await req.get("/graphql", params).catch(e => {
-            console.dir(e, {depth: Infinity});
-            return e;
-          });
+          const {body} = await req.get("/graphql", params);
 
           expect(body).toEqual({
             data: {
@@ -551,7 +548,7 @@ describe("GraphQLController", () => {
                 }
               }
             })
-            .then(response => response.body);
+            .then(r => r.body);
 
           languageBucketName = getBucketName(languageBucket._id);
 
@@ -709,7 +706,7 @@ describe("GraphQLController", () => {
         it("should return document with turkish title that matches with given id", async () => {
           const params = {
             query: `{
-                FindBy${languageBucketName}Id(_id: "${languageRows[1]._id}"){
+                FindBy${languageBucketName}Id(_id: "${languageRows[1]._id}",language: "TR"){
                   _id
                   title
                   description
@@ -722,7 +719,7 @@ describe("GraphQLController", () => {
             data: {
               [`FindBy${languageBucketName}Id`]: {
                 _id: languageRows[1]._id,
-                title: "new english words",
+                title: "yeni türkçe kelimeler",
                 description: "description"
               }
             }
@@ -731,6 +728,10 @@ describe("GraphQLController", () => {
       });
 
       describe("relation", () => {
+        let today = new Date();
+        let yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+        let tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+
         let booksBucket;
         let booksBucketName;
 
@@ -747,6 +748,9 @@ describe("GraphQLController", () => {
             properties: {
               title: {
                 type: "string"
+              },
+              publish_date: {
+                type: "date"
               }
             }
           };
@@ -782,13 +786,16 @@ describe("GraphQLController", () => {
           //insert data
           books = [
             await req.post(`/bucket/${booksBucket._id}/data`, {
-              title: "Priest With Vigor"
+              title: "Priest With Vigor",
+              publish_date: today
             }),
             await req.post(`/bucket/${booksBucket._id}/data`, {
-              title: "Goddess Of Earth"
+              title: "Goddess Of Earth",
+              publish_date: yesterday
             }),
             await req.post(`/bucket/${booksBucket._id}/data`, {
-              title: "Forsaking The Forest"
+              title: "Forsaking The Forest",
+              publish_date: tomorrow
             })
           ].map(r => r.body);
 
@@ -842,10 +849,8 @@ describe("GraphQLController", () => {
             }`
           };
 
-          const {body} = await req.get("/graphql", params).catch(e => {
-            console.dir(e, {depth: Infinity});
-            return e;
-          });
+          const {body} = await req.get("/graphql", params);
+
           expect(body).toEqual({
             data: {
               [`FindBy${booksBucketName}Id`]: {
@@ -879,10 +884,8 @@ describe("GraphQLController", () => {
             }`
           };
 
-          const {body} = await req.get("/graphql", params).catch(e => {
-            console.dir(e, {depth: Infinity});
-            return e;
-          });
+          const {body} = await req.get("/graphql", params);
+
           expect(body).toEqual({
             data: {
               [`Find${booksBucketName}`]: {
@@ -920,6 +923,37 @@ describe("GraphQLController", () => {
           });
         });
 
+        it("should get publisher with its own books", async () => {
+          const params = {
+            query: `{
+              FindBy${publishersBucketName}Id(_id: "${publishers[1]._id}"){
+                _id
+                name
+                books{
+                  _id
+                  title
+                }
+              }
+            }`
+          };
+
+          const {body} = await req.get("/graphql", params);
+          expect(body).toEqual({
+            data: {
+              [`FindBy${publishersBucketName}Id`]: {
+                _id: publishers[1]._id,
+                name: "Newell Brands",
+                books: [
+                  {
+                    _id: books[2]._id,
+                    title: "Forsaking The Forest"
+                  }
+                ]
+              }
+            }
+          });
+        });
+
         it("should get books that belongs to Comcast publisher", async () => {
           const params = {
             query: `{
@@ -939,10 +973,8 @@ describe("GraphQLController", () => {
             }`
           };
 
-          const {body} = await req.get("/graphql", params).catch(e => {
-            console.dir(e, {depth: Infinity});
-            return e;
-          });
+          const {body} = await req.get("/graphql", params);
+
           expect(body).toEqual({
             data: {
               [`Find${booksBucketName}`]: {
@@ -991,10 +1023,8 @@ describe("GraphQLController", () => {
             }`
           };
 
-          const {body} = await req.get("/graphql", params).catch(e => {
-            console.dir(e, {depth: Infinity});
-            return e;
-          });
+          const {body} = await req.get("/graphql", params);
+
           expect(body).toEqual({
             data: {
               [`Find${publishersBucketName}`]: {
@@ -1022,34 +1052,89 @@ describe("GraphQLController", () => {
           });
         });
 
-        it("should get publisher with its own books", async () => {
+        it("should get publishers which has the book that matches with the given book id", async () => {
           const params = {
             query: `{
-              FindBy${publishersBucketName}Id(_id: "${publishers[0]._id}"){
-                _id
-                name
-                books{
+              Find${publishersBucketName}(query: { books: { _id: "${books[2]._id}"  } }){
+                meta{
+                  total
+                }
+                entries{
                   _id
-                  title
+                  name
+                  books{
+                    _id
+                    title
+                  }
                 }
               }
             }`
           };
 
           const {body} = await req.get("/graphql", params);
+
           expect(body).toEqual({
             data: {
-              [`FindBy${publishersBucketName}Id`]: {
-                _id: publishers[0]._id,
-                name: "Comcast",
-                books: [
+              [`Find${publishersBucketName}`]: {
+                meta: {
+                  total: 1
+                },
+                entries: [
                   {
-                    _id: books[0]._id,
-                    title: "Priest With Vigor"
-                  },
+                    _id: publishers[1]._id,
+                    name: "Newell Brands",
+                    books: [
+                      {
+                        _id: books[2]._id,
+                        title: "Forsaking The Forest"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          });
+        });
+
+        it("should get publishers which has book that will be published in tomorrow", async () => {
+          let begin = new Date(tomorrow.setHours(0, 0, 0, 0));
+          let end = new Date(tomorrow.setHours(23, 59, 59, 9999));
+          const params = {
+            query: `{
+              Find${publishersBucketName}(query: { books: { publish_date_gt: "${begin.toString()}" , publish_date_lt: "${end.toString()}" } }){
+                meta{
+                  total
+                }
+                entries{
+                  _id
+                  name
+                  books{
+                    _id
+                    title
+                  }
+                }
+              }
+            }`
+          };
+
+          const {body} = await req.get("/graphql", params);
+
+          expect(body).toEqual({
+            data: {
+              [`Find${publishersBucketName}`]: {
+                meta: {
+                  total: 1
+                },
+                entries: [
                   {
-                    _id: books[1]._id,
-                    title: "Goddess Of Earth"
+                    _id: publishers[1]._id,
+                    name: "Newell Brands",
+                    books: [
+                      {
+                        _id: books[2]._id,
+                        title: "Forsaking The Forest"
+                      }
+                    ]
                   }
                 ]
               }
@@ -1098,7 +1183,7 @@ describe("GraphQLController", () => {
       });
 
       it("should insert new person", async () => {
-        let reqBody = {
+        let insertBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
                 _id
@@ -1108,7 +1193,7 @@ describe("GraphQLController", () => {
             }`
         };
 
-        let {body} = await req.post("/graphql", reqBody);
+        let {body} = await req.post("/graphql", insertBody);
 
         expect(body).toEqual({
           data: {
@@ -1134,9 +1219,9 @@ describe("GraphQLController", () => {
           }`
         };
 
-        let {body: getBody} = await req.post("/graphql", params);
+        let {body: findBody} = await req.post("/graphql", params);
 
-        expect(getBody).toEqual({
+        expect(findBody).toEqual({
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 1},
@@ -1148,7 +1233,7 @@ describe("GraphQLController", () => {
 
       it("should replace person", async () => {
         //insert
-        let reqBody = {
+        let requestBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
                 _id
@@ -1157,11 +1242,11 @@ describe("GraphQLController", () => {
               }
             }`
         };
-        let {body: insertBody} = await req.post("/graphql", reqBody);
+        let {body: insertBody} = await req.post("/graphql", requestBody);
         insertedId = insertBody.data[`insert${bucketName}`]._id;
 
         //update
-        reqBody = {
+        requestBody = {
           query: `mutation {
             replace${bucketName}(_id: "${insertedId}", input: { name: John, age: 12 } ){
               _id
@@ -1170,8 +1255,8 @@ describe("GraphQLController", () => {
             }
           }`
         };
-        let {body} = await req.post("/graphql", reqBody);
-        expect(body).toEqual({
+        let {body: replaceBody} = await req.post("/graphql", requestBody);
+        expect(replaceBody).toEqual({
           data: {
             [`replace${bucketName}`]: {_id: "__skip__", name: "John", age: 12}
           }
@@ -1204,7 +1289,7 @@ describe("GraphQLController", () => {
 
       it("should patch person", async () => {
         //insert
-        let reqBody = {
+        let requestBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
                 _id
@@ -1213,11 +1298,11 @@ describe("GraphQLController", () => {
               }
             }`
         };
-        let {body: insertBody} = await req.post("/graphql", reqBody);
+        let {body: insertBody} = await req.post("/graphql", requestBody);
         insertedId = insertBody.data[`insert${bucketName}`]._id;
 
         //patch
-        reqBody = {
+        requestBody = {
           query: `mutation {
             patch${bucketName}(_id: "${insertedId}", input: { name: John } ){
               _id
@@ -1226,7 +1311,7 @@ describe("GraphQLController", () => {
             }
           }`
         };
-        let {body} = await req.post("/graphql", reqBody);
+        let {body} = await req.post("/graphql", requestBody);
         expect(body).toEqual({
           data: {
             [`patch${bucketName}`]: {_id: "__skip__", name: "John", age: 66}
@@ -1259,7 +1344,7 @@ describe("GraphQLController", () => {
       });
 
       it("should delete person", async () => {
-        let reqBody = {
+        let requestBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
                 _id
@@ -1269,7 +1354,7 @@ describe("GraphQLController", () => {
             }`
         };
 
-        let {body} = await req.post("/graphql", reqBody);
+        let {body} = await req.post("/graphql", requestBody);
 
         insertedId = body.data[`insert${bucketName}`]._id;
 
@@ -1279,10 +1364,7 @@ describe("GraphQLController", () => {
             }`
         };
 
-        let {body: deleteResponse} = await req.post("/graphql", deleteBody).catch(e => {
-          console.dir(e, {depth: Infinity});
-          return e;
-        });
+        let {body: deleteResponse} = await req.post("/graphql", deleteBody);
 
         expect(deleteResponse).toEqual({
           data: {[`delete${bucketName}`]: ""}
@@ -1318,7 +1400,7 @@ describe("GraphQLController", () => {
 
       describe("errors", () => {
         it("should throw error if name is not one of the enums", async () => {
-          let reqBody = {
+          let body = {
             query: `mutation {
                 insert${bucketName}(input: { name: "David", age: 66 } ){
                   _id
@@ -1328,7 +1410,7 @@ describe("GraphQLController", () => {
               }`
           };
 
-          let error = await req.post("/graphql", reqBody).catch(err => err);
+          let error = await req.post("/graphql", body).catch(err => err);
 
           expect(error.statusCode).toEqual(400);
           expect(error.statusText).toEqual("Bad Request");
@@ -1338,7 +1420,7 @@ describe("GraphQLController", () => {
         });
 
         it("should throw error if required field age is not provided", async () => {
-          let reqBody = {
+          let body = {
             query: `mutation {
                 insert${bucketName}(input: { name: "David" } ){
                   _id
@@ -1348,7 +1430,7 @@ describe("GraphQLController", () => {
               }`
           };
 
-          let error = await req.post("/graphql", reqBody).catch(err => err);
+          let error = await req.post("/graphql", body).catch(e => e);
 
           expect(error.statusCode).toEqual(400);
           expect(error.statusText).toEqual("Bad Request");
@@ -1359,7 +1441,7 @@ describe("GraphQLController", () => {
 
         it("should throw validation error if patched document is not valid", async () => {
           //insert
-          let reqBody = {
+          let body = {
             query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
                 _id
@@ -1368,11 +1450,11 @@ describe("GraphQLController", () => {
               }
             }`
           };
-          let {body: insertBody} = await req.post("/graphql", reqBody);
+          let {body: insertBody} = await req.post("/graphql", body);
           insertedId = insertBody.data[`insert${bucketName}`]._id;
 
           //patch
-          reqBody = {
+          body = {
             query: `mutation {
             patch${bucketName}(_id: "${insertedId}", input: { name: "Karolina"  } ){
               _id
@@ -1381,7 +1463,7 @@ describe("GraphQLController", () => {
             }
           }`
           };
-          let error = await req.post("/graphql", reqBody).catch(e => e);
+          let error = await req.post("/graphql", body).catch(e => e);
 
           expect(error.statusCode).toEqual(400);
           expect(error.statusText).toEqual("Bad Request");
