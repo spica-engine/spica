@@ -350,10 +350,10 @@ export function getUpdateQuery(previousDocument: BucketDocument, currentDocument
   changes = changes.map(change => {
     let numIndex = change.path.findIndex(t => typeof t == "number");
     //item update is not possible with merge/patch,
-    //we must put given array directly
+    //we must put the given array directly
     if (numIndex > 0) {
-      //we dont need to track paths which is number and comes after number.
-      //["test",0,"inner_test"] => ["test"]
+      //if paths include array index, the last path before any number is the array path that will be put
+      //we do not need to track rest of it
       change.path = change.path.slice(0, numIndex);
       //array updates will be handled with set operator.
       change.kind = ChangeKind.Edit;

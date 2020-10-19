@@ -6,9 +6,7 @@ load("//tools/dgeni:index.bzl", "docs")
 ts_library(
     name = "bucket",
     srcs = glob([
-        "src/*.ts",
-        "src/graphql/graphql.ts",
-        "src/graphql/schema.ts",
+        "src/**/*.ts",
         "index.ts",
     ]),
     data = glob(["src/schemas/*.json"]),

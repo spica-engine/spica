@@ -325,7 +325,6 @@ export class GraphqlController implements OnModuleInit {
         const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
       }
 
-      //resolve relations if bucket has relation field
       if (
         Object.keys(bucket.properties).some(
           property => bucket.properties[property].type == "relation"
