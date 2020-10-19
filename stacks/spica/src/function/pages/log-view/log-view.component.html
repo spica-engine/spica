@@ -3,10 +3,17 @@
     <mat-icon>bug_report</mat-icon>
     <span>Logs</span>
   </h4>
-  <button mat-button canInteract="function:logs:delete" (click)="clearLogs()">
-    <mat-icon>clear_all</mat-icon>
-    Clear
-  </button>
+  <div [matTooltip]="'You should choose a function filter to clear logs'">
+    <button
+      mat-button
+      canInteract="function:logs:delete"
+      (click)="clearLogs()"
+      [disabled]="!(queryParams | async)?.function.length"
+    >
+      <mat-icon>clear_all</mat-icon>
+      Clear
+    </button>
+  </div>
 </mat-toolbar>
 
 <mat-card class="mat-elevation-z25">

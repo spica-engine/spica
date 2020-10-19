@@ -1,387 +1,403 @@
-<mat-toolbar>
-  <h4 class="mat-h4">
-    <mat-icon>memory</mat-icon>
-    <span>
-      {{ function._id ? function.name : "New Function" }}
-    </span>
-  </h4>
-</mat-toolbar>
+<div [class.with-sidecar]="enableLogView">
+  <mat-toolbar>
+    <h4 class="mat-h4">
+      <mat-icon>memory</mat-icon>
+      <span>
+        {{ function._id ? function.name : "New Function" }}
+      </span>
+    </h4>
+    <div class="actions">
+      <button mat-button (click)="enableLogView = !enableLogView">
+        <mat-icon>bug_report</mat-icon>
+        {{ enableLogView ? "Disable Log View" : "Enable Log View" }}
+      </button>
+    </div>
+  </mat-toolbar>
 
-<mat-card class="mat-elevation-z25">
-  <mat-card-content>
-    <form #form="ngForm">
-      <mat-list>
-        <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
-        <mat-divider></mat-divider>
-        <mat-list-item>
-          <mat-form-field>
-            <mat-label>Name</mat-label>
-            <input
-              matInput
-              placeholder="Name"
-              #nameModel="ngModel"
-              [(ngModel)]="function.name"
-              name="name"
-              required
-              minlength="3"
-              maxlength="50"
-            />
-            <mat-hint>Name of the function.</mat-hint>
-            <mat-error *ngIf="nameModel?.errors?.required">Name is required.</mat-error>
-            <mat-error *ngIf="nameModel?.errors?.minLength">
-              Name must be greater than {{ nameModel.errors.min.min }} characters.
-            </mat-error>
-            <mat-error *ngIf="nameModel?.errors?.maxLength">
-              Name must be less than {{ nameModel.errors.max.max }} characters.
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Description</mat-label>
-            <textarea
-              matInput
-              placeholder="Description"
-              #descriptionModel="ngModel"
-              [(ngModel)]="function.description"
-              name="description"
-              required
-              rows="1"
-              minlength="3"
-              maxlength="250"
-            ></textarea>
-            <mat-hint>Description of the function.</mat-hint>
-            <mat-error *ngIf="descriptionModel?.errors?.required">
-              Description is required.
-            </mat-error>
-            <mat-error *ngIf="descriptionModel?.errors?.minLength">
-              Description must be greater than {{ descriptionModel.errors.min.min }} characters.
-            </mat-error>
-            <mat-error *ngIf="descriptionModel?.errors?.maxLength">
-              Description must be less than {{ descriptionModel.errors.max.max }} characters.
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Language</mat-label>
-            <mat-select
-              placeholder="Language"
-              [(ngModel)]="function.language"
-              #languageModel="ngModel"
-              name="language"
-              [disabled]="function._id"
-            >
-              <mat-select-trigger>
-                <svg viewBox="0 0 24 24" [ngSwitch]="languageModel.value">
-                  <path
-                    *ngSwitchCase="'javascript'"
-                    fill="currentColor"
-                    d="M3,3H21V21H3V3M7.73,18.04C8.13,18.89 8.92,19.59 10.27,19.59C11.77,19.59 12.8,18.79 12.8,17.04V11.26H11.1V17C11.1,17.86 10.75,18.08 10.2,18.08C9.62,18.08 9.38,17.68 9.11,17.21L7.73,18.04M13.71,17.86C14.21,18.84 15.22,19.59 16.8,19.59C18.4,19.59 19.6,18.76 19.6,17.23C19.6,15.82 18.79,15.19 17.35,14.57L16.93,14.39C16.2,14.08 15.89,13.87 15.89,13.37C15.89,12.96 16.2,12.64 16.7,12.64C17.18,12.64 17.5,12.85 17.79,13.37L19.1,12.5C18.55,11.54 17.77,11.17 16.7,11.17C15.19,11.17 14.22,12.13 14.22,13.4C14.22,14.78 15.03,15.43 16.25,15.95L16.67,16.13C17.45,16.47 17.91,16.68 17.91,17.26C17.91,17.74 17.46,18.09 16.76,18.09C15.93,18.09 15.45,17.66 15.09,17.06L13.71,17.86Z"
-                  />
-                  <path
-                    *ngSwitchCase="'typescript'"
-                    fill="currentColor"
-                    d="M3,3H21V21H3V3M13.71,17.86C14.21,18.84 15.22,19.59 16.8,19.59C18.4,19.59 19.6,18.76 19.6,17.23C19.6,15.82 18.79,15.19 17.35,14.57L16.93,14.39C16.2,14.08 15.89,13.87 15.89,13.37C15.89,12.96 16.2,12.64 16.7,12.64C17.18,12.64 17.5,12.85 17.79,13.37L19.1,12.5C18.55,11.54 17.77,11.17 16.7,11.17C15.19,11.17 14.22,12.13 14.22,13.4C14.22,14.78 15.03,15.43 16.25,15.95L16.67,16.13C17.45,16.47 17.91,16.68 17.91,17.26C17.91,17.74 17.46,18.09 16.76,18.09C15.93,18.09 15.45,17.66 15.09,17.06L13.71,17.86M13,11.25H8V12.75H9.5V20H11.25V12.75H13V11.25Z"
-                  />
-                </svg>
-                <mat-label>{{ languageModel.value | titlecase }}</mat-label>
-              </mat-select-trigger>
-              <mat-option value="javascript">Javascript</mat-option>
-              <mat-option value="typescript">Typescript</mat-option>
-            </mat-select>
-            <mat-hint>Language of the function.</mat-hint>
-            <mat-hint align="end" matTooltip="Can not be changed after creation.">
-              <mat-icon>help</mat-icon>
-            </mat-hint>
-          </mat-form-field>
-          <span *ngIf="(information | async)?.timeout; let timeout">
-            <mat-label>
-              Timeout in seconds <b>({{ formatTimeout(function.timeout || timeout) }})</b>
-            </mat-label>
-            <mat-slider
-              thumbLabel
-              [displayWith]="formatTimeout"
-              tickInterval="auto"
-              min="1"
-              [max]="timeout"
-              [ngModel]="function.timeout || timeout"
-              (ngModelChange)="function.timeout = $event"
-              name="timeout"
-              #timeoutModel="ngModel"
-            >
-            </mat-slider>
-            <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
-            <mat-error *ngIf="timeoutModel?.errors?.min">Timeout value must be positive.</mat-error>
-          </span>
-        </mat-list-item>
-
-        <h4 mat-subheader>
-          <mat-icon>code</mat-icon> Code
-          <span></span>
-          <button mat-icon-button (click)="language.format()" matTooltip="Format">
-            <mat-icon>format_align_center</mat-icon>
-          </button>
-          <span class="last-saved" *ngIf="$indexSave | async; let lastSaved">
-            <mat-label *ngIf="lastSaved != 'inprogress'">
-              Last saved: {{ lastSaved | date: "mediumTime" }}
-            </mat-label>
-            <mat-progress-spinner
-              [style.opacity]="lastSaved == 'inprogress' ? 1 : 0"
-              color="primary"
-              mode="indeterminate"
-              [diameter]="18"
-            >
-            </mat-progress-spinner>
-          </span>
-        </h4>
-        <mat-divider></mat-divider>
-        <mat-list-item class="editor">
-          <code-editor
-            (save)="updateIndex()"
-            [(ngModel)]="index"
-            name="code"
-            [options]="editorOptions"
-            [language]="function.language"
-            [marker]="$markers | async"
-            #language="language"
-          >
-          </code-editor>
-        </mat-list-item>
-
-        <h4 mat-subheader>
-          <mat-icon>swap_horiz</mat-icon> Triggers<button
-            type="button"
-            mat-icon-button
-            (click)="addTrigger()"
-          >
-            <mat-icon>add</mat-icon>
-          </button>
-          <mat-error *ngIf="isHandlerDuplicated">
-            Duplicated handler detected. Each handlers must be unique.
-          </mat-error>
-          <mat-error *ngIf="serverError">
-            {{ serverError }}
-          </mat-error>
-        </h4>
-        <mat-divider></mat-divider>
-        <mat-list-item
-          class="triggers"
-          *ngFor="let trigger of function.triggers; let i = index"
-          [ngModelGroup]="i"
-        >
-          <mat-form-field>
-            <mat-label>Handler</mat-label>
-            <input
-              matInput
-              required
-              minlength="1"
-              placeholder="Handler"
-              [(ngModel)]="trigger.handler"
-              name="handler"
-              #handlerModel="ngModel"
-              (ngModelChange)="checkHandlers()"
-            />
-            <mat-error *ngIf="handlerModel.errors?.required">
-              This field is required.
-            </mat-error>
-          </mat-form-field>
-
-          <ng-container *ngIf="information | async; let information">
+  <mat-card class="mat-elevation-z25">
+    <mat-card-content>
+      <form #form="ngForm">
+        <mat-list>
+          <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
+          <mat-divider></mat-divider>
+          <mat-list-item>
             <mat-form-field>
-              <mat-label>Type</mat-label>
-              <mat-select
-                #typeModel="ngModel"
-                name="type"
-                [(ngModel)]="trigger.type"
-                (ngModelChange)="trigger.options = {}"
+              <mat-label>Name</mat-label>
+              <input
+                matInput
+                placeholder="Name"
+                #nameModel="ngModel"
+                [(ngModel)]="function.name"
+                name="name"
                 required
-              >
-                <mat-select-trigger
-                  *ngIf="information.enqueuers | enqueuer: trigger.type; let enqueuer"
-                >
-                  <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
-                  <mat-label>{{ enqueuer.description.title }}</mat-label>
-                </mat-select-trigger>
-                <mat-option
-                  *ngFor="let enqueuer of information.enqueuers"
-                  [value]="enqueuer.description.name"
-                >
-                  <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
-                  <mat-label>
-                    <span>{{ enqueuer.description.title }}</span> —
-                    <small class="mat-small">{{ enqueuer.description.description }}</small>
-                  </mat-label>
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="typeModel.errors?.required">You must select an enqueuer.</mat-error>
+                minlength="3"
+                maxlength="50"
+              />
+              <mat-hint>Name of the function.</mat-hint>
+              <mat-error *ngIf="nameModel?.errors?.required">Name is required.</mat-error>
+              <mat-error *ngIf="nameModel?.errors?.minLength">
+                Name must be greater than {{ nameModel.errors.min.min }} characters.
+              </mat-error>
+              <mat-error *ngIf="nameModel?.errors?.maxLength">
+                Name must be less than {{ nameModel.errors.max.max }} characters.
+              </mat-error>
             </mat-form-field>
-
-            <ng-container
-              ngModelGroup="triggerOptions"
-              *ngIf="
-                (information.enqueuers | enqueuer: trigger.type)?.options
-                  | conditionalSchema: trigger.options;
-                let options
-              "
-            >
-              <span
-                *ngFor="let propertyKv of options.properties | keyvalue"
-                [inputPlacer]="propertyKv.value"
-                [(ngModel)]="trigger.options[propertyKv.key]"
-                [name]="propertyKv.key"
-                [required]="options.required?.indexOf(propertyKv.key) > -1"
+            <mat-form-field>
+              <mat-label>Description</mat-label>
+              <textarea
+                matInput
+                placeholder="Description"
+                #descriptionModel="ngModel"
+                [(ngModel)]="function.description"
+                name="description"
+                required
+                rows="1"
+                minlength="3"
+                maxlength="250"
+              ></textarea>
+              <mat-hint>Description of the function.</mat-hint>
+              <mat-error *ngIf="descriptionModel?.errors?.required">
+                Description is required.
+              </mat-error>
+              <mat-error *ngIf="descriptionModel?.errors?.minLength">
+                Description must be greater than {{ descriptionModel.errors.min.min }} characters.
+              </mat-error>
+              <mat-error *ngIf="descriptionModel?.errors?.maxLength">
+                Description must be less than {{ descriptionModel.errors.max.max }} characters.
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Language</mat-label>
+              <mat-select
+                placeholder="Language"
+                [(ngModel)]="function.language"
+                #languageModel="ngModel"
+                name="language"
+                [disabled]="function._id"
               >
-              </span>
-              <span>
-                <mat-label>
-                  {{ trigger.active ? "Active" : "Deactive" }}
-                </mat-label>
-                <mat-slide-toggle name="status" [(ngModel)]="trigger.active"> </mat-slide-toggle>
-              </span>
-            </ng-container>
-          </ng-container>
+                <mat-select-trigger>
+                  <svg viewBox="0 0 24 24" [ngSwitch]="languageModel.value">
+                    <path
+                      *ngSwitchCase="'javascript'"
+                      fill="currentColor"
+                      d="M3,3H21V21H3V3M7.73,18.04C8.13,18.89 8.92,19.59 10.27,19.59C11.77,19.59 12.8,18.79 12.8,17.04V11.26H11.1V17C11.1,17.86 10.75,18.08 10.2,18.08C9.62,18.08 9.38,17.68 9.11,17.21L7.73,18.04M13.71,17.86C14.21,18.84 15.22,19.59 16.8,19.59C18.4,19.59 19.6,18.76 19.6,17.23C19.6,15.82 18.79,15.19 17.35,14.57L16.93,14.39C16.2,14.08 15.89,13.87 15.89,13.37C15.89,12.96 16.2,12.64 16.7,12.64C17.18,12.64 17.5,12.85 17.79,13.37L19.1,12.5C18.55,11.54 17.77,11.17 16.7,11.17C15.19,11.17 14.22,12.13 14.22,13.4C14.22,14.78 15.03,15.43 16.25,15.95L16.67,16.13C17.45,16.47 17.91,16.68 17.91,17.26C17.91,17.74 17.46,18.09 16.76,18.09C15.93,18.09 15.45,17.66 15.09,17.06L13.71,17.86Z"
+                    />
+                    <path
+                      *ngSwitchCase="'typescript'"
+                      fill="currentColor"
+                      d="M3,3H21V21H3V3M13.71,17.86C14.21,18.84 15.22,19.59 16.8,19.59C18.4,19.59 19.6,18.76 19.6,17.23C19.6,15.82 18.79,15.19 17.35,14.57L16.93,14.39C16.2,14.08 15.89,13.87 15.89,13.37C15.89,12.96 16.2,12.64 16.7,12.64C17.18,12.64 17.5,12.85 17.79,13.37L19.1,12.5C18.55,11.54 17.77,11.17 16.7,11.17C15.19,11.17 14.22,12.13 14.22,13.4C14.22,14.78 15.03,15.43 16.25,15.95L16.67,16.13C17.45,16.47 17.91,16.68 17.91,17.26C17.91,17.74 17.46,18.09 16.76,18.09C15.93,18.09 15.45,17.66 15.09,17.06L13.71,17.86M13,11.25H8V12.75H9.5V20H11.25V12.75H13V11.25Z"
+                    />
+                  </svg>
+                  <mat-label>{{ languageModel.value | titlecase }}</mat-label>
+                </mat-select-trigger>
+                <mat-option value="javascript">Javascript</mat-option>
+                <mat-option value="typescript">Typescript</mat-option>
+              </mat-select>
+              <mat-hint>Language of the function.</mat-hint>
+              <mat-hint align="end" matTooltip="Can not be changed after creation.">
+                <mat-icon>help</mat-icon>
+              </mat-hint>
+            </mat-form-field>
+            <span *ngIf="(information | async)?.timeout; let timeout">
+              <mat-label>
+                Timeout in seconds <b>({{ formatTimeout(function.timeout || timeout) }})</b>
+              </mat-label>
+              <mat-slider
+                thumbLabel
+                [displayWith]="formatTimeout"
+                tickInterval="auto"
+                min="1"
+                [max]="timeout"
+                [ngModel]="function.timeout || timeout"
+                (ngModelChange)="function.timeout = $event"
+                name="timeout"
+                #timeoutModel="ngModel"
+              >
+              </mat-slider>
+              <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
+              <mat-error *ngIf="timeoutModel?.errors?.min"
+                >Timeout value must be positive.</mat-error
+              >
+            </span>
+          </mat-list-item>
 
-          <button
-            mat-icon-button
-            type="button"
-            color="warn"
-            [disabled]="function.triggers.length == 1"
-            (click)="deleteTrigger(i)"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-list-item>
-
-        <ng-container *ngIf="function?._id" ngModelGroup="dependencies">
           <h4 mat-subheader>
-            <mat-icon>archive</mat-icon> Dependencies
+            <mat-icon>code</mat-icon> Code
             <span></span>
-            <mat-progress-spinner
-              *ngIf="dependencyInstallPending"
-              matSuffix
-              diameter="18"
-              mode="indeterminate"
+            <button mat-icon-button (click)="language.format()" matTooltip="Format">
+              <mat-icon>format_align_center</mat-icon>
+            </button>
+            <span class="last-saved" *ngIf="$indexSave | async; let lastSaved">
+              <mat-label *ngIf="lastSaved != 'inprogress'">
+                Last saved: {{ lastSaved | date: "mediumTime" }}
+              </mat-label>
+              <mat-progress-spinner
+                [style.opacity]="lastSaved == 'inprogress' ? 1 : 0"
+                color="primary"
+                mode="indeterminate"
+                [diameter]="18"
+              >
+              </mat-progress-spinner>
+            </span>
+          </h4>
+          <mat-divider></mat-divider>
+          <mat-list-item class="editor">
+            <code-editor
+              (save)="updateIndex()"
+              [(ngModel)]="index"
+              name="code"
+              [options]="editorOptions"
+              [language]="function.language"
+              [marker]="$markers | async"
+              #language="language"
             >
-            </mat-progress-spinner>
+            </code-editor>
+          </mat-list-item>
+
+          <h4 mat-subheader>
+            <mat-icon>swap_horiz</mat-icon> Triggers<button
+              type="button"
+              mat-icon-button
+              (click)="addTrigger()"
+            >
+              <mat-icon>add</mat-icon>
+            </button>
+            <mat-error *ngIf="isHandlerDuplicated">
+              Duplicated handler detected. Each handlers must be unique.
+            </mat-error>
+            <mat-error *ngIf="serverError">
+              {{ serverError }}
+            </mat-error>
           </h4>
           <mat-divider></mat-divider>
           <mat-list-item
-            class="dependency"
-            *ngFor="let dependency of dependencies | async; let index = index"
+            class="triggers"
+            *ngFor="let trigger of function.triggers; let i = index"
+            [ngModelGroup]="i"
           >
-            <svg viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M4,10V14H6V11H7V14H8V10H4M9,10V15H11V14H13V10H9M12,11V13H11V11H12M14,10V14H16V11H17V14H18V11H19V14H20V10H14M3,9H21V15H12V16H8V15H3V9Z"
-              />
-            </svg>
-            <span class="name">{{ dependency.name }}</span>
-            <span class="seperator">@</span>
-            <span class="version">{{ dependency.version }}</span>
-            <button
-              type="button"
-              mat-icon-button
-              matTooltip="Remove this package"
-              (click)="deleteDependency(dependency.name)"
-              [disabled]="dependencyInstallPending"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-            <button
-              type="button"
-              mat-icon-button
-              matTooltip="Update to latest version"
-              (click)="addDependency(dependency.name + '@latest')"
-              [disabled]="dependencyInstallPending"
-            >
-              <mat-icon>refresh</mat-icon>
-            </button>
-          </mat-list-item>
-
-          <mat-list-item>
             <mat-form-field>
-              <mat-label>Dependency name</mat-label>
+              <mat-label>Handler</mat-label>
               <input
                 matInput
-                placeholder="Dependency name"
-                (keyup.enter)="addDependency(dependencyModel.value)"
-                name="dependencyName"
                 required
-                #dependencyModel="ngModel"
-                ngModel
-                [ngModelOptions]="{standalone: true}"
-                [disabled]="dependencyInstallPending"
+                minlength="1"
+                placeholder="Handler"
+                [(ngModel)]="trigger.handler"
+                name="handler"
+                #handlerModel="ngModel"
+                (ngModelChange)="checkHandlers()"
               />
-
-              <mat-error *ngIf="dependencyModel?.errors?.required">
+              <mat-error *ngIf="handlerModel.errors?.required">
                 This field is required.
               </mat-error>
             </mat-form-field>
 
+            <ng-container *ngIf="information | async; let information">
+              <mat-form-field>
+                <mat-label>Type</mat-label>
+                <mat-select
+                  #typeModel="ngModel"
+                  name="type"
+                  [(ngModel)]="trigger.type"
+                  (ngModelChange)="trigger.options = {}"
+                  required
+                >
+                  <mat-select-trigger
+                    *ngIf="information.enqueuers | enqueuer: trigger.type; let enqueuer"
+                  >
+                    <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                    <mat-label>{{ enqueuer.description.title }}</mat-label>
+                  </mat-select-trigger>
+                  <mat-option
+                    *ngFor="let enqueuer of information.enqueuers"
+                    [value]="enqueuer.description.name"
+                  >
+                    <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                    <mat-label>
+                      <span>{{ enqueuer.description.title }}</span> —
+                      <small class="mat-small">{{ enqueuer.description.description }}</small>
+                    </mat-label>
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="typeModel.errors?.required"
+                  >You must select an enqueuer.</mat-error
+                >
+              </mat-form-field>
+
+              <ng-container
+                ngModelGroup="triggerOptions"
+                *ngIf="
+                  (information.enqueuers | enqueuer: trigger.type)?.options
+                    | conditionalSchema: trigger.options;
+                  let options
+                "
+              >
+                <span
+                  *ngFor="let propertyKv of options.properties | keyvalue"
+                  [inputPlacer]="propertyKv.value"
+                  [(ngModel)]="trigger.options[propertyKv.key]"
+                  [name]="propertyKv.key"
+                  [required]="options.required?.indexOf(propertyKv.key) > -1"
+                >
+                </span>
+                <span>
+                  <mat-label>
+                    {{ trigger.active ? "Active" : "Deactive" }}
+                  </mat-label>
+                  <mat-slide-toggle name="status" [(ngModel)]="trigger.active"> </mat-slide-toggle>
+                </span>
+              </ng-container>
+            </ng-container>
+
             <button
-              mat-button
+              mat-icon-button
               type="button"
-              (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
-              [disabled]="dependencyModel.invalid || dependencyInstallPending"
+              color="warn"
+              [disabled]="function.triggers.length == 1"
+              (click)="deleteTrigger(i)"
             >
-              <mat-icon>add</mat-icon> Add
+              <mat-icon>delete</mat-icon>
             </button>
           </mat-list-item>
-        </ng-container>
 
-        <h4 mat-subheader>
-          <mat-icon>dehaze</mat-icon> Environment Variables
-          <span></span>
-          <button type="button" mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
-            <mat-icon>add</mat-icon>
-          </button>
-        </h4>
-        <mat-divider></mat-divider>
-        <mat-list-item
-          *ngFor="let env of function.env; let index = index"
-          [ngModelGroup]="index"
-          class="environment"
-        >
-          <mat-form-field>
-            <mat-label>Key</mat-label>
-            <input matInput placeholder="Key" [(ngModel)]="env.key" name="key" />
-          </mat-form-field>
-          <mat-form-field>
-            <mat-label>Value</mat-label>
-            <textarea
-              matInput
-              placeholder="Value"
-              [(ngModel)]="env.value"
-              name="value"
-              rows="1"
-            ></textarea>
-          </mat-form-field>
-          <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-list-item>
-      </mat-list>
-    </form>
-  </mat-card-content>
-  <mat-card-actions>
-    <button
-      class="save-button"
-      mat-button
-      *matSave="$save | async; let state"
-      [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
-      [canInteract]="function._id ? 'function:update' : 'function:create'"
-      [resource]="function._id ? function._id : undefined"
-      (click)="save()"
-      [ngSwitch]="state"
-    >
-      <mat-icon *ngSwitchDefault>save</mat-icon>
-      <mat-progress-spinner
-        *ngSwitchCase="'saving'"
-        [diameter]="18"
-        color="primary"
-        mode="indeterminate"
+          <ng-container *ngIf="function?._id" ngModelGroup="dependencies">
+            <h4 mat-subheader>
+              <mat-icon>archive</mat-icon> Dependencies
+              <span></span>
+              <mat-progress-spinner
+                *ngIf="dependencyInstallPending"
+                matSuffix
+                diameter="18"
+                mode="indeterminate"
+              >
+              </mat-progress-spinner>
+            </h4>
+            <mat-divider></mat-divider>
+            <mat-list-item
+              class="dependency"
+              *ngFor="let dependency of dependencies | async; let index = index"
+            >
+              <svg viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M4,10V14H6V11H7V14H8V10H4M9,10V15H11V14H13V10H9M12,11V13H11V11H12M14,10V14H16V11H17V14H18V11H19V14H20V10H14M3,9H21V15H12V16H8V15H3V9Z"
+                />
+              </svg>
+              <span class="name">{{ dependency.name }}</span>
+              <span class="seperator">@</span>
+              <span class="version">{{ dependency.version }}</span>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Remove this package"
+                (click)="deleteDependency(dependency.name)"
+                [disabled]="dependencyInstallPending"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Update to latest version"
+                (click)="addDependency(dependency.name + '@latest')"
+                [disabled]="dependencyInstallPending"
+              >
+                <mat-icon>refresh</mat-icon>
+              </button>
+            </mat-list-item>
+
+            <mat-list-item>
+              <mat-form-field>
+                <mat-label>Dependency name</mat-label>
+                <input
+                  matInput
+                  placeholder="Dependency name"
+                  (keyup.enter)="addDependency(dependencyModel.value)"
+                  name="dependencyName"
+                  required
+                  #dependencyModel="ngModel"
+                  ngModel
+                  [ngModelOptions]="{standalone: true}"
+                  [disabled]="dependencyInstallPending"
+                />
+
+                <mat-error *ngIf="dependencyModel?.errors?.required">
+                  This field is required.
+                </mat-error>
+              </mat-form-field>
+
+              <button
+                mat-button
+                type="button"
+                (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
+                [disabled]="dependencyModel.invalid || dependencyInstallPending"
+              >
+                <mat-icon>add</mat-icon> Add
+              </button>
+            </mat-list-item>
+          </ng-container>
+
+          <h4 mat-subheader>
+            <mat-icon>dehaze</mat-icon> Environment Variables
+            <span></span>
+            <button type="button" mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
+              <mat-icon>add</mat-icon>
+            </button>
+          </h4>
+          <mat-divider></mat-divider>
+          <mat-list-item
+            *ngFor="let env of function.env; let index = index"
+            [ngModelGroup]="index"
+            class="environment"
+          >
+            <mat-form-field>
+              <mat-label>Key</mat-label>
+              <input matInput placeholder="Key" [(ngModel)]="env.key" name="key" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Value</mat-label>
+              <textarea
+                matInput
+                placeholder="Value"
+                [(ngModel)]="env.value"
+                name="value"
+                rows="1"
+              ></textarea>
+            </mat-form-field>
+            <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-list-item>
+        </mat-list>
+      </form>
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        class="save-button"
+        mat-button
+        *matSave="$save | async; let state"
+        [disabled]="form.invalid || isHandlerDuplicated || !!state || isIndexPending"
+        [canInteract]="function._id ? 'function:update' : 'function:create'"
+        [resource]="function._id ? function._id : undefined"
+        (click)="save()"
+        [ngSwitch]="state"
       >
-      </mat-progress-spinner>
-      <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
-      <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
-      <span>{{ (!state ? "save" : state) | titlecase }}</span>
-    </button>
-  </mat-card-actions>
-</mat-card>
+        <mat-icon *ngSwitchDefault>save</mat-icon>
+        <mat-progress-spinner
+          *ngSwitchCase="'saving'"
+          [diameter]="18"
+          color="primary"
+          mode="indeterminate"
+        >
+        </mat-progress-spinner>
+        <mat-icon *ngSwitchCase="'saved'">done</mat-icon>
+        <mat-icon *ngSwitchCase="'failed'">clear</mat-icon>
+        <span>{{ (!state ? "save" : state) | titlecase }}</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div class="sidecar-log-view" *ngIf="enableLogView">
+  <log-view></log-view>
+</div>

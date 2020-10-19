@@ -45,6 +45,8 @@ export class AddComponent implements OnInit, OnDestroy {
   isHandlerDuplicated = false;
   serverError: string;
 
+  enableLogView: boolean = false;
+
   private dispose = new EventEmitter();
   editorOptions = {language: "typescript", minimap: {enabled: false}};
 
