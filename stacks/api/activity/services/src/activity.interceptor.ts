@@ -60,7 +60,5 @@ export function createActivity(
     return {...activity, created_at: new Date()};
   });
 
-  //console.log(activities);
-
   return service.insertMany(activities);
 }

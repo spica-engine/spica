@@ -1,12 +1,6 @@
 import {graphqlHTTP} from "express-graphql";
 import {HttpAdapterHost} from "@nestjs/core";
-import {
-  Injectable,
-  UnauthorizedException,
-  Optional,
-  PipeTransform,
-  OnModuleInit
-} from "@nestjs/common";
+import {Injectable, Optional, PipeTransform, OnModuleInit} from "@nestjs/common";
 import {ObjectID, ObjectId} from "@spica-server/database";
 import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {GraphQLScalarType, GraphQLSchema, ValueNode, GraphQLError} from "graphql";
@@ -27,6 +21,8 @@ import {
 import {BucketDataService} from "../bucket-data.service";
 import {Locale, hasTranslatedProperties, findLocale, buildI18nAggregation} from "../locale";
 import {buildRelationAggregation, createHistory, clearRelations} from "../utility";
+import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
+import {Subscription} from "rxjs";
 
 interface FindResponse {
   meta: {total: number};
@@ -35,6 +31,13 @@ interface FindResponse {
 
 @Injectable()
 export class GraphqlController implements OnModuleInit {
+  bucketResourceFilter = {
+    include: [],
+    exclude: []
+  };
+
+  watcherSubscription: Subscription;
+
   //graphql needs a default schema that includes one type and resolver at least
   typeDefs = [
     `type Query{
@@ -125,67 +128,96 @@ export class GraphqlController implements OnModuleInit {
   onModuleInit() {
     let app = this.adapterHost.httpAdapter.getInstance();
 
-    this.bs.watchCollection(true).subscribe(buckets => {
-      this.buckets = buckets;
-
-      if (buckets.length) {
-        this.typeDefs = buckets.map(bucket => createSchema(bucket, this.staticTypes));
-
-        this.resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
-      } else {
-        this.typeDefs = [
-          `type Query{
-            spica: String
-          }`
-        ];
-
-        this.resolvers = [
-          {
-            Query: {
-              spica: () => "Spica"
-            }
-          }
-        ];
-      }
-
-      this.schema = makeExecutableSchema({
-        typeDefs: mergeTypeDefs(this.typeDefs),
-        resolvers: mergeResolvers(this.resolvers)
-      });
-    });
-
     app.use(
       "/graphql",
       graphqlHTTP(async (request, response, gqlParams) => {
-        let isAuthorized = await this.guardService
-          .checkAuthorization({
-            request,
-            response
-          })
-          .catch(err => {
-            //console.log(err);
+        await this.authorize(request, response);
 
-            //for development
-            return true;
-          });
+        let filterAggregation = await this.authenticate(request, "/bucket", {}, ["bucket:index"], {
+          resourceFilter: true
+        });
 
-        if (!isAuthorized) {
-          throw new UnauthorizedException();
-        }
+        this.watchBuckets(request["resourceFilter"], [filterAggregation]);
 
         return {
           schema: this.schema,
           graphiql: true,
           customFormatErrorFn: err => {
-            if (err.extensions && err.extensions.reason == "Validation") {
-              response.statusCode = 400;
-              delete err.extensions.reason;
+            if (err.extensions && err.extensions.statusCode) {
+              response.statusCode = err.extensions.statusCode;
+              delete err.extensions.statusCode;
             }
             return err;
           }
         };
       })
     );
+  }
+
+  watchBuckets(resourceFilter: any, filterAggregation: object[]) {
+    console.log(resourceFilter, filterAggregation);
+    let hasChange = false;
+    if (
+      resourceFilter.include.length != this.bucketResourceFilter.include.length ||
+      !resourceFilter.include.every(item => this.bucketResourceFilter.include.includes(item)) ||
+      resourceFilter.exclude.length != this.bucketResourceFilter.exclude.length
+    ) {
+      hasChange = true;
+    } else {
+      for (const [index, exclude] of resourceFilter.exclude.entries()) {
+        if (
+          exclude.length != this.bucketResourceFilter.exclude[index].length ||
+          !exclude.every(item => this.bucketResourceFilter.exclude[index].includes(item))
+        ) {
+          hasChange = true;
+          break;
+        }
+      }
+    }
+
+    console.log("hasChange", hasChange);
+
+    if (hasChange) {
+      this.bucketResourceFilter = resourceFilter;
+
+      if (this.watcherSubscription) {
+        this.watcherSubscription.unsubscribe();
+      }
+
+      this.watcherSubscription = this.bs
+        .watchCollection(filterAggregation, true)
+        .subscribe(buckets => {
+          console.log(buckets);
+          this.buckets = buckets;
+
+          if (buckets.length) {
+            this.typeDefs = buckets.map(bucket => createSchema(bucket, this.staticTypes));
+
+            this.resolvers = buckets.map(bucket =>
+              this.createResolver(bucket, this.staticResolvers)
+            );
+          } else {
+            this.typeDefs = [
+              `type Query{
+                spica: String
+              }`
+            ];
+
+            this.resolvers = [
+              {
+                Query: {
+                  spica: () => "Spica"
+                }
+              }
+            ];
+          }
+
+          this.schema = makeExecutableSchema({
+            typeDefs: mergeTypeDefs(this.typeDefs),
+            resolvers: mergeResolvers(this.resolvers)
+          });
+        });
+    }
   }
 
   createResolver(bucket: Bucket, staticResolvers: object) {
@@ -212,7 +244,17 @@ export class GraphqlController implements OnModuleInit {
   //resolver methods
   find(bucket: Bucket): Function {
     return async (root, {limit, skip, sort, language, query}, context): Promise<FindResponse> => {
+      let resourceFilterAggregation = await this.authenticate(
+        context,
+        "/bucket/:bucketId/data",
+        {bucketId: bucket._id},
+        ["bucket:data:index"],
+        {resourceFilter: true}
+      );
+
       let aggregation = [];
+
+      aggregation.push(resourceFilterAggregation);
 
       let locale: Locale;
       if (hasTranslatedProperties(bucket.properties)) {
@@ -282,6 +324,14 @@ export class GraphqlController implements OnModuleInit {
 
   findById(bucket: Bucket): Function {
     return async (root, {_id: documentId, language}, context): Promise<BucketDocument> => {
+      await this.authenticate(
+        context,
+        "/bucket/:bucketId/data/:documentId",
+        {bucketId: bucket._id, documentId: documentId},
+        ["bucket:data:show"],
+        {resourceFilter: false}
+      );
+
       let aggregation = [];
 
       aggregation.push({
@@ -321,16 +371,15 @@ export class GraphqlController implements OnModuleInit {
 
   insert(bucket: Bucket): Function {
     return async (root, {input}, context): Promise<BucketDocument> => {
-      // await this.guardService.checkAuthorization({
-      //   request: context,
-      //   response: {}
-      // });
+      await this.authenticate(
+        context,
+        "/bucket/:bucketId/data",
+        {bucketId: bucket._id},
+        ["bucket:data:create"],
+        {resourceFilter: false}
+      );
 
-      await this.validateInput(bucket._id, input).catch(error => {
-        throw new GraphQLError(error.message, null, null, null, null, null, {
-          reason: "Validation"
-        });
-      });
+      await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
       let insertResult = await this.bds.insertOne(bucket._id, input);
 
@@ -354,16 +403,15 @@ export class GraphqlController implements OnModuleInit {
 
   replace(bucket: Bucket): Function {
     return async (root, {_id: documentId, input}, context): Promise<BucketDocument> => {
-      // await this.guardService.checkAuthorization({
-      //   request: context,
-      //   response: {}
-      // });
+      await this.authenticate(
+        context,
+        "/bucket/:bucketId/data/:documentId",
+        {bucketId: bucket._id, documentId: documentId},
+        ["bucket:data:update"],
+        {resourceFilter: false}
+      );
 
-      await this.validateInput(bucket._id, input).catch(error => {
-        throw new GraphQLError(error.message, null, null, null, null, null, {
-          reason: "Validation"
-        });
-      });
+      await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
       const {value: previousDocument} = await this.bds.replaceOne(
         bucket._id,
@@ -405,20 +453,21 @@ export class GraphqlController implements OnModuleInit {
 
   patch(bucket: Bucket): Function {
     return async (root, {_id: documentId, input}, context) => {
-      // await this.guardService.checkAuthorization({
-      //   request: context,
-      //   response: {}
-      // });
+      await this.authenticate(
+        context,
+        "/bucket/:bucketId/data/:documentId",
+        {bucketId: bucket._id, documentId: documentId},
+        ["bucket:data:update"],
+        {resourceFilter: false}
+      );
 
       let document = await this.bds.findOne(bucket._id, {_id: documentId});
 
       let patchedDocument = getPatchedDocument(document, input);
 
-      await this.validateInput(bucket._id, patchedDocument).catch(error => {
-        throw new GraphQLError(error.message, null, null, null, null, null, {
-          reason: "Validation"
-        });
-      });
+      await this.validateInput(bucket._id, patchedDocument).catch(error =>
+        throwError(error.message, 400)
+      );
 
       let updateQuery = getUpdateQuery(document, patchedDocument);
 
@@ -438,10 +487,13 @@ export class GraphqlController implements OnModuleInit {
 
   delete(bucket: Bucket): Function {
     return async (root, {_id: documentId}, context): Promise<string> => {
-      // await this.guardService.checkAuthorization({
-      //   request: context,
-      //   response: {}
-      // });
+      await this.authenticate(
+        context,
+        "/bucket/:bucketId/data/:documentId",
+        {bucketId: bucket._id, documentId: documentId},
+        ["bucket:data:delete"],
+        {resourceFilter: false}
+      );
 
       await clearRelations(this.bs, bucket._id, documentId);
       if (this.history) {
@@ -469,7 +521,7 @@ export class GraphqlController implements OnModuleInit {
   ) {
     context.params.bucketId = bucketId;
     context.params.documentId = documentId;
-    context.method = method;
+    context.method = Action[method];
 
     const response = {
       _id: documentId
@@ -499,28 +551,55 @@ export class GraphqlController implements OnModuleInit {
 
     return pipe.transform(input);
   }
+
+  async authorize(req: any, res: any) {
+    await this.guardService
+      .checkAuthorization({
+        request: req,
+        response: res
+      })
+      .catch(error => {
+        throwError(error.message, 401);
+      });
+  }
+
+  async authenticate(
+    req: any,
+    path: string,
+    params: object,
+    actions: string[],
+    options: {resourceFilter: boolean}
+  ) {
+    req.route = {
+      path: path
+    };
+    req.params = params;
+    await this.guardService
+      .checkAction({
+        request: req,
+        response: {},
+        actions: actions,
+        options: options
+      })
+      .catch(error => {
+        throwError(error.message, 403);
+      });
+    if (options.resourceFilter) {
+      return resourceFilterFunction({}, {
+        switchToHttp: () => {
+          return {
+            getRequest: () => req
+          };
+        }
+      } as any);
+    }
+
+    return;
+  }
 }
 
-//guards
-async (req, res, params) => {
-  try {
-    await this.guardService.checkAuthorization({
-      request: req,
-      response: res
-    });
-    await this.guardService.checkAction({
-      request: req,
-      response: res,
-      actions: ["bucket:data:create"]
-    });
-    return {
-      schema: this.schema,
-      //rootValue: this.resolver,
-      graphiql: true
-    };
-  } catch (e) {
-    console.log(e);
-    throw new UnauthorizedException();
-    //res.end(JSON.stringify({code: e.status || 500, message: e.message}));
-  }
-};
+function throwError(message: string, statusCode: number) {
+  throw new GraphQLError(message, null, null, null, null, null, {
+    statusCode: statusCode
+  });
+}

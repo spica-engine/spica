@@ -69,7 +69,5 @@ export function createBucketDataActivity(
       break;
   }
 
-  //console.log(activities);
-
   return activities;
 }

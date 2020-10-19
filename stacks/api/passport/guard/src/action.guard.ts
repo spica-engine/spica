@@ -103,13 +103,15 @@ function isWildcard(segment: string): segment is "*" {
 export const ActionGuard: (
   actions: string | string[],
   format?: string,
-  prepareUser?: PrepareUser
+  prepareUser?: PrepareUser,
+  options?: {resourceFilter: boolean}
 ) => Type<CanActivate> = createActionGuard;
 
 function createActionGuard(
   actions: string | string[],
   format?: string,
-  prepareUser?: PrepareUser
+  prepareUser?: PrepareUser,
+  options?: {resourceFilter: boolean}
 ): Type<CanActivate> {
   class MixinActionGuard implements CanActivate {
     constructor(@Optional() @Inject(POLICY_RESOLVER) private resolver: PolicyResolver<any>) {}
@@ -126,9 +128,15 @@ function createActionGuard(
         return true;
       }
 
-      const resourceFilterMetadata =
-        Reflect.getMetadata("resourceFilter", context.getClass()) || {};
-      const hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
+      let hasResourceFilter;
+
+      if (options) {
+        hasResourceFilter = options.resourceFilter;
+      } else {
+        const resourceFilterMetadata =
+          Reflect.getMetadata("resourceFilter", context.getClass()) || {};
+        hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
+      }
 
       actions = wrapArray(actions);
 

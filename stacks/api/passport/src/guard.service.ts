@@ -21,13 +21,15 @@ export class GuardService {
   checkAction({
     request,
     response,
-    actions
+    actions,
+    options
   }: {
     request: any;
     response: any;
     actions: string | string[];
+    options?: {resourceFilter: boolean};
   }): Promise<boolean> {
-    const guard = ActionGuard(actions);
+    const guard = ActionGuard(actions, undefined, undefined, options);
     return this.wrapResult(
       new guard(this.resolver).canActivate({
         switchToHttp: () => ({

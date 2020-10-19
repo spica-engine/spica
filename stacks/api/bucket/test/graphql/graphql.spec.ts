@@ -1096,7 +1096,7 @@ describe("GraphQLController", () => {
           });
         });
 
-        it("should get publishers which has book that will be published in tomorrow", async () => {
+        it("should get publishers which has book that will be published at tomorrow", async () => {
           let begin = new Date(tomorrow.setHours(0, 0, 0, 0));
           let end = new Date(tomorrow.setHours(23, 59, 59, 9999));
           const params = {
@@ -1182,7 +1182,7 @@ describe("GraphQLController", () => {
         await req.delete(`/bucket/${bucket._id}/data/${insertedId}`).catch(e => e);
       });
 
-      it("should insert new person", async () => {
+      fit("should insert new person", async () => {
         let insertBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
@@ -1193,7 +1193,7 @@ describe("GraphQLController", () => {
             }`
         };
 
-        let {body} = await req.post("/graphql", insertBody);
+        let {body} = await req.post("/graphql", insertBody).catch(e => {console.dir(e,{depth:Infinity});return e;});
 
         expect(body).toEqual({
           data: {
