@@ -3,7 +3,7 @@ import {HttpAdapterHost} from "@nestjs/core";
 import {Injectable, Optional, PipeTransform, OnModuleInit} from "@nestjs/common";
 import {ObjectID, ObjectId} from "@spica-server/database";
 import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {GraphQLScalarType, GraphQLSchema, ValueNode, GraphQLError} from "graphql";
+import {GraphQLScalarType, ValueNode, GraphQLError, GraphQLSchema} from "graphql";
 
 import {makeExecutableSchema, mergeTypeDefs, mergeResolvers} from "graphql-tools";
 import {GuardService} from "@spica-server/passport";
@@ -22,7 +22,6 @@ import {BucketDataService} from "../bucket-data.service";
 import {Locale, hasTranslatedProperties, findLocale, buildI18nAggregation} from "../locale";
 import {buildRelationAggregation, createHistory, clearRelations} from "../utility";
 import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
-import {Subscription} from "rxjs";
 
 interface FindResponse {
   meta: {total: number};
@@ -31,33 +30,6 @@ interface FindResponse {
 
 @Injectable()
 export class GraphqlController implements OnModuleInit {
-  bucketResourceFilter = {
-    include: [],
-    exclude: []
-  };
-
-  watcherSubscription: Subscription;
-
-  //graphql needs a default schema that includes one type and resolver at least
-  typeDefs = [
-    `type Query{
-      spica: String
-    }`
-  ];
-
-  resolvers: any[] = [
-    {
-      Query: {
-        spica: () => "Spica"
-      }
-    }
-  ];
-
-  schema: GraphQLSchema = makeExecutableSchema({
-    typeDefs: mergeTypeDefs(this.typeDefs),
-    resolvers: mergeResolvers(this.resolvers)
-  });
-
   buckets: Bucket[] = [];
 
   validatorPipes: Map<ObjectId, PipeTransform<any, any>> = new Map();
@@ -137,10 +109,10 @@ export class GraphqlController implements OnModuleInit {
           resourceFilter: true
         });
 
-        this.watchBuckets(request["resourceFilter"], [filterAggregation]);
+        const schema = await this.getSchema(filterAggregation);
 
         return {
-          schema: this.schema,
+          schema: schema,
           graphiql: true,
           customFormatErrorFn: err => {
             if (err.extensions && err.extensions.statusCode) {
@@ -154,70 +126,37 @@ export class GraphqlController implements OnModuleInit {
     );
   }
 
-  watchBuckets(resourceFilter: any, filterAggregation: object[]) {
-    console.log(resourceFilter, filterAggregation);
-    let hasChange = false;
-    if (
-      resourceFilter.include.length != this.bucketResourceFilter.include.length ||
-      !resourceFilter.include.every(item => this.bucketResourceFilter.include.includes(item)) ||
-      resourceFilter.exclude.length != this.bucketResourceFilter.exclude.length
-    ) {
-      hasChange = true;
+  async getSchema(filterAggregation: object): Promise<GraphQLSchema> {
+    let buckets = await this.bs.aggregate([filterAggregation]).toArray();
+
+    let typeDefs = [];
+    let resolvers = [];
+
+    if (buckets.length) {
+      this.buckets = buckets;
+      typeDefs = buckets.map(bucket => createSchema(bucket, this.staticTypes));
+
+      resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
     } else {
-      for (const [index, exclude] of resourceFilter.exclude.entries()) {
-        if (
-          exclude.length != this.bucketResourceFilter.exclude[index].length ||
-          !exclude.every(item => this.bucketResourceFilter.exclude[index].includes(item))
-        ) {
-          hasChange = true;
-          break;
-        }
-      }
-    }
+      //graphql needs a default schema that includes one type and resolver at least
+      typeDefs = [
+        `type Query{
+              spica: String
+            }`
+      ];
 
-    console.log("hasChange", hasChange);
-
-    if (hasChange) {
-      this.bucketResourceFilter = resourceFilter;
-
-      if (this.watcherSubscription) {
-        this.watcherSubscription.unsubscribe();
-      }
-
-      this.watcherSubscription = this.bs
-        .watchCollection(filterAggregation, true)
-        .subscribe(buckets => {
-          console.log(buckets);
-          this.buckets = buckets;
-
-          if (buckets.length) {
-            this.typeDefs = buckets.map(bucket => createSchema(bucket, this.staticTypes));
-
-            this.resolvers = buckets.map(bucket =>
-              this.createResolver(bucket, this.staticResolvers)
-            );
-          } else {
-            this.typeDefs = [
-              `type Query{
-                spica: String
-              }`
-            ];
-
-            this.resolvers = [
-              {
-                Query: {
-                  spica: () => "Spica"
-                }
-              }
-            ];
+      resolvers = [
+        {
+          Query: {
+            spica: () => "Spica"
           }
-
-          this.schema = makeExecutableSchema({
-            typeDefs: mergeTypeDefs(this.typeDefs),
-            resolvers: mergeResolvers(this.resolvers)
-          });
-        });
+        }
+      ];
     }
+    return makeExecutableSchema({
+      typeDefs: mergeTypeDefs(typeDefs),
+      resolvers: mergeResolvers(resolvers)
+    });
   }
 
   createResolver(bucket: Bucket, staticResolvers: object) {
@@ -241,7 +180,6 @@ export class GraphqlController implements OnModuleInit {
     return resolver;
   }
 
-  //resolver methods
   find(bucket: Bucket): Function {
     return async (root, {limit, skip, sort, language, query}, context): Promise<FindResponse> => {
       let resourceFilterAggregation = await this.authenticate(
@@ -512,7 +450,6 @@ export class GraphqlController implements OnModuleInit {
     };
   }
 
-  //activity logs
   insertActivity(
     context: any,
     method: Action,
@@ -539,7 +476,6 @@ export class GraphqlController implements OnModuleInit {
     );
   }
 
-  //document validation
   validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {
     let pipe: any = this.validatorPipes.get(bucketId);
 

@@ -1,11 +1,6 @@
 import {Injectable} from "@nestjs/common";
 import {Default, Validator} from "@spica-server/core/schema";
-import {
-  BaseCollection,
-  Collection,
-  DatabaseService,
-  ObjectId,
-} from "@spica-server/database";
+import {BaseCollection, Collection, DatabaseService, ObjectId} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {Bucket, BucketPreferences} from "./bucket";
 import {Observable} from "rxjs";
@@ -21,29 +16,6 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
   getPreferences() {
     return this.pref.get<BucketPreferences>("bucket");
-  }
-
-  watchCollection(filter: object[], propagateOnStart: boolean): Observable<Bucket[]> {
-    return new Observable(observer => {
-      if (propagateOnStart) {
-        this.buckets
-          .aggregate(filter)
-          .toArray()
-          .then(buckets => observer.next(buckets));
-      }
-      const stream = this.buckets.watch(filter);
-      stream.on("change", () => {
-        this.buckets
-          .aggregate(filter)
-          .toArray()
-          .then(buckets => observer.next(buckets));
-      });
-      return () => {
-        if (!stream.isClosed()) {
-          stream.close();
-        }
-      };
-    });
   }
 
   watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {

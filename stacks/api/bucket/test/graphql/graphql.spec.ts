@@ -63,9 +63,6 @@ describe("GraphQLController", () => {
       if (buckets) {
         let deletes = buckets.map(bucket => req.delete(`/bucket/${bucket._id}`));
         await Promise.all(deletes);
-
-        //wait until bucket watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 100));
       }
     });
 
@@ -114,9 +111,6 @@ describe("GraphQLController", () => {
           await req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
           await req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
         ].map(r => r.body);
-
-        //wait until bucket watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
       it("should return document that matches with given id", async () => {
@@ -566,9 +560,6 @@ describe("GraphQLController", () => {
               description: "description"
             })
           ].map(r => r.body);
-
-          //wait until bucket watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 100));
         });
 
         it("should return documents with english titles", async () => {
@@ -729,8 +720,8 @@ describe("GraphQLController", () => {
 
       describe("relation", () => {
         let today = new Date();
-        let yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-        let tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        let yesterday = new Date(today.getTime() - 24 * 60 * 60 * 5000);
+        let tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 5000);
 
         let booksBucket;
         let booksBucketName;
@@ -830,9 +821,6 @@ describe("GraphQLController", () => {
               })
               .then(r => r.body)
           ]);
-
-          //wait until bucket watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 100));
         });
 
         it("should get book with its own publisher", async () => {
@@ -1173,16 +1161,13 @@ describe("GraphQLController", () => {
           .then(response => response.body);
 
         bucketName = getBucketName(bucket._id);
-
-        //wait until bucket watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
       afterEach(async () => {
         await req.delete(`/bucket/${bucket._id}/data/${insertedId}`).catch(e => e);
       });
 
-      fit("should insert new person", async () => {
+      it("should insert new person", async () => {
         let insertBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
@@ -1193,7 +1178,7 @@ describe("GraphQLController", () => {
             }`
         };
 
-        let {body} = await req.post("/graphql", insertBody).catch(e => {console.dir(e,{depth:Infinity});return e;});
+        let {body} = await req.post("/graphql", insertBody);
 
         expect(body).toEqual({
           data: {
