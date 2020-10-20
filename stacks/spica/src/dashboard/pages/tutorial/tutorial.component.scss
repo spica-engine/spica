@@ -91,6 +91,10 @@
       }
     }
   }
+
+  .dismiss-button {
+    float: right;
+  }
 }
 
 ::ng-deep span.placer > *:first-of-type {
