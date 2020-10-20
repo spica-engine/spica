@@ -12,13 +12,13 @@ import {
   Query,
   UseGuards
 } from "@nestjs/common";
-import { DEFAULT, NUMBER } from "@spica-server/core";
-import { Schema } from "@spica-server/core/schema";
-import { DatabaseService, ObjectId, OBJECT_ID } from "@spica-server/database";
-import { ActionGuard, AuthGuard, ResourceFilter } from "@spica-server/passport/guard";
-import { Webhook } from "./interface";
-import { WebhookInvoker } from "./invoker";
-import { WebhookService } from "./webhook.service";
+import {DEFAULT, NUMBER} from "@spica-server/core";
+import {Schema} from "@spica-server/core/schema";
+import {DatabaseService, ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {Webhook} from "./interface";
+import {WebhookInvoker} from "./invoker";
+import {WebhookService} from "./webhook.service";
 
 @Controller("webhook")
 export class WebhookController {
@@ -26,13 +26,11 @@ export class WebhookController {
     private webhookService: WebhookService,
     private invoker: WebhookInvoker,
     private database: DatabaseService
-  ) { }
+  ) {}
 
   @Get("collections")
   @UseGuards(AuthGuard())
-  collections(
-    @ResourceFilter() resourceFilter: object,
-  ) {
+  collections(@ResourceFilter() resourceFilter: object) {
     return this.database
       .collections()
       .then(collections => collections.map(coll => coll.collectionName));
@@ -49,13 +47,13 @@ export class WebhookController {
       resourceFilter,
       {
         $facet: {
-          meta: [{ $count: "total" }],
-          data: [{ $skip: skip }, { $limit: limit }]
+          meta: [{$count: "total"}],
+          data: [{$skip: skip}, {$limit: limit}]
         }
       },
       {
         $set: {
-          meta: { $ifNull: [{ $arrayElemAt: ["$meta", 0] }, { total: 0 }] }
+          meta: {$ifNull: [{$arrayElemAt: ["$meta", 0]}, {total: 0}]}
         }
       }
     ];
@@ -65,7 +63,7 @@ export class WebhookController {
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("webhook:show"))
   findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.webhookService.findOne({ _id: id });
+    return this.webhookService.findOne({_id: id});
   }
 
   @Post()
@@ -90,13 +88,13 @@ export class WebhookController {
     } catch (error) {
       throw new BadRequestException(error.toString());
     }
-    return this.webhookService.findOneAndReplace({ _id: id }, hook, { returnOriginal: false });
+    return this.webhookService.findOneAndReplace({_id: id}, hook, {returnOriginal: false});
   }
 
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("webhook:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    return this.webhookService.deleteOne({ _id: id }).then(() => { });
+    return this.webhookService.deleteOne({_id: id}).then(() => {});
   }
 }
