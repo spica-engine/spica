@@ -186,7 +186,7 @@ function createPropertyValue(
       throw Error(`Unknown type ${value.type} on ${key} field of ${name}.`);
   }
 
-  if (isRequired) {
+  if (isRequired && prefix == Prefix.Input) {
     result = result + "!";
   }
 

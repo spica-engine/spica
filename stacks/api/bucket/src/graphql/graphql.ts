@@ -3,7 +3,13 @@ import {HttpAdapterHost} from "@nestjs/core";
 import {Injectable, Optional, PipeTransform, OnModuleInit} from "@nestjs/common";
 import {ObjectID, ObjectId} from "@spica-server/database";
 import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {GraphQLScalarType, ValueNode, GraphQLError, GraphQLSchema} from "graphql";
+import {
+  GraphQLScalarType,
+  ValueNode,
+  GraphQLError,
+  GraphQLSchema,
+  GraphQLResolveInfo
+} from "graphql";
 
 import {makeExecutableSchema, mergeTypeDefs, mergeResolvers} from "graphql-tools";
 import {GuardService} from "@spica-server/passport";
@@ -19,7 +25,13 @@ import {
   getUpdateQuery
 } from "./schema";
 import {BucketDataService} from "../bucket-data.service";
-import {Locale, hasTranslatedProperties, findLocale, buildI18nAggregation} from "../locale";
+import {
+  Locale,
+  hasTranslatedProperties,
+  findLocale,
+  buildI18nAggregation,
+  hasRelationalProperties
+} from "../locale";
 import {buildRelationAggregation, createHistory, clearRelations} from "../utility";
 import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
 
@@ -141,8 +153,8 @@ export class GraphqlController implements OnModuleInit {
       //graphql needs a default schema that includes one type and resolver at least
       typeDefs = [
         `type Query{
-              spica: String
-            }`
+          spica: String
+        }`
       ];
 
       resolvers = [
@@ -180,8 +192,158 @@ export class GraphqlController implements OnModuleInit {
     return resolver;
   }
 
+  extractFields(node: any, fields: string[]) {
+    let result = [];
+    node.selectionSet.selections.forEach(selection => {
+      let currentPath = fields.concat([selection.name.value]);
+
+      if (selection.selectionSet) {
+        result = result.concat(this.extractFields(selection, currentPath));
+      } else {
+        result.push(currentPath);
+      }
+    });
+
+    return result;
+  }
+
+  getRelationAggregation(properties: object, fields: string[][], locale: Locale) {
+    let aggregations = [];
+    for (const [key, value] of Object.entries(properties)) {
+      if (value.type == "relation") {
+        let relateds = fields.filter(field => field[0] == key);
+        if (relateds.length) {
+          let aggregation = buildRelationAggregation(
+            key,
+            value.bucketId,
+            value.relationType,
+            locale,
+            true
+          );
+
+          //Remove first key
+          relateds = relateds.map(field => {
+            field.splice(0, 1);
+            return field;
+          });
+
+          let relatedBucket = this.buckets.find(
+            bucket => bucket._id.toHexString() == value.bucketId
+          );
+
+          aggregation[0].$lookup.pipeline.push(
+            ...this.getRelationAggregation(relatedBucket.properties, relateds, locale)
+          );
+
+          aggregations.push(...aggregation);
+        }
+      }
+    }
+    return aggregations;
+  }
+
+  mergeNodes(node: any, rootKey: string) {
+    if (
+      node.selectionSet &&
+      node.selectionSet.selections.some(selection => selection.name.value == rootKey)
+    ) {
+      //return node;
+      let mergedNode = node.selectionSet.selections
+        .filter(selection => selection.name.value == rootKey)
+        .reduce(
+          (acc, curr) => {
+            acc.selectionSet.selections.push(...curr.selectionSet.selections);
+            return acc;
+          },
+          {selectionSet: {selections: []}} as any
+        );
+      return mergedNode;
+    }
+    return {selectionSet: {selections: []}};
+  }
+
+  findRequestedFields(info: GraphQLResolveInfo, rootKey?: string) {
+    let [result] = info.fieldNodes.map(node =>
+      this.extractFields(rootKey ? this.mergeNodes(node, rootKey) : node, [])
+    );
+
+    return result;
+  }
+
+  getProjectAggregation(fields: string[][]) {
+    let result = {};
+    fields.forEach(field => {
+      let mergedField = field.join(".");
+      result[mergedField] = 1;
+    });
+    return {$project: result};
+  }
+
+  async aggregationsFromRequestedFields(
+    bucket: Bucket,
+    info: GraphQLResolveInfo,
+    rootKey?: string,
+    language?: string
+  ) {
+    let aggregations = [];
+
+    let requestedFields = this.findRequestedFields(info, rootKey);
+
+    let locale;
+    if (requestedFields.length) {
+      if (this.relationalFieldRequested(bucket.properties, requestedFields)) {
+        locale = await this.getLocale(language);
+        let relationAggregation = this.getRelationAggregation(
+          bucket.properties,
+          JSON.parse(JSON.stringify(requestedFields)),
+          locale
+        );
+        aggregations.push(...relationAggregation);
+      }
+
+      if (this.translatableFieldsRequested(bucket.properties, requestedFields)) {
+        locale = locale ? locale : await this.getLocale(language);
+        aggregations.push({
+          $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+        });
+      }
+
+      let project = this.getProjectAggregation(requestedFields);
+      aggregations.push(project);
+    }
+
+    return aggregations;
+  }
+
+  relationalFieldRequested(properties: object, requestedFields: string[][]) {
+    let relatedFields = [];
+    Object.keys(properties).forEach(key => {
+      if (properties[key].type == "relation") {
+        relatedFields.push(key);
+      }
+    });
+
+    return requestedFields.some(fields => relatedFields.includes(fields[0]));
+  }
+
+  translatableFieldsRequested(properties: object, requestedFields: string[][]) {
+    let translatableFields = [];
+    Object.keys(properties).forEach(key => {
+      if (properties[key].options && properties[key].options.translate) {
+        translatableFields.push(key);
+      }
+    });
+
+    return requestedFields.some(fields => translatableFields.includes(fields[0]));
+  }
+
   find(bucket: Bucket): Function {
-    return async (root, {limit, skip, sort, language, query}, context): Promise<FindResponse> => {
+    return async (
+      root: any,
+      {limit, skip, sort, language, query}: {[arg: string]: any},
+      context: any,
+      info: GraphQLResolveInfo
+    ): Promise<FindResponse> => {
       let resourceFilterAggregation = await this.authenticate(
         context,
         "/bucket/:bucketId/data",
@@ -194,30 +356,14 @@ export class GraphqlController implements OnModuleInit {
 
       aggregation.push(resourceFilterAggregation);
 
-      let locale: Locale;
-      if (hasTranslatedProperties(bucket.properties)) {
-        const preferences = await this.bs.getPreferences();
-        locale = findLocale(language ? language : preferences.language.default, preferences);
+      let additionalAggregations = await this.aggregationsFromRequestedFields(
+        bucket,
+        info,
+        "entries",
+        language
+      );
 
-        aggregation.push({
-          $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-        });
-      }
-
-      for (const propertyKey in bucket.properties) {
-        const property = bucket.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale,
-              false
-            )
-          );
-        }
-      }
+      aggregation.push(...additionalAggregations);
 
       if (query && Object.keys(query).length) {
         let matchExpression = extractAggregationFromQuery(
@@ -251,17 +397,26 @@ export class GraphqlController implements OnModuleInit {
         {$unwind: "$meta"}
       );
 
-      return this.bds.find(bucket._id, aggregation).then(response => {
-        if (!response.length) {
-          return {meta: {total: 0}, entries: []};
-        }
-        return response[0] as FindResponse;
-      });
+      console.dir(aggregation, {depth: Infinity});
+
+      return this.bds
+        .find(bucket._id, aggregation)
+        .then(response => {
+          console.dir(response, {depth: Infinity});
+          if (!response.length) {
+            return {meta: {total: 0}, entries: []};
+          }
+          return response[0] as FindResponse;
+        })
+        .catch(e => {
+          console.log(e);
+          return e;
+        });
     };
   }
 
   findById(bucket: Bucket): Function {
-    return async (root, {_id: documentId, language}, context): Promise<BucketDocument> => {
+    return async (root, {_id: documentId, language}, context, info): Promise<BucketDocument> => {
       await this.authenticate(
         context,
         "/bucket/:bucketId/data/:documentId",
@@ -272,38 +427,20 @@ export class GraphqlController implements OnModuleInit {
 
       let aggregation = [];
 
-      aggregation.push({
-        $match: {
-          _id: documentId
-        }
+      let additionalAggregations = await this.aggregationsFromRequestedFields(bucket, info);
+      aggregation.push(...additionalAggregations);
+
+      aggregation.push({$match: {_id: documentId}});
+
+      // let aggregation = await this.localizationAndRelation(bucket, language);
+      // aggregation.push({$match: {_id: documentId}});
+
+      console.dir(aggregation, {depth: Infinity});
+
+      return this.bds.find(bucket._id, aggregation).then(([documents]) => {
+        console.dir(documents,{depth:Infinity});
+        return documents;
       });
-
-      let locale: Locale;
-      if (hasTranslatedProperties(bucket.properties)) {
-        const preferences = await this.bs.getPreferences();
-        locale = findLocale(language ? language : preferences.language.default, preferences);
-
-        aggregation.push({
-          $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-        });
-      }
-
-      for (const propertyKey in bucket.properties) {
-        const property = bucket.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale,
-              false
-            )
-          );
-        }
-      }
-
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
     };
   }
 
@@ -325,16 +462,10 @@ export class GraphqlController implements OnModuleInit {
         const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
       }
 
-      if (
-        Object.keys(bucket.properties).some(
-          property => bucket.properties[property].type == "relation"
-        )
-      ) {
-        let findById = this.findById(bucket);
-        return findById(root, {_id: insertResult.insertedId, language: undefined}, context);
-      }
+      let aggregation = await this.localizationAndRelation(bucket);
+      aggregation.push({$match: {_id: insertResult.insertedId}});
 
-      return {...input, _id: insertResult.insertedId};
+      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
     };
   }
 
@@ -375,16 +506,10 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
-      if (
-        Object.keys(bucket.properties).some(
-          property => bucket.properties[property].type == "relation"
-        )
-      ) {
-        let findById = this.findById(bucket);
-        return findById(root, {_id: documentId, language: undefined}, context);
-      }
+      let aggregation = await this.localizationAndRelation(bucket);
+      aggregation.push({$match: {_id: documentId}});
 
-      return currentDocument;
+      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
     };
   }
 
@@ -398,27 +523,45 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      let document = await this.bds.findOne(bucket._id, {_id: documentId});
+      let previousDocument = await this.bds.findOne(bucket._id, {_id: documentId});
 
-      let patchedDocument = getPatchedDocument(document, input);
+      let patchedDocument = getPatchedDocument(previousDocument, input);
 
       await this.validateInput(bucket._id, patchedDocument).catch(error =>
         throwError(error.message, 400)
       );
 
-      let updateQuery = getUpdateQuery(document, patchedDocument);
+      let updateQuery = getUpdateQuery(previousDocument, patchedDocument);
 
       if (!Object.keys(updateQuery).length) {
         throw Error("There is no difference between previous and current documents.");
+      }
+
+      let currentDocument = await this.bds.findOneAndUpdate(
+        bucket._id,
+        {_id: documentId},
+        updateQuery,
+        {returnOriginal: false}
+      );
+
+      if (this.history) {
+        const promise = createHistory(
+          this.bs,
+          this.history,
+          bucket._id,
+          previousDocument,
+          currentDocument
+        );
       }
 
       if (this.activity) {
         const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
       }
 
-      return this.bds.findOneAndUpdate(bucket._id, {_id: documentId}, updateQuery, {
-        returnOriginal: false
-      });
+      let aggregation = await this.localizationAndRelation(bucket);
+      aggregation.push({$match: {_id: documentId}});
+
+      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
     };
   }
 
@@ -447,6 +590,63 @@ export class GraphqlController implements OnModuleInit {
 
       return "";
     };
+  }
+
+  async getLocale(language?: string) {
+    const preferences = await this.bs.getPreferences();
+    return findLocale(language ? language : preferences.language.default, preferences);
+  }
+
+  getI18nAggregation(bucket: Bucket, locale: Locale) {
+    let aggregation = [];
+    aggregation.push({
+      $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+    });
+    return aggregation;
+  }
+
+  // getRelationAggregation(bucket: Bucket, locale: Locale) {
+  //   let aggregation = [];
+  //   for (const propertyKey in bucket.properties) {
+  //     const property = bucket.properties[propertyKey];
+  //     if (property.type == "relation") {
+  //       aggregation.push(
+  //         ...buildRelationAggregation(
+  //           propertyKey,
+  //           property["bucketId"],
+  //           property["relationType"],
+  //           locale,
+  //           false
+  //         )
+  //       );
+  //     }
+  //   }
+  //   return aggregation;
+  // }
+
+  async localizationAndRelation(bucket: Bucket, language?: string) {
+    const needTranslate = hasTranslatedProperties(bucket.properties);
+    const needRelation = hasRelationalProperties(bucket.properties);
+
+    if (!needTranslate && !needRelation) {
+      return Promise.resolve([]);
+    }
+
+    let locale = await this.getLocale(language);
+
+    let aggregation = [];
+
+    if (needTranslate) {
+      let i18nAggregation = this.getI18nAggregation(bucket, locale);
+      aggregation.push(...i18nAggregation);
+    }
+
+    // if (needRelation) {
+    //   let relationAggregation = this.getRelationAggregation(bucket, locale);
+    //   aggregation.push(...relationAggregation);
+    // }
+
+    return aggregation;
   }
 
   insertActivity(
