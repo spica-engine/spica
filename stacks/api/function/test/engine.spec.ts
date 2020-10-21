@@ -104,7 +104,7 @@ describe("Engine", () => {
     engine["categorizeChanges"]([changes]);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith("test_root/test_id");
+    expect(unsubscribeSpy).toHaveBeenCalledWith(changes);
 
     expect(subscribeSpy).toHaveBeenCalledTimes(0);
   });
@@ -130,7 +130,7 @@ describe("Engine", () => {
     engine["categorizeChanges"](changes);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith("test_root/test_id");
+    expect(unsubscribeSpy).toHaveBeenCalledWith(changes[0]);
 
     expect(subscribeSpy).toHaveBeenCalledTimes(2);
     expect(subscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[0]], [changes[1]]]);
@@ -153,7 +153,8 @@ describe("Engine", () => {
         }
       }
     ];
-    expect(unsubscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[1]]]);
+    engine["categorizeChanges"](changes);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(changes[1]);
   });
 
   it("should create the scheduling context when subscribing", () => {
