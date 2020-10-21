@@ -38,7 +38,7 @@ Event trigger will pass the data as parameters to the function when the event ra
 For example a function which has http trigger will look like this:
 
 ```typescript
-export default function (request: triggers.http.Request, response: triggers.http.Response) {
+export default function (request, response) {
   // Send the response
   response.send({
     message: "Spica is awesome!"
@@ -189,6 +189,8 @@ Bucket.initialize({apikey: "{APIKEY which as the needed policy}", publicUrl: ""}
 ###### Get
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.get("{BUCKET ID}");
@@ -198,6 +200,8 @@ export default function (req, res) {
 ###### Get All
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.getAll();
@@ -207,6 +211,8 @@ export default function (req, res) {
 ###### Insert
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -235,6 +241,8 @@ export default function (req, res) {
 ###### Update
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -266,6 +274,8 @@ export default function (req, res) {
 ###### Delete
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.remove("5f10302b4d858d1824e57e6d");
@@ -275,6 +285,8 @@ export default function (req, res) {
 ###### Bucket Data Get
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.get("{BUCKET ID}", "{BUCKET DATA ID}");
@@ -284,6 +296,8 @@ export default function (req, res) {
 ###### Bucket Data Get with Parameters
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.getAll("{BUCKET ID}", {
@@ -296,6 +310,8 @@ export default function (req, res) {
 ###### Bucket Data Insert
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -311,6 +327,8 @@ export default function (req, res) {
 ###### Bucket Data Update
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -329,6 +347,8 @@ export default function (req, res) {
 ###### Bucket Data Get
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.remove("{BUCKET ID}", "{BUCKET DATA ID}");
@@ -396,7 +416,7 @@ Example:
 For **`/books/:bookId`** path, you can access the **bookId** parameter from **`request.params`** object.
 
 ```typescript
-export default function (request: triggers.http.Request, response: triggers.http.Response) {
+export default function (request, response) {
   // Print the bookId parameter
   console.log(request.params.bookId);
   // Send the response
@@ -421,7 +441,7 @@ Usually, every request contains a payload (body) along with the request. It can 
 Example function;
 
 ```typescript
-export default function (request: triggers.http.Request, response: triggers.http.Response) {
+export default function (request, response) {
   // A entry will appear in function logs.
   console.dir(request.body);
   // Send body as response right away
@@ -469,7 +489,7 @@ To be able to create a function that triggered by database event, you need two r
 A basic database function looks like this:
 
 ```typescript
-export default function (changes: triggers.database.Changes) {
+export default function (changes) {
   console.log(changes);
   // Business logic here
 }
@@ -510,11 +530,10 @@ To create a scheduled function you need a CRON time expression and Time-zone bec
 For example, if you want to run your function at every minute, you need a cron time expression like this [\* \* \* \* \*](https://crontab.guru/#*_*_*_*_*).
 
 ```typescript
-export default function (stop: triggers.schedule.Stop) {
+export default function () {
   // Also, note that you do not have to stop your function
   if (true) {
     // Scheduler will stop after first invocation by scheduler
-    stop();
   }
   // Your business logic
 }
@@ -586,7 +605,7 @@ INSERT request object:
 INSERT example:
 
 ```typescript
-export default function (req) {
+export default function (req, res) {
   // Allow the ongoing insert operation if the authorization header does not contain this special string.
   return req.headers.authorization != "FORBIDDEN_APIKEY";
 }
@@ -617,7 +636,7 @@ ActionParameters {
 UPDATE example:
 
 ```typescript
-export default function (req) {
+export default function (req, res) {
   // Allow the ongoing update operation only if the id of the target document is not this special string
   return req.document != "MY_SECRET_DOCUMENT";
 }
@@ -648,7 +667,7 @@ GET request object:
 GET example:
 
 ```typescript
-export default function (req) {
+export default function (req, res) {
   const aggregation = [];
   // If the authorization header does not contain the "MY_SECRET_TOKEN" string literally, then strip out password field to prevent the user from fetching it.
   if (req.headers.authorization != "MY_SECRET_TOKEN") {
@@ -683,7 +702,7 @@ INDEX request object:
 INDEX example:
 
 ```typescript
-export default function (request) {
+export default function (request, response) {
   // Allow the user to only fetch those entries which belong to the user.
   // HINT: For security purposes, DO NOT get identifier of the user via plain HTTP header. At least extract it from a signed token and such.
   return [{$match: {user_id: request.headers["X-Authorized-User"]}}];
