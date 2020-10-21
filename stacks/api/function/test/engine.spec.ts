@@ -104,7 +104,7 @@ describe("Engine", () => {
     engine["categorizeChanges"]([changes]);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith("test_root/test_id");
+    expect(unsubscribeSpy).toHaveBeenCalledWith(changes);
 
     expect(subscribeSpy).toHaveBeenCalledTimes(0);
   });
@@ -130,10 +130,31 @@ describe("Engine", () => {
     engine["categorizeChanges"](changes);
 
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
-    expect(unsubscribeSpy).toHaveBeenCalledWith("test_root/test_id");
+    expect(unsubscribeSpy).toHaveBeenCalledWith(changes[0]);
 
     expect(subscribeSpy).toHaveBeenCalledTimes(2);
     expect(subscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[0]], [changes[1]]]);
+  });
+
+  it("should set the handler when a handler is disabled", () => {
+    let changes: TargetChange[] = [
+      {
+        kind: ChangeKind.Updated,
+        target: {
+          id: "test_id",
+          handler: "test_handler"
+        }
+      },
+      {
+        kind: ChangeKind.Removed,
+        target: {
+          id: "test_id",
+          handler: "test_handler2"
+        }
+      }
+    ];
+    engine["categorizeChanges"](changes);
+    expect(unsubscribeSpy).toHaveBeenCalledWith(changes[1]);
   });
 
   it("should create the scheduling context when subscribing", () => {
@@ -169,7 +190,6 @@ describe("Engine", () => {
       context: {env: [{key: "TEST", value: "true"}], timeout: 60}
     });
   });
-
   describe("Database Schema", () => {
     it("should get initial schema", async () => {
       let schema = await from(engine.getSchema("database"))
