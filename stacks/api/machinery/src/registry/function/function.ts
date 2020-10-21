@@ -2,7 +2,7 @@ import {JSONSchema7} from "json-schema";
 import { ResourceDefinition } from "../../definition";
 
 
-const SchemaV1: JSONSchema7 = {
+const FunctionV1: JSONSchema7 = {
   $schema: "http://json-schema.org/draft-07/schema",
   $id: "http://example.com/example.json",
   type: "object",
@@ -12,7 +12,6 @@ const SchemaV1: JSONSchema7 = {
     "timeout",
     "runtime",
     "dependencies",
-    "trigger",
     "environment"
   ],
   properties: {
@@ -66,30 +65,6 @@ const SchemaV1: JSONSchema7 = {
         }
       }
     },
-    trigger: {
-      $id: "#/properties/trigger",
-      type: "array",
-      items: {
-        $id: "#/properties/trigger/items",
-        type: "object",
-        required: ["name", "type", "options"],
-        properties: {
-          name: {
-            $id: "#/properties/trigger/items/properties/name",
-            type: "string"
-          },
-          type: {
-            $id: "#/properties/trigger/items/properties/type",
-            type: "string"
-          },
-          options: {
-            $id: "#/properties/trigger/items/properties/options",
-            type: "object",
-            required: []
-          }
-        }
-      }
-    },
     environment: {
       $id: "#/properties/environment",
       type: "array",
@@ -123,32 +98,36 @@ export const Function: ResourceDefinition = {
   versions: [
     {
       name: "v1",
-      schema: SchemaV1,
+      schema: FunctionV1,
       current: true,
       additionalPrinterColumns: [
         {
           name: "title",
           type: "string",
           description: "",
-          jsonPath: ".spec.title"
+          jsonPath: ".spec.title",
+          priority: 0
         },
         {
           name: "runtime",
           type: "string",
           description: "",
-          jsonPath: ".spec.runtime.name"
+          jsonPath: ".spec.runtime.name",
+          priority: 0,
         },
         {
           name: "runtime version",
           type: "string",
           description: "",
-          jsonPath: ".spec.runtime.version"
+          jsonPath: ".spec.runtime.version",
+          priority: 0
         },
         {
           name: "language",
           type: "string",
           description: "",
-          jsonPath: ".spec.runtime.language"
+          jsonPath: ".spec.runtime.language",
+          priority: 0
         },
         {
           name: "status",

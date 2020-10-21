@@ -8,7 +8,10 @@ export interface TypeMeta {
 export interface ObjectMeta {
   metadata: {
     name: string;
-    creationTimestamp: string;
+    namespace?: string;
+    creationTimestamp?: string;
+    deletionTimestamp?: string;
+    uid?: string;
   };
 }
 
@@ -34,12 +37,14 @@ export interface ResourceDefinitionVersion {
   name: string;
   current: boolean;
   schema: JSONSchema7;
-  additionalPrinterColumns?: AdditionalPrinterColumn[];
+  additionalPrinterColumns?: ColumnDefinition[];
 }
 
-export interface AdditionalPrinterColumn {
+export interface ColumnDefinition {
   name: string;
-  type: string;
+  type: "integer" | "number" | "string" | "boolean" | "date";
   description: string;
   jsonPath: string;
+  priority?: number;
+  format?: "int32" | "int64" | "float" | "double" | "byte" | "date" | "date-time" | "password"
 }

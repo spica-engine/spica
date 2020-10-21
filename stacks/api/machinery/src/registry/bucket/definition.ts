@@ -1,7 +1,8 @@
-import { JSONSchema7 } from "json-schema";
-import { ResourceDefinition } from "../../definition";
+import {JSONSchema7} from "json-schema";
+import {ResourceDefinition} from "../../definition";
 
-const SchemaV1: JSONSchema7 = {
+export namespace v1 {
+  export const SchemaSchema: JSONSchema7 = {
     title: "Bucket schema meta-schema",
     definitions: {
       schemaArray: {
@@ -18,8 +19,14 @@ const SchemaV1: JSONSchema7 = {
       },
       simpleTypes: {
         enum: [
-          "array", "boolean", "integer", "null", "number", "object", "string",
-          // supported by bucket. 
+          "array",
+          "boolean",
+          "integer",
+          "null",
+          "number",
+          "object",
+          "string",
+          // supported by bucket.
           "storage",
           "richtext",
           "date",
@@ -84,7 +91,7 @@ const SchemaV1: JSONSchema7 = {
       // exclusiveMaximum: {
       //   type: "number"
       // },
-      
+  
       minimum: {
         type: "number"
       },
@@ -100,7 +107,7 @@ const SchemaV1: JSONSchema7 = {
         type: "string",
         format: "regex"
       },
-      
+  
       // Unsupported
       // additionalItems: {$ref: "#"},
   
@@ -129,7 +136,6 @@ const SchemaV1: JSONSchema7 = {
       //   additionalProperties: {$ref: "#"},
       //   default: {}
       // },
-  
   
       properties: {
         type: "object",
@@ -174,7 +180,7 @@ const SchemaV1: JSONSchema7 = {
           }
         ]
       },
-      format: {type: "string"},
+      format: {type: "string"}
   
       // Not supported.
       // contentMediaType: {type: "string"},
@@ -189,36 +195,45 @@ const SchemaV1: JSONSchema7 = {
     },
     default: true
   };
-  
 
-  export const Bucket: ResourceDefinition = {
-    group: "bucket",
-    names: {
-      kind: "Schema",
-      plural: "schemas",
-      singular: "schema",
-      shortNames: ["b", "bkt"]
-    },
-    versions: [
-      {
-        name: "v1",
-        schema: SchemaV1,
-        current: true,
-        additionalPrinterColumns: [
-          {
-            name: "title",
-            type: "string",
-            description: "",
-            jsonPath: ".spec.runtime.name"
-          },
-          {
-            name: "status",
-            type: "string",
-            description: "",
-            jsonPath: ".status"
-          }
-        ]
-      }
-    ]
-  };
-  
+  export type Schema = any;
+}
+
+export const Bucket: ResourceDefinition = {
+  group: "bucket",
+  names: {
+    kind: "Schema",
+    plural: "schemas",
+    singular: "schema",
+    shortNames: ["b", "bkt"]
+  },
+  versions: [
+    {
+      name: "v1",
+      schema: v1.SchemaSchema,
+      current: true,
+      additionalPrinterColumns: [
+        {
+          name: "title",
+          type: "string",
+          description: "",
+          jsonPath: ".spec.title",
+          priority: 0
+        },
+        {
+          name: "description",
+          type: "string",
+          description: "",
+          jsonPath: ".spec.description",
+          priority: 0
+        },
+        {
+          name: "status",
+          type: "string",
+          description: "",
+          jsonPath: ".status"
+        }
+      ]
+    }
+  ]
+};

@@ -3,7 +3,7 @@ kind: Schema
 metadata:
   name: roles
 spec:
-  title: Roles
+  title: Roles 🥴🤘
   description: User roles
   icon: outbond
   required:
@@ -23,8 +23,8 @@ kind: Schema
 metadata:
   name: user
 spec:
-  title: Userss
-  description: Users
+  title: Users 🥳😎
+  description: User bucket
   icon: perm_identity
   required:
     - email
@@ -46,6 +46,71 @@ spec:
     activated_at:
       type: date
 ---
+apiVersion: passport/v1
+kind: ApiKey
+metadata:
+  name: access-to-roles-bucket
+spec:
+  name: Access to Roles Bucket
+  policies:
+    - BucketFullAccess
+---
+apiVersion: function/v1
+kind: Trigger
+metadata:
+  name: trigger-test-fn-when-bucket-changes
+spec:
+  name: bucket
+  type: bucket
+  bucketOptions:
+    bucket: 
+      resourceFieldRef:
+        bucketName: roles
+    phase: AFTER
+    type: INSERT
+---
+apiVersion: function/v1
+kind: Trigger
+metadata:
+  name: trigger-test-fn-on-http-request
+spec:
+  name: http
+  type: http
+  httpOptions:
+    method: Get
+    path: /test 
+---
+apiVersion: function/v1
+kind: Trigger
+metadata:
+  name: trigger-test-fn-on-firehose
+spec:
+  name: firehose
+  type: firehose
+  firehoseOptions:
+    event: "*"
+---
+apiVersion: function/v1
+kind: Trigger
+metadata:
+  name: trigger-test-fn-everyhour
+spec:
+  name: sched
+  type: schedule
+  scheduleOptions:
+    frequency: "0 * * * *"
+    timezone: Europe/Istanbul
+---
+apiVersion: function/v1
+kind: Trigger
+metadata:
+  name: trigger-test-fn-when-system-is-ready
+spec:
+  name: onready
+  type: system
+  systemOptions:
+    event: "READY"
+---
 apiVersion: function/v1
 kind: Function
 metadata:
@@ -53,21 +118,38 @@ metadata:
 spec:
   title: Email
   description: Users
-  language: Javascript
   code: ./test.js
-  trigger:
-    default:
-      type: http
-      active: True
-      options:
-        method: Get
-        path: "/test"
-
+  triggers: 
+    - trigger-test-fn-on-http-request
+    - trigger-test-fn-when-bucket-changes
+    - trigger-test-fn-on-firehose
+    - trigger-test-fn-everyhour
+    - trigger-test-fn-when-system-is-ready
+  runtime:
+    name: Node
+    language: Javascript
   environment:
     - key: TEST
       value: "LITERAL"
-
     - key: BUCKET_ID
       valueFrom:
         resourceFieldRef:
           bucketName: roles
+    - key: APIKEY
+      valueFrom:
+        resourceFieldRef:
+          apiKeyName:  access-to-roles-bucket
+---
+apiVersion: function/v1
+kind: Function
+metadata:
+  name: magick
+spec:
+  title: Magick
+  description: hihi
+  code: ./test.js
+  triggers: []
+  runtime:
+    name: Node
+    language: Typescript
+  environment: []

@@ -1,9 +1,9 @@
-import {Action, Command, CreateCommandParameters} from "@caporal/core";
+import {Action, ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
 import * as docker from "dockerode";
-import {ActionParameters} from "../../interface";
+import {spin} from "../../console";
 import {projectName} from "../../validator";
 
-async function remove({args, logger, options}: ActionParameters) {
+async function remove({args}: ActionParameters) {
   const {name} = args;
 
   const machine = new docker();
@@ -18,11 +18,11 @@ async function remove({args, logger, options}: ActionParameters) {
   });
 
   if (!foundNetworks.length && !foundContainers.length) {
-    return logger.warn(`There is no instance with name ${name}.`);
+    return console.warn(`There is no instance with name ${name}.`);
   }
 
   if (foundContainers.length) {
-    await logger.spin({
+    await spin({
       text: `Removing containers (0/${foundContainers.length}).`,
       op: spinner => {
         let deleted = 0;
@@ -46,7 +46,7 @@ async function remove({args, logger, options}: ActionParameters) {
   }
 
   if (foundNetworks.length) {
-    await logger.spin({
+    await spin({
       text: `Removing networks (0/${foundNetworks.length}).`,
       op: spinner => {
         let deleted = 0;
@@ -70,7 +70,7 @@ async function remove({args, logger, options}: ActionParameters) {
     const foundVolumes = (await machine.listVolumes({
       filters: JSON.stringify({label: [`namespace=${name}`]})
     })).Volumes;
-    await logger.spin({
+    await spin({
       text: `Removing volumes (0/${foundVolumes.length}).`,
       op: spinner => {
         let deleted = 0;
@@ -90,7 +90,7 @@ async function remove({args, logger, options}: ActionParameters) {
     });
   }
 
-  logger.success(`Spica ${name} was successfully deleted.`);
+  console.info(`Spica ${name} was successfully deleted.`);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
@@ -99,5 +99,5 @@ export default function({createCommand}: CreateCommandParameters): Command {
     .option("--retain-volumes", "When false, the data will be removed along with the containers.", {
       default: true
     })
-    .action(remove as unknown as Action);
+    .action((remove as unknown) as Action);
 }

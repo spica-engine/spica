@@ -1,1 +1,0 @@
-export {StackModule} from "./module";

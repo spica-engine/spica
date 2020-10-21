@@ -1,10 +1,8 @@
-import * as docker from "dockerode";
 import {Action, Command, CreateCommandParameters} from "@caporal/core";
-import {ActionParameters} from "../../interface";
+import * as docker from "dockerode";
 import * as duration from "pretty-ms";
 
-async function list({logger}: ActionParameters) {
-
+async function list() {
   const machine = new docker();
 
   const foundNetworks: docker.NetworkInfo[] = await machine.listNetworks({
@@ -22,8 +20,8 @@ async function list({logger}: ActionParameters) {
     const namespace = network["Labels"].namespace;
 
     const instance: any = {
-      NAMESPACE: namespace, 
-      DESCRIPTION: [], 
+      NAMESPACE: namespace,
+      DESCRIPTION: [],
       PORT: "-",
       AGE: "-",
       VERSION: "-",
@@ -32,13 +30,19 @@ async function list({logger}: ActionParameters) {
 
     instances.push(instance);
 
-    const api = containers.find(container => container.Names.some(name => name.indexOf(`${namespace}-api`) != -1));
-    const spica = containers.find(container => container.Names.some(name => name.indexOf(`${namespace}-spica`) != -1));
-    const ingress = containers.find(container => container.Names.some(name => name.indexOf(`${namespace}-ingress`) != -1));
+    const api = containers.find(container =>
+      container.Names.some(name => name.indexOf(`${namespace}-api`) != -1)
+    );
+    const spica = containers.find(container =>
+      container.Names.some(name => name.indexOf(`${namespace}-spica`) != -1)
+    );
+    const ingress = containers.find(container =>
+      container.Names.some(name => name.indexOf(`${namespace}-ingress`) != -1)
+    );
 
     if (api && spica && ingress) {
       instance.VERSION = api.Image.split(":")[1];
-      instance.AGE = duration(new Date(api.Created * 1000).getTime())
+      instance.AGE = duration(new Date(api.Created * 1000).getTime());
 
       if (ingress.State == "running" && ingress.Ports.length) {
         const [port] = ingress.Ports;
@@ -71,11 +75,11 @@ async function list({logger}: ActionParameters) {
     }
   }
 
-  logger.table(instances, ["NAMESPACE", "AGE", "STATUS", "VERSION", "PORT", "DESCRIPTION"]);
+  console.table(instances, ["NAMESPACE", "AGE", "STATUS", "VERSION", "PORT", "DESCRIPTION"]);
 }
 
 export default function({createCommand}: CreateCommandParameters): Command {
   return createCommand("List local projects.")
     .default()
-    .action((list as unknown) as Action);
+    .action(list);
 }

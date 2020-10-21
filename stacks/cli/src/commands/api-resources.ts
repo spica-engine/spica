@@ -1,7 +1,6 @@
 import {Action, Command, CreateCommandParameters} from "@caporal/core";
-import {ActionParameters} from "../interface";
-import {request} from "../request";
 import {JSONSchema7} from "json-schema";
+import {request} from "../request";
 
 export interface TypeMeta {
   kind: string;
@@ -15,12 +14,10 @@ export interface ObjectMeta {
   };
 }
 
-
 export interface Resource<SpecType = unknown> extends TypeMeta, ObjectMeta {
-  spec: SpecType,
-  status?: unknown
+  spec: SpecType;
+  status?: unknown;
 }
-
 
 export interface ResourceDefinition {
   group: string;
@@ -49,9 +46,9 @@ export interface AdditionalPrinterColumn {
   jsonPath: string;
 }
 
-async function apiResources({logger}: ActionParameters) {
+async function apiResources() {
   const resources = await request.get<ResourceDefinition[]>("http://localhost:4300/apis");
-  logger.table(
+  console.table(
     resources.map(def => {
       return {
         name: def.names.plural,

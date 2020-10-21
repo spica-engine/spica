@@ -1,10 +1,10 @@
-import {Action, Command, CreateCommandParameters, CaporalValidator} from "@caporal/core";
+import {Action, Command, CreateCommandParameters, CaporalValidator, ActionParameters} from "@caporal/core";
 import * as docker from "dockerode";
 import * as getport from "get-port";
 import * as open from "open";
 import {Stream} from "stream";
+import { spin } from "../../console";
 import {ImageNotFoundError} from "../../errors";
-import {ActionParameters} from "../../interface";
 import {projectName} from "../../validator";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
@@ -18,10 +18,8 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
   });
 }
 
-async function create({args: cmdArgs, logger, options, ddash}: ActionParameters) {
+async function create({args: cmdArgs, options, ddash}: ActionParameters) {
   const {name}: {name?: string} = cmdArgs;
-
-  console.log(cmdArgs, options);
 
   const machine = new docker();
 
@@ -31,7 +29,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
     publicHost = options.publicUrl ? options.publicUrl : `http://localhost:${port}`;
 
   if (!options.publicUrl && options.port.toString() != port.toString() && options.port != 4500) {
-    logger.info(`Port ${options.port} already in use, the port ${port} will be used instead.`);
+    console.info(`Port ${options.port} already in use, the port ${port} will be used instead.`);
   }
 
   let args = ddash.map(r => r.toString());
@@ -59,14 +57,14 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
   });
 
   if ((foundNetworks.length || foundContainers.length) && !options.force) {
-    logger.warn(
+    console.warn(
       `There is a instance with name ${name} already exists.\nUse --force to delete existing one.`
     );
     return;
   }
 
   if (options.force && (foundNetworks.length || foundContainers.length)) {
-    await logger.spin({
+    await spin({
       text: `Shutting down and removing the previous containers, networks${
         !options.retainVolumes ? ", and volumes" : ""
       }.`,
@@ -115,7 +113,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
     );
   }
 
-  await logger.spin({
+  await spin({
     text: `Pulling images.`,
     op: async spinner => {
       const images = [
@@ -161,7 +159,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
     }
   });
 
-  const network: docker.Network = await logger.spin({
+  const network: docker.Network = await spin({
     text: `Creating a network named ${networkName}.`,
     op: machine.createNetwork({
       Name: networkName,
@@ -202,7 +200,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
 
   const databaseReplicas = options.databaseReplicas;
 
-  await logger.spin({
+  await spin({
     text: `Creating database containers (1/${databaseReplicas})`,
     op: async spinner => {
       for (let index = 0; index < databaseReplicas; index++) {
@@ -212,7 +210,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
     }
   });
 
-  await logger.spin({
+  await spin({
     text: "Waiting the database containers to become ready.",
     op: async spinner => {
       const replSetConfig = JSON.stringify({
@@ -270,7 +268,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
     }
   });
 
-  await logger.spin({
+  await spin({
     text: "Waiting for the replica set to become ready.",
     op: async () => {
       const firstContainer = machine.getContainer(`${databaseName}-0`);
@@ -298,7 +296,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
     }
   });
 
-  await logger.spin({
+  await spin({
     text: `Creating spica containers (0/2)`,
     op: async spinner => {
       const client = await machine.createContainer({
@@ -353,7 +351,7 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
     }
   });
 
-  await logger.spin({
+  await spin({
     text: `Creating an ingress to route traffic.`,
     op: async () => {
       const proxy = await machine.createContainer({
@@ -413,8 +411,9 @@ async function create({args: cmdArgs, logger, options, ddash}: ActionParameters)
       await proxy.restart();
     }
   });
-  logger.success(`
-Spica ${name} is serving on ${publicHost}\nOpen your browser on ${publicHost} to login.
+  console.info(`
+Spica ${name} is serving on ${publicHost}.
+Open your browser on ${publicHost} to login.
 
 Identitifer: spica
 Password: ${name}
