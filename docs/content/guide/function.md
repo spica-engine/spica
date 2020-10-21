@@ -531,10 +531,6 @@ For example, if you want to run your function at every minute, you need a cron t
 
 ```typescript
 export default function () {
-  // Also, note that you do not have to stop your function
-  if (true) {
-    // Scheduler will stop after first invocation by scheduler
-  }
   // Your business logic
 }
 ```
