@@ -12,7 +12,9 @@ Usage:
 $ spica <command> [<args>] [--help] [options]
 ```
 
-Commands:
+> Important: To run `serve` command, you must have [Docker](https://www.docker.com/) and [NodeJs](https://nodejs.org) installed on your development environment.
+
+## Commands
 
 ### Run / List / Remove Local Spica Instance
 
