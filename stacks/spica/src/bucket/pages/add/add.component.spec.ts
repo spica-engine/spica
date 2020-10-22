@@ -18,7 +18,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material/";
 
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {of, Subject} from "rxjs";
 import {PropertyLanguageComponent} from "../../components/language/language.component";
 import {Bucket} from "../../interfaces/bucket";

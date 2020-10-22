@@ -23,7 +23,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
-import {OwlDateTimeModule} from "ng-pick-datetime";
+import {OwlDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {FilterComponent} from "../../components/filter/filter.component";

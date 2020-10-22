@@ -5,7 +5,7 @@ import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {INPUT_SCHEMA} from "../../input";
 import {DateComponent} from "./date.component";
 import {DateValidatorDirective} from "./date.validator";
