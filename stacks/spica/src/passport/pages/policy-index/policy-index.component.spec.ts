@@ -17,6 +17,7 @@ import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyIndexComponent} from "./policy-index.component";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 
 @Component({
   template: `
@@ -46,7 +47,7 @@ describe("PolicyIndexComponent", () => {
         NoopAnimationsModule,
         RouterTestingModule
       ],
-      declarations: [PolicyIndexComponent, ToolbarCmp]
+      declarations: [PolicyIndexComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
     policyService = {
       find: jasmine
