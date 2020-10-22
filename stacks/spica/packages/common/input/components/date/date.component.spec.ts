@@ -68,7 +68,7 @@ describe("Common#date", () => {
       expect(fixture.debugElement.query(By.css("mat-label")).nativeElement.textContent).toBe(title);
     });
 
-    it("should gmt date", async () => {
+    it("should utc date", async () => {
       const model = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
       model.control.setValue(new Date("Aug 26, 2020, 10:23:26 AM"), {emitEvent: true});
       fixture.detectChanges();

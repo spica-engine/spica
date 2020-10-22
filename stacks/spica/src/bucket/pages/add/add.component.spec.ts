@@ -29,13 +29,7 @@ import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
 import {RequiredTranslate} from "../../validators";
 import {AddComponent} from "./add.component";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 
 describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;
