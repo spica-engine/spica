@@ -11,7 +11,6 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatTabsModule} from "@angular/material/tabs";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {ngfModule} from "angular-file";
 import {Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {Storage} from "../../interfaces/storage";
@@ -47,8 +46,7 @@ describe("StoragePicker", () => {
         MatGridListModule,
         MatPaginatorModule,
         MatProgressBarModule,
-        NoopAnimationsModule,
-        ngfModule
+        NoopAnimationsModule
       ],
       declarations: [TestCmp, PickerDirective, PickerComponent, StorageViewComponent],
       providers: [

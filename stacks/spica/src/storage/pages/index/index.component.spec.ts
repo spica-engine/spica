@@ -18,19 +18,12 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {of} from "rxjs";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {StorageViewComponent} from "../../components/storage-view/storage-view.component";
 import {StorageService} from "../../storage.service";
 import {IndexComponent} from "./index.component";
-import {Directive, HostBinding, Input} from "@angular/core";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
