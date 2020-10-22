@@ -5,10 +5,12 @@ import {Trigger} from "./trigger";
 register({
   definition: Function,
   prepareForCreate: (obj: any) => {
-    obj.spec.runtime.version = process.version;
+    // TODO: handle this
+    //obj.spec.runtime.version = process.version;
   },
   prepareForUpdate: (obj: any) => {
-    obj.spec.runtime.version = process.version;
+    // TODO: handle this
+    //obj.spec.runtime.version = process.version;
   }
 });
 

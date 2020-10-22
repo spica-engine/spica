@@ -29,16 +29,16 @@ async function v1_function_to_internal(object: any) {
 
   const env = {};
 
-  for (const {key, value, valueFrom} of spec.environment) {
+  for (const {name, value, valueFrom} of spec.environment) {
     if (value) {
-      env[key] = String(value);
+      env[name] = String(value);
     } else if (valueFrom) {
       const ref = valueFrom.resourceFieldRef;
       if (ref) {
         if (ref.bucketName) {
           const bucket = await bucketStore.get(ref.bucketName);
           if (bucket) {
-            env[key] = String(bucket.metadata.uid);
+            env[name] = String(bucket.metadata.uid);
           } else {
             // TODO: Handle missing buckets
             continue;
@@ -46,7 +46,7 @@ async function v1_function_to_internal(object: any) {
         } else if (ref.apiKeyName) {
           const apiKey = await apiKeyStore.get(ref.apiKeyName);
           if (apiKey) {
-            env[key] = String(apiKey.spec.key);
+            env[name] = String(apiKey.spec.key);
           } else {
             // TODO: Handle missing apikeys
             continue;
@@ -63,7 +63,7 @@ async function v1_function_to_internal(object: any) {
     resource: "triggers"
   });
 
-  spec.triggers = spec.triggers || []; 
+  spec.triggers = spec.triggers || [];
 
   for (const triggerName of spec.triggers) {
     const trigger = await triggerStore.get(triggerName);
@@ -143,6 +143,15 @@ export class FunctionModule {
           await fe.createFunction(fn);
           await fe.update(fn, obj.spec.code);
           await fe.compile(fn);
+
+          const packagesToInstall = [];
+
+          for (const dependency of obj.spec.dependency) {
+            packagesToInstall.push(`${dependency.name}@${dependency.version}`);
+          }
+
+          await fe.addPackage(fn, packagesToInstall).toPromise();
+
           await st.patch(obj.metadata.name, {metadata: {uid: String(fn._id)}, status: "Ready"});
         },
         update: async (oldObj, obj: any) => {
@@ -155,6 +164,30 @@ export class FunctionModule {
           if (oldObj.spec.code != obj.spec.code) {
             await fe.update(fn, obj.spec.code);
             await fe.compile(fn);
+          }
+
+          const newPackageMap = new Map<string, string>();
+
+          for (const dependency of obj.spec.dependency) {
+            newPackageMap.set(dependency.name, dependency.version);
+          }
+
+          const oldPackageMap = new Map<string, string>();
+
+          for (const dependency of oldObj.spec.dependency) {
+            oldPackageMap.set(dependency.name, dependency.version);
+          }
+
+          for (const [name, version] of newPackageMap.entries()) {
+            if (!oldPackageMap.has(name) || oldPackageMap.get(name) != version) {
+              await fe.addPackage(fn, `${name}@${version}`).toPromise();
+            }
+          }
+
+          for (const name of oldPackageMap.keys()) {
+            if (!newPackageMap.has(name)) {
+              await fe.removePackage(fn, name);
+            }
           }
         },
         delete: async (obj: any) => {
