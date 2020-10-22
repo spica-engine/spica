@@ -22,12 +22,9 @@ abstract class MixinValidator {
         this.validator.removeSchema("");
         return value;
       })
-      .catch((error: ValidationError) => {
+      .catch((error) => {
         this.validator.removeSchema("");
-        throw new BadRequestException(
-          (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
-          error.message
-        );
+        throw new BadRequestException(error);
       });
   }
 }

@@ -13,7 +13,7 @@ export interface Default {
   create(data: unknown): unknown;
 }
 
-export type Format = FormatDefinition & {
+export type Format = FormatDefinition<any> & {
   name: string;
   coerce?: (val: any) => any;
 };
