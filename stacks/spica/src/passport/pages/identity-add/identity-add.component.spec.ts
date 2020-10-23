@@ -1,5 +1,6 @@
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
+import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
@@ -10,22 +11,14 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute, Router} from "@angular/router";
+import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {of, throwError} from "rxjs";
 import {InputModule} from "../../../../packages/common/input/input.module";
 import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {IdentityService} from "../../services/identity.service";
-import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {PolicyService} from "../../services/policy.service";
 import {IdentityAddComponent} from "./identity-add.component";
-import {Directive, HostBinding, Input} from "@angular/core";
-import {MatButtonModule} from "@angular/material/button";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
 
 describe("Identity Add Component", () => {
   let fixture: ComponentFixture<IdentityAddComponent>;

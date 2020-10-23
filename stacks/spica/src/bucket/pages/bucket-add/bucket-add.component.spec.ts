@@ -1,5 +1,7 @@
-import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {BucketAddComponent} from "./bucket-add.component";
+import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule, NgForm, NgModel} from "@angular/forms";
+import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatOptionModule} from "@angular/material/core";
@@ -10,38 +12,28 @@ import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
-import {MatMenuModule, _MatMenuDirectivesModule} from "@angular/material/menu";
+import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {FormsModule, NgModel, NgForm} from "@angular/forms";
-import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
-import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {ActivatedRoute, Router} from "@angular/router";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
-import {MatButtonModule} from "@angular/material/button";
-
-import {ActivatedRoute, Router} from "@angular/router";
-import {BucketService} from "src/bucket/services/bucket.service";
-import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
-
 import {of} from "rxjs";
 import {Bucket} from "src/bucket/interfaces/bucket";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {By} from "@angular/platform-browser";
-import {Directive, HostBinding, Input} from "@angular/core";
+import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
+import {BucketService} from "src/bucket/services/bucket.service";
+import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {BucketAddComponent} from "./bucket-add.component";
+import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
-
-describe("Bucket Add Component", () => {
+describe("BucketAddComponent", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
 
   let myBucket = {
@@ -96,14 +88,15 @@ describe("Bucket Add Component", () => {
         MatDividerModule,
         MatFormFieldModule,
         MatInputModule,
-        _MatMenuDirectivesModule,
+
         MatMenuModule,
         MatTooltipModule,
         MatPaginatorModule,
         MatToolbarModule,
         NoopAnimationsModule,
         InputModule.withPlacers([]),
-        MatSaveModule
+        MatSaveModule,
+        MatAwareDialogModule
       ],
       providers: [
         {
