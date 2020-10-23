@@ -259,8 +259,6 @@ export class GraphqlController implements OnModuleInit {
         {$unwind: "$meta"}
       );
 
-      
-
       return this.bds.find(bucket._id, aggregation).then(response => {
         if (!response.length) {
           return {meta: {total: 0}, entries: []};
