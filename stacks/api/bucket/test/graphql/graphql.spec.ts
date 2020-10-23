@@ -719,9 +719,15 @@ describe("GraphQLController", () => {
       });
 
       describe("relation", () => {
-        let today = new Date();
-        let yesterday = new Date(today.getTime() - 24 * 60 * 60 * 5000);
-        let tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 5000);
+        let today = new Date("2020-10-19T12:00:00.000Z");
+        let yesterday = new Date("2020-10-18T12:00:00.000Z");
+        let tomorrow = new Date("2020-10-20T12:00:00.000Z");
+
+        let authorsBucket;
+        let authorsBucketName;
+
+        let eventsBucket;
+        let eventsBucketName;
 
         let booksBucket;
         let booksBucketName;
@@ -729,6 +735,8 @@ describe("GraphQLController", () => {
         let publishersBucket;
         let publishersBucketName;
 
+        let authors;
+        let events;
         let books;
         let publishers;
 
@@ -765,28 +773,95 @@ describe("GraphQLController", () => {
           publishersBucket = await req.post("/bucket", publishersBucket).then(r => r.body);
           publishersBucketName = getBucketName(publishersBucket._id);
 
-          booksBucket.properties.publisher = {
-            type: "relation",
-            relationType: "onetoone",
-            bucketId: publishersBucket._id
+          eventsBucket = {
+            title: "Events",
+            description: "Events",
+            properties: {
+              name: {
+                type: "string"
+              },
+              year: {
+                type: "number"
+              }
+            }
           };
+          eventsBucket = await req.post("/bucket", eventsBucket).then(r => r.body);
+          eventsBucketName = getBucketName(eventsBucket._id);
+
+          authorsBucket = {
+            title: "Authors",
+            description: "Authors",
+            properties: {
+              fullname: {
+                type: "string"
+              },
+              events: {
+                type: "relation",
+                relationType: "onetomany",
+                bucketId: eventsBucket._id
+              }
+            }
+          };
+          authorsBucket = await req.post("/bucket", authorsBucket).then(r => r.body);
+          authorsBucketName = getBucketName(authorsBucket._id);
+
+          booksBucket.properties = {
+            ...booksBucket.properties,
+            publisher: {
+              type: "relation",
+              relationType: "onetoone",
+              bucketId: publishersBucket._id
+            },
+            author: {
+              type: "relation",
+              relationType: "onetoone",
+              bucketId: authorsBucket._id
+            }
+          };
+
           booksBucket = await req
             .put(`/bucket/${booksBucket._id}`, booksBucket)
             .then(response => response.body);
 
           //insert data
+
+          events = [
+            await req.post(`/bucket/${eventsBucket._id}/data`, {
+              name: "Event Rebel",
+              year: 2020
+            }),
+            await req.post(`/bucket/${eventsBucket._id}/data`, {
+              name: "Seastar Fest",
+              year: 2010
+            })
+          ].map(r => r.body);
+
+          authors = [
+            await req.post(`/bucket/${authorsBucket._id}/data`, {
+              fullname: "Jaydon Villa",
+              events: [events[0]._id, events[1]._id]
+            }),
+            await req.post(`/bucket/${authorsBucket._id}/data`, {
+              fullname: "Juan Moody",
+              events: [events[0]._id]
+            })
+          ].map(r => r.body);
+
           books = [
             await req.post(`/bucket/${booksBucket._id}/data`, {
               title: "Priest With Vigor",
-              publish_date: today
+              publish_date: today,
+              author: authors[0]._id
             }),
             await req.post(`/bucket/${booksBucket._id}/data`, {
               title: "Goddess Of Earth",
-              publish_date: yesterday
+              publish_date: yesterday,
+              author: authors[0]._id
             }),
             await req.post(`/bucket/${booksBucket._id}/data`, {
               title: "Forsaking The Forest",
-              publish_date: tomorrow
+              publish_date: tomorrow,
+              author: authors[1]._id
             })
           ].map(r => r.body);
 
@@ -1085,8 +1160,9 @@ describe("GraphQLController", () => {
         });
 
         it("should get publishers which has book that will be published at tomorrow", async () => {
-          let begin = new Date(tomorrow.setHours(0, 0, 0, 0));
-          let end = new Date(tomorrow.setHours(23, 59, 59, 9999));
+          let begin = new Date("2020-10-20T00:00:00.000Z");
+          let end = new Date("2020-10-20T23:59:59.999Z");
+
           const params = {
             query: `{
               Find${publishersBucketName}(query: { books: { publish_date_gt: "${begin.toString()}" , publish_date_lt: "${end.toString()}" } }){
@@ -1123,6 +1199,131 @@ describe("GraphQLController", () => {
                         title: "Forsaking The Forest"
                       }
                     ]
+                  }
+                ]
+              }
+            }
+          });
+        });
+
+        it("should resolve nested relations", async () => {
+          const params = {
+            query: `{
+              Find${booksBucketName}{
+                meta{
+                  total
+                }
+                entries{
+                  title
+                  publisher{
+                    name
+                  }
+                  author{
+                    fullname
+                    events{
+                      name
+                      year
+                    }
+                  }
+                }
+              }
+            }`
+          };
+
+          const {body} = await req.get("/graphql", params);
+          expect(body).toEqual({
+            data: {
+              [`Find${booksBucketName}`]: {
+                meta: {
+                  total: 3
+                },
+                entries: [
+                  {
+                    title: "Priest With Vigor",
+                    publisher: {
+                      name: "Comcast"
+                    },
+                    author: {
+                      fullname: "Jaydon Villa",
+                      events: [
+                        {
+                          name: "Event Rebel",
+                          year: 2020
+                        },
+                        {
+                          name: "Seastar Fest",
+                          year: 2010
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    title: "Goddess Of Earth",
+                    publisher: {
+                      name: "Comcast"
+                    },
+                    author: {
+                      fullname: "Jaydon Villa",
+                      events: [
+                        {
+                          name: "Event Rebel",
+                          year: 2020
+                        },
+                        {
+                          name: "Seastar Fest",
+                          year: 2010
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    title: "Forsaking The Forest",
+                    publisher: {
+                      name: "Newell Brands"
+                    },
+                    author: {
+                      fullname: "Juan Moody",
+                      events: [
+                        {
+                          name: "Event Rebel",
+                          year: 2020
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          });
+        });
+
+        it("should filter books which has author who joined Seastar Fest", async () => {
+          const params = {
+            query: `{
+              Find${booksBucketName}(query:{author:{events:{name:"Seastar Fest"}}}){
+                meta{
+                  total
+                }
+                entries{
+                  title
+                }
+              }
+            }`
+          };
+
+          const {body} = await req.get("/graphql", params);
+          expect(body).toEqual({
+            data: {
+              [`Find${booksBucketName}`]: {
+                meta: {
+                  total: 2
+                },
+                entries: [
+                  {
+                    title: "Priest With Vigor"
+                  },
+                  {
+                    title: "Goddess Of Earth"
                   }
                 ]
               }

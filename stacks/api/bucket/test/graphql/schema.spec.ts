@@ -2,10 +2,13 @@ import {
   createSchema,
   extractAggregationFromQuery,
   getPatchedDocument,
-  getUpdateQuery
+  getUpdateQuery,
+  requestedFieldsFromInfo,
+  aggregationsFromRequestedFields,
+  getProjectAggregation,
+  requestedFieldsFromExpression
 } from "../../src/graphql/schema";
 import {format as _format} from "prettier";
-import {ObjectId} from "@spica-server/database";
 
 export function format(text: string) {
   return _format(text, {parser: "graphql"});
@@ -44,7 +47,7 @@ describe("Schema", () => {
     }
 
     type Query{
-      FindBucket_id(limit: Int, skip: Int, sort: JSON ,language: String, query: JSON): Bucket_idFindResponse
+      FindBucket_id(limit: Int, skip: Int, sort: JSON, language: String, schedule: Boolean, query: JSON): Bucket_idFindResponse
       FindByBucket_idId(_id: ObjectID!, language: String):Bucket_id
     }
 
@@ -83,7 +86,7 @@ describe("Schema", () => {
 
           type Bucket_id{
             _id: ObjectID
-            title : String!
+            title : String
             description : String
           }
         
@@ -366,13 +369,9 @@ describe("Schema", () => {
     });
 
     it("should cast expression values to own original formats", () => {
-      let id = new ObjectId().toHexString();
       let date = new Date().toString();
 
       bucket.properties = {
-        _id: {
-          type: "objectid"
-        },
         created_at: {
           type: "date"
         },
@@ -385,19 +384,452 @@ describe("Schema", () => {
       };
 
       query = {
-        _id: id,
         created_at_lt: date,
         dates_in: [date]
       };
       let aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({
-        _id: new ObjectId(id),
         created_at: {
           $lt: new Date(date)
         },
         dates: {
           $in: [new Date(date)]
         }
+      });
+    });
+  });
+
+  describe("RequestedFields", () => {
+    it("should find requested fields", () => {
+      let info: any = {
+        fieldNodes: [
+          {
+            name: {
+              value: "find_my_entry"
+            },
+            selectionSet: {
+              selections: [
+                {
+                  name: {
+                    value: "name"
+                  }
+                },
+                {
+                  name: {
+                    value: "surname"
+                  }
+                },
+                {
+                  name: {
+                    value: "address"
+                  },
+                  selectionSet: {
+                    selections: [
+                      {
+                        name: {
+                          value: "city"
+                        }
+                      },
+                      {
+                        name: {
+                          value: "street"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      };
+
+      let requestedFields = requestedFieldsFromInfo(info);
+
+      expect(requestedFields).toEqual([
+        ["name"],
+        ["surname"],
+        ["address", "city"],
+        ["address", "street"]
+      ]);
+    });
+
+    it("should extract requested fields from expression", () => {
+      let expression = {
+        status: true,
+        $or: [
+          {
+            $or: [
+              {
+                name: {$regex: "test"}
+              },
+              {
+                age: {$gte: 12, lt: 21}
+              }
+            ]
+          },
+          {
+            "address.city": "paris"
+          },
+          {
+            age: 20
+          }
+        ]
+      };
+
+      let requestedFields = requestedFieldsFromExpression(expression, []);
+      expect(requestedFields).toEqual([
+        ["status"],
+        ["name"],
+        ["age"],
+        ["address", "city"],
+        ["age"]
+      ]);
+    });
+
+    it("should find requested fields from specified root key,and merge them", () => {
+      let info: any = {
+        fieldNodes: [
+          {
+            name: {
+              value: "find_my_all_entries"
+            },
+            selectionSet: {
+              selections: [
+                {
+                  name: {
+                    value: "meta"
+                  },
+                  selectionSet: {
+                    selections: [
+                      {
+                        name: {
+                          value: "total"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  name: {
+                    value: "entries"
+                  },
+                  selectionSet: {
+                    selections: [
+                      {
+                        name: {
+                          value: "name"
+                        }
+                      },
+                      {
+                        name: {
+                          value: "surname"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  name: {
+                    value: "entries"
+                  },
+                  selectionSet: {
+                    selections: [
+                      {
+                        name: {
+                          value: "created_at"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      };
+
+      let requestedFields = requestedFieldsFromInfo(info, "entries");
+
+      expect(requestedFields).toEqual([["name"], ["surname"], ["created_at"]]);
+    });
+
+    describe("aggregations", () => {
+      let bucket;
+      let localeFactory;
+      let buckets;
+
+      let relatedBucket;
+
+      beforeEach(() => {
+        bucket = {
+          _id: "first_bucket_id",
+          properties: {
+            name: {
+              type: "string"
+            },
+            translatable_field: {
+              type: "string",
+              options: {
+                translate: true
+              }
+            },
+            to_second_bucket: {
+              type: "relation",
+              relationType: "onetoone",
+              bucketId: "second_bucket_id"
+            }
+          }
+        };
+
+        relatedBucket = {
+          _id: "second_bucket_id",
+          properties: {
+            title: {
+              type: "string"
+            },
+            to_first_bucket: {
+              type: "relation",
+              relationType: "onetoone",
+              bucketId: "first_bucket_id"
+            }
+          }
+        };
+
+        buckets = [bucket, relatedBucket];
+
+        localeFactory = jasmine
+          .createSpy("localeFactory")
+          .and.returnValue(Promise.resolve({best: "EN", fallback: "EN"}));
+      });
+
+      it("should not create aggregation if relation or translatable field requested", async () => {
+        let fields = [["name"]];
+        let aggregations = await aggregationsFromRequestedFields(
+          bucket,
+          fields,
+          localeFactory,
+          buckets
+        );
+
+        expect(aggregations).toEqual([]);
+        expect(localeFactory).toHaveBeenCalledTimes(0);
+      });
+
+      it("should create relation and i18n aggregation", async () => {
+        let fields = [["name"], ["translatable_field"], ["to_second_bucket", "title"]];
+        let aggregations = await aggregationsFromRequestedFields(
+          bucket,
+          fields,
+          localeFactory,
+          buckets
+        );
+
+        expect(aggregations).toEqual([
+          //relation
+          {
+            $lookup: {
+              from: "bucket_second_bucket_id",
+              let: {documentId: {$toObjectId: "$to_second_bucket"}},
+              pipeline: [
+                {
+                  $match: {$expr: {$eq: ["$_id", "$$documentId"]}}
+                },
+                {
+                  $replaceWith: {
+                    $mergeObjects: [
+                      "$$ROOT",
+                      {
+                        $arrayToObject: {
+                          $map: {
+                            input: {
+                              $filter: {
+                                input: {$objectToArray: "$$ROOT"},
+                                as: "item",
+                                cond: {
+                                  $eq: [{$type: "$$item.v"}, "object"]
+                                }
+                              }
+                            },
+                            as: "prop",
+                            in: {
+                              k: "$$prop.k",
+                              v: {
+                                $ifNull: ["$$prop.v.EN", {$ifNull: ["$$prop.v.EN", "$$prop.v"]}]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {$set: {_id: {$toString: "$_id"}}}
+              ],
+              as: "to_second_bucket"
+            }
+          },
+          {
+            $unwind: {path: "$to_second_bucket", preserveNullAndEmptyArrays: true}
+          },
+          //internationalization
+          {
+            $replaceWith: {
+              $mergeObjects: [
+                "$$ROOT",
+                {
+                  $arrayToObject: {
+                    $map: {
+                      input: {
+                        $filter: {
+                          input: {$objectToArray: "$$ROOT"},
+                          as: "item",
+                          cond: {$eq: [{$type: "$$item.v"}, "object"]}
+                        }
+                      },
+                      as: "prop",
+                      in: {
+                        k: "$$prop.k",
+                        v: {
+                          $ifNull: ["$$prop.v.EN", {$ifNull: ["$$prop.v.EN", "$$prop.v"]}]
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]);
+        expect(localeFactory).toHaveBeenCalledTimes(1);
+      });
+
+      it("should create aggregation for nested relations", async () => {
+        let fields = [["to_second_bucket", "to_first_bucket", "name"]];
+        let aggregations = await aggregationsFromRequestedFields(
+          bucket,
+          fields,
+          localeFactory,
+          buckets
+        );
+
+        expect(aggregations).toEqual([
+          {
+            $lookup: {
+              from: "bucket_second_bucket_id",
+              let: {documentId: {$toObjectId: "$to_second_bucket"}},
+              pipeline: [
+                {
+                  $match: {$expr: {$eq: ["$_id", "$$documentId"]}}
+                },
+                {
+                  $replaceWith: {
+                    $mergeObjects: [
+                      "$$ROOT",
+                      {
+                        $arrayToObject: {
+                          $map: {
+                            input: {
+                              $filter: {
+                                input: {$objectToArray: "$$ROOT"},
+                                as: "item",
+                                cond: {
+                                  $eq: [{$type: "$$item.v"}, "object"]
+                                }
+                              }
+                            },
+                            as: "prop",
+                            in: {
+                              k: "$$prop.k",
+                              v: {
+                                $ifNull: ["$$prop.v.EN", {$ifNull: ["$$prop.v.EN", "$$prop.v"]}]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {$set: {_id: {$toString: "$_id"}}},
+                //nested relation should be here recursively
+                {
+                  $lookup: {
+                    from: "bucket_first_bucket_id",
+                    let: {documentId: {$toObjectId: "$to_first_bucket"}},
+                    pipeline: [
+                      {
+                        $match: {$expr: {$eq: ["$_id", "$$documentId"]}}
+                      },
+                      {
+                        $replaceWith: {
+                          $mergeObjects: [
+                            "$$ROOT",
+                            {
+                              $arrayToObject: {
+                                $map: {
+                                  input: {
+                                    $filter: {
+                                      input: {$objectToArray: "$$ROOT"},
+                                      as: "item",
+                                      cond: {
+                                        $eq: [{$type: "$$item.v"}, "object"]
+                                      }
+                                    }
+                                  },
+                                  as: "prop",
+                                  in: {
+                                    k: "$$prop.k",
+                                    v: {
+                                      $ifNull: [
+                                        "$$prop.v.EN",
+                                        {$ifNull: ["$$prop.v.EN", "$$prop.v"]}
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {$set: {_id: {$toString: "$_id"}}}
+                    ],
+                    as: "to_first_bucket"
+                  }
+                },
+                {
+                  $unwind: {path: "$to_first_bucket", preserveNullAndEmptyArrays: true}
+                }
+              ],
+              as: "to_second_bucket"
+            }
+          },
+          {
+            $unwind: {path: "$to_second_bucket", preserveNullAndEmptyArrays: true}
+          }
+        ]);
+      });
+
+      it("should create project aggregation from requested fields", () => {
+        let fields = [
+          ["name"],
+          ["to_second_bucket", "title"],
+          ["to_second_bucket", "to_first_bucket", "name"],
+          ["to_second_bucket", "to_first_bucket", "translatable_field"],
+          ["translatable_field"]
+        ];
+
+        let project = getProjectAggregation(fields);
+        expect(project).toEqual({
+          $project: {
+            name: 1,
+            "to_second_bucket.title": 1,
+            "to_second_bucket.to_first_bucket.name": 1,
+            "to_second_bucket.to_first_bucket.translatable_field": 1,
+            translatable_field: 1
+          }
+        });
       });
     });
   });

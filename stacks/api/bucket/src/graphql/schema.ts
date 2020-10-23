@@ -1,6 +1,9 @@
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {ObjectId, ObjectID} from "@spica-server/database";
+import {ObjectId} from "@spica-server/database";
 import {diff, ChangeKind, ChangePaths} from "@spica-server/bucket/history/differ";
+import {GraphQLResolveInfo} from "graphql";
+import {Locale, buildI18nAggregation} from "../locale";
+import {buildRelationAggregation} from "../utility";
 const JsonMergePatch = require("json-merge-patch");
 
 enum Prefix {
@@ -30,7 +33,7 @@ export function createSchema(bucket: Bucket, staticTypes: string) {
       }
 
       type Query{
-        Find${name}(limit: Int, skip: Int, sort: JSON ,language: String, query: JSON): ${name}FindResponse
+        Find${name}(limit: Int, skip: Int, sort: JSON ,language: String,schedule:Boolean ,query: JSON): ${name}FindResponse
         FindBy${name}Id(_id: ObjectID!, language: String):${name}
       }
 
@@ -197,6 +200,119 @@ export function getBucketName(uniqueField: string | ObjectId): string {
   return `Bucket_${uniqueField.toString()}`;
 }
 
+export async function aggregationsFromRequestedFields(
+  bucket: Bucket,
+  requestedFields: string[][],
+  localeFactory: (language?: string) => Promise<Locale>,
+  buckets: Bucket[],
+  language?: string
+) {
+  let aggregations = [];
+
+  let locale: Locale;
+  if (requestedFields.length) {
+    if (relationalFieldRequested(bucket.properties, requestedFields)) {
+      locale = await localeFactory(language);
+      let relationAggregation = getRelationAggregation(
+        bucket.properties,
+        JSON.parse(JSON.stringify(requestedFields)),
+        locale,
+        buckets
+      );
+      aggregations.push(...relationAggregation);
+    }
+
+    if (translatableFieldRequested(bucket.properties, requestedFields)) {
+      locale = locale ? locale : await localeFactory(language);
+      aggregations.push({
+        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+      });
+    }
+  }
+
+  return aggregations;
+}
+
+export function requestedFieldsFromInfo(info: GraphQLResolveInfo, rootKey?: string): string[][] {
+  let [result] = info.fieldNodes.map(node =>
+    extractFieldsFromNode(rootKey ? mergeNodes(node, rootKey) : node, [])
+  );
+
+  return result;
+}
+
+function extractFieldsFromNode(node: any, fields: string[]) {
+  let result = [];
+  node.selectionSet.selections.forEach(selection => {
+    let currentPath = fields.concat([selection.name.value]);
+
+    if (selection.selectionSet) {
+      result = result.concat(extractFieldsFromNode(selection, currentPath));
+    } else {
+      result.push(currentPath);
+    }
+  });
+
+  return result;
+}
+
+function mergeNodes(node: any, rootKey: string) {
+  let mergedNode = {selectionSet: {selections: []}};
+  if (
+    node.selectionSet &&
+    node.selectionSet.selections.some(selection => selection.name.value == rootKey)
+  ) {
+    mergedNode = node.selectionSet.selections
+      .filter(selection => selection.name.value == rootKey)
+      .reduce((acc, curr) => {
+        acc.selectionSet.selections.push(...curr.selectionSet.selections);
+        return acc;
+      }, mergedNode);
+  }
+  return mergedNode;
+}
+
+export function getProjectAggregation(requestedFields: string[][]) {
+  let result = {};
+  requestedFields.forEach(pattern => {
+    let path = pattern.join(".");
+    result[path] = 1;
+  });
+  return {$project: result};
+}
+
+function getRelationAggregation(
+  properties: object,
+  fields: string[][],
+  locale: Locale,
+  buckets: Bucket[]
+) {
+  let aggregations = [];
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.type == "relation") {
+      let relateds = fields.filter(field => field[0] == key);
+      if (relateds.length) {
+        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
+
+        let relatedBucket = buckets.find(bucket => bucket._id.toString() == value.bucketId);
+
+        //Remove first key to continue recursive lookup
+        relateds = relateds.map(field => {
+          field.splice(0, 1);
+          return field;
+        });
+
+        aggregation[0].$lookup.pipeline.push(
+          ...getRelationAggregation(relatedBucket.properties, relateds, locale, buckets)
+        );
+
+        aggregations.push(...aggregation);
+      }
+    }
+  }
+  return aggregations;
+}
+
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
   let bucketProperties = bucket.properties;
   if (ObjectId.isValid(bucket._id)) {
@@ -222,10 +338,7 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
         let expression = {
           [operator]: conditions
         };
-        finalExpression = {
-          ...finalExpression,
-          ...expression
-        };
+        finalExpression = {...finalExpression, ...expression};
       }
     } else if (isParsableObject(value)) {
       if (bucket.properties[key].type == "relation") {
@@ -294,7 +407,10 @@ function castToOriginalType(value: any, property: any): unknown {
     case "date":
       return new Date(value);
     case "objectid":
-      return new ObjectID(value);
+      //@TODO: This line should be new ObjectId(value).
+      //But there are too many methods that uses $toString operator to convert object id to string.
+      //This issue will be handled on another task
+      return value.toString();
     case "array":
       return value.map(val => castToOriginalType(val, property.items));
     default:
@@ -406,4 +522,38 @@ function createExpressionFromChange(
 
 function findValueOfPath(path: (string | number)[], document: BucketDocument) {
   return path.reduce((acc, curr) => acc[curr], document);
+}
+
+function relationalFieldRequested(properties: object, requestedFields: string[][]): boolean {
+  let relatedFields = [];
+  Object.keys(properties).forEach(key => {
+    if (properties[key].type == "relation") {
+      relatedFields.push(key);
+    }
+  });
+
+  return requestedFields.some(fields => relatedFields.includes(fields[0]));
+}
+
+function translatableFieldRequested(properties: object, requestedFields: string[][]): boolean {
+  let translatableFields = [];
+  Object.keys(properties).forEach(key => {
+    if (properties[key].options && properties[key].options.translate) {
+      translatableFields.push(key);
+    }
+  });
+
+  return requestedFields.some(fields => translatableFields.includes(fields[0]));
+}
+
+export function requestedFieldsFromExpression(expression: object, requestedFields: string[][]) {
+  for (const [key, value] of Object.entries(expression)) {
+    if (key == "$or" || key == "$and") {
+      value.forEach(condition => requestedFieldsFromExpression(condition, requestedFields));
+    } else {
+      let field = key.split(".");
+      requestedFields.push(field);
+    }
+  }
+  return requestedFields;
 }
