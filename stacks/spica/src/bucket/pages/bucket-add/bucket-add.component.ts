@@ -199,8 +199,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   saveBucket(): void {
     const isInsert = !this.bucket._id;
 
-    if(!this.bucket.hasOwnProperty("order"))
-      this.bucket.order = this.buckets.length;
+    if (!this.bucket.hasOwnProperty("order")) this.bucket.order = this.buckets.length;
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(
