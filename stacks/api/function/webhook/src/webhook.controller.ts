@@ -30,7 +30,7 @@ export class WebhookController {
 
   @Get("collections")
   @UseGuards(AuthGuard())
-  collections(@ResourceFilter() resourceFilter: object) {
+  collections() {
     return this.database
       .collections()
       .then(collections => collections.map(coll => coll.collectionName));
