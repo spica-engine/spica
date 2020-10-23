@@ -11,6 +11,7 @@ ts_library(
     module_name = "@spica-server/machinery",
     deps = [
         "//packages/database",
+        "//packages/core/schema",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
         "@npm//rxjs",

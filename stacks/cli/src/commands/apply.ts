@@ -9,15 +9,18 @@ import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
 import { request } from "../request";
-import { formatFailureStatus, isFailureStatus } from "../status";
+import { formatFailureStatus, formatValidationErrors, isFailureStatus, isValidationError } from "../status";
 import { Resource } from "./api-resources";
 
 async function apply({options}: ActionParameters) {
-  const filename = path.normalize(options.filename as string);
-  const documents = YAML.parseAllDocuments(fs.readFileSync(filename).toString());
+  const filename = path.relative(process.cwd(), options.filename as string);
+  const rawDocument = fs.readFileSync(filename).toString();
+  const documents = YAML.parseAllDocuments(rawDocument);
 
   for (const document of documents) {
     const {apiVersion, kind, metadata, spec} = document.toJSON();
+
+
 
     const resourceList = await request.get<any>(`http://localhost:4300/apis/${apiVersion}`);
 
@@ -66,9 +69,14 @@ async function apply({options}: ActionParameters) {
         type = "replaced";
       }
     }
+    
 
     if (isFailureStatus(result)) {
-      return console.error(formatFailureStatus(result));
+      if ( isValidationError(result) ) {
+        return console.error(formatValidationErrors(result, document, rawDocument, filename));
+      } else {
+        return console.error(formatFailureStatus(result));
+      }
     }
 
     console.info(`${resource.singular} "${metadata.name}" ${type}.`);

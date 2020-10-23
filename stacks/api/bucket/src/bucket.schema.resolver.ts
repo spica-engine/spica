@@ -59,16 +59,16 @@ export function getCustomKeywords(validator: Validator) {
 
             if (defaultValueHandler) {
               parentData[propertyName] = defaultValueHandler.create(
-                data == defaultValueHandler.keyword ? undefined : data
+                data == defaultValueHandler.match ? undefined : data
               );
             } else if (!defaultValueHandler && parentSchema["readOnly"]) {
               parentData[propertyName] = schema;
             }
 
             return true;
-          };
+          }
         }
-      }
+      } as any
     }
   ];
 

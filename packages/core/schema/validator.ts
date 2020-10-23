@@ -1,5 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {default as Ajv, KeywordDefinition} from "ajv";
+import { ValidationError } from "ajv/dist/compile/error_classes";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
 import {skip, take} from "rxjs/operators";
@@ -14,6 +15,7 @@ import {
   SCHEMA_MODULE_OPTIONS,
   UriResolver
 } from "./interface";
+export {ErrorObject} from "ajv";
 export {ValidationError} from "ajv/dist/compile/error_classes";
 
 @Injectable()
@@ -21,6 +23,10 @@ export class Validator {
   private _ajv: Ajv;
   private _resolvers = new Set<UriResolver>();
   private _defaults: Map<string, Default>;
+
+  get defaults(): Default[] {
+    return Array.from(this._defaults.values());
+  }
 
   constructor(
     @Inject(SCHEMA_MODULE_OPTIONS) local: ModuleOptions = {},
@@ -32,14 +38,14 @@ export class Validator {
     this._ajv = new Ajv({
       removeAdditional: true,
       useDefaults: true,
-      validateSchema: false,
       loadSchema: uri => this._fetch(uri),
       formats: new Array<Format>().concat(local.formats || []).concat(global.formats || []).reduce((formats, format) => {
         formats[format.name] = format;
         return formats;
       }, {}),
       schemas: new Array().concat(local.schemas|| []).concat(global.schemas|| []),
-      ['defaults' as any]: this._defaults
+      ['defaults' as any]: this._defaults,
+      strict: false
     });
  
     for (const keyword of new Array<Keyword>().concat(local.keywords|| []).concat(global.keywords|| [])) {
@@ -92,10 +98,15 @@ export class Validator {
     this._ajv.removeSchema(schemaUri);
   }
 
-  async validate(schema: object, value?: any) {
+  async validate<T = unknown>(schema: object, value: T): Promise<void>{
     const validate = await this._ajv.compileAsync(schema);
-    return Promise.resolve(validate(value)).then(valid =>
-      valid ? valid : Promise.reject(new Ajv.ValidationError(validate.errors))
-    );
+    try {
+      const valid = validate(value);
+      if ( !valid ) {
+        throw new ValidationError(validate.errors);
+      }
+    } catch (e) {
+      throw e;
+    }
   }
 }

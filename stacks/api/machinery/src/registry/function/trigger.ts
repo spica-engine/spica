@@ -3,38 +3,34 @@ import {ResourceDefinition} from "../../definition";
 
 const TriggerV1: JSONSchema7 = {
   $schema: "http://json-schema.org/draft-07/schema",
-  type: "array",
-  items: {
-    $id: "#/items",
-    type: "object",
-    required: [],
-    properties: {
-      name: {
-        $id: "#/items/properties/name",
-        type: "string"
-      },
-      active: {
-        $id: "#/items/properties/active",
-        type: "boolean"
-      },
-      type: {
-        $id: "#/items/properties/type",
-        type: "string",
-        enum: ["http"]
-      },
-      httpOptions: {
-        $id: "#/items/properties/httpOptions",
-        type: "object",
-        required: [],
-        properties: {
-          method: {
-            $id: "#/items/properties/httpOptions/properties/method",
-            type: "string"
-          },
-          path: {
-            $id: "#/items/properties/httpOptions/properties/path",
-            type: "string"
-          }
+  $id: "#/items",
+  type: "object",
+  properties: {
+    name: {
+      $id: "#/items/properties/name",
+      type: "string"
+    },
+    active: {
+      $id: "#/items/properties/active",
+      type: "boolean"
+    },
+    type: {
+      $id: "#/items/properties/type",
+      type: "string",
+      enum: ["http"]
+    },
+    httpOptions: {
+      $id: "#/items/properties/httpOptions",
+      type: "object",
+      required: [],
+      properties: {
+        method: {
+          $id: "#/items/properties/httpOptions/properties/method",
+          type: "string"
+        },
+        path: {
+          $id: "#/items/properties/httpOptions/properties/path",
+          type: "string"
         }
       }
     }
@@ -56,18 +52,18 @@ export const Trigger: ResourceDefinition = {
       current: true,
       additionalPrinterColumns: [
         {
-          name: 'TYPE',
-          description: 'Type of the trigger',
-          jsonPath: '.spec.type',
+          name: "TYPE",
+          description: "Type of the trigger",
+          jsonPath: ".spec.type",
           priority: 0,
-          type: 'string'
+          type: "string"
         },
         {
-          name: 'HANDLER',
-          description: 'Name of the handler to invoke',
-          jsonPath: '.spec.name',
+          name: "HANDLER",
+          description: "Name of the handler to invoke",
+          jsonPath: ".spec.name",
           priority: 0,
-          type: 'string'
+          type: "string"
         }
       ]
     }

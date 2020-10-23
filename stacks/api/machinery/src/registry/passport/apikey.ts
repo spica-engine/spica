@@ -1,4 +1,27 @@
+import {JSONSchema7} from "json-schema";
 import {ResourceDefinition} from "../../definition";
+
+export namespace v1 {
+  export const Schema: JSONSchema7 = {
+    $schema: "http://json-schema.org/draft-07/schema#",
+    $id: "http://spica.internal/passport/apikey",
+    type: "object",
+    required: ["name"],
+    properties: {
+      name: {
+        type: "string"
+      },
+      description: {
+        type: "string"
+      },
+      active: {
+        type: "boolean",
+        default: true
+      }
+    },
+    additionalProperties: false
+  };
+}
 
 export const ApiKey: ResourceDefinition = {
   group: "passport",
@@ -11,7 +34,7 @@ export const ApiKey: ResourceDefinition = {
   versions: [
     {
       name: "v1",
-      schema: undefined,
+      schema: v1.Schema,
       current: true,
       additionalPrinterColumns: [
         {

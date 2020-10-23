@@ -37,6 +37,7 @@ export interface ResourceDefinitionVersion {
   name: string;
   current: boolean;
   schema: JSONSchema7;
+  additionalSchemas?: JSONSchema7[];
   additionalPrinterColumns?: ColumnDefinition[];
 }
 

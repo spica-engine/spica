@@ -1,11 +1,26 @@
 export interface Status {
   metadata?: StatusMetadata;
-  status: "Success" | "Failure";
+  status: StatusStatus;
   message: string;
-  reason: "BadRequest" | "Unauthorized" | "Forbidden" | "NotFound" | "AlreadyExists" | "Conflict" | "Invalid" | "Timeout" | "ServerTimeout" | "MethodNotAllowed" | "InternalError";
+  reason: StatusReason;
   details?: StatusDetails;
   code: number;
 }
+
+export type StatusReason =
+  | "BadRequest"
+  | "Unauthorized"
+  | "Forbidden"
+  | "NotFound"
+  | "AlreadyExists"
+  | "Conflict"
+  | "Invalid"
+  | "Timeout"
+  | "ServerTimeout"
+  | "MethodNotAllowed"
+  | "InternalError";
+
+export type StatusStatus = "Success" | "Failure";
 
 export interface StatusMetadata {
   [key: string]: unknown;
@@ -69,3 +84,20 @@ export function notFound({
   });
 }
 
+export function badRequest({
+  reason,
+  message,
+  details
+}: {
+  reason: StatusReason;
+  message: string;
+  details: StatusDetails;
+}) {
+  return status({
+    code: 400,
+    reason,
+    status: "Failure",
+    message,
+    details
+  });
+}

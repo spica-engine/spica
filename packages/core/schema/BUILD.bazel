@@ -6,14 +6,15 @@ load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 ts_library(
     name = "schema",
     srcs = [
-        "defaults.ts",
         "index.ts",
         "interface.ts",
         "module.ts",
         "pipe.ts",
         "validator.ts",
         "format.ts",
-        "default.ts"
+        "formats.ts",
+        "default.ts",
+        "defaults.ts",
     ],
     module_name = "@spica-server/core/schema",
     tsconfig = "//:tsconfig.json",

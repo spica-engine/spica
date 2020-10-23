@@ -29,6 +29,7 @@ import {
 import {alreadyExists, isStatusKind, notFound, status, StatusMetadata} from "./status";
 import {Store, __setDb} from "./store";
 import {acceptsTable, table} from "./table";
+import { validate } from "./validation";
 
 const DEBUG = true;
 
@@ -218,7 +219,7 @@ export class ApiMachineryObjectController {
     @Param("group") groupName: string,
     @Param("version") versionName: string,
     @Param("resource") resourceName: string,
-    @Body() object: Resource
+    @Body() object: Resource<object>
   ) {
     const groupVersionResource: GroupVersionResource = {
       group: groupName,
@@ -256,6 +257,9 @@ export class ApiMachineryObjectController {
       object.metadata.namespace = "default";
     }
 
+    await validate({scheme, versionName, object});
+
+
     if (scheme.prepareForCreate) {
       scheme.prepareForCreate(object);
     }
@@ -271,7 +275,7 @@ export class ApiMachineryObjectController {
     @Param("version") versionName: string,
     @Param("resource") resourceName: string,
     @Param("name") objectName: string,
-    @Body() object: Resource
+    @Body() object: Resource<object>
   ) {
     const groupVersionResource: GroupVersionResource = {
       group: groupName,
@@ -302,6 +306,8 @@ export class ApiMachineryObjectController {
     const oldObj = await objects.get(objectName);
 
     const newObj = {...oldObj, spec: object.spec};
+
+    await validate({scheme, versionName, object});
 
     if (scheme.prepareForUpdate) {
       scheme.prepareForUpdate(newObj);
