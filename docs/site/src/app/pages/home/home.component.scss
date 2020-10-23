@@ -121,6 +121,8 @@
         justify-content: space-around;
         margin-bottom: -35%;
         img {
+          cursor: pointer;
+          height: intrinsic;
           width: 25%;
           border-radius: 15px;
           margin: 0px;
@@ -211,6 +213,10 @@
     }
     div.github {
       align-self: center;
+      align-items: center;
+      mat-icon {
+        margin-top: -3px;
+      }
     }
   }
 
