@@ -37,7 +37,7 @@ import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from "ng-pick-datetime";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
 import {BucketRoutingModule} from "./bucket-routing.module";

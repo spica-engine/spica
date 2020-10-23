@@ -7,8 +7,7 @@ import {MatSelectModule} from "@angular/material/select";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {InputModule} from "@spica-client/common";
-import {OwlDateTimeModule} from "ng-pick-datetime";
-import {OwlDateTimeInputDirective} from "ng-pick-datetime/date-time/date-time-picker-input.directive";
+import {OwlDateTimeModule, OwlDateTimeInputDirective} from "@danielmoncada/angular-datetime-picker";
 import {FilterComponent} from "./filter.component";
 
 @Component({

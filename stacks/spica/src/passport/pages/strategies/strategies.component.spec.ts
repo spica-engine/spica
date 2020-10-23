@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {Component, TemplateRef, Directive, HostBinding, Input} from "@angular/core";
+import {Component, TemplateRef} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -12,16 +12,10 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {Subject} from "rxjs";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {Strategy} from "../../interfaces/strategy";
 import {StrategyService} from "../../services/strategy.service";
 import {StrategiesComponent} from "./strategies.component";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
 
 @Component({
   template: `
