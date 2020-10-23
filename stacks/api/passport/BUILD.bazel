@@ -33,10 +33,9 @@ ts_library(
 docs(
     name = "docs",
     srcs = [
-        "passport.controller.ts",
+        "src/passport.controller.ts",
     ],
     doc_name = "passport",
-    tags = ["passport-docs"],
     exports = [
         "passport",
     ],
