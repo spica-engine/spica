@@ -58,6 +58,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     "storage"
   ];
 
+  buckets: Bucket[];
   bucket: Bucket;
 
   $save: Observable<SavingState>;
@@ -82,6 +83,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     private historyService: BucketHistoryService
   ) {
     this.inputTypes = _inputResolver.entries();
+    this.bs.getBuckets().subscribe(data => (this.buckets = data));
   }
 
   ngOnInit(): void {
@@ -197,6 +199,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   saveBucket(): void {
     const isInsert = !this.bucket._id;
 
+    if(!this.bucket.hasOwnProperty("order"))
+      this.bucket.order = this.buckets.length;
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(
