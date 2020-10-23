@@ -3,16 +3,18 @@ import {default as Ajv, KeywordDefinition} from "ajv";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
 import {skip, take} from "rxjs/operators";
+import defaultVocabulary from "./default";
+import formatVocabulary from "./format";
 import {
   Default,
   Format,
   GLOBAL_SCHEMA_MODULE_OPTIONS,
+  Keyword,
   ModuleOptions,
   SCHEMA_MODULE_OPTIONS,
   UriResolver
 } from "./interface";
-import formatVocabulary from "./format";
-export {ValidationError} from "ajv/dist/compile/error_classes"
+export {ValidationError} from "ajv/dist/compile/error_classes";
 
 @Injectable()
 export class Validator {
@@ -20,47 +22,32 @@ export class Validator {
   private _resolvers = new Set<UriResolver>();
   private _defaults: Map<string, Default>;
 
-  public get defaults(): Array<Default> {
-    return Array.from(this._defaults.values());
-  }
-
   constructor(
     @Inject(SCHEMA_MODULE_OPTIONS) local: ModuleOptions = {},
     @Optional() @Inject(GLOBAL_SCHEMA_MODULE_OPTIONS) global: ModuleOptions = {}
   ) {
-    this._defaults = new Map<string, Default>(
-      [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.keyword, def] as any)
+    this._defaults =  new Map<string, Default>(
+      [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.match, def])
     );
     this._ajv = new Ajv({
       removeAdditional: true,
       useDefaults: true,
       validateSchema: false,
       loadSchema: uri => this._fetch(uri),
-      formats: [...(local.formats || []), ...(global.formats || [])].reduce((formats, format) => {
+      formats: new Array<Format>().concat(local.formats || []).concat(global.formats || []).reduce((formats, format) => {
         formats[format.name] = format;
         return formats;
       }, {}),
-      schemas: [...(local.schemas || []), ...(global.schemas || [])]
+      schemas: new Array().concat(local.schemas|| []).concat(global.schemas|| []),
+      ['defaults' as any]: this._defaults
     });
-    [...(local.keywords || []), ...(global.keywords || [])].forEach(keyword =>
+ 
+    for (const keyword of new Array<Keyword>().concat(local.keywords|| []).concat(global.keywords|| [])) {
       this.registerKeyword(keyword.name, keyword)
-    );
-    // this.registerKeyword("default", {
-    //   modifying: true,
-    //   code: (cxt) => {
-    //     return (data, dataPath, parentData) => {
-    //       const defaultValueHandler = this._defaults.get(schema);
-    //       // TODO(thesayyn): Check type of the default value handler against schema type;
-    //       if (defaultValueHandler) {
-    //         const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
-    //         parentData[propertyName] = defaultValueHandler.create(
-    //           data == defaultValueHandler.keyword ? undefined : data
-    //         );
-    //       }
-    //       return true;
-    //     };
-    //   }
-    // });
+    }
+
+    this._ajv.removeKeyword("default");
+    this._ajv.addKeyword(defaultVocabulary);
     this._ajv.removeKeyword("format");
     this._ajv.addKeyword(formatVocabulary);
   }
@@ -93,7 +80,7 @@ export class Validator {
   }
 
   registerDefault(def: Default) {
-    this._defaults.set(def.keyword, def);
+    this._defaults.set(def.match, def);
   }
 
   registerKeyword(name: string, def: KeywordDefinition) {

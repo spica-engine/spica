@@ -8,7 +8,7 @@ export const SCHEMA_MODULE_OPTIONS = "SCHEMA_MODULE_OPTIONS";
 export type UriResolver = (uri: string) => Observable<object> | Promise<object> | null | undefined;
 
 export interface Default {
-  keyword: string;
+  match: string;
   type: string;
   create(data: unknown): unknown;
 }

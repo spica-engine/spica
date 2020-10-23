@@ -27,7 +27,7 @@ describe("schema validator", () => {
 
   it("should assign dynamic default", async () => {
     validator.registerDefault({
-      keyword: "dynamicdefault",
+      match: "dynamicdefault",
       type: "string",
       create: () => "dynamicvalue"
     });
@@ -43,7 +43,7 @@ describe("schema validator", () => {
 
   it("previous value should be passed correctly", async () => {
     const dynamicValueSpy = jasmine.createSpy().and.callFake(() => "dynamicvalue");
-    validator.registerDefault({keyword: "created_at", type: "string", create: dynamicValueSpy});
+    validator.registerDefault({match: "created_at", type: "string", create: dynamicValueSpy});
     const schema: JSONSchema7 = {
       type: "object",
       properties: {prop: {type: "string", default: "created_at"}}
@@ -58,11 +58,14 @@ describe("schema validator", () => {
   it("should call uri resolver", done => {
     const resolver = jasmine.createSpy();
     validator.registerUriResolver(resolver);
-    validator.validate({$ref: "unknown-schema"}).then(() => done.fail(), () => {
-      expect(resolver).toHaveBeenCalledTimes(1);
-      expect(resolver.calls.first().args[0]).toBe("unknown-schema");
-      done();
-    });
+    validator.validate({$ref: "unknown-schema"}).then(
+      () => done.fail(),
+      () => {
+        expect(resolver).toHaveBeenCalledTimes(1);
+        expect(resolver.calls.first().args[0]).toBe("unknown-schema");
+        done();
+      }
+    );
   });
 
   it("should resolve referenced schema and validate and invalidate subsequent schemas", async () => {
@@ -141,18 +144,27 @@ describe("schema validator", () => {
       spy = jasmine.createSpy("validatefn").and.callFake(data => {
         return data == "formatted";
       });
-      const format: Format = {
-        name: "myformat",
-        type: "string",
-        validate: spy
-      };
-      validator = new Validator({formats: [format]});
+
+      validator = new Validator({
+        formats: [
+          {
+            name: "myformat",
+            type: "string",
+            validate: spy
+          },
+          {
+            name: "date-time",
+            type: "string",
+            validate: /^\d\d\d\d-[0-1]\d-[0-3]\d[t\s](?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)$/i
+          }
+        ]
+      });
     });
 
     it("should work with regex formats", () => {
       return expectAsync(
-        validator.validate({type: "string", format: "date-time"}, "1963-06-19T08:30:06.283185Z").catch(console.log)
-      ).toBeRejected();
+        validator.validate({type: "string", format: "date-time"}, "1963-06-19T08:30:06.283185Z")
+      ).toBeResolved();
     });
 
     it("should pass validation", async () => {

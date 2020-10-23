@@ -13,6 +13,7 @@ ts_library(
         "pipe.ts",
         "validator.ts",
         "format.ts",
+        "default.ts"
     ],
     module_name = "@spica-server/core/schema",
     tsconfig = "//:tsconfig.json",
