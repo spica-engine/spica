@@ -14,6 +14,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {PreferencesService} from "@spica-client/core";
 import {of} from "rxjs";
 import {SettingsComponent} from "./settings.component";
+import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 
 describe("SettingsComponent", () => {
   let fixture: ComponentFixture<SettingsComponent>;
@@ -46,7 +47,8 @@ describe("SettingsComponent", () => {
         MatListModule,
         RouterTestingModule,
         NoopAnimationsModule,
-        FormsModule
+        FormsModule,
+        MatAwareDialogModule
       ],
       providers: [
         {

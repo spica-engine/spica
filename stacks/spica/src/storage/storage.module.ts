@@ -23,7 +23,6 @@ import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {provideActivityFactory} from "@spica-client/storage/providers/activity";
 import {AngularCropperjsModule} from "angular-cropperjs";
-import {ngfModule} from "angular-file";
 import {ImageEditorComponent} from "./components/image-editor/image-editor.component";
 import {PickerComponent} from "./components/picker/picker.component";
 import {PickerDirective} from "./components/picker/picker.directive";
@@ -51,7 +50,6 @@ import {StorageRoutingModule} from "./storage-routing.module";
     StorageRoutingModule,
     MatFormFieldModule,
     MatSelectModule,
-    ngfModule,
     MatSliderModule,
     MatInputModule,
     AngularCropperjsModule,

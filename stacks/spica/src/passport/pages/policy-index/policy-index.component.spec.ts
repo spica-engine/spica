@@ -10,13 +10,14 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
-import {MatAwareDialogModule} from "@spica-client/material";
+import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 import {Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyIndexComponent} from "./policy-index.component";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 
 @Component({
   template: `
@@ -46,7 +47,7 @@ describe("PolicyIndexComponent", () => {
         NoopAnimationsModule,
         RouterTestingModule
       ],
-      declarations: [PolicyIndexComponent, ToolbarCmp]
+      declarations: [PolicyIndexComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
     policyService = {
       find: jasmine
