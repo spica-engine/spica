@@ -11,7 +11,7 @@ const FunctionV1: JSONSchema7 = {
     "description",
     "timeout",
     "runtime",
-    "dependencies",
+    "dependency",
     "environment"
   ],
   properties: {
@@ -30,7 +30,7 @@ const FunctionV1: JSONSchema7 = {
     runtime: {
       $id: "#/properties/runtime",
       type: "object",
-      required: ["name", "version", "language"],
+      required: ["name", "language"],
       properties: {
         name: {
           $id: "#/properties/runtime/properties/name",
@@ -46,20 +46,20 @@ const FunctionV1: JSONSchema7 = {
         }
       }
     },
-    dependencies: {
-      $id: "#/properties/dependencies",
+    dependency: {
+      $id: "#/properties/dependency",
       type: "array",
       items: {
-        $id: "#/properties/dependencies/items",
+        $id: "#/properties/dependency/items",
         type: "object",
         required: ["name", "version"],
         properties: {
           name: {
-            $id: "#/properties/dependencies/items/properties/name",
+            $id: "#/properties/dependency/items/properties/name",
             type: "string"
           },
           version: {
-            $id: "#/properties/dependencies/items/properties/version",
+            $id: "#/properties/dependency/items/properties/version",
             type: "string"
           }
         }
