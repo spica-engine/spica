@@ -1,5 +1,8 @@
-import {Component, Inject} from "@angular/core";
+import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
+import {FormControl} from "@angular/forms";
+import {MatChipInputEvent} from "@angular/material/chips";
 import {InputSchema, INPUT_SCHEMA} from "../../input";
+import {COMMA, ENTER} from "@angular/cdk/keycodes";
 
 @Component({
   templateUrl: "./enum-schema.component.html",
@@ -8,16 +11,32 @@ import {InputSchema, INPUT_SCHEMA} from "../../input";
 })
 export class EnumSchemaComponent {
   _trackBy: (i) => any = i => i;
+  enumCtrl = new FormControl();
+  selectable = true;
+  removable = true;
+  separatorKeysCodes: number[] = [ENTER, COMMA];
 
   schemaWithoutEnum: InputSchema;
+  @ViewChild("enumInput") enumInput: ElementRef<HTMLInputElement>;
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {
     this.schema.enum = this.schema.enum || [];
     this.schemaWithoutEnum = {...this.schema, enum: undefined};
   }
 
-  addItem() {
-    this.schema.enum.push(undefined);
+  addItem(event: MatChipInputEvent) {
+    const input = event.input;
+    const value = event.value ? event.value.trim() : undefined;
+
+    if (value) {
+      this.schema.enum.push(value);
+    }
+
+    if (input) {
+      input.value = "";
+    }
+
+    this.enumCtrl.setValue(null);
   }
 
   removeItem(index) {
