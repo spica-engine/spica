@@ -1,21 +1,29 @@
-import {Action, Command, CreateCommandParameters, CaporalValidator, ActionParameters} from "@caporal/core";
+import {
+  Action,
+  Command,
+  CreateCommandParameters,
+  CaporalValidator,
+  ActionParameters
+} from "@caporal/core";
 import * as docker from "dockerode";
 import * as getport from "get-port";
 import * as open from "open";
 import {Stream} from "stream";
-import { spin } from "../../console";
-import {ImageNotFoundError} from "../../errors";
+import {spin} from "../../console";
 import {projectName} from "../../validator";
 
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
     const response = [];
-    if ( !stream.on ) {
-      console.log(new Error().stack);
-    }
     stream.on("data", chunk => response.push(chunk));
     stream.on("end", () => resolve(Buffer.concat(response)));
   });
+}
+
+export class ImageNotFoundError extends Error {
+  constructor(image: string, tag: string) {
+    super(`Could not find the image ${image}:${tag}.`);
+  }
 }
 
 async function create({args: cmdArgs, options, ddash}: ActionParameters) {
@@ -238,7 +246,7 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
         }))
           .start({})
           .catch(e => e);
-          
+
         return (await streamToBuffer(result.output)).toString();
       };
 

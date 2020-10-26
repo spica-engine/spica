@@ -1,4 +1,4 @@
-import {Action, Command, CreateCommandParameters} from "@caporal/core";
+import {Command, CreateCommandParameters} from "@caporal/core";
 import * as docker from "dockerode";
 import * as duration from "pretty-ms";
 

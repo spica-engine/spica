@@ -1,6 +1,6 @@
 import { getLineNumberAndColumnFromRange } from "./range";
 
-export interface Status {
+export interface Status<Details = StatusDetails> {
   metadata?: StatusMetadata;
   status: "Success" | "Failure";
   message: string;
@@ -16,7 +16,7 @@ export interface Status {
     | "ServerTimeout"
     | "MethodNotAllowed"
     | "InternalError";
-  details?: StatusDetails;
+  details?: Details;
   code: number;
 }
 
@@ -50,7 +50,7 @@ export function formatValidationErrors(status: Status, document: any, documentCo
   const errors = [];
   for (const error of status.details.errors as any[]) {
     const range = getRange(document, documentContent, error.path).join(":");
-    errors.push(`${documentName}:${range} - ${error.path} ${error.message}`)
+    errors.push(`./${documentName}:${range} - ${error.path} ${error.message}`)
   }
   return `Error from server (${status.reason}): ${status.message}\n${errors.join("\n")}`;
 }
