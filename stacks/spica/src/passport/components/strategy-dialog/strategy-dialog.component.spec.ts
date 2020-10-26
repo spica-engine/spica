@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed} from "@angular/core/testing";
+import {async, ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
 import {StrategyDialogComponent} from "./strategy-dialog.component";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MAT_DIALOG_DATA} from "@angular/material/dialog";
@@ -9,7 +9,7 @@ describe("StrategyDialogComponent", () => {
   let fixture: ComponentFixture<StrategyDialogComponent>;
   let data: any;
 
-  beforeEach(async(() => {
+  beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [StrategyDialogComponent],
       imports: [MatProgressSpinnerModule],
@@ -23,13 +23,14 @@ describe("StrategyDialogComponent", () => {
     fixture = TestBed.createComponent(StrategyDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  }));
+  });
 
   it("should set src of the iframe from dialog data", () => {
     expect(fixture.debugElement.query(By.css("iframe")).nativeElement.src).toBe("about:blank");
   });
 
   it("should set opacity of the iframe to one when the iframe is ready", () => {
+    fixture.componentInstance.loaded = true;
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.css("iframe")).styles.opacity).toBe("1");
   });

@@ -83,8 +83,17 @@ mat-form-field {
   .mat-form-field-outline {
     background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
     border-radius: 5px;
+    top: 0.75em !important;
     > * {
       visibility: hidden;
+    }
+  }
+  .mat-form-field-label {
+    top: 2.14375em !important;
+  }
+  &.mat-form-field-appearance-outline.mat-form-field-can-float.mat-form-field-should-float {
+    .mat-form-field-label {
+      transform: translateY(-1.89375em) scale(0.75) !important;
     }
   }
 }
