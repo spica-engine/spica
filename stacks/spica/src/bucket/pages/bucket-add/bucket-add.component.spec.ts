@@ -32,6 +32,7 @@ import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {BucketAddComponent} from "./bucket-add.component";
 import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
+import {BucketIndexComponent} from "../bucket-index/bucket-index.component";
 
 describe("BucketAddComponent", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
@@ -87,7 +88,6 @@ describe("BucketAddComponent", () => {
         MatDividerModule,
         MatFormFieldModule,
         MatInputModule,
-
         MatMenuModule,
         MatTooltipModule,
         MatPaginatorModule,
@@ -121,7 +121,8 @@ describe("BucketAddComponent", () => {
                 of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "type2"}])
               ),
             getBucket: jasmine.createSpy("getBucket").and.returnValue(of(myBucket)),
-            replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket))
+            replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket)),
+            getBuckets: jasmine.createSpy("getBuckets").and.returnValue(of([myBucket]))
           }
         },
         {
@@ -132,7 +133,12 @@ describe("BucketAddComponent", () => {
           }
         }
       ],
-      declarations: [BucketAddComponent, PropertyKvPipe, CanInteractDirectiveTest]
+      declarations: [
+        BucketAddComponent,
+        BucketIndexComponent,
+        PropertyKvPipe,
+        CanInteractDirectiveTest
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(BucketAddComponent);
@@ -192,9 +198,10 @@ describe("BucketAddComponent", () => {
       expect(
         fixture.debugElement.query(By.css("h4 > button mat-icon")).nativeElement.textContent
       ).toBe("myIcon");
-      expect(fixture.debugElement.query(By.css("h4 > span")).nativeElement.textContent).toBe(
-        "my bucket"
-      );
+
+      expect(
+        fixture.debugElement.query(By.css("div.right-content h4 > span")).nativeElement.textContent
+      ).toBe("my bucket");
 
       const form = fixture.debugElement.query(By.css("mat-card mat-list-item:first-of-type form"));
 
@@ -289,7 +296,8 @@ describe("BucketAddComponent", () => {
       (document.body.querySelector(".mat-menu-content button") as HTMLElement).click();
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar button mat-icon")).nativeElement.textContent
+        fixture.debugElement.query(By.css("div.right-content mat-toolbar button mat-icon"))
+          .nativeElement.textContent
       ).toBe("3d_rotation");
     });
 

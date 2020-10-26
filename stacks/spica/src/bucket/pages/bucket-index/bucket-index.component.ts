@@ -30,11 +30,7 @@ export class BucketIndexComponent implements OnDestroy {
   private dispose = new Subject();
   @Input() sideCar = false;
 
-  constructor(
-    private bs: BucketService,
-    public breakpointObserver: BreakpointObserver,
-    private viewportRuler: ViewportRuler
-  ) {
+  constructor(private bs: BucketService, private viewportRuler: ViewportRuler) {
     this.target = null;
     this.source = null;
     this.bs.getBuckets().subscribe(data => (this.buckets = data));
