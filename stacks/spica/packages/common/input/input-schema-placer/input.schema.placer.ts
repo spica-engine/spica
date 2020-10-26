@@ -29,12 +29,12 @@ import {InputResolver} from "../input.resolver";
     `,
     `
       :host > mat-form-field:not(:first-of-type) {
-        margin: 0px 5px !important;
+        margin: 0px 5px;
       }
     `,
     `
       :host > mat-form-field:first-of-type {
-        margin-right: 5px !important;
+        margin-right: 5px;
       }
     `
   ]
@@ -43,6 +43,7 @@ export class InputSchemaPlacer implements OnChanges, ControlValueAccessor {
   @Input("inputSchemaPlacer") type: string;
 
   @Input() forbiddenTypes: string[];
+  @Input() advancedOnly: boolean = false;
 
   public placer: Type<any>;
   public injector: Injector;

@@ -43,8 +43,9 @@ describe("Common#schema-placer", () => {
   });
 
   it("Should be working inputs", fakeAsync(() => {
-    const titleInput = fixture.debugElement.queryAll(By.css("input"))[0];
-    const descriptionTextarea = fixture.debugElement.queryAll(By.css("textarea"))[0];
+    fixture.detectChanges();
+    const titleInput = fixture.debugElement.query(By.css("input"));
+    const descriptionTextarea = fixture.debugElement.query(By.css("textarea"));
     component.schema = {
       type: "string",
       title: "test",
@@ -75,5 +76,12 @@ describe("Common#schema-placer", () => {
 
     expect(titleInput.nativeElement.value).toEqual(component.schema.title);
     expect(descriptionTextarea.nativeElement.value).toEqual(component.schema.description);
+  }));
+
+  it("Should not show the basic settings default", fakeAsync(() => {
+    fixture.componentInstance.advancedOnly = true;
+    fixture.detectChanges();
+    expect(fixture.debugElement.query(By.css("input"))).toBeFalsy();
+    expect(fixture.debugElement.query(By.css("textarea"))).toBeFalsy();
   }));
 });
