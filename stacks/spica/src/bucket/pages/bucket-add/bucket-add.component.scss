@@ -84,6 +84,10 @@
     }
   }
 
+  mat-card > mat-card-actions {
+    padding: 10px 20px !important;
+  }
+
   .input-defaults {
     width: 50%;
     margin-top: 20px;
@@ -207,6 +211,9 @@
     ::ng-deep mat-card-content {
       margin-bottom: 0px;
       mat-list {
+        > div:nth-child(2) {
+          padding: 0px 20px !important;
+        }
         mat-list-item {
           height: auto;
           padding-top: 34px;
@@ -251,6 +258,7 @@
 
     .remove-history {
       margin: 50px 0px;
+      padding: 0px 20px;
       display: block;
       button {
         float: right;

@@ -42,8 +42,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   readonly icons: Array<string> = ICONS;
   readonly iconPageSize = 21;
 
-  configureMeta = true;
-  configureView = false;
+  configurationState = "meta";
+
   isThereVisible = true;
   visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
   bucket: Bucket;

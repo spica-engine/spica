@@ -43,16 +43,19 @@
       </h4>
     </span>
     <div class="actions">
-      <button mat-button (click)="configureView = !configureView; configureMeta = !configureMeta">
-        <mat-icon>{{ configureView ? "text_fields" : "view_module" }}</mat-icon>
-        {{ configureView ? "Configure the meta" : "Configure the view" }}
+      <button
+        mat-button
+        (click)="configurationState = configurationState == 'meta' ? 'view' : 'meta'"
+      >
+        <mat-icon>{{ configurationState == "view" ? "text_fields" : "view_module" }}</mat-icon>
+        {{ configurationState == "view" ? "Configure the meta" : "Configure the view" }}
       </button>
     </div>
   </mat-toolbar>
   <mat-card class="mat-elevation-z25 bucket-settings" *ngIf="bucket" @smooth>
     <mat-card-content>
       <mat-list>
-        <div [class.hide]="!configureMeta">
+        <div [class.hide]="configurationState != 'meta'">
           <span>
             <span class="errors" *ngIf="describeForm.touched">
               <mat-error *ngIf="describeForm.invalid">
@@ -241,7 +244,7 @@
             </button>
           </mat-list-item>
         </div>
-        <div [class.hide]="!configureView">
+        <div [class.hide]="configurationState != 'view'">
           <span>
             <h4 mat-subheader><mat-icon>view_module</mat-icon> View</h4>
           </span>
