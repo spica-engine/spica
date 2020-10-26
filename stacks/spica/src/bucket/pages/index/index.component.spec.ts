@@ -20,12 +20,13 @@ import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
+import {OwlDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
-import {OwlDateTimeModule} from "ng-pick-datetime";
 import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {FilterComponent} from "../../components/filter/filter.component";
 import {PersistHeaderWidthDirective} from "../../directives/persist-header-width/persist-header-width.directive";
 import {Bucket} from "../../interfaces/bucket";
@@ -33,14 +34,6 @@ import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
-import {Directive, HostBinding, Input} from "@angular/core";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;

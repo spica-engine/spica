@@ -2,6 +2,13 @@ import {Directive, HostBinding, Input, OnInit, SimpleChanges} from "@angular/cor
 import {PassportService} from "../services/passport.service";
 
 @Directive({selector: "[canInteract]"})
+export class CanInteractDirectiveTest {
+  @HostBinding("style.visibility") _visible = "visible";
+  @Input("canInteract") action: string;
+  @Input("resource") resource: string;
+}
+
+@Directive({selector: "[canInteract]"})
 export class CanInteractDirective implements OnInit {
   @HostBinding("style.visibility") _visible = "hidden";
   @Input("canInteract") action: string;

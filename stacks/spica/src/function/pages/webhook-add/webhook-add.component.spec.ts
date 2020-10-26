@@ -1,12 +1,13 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {Directive, HostBinding, Input, Component} from "@angular/core";
 import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {FormsModule, NgForm, NgModel} from "@angular/forms";
+import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
@@ -15,22 +16,14 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {LayoutModule} from "@spica-client/core/layout";
+import {MatSaveModule} from "@spica-client/material";
 import {of, Subject} from "rxjs";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {EditorComponent} from "../../components/editor/editor.component";
 import {HandlebarsLanguageDirective} from "../../components/editor/handlebars.language";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 import {WebhookAddComponent} from "./webhook-add.component";
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {MatSaveModule} from "@spica-client/material";
-import {MatButtonModule} from "@angular/material/button";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
 
 describe("Webhook", () => {
   let fixture: ComponentFixture<WebhookAddComponent>;
