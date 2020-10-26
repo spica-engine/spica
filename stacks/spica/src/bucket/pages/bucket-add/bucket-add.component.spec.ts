@@ -6,7 +6,6 @@ import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatOptionModule} from "@angular/material/core";
 import {MatDividerModule} from "@angular/material/divider";
-import {MatExpansionModule} from "@angular/material/expansion";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
@@ -21,7 +20,7 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {ActivatedRoute, Router} from "@angular/router";
+import {ActivatedRoute} from "@angular/router";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
 import {of} from "rxjs";
@@ -33,8 +32,9 @@ import {CanInteractDirectiveTest} from "../../../passport/directives/can-interac
 import {BucketAddComponent} from "./bucket-add.component";
 import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 import {BucketIndexComponent} from "../bucket-index/bucket-index.component";
+import {RouterTestingModule} from "@angular/router/testing";
 
-describe("BucketAddComponent", () => {
+fdescribe("BucketAddComponent", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
 
   let myBucket = {
@@ -95,7 +95,8 @@ describe("BucketAddComponent", () => {
         NoopAnimationsModule,
         InputModule.withPlacers([]),
         MatSaveModule,
-        MatAwareDialogModule
+        MatAwareDialogModule,
+        RouterTestingModule
       ],
       providers: [
         {
@@ -104,12 +105,6 @@ describe("BucketAddComponent", () => {
             params: of({
               id: "id1"
             })
-          }
-        },
-        {
-          provide: Router,
-          useValue: {
-            navigate: jasmine.createSpy("navigate")
           }
         },
         {
