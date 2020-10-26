@@ -26,14 +26,12 @@ export class EnumSchemaComponent {
 
   addItem(event: MatChipInputEvent) {
     const input = event.input;
-    const value = event.value;
+    const value = event.value ? event.value.trim() : undefined;
 
-    // Add our fruit
-    if ((value || "").trim()) {
-      this.schema.enum.push(value.trim());
+    if (value) {
+      this.schema.enum.push(value);
     }
 
-    // Reset the input value
     if (input) {
       input.value = "";
     }
