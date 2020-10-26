@@ -301,28 +301,31 @@ describe("Bucket Add Component", () => {
     });
 
     it("should delete prop1", () => {
-      fixture.debugElement
-        .query(
-          By.css(
-            "mat-list-item.properties .fields div:nth-child(1) .property-description button:nth-child(2)"
-          )
-        )
-        .nativeElement.click();
+      fixture.componentInstance.deleteProperty("prop1");
       fixture.detectChanges();
-      expect(fixture.componentInstance.bucket.properties).toEqual({
-        prop2: {
-          type: "textarea",
-          title: "title of prop2",
-          description: "description of prop2",
-          options: {
-            position: "right",
-            visible: false,
-            translate: false
+
+      expect(fixture.componentInstance.bucket).toEqual({
+        _id: "123",
+        title: "my bucket",
+        description: "description",
+        primary: undefined,
+        icon: "myIcon",
+        required: [],
+        readOnly: false,
+        history: true,
+        properties: {
+          prop2: {
+            type: "textarea",
+            title: "title of prop2",
+            description: "description of prop2",
+            options: {
+              position: "right",
+              visible: false,
+              translate: false
+            }
           }
         }
       });
-      expect(fixture.componentInstance.bucket.primary).toBe(undefined);
-      expect(fixture.componentInstance.bucket.required).toEqual([]);
     });
 
     it("should save bucket", async () => {

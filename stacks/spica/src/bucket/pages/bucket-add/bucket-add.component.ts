@@ -161,7 +161,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       this.bucket.required.splice(this.bucket.required.indexOf(propertyKey), 1);
     }
 
-    this.bucket.properties = {...this.bucket.properties};
     this.updatePositionProperties();
   }
 
