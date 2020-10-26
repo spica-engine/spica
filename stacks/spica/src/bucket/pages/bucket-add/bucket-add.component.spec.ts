@@ -34,7 +34,7 @@ import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 import {BucketIndexComponent} from "../bucket-index/bucket-index.component";
 import {RouterTestingModule} from "@angular/router/testing";
 
-fdescribe("BucketAddComponent", () => {
+describe("BucketAddComponent", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
 
   let myBucket = {
