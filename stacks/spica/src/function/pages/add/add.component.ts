@@ -130,7 +130,6 @@ export class AddComponent implements OnInit, OnDestroy {
 
   showExample(trigger: Trigger) {
     this.dialog.open(CodeComponent, {
-      width: "500px",
       data: {
         code: this.functionService.getExample(trigger)
       }

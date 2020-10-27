@@ -237,10 +237,6 @@
               </span>
             </ng-container>
           </ng-container>
-
-          <button mat-icon-button [matToolTip]="'Show the example code'" (click)="showExample(trigger)">
-            <mat-icon>info</mat-icon>
-          </button>
           <button
             mat-icon-button
             type="button"
@@ -249,6 +245,9 @@
             (click)="deleteTrigger(i)"
           >
             <mat-icon>delete</mat-icon>
+          </button>
+          <button mat-icon-button matToolTip="Show the example code" (click)="showExample(trigger)">
+            <mat-icon>contact_support</mat-icon>
           </button>
         </mat-list-item>
 

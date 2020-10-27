@@ -1,14 +1,23 @@
 :host {
-  pre{
+  pre {
     padding: 7px 10px;
     border-radius: 5px;
     background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
-    max-height: 400px;
-    white-space:pre-wrap
+    height: auto;
   }
-  div:first-of-type {
+
+  div {
     width: 100%;
     display: flex;
-    justify-content: center;
+    &:first-of-type {
+      justify-content: space-between;
+      > button{
+        margin-right: -24px;
+        margin-top: -24px;
+      }
+    }
+    &:last-of-type {
+      justify-content: center;
+    }
   }
 }
