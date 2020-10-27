@@ -40,7 +40,7 @@
             [canInteract]="'bucket:add'"
             class="quick-link-add-bucket"
             [routerLink]="['/buckets/add']"
-            *ngIf="(currentCategory | async) == contentCategory[1].category;"
+            *ngIf="(currentCategory | async) == contentCategory[1]?.category;"
           >
             <mat-icon>add</mat-icon>
             Add New Bucket

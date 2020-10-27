@@ -100,7 +100,7 @@ describe("Home Layout", () => {
       const selectedCategoryTitle = fixture.debugElement.nativeElement.querySelector(
         "mat-nav-list:last-of-type > h4"
       );
-      expect(selectedCategoryTitle.textContent).toEqual("Content");
+      expect(selectedCategoryTitle.textContent).toEqual("Buckets");
       const selectedCategoryRoutes = fixture.debugElement.nativeElement.querySelectorAll(
         "mat-nav-list:last-of-type > mat-list-item"
       );
