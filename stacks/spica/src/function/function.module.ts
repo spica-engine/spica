@@ -46,7 +46,7 @@ import {WebhookModule} from "./webhook.module";
 import {MatSliderModule} from "@angular/material/slider";
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {ScrollingModule} from "@angular/cdk/scrolling";
-import { CodeComponent } from "./pages/add/code/code.component";
+import {CodeComponent} from "./pages/add/code/code.component";
 
 @NgModule({
   declarations: [
@@ -56,7 +56,7 @@ import { CodeComponent } from "./pages/add/code/code.component";
     WelcomeComponent,
     LanguageDirective,
     EnqueuerPipe,
-    CodeComponent,
+    CodeComponent
   ],
   imports: [
     CommonModule,

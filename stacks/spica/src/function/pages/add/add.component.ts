@@ -29,6 +29,8 @@ import {
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
 import {CodeComponent} from "./code/code.component";
+import * as ts from "prettier/parser-typescript";
+import {format} from "prettier/standalone";
 
 @Component({
   selector: "functions-add",
@@ -129,9 +131,11 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   showExample(trigger: Trigger) {
+    let code = this.functionService.getExample(trigger);
+    code = this._format(code);
     this.dialog.open(CodeComponent, {
       data: {
-        code: this.functionService.getExample(trigger)
+        code: code
       }
     });
   }
@@ -242,6 +246,14 @@ export class AddComponent implements OnInit, OnDestroy {
       if (duplicatedHandler.length > 1) {
         this.isHandlerDuplicated = true;
       }
+    });
+  }
+
+  _format(code: string) {
+    return format(code, {
+      parser: "typescript",
+      plugins: [ts],
+      tabWidth: 4
     });
   }
 }
