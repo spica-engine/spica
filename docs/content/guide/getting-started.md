@@ -26,13 +26,6 @@ This tutorial helps you to install Spica to different environments. We provide a
 
 Spica has a command-line interface for quick installation. To use it, you must have [Docker](https://www.docker.com/) and [NodeJs](https://nodejs.org) installed on your development environment.
 
-> IMPORTANT: There has to be at least one docker machine is up and running on your environment. To create a docker machine enter the following command to your terminal:
->
-> ```shell
-> $ docker-machine create <machine name>
-> $ eval "$(docker-machine env <machine name>)"
-> ```
-
 Install CLI using the `npm` package manager:
 
 ```sh
@@ -42,10 +35,10 @@ $ npm install @spica/cli -g
 To create and serve a new Spica instance on your computer, simply run:
 
 ```sh
-$ spica serve <docker machine name>
+$ spica project start <project-name>
 ```
 
-By default, Spica is served under 4500 port. It can be changed by using `--port` parameter
+By default, the project is served under 4500 port. This behavior can be changed by using `--port` option.
 
 ### Using Kubernetes
 
@@ -437,7 +430,7 @@ $ npm install @spica/cli -g
 To create and serve a new Spica instance on your computer, simply run:
 
 ```sh
-$ spica server my-spica-instance
+$ spica project start my-spica-instance
 ```
 
 By default, Spica is served under 4500 port. It can be changed by using `--port` parameter

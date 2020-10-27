@@ -24,7 +24,7 @@ Clicking to the Create button, downloads a service account key file. Make sure t
 To integrate your Cloud Storage account, you have to either restart or create a new instance with the following parameters:
 
 ```shell
-  $ spica serve <docker machine name> -- --storage-strategy="gcloud" --gcloud-service-account-path=<where you download the service account file> --gcloud-bucket-name=<GCloud bucket name>
+  $ spica project start <project-name> -- --storage-strategy="gcloud" --gcloud-service-account-path=<path/to/service-account/file> --gcloud-bucket-name=<gcloud-bucket-name>
 ```
 
 > IMPORTANT: GCloud bucket should be configured for public access.

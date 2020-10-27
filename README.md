@@ -21,7 +21,7 @@ Spica is not a framework, it's a full-fledged free and open-source development e
 npm install -g @spica/cli
 
 # Start a fresh server
-spica serve my-first-server
+spica project start my-first-server
 ```
 
 

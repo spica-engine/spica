@@ -144,15 +144,15 @@ const args = yargs
       description: "Number of worker processes to fork at start up.",
       default: 10
     },
-    "function-api-url": {
-      string: true,
-      description:
-        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
-    },
     "function-pool-maximum-size": {
       number: true,
       description: "Maximum number of worker processes to fork.",
       default: 15
+    },
+    "function-api-url": {
+      string: true,
+      description:
+        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
     },
     "function-timeout": {
       number: true,

@@ -9,7 +9,7 @@ exec 5>&1
 
 
 # Test if --retain-volumes=true retains volumes
-spica serve $NAME --force --version=$TAG --port=5790 --image-pull-policy=if-not-present --no-open
+spica project start $NAME --force --version=$TAG --port=5790 --image-pull-policy=if-not-present --no-open
 
 CLI_OUTPUT=$(spica rm $NAME --retain-volumes=true 2>&1 | tee /dev/fd/5; exit ${PIPESTATUS[0]})
 
@@ -20,7 +20,7 @@ DOCKER_OUTPUT=$(docker volume ls 2>&1 | tee /dev/fd/5; exit ${PIPESTATUS[0]})
 assert_contains "$DOCKER_OUTPUT" "$NAME" 
 
 # Test if --retain-volumes=false removes volumes
-spica serve $NAME --force --version=$TAG --port=5789 --image-pull-policy=if-not-present --no-open
+spica project start $NAME --force --version=$TAG --port=5789 --image-pull-policy=if-not-present --no-open
 
 CLI_OUTPUT=$(spica rm $NAME --retain-volumes=false 2>&1 | tee /dev/fd/5; exit ${PIPESTATUS[0]})
 
