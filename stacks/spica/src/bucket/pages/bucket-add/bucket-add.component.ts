@@ -17,7 +17,8 @@ import {
   ignoreElements,
   endWith,
   catchError,
-  mapTo
+  mapTo,
+  take
 } from "rxjs/operators";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
@@ -73,8 +74,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.inputTypes = _inputResolver.entries();
     this.bs
       .getBuckets()
-      .toPromise()
-      .then(buckets => (this.buckets = buckets));
+      .pipe(take(1))
+      .subscribe(buckets => (this.buckets = buckets));
   }
 
   ngOnInit(): void {
@@ -173,7 +174,9 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   saveBucket(): void {
     const isInsert = !this.bucket._id;
 
-    if (!this.bucket.hasOwnProperty("order")) this.bucket.order = this.buckets.length;
+    if (!this.bucket.hasOwnProperty("order")) {
+      this.bucket.order = this.buckets.length;
+    }
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(

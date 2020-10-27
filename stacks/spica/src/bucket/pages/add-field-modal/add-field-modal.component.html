@@ -54,7 +54,7 @@
       </mat-error>
     </mat-form-field>
     <div class="advanced-settings">
-      <mat-label>advanced Settings</mat-label>
+      <mat-label>Advanced Settings</mat-label>
       <mat-divider *ngIf="field != 'object'"></mat-divider>
       <div *ngIf="!parentSchema.properties[propertyKey].value.metaPlacer && field != 'date'">
         There is no specific settings for this input type {{ placer }}
@@ -120,7 +120,7 @@
           </mat-checkbox>
         </div>
         <div>
-          <mat-checkbox [(ngModel)]="propertyKv.value.readOnly">
+          <mat-checkbox [(ngModel)]="propertyKv.readOnly">
             Read-only
           </mat-checkbox>
         </div>

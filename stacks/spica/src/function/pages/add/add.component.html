@@ -146,13 +146,7 @@
         </mat-list-item>
 
         <h4 mat-subheader>
-          <mat-icon>swap_horiz</mat-icon> Triggers<button
-            type="button"
-            mat-icon-button
-            (click)="addTrigger()"
-          >
-            <mat-icon>add</mat-icon>
-          </button>
+          <mat-icon>swap_horiz</mat-icon> Triggers
           <mat-error *ngIf="isHandlerDuplicated">
             Duplicated handler detected. Each handlers must be unique.
           </mat-error>
@@ -248,6 +242,9 @@
             <mat-icon>delete</mat-icon>
           </button>
         </mat-list-item>
+        <button type="button" mat-button class="new-trigger" (click)="addTrigger()">
+          <mat-icon>add</mat-icon>Add New Trigger
+        </button>
 
         <ng-container *ngIf="function?._id" ngModelGroup="dependencies">
           <h4 mat-subheader>
