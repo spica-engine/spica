@@ -9,6 +9,8 @@ describe("InputResolver", () => {
   it("should return types", () => {
     const resolver = new InputResolver([
       {
+        color: "#fff",
+        icon: "format_quote",
         origin: "string",
         type: "mytype",
         placer: undefined
@@ -21,6 +23,8 @@ describe("InputResolver", () => {
     class FakePlacer {}
     const resolver = new InputResolver([
       {
+        color: "#fff",
+        icon: "format_qoute",
         origin: "string",
         type: "mytype",
         placer: FakePlacer
@@ -28,6 +32,8 @@ describe("InputResolver", () => {
     ]);
     expect(resolver.resolve("mytype2")).toBe(undefined);
     expect(resolver.resolve("mytype")).toEqual({
+      color: "#fff",
+      icon: "format_qoute",
       origin: "string",
       type: "mytype",
       placer: FakePlacer
@@ -37,6 +43,8 @@ describe("InputResolver", () => {
   it("should return type origin", () => {
     const resolver = new InputResolver([
       {
+        color: "#fff",
+        icon: "format_qoute",
         origin: "string",
         type: "mytype",
         placer: undefined
@@ -49,6 +57,8 @@ describe("InputResolver", () => {
     const coerceSpy = jasmine.createSpy().and.returnValue({test: 123});
     const resolver = new InputResolver([
       {
+        color: "#fff",
+        icon: "format_qoute",
         origin: "string",
         type: "mytype",
         placer: undefined,
@@ -62,6 +72,8 @@ describe("InputResolver", () => {
   it("should return if the type has no coerce fn", () => {
     const resolver = new InputResolver([
       {
+        color: "#fff",
+        icon: "format_qoute",
         origin: "string",
         type: "mytype",
         placer: undefined
