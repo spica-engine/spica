@@ -7,7 +7,7 @@ import {
   NgModule,
   Optional
 } from "@angular/core";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatBadgeModule} from "@angular/material/badge";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -46,6 +46,7 @@ import {InputSchemaPlacer} from "./input-schema-placer/input.schema.placer";
 import {InputPlacerComponent} from "./input.placer";
 import {InputResolver} from "./input.resolver";
 import {NgModelParentDirective} from "./ngmodel.parent";
+
 import {
   MaxItemsValidator,
   MaxValidator,
@@ -65,6 +66,7 @@ export function coerceObject() {
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     MatInputModule,
     MatIconModule,
     MatSelectModule,
@@ -130,27 +132,54 @@ export function coerceObject() {
       {
         origin: "string",
         type: "string",
+        icon: "format_quote",
+        color: "#5fa55a",
         placer: StringComponent,
         metaPlacer: StringSchemaComponent
       },
-      {origin: "string", type: "date", placer: DateComponent},
+      {
+        origin: "string",
+        type: "date",
+        icon: "calendar_today",
+        color: "#01b4bc",
+        placer: DateComponent
+      },
       {
         origin: "number",
         type: "number",
+        icon: "looks_one",
+        color: "#dabd1a",
         placer: NumberComponent,
         metaPlacer: NumberSchemaComponent
       },
       {
         origin: "boolean",
         type: "boolean",
+        icon: "exposure",
+        color: "#fa8925",
         placer: BooleanComponent,
         metaPlacer: BooleanSchemaComponent
       },
-      {origin: "string", type: "textarea", placer: TextAreaComponent},
-      {origin: "array", type: "array", placer: ArrayComponent, metaPlacer: ArraySchemaComponent},
+      {
+        origin: "string",
+        type: "textarea",
+        icon: "format_size",
+        color: "#fa5457",
+        placer: TextAreaComponent
+      },
+      {
+        origin: "array",
+        type: "array",
+        icon: "ballot",
+        color: "#17a98e",
+        placer: ArrayComponent,
+        metaPlacer: ArraySchemaComponent
+      },
       {
         origin: "object",
         type: "object",
+        icon: "all_out",
+        color: "#1abfda",
         placer: ObjectComponent,
         metaPlacer: ObjectSchemaComponent,
         coerce: coerceObject
@@ -158,6 +187,8 @@ export function coerceObject() {
       {
         origin: "string",
         type: "color",
+        icon: "invert_colors",
+        color: "#381ada",
         placer: ColorComponent
       }
     ])

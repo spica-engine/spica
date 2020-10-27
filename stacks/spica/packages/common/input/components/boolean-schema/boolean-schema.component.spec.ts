@@ -35,9 +35,6 @@ describe("Common#boolean-schema", () => {
     tick();
     fixture.detectChanges();
     const toggle = document.querySelector(".mat-slide-toggle-input");
-    expect(fixture.debugElement.query(By.css("mat-label")).nativeElement.innerText).toEqual(
-      "Default"
-    );
     expect(toggle.getAttribute("aria-checked")).toBe("true");
   }));
   it("should be checked value equal to component data", fakeAsync(() => {

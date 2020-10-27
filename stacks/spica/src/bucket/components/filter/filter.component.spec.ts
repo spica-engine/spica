@@ -43,16 +43,22 @@ describe("FilterComponent", () => {
         MatInputModule,
         InputModule.withPlacers([
           {
+            color: "#fff",
+            icon: "format_qoute",
             origin: "string",
             type: "mytype",
             placer: NoopPlacer
           },
           {
+            color: "#fff",
+            icon: "format_qoute",
             origin: "string",
             type: "date",
             placer: NoopPlacer
           },
           {
+            color: "#fff",
+            icon: "format_qoute",
             origin: "string",
             type: "relation",
             placer: NoopPlacer
