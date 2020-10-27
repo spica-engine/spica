@@ -37,7 +37,7 @@
         </mat-list-item>
         <div *ngIf="categories$ | async as contentCategory; ">
           <mat-list-item
-            canInteract="bucket:add"
+            canInteract="bucket:create"
             class="quick-link-add-bucket"
             [routerLink]="['/buckets/add']"
             *ngIf="(currentCategory | async) == contentCategory[1]?.category;"
