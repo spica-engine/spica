@@ -16,6 +16,7 @@ import {RouteService} from "../../route/route.service";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 import {ToolbarActionDirective} from "../toolbar-action";
 import {HomeLayoutComponent} from "./home.layout";
+import {CanInteractDirectiveTest} from "../../../../src/passport/directives/can-interact.directive";
 
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
@@ -24,7 +25,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,
