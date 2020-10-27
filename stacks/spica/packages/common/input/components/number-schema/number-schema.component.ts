@@ -6,8 +6,6 @@ import {INPUT_SCHEMA, InputSchema} from "../../input";
   styleUrls: ["./number-schema.component.scss"]
 })
 export class NumberSchemaComponent {
-  showOptions: boolean = false;
-
   constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
 
   removeEnum() {

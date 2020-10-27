@@ -1,5 +1,5 @@
 import {BreakpointObserver} from "@angular/cdk/layout";
-import {Component, OnDestroy, ViewChild} from "@angular/core";
+import {Component, Input, OnDestroy, ViewChild} from "@angular/core";
 import {Subject, merge, interval} from "rxjs";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketService} from "../../services/bucket.service";
@@ -28,12 +28,9 @@ export class BucketIndexComponent implements OnDestroy {
   public activeContainer;
   buckets = [];
   private dispose = new Subject();
+  @Input() sideCar = false;
 
-  constructor(
-    private bs: BucketService,
-    public breakpointObserver: BreakpointObserver,
-    private viewportRuler: ViewportRuler
-  ) {
+  constructor(private bs: BucketService, private viewportRuler: ViewportRuler) {
     this.target = null;
     this.source = null;
     this.bs.getBuckets().subscribe(data => (this.buckets = data));

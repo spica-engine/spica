@@ -16,6 +16,8 @@ export interface InputPlacerWithMetaPlacer {
   origin: JSONSchema7TypeName;
   type: string;
   placer: any;
+  color: string;
+  icon: string;
   metaPlacer?: any;
   coerce?: () => any;
 }
