@@ -1,0 +1,22 @@
+{
+  "http": "export function example(request, response) {\nreturn response.status(201).send('Message from example http function.');\n}",
+  "database": "export function example(changes){\nconsole.log(changes);\n}",
+  "schedule": "export function example(stop){\nconsole.log('Message from example schedule function.');\nconst time_to_stop = new Date('2050-01-01');\nconst now = new Date();\nif(time_to_stop == now){\nstop(); /*stop the scheduler function.*/\n}\n}",
+  "system": "export function example(){\nconst now = new Date();\nconsole.log('System has become ready at ' , now);\n}",
+  "bucket": {
+    "BEFORE": {
+      "INSERT": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' want to insert a new entry to bucket that has id ' + request.bucket );\nconst can_insert = true;\nreturn can_insert;\n}",
+      "UPDATE": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' want to update the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );\nconst can_update = true;\nreturn can_update;\n}",
+      "DELETE": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' want to delete the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );\nconst can_delete = true;\nreturn can_delete;\n}",
+      "GET": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' will display the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );\nconst my_secret_field = 'password';\nreturn [ { $unset: my_secret_field } ];\n}",
+      "INDEX": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' will display all documents of bucket that has id ' + request.bucket );\nconst my_criteria = { age: 20 }\nreturn [ { $match: my_criteria } ];\n}",
+      "STREAM": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' will display all documents of bucket that has id ' + request.bucket + ' via websocket' );\nreturn { public_field: 1, secret_field: 0 };\n}"
+    },
+    "AFTER": {
+      "ALL": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n",
+      "INSERT": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n",
+      "UPDATE": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n",
+      "DELETE": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n"
+    }
+  }
+}

@@ -32,6 +32,7 @@ export interface Function extends FunctionDescription {
 }
 
 export interface Trigger extends TriggerDescription {
+  example?:string,
   handler: string;
 }
 
@@ -63,6 +64,11 @@ export function emptyFunction(): NormalizedFunction {
 
 export function emptyTrigger(handler?: string): Trigger {
   return {
+    example: `
+export function example(req,res){
+  console.log(req);
+  return res.status(201).send("OK")
+}`,
     handler: handler,
     options: {},
     type: "http",

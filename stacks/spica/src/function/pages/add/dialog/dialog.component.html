@@ -1,0 +1,11 @@
+<h4>
+  Example Code:
+</h4>
+<pre [innerHTML]="data.code"></pre>
+<div>
+  <button mat-button #clipboard="matClipboard" [matClipboard]="data.code">
+    <mat-icon [matTooltip]="clipboard.toolTip">
+      {{ clipboard.icon }}
+    </mat-icon>
+  </button>
+</div>

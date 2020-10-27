@@ -24,8 +24,12 @@ import {
   emptyTrigger,
   Information,
   NormalizedFunction,
-  normalizeFunction
+  normalizeFunction,
+  Trigger
 } from "../../interface";
+import {MatDialog} from "@angular/material/dialog";
+import {DialogComponent} from "./dialog/dialog.component";
+import examples from "./examples.json";
 
 @Component({
   selector: "functions-add",
@@ -61,7 +65,8 @@ export class AddComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private functionService: FunctionService,
-    private http: HttpClient
+    private http: HttpClient,
+    public dialog: MatDialog
   ) {
     this.information = this.functionService.information().pipe(
       share(),
@@ -122,6 +127,29 @@ export class AddComponent implements OnInit, OnDestroy {
 
   removeVariable(index: number) {
     this.function.env.splice(index, 1);
+  }
+
+  showExample(trigger: Trigger) {
+    let code = "";
+    console.log(examples);
+    if (trigger.type == "bucket") {
+      if (!trigger.options.phase || !trigger.options.type) {
+        code = "Fill the phase and operation type to display example code.";
+      } else {
+        code = examples.bucket[trigger.options.phase][trigger.options.type];
+      }
+    } else if (examples[trigger.type]) {
+      code = examples[trigger.type];
+    } else {
+      code = "Example code is not available for this trigger.";
+    }
+
+    this.dialog.open(DialogComponent, {
+      width: "500px",
+      data: {
+        code
+      }
+    });
   }
 
   updateIndex() {

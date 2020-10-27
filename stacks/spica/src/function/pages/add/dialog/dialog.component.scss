@@ -1,0 +1,14 @@
+:host {
+  pre{
+    padding: 7px 10px;
+    border-radius: 5px;
+    background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
+    max-height: 400px;
+    white-space:pre-wrap
+  }
+  div:first-of-type {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+}

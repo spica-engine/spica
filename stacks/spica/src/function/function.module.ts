@@ -27,7 +27,7 @@ import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {provideActivityFactory} from "@spica-client/function/providers/activity";
 import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
-import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatSaveModule, MatClipboardModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {PassportModule} from "../passport/passport.module";
@@ -46,6 +46,7 @@ import {WebhookModule} from "./webhook.module";
 import {MatSliderModule} from "@angular/material/slider";
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {ScrollingModule} from "@angular/cdk/scrolling";
+import { DialogComponent } from "./pages/add/dialog/dialog.component";
 
 @NgModule({
   declarations: [
@@ -54,7 +55,8 @@ import {ScrollingModule} from "@angular/cdk/scrolling";
     LogViewComponent,
     WelcomeComponent,
     LanguageDirective,
-    EnqueuerPipe
+    EnqueuerPipe,
+    DialogComponent,
   ],
   imports: [
     CommonModule,
@@ -91,7 +93,8 @@ import {ScrollingModule} from "@angular/cdk/scrolling";
     WebhookModule,
     MatSaveModule,
     MatDatepickerModule,
-    ScrollingModule
+    ScrollingModule,
+    MatClipboardModule
   ]
 })
 export class FunctionModule {
