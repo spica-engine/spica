@@ -29,7 +29,6 @@ import {
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
 import {DialogComponent} from "./dialog/dialog.component";
-import examples from "./examples.json";
 
 @Component({
   selector: "functions-add",
@@ -130,24 +129,10 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   showExample(trigger: Trigger) {
-    let code = "";
-    console.log(examples);
-    if (trigger.type == "bucket") {
-      if (!trigger.options.phase || !trigger.options.type) {
-        code = "Fill the phase and operation type to display example code.";
-      } else {
-        code = examples.bucket[trigger.options.phase][trigger.options.type];
-      }
-    } else if (examples[trigger.type]) {
-      code = examples[trigger.type];
-    } else {
-      code = "Example code is not available for this trigger.";
-    }
-
     this.dialog.open(DialogComponent, {
       width: "500px",
       data: {
-        code
+        code: this.functionService.getExample(trigger)
       }
     });
   }
