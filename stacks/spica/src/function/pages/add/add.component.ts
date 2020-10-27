@@ -28,7 +28,7 @@ import {
   Trigger
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
-import {DialogComponent} from "./dialog/dialog.component";
+import {CodeComponent} from "./code/code.component";
 
 @Component({
   selector: "functions-add",
@@ -129,7 +129,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   showExample(trigger: Trigger) {
-    this.dialog.open(DialogComponent, {
+    this.dialog.open(CodeComponent, {
       width: "500px",
       data: {
         code: this.functionService.getExample(trigger)

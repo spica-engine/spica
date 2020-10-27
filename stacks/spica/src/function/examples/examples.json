@@ -1,22 +1,28 @@
 {
-  "http": "export function example(request, response) {\nreturn response.status(201).send('Message from example http function.');\n}",
-  "database": "export function example(changes){\nconsole.log(changes);\n}",
-  "schedule": "export function example(stop){\nconsole.log('Message from example schedule function.');\nconst time_to_stop = new Date('2050-01-01');\nconst now = new Date();\nif(time_to_stop == now){\nstop(); /*stop the scheduler function.*/\n}\n}",
-  "system": "export function example(){\nconst now = new Date();\nconsole.log('System has become ready at ' , now);\n}",
+  "http": "export default function(request, response){return response.status(201).send('Message from example http function.');}",
+  "database": {
+    "INSERT": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);console.log('Document: ',change.document);}",
+    "REPLACE": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);console.log('Document: ',change.document);}",
+    "UPDATE": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);console.log('Document: ',change.document);}",
+    "DELETE": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);}"
+  },
+  "firehose": "export default function (message, {socket, pool}) {console.log(message.name);console.log(message.data.url);const isAuthorized = false;if (isAuthorized) {socket.send('authorization', {state: true});pool.send('connection', {id: socket.id,ip_address: socket.remoteAddress});} else {socket.send('authorization', {state: false, error: 'Authorization has failed.'});socket.close();}}",
+  "schedule": "export default function(unregister){console.log('Message from example schedule function.');const unregister_date = new Date('2050-01-01');const now = new Date();if(now > unregister_date){unregister();}}",
+  "system": "export default function(){const now = new Date();console.log('System has become ready at ' , now);}",
   "bucket": {
     "BEFORE": {
-      "INSERT": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' want to insert a new entry to bucket that has id ' + request.bucket );\nconst can_insert = true;\nreturn can_insert;\n}",
-      "UPDATE": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' want to update the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );\nconst can_update = true;\nreturn can_update;\n}",
-      "DELETE": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' want to delete the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );\nconst can_delete = true;\nreturn can_delete;\n}",
-      "GET": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' will display the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );\nconst my_secret_field = 'password';\nreturn [ { $unset: my_secret_field } ];\n}",
-      "INDEX": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' will display all documents of bucket that has id ' + request.bucket );\nconst my_criteria = { age: 20 }\nreturn [ { $match: my_criteria } ];\n}",
-      "STREAM": "export function example(request){\nconsole.log('User with ' + request.headers.authorization + ' will display all documents of bucket that has id ' + request.bucket + ' via websocket' );\nreturn { public_field: 1, secret_field: 0 };\n}"
+      "INSERT": "export default function(request){console.log('User with ' + request.headers.authorization + ' want to insert a new entry to bucket that has id ' + request.bucket );const can_insert = true;return can_insert;}",
+      "UPDATE": "export default function(request){console.log('User with ' + request.headers.authorization + ' want to update the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );const can_update = true;return can_update;}",
+      "DELETE": "export default function(request){console.log('User with ' + request.headers.authorization + ' want to delete the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );const can_delete = true;return can_delete;}",
+      "GET": "export default function(request){console.log('User with ' + request.headers.authorization + ' want to display the document that has id ' + request.document + ' of bucket that has id ' + request.bucket );const my_secret_field = 'password';return [ { $unset: my_secret_field } ];}",
+      "INDEX": "export default function(request){console.log('User with ' + request.headers.authorization + ' want to display all documents of bucket that has id ' + request.bucket );const my_criteria = { age: 20 };return [ { $match: my_criteria } ];}",
+      "STREAM": "export default function(request){console.log('User with ' + request.headers.authorization + ' want to display all documents of bucket that has id ' + request.bucket + ' via websocket' );return { _id: my_user_id, active: true };}"
     },
     "AFTER": {
-      "ALL": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n",
-      "INSERT": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n",
-      "UPDATE": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n",
-      "DELETE": "export function example(changes){\nconsole.log('User with ' + request.headers.authorization + ' has inserted a new entry to bucket that has id ' + request.bucket );\n"
+      "ALL": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);console.log('Previous document: ',change.previous);if(change.current){console.log('Current document: ',change.current)}}",
+      "INSERT": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);console.log('Previous document: ',change.previous);console.log('Current document: ',change.current)}",
+      "UPDATE": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);console.log('Previous document: ',change.previous);console.log('Current document: ',change.current)}",
+      "DELETE": "export default function(change){console.log(change.kind + ' action has been performed on document with id ' + change.documentKey + ' of bucket with id ' + change.bucket);console.log('Previous document: ',change.previous)}"
     }
   }
 }

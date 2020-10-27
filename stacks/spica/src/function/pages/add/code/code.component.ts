@@ -2,11 +2,11 @@ import { Component, OnInit, Inject } from '@angular/core';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
 
 @Component({
-  selector: 'app-dialog',
-  templateUrl: './dialog.component.html',
-  styleUrls: ['./dialog.component.scss']
+  selector: 'function-example-code',
+  templateUrl: './code.component.html',
+  styleUrls: ['./code.component.scss']
 })
-export class DialogComponent implements OnInit {
+export class CodeComponent implements OnInit {
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) { }
 

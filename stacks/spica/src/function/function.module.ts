@@ -46,7 +46,7 @@ import {WebhookModule} from "./webhook.module";
 import {MatSliderModule} from "@angular/material/slider";
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {ScrollingModule} from "@angular/cdk/scrolling";
-import { DialogComponent } from "./pages/add/dialog/dialog.component";
+import { CodeComponent } from "./pages/add/code/code.component";
 
 @NgModule({
   declarations: [
@@ -56,7 +56,7 @@ import { DialogComponent } from "./pages/add/dialog/dialog.component";
     WelcomeComponent,
     LanguageDirective,
     EnqueuerPipe,
-    DialogComponent,
+    CodeComponent,
   ],
   imports: [
     CommonModule,
