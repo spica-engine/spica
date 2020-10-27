@@ -141,7 +141,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -200,7 +200,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -249,7 +249,12 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, DummyAction, ToolbarActionDirective],
+        declarations: [
+          HomeLayoutComponent,
+          DummyAction,
+          ToolbarActionDirective,
+          CanInteractDirectiveTest
+        ],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -299,7 +304,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,
