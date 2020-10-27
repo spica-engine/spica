@@ -56,7 +56,15 @@ import {StorageRoutingModule} from "./storage-routing.module";
     MatToolbarModule,
     MatClipboardModule,
     MatMenuModule,
-    InputModule.withPlacers([{origin: "string", type: "storage", placer: StorageComponent}])
+    InputModule.withPlacers([
+      {
+        origin: "string",
+        type: "storage",
+        icon: "perm_media",
+        color: "#ab1ada",
+        placer: StorageComponent
+      }
+    ])
   ],
   declarations: [
     IndexComponent,
