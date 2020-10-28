@@ -220,22 +220,6 @@
                   [(ngModel)]="bucket.properties[propertyKv.key]"
                 >
                 </span>
-                <div class="readonly" *ngIf="bucket.properties[propertyKv.key].readOnly">
-                  <mat-divider></mat-divider>
-                  <span
-                    [inputPlacer]="propertyKv.value"
-                    [(ngModel)]="bucket.properties[propertyKv.key].default"
-                  >
-                  </span>
-                  <div>
-                    <mat-icon>
-                      info
-                    </mat-icon>
-                    <mat-hint>
-                      No one will be able to insert or change this field.
-                    </mat-hint>
-                  </div>
-                </div>
               </div>
             </div>
 

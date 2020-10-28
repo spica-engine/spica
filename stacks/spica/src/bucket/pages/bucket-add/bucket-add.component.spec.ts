@@ -341,7 +341,8 @@ describe("BucketAddComponent", () => {
         title: "new title",
         description: "new description",
         readOnly: false,
-        history: false
+        history: false,
+        order: 1
       } as Bucket);
     });
 

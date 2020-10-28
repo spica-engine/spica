@@ -25,6 +25,12 @@ import {EditorComponent} from "../../components/editor/editor.component";
 import {FunctionService} from "../../function.service";
 import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
+import {LogViewComponent} from "../log-view/log-view.component";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {MatOptionModule, MatNativeDateModule} from "@angular/material/core";
+import {MatInputModule} from "@angular/material/input";
+import {ScrollingModule} from "@angular/cdk/scrolling";
+import {MatDatepickerModule} from "@angular/material/datepicker";
 
 @Directive({
   selector: "code-editor[language]",
@@ -56,7 +62,15 @@ describe("Function Add", () => {
         MatSaveModule,
         MatSliderModule,
         LayoutModule,
-        InputModule
+        InputModule,
+
+        //for log view component
+        NoopAnimationsModule,
+        MatOptionModule,
+        MatInputModule,
+        ScrollingModule,
+        MatDatepickerModule,
+        MatNativeDateModule
       ],
       providers: [
         {
@@ -83,6 +97,7 @@ describe("Function Add", () => {
       declarations: [
         AddComponent,
         EditorComponent,
+        LogViewComponent,
         EnqueuerPipe,
         MockLanguageDirective,
         CanInteractDirectiveTest
