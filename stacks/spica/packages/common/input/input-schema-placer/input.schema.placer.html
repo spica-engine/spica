@@ -1,4 +1,4 @@
-<mat-form-field>
+<mat-form-field *ngIf="!advancedOnly">
   <mat-select
     name="type"
     placeholder="Select type"
@@ -13,7 +13,7 @@
   </mat-select>
   <mat-error *ngIf="typeModel?.errors?.required">This field is required.</mat-error>
 </mat-form-field>
-<mat-form-field>
+<mat-form-field *ngIf="!advancedOnly">
   <input
     matInput
     name="title"
@@ -37,7 +37,7 @@
     character.
   </mat-error>
 </mat-form-field>
-<mat-form-field>
+<mat-form-field *ngIf="!advancedOnly">
   <textarea
     matInput
     name="description"

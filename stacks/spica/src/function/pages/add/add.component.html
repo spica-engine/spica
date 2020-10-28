@@ -259,6 +259,9 @@
               <mat-icon>delete</mat-icon>
             </button>
           </mat-list-item>
+          <button type="button" mat-button class="new-trigger" (click)="addTrigger()">
+            <mat-icon>add</mat-icon>Add New Trigger
+          </button>
 
           <ng-container *ngIf="function?._id" ngModelGroup="dependencies">
             <h4 mat-subheader>
@@ -399,5 +402,5 @@
 </div>
 
 <div class="sidecar-log-view" *ngIf="enableLogView">
-  <log-view></log-view>
+  <log-view [functionId$]="selectedFunctionId" ></log-view>
 </div>

@@ -2,7 +2,7 @@ import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {SavingState} from "@spica-client/material";
-import {merge, Observable, of, Subject, throwError} from "rxjs";
+import {merge, Observable, of, Subject, throwError, BehaviorSubject} from "rxjs";
 import {
   catchError,
   delay,
@@ -36,6 +36,8 @@ export class AddComponent implements OnInit, OnDestroy {
   @ViewChild("toolbar", {static: true}) toolbar;
 
   function: NormalizedFunction = emptyFunction();
+
+  selectedFunctionId = new BehaviorSubject(undefined);
 
   information: Observable<Information>;
 
@@ -77,6 +79,7 @@ export class AddComponent implements OnInit, OnDestroy {
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),
+        tap(params => this.selectedFunctionId.next(params.id)),
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
           this.dependencyInstallPending = false;

@@ -3,10 +3,10 @@ import {Observable} from "rxjs";
 
 export enum RouteCategory {
   Primary = "Primary",
-  Content = "Content",
-  Developer = "Developer",
-  System = "System",
-  Function = "Function"
+  Content = "Buckets",
+  Developer = "Developer Area",
+  System = "Access Management",
+  Function = "Functions"
 }
 
 export interface Route {

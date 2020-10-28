@@ -5,6 +5,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatListModule} from "@angular/material/list";
 import {MatSidenavModule} from "@angular/material/sidenav";
 import {MatToolbarModule} from "@angular/material/toolbar";
+import {By} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {StoreModule} from "@ngrx/store";
@@ -15,6 +16,7 @@ import {RouteService} from "../../route/route.service";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 import {ToolbarActionDirective} from "../toolbar-action";
 import {HomeLayoutComponent} from "./home.layout";
+import {CanInteractDirectiveTest} from "../../../../src/passport/directives/can-interact.directive";
 
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
@@ -23,7 +25,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -98,13 +100,38 @@ describe("Home Layout", () => {
       const selectedCategoryTitle = fixture.debugElement.nativeElement.querySelector(
         "mat-nav-list:last-of-type > h4"
       );
-      expect(selectedCategoryTitle.textContent).toEqual("Content");
+      expect(selectedCategoryTitle.textContent).toEqual("Buckets");
       const selectedCategoryRoutes = fixture.debugElement.nativeElement.querySelectorAll(
         "mat-nav-list:last-of-type > mat-list-item"
       );
       expect(selectedCategoryRoutes.length).toEqual(2);
       expect(selectedCategoryRoutes[0].textContent).toEqual(" content1 ");
       expect(selectedCategoryRoutes[1].textContent).toEqual(" content2 ");
+    }));
+
+    it("should show quick-action links if the current tab is content", fakeAsync(() => {
+      TestBed.get(RouteService).dispatch(
+        new Retrieve([
+          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2"},
+          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1"},
+          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
+          {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
+          {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
+          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
+          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+        ])
+      );
+      tick();
+      fixture.detectChanges();
+      fixture.componentInstance.currentCategory.next(RouteCategory.Content);
+      tick(10);
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css(".quick-link-add-bucket"))).toBeTruthy();
+      fixture.componentInstance.currentCategory.next(RouteCategory.Developer);
+      tick();
+      fixture.detectChanges();
+      expect(fixture.debugElement.query(By.css(".quick-link-add-bucket"))).toBeFalsy();
     }));
   });
 
@@ -114,7 +141,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -173,7 +200,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -222,7 +249,12 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, DummyAction, ToolbarActionDirective],
+        declarations: [
+          HomeLayoutComponent,
+          DummyAction,
+          ToolbarActionDirective,
+          CanInteractDirectiveTest
+        ],
         imports: [
           MatSidenavModule,
           MatListModule,
@@ -272,7 +304,7 @@ describe("Home Layout", () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        declarations: [HomeLayoutComponent, ToolbarActionDirective],
+        declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
           MatSidenavModule,
           MatListModule,

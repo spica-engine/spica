@@ -5,7 +5,6 @@
   <div class="content">
     <div class="title">
       <h5>Let's create your first Restful API</h5>
-      <button color="warn" mat-button (click)="hideTutorial()">Don't show this again</button>
     </div>
     <mat-vertical-stepper linear #stepper>
       <mat-step editable="false">
@@ -105,5 +104,8 @@
         </div>
       </mat-step>
     </mat-vertical-stepper>
+    <button class="dismiss-button" color="warn" mat-flat-button (click)="hideTutorial()">
+      Don't show this again
+    </button>
   </div>
 </div>
