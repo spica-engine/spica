@@ -128,6 +128,24 @@
         .select {
           width: 75px;
         }
+        th:not(:last-of-type){
+          position: relative;
+          &:after{
+            content: "||";
+            position: absolute;
+            right: 10px;
+            top: 10px;
+          }
+        }
+        tr{
+          height: 40px !important;
+          >th:last-of-type{
+            padding-right: 35px;
+          }
+          >*:last-of-type{
+            text-align: right;
+          }
+        }
       }
     }
   }
