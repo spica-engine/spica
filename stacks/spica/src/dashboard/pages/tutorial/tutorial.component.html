@@ -9,7 +9,10 @@
     <mat-vertical-stepper linear #stepper>
       <mat-step editable="false">
         <ng-template matStepLabel>Creating a bucket</ng-template>
-
+        <h4 class="row">
+          Buckets are the data collections in your Spica project. You can define a flexible data
+          model for any bucket. So let's create your first bucket here
+        </h4>
         <div class="row" *ngFor="let property of properties; index as i">
           <mat-form-field>
             <mat-label>Field Name</mat-label>
@@ -47,6 +50,9 @@
       </mat-step>
       <mat-step editable="false">
         <ng-template matStepLabel>Creating an entry</ng-template>
+        <h4 class="row">
+          Now, create few entries for your project.
+        </h4>
         <div class="placers">
           <ng-container *ngFor="let property of bucket.properties | keyvalue">
             <span

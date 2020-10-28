@@ -29,6 +29,11 @@
     justify-content: space-between;
   }
 
+  h4:first-of-type {
+    margin-bottom: 30px;
+    font-weight: normal;
+  }
+
   div.row {
     margin-top: 10px;
   }
@@ -101,10 +106,14 @@
   width: 100% !important;
 }
 
+::ng-deep .mat-snack-bar-container {
+  color: white !important;
+}
 ::ng-deep snack-bar-container {
   width: 250px !important;
   padding: 20px !important;
   border-radius: 8px !important;
+  background: #62c362 !important;
   span {
     line-height: 22px !important;
     font-size: 16px !important;
