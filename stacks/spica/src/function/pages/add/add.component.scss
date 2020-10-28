@@ -150,15 +150,6 @@
             padding-bottom: 20px;
             height: 80px;
 
-            pre.example  {
-              padding: 7px 10px;
-              border-radius: 5px;
-              background: rgba(var(--background-app-bar-rgb), calc(0.22 + var(--tone-diff)));
-              max-height: 400px;
-              max-width: 500px;
-              overflow-y: auto;
-            }
-
             ::ng-deep .mat-list-item-content > *:not(:first-child) {
               margin-left: 10px;
             }
