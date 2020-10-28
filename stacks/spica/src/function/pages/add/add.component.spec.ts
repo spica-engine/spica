@@ -27,6 +27,12 @@ import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {Store} from "@ngrx/store";
 import examples from "../../examples/examples.json";
 import {MAT_DIALOG_DATA} from "@angular/material/dialog";
+import {LogViewComponent} from "../log-view/log-view.component";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {MatOptionModule, MatNativeDateModule} from "@angular/material/core";
+import {MatInputModule} from "@angular/material/input";
+import {ScrollingModule} from "@angular/cdk/scrolling";
+import {MatDatepickerModule} from "@angular/material/datepicker";
 
 @Directive({
   selector: "code-editor[language]",
@@ -58,7 +64,15 @@ describe("Function Add", () => {
         MatSaveModule,
         MatSliderModule,
         LayoutModule,
-        InputModule
+        InputModule,
+
+        //for log view component
+        NoopAnimationsModule,
+        MatOptionModule,
+        MatInputModule,
+        ScrollingModule,
+        MatDatepickerModule,
+        MatNativeDateModule
       ],
       providers: [
         {
@@ -89,6 +103,7 @@ describe("Function Add", () => {
       declarations: [
         AddComponent,
         EditorComponent,
+        LogViewComponent,
         EnqueuerPipe,
         MockLanguageDirective,
         CanInteractDirectiveTest
@@ -168,7 +183,7 @@ describe("Function Add", () => {
         options: {}
       };
       let code = getExample(trigger as any);
-      expect(code).toEqual("Example code does not exist for this trigger.");
+      expect(code).toEqual("'Example code does not exist for this trigger.'");
     });
 
     describe("bucket", () => {
@@ -178,7 +193,7 @@ describe("Function Add", () => {
           options: {}
         };
         let code = getExample(trigger as any);
-        expect(code).toEqual("Select the phase and operation type to display example code.");
+        expect(code).toEqual("'Select the phase and operation type to display example code.'");
       });
 
       describe("before", () => {
@@ -200,7 +215,7 @@ describe("Function Add", () => {
             options: {phase: "BEFORE"}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("Select the phase and operation type to display example code.");
+          expect(code).toEqual("'Select the phase and operation type to display example code.'");
         });
       });
       describe("after", () => {
@@ -222,7 +237,7 @@ describe("Function Add", () => {
             options: {phase: "AFTER"}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("Select the phase and operation type to display example code.");
+          expect(code).toEqual("'Select the phase and operation type to display example code.'");
         });
       });
     });
@@ -245,7 +260,7 @@ describe("Function Add", () => {
           options: {}
         };
         let code = getExample(trigger as any);
-        expect(code).toEqual("Select an operation type to display example code.");
+        expect(code).toEqual("'Select an operation type to display example code.'");
       });
     });
   });

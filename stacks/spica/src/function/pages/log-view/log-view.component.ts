@@ -1,6 +1,6 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, Input} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, forkJoin} from "rxjs";
+import {Observable, forkJoin, BehaviorSubject, combineLatest} from "rxjs";
 import {switchMap, tap, map, filter, take, flatMap} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
@@ -23,18 +23,20 @@ export class LogViewComponent implements OnInit {
 
   bufferSize = 500;
 
+  @Input() functionId$: BehaviorSubject<string> = new BehaviorSubject(undefined);
+
   constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {}
 
   ngOnInit() {
-    this.queryParams = this.route.queryParams.pipe(
-      map(filter => {
+    this.queryParams = combineLatest(this.functionId$, this.route.queryParams).pipe(
+      map(([functionId, filter]) => {
         filter = {...filter};
         if (filter.showErrors) {
           filter.showErrors = JSON.parse(filter.showErrors);
         }
         if (!Array.isArray(filter.function)) {
           if (!filter.function) {
-            filter.function = [];
+            filter.function = [functionId].filter(Boolean);
           } else {
             filter.function = [filter.function];
           }
