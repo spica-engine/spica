@@ -25,6 +25,7 @@ import {EditorComponent} from "../../components/editor/editor.component";
 import {FunctionService} from "../../function.service";
 import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
+import {LogViewComponent} from "../log-view/log-view.component";
 
 @Directive({
   selector: "code-editor[language]",
@@ -83,6 +84,7 @@ describe("Function Add", () => {
       declarations: [
         AddComponent,
         EditorComponent,
+        LogViewComponent,
         EnqueuerPipe,
         MockLanguageDirective,
         CanInteractDirectiveTest
