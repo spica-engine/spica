@@ -17,13 +17,15 @@ import {
   ignoreElements,
   endWith,
   catchError,
-  mapTo
+  mapTo,
+  take
 } from "rxjs/operators";
-import {INPUT_ICONS} from "../../icons";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
+import {MatDialog} from "@angular/material/dialog";
+import {AddFieldModalComponent} from "../add-field-modal/add-field-modal.component";
 
 @Component({
   selector: "bucket-add",
@@ -39,25 +41,14 @@ import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history
 export class BucketAddComponent implements OnInit, OnDestroy {
   readonly inputTypes: string[];
   readonly icons: Array<string> = ICONS;
-  readonly bIcons = INPUT_ICONS;
   readonly iconPageSize = 21;
+
+  configurationState = "meta";
 
   isThereVisible = true;
   visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
-  translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
-  basicPropertyTypes = ["string", "textarea", "boolean", "number"];
-  visibleTypes = [
-    "string",
-    "textarea",
-    "boolean",
-    "number",
-    "relation",
-    "date",
-    "color",
-    "storage"
-  ];
-
+  buckets: Bucket[];
   bucket: Bucket;
 
   $save: Observable<SavingState>;
@@ -68,20 +59,23 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
-  immutableProperties: Array<string> = [];
-
   propertyPositionMap: {[k: string]: any[]} = {};
 
   private onDestroy: Subject<void> = new Subject<void>();
 
   constructor(
-    _inputResolver: InputResolver,
+    public _inputResolver: InputResolver,
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private bs: BucketService,
-    private historyService: BucketHistoryService
+    private historyService: BucketHistoryService,
+    private dialog: MatDialog
   ) {
     this.inputTypes = _inputResolver.entries();
+    this.bs
+      .getBuckets()
+      .pipe(take(1))
+      .subscribe(buckets => (this.buckets = buckets));
   }
 
   ngOnInit(): void {
@@ -118,7 +112,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         switchMap(params => this.bs.getBucket(params.id)),
         tap(scheme => {
           this.bucket = deepCopy<Bucket>(scheme);
-          this.immutableProperties = Object.keys(this.bucket.properties);
         }),
 
         takeUntil(this.onDestroy)
@@ -157,21 +150,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-  addProperty(propertyKey: string) {
-    if (propertyKey && !this.bucket.properties[propertyKey]) {
-      const propertyName = propertyKey.toLowerCase();
-      this.bucket.properties[propertyName] = {
-        type: this.inputTypes.indexOf(propertyName) > -1 ? propertyName : "string",
-        title: propertyKey,
-        description: `Description of ${propertyKey}`,
-        options: {
-          position: "bottom"
-        }
-      };
-      this.updatePositionProperties();
-    }
-  }
-
   setDefault(event: MatCheckboxChange, propertyKey) {
     if (event.checked) {
       this.bucket.properties[propertyKey].default = undefined;
@@ -190,13 +168,15 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       this.bucket.required.splice(this.bucket.required.indexOf(propertyKey), 1);
     }
 
-    this.bucket.properties = {...this.bucket.properties};
     this.updatePositionProperties();
   }
 
   saveBucket(): void {
     const isInsert = !this.bucket._id;
 
+    if (!this.bucket.hasOwnProperty("order")) {
+      this.bucket.order = this.buckets.length;
+    }
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(
@@ -220,6 +200,22 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         catchError(() => of(SavingState.Failed))
       )
     );
+  }
+
+  createNewField(propertyKey: string = null) {
+    let dialogRef = this.dialog.open(AddFieldModalComponent, {
+      width: "800px",
+      maxHeight: "800px",
+      data: {
+        parentSchema: this.bucket,
+        predefinedDefaults: this.predefinedDefaults,
+        propertyKey: propertyKey
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(data => {
+      this.updatePositionProperties();
+    });
   }
 
   ngOnDestroy() {
