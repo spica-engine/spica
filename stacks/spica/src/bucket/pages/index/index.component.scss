@@ -128,7 +128,7 @@
         .select {
           width: 75px;
         }
-        th:not(:last-of-type) {
+        th:not(.select):not(:last-of-type) {
           position: relative;
           &:after {
             content: "||";
