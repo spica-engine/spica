@@ -169,6 +169,14 @@
             }
           }
         }
+
+        .new-trigger {
+          width: calc(100% - 48px);
+          border: 1px dashed rgba(0, 0, 0, 0.07);
+          border-radius: 5px;
+          margin: 16px 24px;
+          padding: 15px;
+        }
       }
     }
   }

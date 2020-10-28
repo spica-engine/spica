@@ -17,7 +17,8 @@ import {
   ignoreElements,
   endWith,
   catchError,
-  mapTo
+  mapTo,
+  take
 } from "rxjs/operators";
 import {Bucket, emptyBucket} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
@@ -46,6 +47,8 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   isThereVisible = true;
   visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
+
+  buckets: Bucket[];
   bucket: Bucket;
 
   $save: Observable<SavingState>;
@@ -69,6 +72,10 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     private dialog: MatDialog
   ) {
     this.inputTypes = _inputResolver.entries();
+    this.bs
+      .getBuckets()
+      .pipe(take(1))
+      .subscribe(buckets => (this.buckets = buckets));
   }
 
   ngOnInit(): void {
@@ -167,6 +174,9 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   saveBucket(): void {
     const isInsert = !this.bucket._id;
 
+    if (!this.bucket.hasOwnProperty("order")) {
+      this.bucket.order = this.buckets.length;
+    }
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(

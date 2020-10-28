@@ -35,19 +35,24 @@
       [cdkDropListEnterPredicate]="dropListEnterPredicate"
       (cdkDropListDropped)="dropListDropped()"
     >
-      <div class="bucket-card drag-box mat-elevation-1" cdkDrag (cdkDragMoved)="dragMoved($event)">
+      <div
+        class="bucket-card drag-box mat-elevation-1"
+        canInteract="bucket:show"
+        [resource]="bucket._id"
+        [routerLink]="['../' + bucket._id]"
+        cdkDrag
+        (cdkDragMoved)="dragMoved($event)"
+      >
         <div class="bucket-title">
-          <mat-icon>{{ bucket.icon }}</mat-icon>
-          <span>{{ bucket.title }}</span>
+          <div>
+            <mat-icon>{{ bucket.icon }}</mat-icon>
+            <span>{{ bucket.title }}</span>
+          </div>
+          <small>ID: {{ bucket._id }}</small>
         </div>
         <div class="actions">
-          <button
-            canInteract="bucket:show"
-            [resource]="bucket._id"
-            mat-icon-button
-            [routerLink]="['../' + bucket._id]"
-          >
-            <mat-icon>edit</mat-icon>
+          <button mat-icon-button cdkDragHandle disableRipple class="drag-button">
+            <mat-icon>drag_handle</mat-icon>
           </button>
           <button
             canInteract="bucket:delete"
