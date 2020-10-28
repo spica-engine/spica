@@ -35,6 +35,17 @@
           <mat-icon>{{ route.icon }}</mat-icon>
           {{ route.display }}
         </mat-list-item>
+        <div *ngIf="categories$ | async as contentCategory; ">
+          <mat-list-item
+            canInteract="bucket:create"
+            class="quick-link-add-bucket"
+            [routerLink]="['/buckets/add']"
+            *ngIf="(currentCategory | async) == contentCategory[1]?.category;"
+          >
+            <mat-icon>add</mat-icon>
+            Add New Bucket
+          </mat-list-item>
+        </div>
       </mat-nav-list>
     </section>
   </mat-sidenav>

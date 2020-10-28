@@ -1,6 +1,7 @@
-import {async, ComponentFixture, TestBed} from "@angular/core/testing";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {ApiKeyAddComponent} from "./apikey-add.component";
+import {async, ComponentFixture, TestBed} from "@angular/core/testing";
+import {FormsModule} from "@angular/forms";
+import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
@@ -9,26 +10,18 @@ import {MatListModule} from "@angular/material/list";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {FormsModule} from "@angular/forms";
+import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
-import {of} from "rxjs";
 import {RouterTestingModule} from "@angular/router/testing";
 import {IndexResult} from "@spica-client/core";
+import {PassportService} from "@spica/client/src/passport/services/passport.service";
+import {of} from "rxjs";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {ApiKey} from "../../interfaces/apikey";
 import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
-import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {PolicyService} from "../../services/policy.service";
-import {By} from "@angular/platform-browser";
-import {Directive, HostBinding, Input} from "@angular/core";
-import {MatButtonModule} from "@angular/material/button";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
+import {ApiKeyAddComponent} from "./apikey-add.component";
 
 describe("ApiKeyAddComponent", () => {
   let component: ApiKeyAddComponent;

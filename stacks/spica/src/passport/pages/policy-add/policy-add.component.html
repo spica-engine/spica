@@ -44,8 +44,8 @@
                 required
               >
                 <mat-option *ngFor="let service of services | keyvalue" [value]="service.key">
-                  {{ service.key.replaceAll(":", " ") | titlecase }}</mat-option
-                >
+                  {{ service.key.replaceAll(":", " ") | titlecase }}
+                </mat-option>
               </mat-select>
             </mat-form-field>
             <mat-form-field *ngIf="statement.module">

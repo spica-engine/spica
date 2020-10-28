@@ -13,7 +13,7 @@ import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
-  selector: "bucket-index",
+  selector: "bucket-data-index",
   templateUrl: "./index.component.html",
   styleUrls: ["./index.component.scss"],
   animations: [

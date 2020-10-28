@@ -14,14 +14,7 @@ import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
 import {MatButtonModule} from "@angular/material/button";
-import {Directive, HostBinding, Input} from "@angular/core";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 
 describe("Webhook Index", () => {
   let fixture: ComponentFixture<WebhookIndexComponent>;

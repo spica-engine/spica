@@ -1,8 +1,6 @@
-import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {PolicyAddComponent} from "./policy-add.component";
-import {PolicyService} from "../../services/policy.service";
-import {of} from "rxjs";
-import {ActivatedRoute, RouterModule} from "@angular/router";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
+import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {FormsModule} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatFormFieldModule} from "@angular/material/form-field";
@@ -10,17 +8,12 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatSelectModule} from "@angular/material/select";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {FormsModule} from "@angular/forms";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {Directive, HostBinding, Input} from "@angular/core";
-import {HttpClientTestingModule} from "@angular/common/http/testing";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
+import {ActivatedRoute, RouterModule} from "@angular/router";
+import {of} from "rxjs";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {PolicyService} from "../../services/policy.service";
+import {PolicyAddComponent} from "./policy-add.component";
 
 describe("Policy Add Component", () => {
   describe("Policy Add", () => {
