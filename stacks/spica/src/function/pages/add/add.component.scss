@@ -1,14 +1,26 @@
 :host {
+  .with-sidecar {
+    width: calc(100% - 450px) !important;
+    display: block;
+  }
   mat-toolbar {
     min-height: 250px;
     padding: 0 30px;
     align-items: flex-start;
+    flex-direction: column;
+
     h4 {
       mat-icon,
       span {
         vertical-align: middle;
         margin-left: 5px;
       }
+      margin-bottom: 60px;
+    }
+
+    div.actions {
+      max-width: 100%;
+      align-self: flex-end;
     }
   }
 
@@ -66,7 +78,7 @@
             ::ng-deep .mat-list-item-content {
               display: grid !important;
               gap: 15px;
-              grid-template-columns: 1fr 1fr 1fr 1fr;
+              grid-template-columns: repeat(auto-fill, minmax(250px, max-content));
             }
             mat-select {
               mat-select-trigger {
@@ -176,6 +188,52 @@
           border-radius: 5px;
           margin: 16px 24px;
           padding: 15px;
+        }
+      }
+    }
+  }
+
+  .sidecar-log-view {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width: 450px;
+    height: 100%;
+    border-left: 1px solid #eeefee;
+    background: #fafafa;
+    ::ng-deep {
+      mat-form-field {
+        margin: 0px !important;
+        width: 100% !important;
+      }
+      mat-slide-toggle,
+      mat-card-content {
+        margin: 0px !important;
+      }
+      mat-expansion-panel-header {
+        padding: 5px !important;
+      }
+      .cdk-virtual-scroll-content-wrapper {
+        div:first-of-type {
+          margin-right: 0px !important;
+          padding: 5px !important;
+        }
+        div:first-of-type,
+        mat-panel-title {
+          font-size: 0.8rem !important;
+          margin: 0px !important;
+          span:nth-child(1) {
+            width: 30% !important;
+            margin: 10px 5px 10px 0px !important;
+          }
+          span:nth-child(2) {
+            width: 30% !important;
+            margin: 10px 0px !important;
+          }
+          span:last-of-type {
+            width: 40% !important;
+            margin: 10px 0px 10px 5px !important;
+          }
         }
       }
     }
