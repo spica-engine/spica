@@ -65,3 +65,7 @@ export function findLocale(language: string, preferences: BucketPreferences): Lo
 export function hasTranslatedProperties(properties: JSONSchema7) {
   return Object.values(properties).some(property => property.options && property.options.translate);
 }
+
+export function hasRelationalProperties(properties: JSONSchema7) {
+  return Object.values(properties).some(value => value.type == "relation");
+}
