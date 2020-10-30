@@ -13,7 +13,7 @@ import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} f
 import * as fromFunction from "./reducers/function.reducer";
 import {PassportService} from "@spica-client/passport";
 import {getWsObs} from "@spica-client/common";
-import examples from "./examples/examples.json";
+import {examples} from "./examples/examples";
 
 @Injectable({providedIn: "root"})
 export class FunctionService {
@@ -31,18 +31,18 @@ export class FunctionService {
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {
       if (!trigger.options.phase || !trigger.options.type) {
-        return "'Select the phase and operation type to display example code.'";
+        return "Select the phase and operation type to display example code.";
       }
       return examples.bucket[trigger.options.phase][trigger.options.type];
     } else if (trigger.type == "database") {
       if (!trigger.options.type) {
-        return "'Select an operation type to display example code.'";
+        return "Select an operation type to display example code.";
       }
       return examples.database[trigger.options.type];
     } else if (examples[trigger.type]) {
       return examples[trigger.type];
     }
-    return "'Example code does not exist for this trigger.'";
+    return "Example code does not exist for this trigger.";
   }
 
   loadFunctions() {

@@ -25,7 +25,7 @@ import {EditorComponent} from "../../components/editor/editor.component";
 import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {Store} from "@ngrx/store";
-import examples from "../../examples/examples.json";
+import {examples} from "../../examples/examples";
 import {MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {LogViewComponent} from "../log-view/log-view.component";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -183,7 +183,7 @@ describe("Function Add", () => {
         options: {}
       };
       let code = getExample(trigger as any);
-      expect(code).toEqual("'Example code does not exist for this trigger.'");
+      expect(code).toEqual("Example code does not exist for this trigger.");
     });
 
     describe("bucket", () => {
@@ -193,7 +193,7 @@ describe("Function Add", () => {
           options: {}
         };
         let code = getExample(trigger as any);
-        expect(code).toEqual("'Select the phase and operation type to display example code.'");
+        expect(code).toEqual("Select the phase and operation type to display example code.");
       });
 
       describe("before", () => {
@@ -215,7 +215,7 @@ describe("Function Add", () => {
             options: {phase: "BEFORE"}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("'Select the phase and operation type to display example code.'");
+          expect(code).toEqual("Select the phase and operation type to display example code.");
         });
       });
       describe("after", () => {
@@ -237,7 +237,7 @@ describe("Function Add", () => {
             options: {phase: "AFTER"}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("'Select the phase and operation type to display example code.'");
+          expect(code).toEqual("Select the phase and operation type to display example code.");
         });
       });
     });
@@ -260,7 +260,7 @@ describe("Function Add", () => {
           options: {}
         };
         let code = getExample(trigger as any);
-        expect(code).toEqual("'Select an operation type to display example code.'");
+        expect(code).toEqual("Select an operation type to display example code.");
       });
     });
   });
