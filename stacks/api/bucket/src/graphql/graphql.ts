@@ -26,7 +26,8 @@ import {
   aggregationsFromRequestedFields,
   getProjectAggregation,
   requestedFieldsFromInfo,
-  requestedFieldsFromExpression
+  requestedFieldsFromExpression,
+  deepCopy
 } from "./schema";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
@@ -97,6 +98,8 @@ export class GraphqlController implements OnModuleInit {
     })
   };
 
+  schema: GraphQLSchema;
+
   constructor(
     private adapterHost: HttpAdapterHost,
     private bs: BucketService,
@@ -105,7 +108,12 @@ export class GraphqlController implements OnModuleInit {
     private validator: Validator,
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService
-  ) {}
+  ) {
+    this.bs.watchAll(true).subscribe(buckets => {
+      this.buckets = buckets;
+      this.schema = this.getSchema(buckets);
+    });
+  }
 
   onModuleInit() {
     let app = this.adapterHost.httpAdapter.getInstance();
@@ -115,14 +123,12 @@ export class GraphqlController implements OnModuleInit {
       graphqlHTTP(async (request, response, gqlParams) => {
         await this.authorize(request, response);
 
-        let filterAggregation = await this.authenticate(request, "/bucket", {}, ["bucket:index"], {
+        await this.authenticate(request, "/bucket", {}, ["bucket:index"], {
           resourceFilter: true
         });
 
-        const schema = await this.getSchema(filterAggregation);
-
         return {
-          schema: schema,
+          schema: this.schema,
           graphiql: true,
           customFormatErrorFn: err => {
             if (err.extensions && err.extensions.statusCode) {
@@ -136,14 +142,11 @@ export class GraphqlController implements OnModuleInit {
     );
   }
 
-  async getSchema(filterAggregation: object): Promise<GraphQLSchema> {
-    let buckets = await this.bs.aggregate([filterAggregation]).toArray();
-
+  getSchema(buckets: Bucket[]): GraphQLSchema {
     let typeDefs = [];
     let resolvers = [];
 
     if (buckets.length) {
-      this.buckets = buckets;
       typeDefs = buckets.map(bucket => createSchema(bucket, this.staticTypes));
 
       resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
@@ -213,9 +216,9 @@ export class GraphqlController implements OnModuleInit {
       let matchExpression = {};
       if (query && Object.keys(query).length) {
         matchExpression = extractAggregationFromQuery(
-          JSON.parse(JSON.stringify(bucket)),
+          deepCopy(bucket),
           query,
-          JSON.parse(JSON.stringify(this.buckets))
+          deepCopy(this.buckets)
         );
       }
 
@@ -224,10 +227,10 @@ export class GraphqlController implements OnModuleInit {
       );
 
       let relationAndLocalization = await aggregationsFromRequestedFields(
-        JSON.parse(JSON.stringify(bucket)),
+        deepCopy(bucket),
         requestedFields,
         this.getLocale,
-        JSON.parse(JSON.stringify(this.buckets)),
+        deepCopy(this.buckets),
         language
       );
       aggregation.push(...relationAndLocalization);
@@ -243,7 +246,9 @@ export class GraphqlController implements OnModuleInit {
         subAggregation.push({$sort: sort});
       }
 
-      subAggregation.push({$skip: skip | 0});
+      if (skip) {
+        subAggregation.push({$skip: skip});
+      }
 
       if (limit) {
         subAggregation.push({$limit: limit});
@@ -287,10 +292,10 @@ export class GraphqlController implements OnModuleInit {
 
       let requestedFields = requestedFieldsFromInfo(info);
       let relationAndLocalization = await aggregationsFromRequestedFields(
-        JSON.parse(JSON.stringify(bucket)),
+        deepCopy(bucket),
         requestedFields,
         this.getLocale,
-        JSON.parse(JSON.stringify(this.buckets)),
+        deepCopy(this.buckets),
         language
       );
       aggregation.push(...relationAndLocalization);
@@ -333,10 +338,10 @@ export class GraphqlController implements OnModuleInit {
 
       let requestedFields = requestedFieldsFromInfo(info);
       let relationAndLocalization = await aggregationsFromRequestedFields(
-        JSON.parse(JSON.stringify(bucket)),
+        deepCopy(bucket),
         requestedFields,
         this.getLocale,
-        JSON.parse(JSON.stringify(this.buckets))
+        deepCopy(this.buckets)
       );
       aggregation.push(...relationAndLocalization);
 
@@ -395,10 +400,10 @@ export class GraphqlController implements OnModuleInit {
 
       let requestedFields = requestedFieldsFromInfo(info);
       let relationAndLocalization = await aggregationsFromRequestedFields(
-        JSON.parse(JSON.stringify(bucket)),
+        deepCopy(bucket),
         requestedFields,
         this.getLocale,
-        JSON.parse(JSON.stringify(this.buckets))
+        deepCopy(this.buckets)
       );
       aggregation.push(...relationAndLocalization);
 
@@ -465,10 +470,10 @@ export class GraphqlController implements OnModuleInit {
 
       let requestedFields = requestedFieldsFromInfo(info);
       let relationAndLocalization = await aggregationsFromRequestedFields(
-        JSON.parse(JSON.stringify(bucket)),
+        deepCopy(bucket),
         requestedFields,
         this.getLocale,
-        JSON.parse(JSON.stringify(this.buckets))
+        deepCopy(this.buckets)
       );
       aggregation.push(...relationAndLocalization);
 

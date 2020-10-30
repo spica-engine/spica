@@ -64,6 +64,9 @@ describe("GraphQLController", () => {
         let deletes = buckets.map(bucket => req.delete(`/bucket/${bucket._id}`));
         await Promise.all(deletes);
       }
+
+      //wait until watcher send changes
+      await new Promise(resolve => setTimeout(resolve, 100));
     });
 
     it("should return default response when there is no bucket ", async () => {
@@ -111,6 +114,9 @@ describe("GraphQLController", () => {
           await req.post(`/bucket/${bucket._id}/data`, {name: "Dwight", age: 38}),
           await req.post(`/bucket/${bucket._id}/data`, {name: "Toby", age: 30})
         ].map(r => r.body);
+
+        //wait until watcher send changes
+        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
       it("should return document that matches with given id", async () => {
@@ -560,6 +566,9 @@ describe("GraphQLController", () => {
               description: "description"
             })
           ].map(r => r.body);
+
+          //wait until watcher send changes
+          await new Promise(resolve => setTimeout(resolve, 100));
         });
 
         it("should return documents with english titles", async () => {
@@ -896,6 +905,9 @@ describe("GraphQLController", () => {
               })
               .then(r => r.body)
           ]);
+
+          //wait until watcher send changes
+          await new Promise(resolve => setTimeout(resolve, 100));
         });
 
         it("should get book with its own publisher", async () => {
@@ -1434,6 +1446,9 @@ describe("GraphQLController", () => {
           .then(response => response.body);
 
         bucketName = getBucketName(bucket._id);
+
+        //wait until watcher send changes
+        await new Promise(resolve => setTimeout(resolve, 100));
       });
 
       afterEach(async () => {

@@ -521,7 +521,7 @@ function createExpressionFromChange(
 }
 
 function findValueOfPath(path: (string | number)[], document: BucketDocument) {
-  return path.reduce((acc, curr) => acc[curr], document);
+  return path.reduce((document, name) => document[name], document);
 }
 
 function relationalFieldRequested(properties: object, requestedFields: string[][]): boolean {
@@ -537,11 +537,11 @@ function relationalFieldRequested(properties: object, requestedFields: string[][
 
 function translatableFieldRequested(properties: object, requestedFields: string[][]): boolean {
   let translatableFields = [];
-  Object.keys(properties).forEach(key => {
-    if (properties[key].options && properties[key].options.translate) {
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.options && value.options.translate) {
       translatableFields.push(key);
     }
-  });
+  }
 
   return requestedFields.some(fields => translatableFields.includes(fields[0]));
 }
@@ -556,4 +556,8 @@ export function requestedFieldsFromExpression(expression: object, requestedField
     }
   }
   return requestedFields;
+}
+
+export function deepCopy(value: unknown) {
+  return JSON.parse(JSON.stringify(value));
 }
