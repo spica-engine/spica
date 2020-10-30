@@ -241,14 +241,13 @@ export class GraphqlController implements OnModuleInit {
         let project = getProjectAggregation(requestedFields);
         aggregation.push(project);
       }
+      
       let subAggregation = [];
       if (sort && Object.keys(sort).length) {
         subAggregation.push({$sort: sort});
       }
 
-      if (skip) {
-        subAggregation.push({$skip: skip});
-      }
+      subAggregation.push({$skip: skip | 0});
 
       if (limit) {
         subAggregation.push({$limit: limit});
