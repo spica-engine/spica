@@ -21,6 +21,39 @@ export function findRelations(
   return targets;
 }
 
+//remove it after graphql pr merged
+export function getRelationAggregation(
+  properties: object,
+  fields: string[][],
+  locale: Locale,
+  buckets: any[]
+) {
+  let aggregations = [];
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.type == "relation") {
+      let relateds = fields.filter(field => field[0] == key);
+      if (relateds.length) {
+        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
+
+        let relatedBucket = buckets.find(bucket => bucket._id.toString() == value.bucketId);
+
+        //Remove first key to continue recursive lookup
+        relateds = relateds.map(field => {
+          field.splice(0, 1);
+          return field;
+        });
+
+        aggregation[0].$lookup.pipeline.push(
+          ...getRelationAggregation(relatedBucket.properties, relateds, locale, buckets)
+        );
+
+        aggregations.push(...aggregation);
+      }
+    }
+  }
+  return aggregations;
+}
+
 export function findUpdatedFields(
   previousSchema: any,
   currentSchema: any,
