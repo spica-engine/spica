@@ -1,47 +1,40 @@
-import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {BucketAddComponent} from "./bucket-add.component";
+import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule, NgForm, NgModel} from "@angular/forms";
+import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatOptionModule} from "@angular/material/core";
 import {MatDividerModule} from "@angular/material/divider";
-import {MatExpansionModule} from "@angular/material/expansion";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatGridListModule} from "@angular/material/grid-list";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
-import {MatMenuModule, _MatMenuDirectivesModule} from "@angular/material/menu";
+import {MatMenuModule} from "@angular/material/menu";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {FormsModule, NgModel, NgForm} from "@angular/forms";
-import {CdkDropList, DragDropModule} from "@angular/cdk/drag-drop";
-import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {ActivatedRoute} from "@angular/router";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
-import {MatButtonModule} from "@angular/material/button";
-
-import {ActivatedRoute, Router} from "@angular/router";
-import {BucketService} from "src/bucket/services/bucket.service";
-import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
-
 import {of} from "rxjs";
 import {Bucket} from "src/bucket/interfaces/bucket";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {By} from "@angular/platform-browser";
-import {Directive, HostBinding, Input} from "@angular/core";
+import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
+import {BucketService} from "src/bucket/services/bucket.service";
+import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {BucketAddComponent} from "./bucket-add.component";
+import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
+import {BucketIndexComponent} from "../bucket-index/bucket-index.component";
+import {RouterTestingModule} from "@angular/router/testing";
 
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
-
-describe("Bucket Add Component", () => {
+describe("BucketAddComponent", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
 
   let myBucket = {
@@ -88,7 +81,6 @@ describe("Bucket Add Component", () => {
         MatOptionModule,
         MatButtonModule,
         MatCheckboxModule,
-        MatExpansionModule,
         MatIconModule,
         FormsModule,
         MatSlideToggleModule,
@@ -96,14 +88,15 @@ describe("Bucket Add Component", () => {
         MatDividerModule,
         MatFormFieldModule,
         MatInputModule,
-        _MatMenuDirectivesModule,
         MatMenuModule,
         MatTooltipModule,
         MatPaginatorModule,
         MatToolbarModule,
         NoopAnimationsModule,
         InputModule.withPlacers([]),
-        MatSaveModule
+        MatSaveModule,
+        MatAwareDialogModule,
+        RouterTestingModule
       ],
       providers: [
         {
@@ -115,12 +108,6 @@ describe("Bucket Add Component", () => {
           }
         },
         {
-          provide: Router,
-          useValue: {
-            navigate: jasmine.createSpy("navigate")
-          }
-        },
-        {
           provide: BucketService,
           useValue: {
             getPredefinedDefaults: jasmine
@@ -129,7 +116,8 @@ describe("Bucket Add Component", () => {
                 of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "type2"}])
               ),
             getBucket: jasmine.createSpy("getBucket").and.returnValue(of(myBucket)),
-            replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket))
+            replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket)),
+            getBuckets: jasmine.createSpy("getBuckets").and.returnValue(of([myBucket]))
           }
         },
         {
@@ -140,7 +128,12 @@ describe("Bucket Add Component", () => {
           }
         }
       ],
-      declarations: [BucketAddComponent, PropertyKvPipe, CanInteractDirectiveTest]
+      declarations: [
+        BucketAddComponent,
+        BucketIndexComponent,
+        PropertyKvPipe,
+        CanInteractDirectiveTest
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(BucketAddComponent);
@@ -164,7 +157,6 @@ describe("Bucket Add Component", () => {
         ]
       });
       expect(fixture.componentInstance.bucket).toEqual(myBucket as Bucket);
-      expect(fixture.componentInstance.immutableProperties).toEqual(["prop1", "prop2"]);
       expect(fixture.componentInstance.propertyPositionMap).toEqual({
         left: [
           {
@@ -201,9 +193,10 @@ describe("Bucket Add Component", () => {
       expect(
         fixture.debugElement.query(By.css("h4 > button mat-icon")).nativeElement.textContent
       ).toBe("myIcon");
-      expect(fixture.debugElement.query(By.css("h4 > span")).nativeElement.textContent).toBe(
-        "my bucket"
-      );
+
+      expect(
+        fixture.debugElement.query(By.css("div.right-content h4 > span")).nativeElement.textContent
+      ).toBe("my bucket");
 
       const form = fixture.debugElement.query(By.css("mat-card mat-list-item:first-of-type form"));
 
@@ -228,54 +221,6 @@ describe("Bucket Add Component", () => {
       expect(
         form.query(By.css(".toggles .history mat-slide-toggle")).injector.get(NgModel).model
       ).toBe(true, "should work if history value is true");
-
-      const firstProperty = fixture.debugElement.query(
-        By.css("mat-list-item.properties mat-expansion-panel:nth-child(1)")
-      );
-
-      expect(
-        firstProperty.query(By.css("mat-panel-title > mat-icon")).nativeElement.textContent
-      ).toBe("format_quote");
-      expect(
-        firstProperty.query(By.css("mat-panel-title > mat-label")).nativeElement.textContent
-      ).toBe("title of prop1");
-
-      expect(
-        firstProperty.query(By.css("span.input-placer-area")).injector.get(NgModel).model
-      ).toEqual({
-        type: "string",
-        title: "title of prop1",
-        description: "description of prop1",
-        options: {
-          position: "left",
-          visible: true,
-          translate: true
-        }
-      });
-
-      const secondProperty = fixture.debugElement.query(
-        By.css("mat-list-item.properties mat-expansion-panel:nth-child(2)")
-      );
-
-      expect(
-        secondProperty.query(By.css("mat-panel-title > mat-icon")).nativeElement.textContent
-      ).toBe("format_size");
-      expect(
-        secondProperty.query(By.css("mat-panel-title > mat-label")).nativeElement.textContent
-      ).toBe("title of prop2");
-
-      expect(
-        secondProperty.query(By.css("span.input-placer-area")).injector.get(NgModel).model
-      ).toEqual({
-        type: "textarea",
-        title: "title of prop2",
-        description: "description of prop2",
-        options: {
-          position: "right",
-          visible: false,
-          translate: false
-        }
-      });
 
       expect(
         fixture.debugElement
@@ -327,7 +272,6 @@ describe("Bucket Add Component", () => {
 
     it("should render disabled history toggle and error", async () => {
       fixture.componentInstance.isHistoryEndpointEnabled$ = of(false);
-
       fixture.detectChanges();
 
       expect(
@@ -347,162 +291,37 @@ describe("Bucket Add Component", () => {
       (document.body.querySelector(".mat-menu-content button") as HTMLElement).click();
       fixture.detectChanges();
       expect(
-        fixture.debugElement.query(By.css("mat-toolbar button mat-icon")).nativeElement.textContent
+        fixture.debugElement.query(By.css("div.right-content mat-toolbar button mat-icon"))
+          .nativeElement.textContent
       ).toBe("3d_rotation");
-    });
-
-    it("should show settings of prop1", fakeAsync(() => {
-      fixture.debugElement
-        .query(By.css("mat-list-item.properties mat-expansion-panel:nth-child(1) mat-menu"))
-        .nativeElement.click();
-      fixture.detectChanges();
-
-      tick();
-      fixture.detectChanges();
-
-      expect(
-        document.body.querySelector(
-          "div.mat-menu-content div.mat-menu-item:nth-child(1) mat-checkbox"
-        ).classList
-      ).toContain("mat-checkbox-checked", "should be checked if this property is primary");
-
-      expect(
-        document.body.querySelector(
-          "div.mat-menu-content div.mat-menu-item:nth-child(1) mat-checkbox"
-        ).classList
-      ).toContain("mat-checkbox-disabled", "should be disabled if this property is primary");
-
-      expect(
-        document.body.querySelector(
-          "div.mat-menu-content div.mat-menu-item:nth-child(2) mat-checkbox"
-        ).classList
-      ).toContain("mat-checkbox-checked", "should be checked if this property is visible");
-
-      expect(
-        document.body.querySelector(
-          "div.mat-menu-content div.mat-menu-item:nth-child(3) mat-checkbox"
-        ).classList
-      ).toContain("mat-checkbox-checked", "should be checked if this property is translatable");
-
-      expect(
-        document.body.querySelector(
-          "div.mat-menu-content div.mat-menu-item:nth-child(3) mat-checkbox"
-        ).classList
-      ).toContain("mat-checkbox-disabled", "should be disabled if this property is immutablle");
-
-      expect(
-        document.body.querySelector(
-          "div.mat-menu-content div.mat-menu-item:nth-child(4) mat-checkbox"
-        ).classList
-      ).not.toContain(
-        "mat-checkbox-checked",
-        "should be unchecked if this property isn't read-only"
-      );
-
-      expect(
-        document.body.querySelector(
-          "div.mat-menu-content div.mat-menu-item:nth-child(5) mat-checkbox"
-        ).classList
-      ).toContain("mat-checkbox-checked", "should be checked if this property is required");
-    }));
-
-    it("should make prop2 is primary", () => {
-      fixture.debugElement
-        .query(By.css("mat-list-item.properties mat-expansion-panel:nth-child(2) mat-menu"))
-        .nativeElement.click();
-      fixture.detectChanges();
-      document.body
-        .querySelector<HTMLInputElement>(
-          "div.mat-menu-content div.mat-menu-item:nth-child(1) mat-checkbox input"
-        )
-        .dispatchEvent(new Event("click"));
-      fixture.detectChanges();
-      expect(fixture.componentInstance.bucket.primary).toBe("prop2");
-    });
-
-    it("should make prop2 is visible", () => {
-      const spy = spyOn(fixture.componentInstance, "updatePositionProperties");
-      fixture.debugElement
-        .query(By.css("mat-list-item.properties mat-expansion-panel:nth-child(2) mat-menu"))
-        .nativeElement.click();
-      fixture.detectChanges();
-      document.body
-        .querySelector<HTMLInputElement>(
-          "div.mat-menu-content div.mat-menu-item:nth-child(2) mat-checkbox input"
-        )
-        .dispatchEvent(new Event("click"));
-      fixture.detectChanges();
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(fixture.componentInstance.bucket.properties.prop2.options.visible).toBe(true);
-    });
-
-    it("should make prop2 is required", () => {
-      fixture.debugElement
-        .query(By.css("mat-list-item.properties mat-expansion-panel:nth-child(2) mat-menu"))
-        .nativeElement.click();
-      fixture.detectChanges();
-      document.body
-        .querySelector<HTMLInputElement>(
-          "div.mat-menu-content div.mat-menu-item:nth-child(5) mat-checkbox input"
-        )
-        .dispatchEvent(new Event("click"));
-      fixture.detectChanges();
-      expect(fixture.componentInstance.bucket.required.includes("prop2")).toBe(true);
     });
 
     it("should delete prop1", () => {
       fixture.componentInstance.deleteProperty("prop1");
       fixture.detectChanges();
-      expect(fixture.componentInstance.bucket.properties).toEqual({
-        prop2: {
-          type: "textarea",
-          title: "title of prop2",
-          description: "description of prop2",
-          options: {
-            position: "right",
-            visible: false,
-            translate: false
-          }
-        }
-      });
-      expect(fixture.componentInstance.bucket.primary).toBe(undefined);
-      expect(fixture.componentInstance.bucket.required).toEqual([]);
-    });
 
-    it("should add new property", async () => {
-      await fixture.whenStable();
-      const input = fixture.debugElement
-        .query(By.css("mat-list-item.property mat-form-field input"))
-        .injector.get(NgModel);
-      input.control.setValue("prop3");
-      input.control.markAsTouched();
-      fixture.detectChanges();
-      expect(
-        fixture.debugElement.query(By.css("mat-list-item.property button")).nativeElement.disabled
-      ).toBe(false);
-      fixture.debugElement.query(By.css("mat-list-item.property button")).nativeElement.click();
-      fixture.detectChanges();
-      expect(fixture.componentInstance.bucket.properties["prop3"]).toEqual({
-        type: "string",
-        title: "prop3",
-        description: "Description of prop3",
-        options: {
-          position: "bottom"
-        }
-      });
-      expect(fixture.componentInstance.propertyPositionMap.bottom).toEqual([
-        {
-          key: "prop3",
-          value: {
-            type: "string",
-            description: "Description of prop3",
-            title: "prop3",
+      expect(fixture.componentInstance.bucket).toEqual({
+        _id: "123",
+        title: "my bucket",
+        description: "description",
+        primary: undefined,
+        icon: "myIcon",
+        required: [],
+        readOnly: false,
+        history: true,
+        properties: {
+          prop2: {
+            type: "textarea",
+            title: "title of prop2",
+            description: "description of prop2",
             options: {
-              position: "bottom"
+              position: "right",
+              visible: false,
+              translate: false
             }
           }
         }
-      ]);
+      });
     });
 
     it("should save bucket", async () => {
@@ -522,7 +341,8 @@ describe("Bucket Add Component", () => {
         title: "new title",
         description: "new description",
         readOnly: false,
-        history: false
+        history: false,
+        order: 1
       } as Bucket);
     });
 
@@ -641,26 +461,6 @@ describe("Bucket Add Component", () => {
             )
           ).nativeElement.textContent
         ).toBe(" Length of the description must be greater than 5 character. ");
-      });
-    });
-
-    describe("property", () => {
-      let input: NgModel;
-      beforeEach(() => {
-        input = fixture.debugElement
-          .query(By.css("mat-card mat-list-item.property mat-form-field input"))
-          .injector.get(NgModel);
-      });
-      it("should show required field error", async () => {
-        await fixture.whenStable();
-        input.control.reset();
-        input.control.markAsTouched();
-        fixture.detectChanges();
-        expect(
-          fixture.debugElement.query(
-            By.css("mat-card mat-list-item.property mat-form-field mat-error")
-          ).nativeElement.textContent
-        ).toBe(" Property name is required. ");
       });
     });
 

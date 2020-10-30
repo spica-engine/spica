@@ -9,7 +9,9 @@ import {
   InsertOneWriteOpResult,
   InsertWriteOpResult,
   ObjectId,
-  UpdateQuery
+  UpdateQuery,
+  UpdateOneOptions,
+  FindOneAndUpdateOption
 } from "@spica-server/database";
 
 @Injectable()
@@ -83,6 +85,16 @@ export class BucketDataService {
   updateOne<T = unknown>(bucketId: ObjectId, filter: FilterQuery<T>, update: UpdateQuery<T>) {
     const collection = this.db.collection(getBucketDataCollection(bucketId));
     return collection.updateOne(filter, update);
+  }
+
+  findOneAndUpdate<T = unknown>(
+    bucketId: ObjectId,
+    filter: FilterQuery<T>,
+    update: T | UpdateQuery<T>,
+    options?: FindOneAndUpdateOption
+  ): Promise<T> {
+    const collection = this.db.collection(getBucketDataCollection(bucketId));
+    return collection.findOneAndUpdate(filter, update, options).then(r => r.value);
   }
 }
 

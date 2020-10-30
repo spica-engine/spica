@@ -13,6 +13,7 @@ export interface Bucket {
     [key: string]: JSONSchema7 & PropertyOptions;
   };
   order?: number;
+  required?: string[];
 }
 
 interface PropertyOptions {

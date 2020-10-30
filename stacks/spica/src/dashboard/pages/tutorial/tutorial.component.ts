@@ -121,7 +121,7 @@ export class TutorialComponent implements OnInit, AfterViewInit {
         this.stepper.selected.completed = true;
         this.stepper.next();
         this._snackBar.open(
-          "Congratulations. You have completed the tutorial. Now, you can continue to develop your project.",
+          "Congratulations. You have completed the tutorial. Please follow the documentation to continue development for your project.",
           "",
           {
             duration: 5000

@@ -1,3 +1,42 @@
+::ng-deep {
+  .bucket-card {
+    user-select: none;
+    display: flex;
+    width: 100%;
+    box-shadow: unset !important;
+    height: auto;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent !important;
+    flex-direction: row;
+    padding: 0px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    .bucket-title {
+      flex-direction: column;
+      width: 200px;
+      margin-bottom: 5px;
+      display: flex;
+      > div {
+        display: flex;
+        align-items: center;
+        span {
+          font-size: 1rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-transform: capitalize;
+        }
+      }
+      small {
+        width: 100%;
+        opacity: 0.8;
+        margin-top: 5px;
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
 :host {
   .drag-list {
     list-style-type: none;
@@ -19,8 +58,7 @@
   }
 
   .drag-box {
-    margin: 0 15px;
-    cursor: move;
+    cursor: pointer;
     transition: box-shadow 200ms cubic-bezier(0, 0, 0.2, 1);
   }
 
@@ -31,8 +69,16 @@
   }
 
   .cdk-drop-list {
-    display: flex;
-    padding-bottom: 30px;
+    display: block;
+    width: 100%;
+    padding-bottom: 5px;
+    background: transparent !important;
+
+    div.actions {
+      .drag-button {
+        cursor: move !important;
+      }
+    }
   }
 
   .cdk-drag-preview {
@@ -76,39 +122,9 @@
     div.actions {
       align-self: flex-end;
       margin-top: 50px;
-    }
-  }
-
-  mat-card {
-    width: 280px;
-    height: 180px;
-    float: left;
-    user-select: none;
-    mat-card-title {
-      span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        text-transform: capitalize;
-        font-size: 20px;
+      .drag-button {
+        cursor: move !important;
       }
-      width: 255px;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      .space-between {
-        flex: 1 1 auto;
-      }
-    }
-    mat-card-content p {
-      height: 68px;
-      overflow-wrap: break-word;
-      overflow: hidden;
-    }
-    mat-card-actions {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
     }
   }
 }

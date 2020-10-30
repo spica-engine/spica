@@ -35,7 +35,7 @@
     </mat-list>
 
     <form ngForm #addForm="ngForm">
-      <div class="hint-message">There goes language and other bucket settings</div>
+      <div class="hint-message"></div>
       <mat-form-field>
         <mat-label>Choose Language</mat-label>
         <mat-select ngModel #selectedLanguage="ngModel" name="lang">
@@ -44,15 +44,14 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <button
+        mat-button
+        [disabled]="addForm.invalid || settings.language.available[selectedLanguage.value]"
+        (click)="addLanguage(selectedLanguage.value)"
+      >
+        <mat-icon>add</mat-icon> Add new language to buckets
+      </button>
     </form>
-
-    <button
-      mat-button
-      [disabled]="addForm.invalid || settings.language.available[selectedLanguage.value]"
-      (click)="addLanguage(selectedLanguage.value)"
-    >
-      <mat-icon>add</mat-icon> Add new language
-    </button>
   </mat-card-content>
   <mat-card-actions>
     <button

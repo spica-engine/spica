@@ -1,8 +1,9 @@
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection, BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
-import {BucketService} from "../services";
+import {BucketService, BucketDocument} from "@spica-server/bucket/services";
 import {diff, ChangeKind} from "../history/differ";
+import {HistoryService} from "@spica-server/bucket/history";
 
 export function findRelations(
   schema: any,
@@ -241,4 +242,39 @@ export function provideLanguageChangeUpdater(
 
     return Promise.all(promises);
   };
+}
+
+export async function clearRelations(
+  bucketService: BucketService,
+  bucketId: ObjectId,
+  documentId: ObjectId
+) {
+  let buckets = await bucketService.find({_id: {$ne: bucketId}});
+  if (buckets.length < 1) return;
+
+  for (const bucket of buckets) {
+    let targets = findRelations(bucket.properties, bucketId.toHexString(), "", new Map());
+    if (targets.size < 1) continue;
+
+    for (const [target, type] of targets.entries()) {
+      const updateParams = getUpdateParams(target, type, documentId.toHexString());
+      await bucketService
+        .collection(`bucket_${bucket._id.toHexString()}`)
+        .updateMany(updateParams.filter, updateParams.update);
+    }
+  }
+}
+
+export function createHistory(
+  bs: BucketService,
+  history: HistoryService,
+  bucketId: ObjectId,
+  previousDocument: BucketDocument,
+  currentDocument: BucketDocument
+) {
+  return bs.findOne({_id: bucketId}).then(bucket => {
+    if (bucket && bucket.history) {
+      return history.createHistory(bucketId, previousDocument, currentDocument);
+    }
+  });
 }

@@ -45,7 +45,7 @@ describe("IdentityBadgeComponent", () => {
 
     router = TestBed.get(Router);
 
-    router.navigate = jasmine.createSpy("navigate", router.navigate).and.callThrough();
+    router.navigate = jasmine.createSpy("navigate", router.navigate);
 
     fixture = TestBed.createComponent(IdentityBadgeComponent);
     fixture.detectChanges();

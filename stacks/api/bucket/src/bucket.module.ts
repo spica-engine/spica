@@ -13,6 +13,7 @@ import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {DocumentScheduler} from "./scheduler";
 import {provideLanguageChangeUpdater} from "./utility";
+import {GraphqlController} from "./graphql/graphql";
 
 function assingTitleIfNeeded(schema, name) {
   if (!schema.title) {
@@ -109,7 +110,8 @@ export class BucketModule {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
           inject: [Validator, BucketService]
-        }
+        },
+        GraphqlController
       ],
       exports: [BucketDataService, ServicesModule]
     };
