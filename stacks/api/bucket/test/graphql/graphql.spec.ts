@@ -66,7 +66,7 @@ describe("GraphQLController", () => {
       }
 
       //wait until watcher send changes
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500));
     });
 
     it("should return default response when there is no bucket ", async () => {
@@ -116,7 +116,7 @@ describe("GraphQLController", () => {
         ].map(r => r.body);
 
         //wait until watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 500));
       });
 
       it("should return document that matches with given id", async () => {
@@ -568,7 +568,7 @@ describe("GraphQLController", () => {
           ].map(r => r.body);
 
           //wait until watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 500));
         });
 
         it("should return documents with english titles", async () => {
@@ -907,7 +907,7 @@ describe("GraphQLController", () => {
           ]);
 
           //wait until watcher send changes
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 500));
         });
 
         it("should get book with its own publisher", async () => {
@@ -1348,7 +1348,7 @@ describe("GraphQLController", () => {
         let scheduledDocument;
         beforeEach(async () => {
           //change this api request with graphql request after complete the support for inserting schedule document from graphql
-          let tomorrow = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
+          let tomorrow = new Date(new Date().getTime() + 24 * 60 * 60 * 5000);
           scheduledDocument = await req
             .post(`/bucket/${bucket._id}/data`, {name: "Julian", age: 77, _schedule: tomorrow})
             .then(r => r.body);
@@ -1448,7 +1448,7 @@ describe("GraphQLController", () => {
         bucketName = getBucketName(bucket._id);
 
         //wait until watcher send changes
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 500));
       });
 
       afterEach(async () => {
