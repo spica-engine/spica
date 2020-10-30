@@ -19,10 +19,7 @@ async function get({args}: ActionParameters) {
         resource.plural == kind ||
         resource.shortNames.indexOf(kind) != -1
       ) {
-        const {rows, columns} = await printTable(
-          `${group.name}/${preferredVersion}`,
-          resource
-        );
+        const {rows, columns} = await printTable(`${group.name}/${preferredVersion}`, resource);
         if (kind == "all") {
           console.log(`${resource.plural.toLocaleUpperCase()}`);
         }

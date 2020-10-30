@@ -57,7 +57,6 @@ export namespace request {
     );
   }
 
-
   export async function put<T>(url: string, body?: object, headers?: HeaderInit): Promise<T> {
     headers = headers || {};
     headers["Content-type"] = "application/json";

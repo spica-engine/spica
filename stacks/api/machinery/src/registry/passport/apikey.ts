@@ -4,7 +4,6 @@ import {ResourceDefinition} from "../../definition";
 export namespace v1 {
   export const Schema: JSONSchema7 = {
     $schema: "http://json-schema.org/draft-07/schema#",
-    $id: "http://spica.internal/passport/apikey",
     type: "object",
     required: ["name"],
     properties: {
@@ -13,10 +12,6 @@ export namespace v1 {
       },
       description: {
         type: "string"
-      },
-      active: {
-        type: "boolean",
-        default: true
       }
     },
     additionalProperties: false

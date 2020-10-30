@@ -8,9 +8,14 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
-import { request } from "../request";
-import { formatFailureStatus, formatValidationErrors, isFailureStatus, isValidationError } from "../status";
-import { Resource } from "./api-resources";
+import {request} from "../request";
+import {
+  formatFailureStatus,
+  formatValidationErrors,
+  isFailureStatus,
+  isValidationError
+} from "../status";
+import {Resource} from "./api-resources";
 
 async function apply({options}: ActionParameters) {
   const filename = path.relative(process.cwd(), options.filename as string);
@@ -19,8 +24,6 @@ async function apply({options}: ActionParameters) {
 
   for (const document of documents) {
     const {apiVersion, kind, metadata, spec} = document.toJSON();
-
-
 
     const resourceList = await request.get<any>(`http://localhost:4300/apis/${apiVersion}`);
 
@@ -69,10 +72,9 @@ async function apply({options}: ActionParameters) {
         type = "replaced";
       }
     }
-    
 
     if (isFailureStatus(result)) {
-      if ( isValidationError(result) ) {
+      if (isValidationError(result)) {
         return console.error(formatValidationErrors(result, document, rawDocument, filename));
       } else {
         return console.error(formatFailureStatus(result));

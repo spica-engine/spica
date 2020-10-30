@@ -66,7 +66,7 @@ export function getCustomKeywords(validator: Validator) {
             }
 
             return true;
-          }
+          };
         }
       } as any
     }

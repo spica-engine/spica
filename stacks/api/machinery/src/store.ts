@@ -33,8 +33,10 @@ export class Store<SpecType = unknown, StatusType = unknown> {
     const result = (await this.store.findOne({
       _id: `${this.groupKey}ɵ${name}`
     })) as Resource<SpecType, StatusType>;
-    // it is there. i know it
-    delete result["_id"];
+    if (result) {
+      // it is there. i know it
+      delete result["_id"];
+    }
     return result;
   }
 
@@ -55,18 +57,17 @@ export class Store<SpecType = unknown, StatusType = unknown> {
         const value = partialPatch[name];
         const type = typeof value;
 
-        if (value == null) { 
+        if (value == null) {
           unset[key] = "";
-        } else if (type == "boolean" || type == "string" || type == "number" || type == "bigint") {
+        } else if (type == "boolean" || type == "string" || type == "number" || type == "bigint") {
           set[key] = value;
-        } else if ( Array.isArray(value) ) {
+        } else if (Array.isArray(value)) {
           throw new Error("TODO: handle arrays");
-        } else if ( typeof value == "object" ) {
+        } else if (typeof value == "object") {
           visit(value, key);
         }
       }
-    }
-
+    };
 
     visit(patch);
 

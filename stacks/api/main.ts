@@ -4,15 +4,8 @@ import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {
-  CREATED_AT,
-  UPDATED_AT
-} from "@spica-server/core/schema/defaults";
-import {  
-  DATE_TIME,
-  OBJECTID_STRING,
-  OBJECT_ID
-} from "@spica-server/core/schema/formats";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
@@ -296,7 +289,10 @@ const modules = [
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
-    poolSize: args["database-pool-size"]
+    poolSize: args["database-pool-size"],
+    appname: "spica",
+    useNewUrlParser: true,
+    ["useUnifiedTopology" as any]: true
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
@@ -365,26 +361,29 @@ if (args["cert-file"] && args["key-file"]) {
     cert: fs.readFileSync(args["key-file"])
   };
 }
+
 NestFactory.create(RootModule, {
   httpsOptions,
   bodyParser: false,
   logger: false
-}).then(app => {
-  app.useWebSocketAdapter(new WsAdapter(app));
-  app.use(
-    Middlewares.Preflight({
-      allowedOrigins: args["cors-allowed-origins"],
-      allowedMethods: args["cors-allowed-methods"],
-      allowedHeaders: args["cors-allowed-headers"],
-      allowCredentials: args["cors-allow-credentials"]
-    }),
-    Middlewares.JsonBodyParser({
-      limit: args["payload-size-limit"],
-      ignoreUrls: [
-        /$\/storage/
-      ]
-    }),
-    Middlewares.MergePatchJsonParser(args["payload-size-limit"])
-  );
-  app.listen(args.port);
-});
+})
+  .then(app => {
+    app.useWebSocketAdapter(new WsAdapter(app));
+    app.use(
+      Middlewares.Preflight({
+        allowedOrigins: args["cors-allowed-origins"],
+        allowedMethods: args["cors-allowed-methods"],
+        allowedHeaders: args["cors-allowed-headers"],
+        allowCredentials: args["cors-allow-credentials"]
+      }),
+      Middlewares.JsonBodyParser({
+        limit: args["payload-size-limit"],
+        ignoreUrls: [/$\/storage/]
+      }),
+      Middlewares.MergePatchJsonParser(args["payload-size-limit"])
+    );
+    return app.listen(args.port);
+  })
+  .then(() => {
+    console.log(`: APIs are ready on port ${args.port}`);
+  });

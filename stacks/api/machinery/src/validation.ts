@@ -1,57 +1,82 @@
-import { ValidationError as _ValidationError, Validator, ErrorObject } from "@spica-server/core/schema";
-import { Resource } from "./definition";
-import { getVersionFromScheme, Scheme } from "./scheme";
-import { badRequest } from "./status";
+import {
+  ErrorObject,
+  ValidationError as _ValidationError,
+  Validator,
+  _
+} from "@spica-server/core/schema";
+import {Resource} from "./definition";
+import {getVersionFromScheme, Scheme} from "./scheme";
+import {badRequest} from "./status";
 
-export interface ValidationOptions {scheme: Scheme, versionName: string, object: Resource<object, unknown>}
+export interface ValidationOptions {
+  scheme: Scheme;
+  versionName: string;
+  object: Resource<object, unknown>;
+}
 
 export interface DataError {
-    path: string;
-    message: string;
+  path: string;
+  message: string;
 }
 
 export async function validate({object, scheme, versionName}: ValidationOptions): Promise<void> {
-    const version = getVersionFromScheme(scheme, versionName);
-    const validator = new Validator({schemas: version.additionalSchemas});
-    try {
-        await validator.validate(version.schema, object.spec);
-    } catch (e) {
-        if ( e instanceof _ValidationError ) {
-        
-            throw badRequest({
-                message: e.message,
-                reason: 'Invalid',
-                details: {
-                    errors: e.errors.map(mapErrorObjectToDataError)
-                }
-            })
+  const version = getVersionFromScheme(scheme, versionName);
+  const validator = new Validator({schemas: version.additionalSchemas}, {});
+  try {
+    await validator.validate(version.schema, object.spec);
+  } catch (e) {
+    if (e instanceof _ValidationError) {
+      throw badRequest({
+        message: "Validation error",
+        reason: "Invalid",
+        details: {
+          errors: e.errors.map(mapErrorObjectToDataError)
         }
-
-        throw badRequest({
-            message: e.message,
-            reason: 'Invalid',
-            details: {
-                error: e,
-                params: e.constructor.name
-            }
-        })
+      });
     }
+
+    throw badRequest({
+      message: e.message,
+      reason: "Invalid",
+      details: {
+        error: e,
+        params: e.constructor.name
+      }
+    });
+  }
 }
 
+// function groupErrors(errors: Partial<ErrorObject>[]): Partial<ErrorObject>[] {
+//     const oneOfIndex = errors.findIndex(error => error.keyword == "oneOf" );
+//     if ( oneOfIndex != -1 ) {
+//         const oneOf = errors[oneOfIndex];
+//         const oneOfRelatedErrors = errors.filter((error, index) => error.dataPath == oneOf.dataPath && index != oneOfIndex);
+//         if (! oneOf.params.passingSchemas ) {
+//             oneOf.message = `either ${oneOfRelatedErrors.map(error => error.message).join(" or ")}`;
+//             errors = errors.filter((error, index) => error.dataPath != oneOf.dataPath || index == oneOfIndex);
+//         } else {
+//             console.log(oneOf);
+//         }
+
+//     }
+
+//     return errors;
+// }
+
 function mapErrorObjectToDataError(error: ErrorObject): DataError {
-    const path = `.spec${error.dataPath.replace(/\//g, ".")}`;
-    let message: string = error.message;
+  const path = `.spec${error.dataPath.replace(/\//g, ".")}`;
+  let message: string = error.message;
 
-    switch (error.keyword) {
-        case "enum":
-            message = `${message} (${error.params.allowedValues.join(", ")})`; 
-            break;
-        default:
-            break;
-    }
+  switch (error.keyword) {
+    case "enum":
+      message = `${message} (${error.params.allowedValues.join(", ")})`;
+      break;
+    default:
+      break;
+  }
 
-    return {
-        path,
-        message
-    }
+  return {
+    path,
+    message
+  };
 }

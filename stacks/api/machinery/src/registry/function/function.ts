@@ -1,19 +1,10 @@
 import {JSONSchema7} from "json-schema";
-import { ResourceDefinition } from "../../definition";
-
+import {ResourceDefinition} from "../../definition";
 
 const FunctionV1: JSONSchema7 = {
   $schema: "http://json-schema.org/draft-07/schema",
-  $id: "http://example.com/example.json",
   type: "object",
-  required: [
-    "title",
-    "description",
-    "timeout",
-    "runtime",
-    "dependency",
-    "environment"
-  ],
+  required: ["title", "description", "timeout", "runtime"],
   properties: {
     title: {
       $id: "#/properties/title",
@@ -25,7 +16,8 @@ const FunctionV1: JSONSchema7 = {
     },
     timeout: {
       $id: "#/properties/timeout",
-      type: "integer"
+      type: "integer",
+      default: 10
     },
     runtime: {
       $id: "#/properties/runtime",
@@ -34,7 +26,8 @@ const FunctionV1: JSONSchema7 = {
       properties: {
         name: {
           $id: "#/properties/runtime/properties/name",
-          type: "string"
+          type: "string",
+          enum: ["Node"]
         },
         version: {
           $id: "#/properties/runtime/properties/version",
@@ -42,13 +35,15 @@ const FunctionV1: JSONSchema7 = {
         },
         language: {
           $id: "#/properties/runtime/properties/language",
-          type: "string"
+          type: "string",
+          enum: ["Javascript", "Typescript"]
         }
       }
     },
     dependency: {
       $id: "#/properties/dependency",
       type: "array",
+      default: [],
       items: {
         $id: "#/properties/dependency/items",
         type: "object",
@@ -68,10 +63,12 @@ const FunctionV1: JSONSchema7 = {
     environment: {
       $id: "#/properties/environment",
       type: "array",
+      default: [],
       items: {
         $id: "#/properties/environment/items",
         type: "object",
-        required: ["name", "value"],
+        required: ["name"],
+        oneOf: [{required: ["value"]}, {required: ["valueFrom"]}],
         properties: {
           name: {
             $id: "#/properties/environment/items/properties/name",
@@ -80,6 +77,31 @@ const FunctionV1: JSONSchema7 = {
           value: {
             $id: "#/properties/environment/items/properties/value",
             type: "string"
+          },
+          valueFrom: {
+            $id: "#/properties/environment/items/properties/valueFrom",
+            type: "object",
+            required: ["resourceFieldRef"],
+            properties: {
+              resourceFieldRef: {
+                $id:
+                  "#/properties/environment/items/properties/valueFrom/properties/resourceFieldRef",
+                type: "object",
+                oneOf: [{required: ["bucketName"]}, {required: ["apiKeyName"]}],
+                properties: {
+                  bucketName: {
+                    $id:
+                      "#/properties/environment/items/properties/valueFrom/properties/resourceFieldRef/properties/bucketName",
+                    type: "string"
+                  },
+                  apiKeyName: {
+                    $id:
+                      "#/properties/environment/items/properties/valueFrom/properties/resourceFieldRef/properties/apiKeyName",
+                    type: "string"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -113,7 +135,7 @@ export const Function: ResourceDefinition = {
           type: "string",
           description: "",
           jsonPath: ".spec.runtime.name",
-          priority: 0,
+          priority: 0
         },
         {
           name: "runtime version",

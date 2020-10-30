@@ -1,4 +1,4 @@
-import { getLineNumberAndColumnFromRange } from "./range";
+import {getLineNumberAndColumnFromRange} from "./range";
 
 export interface Status<Details = StatusDetails> {
   metadata?: StatusMetadata;
@@ -40,17 +40,22 @@ export function formatFailureStatus(status: Status) {
   return `Error from server (${status.reason}): ${status.message}`;
 }
 
-
 export function isValidationError(object: unknown): object is Status {
-  return isFailureStatus(object) && object.reason == "Invalid" && Array.isArray(object.details.errors);
+  return (
+    isFailureStatus(object) && object.reason == "Invalid" && Array.isArray(object.details.errors)
+  );
 }
 
-
-export function formatValidationErrors(status: Status, document: any, documentContent: string, documentName: string) {
+export function formatValidationErrors(
+  status: Status,
+  document: any,
+  documentContent: string,
+  documentName: string
+) {
   const errors = [];
   for (const error of status.details.errors as any[]) {
     const range = getRange(document, documentContent, error.path).join(":");
-    errors.push(`./${documentName}:${range} - ${error.path} ${error.message}`)
+    errors.push(`./${documentName}:${range} - ${error.path} ${error.message}`);
   }
   return `Error from server (${status.reason}): ${status.message}\n${errors.join("\n")}`;
 }

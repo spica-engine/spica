@@ -22,7 +22,7 @@ abstract class MixinValidator {
         this.validator.removeSchema("");
         return value;
       })
-      .catch((error) => {
+      .catch(error => {
         this.validator.removeSchema("");
         throw new BadRequestException(error);
       });

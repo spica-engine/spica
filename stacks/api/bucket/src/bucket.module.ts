@@ -14,8 +14,24 @@ import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema
 import {DocumentScheduler} from "./scheduler";
 import {provideLanguageChangeUpdater} from "./utility";
 
+function assingTitleIfNeeded(schema, name) {
+  if (!schema.title) {
+    schema.title = name;
+  }
+
+  if (schema.type == "object") {
+    for (const propertyName in schema.properties) {
+      const prop = schema.properties[propertyName];
+      assingTitleIfNeeded(prop, propertyName);
+    }
+  } else if (schema.type == "array") {
+    assingTitleIfNeeded(schema.items, name);
+  }
+}
+
 async function v1_schema_to_internal(obj): Promise<Bucket> {
   const {spec} = obj;
+
   const store = new Store({group: "bucket", resource: "schemas"});
 
   const raw = {...spec, properties: {...spec.properties}};
@@ -37,22 +53,21 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
       };
     }
 
-    if (!property.title) {
-      property.title = propertyName;
-    }
+    assingTitleIfNeeded(property, propertyName);
 
     raw.properties[propertyName] = property;
 
     if (property.type == "relation" && typeof property.bucket == "object") {
-      const bucketName = property.bucket.valueFrom.resourceFieldRef.bucketName;
+      const bucketName = property.bucket.resourceFieldRef.bucketName;
 
       const relatedBucket = await store.get(bucketName);
 
       raw.properties[propertyName] = {
         ...property,
-        bucketId: relatedBucket.metadata.uid,
-        bucket: undefined
+        bucketId: relatedBucket.metadata.uid
       };
+
+      delete raw.properties[propertyName].bucket;
     }
   }
 
@@ -124,9 +139,9 @@ export class BucketModule {
           const bkt = await bs.insertOne(bucketSchemaInternal);
           const st = store({
             group: "bucket",
-            resource: "schemas",
+            resource: "schemas"
           });
-          await st.patch(obj.metadata.name, {metadata: {uid: String(bkt._id)}, status: 'Ready'});
+          await st.patch(obj.metadata.name, {metadata: {uid: String(bkt._id)}, status: "Ready"});
         },
         update: async (_, newObj: any) => {
           const bucketSchemaInternal = await v1_schema_to_internal(newObj);

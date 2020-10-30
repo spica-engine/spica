@@ -1,6 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
 import {default as Ajv, KeywordDefinition} from "ajv";
-import { ValidationError } from "ajv/dist/compile/error_classes";
+import {ValidationError} from "ajv/dist/compile/error_classes";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
 import {skip, take} from "rxjs/operators";
@@ -15,8 +15,9 @@ import {
   SCHEMA_MODULE_OPTIONS,
   UriResolver
 } from "./interface";
-export {ErrorObject} from "ajv";
+export {ErrorObject, _} from "ajv";
 export {ValidationError} from "ajv/dist/compile/error_classes";
+import formats from "ajv-formats";
 
 @Injectable()
 export class Validator {
@@ -32,30 +33,36 @@ export class Validator {
     @Inject(SCHEMA_MODULE_OPTIONS) local: ModuleOptions = {},
     @Optional() @Inject(GLOBAL_SCHEMA_MODULE_OPTIONS) global: ModuleOptions = {}
   ) {
-    this._defaults =  new Map<string, Default>(
+    this._defaults = new Map<string, Default>(
       [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.match, def])
     );
     this._ajv = new Ajv({
       removeAdditional: true,
       useDefaults: true,
       loadSchema: uri => this._fetch(uri),
-      formats: new Array<Format>().concat(local.formats || []).concat(global.formats || []).reduce((formats, format) => {
-        formats[format.name] = format;
-        return formats;
-      }, {}),
-      schemas: new Array().concat(local.schemas|| []).concat(global.schemas|| []),
-      ['defaults' as any]: this._defaults,
+      formats: new Array<Format>()
+        .concat(local.formats || [])
+        .concat(global.formats || [])
+        .reduce((formats, format) => {
+          formats[format.name] = format;
+          return formats;
+        }, {}),
+      schemas: new Array().concat(local.schemas || []).concat(global.schemas || []),
+      ["defaults" as any]: this._defaults,
       strict: false
     });
- 
-    for (const keyword of new Array<Keyword>().concat(local.keywords|| []).concat(global.keywords|| [])) {
-      this.registerKeyword(keyword.name, keyword)
+
+    for (const keyword of new Array<Keyword>()
+      .concat(local.keywords || [])
+      .concat(global.keywords || [])) {
+      this.registerKeyword(keyword.name, keyword);
     }
 
     this._ajv.removeKeyword("default");
     this._ajv.addKeyword(defaultVocabulary);
     this._ajv.removeKeyword("format");
     this._ajv.addKeyword(formatVocabulary);
+    formats(this._ajv, {formats: ["date-time", "regex"]});
   }
 
   private _fetch(uri: string): Promise<Object> {
@@ -89,20 +96,26 @@ export class Validator {
     this._defaults.set(def.match, def);
   }
 
-  registerKeyword(name: string, def: KeywordDefinition) {
-    this._ajv.removeKeyword(name);
-    this._ajv.addKeyword(name, def);
+  registerKeyword(def: KeywordDefinition): void;
+  registerKeyword(name: string, def: KeywordDefinition): void;
+  registerKeyword(nameOrDef: string | KeywordDefinition, def?: KeywordDefinition): void {
+    if (typeof nameOrDef == "string") {
+      this._ajv.removeKeyword(nameOrDef);
+    } else {
+      this._ajv.removeKeyword(def.keyword as string);
+    }
+    this._ajv.addKeyword(def);
   }
 
   removeSchema(schemaUri?: string) {
     this._ajv.removeSchema(schemaUri);
   }
 
-  async validate<T = unknown>(schema: object, value: T): Promise<void>{
+  async validate<T = unknown>(schema: object, value: T): Promise<void> {
     const validate = await this._ajv.compileAsync(schema);
     try {
       const valid = validate(value);
-      if ( !valid ) {
+      if (!valid) {
         throw new ValidationError(validate.errors);
       }
     } catch (e) {

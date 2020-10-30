@@ -16,8 +16,8 @@ export interface ObjectMeta {
 }
 
 export interface Resource<SpecType = unknown, StatusType = unknown> extends TypeMeta, ObjectMeta {
-  spec: SpecType,
-  status?: StatusType
+  spec: SpecType;
+  status?: StatusType;
 }
 
 export interface ResourceDefinition {
@@ -43,9 +43,9 @@ export interface ResourceDefinitionVersion {
 
 export interface ColumnDefinition {
   name: string;
-  type: "integer" | "number" | "string" | "boolean" | "date";
+  type: "integer" | "number" | "string" | "boolean" | "date";
   description: string;
   jsonPath: string;
   priority?: number;
-  format?: "int32" | "int64" | "float" | "double" | "byte" | "date" | "date-time" | "password"
+  format?: "int32" | "int64" | "float" | "double" | "byte" | "date" | "date-time" | "password";
 }

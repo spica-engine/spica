@@ -2725,12 +2725,12 @@ ajv-errors@^1.0.0:
   resolved "https://registry.yarnpkg.com/ajv-errors/-/ajv-errors-1.0.1.tgz#f35986aceb91afadec4102fbd85014950cefa64d"
   integrity sha512-DCRfO/4nQ+89p/RK43i8Ezd41EqdGIU4ld7nGF8OQ14oc/we5rEntLCUa7+jrn3nn83BosfwZA0wb4pon2o8iQ==
 
-ajv-formats@^0.3.4:
-  version "0.3.4"
-  resolved "https://registry.yarnpkg.com/ajv-formats/-/ajv-formats-0.3.4.tgz#6ccb2c60f7da7cffaf73bb2d04f1a6c6e9d2b156"
-  integrity sha512-iLcquk0mWlX4Xs4FeV8ipDx2jrk9YtuaAnl/bu7ZmKbv3K9uOFJ8LddhQSr+WMV35OdjOi6G/jVszNnb03089g==
+ajv-formats@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/ajv-formats/-/ajv-formats-0.4.0.tgz#f2e992b4b755117f33f2cdce2e67ce4549c93bca"
+  integrity sha512-jpnvtETr71E0RhFHk0qQ9XzFShVYq3MH9/mOIUPFMluBSzQz6/dNN/3EnKQ1awzz2DAtoIMBD7tKMKGtUIx/UQ==
   dependencies:
-    ajv "^7.0.0-beta.0"
+    ajv "^7.0.0-beta.2"
 
 ajv-keywords@^3.1.0, ajv-keywords@^3.4.1:
   version "3.4.1"
@@ -2767,10 +2767,10 @@ ajv@^6.5.5:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^7.0.0-beta.0, ajv@^7.0.0-beta.1:
-  version "7.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/ajv/-/ajv-7.0.0-beta.1.tgz#7427b34592edaf2eaa97655ec398e5d17991b817"
-  integrity sha512-rKX+VjvPBBBTw+fXQ1b37Z9sarOr49/1QP5Clb1PSy/f8pKiU/+cQ2uBIFtX3QanL/3/LW+mKiw/G8gwRdyTEA==
+ajv@^7.0.0-beta.2:
+  version "7.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-7.0.0-beta.2.tgz#709980b7850183a027631160c01954409c05cfac"
+  integrity sha512-QNYgGgTZ370cYyxsIpQWt8HG7fxBlYrb3wW/SVxsAJ9qqVh8bmbszwNWut93EEhK+rTOY2IKj+SOQRo/7mvQiw==
   dependencies:
     fast-deep-equal "^3.1.1"
     json-schema-traverse "^0.5.0"

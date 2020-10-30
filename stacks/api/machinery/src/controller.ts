@@ -29,7 +29,7 @@ import {
 import {alreadyExists, isStatusKind, notFound, status, StatusMetadata} from "./status";
 import {Store, __setDb} from "./store";
 import {acceptsTable, table} from "./table";
-import { validate } from "./validation";
+import {validate} from "./validation";
 
 const DEBUG = true;
 
@@ -258,7 +258,6 @@ export class ApiMachineryObjectController {
     }
 
     await validate({scheme, versionName, object});
-
 
     if (scheme.prepareForCreate) {
       scheme.prepareForCreate(object);

@@ -3,11 +3,14 @@ import * as columnify from "columnify";
 import * as ora from "ora";
 import * as util from "util";
 
-
 export function spin(options?: ora.Options): ora.Ora;
 export function spin<T = any>(options?: ora.Options & {op: Promise<T>}): Promise<T>;
-export function spin<T = any>(options?: ora.Options & {op: (spinner: ora.Ora) => Promise<T>}): Promise<T>;
-export function spin(options?: ora.Options & {op?: Promise<unknown> | ((spinner: ora.Ora) => Promise<unknown>)}) {
+export function spin<T = any>(
+  options?: ora.Options & {op: (spinner: ora.Ora) => Promise<T>}
+): Promise<T>;
+export function spin(
+  options?: ora.Options & {op?: Promise<unknown> | ((spinner: ora.Ora) => Promise<unknown>)}
+) {
   const spinner = ora({...options, color: options.color || "yellow"});
   if (typeof options.op == "function") {
     options.op = options.op(spinner);
@@ -32,9 +35,7 @@ export function spin(options?: ora.Options & {op?: Promise<unknown> | ((spinner:
   return spinner.start();
 }
 
-
 export class Logger extends console.Console {
-
   error(message?: any, ...optionalParams: any[]) {
     super.error(bold(red(util.format(message, ...optionalParams))));
   }
@@ -57,4 +58,3 @@ export class Logger extends console.Console {
 }
 
 globalThis.console = new Logger(process.stdout, process.stderr);
-

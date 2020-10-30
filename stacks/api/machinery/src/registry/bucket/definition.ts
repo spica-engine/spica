@@ -1,7 +1,7 @@
-import {JSONSchema7, JSONSchema7Definition} from "json-schema";
+import {JSONSchema7} from "json-schema";
 import {ResourceDefinition} from "../../definition";
 
-const bucketSchema:JSONSchema7Definition = { 
+const bucketSchema: JSONSchema7 = {
   $id: "bucket-meta-schema",
   title: "Bucket schema meta-schema",
   definitions: {
@@ -72,8 +72,9 @@ const bucketSchema:JSONSchema7Definition = {
     },
     default: true,
     readOnly: {
-      type: "boolean",
-      default: false
+      type: "boolean"
+      // Unsupported
+      // default: false
     },
     examples: {
       type: "array",
@@ -113,15 +114,16 @@ const bucketSchema:JSONSchema7Definition = {
     // additionalItems: {$ref: "#"},
 
     items: {
-      anyOf: [{$ref: "#"}, {$ref: "#/definitions/schemaArray"}],
+      anyOf: [{$ref: "#"}, {$ref: "#/definitions/schemaArray"}]
       // Unsupported
       // default: true
     },
     maxItems: {$ref: "#/definitions/nonNegativeInteger"},
     minItems: {$ref: "#/definitions/nonNegativeIntegerDefault0"},
     uniqueItems: {
-      type: "boolean",
-      default: false
+      type: "boolean"
+      // Unsupported
+      //default: false
     },
 
     // Unsupported
@@ -141,8 +143,45 @@ const bucketSchema:JSONSchema7Definition = {
 
     properties: {
       type: "object",
-      additionalProperties: {$ref: "#"},
-      default: {}
+      additionalProperties: {$ref: "#"}
+      // Unsupported
+      //default: {}
+    },
+
+    // Supported by bucket
+    options: {
+      type: "object",
+      properties: {
+        visible: {
+          type: "boolean"
+        },
+        translate: {
+          type: "boolean"
+        },
+        history: {
+          type: "boolean"
+        },
+        position: {
+          type: "string",
+          enum: ["left", "right", "bottom"]
+        }
+      }
+    },
+    icon: {
+      type: "string"
+    },
+    bucket: {
+      type: "object",
+      required: ["resourceFieldRef"],
+      properties: {
+        resourceFieldRef: {
+          type: "object",
+          required: ["bucketName"],
+          properties: {
+            bucketName: {type: "string"}
+          }
+        }
+      }
     },
 
     // Unsupported
@@ -197,25 +236,14 @@ const bucketSchema:JSONSchema7Definition = {
     // anyOf: {$ref: "#/definitions/schemaArray"},
     // oneOf: {$ref: "#/definitions/schemaArray"},
     // not: {$ref: "#"}
-  },
+  }
 
   // Unsupported
   // default: true
 };
 
 export namespace v1 {
-  export const SchemaSchema: JSONSchema7 = {
-    type: 'object',
-    properties: {
-      properties: {
-        patternProperties: {
-          "^[a-zA-Z_\\-][a-zA-Z_\\-0-9]*$": {
-            $ref: "bucket-meta-schema"
-          }
-        }
-      }
-    }
-  };
+  export const SchemaSchema: JSONSchema7 = bucketSchema;
 
   export type Schema = any;
 }
@@ -232,7 +260,6 @@ export const Bucket: ResourceDefinition = {
     {
       name: "v1",
       schema: v1.SchemaSchema,
-      additionalSchemas: [bucketSchema],
       current: true,
       additionalPrinterColumns: [
         {

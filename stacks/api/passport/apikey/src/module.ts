@@ -49,7 +49,11 @@ export class ApiKeyModule {
         },
         update: async (_, newObj) => {
           const raw = v1_apikey_to_internal(newObj);
+          delete raw.key;
           await apiKeyService.updateOne({_id: new ObjectId(newObj.metadata.uid)}, {$set: raw});
+        },
+        delete: async obj => {
+          await apiKeyService.deleteOne({_id: new ObjectId(obj.metadata.uid)});
         }
       }
     );

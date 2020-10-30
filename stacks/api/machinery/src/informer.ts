@@ -1,4 +1,4 @@
-import { GroupResource, GroupVersionResource } from "./scheme";
+import {GroupResource, GroupVersionResource} from "./scheme";
 
 const informers = new Set<{
   groupVersionResource: GroupVersionResource;
