@@ -68,7 +68,7 @@ describe("ClipboardDirective", () => {
 
     it("should prepare input element for copying", () => {
       const input = component.directive.prepareElement("test123");
-      expect(input.tagName).toBe("INPUT");
+      expect(input.tagName).toBe("TEXTAREA");
       expect(input.value).toBe("test123");
     });
 

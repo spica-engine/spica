@@ -22,9 +22,11 @@ import {InputModule} from "@spica-client/common/input";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {EditorComponent} from "../../components/editor/editor.component";
-import {FunctionService} from "../../function.service";
-import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
+import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
+import {Store} from "@ngrx/store";
+import {examples} from "../../examples/examples";
+import {MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {LogViewComponent} from "../log-view/log-view.component";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {MatOptionModule, MatNativeDateModule} from "@angular/material/core";
@@ -74,18 +76,22 @@ describe("Function Add", () => {
       ],
       providers: [
         {
-          provide: FunctionService,
-          useValue: {
-            information: () => {
-              return of();
-            }
-          }
+          provide: Store,
+          useValue: {}
+        },
+        {
+          provide: WEBSOCKET_INTERCEPTOR,
+          useValue: {}
         },
         {
           provide: ActivatedRoute,
           useValue: {
             params: of()
           }
+        },
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {}
         },
         {
           provide: FUNCTION_OPTIONS,
@@ -103,6 +109,7 @@ describe("Function Add", () => {
         CanInteractDirectiveTest
       ]
     }).compileComponents();
+
     fixture = TestBed.createComponent(AddComponent);
   });
 
@@ -154,6 +161,108 @@ describe("Function Add", () => {
     ]);
 
     expect(fixture.componentInstance.isHandlerDuplicated).toBe(false);
+  });
+
+  describe("example codes", () => {
+    let getExample;
+    beforeEach(() => {
+      getExample = fixture.componentInstance["functionService"].getExample;
+    });
+
+    it("should get system example code ", () => {
+      let trigger = {
+        type: "system"
+      };
+      let code = getExample(trigger as any);
+      expect(code).toEqual(examples.system);
+    });
+
+    it("should return information about unknown trigger", () => {
+      let trigger = {
+        type: "unknown",
+        options: {}
+      };
+      let code = getExample(trigger as any);
+      expect(code).toEqual("Example code does not exist for this trigger.");
+    });
+
+    describe("bucket", () => {
+      it("should return information about missing inputs", () => {
+        let trigger = {
+          type: "bucket",
+          options: {}
+        };
+        let code = getExample(trigger as any);
+        expect(code).toEqual("Select the phase and operation type to display example code.");
+      });
+
+      describe("before", () => {
+        it("should get insert example code", () => {
+          let trigger = {
+            type: "bucket",
+            options: {
+              phase: "BEFORE",
+              type: "INSERT"
+            }
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual(examples.bucket.BEFORE.INSERT);
+        });
+
+        it("should return information about missing inputs", () => {
+          let trigger = {
+            type: "bucket",
+            options: {phase: "BEFORE"}
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual("Select the phase and operation type to display example code.");
+        });
+      });
+      describe("after", () => {
+        it("should get all example code", () => {
+          let trigger = {
+            type: "bucket",
+            options: {
+              phase: "AFTER",
+              type: "ALL"
+            }
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual(examples.bucket.AFTER.ALL);
+        });
+
+        it("should return information about missing inputs", () => {
+          let trigger = {
+            type: "bucket",
+            options: {phase: "AFTER"}
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual("Select the phase and operation type to display example code.");
+        });
+      });
+    });
+
+    describe("database", () => {
+      it("should get delete example code", () => {
+        let trigger = {
+          type: "database",
+          options: {
+            type: "DELETE"
+          }
+        };
+        let code = getExample(trigger as any);
+        expect(code).toEqual(examples.database.DELETE);
+      });
+
+      it("should return information about missing inputs", () => {
+        let trigger = {
+          type: "database",
+          options: {}
+        };
+        let code = getExample(trigger as any);
+        expect(code).toEqual("Select an operation type to display example code.");
+      });
+    });
   });
 
   //  it("enter should not add trigger", () => {
