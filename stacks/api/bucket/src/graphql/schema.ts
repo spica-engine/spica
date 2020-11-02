@@ -281,8 +281,6 @@ export function getProjectAggregation(requestedFields: string[][]) {
   return {$project: result};
 }
 
-
-
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
   let bucketProperties = bucket.properties;
   if (ObjectId.isValid(bucket._id)) {
