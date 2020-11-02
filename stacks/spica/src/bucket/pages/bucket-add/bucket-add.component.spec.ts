@@ -110,11 +110,6 @@ describe("BucketAddComponent", () => {
         {
           provide: BucketService,
           useValue: {
-            getPredefinedDefaults: jasmine
-              .createSpy("getPredefinedDefaults")
-              .and.returnValues(
-                of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "type2"}])
-              ),
             getBucket: jasmine.createSpy("getBucket").and.returnValue(of(myBucket)),
             replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket)),
             getBuckets: jasmine.createSpy("getBuckets").and.returnValue(of([myBucket]))
@@ -142,20 +137,6 @@ describe("BucketAddComponent", () => {
 
   describe("basic behaviours", () => {
     it("should be defined when component created", () => {
-      expect(fixture.componentInstance.predefinedDefaults).toEqual({
-        type: [
-          {
-            keyword: "keyword",
-            type: "type"
-          }
-        ],
-        type2: [
-          {
-            keyword: "keyword2",
-            type: "type2"
-          }
-        ]
-      });
       expect(fixture.componentInstance.bucket).toEqual(myBucket as Bucket);
       expect(fixture.componentInstance.propertyPositionMap).toEqual({
         left: [
