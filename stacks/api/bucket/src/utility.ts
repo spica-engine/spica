@@ -2,8 +2,9 @@ import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection, BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
 import {BucketService, BucketDocument} from "@spica-server/bucket/services";
-import {diff, ChangeKind} from "../history/differ";
+import {diff, ChangeKind, ChangePaths} from "../history/differ";
 import {HistoryService} from "@spica-server/bucket/history";
+const JsonMergePatch = require("json-merge-patch");
 
 export function findRelations(
   schema: any,
@@ -277,4 +278,77 @@ export function createHistory(
       return history.createHistory(bucketId, previousDocument, currentDocument);
     }
   });
+}
+
+export function getPatchedDocument(previousDocument: BucketDocument, patchQuery: any) {
+  delete previousDocument._id;
+  delete patchQuery._id;
+
+  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
+}
+
+export function getUpdateQuery(previousDocument: BucketDocument, currentDocument: BucketDocument) {
+  let updateQuery: any = {};
+
+  let changes = diff(previousDocument, currentDocument);
+
+  changes = changes.map(change => {
+    let numIndex = change.path.findIndex(t => typeof t == "number");
+    //item update is not possible with merge/patch,
+    //we must put the given array directly
+    if (numIndex > 0) {
+      //if paths include array index, the last path before any number is the array path that will be put
+      //we do not need to track rest of it
+      change.path = change.path.slice(0, numIndex);
+      //array updates will be handled with set operator.
+      change.kind = ChangeKind.Edit;
+    }
+    return change;
+  });
+
+  const setTargets = changes
+    .filter(change => change.kind != ChangeKind.Delete)
+    .map(change => change.path);
+  let setExpressions = createExpressionFromChange(currentDocument, setTargets, "set");
+  if (Object.keys(setExpressions).length) {
+    updateQuery.$set = setExpressions;
+  }
+
+  const unsetTargets = changes
+    .filter(change => change.kind == ChangeKind.Delete)
+    .map(change => change.path);
+  let unsetExpressions = createExpressionFromChange(currentDocument, unsetTargets, "unset");
+  if (Object.keys(unsetExpressions).length) {
+    updateQuery.$unset = unsetExpressions;
+  }
+
+  return updateQuery;
+}
+
+function createExpressionFromChange(
+  document: BucketDocument,
+  targets: ChangePaths[],
+  operation: "set" | "unset"
+) {
+  let expressions = {};
+  targets.forEach(target => {
+    let key = target.join(".");
+    let value = "";
+
+    if (operation == "set") {
+      value = findValueOfPath(target, document);
+    }
+
+    expressions[key] = value;
+  });
+
+  return expressions;
+}
+
+function findValueOfPath(path: (string | number)[], document: BucketDocument) {
+  return path.reduce((document, name) => document[name], document);
+}
+
+export function deepCopy(value: unknown) {
+  return JSON.parse(JSON.stringify(value));
 }

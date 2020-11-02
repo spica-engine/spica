@@ -4,7 +4,6 @@ import {diff, ChangeKind, ChangePaths} from "@spica-server/bucket/history/differ
 import {GraphQLResolveInfo} from "graphql";
 import {Locale, buildI18nAggregation} from "../locale";
 import {buildRelationAggregation} from "../utility";
-const JsonMergePatch = require("json-merge-patch");
 
 enum Prefix {
   Type = "type",
@@ -14,11 +13,6 @@ enum Prefix {
 enum Suffix {
   Type = "",
   Input = "Input"
-}
-
-enum UpdateType {
-  Set,
-  Unset
 }
 
 export function createSchema(bucket: Bucket, staticTypes: string) {
@@ -451,79 +445,6 @@ function isParsableObject(object: any): boolean {
   );
 }
 
-export function getPatchedDocument(previousDocument: BucketDocument, patchQuery: any) {
-  delete previousDocument._id;
-  delete patchQuery._id;
-
-  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
-}
-
-export function getUpdateQuery(previousDocument: BucketDocument, currentDocument: BucketDocument) {
-  let updateQuery: any = {};
-
-  let changes = diff(previousDocument, currentDocument);
-
-  changes = changes.map(change => {
-    let numIndex = change.path.findIndex(t => typeof t == "number");
-    //item update is not possible with merge/patch,
-    //we must put the given array directly
-    if (numIndex > 0) {
-      //if paths include array index, the last path before any number is the array path that will be put
-      //we do not need to track rest of it
-      change.path = change.path.slice(0, numIndex);
-      //array updates will be handled with set operator.
-      change.kind = ChangeKind.Edit;
-    }
-    return change;
-  });
-
-  const setTargets = changes
-    .filter(change => change.kind != ChangeKind.Delete)
-    .map(change => change.path);
-  let setExpressions = createExpressionFromChange(currentDocument, setTargets, UpdateType.Set);
-  if (Object.keys(setExpressions).length) {
-    updateQuery.$set = setExpressions;
-  }
-
-  const unsetTargets = changes
-    .filter(change => change.kind == ChangeKind.Delete)
-    .map(change => change.path);
-  let unsetExpressions = createExpressionFromChange(
-    currentDocument,
-    unsetTargets,
-    UpdateType.Unset
-  );
-  if (Object.keys(unsetExpressions).length) {
-    updateQuery.$unset = unsetExpressions;
-  }
-
-  return updateQuery;
-}
-
-function createExpressionFromChange(
-  document: BucketDocument,
-  targets: ChangePaths[],
-  operation: UpdateType
-) {
-  let expressions = {};
-  targets.forEach(target => {
-    let key = target.join(".");
-    let value = "";
-
-    if (operation == UpdateType.Set) {
-      value = findValueOfPath(target, document);
-    }
-
-    expressions[key] = value;
-  });
-
-  return expressions;
-}
-
-function findValueOfPath(path: (string | number)[], document: BucketDocument) {
-  return path.reduce((document, name) => document[name], document);
-}
-
 function relationalFieldRequested(properties: object, requestedFields: string[][]): boolean {
   let relatedFields = [];
   Object.keys(properties).forEach(key => {
@@ -556,8 +477,4 @@ export function requestedFieldsFromExpression(expression: object, requestedField
     }
   }
   return requestedFields;
-}
-
-export function deepCopy(value: unknown) {
-  return JSON.parse(JSON.stringify(value));
 }

@@ -21,17 +21,20 @@ import {
   getBucketName,
   createSchema,
   extractAggregationFromQuery,
-  getPatchedDocument,
-  getUpdateQuery,
   aggregationsFromRequestedFields,
   getProjectAggregation,
   requestedFieldsFromInfo,
-  requestedFieldsFromExpression,
-  deepCopy
+  requestedFieldsFromExpression
 } from "./schema";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
-import {createHistory, clearRelations} from "../utility";
+import {
+  createHistory,
+  clearRelations,
+  deepCopy,
+  getUpdateQuery,
+  getPatchedDocument
+} from "../utility";
 import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
 
 interface FindResponse {

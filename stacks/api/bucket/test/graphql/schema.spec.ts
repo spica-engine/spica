@@ -1,14 +1,13 @@
 import {
   createSchema,
   extractAggregationFromQuery,
-  getPatchedDocument,
-  getUpdateQuery,
   requestedFieldsFromInfo,
   aggregationsFromRequestedFields,
   getProjectAggregation,
   requestedFieldsFromExpression
 } from "../../src/graphql/schema";
 import {format as _format} from "prettier";
+import {getUpdateQuery, getPatchedDocument} from "@spica-server/bucket/src/utility";
 
 export function format(text: string) {
   return _format(text, {parser: "graphql"});
