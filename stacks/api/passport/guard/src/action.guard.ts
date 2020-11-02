@@ -34,47 +34,46 @@ export interface PrepareUser {
   (request: any): any;
 }
 
-export const ResourceFilter = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const {include, exclude: excluded} = request.resourceFilter;
+export const resourceFilterFunction = (data: unknown, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest();
+  const {include, exclude: excluded} = request.resourceFilter;
 
-    let aggregation = [];
+  let aggregation = [];
 
-    for (const exclude of excluded) {
-      aggregation.push({
-        _id: {
-          $nin: Array.from<string>(new Set(exclude)).map(id => new ObjectId(id))
-        }
-      });
-    }
-
-    if (include.length) {
-      aggregation.push({
-        _id: {
-          $in: Array.from<string>(new Set(include)).map(id => new ObjectId(id))
-        }
-      });
-    }
-
-    if (!aggregation.length) {
-      return {
-        $match: {}
-      };
-    }
-
-    return {
-      $match: {
-        $or: aggregation
+  for (const exclude of excluded) {
+    aggregation.push({
+      _id: {
+        $nin: Array.from<string>(new Set(exclude)).map(id => new ObjectId(id))
       }
+    });
+  }
+
+  if (include.length) {
+    aggregation.push({
+      _id: {
+        $in: Array.from<string>(new Set(include)).map(id => new ObjectId(id))
+      }
+    });
+  }
+
+  if (!aggregation.length) {
+    return {
+      $match: {}
     };
-  },
-  [
-    (target, key, index) => {
-      Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
+  }
+
+  return {
+    $match: {
+      $or: aggregation
     }
-  ]
-);
+  };
+};
+
+export const ResourceFilter = createParamDecorator(resourceFilterFunction, [
+  (target, key, index) => {
+    Reflect.defineMetadata("resourceFilter", {key, index}, target.constructor);
+  }
+]);
 
 function buildResourceAndModuleName(path: string, params: object, format?: string) {
   if (format) {
@@ -104,13 +103,15 @@ function isWildcard(segment: string): segment is "*" {
 export const ActionGuard: (
   actions: string | string[],
   format?: string,
-  prepareUser?: PrepareUser
+  prepareUser?: PrepareUser,
+  options?: {resourceFilter: boolean}
 ) => Type<CanActivate> = createActionGuard;
 
 function createActionGuard(
   actions: string | string[],
   format?: string,
-  prepareUser?: PrepareUser
+  prepareUser?: PrepareUser,
+  options?: {resourceFilter: boolean}
 ): Type<CanActivate> {
   class MixinActionGuard implements CanActivate {
     constructor(@Optional() @Inject(POLICY_RESOLVER) private resolver: PolicyResolver<any>) {}
@@ -127,9 +128,15 @@ function createActionGuard(
         return true;
       }
 
-      const resourceFilterMetadata =
-        Reflect.getMetadata("resourceFilter", context.getClass()) || {};
-      const hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
+      let hasResourceFilter;
+
+      if (options) {
+        hasResourceFilter = options.resourceFilter;
+      } else {
+        const resourceFilterMetadata =
+          Reflect.getMetadata("resourceFilter", context.getClass()) || {};
+        hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
+      }
 
       actions = wrapArray(actions);
 

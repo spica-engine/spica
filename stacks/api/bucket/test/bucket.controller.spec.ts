@@ -671,7 +671,7 @@ describe("Bucket acceptance", () => {
           }
         },
         root_updated: {
-          type: "relation",
+          type: "date",
           options: {}
         },
         root_not_removed_or_updated: {

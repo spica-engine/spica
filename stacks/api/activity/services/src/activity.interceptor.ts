@@ -22,24 +22,7 @@ export abstract class ActivityInterceptor implements NestInterceptor {
         );
       return next.handle();
     }
-    return next.handle().pipe(
-      tap(res => {
-        const req = context.switchToHttp().getRequest();
-        const identifier = getUser(req.user);
-        if (!identifier) {
-          console.log(`Identifier was not sent.`);
-          return;
-        }
-        const action = getAction(req.method);
-        const activities: Activity[] = this.predict({identifier, action}, req, res).map(
-          activity => {
-            return {...activity, created_at: new Date()};
-          }
-        );
-
-        this.service.insertMany(activities);
-      })
-    );
+    return next.handle().pipe(tap(res => createActivity(context, res, this.predict, this.service)));
   }
 }
 
@@ -58,4 +41,24 @@ export function getAction(action: string): Action {
 
 export function getUser(user: any): string {
   return user ? user._id : undefined;
+}
+
+export function createActivity(
+  context: ExecutionContext,
+  res: any,
+  predict: Predict,
+  service: ActivityService
+) {
+  const req = context.switchToHttp().getRequest();
+  const identifier = getUser(req.user);
+  if (!identifier) {
+    console.log(`Identifier was not sent.`);
+    return;
+  }
+  const action = getAction(req.method);
+  const activities: Activity[] = predict({identifier, action}, req, res).map(activity => {
+    return {...activity, created_at: new Date()};
+  });
+
+  return service.insertMany(activities);
 }
