@@ -121,8 +121,8 @@ export class BucketDataController {
       });
     }
 
-    if (typeof relation == "boolean") {
-      if (relation) {
+    if (relation) {
+      if (typeof relation == "boolean") {
         for (const propertyKey in bucket.properties) {
           const property = bucket.properties[propertyKey];
           if (property.type == "relation") {
@@ -136,16 +136,18 @@ export class BucketDataController {
             );
           }
         }
+      } else {
+        let fields: string[][] = relation.map(pattern => pattern.split("."));
+
+        let relationAggregation = await getRelationAggregation(
+          bucket.properties,
+          fields,
+          locale,
+          (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+
+        aggregation.push(...relationAggregation);
       }
-    } else {
-      let fields: string[][] = [];
-      relation.forEach(pattern => fields.push(pattern.split(".")));
-
-      let buckets = await this.bs.find();
-
-      let relationAggregation = getRelationAggregation(bucket.properties, fields, locale, buckets);
-
-      aggregation.push(...relationAggregation);
     }
 
     if (typeof filter == "object") {
@@ -255,9 +257,9 @@ export class BucketDataController {
       req.res.header("Content-language", locale.best || locale.fallback);
     }
 
-    if (typeof relation == "boolean") {
-      if (relation) {
-        const bucket = await this.bs.findOne({_id: bucketId});
+    if (relation) {
+      const bucket = await this.bs.findOne({_id: bucketId});
+      if (typeof relation == "boolean") {
         for (const propertyKey in bucket.properties) {
           const property = bucket.properties[propertyKey];
           if (property.type == "relation") {
@@ -271,17 +273,18 @@ export class BucketDataController {
             );
           }
         }
+      } else {
+        let fields: string[][] = relation.map(pattern => pattern.split("."));
+
+        let relationAggregation = await getRelationAggregation(
+          bucket.properties,
+          fields,
+          locale,
+          (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+
+        aggregation.push(...relationAggregation);
       }
-    } else {
-      let fields: string[][] = [];
-      relation.forEach(pattern => fields.push(pattern.split(".")));
-
-      let buckets = await this.bs.find();
-      let bucket = buckets.find(bucket => bucket._id.toHexString() == bucketId.toHexString());
-
-      let relationAggregation = getRelationAggregation(bucket.properties, fields, locale, buckets);
-
-      aggregation.push(...relationAggregation);
     }
 
     if (this.reviewDispatcher && strategyType == "APIKEY") {

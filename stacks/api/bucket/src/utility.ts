@@ -1,7 +1,7 @@
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection, BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
-import {BucketService, BucketDocument} from "@spica-server/bucket/services";
+import {BucketService, BucketDocument, Bucket} from "@spica-server/bucket/services";
 import {diff, ChangeKind} from "../history/differ";
 import {HistoryService} from "@spica-server/bucket/history";
 
@@ -22,11 +22,11 @@ export function findRelations(
   return targets;
 }
 
-export function getRelationAggregation(
+export async function getRelationAggregation(
   properties: object,
   fields: string[][],
   locale: Locale,
-  buckets: any[]
+  getSchema: (bucketId: string) => Promise<Bucket>
 ) {
   let aggregations = [];
   for (const [key, value] of Object.entries(properties)) {
@@ -35,17 +35,19 @@ export function getRelationAggregation(
       if (relateds.length) {
         let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
 
-        let relatedBucket = buckets.find(bucket => bucket._id.toString() == value.bucketId);
+        let relatedBucket = await getSchema(value.bucketId);
 
         //Remove first key to continue recursive lookup
-        relateds = relateds.map(field => {
-          field.splice(0, 1);
-          return field;
-        });
+        relateds = relateds.map(field => field.slice(1));
 
-        aggregation[0].$lookup.pipeline.push(
-          ...getRelationAggregation(relatedBucket.properties, relateds, locale, buckets)
+        let innerLookup = await getRelationAggregation(
+          relatedBucket.properties,
+          relateds,
+          locale,
+          getSchema
         );
+
+        aggregation[0].$lookup.pipeline.push(...innerLookup);
 
         aggregations.push(...aggregation);
       }

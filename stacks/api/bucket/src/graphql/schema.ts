@@ -153,6 +153,10 @@ function createPropertyValue(
       result = "String";
       break;
 
+    case "storage":
+      result = "String";
+      break;
+
     case "object":
       let extra = createInterface(prefix, suffix, `${name}_${key}`, value, []);
       extras.push(extra);
@@ -213,11 +217,11 @@ export async function aggregationsFromRequestedFields(
   if (requestedFields.length) {
     if (relationalFieldRequested(bucket.properties, requestedFields)) {
       locale = await localeFactory(language);
-      let relationAggregation = getRelationAggregation(
+      let relationAggregation = await getRelationAggregation(
         bucket.properties,
-        JSON.parse(JSON.stringify(requestedFields)),
+        deepCopy(requestedFields),
         locale,
-        buckets
+        (bucketId: string) => Promise.resolve(buckets.find(b => b._id.toString() == bucketId))
       );
       aggregations.push(...relationAggregation);
     }
@@ -423,7 +427,7 @@ export function getPatchedDocument(previousDocument: BucketDocument, patchQuery:
   delete previousDocument._id;
   delete patchQuery._id;
 
-  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
+  return JsonMergePatch.apply(deepCopy(previousDocument), patchQuery);
 }
 
 export function getUpdateQuery(previousDocument: BucketDocument, currentDocument: BucketDocument) {
