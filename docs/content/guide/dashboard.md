@@ -10,18 +10,18 @@ Define a dashboard:
 export function line(req, res) {
   var linedata = {
     linedata: {
-      title:"line title",
+      title: "line title",
       options: {legend: {display: true}, responsive: true},
       label: ["1", "2", "3", "4", "5", "6"],
       datasets: [{data: [65, 59, 90, 81, 56, 55, 40], label: "linedata"}],
       legend: true,
-      width:70,
-      filters:[{key:'line_data_filter',title:'Please enter filter',type:"string"}]
+      width: 70,
+      filters: [{key: "line_data_filter", title: "Please enter filter", type: "string"}]
     }
   };
   var radardata = {
     radardata: {
-      title:"radar title",
+      title: "radar title",
       options: {legend: {display: true}, responsive: true},
       label: ["Eating", "Drinking", "Sleeping", "Designing", "Coding", "Cycling", "Running"],
       datasets: [
@@ -29,12 +29,12 @@ export function line(req, res) {
         {data: [28, 48, 40, 19, 96, 27, 100], label: "Series B"}
       ],
       legend: true,
-      width:30
+      width: 30
     }
   };
   var bardata = {
     bardata: {
-      title:"bar title",
+      title: "bar title",
       options: {legend: {display: true}, responsive: true},
       label: ["2006", "2007", "2008", "2009", "2010", "2011", "2012"],
       datasets: [
@@ -46,7 +46,7 @@ export function line(req, res) {
   };
   var piedata = {
     piedata: {
-      title:"pie title",
+      title: "pie title",
       options: {legend: {display: true}, responsive: true},
       label: [["piedata", "Sales"], ["In", "Store", "Sales"], "Mail Sales"],
       data: [300, 500, 100],
@@ -55,16 +55,20 @@ export function line(req, res) {
   };
   var doughnutdata = {
     doughnutdata: {
-      title:"doughnot title",
+      title: "doughnot title",
       options: {legend: {display: true}, responsive: true},
       label: ["doughnutdata Sales", "In-Store Sales", "Mail-Order Sales"],
-      data: [[350, 450, 100], [50, 150, 120], [250, 130, 70]],
+      data: [
+        [350, 450, 100],
+        [50, 150, 120],
+        [250, 130, 70]
+      ],
       legend: true
     }
   };
   var bubbledata = {
     bubbledata: {
-      title:"buble title",
+      title: "buble title",
       options: {
         responsive: true,
         scales: {
@@ -102,13 +106,19 @@ export function line(req, res) {
   };
   var scatterdata = {
     scatterdata: {
-       title:"scatter title",
+      title: "scatter title",
       options: {
         responsive: true
       },
       datasets: [
         {
-          data: [{x: 1, y: 1}, {x: 2, y: 3}, {x: 3, y: -2}, {x: 4, y: 4}, {x: 5, y: -3, r: 20}],
+          data: [
+            {x: 1, y: 1},
+            {x: 2, y: 3},
+            {x: 3, y: -2},
+            {x: 4, y: 4},
+            {x: 5, y: -3, r: 20}
+          ],
           label: "scatterdata",
           pointRadius: 10
         }
@@ -118,7 +128,7 @@ export function line(req, res) {
   };
   var polarAreadata = {
     polarAreadata: {
-       title:"polar title",
+      title: "polar title",
       options: {
         responsive: true
       },
@@ -128,7 +138,7 @@ export function line(req, res) {
   };
   var tabledata = {
     tabledata: {
-       title:"table title",
+      title: "table title",
       data: [
         {position: 1, name: "Hydrogen", weight: 1.0079, symbol: "H"},
         {position: 2, name: "Helium", weight: 4.0026, symbol: "He"},
@@ -144,6 +154,7 @@ export function line(req, res) {
       displayedColumns: ["position", "name", "weight", "symbol"]
     }
   };
+
   res.send([
     linedata,
     bubbledata,
@@ -153,8 +164,8 @@ export function line(req, res) {
     doughnutdata,
     polarAreadata,
     bardata,
-    tabledata]
-  );
+    tabledata
+  ]);
 }
 ```
 
@@ -163,65 +174,65 @@ And initialize dashboards on another function:
 ```javascript
 // Add `@spica-devkit/dashboard` to your dependencies and import it
 import * as Dashboard from "@spica-devkit/dashboard";
-export default async function (req,res) {
+export default async function (req, res) {
   // Create an API key and initialize dashboards with it
 
-  Dashboard.initialize({apikey:"<APIKEY>})
-  await Dashboard.remove('unique_key');
+  Dashboard.initialize({apikey: "<APIKEY>", public_url: ""});
+  await Dashboard.remove("unique_key");
   let dashboard = await Dashboard.create({
     key: "unique_key",
     name: "Line Chart", // This name will be shown on Spica Client
     icon: "none",
     components: [
-        {
+      {
         type: "bar",
         // Url of your dashboard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "bardata",
-      }, 
+        key: "bardata"
+      },
       {
         type: "table",
         // Url of your dashobard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "tabledata",
-      }, 
-        {
+        key: "tabledata"
+      },
+      {
         type: "polarArea",
         // Url of your dashobard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "polarAreadata",
-      }, 
+        key: "polarAreadata"
+      },
       {
         type: "line",
         // Url of your dashobard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "linedata",
-      },      
+        key: "linedata"
+      },
       {
         type: "bubble",
         // Url of your dashobard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "bubbledata",
-      },      
+        key: "bubbledata"
+      },
       {
         type: "pie",
         // Url of your dashobard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "piedata",
-      },      
+        key: "piedata"
+      },
       {
         type: "doughnut",
         // Url of your dashobard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "doughnutdata",
-      },      
+        key: "doughnutdata"
+      },
       {
         type: "radar",
         // Url of your dashobard function
         url: "https://master.spicaengine.com/api/fn-execute/line",
-        key: "radardata",
-      },
-    ],
+        key: "radardata"
+      }
+    ]
   });
   res.status(200).send(true);
 }

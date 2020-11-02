@@ -16,7 +16,7 @@ See the following table for common `functions` use cases:
 | Webhooks        | With a simple HTTP call, respond to events originating from 3rd party systems like GitHub, Slack, Stripe.                                                                                                             |
 | APIs            | Compose applications from lightweight, quick and flexible.                                                                                                                                                            |
 
-### Events and triggers
+## Events and triggers
 
 There are events in the Spica. As an example there is an event when there is a change in the database or receive an HTTP request
 
@@ -31,14 +31,14 @@ Currently, the Functions supports following triggers:
 - [System](#system)
 - [Firehose](#firehose)
 
-#### Event Data
+### Event Data
 
 Event trigger will pass the data as parameters to the function when the event raised. The parameters will be different related to the type of event.
 
 For example a function which has http trigger will look like this:
 
 ```typescript
-export default function (request: triggers.http.Request, response: triggers.http.Response) {
+export default function (request, response) {
   // Send the response
   response.send({
     message: "Spica is awesome!"
@@ -48,7 +48,7 @@ export default function (request: triggers.http.Request, response: triggers.http
 
 See [triggers](#triggers) section for parameter types.
 
-### Modules
+## Modules
 
 Spica provides modules to your function in runtime. Modules work like a module in node_modules but not placed in node_modules directory.
 
@@ -59,13 +59,13 @@ In order to use these modules in a **function**, they need to be added as **depe
 | `@spica-devkit/database` | This module has a public API for making database operations like **update**, **delete**, **create**, **get**                    |
 | `@spica-devkit/bucket`   | This module has a public API for making both Bucket and Bucket Data operations like **update**, **delete**, **insert**, **get** |
 
-#### Database
+### Database
 
 The database module is an in-memory module that has public API for basic database operations like `FIND`, `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 
 > Database module imported from `@spica-devkit/database`.
 
-##### Connecting to the database
+#### Connecting to the database
 
 You can get the database instance with the `database()` function exported from `@spica-devkit/database` module.
 
@@ -76,7 +76,7 @@ const db: Database = await database();
 // Type of db variable is  Database which exported from `@spica-devkit/database`
 ```
 
-##### Getting the reference to a Collection
+#### Getting the reference to a Collection
 
 To make changes in a collection you need to get it reference first. You can get reference for a specific collection with `Database.collection()` function exported by your database instance. For more information check [mongoDB API](https://mongodb.github.io/node-mongodb-native/3.2/api/Collection.html)
 
@@ -87,11 +87,11 @@ const db: Database = await database();
 const collection: Collection = db.collection("persistent_collection");
 ```
 
-##### Operations
+#### Operations
 
 Here is some fundamental examples;
 
-###### Insert
+##### Insert
 
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
@@ -111,7 +111,7 @@ export default async function() {
 }
 ```
 
-###### Find
+##### Find
 
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
@@ -133,7 +133,7 @@ export default async function () {
 
 > NOTE: `find` method accepts [Query and Projection Operators](https://docs.mongodb.com/manual/reference/operator/query/)
 
-###### Find One
+##### Find One
 
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
@@ -149,7 +149,7 @@ export default async function () {
 }
 ```
 
-###### Update
+##### Update
 
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
@@ -189,6 +189,8 @@ Bucket.initialize({apikey: "{APIKEY which as the needed policy}", publicUrl: ""}
 ###### Get
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.get("{BUCKET ID}");
@@ -198,6 +200,8 @@ export default function (req, res) {
 ###### Get All
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.getAll();
@@ -207,6 +211,8 @@ export default function (req, res) {
 ###### Insert
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -235,6 +241,8 @@ export default function (req, res) {
 ###### Update
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -266,6 +274,8 @@ export default function (req, res) {
 ###### Delete
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.remove("5f10302b4d858d1824e57e6d");
@@ -275,6 +285,8 @@ export default function (req, res) {
 ###### Bucket Data Get
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.get("{BUCKET ID}", "{BUCKET DATA ID}");
@@ -284,6 +296,8 @@ export default function (req, res) {
 ###### Bucket Data Get with Parameters
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.getAll("{BUCKET ID}", {
@@ -296,6 +310,8 @@ export default function (req, res) {
 ###### Bucket Data Insert
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -311,6 +327,8 @@ export default function (req, res) {
 ###### Bucket Data Update
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
@@ -329,15 +347,17 @@ export default function (req, res) {
 ###### Bucket Data Get
 
 ```typescript
+import * as Bucket from "@spica-devkit/bucket";
+
 export default function (req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.remove("{BUCKET ID}", "{BUCKET DATA ID}");
 }
 ```
 
-### Triggers
+## Triggers
 
-#### Http
+### Http
 
 You can invoke your function with an HTTP request using the `POST`, `PUT`, `GET`, `DELETE`, `PATCH`, `HEAD` and `OPTIONS` HTTP methods along with a path like `/books` or `/books/:id`.
 
@@ -348,7 +368,7 @@ Path and Method, the method must be one of the specified HTTP methods above also
 
 > **IMPORTANT:** The path and method are not validated for any collision with another function's path and method. So make sure that the path and method not used by other functions otherwise you function may override other function's path.
 
-##### Method
+#### Method
 
 Http trigger needs an HTTP method to be able to triage requests properly. For more info check out [Http Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
 
@@ -364,7 +384,7 @@ Currently, these methods are valid for use;
 
 Also, you can use `ANY` method that covers all methods above which means your function will be executed regardless of the HTTP method of request that bein received.
 
-##### Path
+#### Path
 
 Spica will use the path will use when reserve a trigger URL for your function. When you save your function, the trigger URL will be attached to **`{API_URL}/fn-execute`** as suffix URL.
 
@@ -387,7 +407,7 @@ However the **`/books/:bookId`** path **will not** match with the paths below:
 
 Because the path has only one parameter which can match with a sub-segment.
 
-##### Getting parameters in function code
+#### Getting parameters in function code
 
 The parameters in the trigger path will be passed through the `request` parameter to your function. It's the first parameter of your function.
 
@@ -396,7 +416,7 @@ Example:
 For **`/books/:bookId`** path, you can access the **bookId** parameter from **`request.params`** object.
 
 ```typescript
-export default function (request: triggers.http.Request, response: triggers.http.Response) {
+export default function (request, response) {
   // Print the bookId parameter
   console.log(request.params.bookId);
   // Send the response
@@ -414,14 +434,14 @@ When you execute this function on **`/fn-execute/books/1`** URL, the response wi
 }
 ```
 
-##### Request Body
+#### Request Body
 
 Usually, every request contains a payload (body) along with the request. It can be either `Raw` or `Text` payload. You can access to the payload of the request with `request.body` property.
 
 Example function;
 
 ```typescript
-export default function (request: triggers.http.Request, response: triggers.http.Response) {
+export default function (request, response) {
   // A entry will appear in function logs.
   console.dir(request.body);
   // Send body as response right away
@@ -454,7 +474,7 @@ You need to parse payload to be able to use it in a function.
 | Text   | application/xml                   | No        | You need to install an appropriate module to handle request payload.                      |
 | Text   | application/yaml                  | No        | You need to install an appropriate module to handle request payload.                      |
 
-#### Database
+### Database
 
 Database trigger, invokes your function when a specific database event raised in a collection of database. The database trigger can invoke your function with `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP` events in a specific database collection. When the event raised, your function will be invoked with the changes in the collection.
 
@@ -469,7 +489,7 @@ To be able to create a function that triggered by database event, you need two r
 A basic database function looks like this:
 
 ```typescript
-export default function (changes: triggers.database.Changes) {
+export default function (changes) {
   console.log(changes);
   // Business logic here
 }
@@ -501,7 +521,7 @@ Content of `changes` variable with the `INSERT` event and `full document` option
 }
 ```
 
-#### Schedule
+### Schedule
 
 Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked at next tick.
 
@@ -510,19 +530,14 @@ To create a scheduled function you need a CRON time expression and Time-zone bec
 For example, if you want to run your function at every minute, you need a cron time expression like this [\* \* \* \* \*](https://crontab.guru/#*_*_*_*_*).
 
 ```typescript
-export default function (stop: triggers.schedule.Stop) {
-  // Also, note that you do not have to stop your function
-  if (true) {
-    // Scheduler will stop after first invocation by scheduler
-    stop();
-  }
+export default function () {
   // Your business logic
 }
 ```
 
 In the example, we have stopped scheduler so our function won't be invoked next time when scheduler ticks.
 
-##### Cron Time expression
+#### Cron Time expression
 
 Cron expression made of five-string separated with a whitespace character.
 
@@ -550,14 +565,19 @@ Here is some example of CRON expressions
 | `0 * * * *` | Run once an hour at the beginning of the hour              |
 | `* * * * *` | Run every minute                                           |
 
-#### Bucket
+### Bucket
 
-Bucket trigger invokes your function before the selected operation for a specific bucket. For bucket trigger, all `INSERT`, `UPDATE`, `INDEX`, `GET`, `DELETE`, `STREAM` operations are available.
+Bucket trigger invokes your function **before** or **after** the selected operation for a specific bucket.
 
 All required fields for a bucket trigger are listed below;
 
 - **Bucket:** Bucket ID of the desired bucket
+- **Phase:** Spesifies, on which phase the function triggers
 - **Event Type:** Type of the event that happens in the collection.
+
+#### Bucket Before Events
+
+For bucket before trigger, all `INSERT`, `UPDATE`, `INDEX`, `GET`, `DELETE`, `STREAM` operations are available.
 
 > IMPORTANT: `STREAM` operations are used for real-time bucket connections. If your client uses real-time data transfer, you can use `STREAM` operation to trigger a function at the beginning of a real-time data transfer.
 
@@ -586,7 +606,7 @@ INSERT request object:
 INSERT example:
 
 ```typescript
-export default function (req) {
+export default function (req, res) {
   // Allow the ongoing insert operation if the authorization header does not contain this special string.
   return req.headers.authorization != "FORBIDDEN_APIKEY";
 }
@@ -617,7 +637,7 @@ ActionParameters {
 UPDATE example:
 
 ```typescript
-export default function (req) {
+export default function (req, res) {
   // Allow the ongoing update operation only if the id of the target document is not this special string
   return req.document != "MY_SECRET_DOCUMENT";
 }
@@ -648,7 +668,7 @@ GET request object:
 GET example:
 
 ```typescript
-export default function (req) {
+export default function (req, res) {
   const aggregation = [];
   // If the authorization header does not contain the "MY_SECRET_TOKEN" string literally, then strip out password field to prevent the user from fetching it.
   if (req.headers.authorization != "MY_SECRET_TOKEN") {
@@ -683,14 +703,62 @@ INDEX request object:
 INDEX example:
 
 ```typescript
-export default function (request) {
+export default function (request, response) {
   // Allow the user to only fetch those entries which belong to the user.
   // HINT: For security purposes, DO NOT get identifier of the user via plain HTTP header. At least extract it from a signed token and such.
   return [{$match: {user_id: request.headers["X-Authorized-User"]}}];
 }
 ```
 
-#### System
+#### Bucket After Events
+
+Bucket after events triggers after any of the following Bucket event happens:
+
+- `ALL`: Triggers after any of the below operations happens on Bucket Data,
+- `INSERT`: Triggers after a new data inserted to the spesific Bucket,
+- `UPDATE`: Triggers after a bucket data updated,
+- `DELETE`: Triggers after a bucket data deleted.
+
+The functiont takes the `change` object as a parameter.
+
+Example change object:
+
+```json
+{
+  "kind": "update",
+  "bucket": "5f6fb373196847002cb2e1bd",
+  "documentKey": "5f6fb467196847002cb2e1ca",
+  "previous": {
+    "_id": "5f6fb467196847002cb2e1ca",
+    "slug": "test_1",
+    "title": "First Title"
+  },
+  "current": {
+    "_id": "5f6fb467196847002cb2e1ca",
+    "slug": "test_2",
+    "title": "Second Title"
+  }
+}
+```
+
+Example function:
+
+```javascript
+export default function (changes) {
+  console.log(changes);
+  // Business logic here
+}
+```
+
+#### Difference Between Bucket After Events and Database Events
+
+Database events triggers when a change happens on Database layer, but Bucket After Events listens the API operations and triggers when the API processes the request.
+
+If you happen to change a data directly from the database (e.g. by using the `@spica-devkit/database`), only the Database events are triggers. But on either changes via Spica Client or Bucket APIs both **Bucket After Events** and **Database Events** triggers.
+
+For example, let's assume we want to send a notification to a 3rd party API when a Spica User changes a data on Spica, but also we have a function which changes a bucket data internally by using `@spica-devkit/database`. It's correct to use **Bucket After Events** for the 3rd API communication instead of the Database Events in this case.
+
+### System
 
 System trigger includes system related event data and invokes a function whenever the chosen event happens. The system trigger is the best choice for using the dashboard module, configuring the instance, or setting up a starting state for your data. `READY` event will be triggered when a server restarts and ready to use. For the current version, the system trigger supports the `READY` event only.
 
@@ -700,7 +768,7 @@ export default function () {
 }
 ```
 
-#### Firehose
+### Firehose
 
 You can invoke a function in real-time from your client application. It is a great tool for low latency operations since it keeps the connection always open _unlike the HTTP trigger_. Keep in mind that the firehose trigger does not interact with the bucket or database directly. However, that does not mean you can not perform database operations within your function. Instead, it listens to the real-time events so you can interact with the functions on the server directly from your client application. The firehose trigger can listen to a _user-defined event_, _connection_ and _disconnect_ event and let you act on behalf of those events.
 
