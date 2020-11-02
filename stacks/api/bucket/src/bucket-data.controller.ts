@@ -442,9 +442,6 @@ export class BucketDataController {
     const patchedDocument = getPatchedDocument(previousDocument, patch);
 
     await this.validateInput(bucketId, patchedDocument).catch(error => {
-      console.log("FROM CONTROLLER");
-
-      console.log(error.message);
       throw new BadRequestException(
         (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
         error.message
