@@ -924,14 +924,12 @@ describe("BucketDataController", () => {
 
       describe("find", () => {
         it("should get statistic with achievement,user and own wallets", async () => {
-          const {body: document} = await req
-            .get(`/bucket/${statisticsBucket._id}/data/${userWithWalletStats._id}`, {
+          const {body: document} = await req.get(
+            `/bucket/${statisticsBucket._id}/data/${userWithWalletStats._id}`,
+            {
               relation: true
-            })
-            .catch(e => {
-              console.log(e);
-              return e;
-            });
+            }
+          );
           expect(document).toEqual({
             _id: "__skip__",
             user: {

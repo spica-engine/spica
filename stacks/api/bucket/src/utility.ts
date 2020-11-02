@@ -22,7 +22,6 @@ export function findRelations(
   return targets;
 }
 
-//remove it after graphql pr merged
 export function getRelationAggregation(
   properties: object,
   fields: string[][],
