@@ -24,8 +24,11 @@ import {
   emptyTrigger,
   Information,
   NormalizedFunction,
-  normalizeFunction
+  normalizeFunction,
+  Trigger
 } from "../../interface";
+import {MatDialog} from "@angular/material/dialog";
+import {CodeComponent} from "./code/code.component";
 
 @Component({
   selector: "functions-add",
@@ -65,7 +68,8 @@ export class AddComponent implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private functionService: FunctionService,
-    private http: HttpClient
+    private http: HttpClient,
+    public dialog: MatDialog
   ) {
     this.information = this.functionService.information().pipe(
       share(),
@@ -127,6 +131,16 @@ export class AddComponent implements OnInit, OnDestroy {
 
   removeVariable(index: number) {
     this.function.env.splice(index, 1);
+  }
+
+  showExample(trigger: Trigger) {
+    let code = this.functionService.getExample(trigger);
+    this.dialog.open(CodeComponent, {
+      width: "700px",
+      data: {
+        code: code
+      }
+    });
   }
 
   updateIndex() {
