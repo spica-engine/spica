@@ -31,15 +31,15 @@ export class MatClipboardDirective {
     }, 1000);
   }
 
-  copyToClipBoard(element: HTMLInputElement) {
+  copyToClipBoard(element: HTMLTextAreaElement) {
     document.body.appendChild(element);
     element.focus();
     element.select();
     document.execCommand("copy");
   }
 
-  prepareElement(text: string): HTMLInputElement {
-    const input = document.createElement("input");
+  prepareElement(text: string): HTMLTextAreaElement {
+    const input = document.createElement("textarea");
     input.value = text;
     return input;
   }
