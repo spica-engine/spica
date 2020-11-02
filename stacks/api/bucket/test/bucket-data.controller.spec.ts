@@ -932,10 +932,7 @@ describe("BucketDataController", () => {
           .patch(`/bucket/${myBucketId}/data/${insertedDocument._id}`, {
             title: 1001
           })
-          .catch(e => {
-            console.log(e);
-            return e;
-          });
+          .catch(e => e);
 
         expect(response.statusCode).toBe(400);
         expect(response.statusText).toBe("Bad Request");
