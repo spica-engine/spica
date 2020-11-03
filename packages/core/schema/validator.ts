@@ -19,6 +19,62 @@ export class Validator {
   private _resolvers = new Set<UriResolver>();
   private _defaults: Map<string, Default>;
 
+  private formatKeywordDefinition = {
+    modifying: true,
+    errors: true,
+    compile: (schema, parentSchema, it) => {
+      return function validateFn(data, dataPath, parentData) {
+        if (!data) {
+          return true;
+        }
+
+        const format = it.formats[schema];
+        if (it.opts.format === "false") {
+          return true;
+        }
+
+        if (!format && it.opts.unknownFormats != "ignore") {
+          throw new Error(`unknown format "${schema}" used in schema at path ${it.schemaPath}`);
+        } else if (!format && it.opts.logger != false && it.opts.unknownFormats == "ignore") {
+          it.opts.logger.warn(
+            `unknown format "${schema}" ignored in schema at path "${it["errSchemaPath"]}"`
+          );
+          return true;
+        }
+
+        if (parentSchema["type"] != ((typeof format == "object" && format.type) || "string")) {
+          return true;
+        }
+
+        let validate: any = format.validate ? format.validate : format;
+
+        if (typeof validate == "string") {
+          validate = new RegExp(validate);
+        }
+
+        let passed = false;
+        if (format instanceof RegExp) {
+          passed = format.test(data);
+        } else if (typeof validate == "function") {
+          passed = validate(data);
+        }
+
+        if (!passed) {
+          validateFn["errors"] = [
+            {
+              keyword: "format",
+              message: `should match format '${schema}'`
+            }
+          ];
+        } else if (typeof format == "object" && format["coerce"]) {
+          const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
+          parentData[propertyName] = (format as Format).coerce(data);
+        }
+        return passed;
+      };
+    }
+  };
+
   public get defaults(): Array<Default> {
     return Array.from(this._defaults.values());
   }
@@ -62,61 +118,7 @@ export class Validator {
       }
     });
 
-    this.registerKeyword("format", {
-      modifying: true,
-      errors: true,
-      compile: (schema, parentSchema, it) => {
-        return function validateFn(data, dataPath, parentData) {
-          if (!data) {
-            return true;
-          }
-
-          const format = it.formats[schema];
-          if (it.opts.format === "false") {
-            return true;
-          }
-
-          if (!format && it.opts.unknownFormats != "ignore") {
-            throw new Error(`unknown format "${schema}" used in schema at path ${it.schemaPath}`);
-          } else if (!format && it.opts.logger != false && it.opts.unknownFormats == "ignore") {
-            it.opts.logger.warn(
-              `unknown format "${schema}" ignored in schema at path "${it["errSchemaPath"]}"`
-            );
-            return true;
-          }
-
-          if (parentSchema["type"] != ((typeof format == "object" && format.type) || "string")) {
-            return true;
-          }
-
-          let validate: any = format.validate ? format.validate : format;
-
-          if (typeof validate == "string") {
-            validate = new RegExp(validate);
-          }
-
-          let passed = false;
-          if (format instanceof RegExp) {
-            passed = format.test(data);
-          } else if (typeof validate == "function") {
-            passed = validate(data);
-          }
-
-          if (!passed) {
-            validateFn["errors"] = [
-              {
-                keyword: "format",
-                message: `should match format '${schema}'`
-              }
-            ];
-          } else if (typeof format == "object" && format["coerce"]) {
-            const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
-            parentData[propertyName] = (format as Format).coerce(data);
-          }
-          return passed;
-        };
-      }
-    });
+    this.registerKeyword("format", this.formatKeywordDefinition);
   }
 
   private _fetch(uri: string): Promise<Object> {

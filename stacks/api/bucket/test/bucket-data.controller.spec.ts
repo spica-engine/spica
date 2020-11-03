@@ -1345,4 +1345,61 @@ describe("BucketDataController", () => {
       });
     });
   });
+
+  describe("defaults and readonly", () => {
+    let bucketId: ObjectId;
+    beforeEach(async () => {
+      const myBucket = {
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        readOnly: false,
+        properties: {
+          //this value is the value of the field on document, if it is not specified, default value will be used.
+          create_date: {
+            type: "date",
+            title: "registiration_date",
+            description: "Description of the row",
+            options: {position: "right"},
+            default: ":created_at"
+          },
+          //this value always the create date of document. Value of the field on document will be ignored.
+          create_date_readonly: {
+            type: "date",
+            title: "registiration_date",
+            description: "Description of the row",
+            options: {position: "right"},
+            default: ":created_at",
+            readOnly: true
+          }
+        }
+      };
+      bucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
+    });
+
+    it("should work with default and readonly values", async () => {
+      const date = new Date("1980-01-01");
+      let document = {
+        create_date: date,
+        create_date_readonly: date
+      };
+      const insertedDocument = (await req.post(`/bucket/${bucketId}/data`, document)).body;
+
+      expect(new Date(insertedDocument.create_date)).toEqual(
+        date,
+        "should be equal if document value inserted"
+      );
+      expect(new Date(insertedDocument.create_date_readonly)).not.toEqual(
+        date,
+        "should not be equal if document value ignored"
+      );
+    });
+
+    it("should put default values if field does not exist on document", async () => {
+      const insertedDocument = (await req.post(`/bucket/${bucketId}/data`)).body;
+
+      expect(new Date(insertedDocument.create_date)).toEqual(jasmine.any(Date));
+      expect(new Date(insertedDocument.create_date_readonly)).toEqual(jasmine.any(Date));
+    });
+  });
 });
