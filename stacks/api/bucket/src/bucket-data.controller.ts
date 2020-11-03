@@ -23,14 +23,20 @@ import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter, ReviewDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER, OR, BooleanCheck} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
-import {buildRelationAggregation, filterReviver, clearRelations, createHistory} from "./utility";
+import {
+  buildRelationAggregation,
+  filterReviver,
+  clearRelations,
+  createHistory,
+  getRelationAggregation
+} from "./utility";
 
 /**
  * All APIs related to bucket documents.
@@ -71,7 +77,8 @@ export class BucketDataController {
     @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
-    @Query("relation", DEFAULT(false), BOOLEAN) relation?: boolean,
+    @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
+    relation?: boolean | string[],
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
@@ -115,18 +122,31 @@ export class BucketDataController {
     }
 
     if (relation) {
-      for (const propertyKey in bucket.properties) {
-        const property = bucket.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale
-            )
-          );
+      if (typeof relation == "boolean") {
+        for (const propertyKey in bucket.properties) {
+          const property = bucket.properties[propertyKey];
+          if (property.type == "relation") {
+            aggregation.push(
+              ...buildRelationAggregation(
+                propertyKey,
+                property["bucketId"],
+                property["relationType"],
+                locale
+              )
+            );
+          }
         }
+      } else {
+        let fields: string[][] = relation.map(pattern => pattern.split("."));
+
+        let relationAggregation = await getRelationAggregation(
+          bucket.properties,
+          fields,
+          locale,
+          (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+
+        aggregation.push(...relationAggregation);
       }
     }
 
@@ -215,7 +235,8 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("relation", DEFAULT(false), BOOLEAN) relation?: boolean
+    @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
+    relation?: boolean | string[]
   ) {
     let aggregation = [];
 
@@ -237,19 +258,32 @@ export class BucketDataController {
     }
 
     if (relation) {
-      const schema = await this.bs.findOne({_id: bucketId});
-      for (const propertyKey in schema.properties) {
-        const property = schema.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale
-            )
-          );
+      const bucket = await this.bs.findOne({_id: bucketId});
+      if (typeof relation == "boolean") {
+        for (const propertyKey in bucket.properties) {
+          const property = bucket.properties[propertyKey];
+          if (property.type == "relation") {
+            aggregation.push(
+              ...buildRelationAggregation(
+                propertyKey,
+                property["bucketId"],
+                property["relationType"],
+                locale
+              )
+            );
+          }
         }
+      } else {
+        let fields: string[][] = relation.map(pattern => pattern.split("."));
+
+        let relationAggregation = await getRelationAggregation(
+          bucket.properties,
+          fields,
+          locale,
+          (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+
+        aggregation.push(...relationAggregation);
       }
     }
 
