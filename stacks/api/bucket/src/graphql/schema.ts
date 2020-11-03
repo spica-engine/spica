@@ -88,9 +88,13 @@ function createInterface(
 function createEnum(name: string, values: string[]) {
   return `
       enum ${name}{
-        ${values.join("\n")}
+        ${removeDuplicates(values).join("\n")}
       }
     `;
+}
+
+function removeDuplicates(values: string[]) {
+  return values.filter((value, index) => values.findIndex(v => v == value) == index);
 }
 
 function createProperty(
