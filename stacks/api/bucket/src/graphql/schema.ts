@@ -3,7 +3,7 @@ import {ObjectId} from "@spica-server/database";
 import {diff, ChangeKind, ChangePaths} from "@spica-server/bucket/history/differ";
 import {GraphQLResolveInfo} from "graphql";
 import {Locale, buildI18nAggregation} from "../locale";
-import {buildRelationAggregation} from "../utility";
+import {getRelationAggregation} from "../utility";
 const JsonMergePatch = require("json-merge-patch");
 
 enum Prefix {
@@ -153,6 +153,10 @@ function createPropertyValue(
       result = "String";
       break;
 
+    case "storage":
+      result = "String";
+      break;
+
     case "object":
       let extra = createInterface(prefix, suffix, `${name}_${key}`, value, []);
       extras.push(extra);
@@ -213,11 +217,11 @@ export async function aggregationsFromRequestedFields(
   if (requestedFields.length) {
     if (relationalFieldRequested(bucket.properties, requestedFields)) {
       locale = await localeFactory(language);
-      let relationAggregation = getRelationAggregation(
+      let relationAggregation = await getRelationAggregation(
         bucket.properties,
-        JSON.parse(JSON.stringify(requestedFields)),
+        deepCopy(requestedFields),
         locale,
-        buckets
+        (bucketId: string) => Promise.resolve(buckets.find(b => b._id.toString() == bucketId))
       );
       aggregations.push(...relationAggregation);
     }
@@ -279,38 +283,6 @@ export function getProjectAggregation(requestedFields: string[][]) {
     result[path] = 1;
   });
   return {$project: result};
-}
-
-function getRelationAggregation(
-  properties: object,
-  fields: string[][],
-  locale: Locale,
-  buckets: Bucket[]
-) {
-  let aggregations = [];
-  for (const [key, value] of Object.entries(properties)) {
-    if (value.type == "relation") {
-      let relateds = fields.filter(field => field[0] == key);
-      if (relateds.length) {
-        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
-
-        let relatedBucket = buckets.find(bucket => bucket._id.toString() == value.bucketId);
-
-        //Remove first key to continue recursive lookup
-        relateds = relateds.map(field => {
-          field.splice(0, 1);
-          return field;
-        });
-
-        aggregation[0].$lookup.pipeline.push(
-          ...getRelationAggregation(relatedBucket.properties, relateds, locale, buckets)
-        );
-
-        aggregations.push(...aggregation);
-      }
-    }
-  }
-  return aggregations;
 }
 
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
@@ -455,7 +427,7 @@ export function getPatchedDocument(previousDocument: BucketDocument, patchQuery:
   delete previousDocument._id;
   delete patchQuery._id;
 
-  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
+  return JsonMergePatch.apply(deepCopy(previousDocument), patchQuery);
 }
 
 export function getUpdateQuery(previousDocument: BucketDocument, currentDocument: BucketDocument) {

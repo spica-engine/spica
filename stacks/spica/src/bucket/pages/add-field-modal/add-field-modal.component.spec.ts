@@ -189,7 +189,7 @@ describe("Add Field Component", () => {
     });
 
     it("should hide general settings if parent schema is not the bucket", () => {
-      fixture.componentInstance.parentSchema.primary = undefined;
+      delete fixture.componentInstance.parentSchema.primary;
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css(".general-settings"))).toBeFalsy();
 
