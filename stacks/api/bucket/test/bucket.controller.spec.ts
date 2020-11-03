@@ -791,11 +791,13 @@ describe("Bucket acceptance", () => {
             user: {
               type: "relation",
               bucketId: usersBucket._id,
+              relationType: "onetoone",
               options: {}
             },
             setting: {
               type: "relation",
               bucketId: settingsBucket._id,
+              relationType: "onetoone",
               options: {}
             }
           }
@@ -846,6 +848,7 @@ describe("Bucket acceptance", () => {
         setting: {
           type: "relation",
           bucketId: settingsBucket._id,
+          relationType: "onetoone",
           options: {}
         }
       });

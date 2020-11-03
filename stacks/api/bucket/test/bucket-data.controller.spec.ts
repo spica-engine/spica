@@ -573,6 +573,8 @@ describe("BucketDataController", () => {
       let achievement: BucketDocument;
       let wallets: BucketDocument[];
 
+      let userWithWalletStats: BucketDocument;
+
       beforeEach(async () => {
         achievementsBucket = await req
           .post("/bucket", {
@@ -677,6 +679,13 @@ describe("BucketDataController", () => {
           user: anotherUser._id,
           achievement: achievement._id
         });
+
+        userWithWalletStats = await req
+          .post(`/bucket/${statisticsBucket._id}/data`, {
+            user: userWithWallet._id,
+            achievement: achievement._id
+          })
+          .then(r => r.body);
       });
 
       afterEach(async () => {
@@ -686,135 +695,289 @@ describe("BucketDataController", () => {
         await req.delete(`/bucket/${walletBucket._id}`);
       });
 
-      it("should return users with wallets", async () => {
-        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {relation: true});
-        expect(users).toEqual([
-          {_id: "__skip__", name: "user66", wallet: []},
-          {_id: "__skip__", name: "user33", wallet: []},
-          {
-            _id: "__skip__",
-            name: "wealthy user",
-            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
-          }
-        ]);
+      describe("findAll", () => {
+        it("should return users with wallets", async () => {
+          const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {relation: true});
+          expect(users).toEqual([
+            {_id: "__skip__", name: "user66", wallet: []},
+            {_id: "__skip__", name: "user33", wallet: []},
+            {
+              _id: "__skip__",
+              name: "wealthy user",
+              wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+            }
+          ]);
+        });
+
+        it("should return users by their wallet name", async () => {
+          const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {
+            relation: true,
+            filter: JSON.stringify({"wallet.name": "GNB"})
+          });
+          expect(users).toEqual([
+            {
+              _id: "__skip__",
+              name: "wealthy user",
+              wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+            }
+          ]);
+        });
+
+        it("should get statistics with username and achievement name", async () => {
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            relation: true
+          });
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "user66"
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            },
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "user33"
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            },
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "wealthy user",
+                wallet: wallets.map(w => w._id)
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            }
+          ]);
+        });
+
+        it("should get statistics with achievement,user and their wallets", async () => {
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            relation: ["user.wallet", "achievement"]
+          });
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "user66",
+                wallet: []
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            },
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "user33",
+                wallet: []
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            },
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "wealthy user",
+                wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            }
+          ]);
+        });
+
+        it("should filter statistics by user wallet", async () => {
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            relation: ["user.wallet", "achievement"],
+            filter: JSON.stringify({"user.wallet.name": "GNB"})
+          });
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "wealthy user",
+                wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            }
+          ]);
+        });
+
+        it("should get statistics with only id", async () => {
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            relation: false
+          });
+
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: user._id,
+              achievement: achievement._id
+            },
+            {
+              _id: "__skip__",
+              user: anotherUser._id,
+              achievement: achievement._id
+            },
+            {
+              _id: "__skip__",
+              user: userWithWallet._id,
+              achievement: achievement._id
+            }
+          ]);
+        });
+
+        it("should return the documents including those which does not have the relation field filled", async () => {
+          const {body: newRow} = await req.post(`/bucket/${statisticsBucket._id}/data`, {});
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            relation: true
+          });
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "user66"
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            },
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "user33"
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            },
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "wealthy user",
+                wallet: wallets.map(w => w._id)
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            },
+            {
+              _id: newRow._id
+            }
+          ]);
+        });
+
+        it("should filter by relation", async () => {
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            relation: true,
+            filter: JSON.stringify({"user._id": anotherUser._id})
+          });
+
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "user33"
+              },
+              achievement: {
+                _id: "__skip__",
+                name: "do something until something else happens"
+              }
+            }
+          ]);
+        });
       });
 
-      it("should return users by their wallet name", async () => {
-        const {body: users} = await req.get(`/bucket/${usersBucket._id}/data`, {
-          relation: true,
-          filter: JSON.stringify({"wallet.name": "GNB"})
-        });
-        expect(users).toEqual([
-          {
-            _id: "__skip__",
-            name: "wealthy user",
-            wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
-          }
-        ]);
-      });
-
-      it("should get statistics with username and achievement name", async () => {
-        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
-          relation: true
-        });
-        expect(documents).toEqual([
-          {
+      describe("find", () => {
+        it("should get statistic with achievement,user and own wallets", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${statisticsBucket._id}/data/${userWithWalletStats._id}`,
+            {
+              relation: true
+            }
+          );
+          expect(document).toEqual({
             _id: "__skip__",
             user: {
               _id: "__skip__",
-              name: "user66"
+              name: "wealthy user",
+              wallet: wallets.map(w => w._id)
             },
             achievement: {
               _id: "__skip__",
               name: "do something until something else happens"
             }
-          },
-          {
-            _id: "__skip__",
-            user: {
-              _id: "__skip__",
-              name: "user33"
-            },
-            achievement: {
-              _id: "__skip__",
-              name: "do something until something else happens"
-            }
-          }
-        ]);
-      });
-
-      it("should get statistics with only id", async () => {
-        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
-          relation: false
+          });
         });
 
-        expect(documents).toEqual([
-          {
+        it("should get statistic with username id and achievement id", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${statisticsBucket._id}/data/${userWithWalletStats._id}`,
+            {
+              relation: false
+            }
+          );
+          expect(document).toEqual({
             _id: "__skip__",
-            user: user._id,
+            user: userWithWallet._id,
             achievement: achievement._id
-          },
-          {
-            _id: "__skip__",
-            user: anotherUser._id,
-            achievement: achievement._id
-          }
-        ]);
-      });
-
-      it("should return the documents including those which does not have the relation field filled", async () => {
-        const {body: newRow} = await req.post(`/bucket/${statisticsBucket._id}/data`, {});
-        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
-          relation: true
-        });
-        expect(documents).toEqual([
-          {
-            _id: "__skip__",
-            user: {
-              _id: "__skip__",
-              name: "user66"
-            },
-            achievement: {
-              _id: "__skip__",
-              name: "do something until something else happens"
-            }
-          },
-          {
-            _id: "__skip__",
-            user: {
-              _id: "__skip__",
-              name: "user33"
-            },
-            achievement: {
-              _id: "__skip__",
-              name: "do something until something else happens"
-            }
-          },
-          {
-            _id: newRow._id
-          }
-        ]);
-      });
-
-      it("should filter by relation", async () => {
-        const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
-          relation: true,
-          filter: JSON.stringify({"user._id": anotherUser._id})
+          });
         });
 
-        expect(documents).toEqual([
-          {
-            _id: "__skip__",
-            user: {
-              _id: "__skip__",
-              name: "user33"
-            },
-            achievement: {
-              _id: "__skip__",
-              name: "do something until something else happens"
+        it("should get statistic with user and own wallet", async () => {
+          const {body: document} = await req.get(
+            `/bucket/${statisticsBucket._id}/data/${userWithWalletStats._id}`,
+            {
+              relation: ["user.wallet"]
             }
-          }
-        ]);
+          );
+          expect(document).toEqual(
+            {
+              _id: "__skip__",
+              user: {
+                _id: "__skip__",
+                name: "wealthy user",
+                wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+              },
+              achievement: achievement._id
+            },
+            "should not resolve the achievement relation"
+          );
+        });
       });
     });
   });

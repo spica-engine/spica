@@ -72,3 +72,29 @@ export function ARRAY<T>(coerce: (v: string) => T): PipeTransform<string | strin
     }
   };
 }
+
+export function BooleanCheck(value) {
+  return (
+    value == "true" ||
+    value == "false" ||
+    //compatibility with default values
+    value === true ||
+    value === false
+  );
+}
+
+export function OR(
+  condition: (value) => boolean,
+  coerceTrue: PipeTransform,
+  coerceFalse: PipeTransform
+): PipeTransform {
+  return {
+    transform: value => {
+      if (condition(value)) {
+        return coerceTrue.transform(value, undefined);
+      } else {
+        return coerceFalse.transform(value, undefined);
+      }
+    }
+  };
+}

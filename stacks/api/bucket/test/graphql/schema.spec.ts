@@ -222,6 +222,9 @@ describe("Schema", () => {
         number: {
           type: "number"
         },
+        storage: {
+          type: "storage"
+        },
         array: {
           type: "array",
           items: {
@@ -246,6 +249,7 @@ describe("Schema", () => {
           boolean: Boolean
           color: String
           number: Int
+          storage: String
           array: [[String]]
         }
 
@@ -255,6 +259,7 @@ describe("Schema", () => {
           boolean: Boolean
           color: String
           number: Int
+          storage: String
           array: [[String]]
         }
       `)
