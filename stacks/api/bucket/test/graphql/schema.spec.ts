@@ -74,7 +74,7 @@ describe("Schema", () => {
 
     it("should create schema for bucket", () => {
       bucket.required = ["title"];
-      let schema = createSchema(bucket, staticTypes);
+      let schema = createSchema(bucket, staticTypes, []);
 
       expect(format(schema)).toEqual(
         format(
@@ -110,7 +110,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", []);
       expect(format(schema)).toEqual(
         format(
           `
@@ -141,11 +141,17 @@ describe("Schema", () => {
       bucket.properties = {
         roles: {
           type: "string",
-          enum: ["AUTHOR", "ADMIN", "USER"]
+          enum: [
+            "AUTHOR",
+            "ADMIN",
+            "USER",
+            //duplicated value
+            "AUTHOR"
+          ]
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", []);
 
       expect(format(schema)).toEqual(
         format(
@@ -167,7 +173,8 @@ describe("Schema", () => {
             roles : Bucket_id_roles
           }
         `
-        )
+        ),
+        "should work if duplicated value removed"
       );
     });
 
@@ -185,7 +192,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", ["otherid", "anotherid"]);
 
       expect(format(schema)).toEqual(
         format(`
@@ -236,7 +243,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", []);
 
       expect(format(schema)).toEqual(
         format(`

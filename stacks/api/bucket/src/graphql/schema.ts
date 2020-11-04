@@ -14,7 +14,7 @@ enum Suffix {
   Input = "Input"
 }
 
-export function createSchema(bucket: Bucket, staticTypes: string) {
+export function createSchema(bucket: Bucket, staticTypes: string, bucketIds: string[]) {
   let name = getBucketName(bucket._id);
 
   let schema = `
@@ -38,9 +38,9 @@ export function createSchema(bucket: Bucket, staticTypes: string) {
       }
     `;
 
-  let types = createInterface(Prefix.Type, Suffix.Type, name, bucket, []);
+  let types = createInterface(Prefix.Type, Suffix.Type, name, bucket, [], bucketIds);
 
-  let inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, []);
+  let inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, [], bucketIds);
 
   schema = schema + types + inputs;
 
@@ -52,7 +52,8 @@ function createInterface(
   suffix: string,
   name: string,
   schema: any,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[]
 ) {
   let properties = [];
 
@@ -63,7 +64,7 @@ function createInterface(
   for (const [key, value] of Object.entries(schema.properties) as any) {
     let isRequired = schema.required && schema.required.includes(key);
 
-    let property = createProperty(name, prefix, suffix, key, value, isRequired, extras);
+    let property = createProperty(name, prefix, suffix, key, value, isRequired, extras, bucketIds);
 
     properties.push(property);
   }
@@ -81,7 +82,7 @@ function createInterface(
 function createEnum(name: string, values: string[]) {
   return `
       enum ${name}{
-        ${values.join("\n")}
+        ${Array.from(new Set(values).values()).join("\n")}
       }
     `;
 }
@@ -93,9 +94,19 @@ function createProperty(
   key: string,
   value: any,
   isRequired: Boolean,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[]
 ) {
-  return `${key} : ${createPropertyValue(name, prefix, suffix, key, value, isRequired, extras)}`;
+  return `${key} : ${createPropertyValue(
+    name,
+    prefix,
+    suffix,
+    key,
+    value,
+    isRequired,
+    extras,
+    bucketIds
+  )}`;
 }
 
 function createPropertyValue(
@@ -105,7 +116,8 @@ function createPropertyValue(
   key: string,
   value: any,
   isRequired: Boolean,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[]
 ) {
   let result;
 
@@ -126,7 +138,8 @@ function createPropertyValue(
         key,
         value.items,
         false,
-        extras
+        extras,
+        bucketIds
       )}]`;
       break;
 
@@ -151,7 +164,7 @@ function createPropertyValue(
       break;
 
     case "object":
-      let extra = createInterface(prefix, suffix, `${name}_${key}`, value, []);
+      let extra = createInterface(prefix, suffix, `${name}_${key}`, value, [], bucketIds);
       extras.push(extra);
       result = `${name}_${key}` + suffix;
       break;
@@ -173,17 +186,22 @@ function createPropertyValue(
       break;
 
     case "relation":
-      if (!value.bucketId) {
-        throw Error(`Related bucket must be provided for ${key} field of ${name}.`);
+      if (!bucketIds.includes(value.bucketId)) {
+        throw Error(`Related bucket '${value.bucketId}' does not exist.`);
       }
 
-      let relatedBucketName = getBucketName(value.bucketId);
-      result = prefix == Prefix.Type ? relatedBucketName : "String";
-      result = value.relationType == "onetoone" ? result : `[${result}]`;
+      result = prefix == Prefix.Type ? getBucketName(value.bucketId) : "String";
+
+      if (value.relationType == "onetomany") {
+        result = `[${result}]`;
+      } else if (value.relationType != "onetoone") {
+        throw Error(`Unknown relation type for '${key}' field of ${name}.`);
+      }
+
       break;
 
     default:
-      throw Error(`Unknown type ${value.type} on ${key} field of ${name}.`);
+      throw Error(`Unknown type '${value.type}' on '${key}' field of ${name}.`);
   }
 
   if (isRequired && prefix == Prefix.Input) {
