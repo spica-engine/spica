@@ -8,24 +8,25 @@ import {
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
-import {request} from "../request";
+import {machinery} from "../machinery";
 import {
   formatFailureStatus,
   formatValidationErrors,
   isFailureStatus,
   isValidationError
 } from "../status";
-import {Resource} from "./api-resources";
 
 async function apply({options}: ActionParameters) {
   const filename = path.relative(process.cwd(), options.filename as string);
   const rawDocument = fs.readFileSync(filename).toString();
   const documents = YAML.parseAllDocuments(rawDocument);
 
+  const machineryClient = await machinery.createFromConfig();
+
   for (const document of documents) {
     const {apiVersion, kind, metadata, spec} = document.toJSON();
 
-    const resourceList = await request.get<any>(`http://localhost:4300/apis/${apiVersion}`);
+    const resourceList = await machineryClient.get<any>(`/apis/${apiVersion}`);
 
     if (isFailureStatus(resourceList)) {
       return console.error(formatFailureStatus(resourceList));
@@ -49,7 +50,7 @@ async function apply({options}: ActionParameters) {
       spec.code = fs.readFileSync(path.resolve(basePath, spec.code)).toString();
     }
 
-    let result = await request.post(`http://localhost:4300/apis/${apiVersion}/${resource.plural}`, {
+    let result = await machineryClient.post(`/apis/${apiVersion}/${resource.plural}`, {
       metadata,
       spec
     });
@@ -57,16 +58,16 @@ async function apply({options}: ActionParameters) {
     let type: string = "created";
 
     if (isFailureStatus(result) && result.reason == "AlreadyExists") {
-      const upstream = await request.get<Resource>(
-        `http://localhost:4300/apis/${apiVersion}/${resource.plural}/${metadata.name}`
+      const upstream = await machineryClient.get<any>(
+        `/apis/${apiVersion}/${resource.plural}/${metadata.name}`
       );
 
       if (JSON.stringify(upstream.spec) == JSON.stringify(spec)) {
         type = "up-to date";
         result = {};
       } else {
-        result = await request.put(
-          `http://localhost:4300/apis/${apiVersion}/${resource.plural}/${metadata.name}`,
+        result = await machineryClient.put(
+          `/apis/${apiVersion}/${resource.plural}/${metadata.name}`,
           {metadata, spec}
         );
         type = "replaced";

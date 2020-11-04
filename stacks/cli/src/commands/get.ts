@@ -1,17 +1,19 @@
 import {ActionParameters, Command, CreateCommandParameters} from "@caporal/core";
 import * as jsonpath from "jsonpath";
 import * as duration from "pretty-ms";
-import {request} from "../request";
+import {machinery} from "../machinery";
 import {formatFailureStatus, isFailureStatus} from "../status";
 
 async function get({args}: ActionParameters) {
-  const groupList = await request.get<any>("http://localhost:4300/apis");
+  const machineryClient = await machinery.createFromConfig();
+  const groupList = await machineryClient.get<any>("/apis");
   const kind = args.kind as string;
+
   for (const group of groupList.groups) {
+    // TODO: get this from the API
     const preferredVersion = group.versions[0];
-    const resourceList = await request.get<any>(
-      `http://localhost:4300/apis/${group.name}/${preferredVersion}`
-    );
+    const resourceList = await machineryClient.get<any>(`/apis/${group.name}/${preferredVersion}`);
+
     for (const resource of resourceList.resources) {
       if (
         kind == "all" ||
@@ -19,7 +21,11 @@ async function get({args}: ActionParameters) {
         resource.plural == kind ||
         resource.shortNames.indexOf(kind) != -1
       ) {
-        const {rows, columns} = await printTable(`${group.name}/${preferredVersion}`, resource);
+        const {rows, columns} = await printTable(
+          machineryClient,
+          `${group.name}/${preferredVersion}`,
+          resource
+        );
         if (kind == "all") {
           console.log(`${resource.plural.toLocaleUpperCase()}`);
         }
@@ -39,13 +45,12 @@ async function get({args}: ActionParameters) {
   }
 }
 
-async function printTable(groupVersion, resource) {
-  const table = await request.get<any>(
-    `http://localhost:4300/apis/${groupVersion}/${resource.plural}`,
-    {
+async function printTable(client: machinery.Client, groupVersion, resource) {
+  const table = await client.get<any>(`/apis/${groupVersion}/${resource.plural}`, {
+    headers: {
       Accept: "application/json;as=Table;v=1"
     }
-  );
+  });
 
   if (isFailureStatus(table)) {
     console.error(formatFailureStatus(table));

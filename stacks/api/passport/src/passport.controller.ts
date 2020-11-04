@@ -92,7 +92,7 @@ export class PassportController {
   @Get("strategies")
   async strategies() {
     const strategies = await this.strategy.find();
-    return strategies.map(({_id, name, icon, type, title}) => ({_id, name, icon, type, title}));
+    return strategies.map(({name, icon, type, title}) => ({name, icon, type, title}));
   }
 
   @Get("strategy/:name/url")

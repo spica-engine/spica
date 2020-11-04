@@ -2,19 +2,21 @@ import {ActionParameters, CaporalValidator, Command, CreateCommandParameters} fr
 import * as fs from "fs";
 import * as path from "path";
 import * as YAML from "yaml";
-import {request} from "../request";
+import {machinery} from "../machinery";
 import {formatFailureStatus, isFailureStatus} from "../status";
 
 async function del({options}: ActionParameters) {
+  const machineryClient = await machinery.createFromConfig();
+
   const filename = path.normalize(options.filename as string);
   const documents = YAML.parseAllDocuments(fs.readFileSync(filename).toString());
 
   const ignoreNotFound = options.ignoreNotFound;
 
   for (const document of documents) {
-    const {apiVersion, kind, metadata, spec} = document.toJSON();
+    const {apiVersion, kind, metadata} = document.toJSON();
 
-    const resourceList = await request.get<any>(`http://localhost:4300/apis/${apiVersion}`);
+    const resourceList = await machineryClient.get<any>(`/apis/${apiVersion}`);
 
     if (isFailureStatus(resourceList)) {
       return console.error(formatFailureStatus(resourceList));
@@ -32,9 +34,10 @@ async function del({options}: ActionParameters) {
       return console.error(`the server doesn't have a resource type "${kind}"`);
     }
 
-    const result = await request.del(
-      `http://localhost:4300/apis/${apiVersion}/${resource.plural}/${metadata.name}`
+    const result = await machineryClient.delete(
+      `/apis/${apiVersion}/${resource.plural}/${metadata.name}`
     );
+
     if (isFailureStatus(result) && result.reason == "NotFound") {
       if (!ignoreNotFound) {
         return console.error(formatFailureStatus(result));

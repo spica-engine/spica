@@ -16,7 +16,6 @@ ts_library(
         "//stacks/api/passport/guard",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
-        "@npm//@types/node-fetch",
         "@npm//handlebars",
         "@npm//node-fetch",
         "@npm//rxjs",

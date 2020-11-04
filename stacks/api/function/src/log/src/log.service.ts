@@ -8,8 +8,8 @@ const COLLECTION_NAME = "function_logs";
 export class LogService extends BaseCollection<Log>(COLLECTION_NAME) {
   constructor(db: DatabaseService, @Inject(FUNCTION_LOG_OPTIONS) options: LogOptions) {
     super(db);
-    this.createCollection(COLLECTION_NAME).then(() =>
-      this.upsertTTLIndex(options.expireAfterSeconds)
-    );
+    this.createCollection(COLLECTION_NAME)
+      .then(() => this.upsertTTLIndex(options.expireAfterSeconds))
+      .catch(() => {});
   }
 }

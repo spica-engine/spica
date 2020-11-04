@@ -16,12 +16,12 @@
     "columnify": "^1.5.4",
     "dockerode": "^3.2.1",
     "get-port": "^5.0.0", 
-    "node-fetch": "^2.6.0",
+    "cosmiconfig": "^7.0.0",
+    "axios": "^0.21.0",
     "yaml": "^1.8.3",
     "jsonpath": "^1.0.2"
   },
   "devDependencies": {
-    "@types/dockerode": "^2.5.34",
-    "@types/node-fetch": "^2.5.5"
+    "@types/dockerode": "^2.5.34"
   }
 }

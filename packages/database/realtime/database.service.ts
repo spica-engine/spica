@@ -181,11 +181,14 @@ export class RealtimeDatabaseService {
                 fullDocument: "updateLookup"
               }
             )
-            .on("change", change => {
+            ["on"]("change", change => {
+              if (!("documentKey" in change)) {
+                return;
+              }
               if (hasChangeAlreadyPresentInCursor(ids, change)) {
                 observer.next({
                   kind: ChunkKind.Expunge,
-                  document: change.documentKey
+                  document: change.documentKey as T
                 });
                 ids.delete(change.documentKey._id.toString());
               }
@@ -199,7 +202,7 @@ export class RealtimeDatabaseService {
           .find(options.filter)
           .skip(options.skip ? options.skip + ids.size : ids.size)
           .limit(options.limit - ids.size)
-          .on("data", data => {
+          ["on"]("data", data => {
             observer.next({kind: ChunkKind.Initial, document: data});
             ids.add(data._id.toString());
           });
@@ -211,7 +214,7 @@ export class RealtimeDatabaseService {
           .watch(pipeline, {
             fullDocument: "updateLookup"
           })
-          .on("change", change => {
+          ["on"]("change", change => {
             switch (change.operationType) {
               case "insert":
                 if (options.limit && ids.size >= options.limit && !options.sort) {
@@ -229,7 +232,7 @@ export class RealtimeDatabaseService {
                 break;
               case "delete":
                 if (ids.has(change.documentKey._id.toString())) {
-                  observer.next({kind: ChunkKind.Delete, document: change.documentKey});
+                  observer.next({kind: ChunkKind.Delete, document: change.documentKey as T});
                   ids.delete(change.documentKey._id.toString());
 
                   if (options.limit && ids.size < options.limit) {
@@ -289,11 +292,11 @@ export class RealtimeDatabaseService {
         if (options.limit) {
           stream = stream.limit(options.limit);
         }
-        stream.on("data", data => {
+        stream["on"]("data", data => {
           subscriber.next({kind: ChunkKind.Initial, document: data});
           ids.add(data._id.toString());
         });
-        stream.on("end", () => {
+        stream["on"]("end", () => {
           subscriber.next({kind: ChunkKind.EndOfInitial});
           connect();
         });

@@ -54,7 +54,7 @@ export class Npm extends PackageManager {
 
       return () => {
         if (!proc.killed) {
-          proc.kill("sigkill");
+          proc.kill("SIGKILL");
         }
       };
     });
