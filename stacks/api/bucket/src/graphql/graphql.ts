@@ -98,7 +98,25 @@ export class GraphqlController implements OnModuleInit {
     })
   };
 
+  //graphql needs a default schema that includes one type and resolver at least
+  defaultSchema: GraphQLSchema = makeExecutableSchema({
+    typeDefs: mergeTypeDefs([
+      `type Query{
+        spica: String
+      }`
+    ]),
+    resolvers: mergeResolvers([
+      {
+        Query: {
+          spica: () => "Spica"
+        }
+      }
+    ])
+  });
+
   schema: GraphQLSchema;
+
+  errorFromLastSchemaGeneration: string;
 
   constructor(
     private adapterHost: HttpAdapterHost,
@@ -111,7 +129,14 @@ export class GraphqlController implements OnModuleInit {
   ) {
     this.bs.watchAll(true).subscribe(buckets => {
       this.buckets = buckets;
-      this.schema = this.getSchema(buckets);
+
+      try {
+        this.schema = buckets.length ? this.getSchema(buckets) : this.defaultSchema;
+        this.errorFromLastSchemaGeneration = undefined;
+      } catch (error) {
+        this.schema = this.defaultSchema;
+        this.errorFromLastSchemaGeneration = error.message;
+      }
     });
   }
 
@@ -126,6 +151,11 @@ export class GraphqlController implements OnModuleInit {
         await this.authenticate(request, "/bucket", {}, ["bucket:index"], {
           resourceFilter: true
         });
+
+        if (this.errorFromLastSchemaGeneration) {
+          response.statusCode = 500;
+          response.statusMessage = this.errorFromLastSchemaGeneration;
+        }
 
         return {
           schema: this.schema,
@@ -143,29 +173,11 @@ export class GraphqlController implements OnModuleInit {
   }
 
   getSchema(buckets: Bucket[]): GraphQLSchema {
-    let typeDefs = [];
-    let resolvers = [];
+    let typeDefs = buckets.map(bucket =>
+      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()))
+    );
+    let resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
 
-    if (buckets.length) {
-      typeDefs = buckets.map(bucket => createSchema(bucket, this.staticTypes));
-
-      resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
-    } else {
-      //graphql needs a default schema that includes one type and resolver at least
-      typeDefs = [
-        `type Query{
-          spica: String
-        }`
-      ];
-
-      resolvers = [
-        {
-          Query: {
-            spica: () => "Spica"
-          }
-        }
-      ];
-    }
     return makeExecutableSchema({
       typeDefs: mergeTypeDefs(typeDefs),
       resolvers: mergeResolvers(resolvers)
