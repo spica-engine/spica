@@ -1747,4 +1747,66 @@ describe("GraphQLController", () => {
       });
     });
   });
+
+  describe("Errors", () => {
+    it("should return error response if related bucket does not exist", async () => {
+      await req.post("/bucket", {
+        title: "bucket",
+        description: "bucket",
+        properties: {
+          relation_field: {
+            type: "relation",
+            bucketId: "unknown_bucket_id",
+            relationType: "onetoone"
+          }
+        }
+      });
+
+      //wait until watcher send changes
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const response = await req.get("/graphql", {query: "{spica}"}).catch(e => e);
+
+      expect(response.statusCode).toEqual(500);
+      expect(response.statusText).toEqual("Related bucket 'unknown_bucket_id' does not exist.");
+    });
+
+    it("should return error response if relation type is not valid", async () => {
+      const playersBucket = await req
+        .post("/bucket", {
+          title: "Players",
+          description: "Players",
+          properties: {
+            name: {
+              type: "string"
+            }
+          }
+        })
+        .then(r => r.body);
+
+      const scoresBucket = await req
+        .post("/bucket", {
+          title: "Scores",
+          description: "Scores",
+          properties: {
+            player: {
+              type: "relation",
+              bucketId: playersBucket._id,
+              relationType: "manytoone"
+            }
+          }
+        })
+        .then(r => r.body);
+
+      //wait until watcher send changes
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const response = await req.get("/graphql", {query: "{spica}"}).catch(e => e);
+
+      expect(response.statusCode).toEqual(500);
+      expect(response.statusText).toEqual(
+        `Unknown relation type for 'player' field of Bucket_${scoresBucket._id}.`
+      );
+    });
+  });
 });
