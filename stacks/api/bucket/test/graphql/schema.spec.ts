@@ -142,7 +142,13 @@ describe("Schema", () => {
       bucket.properties = {
         roles: {
           type: "string",
-          enum: ["AUTHOR", "ADMIN", "USER"]
+          enum: [
+            "AUTHOR",
+            "ADMIN",
+            "USER",
+            //duplicated value
+            "AUTHOR"
+          ]
         }
       };
 
@@ -168,7 +174,8 @@ describe("Schema", () => {
             roles : Bucket_id_roles
           }
         `
-        )
+        ),
+        "should work if duplicated value removed"
       );
     });
 

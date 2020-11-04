@@ -88,7 +88,7 @@ function createInterface(
 function createEnum(name: string, values: string[]) {
   return `
       enum ${name}{
-        ${values.join("\n")}
+        ${Array.from(new Set(values).values()).join("\n")}
       }
     `;
 }
