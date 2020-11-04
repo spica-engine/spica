@@ -75,7 +75,7 @@ describe("Schema", () => {
 
     it("should create schema for bucket", () => {
       bucket.required = ["title"];
-      let schema = createSchema(bucket, staticTypes);
+      let schema = createSchema(bucket, staticTypes, []);
 
       expect(format(schema)).toEqual(
         format(
@@ -111,7 +111,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", []);
       expect(format(schema)).toEqual(
         format(
           `
@@ -152,7 +152,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", []);
 
       expect(format(schema)).toEqual(
         format(
@@ -193,7 +193,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", ["otherid", "anotherid"]);
 
       expect(format(schema)).toEqual(
         format(`
@@ -244,7 +244,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", []);
 
       expect(format(schema)).toEqual(
         format(`
