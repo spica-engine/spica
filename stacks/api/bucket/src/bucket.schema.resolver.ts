@@ -43,6 +43,8 @@ export function provideBucketSchemaResolver(validator: Validator, bs: BucketServ
   validator.registerUriResolver(uri => resolver.resolve(uri));
   let keywords = getCustomKeywords(validator);
   keywords.forEach(keyword => validator.registerKeyword(keyword.name, keyword.def));
+  //format should run after default;
+  validator.registerKeyword("format", validator["formatKeywordDefinition"]);
   return resolver;
 }
 
@@ -59,7 +61,7 @@ export function getCustomKeywords(validator: Validator) {
 
             if (defaultValueHandler) {
               parentData[propertyName] = defaultValueHandler.create(
-                data == defaultValueHandler.keyword ? undefined : data
+                data == defaultValueHandler.keyword || parentSchema["readOnly"] ? undefined : data
               );
             } else if (!defaultValueHandler && parentSchema["readOnly"]) {
               parentData[propertyName] = schema;
