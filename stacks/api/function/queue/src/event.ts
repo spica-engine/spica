@@ -6,17 +6,11 @@ import {Queue} from "./queue";
 
 export class EventQueue {
   private server: grpc.Server;
-  private queue = new Map<string, Event.Event>();
-
-  private _next = new Array<(event: Event.Event) => void>();
-
-  get size(): number {
-    return this.queue.size;
-  }
 
   constructor(
     private _enqueueCallback: (event: Event.Event) => void,
-    private _popCallback: (event: Event.Event, worker: string) => void
+    private _gotWorker: (id: string, schedule: (event: Event.Event) => void) => void,
+    private _cancel: (event: Event.Event)  => void
   ) {
     this._create();
   }
@@ -53,31 +47,18 @@ export class EventQueue {
 
   enqueue(event: Event.Event) {
     event.id = uniqid();
-    this.queue.set(event.id, event);
     this._enqueueCallback(event);
-    if (this._next[0]) {
-      this._next.shift()(event);
-    }
   }
 
   dequeue(event: Event.Event) {
-    this.queue.delete(event.id);
+    this._cancel(event);
   }
 
   async pop(
     call: grpc.ServerUnaryCall<Event.Pop, Event.Event>,
     callback: grpc.sendUnaryData<Event.Event>
   ) {
-    let event: Event.Event;
-
-    if (this.size == 0) {
-      event = await new Promise(resolve => this._next.push(resolve));
-    } else {
-      event = this.queue.values().next().value;
-    }
-
-    this.queue.delete(event.id);
-    this._popCallback(event, call.request.id);
+    const event = await new Promise<Event.Event>(resolve => this._gotWorker(call.request.id, resolve));
     callback(undefined, event);
   }
 

@@ -29,30 +29,36 @@ if (!process.env.WORKER_ID) {
 }
 
 (async () => {
+  const queue = new EventQueue();
+  const pop = new Event.Pop({
+    id: process.env.WORKER_ID
+  });
+  await initialize();
+  const next = () =>
+    queue.pop(pop).catch(e => {
+      // if ( e.code != 1 ) {
+      //   console.error(e);
+      //   exitAbnormally("There is no event in the queue.");
+      // }
+      return undefined;
+    });
+
+  let event;
+  while ((event = await next())) {
+    _process(event);
+  }
+})();
+
+async function initialize() {
   if (process.env.__EXPERIMENTAL_DEVKIT_DATABASE_CACHE) {
     const _require = globalThis.require;
     globalThis.require = createRequire(path.join(process.cwd(), "external/npm/node_modules"));
     await import("./experimental_database");
     globalThis.require = _require;
   }
+}
 
-  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} waiting for the event.`;
-
-  const queue = new EventQueue();
-  const pop = new Event.Pop({
-    id: process.env.WORKER_ID
-  });
-  const event = await queue.pop(pop).catch(e => {
-    console.error(e);
-    return undefined;
-  });
-
-  if (!event) {
-    exitAbnormally("There is no event in the queue.");
-  }
-
-  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} processing the event ${event.id}.`;
-
+async function _process(event) {
   process.chdir(event.target.cwd);
 
   process.env.TIMEOUT = String(event.target.context.timeout);
@@ -191,7 +197,8 @@ if (!process.env.WORKER_ID) {
 
   globalThis.require = createRequire(path.join(process.cwd(), "node_modules"));
 
-  let module = await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT));
+
+  let module = await import(path.join(process.cwd(), ".build", process.env.ENTRYPOINT) + '?event='+event.id);
 
   if ("default" in module && module.default.__esModule) {
     module = module.default; // Do not ask me why
@@ -209,7 +216,7 @@ if (!process.env.WORKER_ID) {
   } else {
     callback(module[event.target.handler](...callArguments));
   }
-})();
+}
 
 function exitAbnormally(reason) {
   console.error(reason);

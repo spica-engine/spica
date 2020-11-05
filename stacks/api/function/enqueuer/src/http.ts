@@ -77,13 +77,15 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
       event.target = target;
       event.type = Event.Type.HTTP;
       this.queue.enqueue(event);
-      const request = new Http.Request();
-      request.method = req.method;
-      request.url = req.url;
-      request.path = req.path;
-      request.statusCode = req.statusCode;
-      request.statusMessage = req.statusMessage;
-      request.query = JSON.stringify(req.query);
+      const request = new Http.Request({
+        method: req.method,
+        url: req.url,
+        path: req.path,
+        statusCode: req.statusCode,
+        statusMessage: req.statusMessage,
+        query: JSON.stringify(req.query),
+        body: new Uint8Array(req.body)
+      });
       request.params = Object.keys(req.params).reduce((acc, key) => {
         const param = new Http.Param();
         param.key = key;
@@ -91,7 +93,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         acc.push(param);
         return acc;
       }, []);
-      request.body = new Uint8Array(req.body);
       request.headers = Object.keys(req.headers).reduce((acc, key) => {
         const header = new Http.Header();
         header.key = key;
@@ -105,7 +106,10 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         return acc;
       }, []);
       this.http.enqueue(event.id, request, res);
-      req.once("close", () => this.http.dequeue(event.id));
+      req.once("close", () => {
+        this.queue.dequeue(event);
+        this.http.dequeue(event.id);
+      });
     };
 
     Object.defineProperty(fn, "target", {writable: false, value: target});

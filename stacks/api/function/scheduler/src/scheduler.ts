@@ -52,7 +52,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.runtimes.set("node", new Node());
     this.pkgmanagers.set("node", new Npm());
 
-    this.queue = new EventQueue(this.schedule.bind(this), this.yield.bind(this));
+    this.queue = new EventQueue(
+      event => this.enqueued(event),
+      (id, schedule) => this.gotWorker(id, schedule),
+      event => this.cancelled(event)
+    );
 
     this.httpQueue = new HttpQueue();
     this.queue.addQueue(this.httpQueue);
@@ -93,7 +97,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     await this.queue.listen();
 
     for (let i = 0; i < this.options.poolSize; i++) {
-      this.schedule();
+      this.spawn();
     }
   }
 
@@ -108,10 +112,49 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     return this.queue.kill();
   }
 
-  private schedule() {
-    if (this.pool.size >= this.options.poolMaxSize) {
-      return;
-    }
+  events = new Set<Event.Event>();
+  deadlines = new Map<string, number>();
+  batching = new Map<string, string>();
+  workers = new Map<string, (event: Event.Event) => void>();
+
+  enqueued(event: Event.Event) {
+    console.debug(`an event enqueued ${JSON.stringify(event.toObject())}`)
+    this.events.add(event);
+    this.workers.get(this.workers.keys().next().value)(event);
+  }
+
+  cancelled(event: Event.Event) {
+    console.debug(`an event got cancelled ${JSON.stringify(event.toObject())}`)
+  }
+
+  gotWorker(id: string, schedule: (event: Event.Event) => void) {
+    console.debug(`got a worker ${id}`)
+    this.workers.set(id, schedule);
+  }
+
+  lostWorker(id: string) {
+    console.debug(`lost a worker ${id}`);
+    this.pool.delete(id);
+  }
+
+  attach(id: string, event: Event.Event) {
+    const worker = this.pool.get(id);
+    const [stdout, stderr] = this.output.create({
+      eventId: event.id,
+      functionId: event.target.id
+    });
+    const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
+    const timeout = setTimeout(() => {
+      stderr.write(
+        `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
+      );
+      worker.kill();
+    }, timeoutInSeconds * 1000);
+    worker.attach(stdout, stderr);
+    worker.once("exit", () => clearTimeout(timeout));
+  }
+
+  private spawn() {
     const id: string = uniqid();
     const worker = this.runtimes.get("node").spawn({
       id,
@@ -126,30 +169,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       }
     });
     this.pool.set(id, worker);
-    // Do not enable autospawn under testing
-    if (!process.env.TEST_TARGET) {
-      worker.once("exit", () => {
-        this.pool.delete(id);
-        this.schedule();
-      });
-    }
-  }
-
-  private yield(event: Event.Event, workerId: string) {
-    const worker = this.pool.get(workerId);
-    const [stdout, stderr] = this.output.create({
-      eventId: event.id,
-      functionId: event.target.id
-    });
-    const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
-    const timeout = setTimeout(() => {
-      stderr.write(
-        `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
-      );
-      worker.kill();
-    }, timeoutInSeconds * 1000);
-    worker.attach(stdout, stderr);
-    worker.once("exit", () => clearTimeout(timeout));
+    worker.attach(process.stdout, process.stderr);
+    worker.once("exit", () => this.lostWorker(id));
   }
 
   /**
