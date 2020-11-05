@@ -113,7 +113,7 @@ fdescribe("Home Layout", () => {
           {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
           {category: RouteCategory.Content, id: "0", path: "", icon: "", display: "system2"},
           {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"},
-          {category: RouteCategory.Content_Sub, id: "4", path: "", icon: "", display: "sub2"},
+          {category: RouteCategory.Content_Sub, id: "4", path: "", icon: "", display: "sub2"}
         ])
       );
       tick();
@@ -126,7 +126,7 @@ fdescribe("Home Layout", () => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
           {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"},
+          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"}
         ])
       );
       tick();
