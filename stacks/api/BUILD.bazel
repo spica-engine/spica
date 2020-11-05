@@ -42,25 +42,27 @@ nodejs_binary(
         "PERSISTENT_PATH",
         "PORT",
         "FUNCTION_GRPC_ADDRESS",
+        "FUNCTION_RUNTIME_ROOT",
         "SECRET",
         "DEFAULT_PASSWORD",
         "ENABLE_BUCKET_HOOKS",
         "ENABLE_BUCKET_HISTORY",
         "ENABLE_ACTIVITY_STREAM",
     ],
-    data = [":api"],
+    data = [
+        ":api",
+        "//stacks/api/function/runtimes/node:files"
+    ],
     entry_point = "//stacks/api:main.ts",
 )
 
 nodejs_image(
     name = "image_base",
     base = "@debian_image//image",
-    data = ["//stacks/api"],
-    entry_point = "//stacks/api:main.ts",
-    layers = [
-        "@nodejs_linux_amd64//:bin/npm",
-        "@nodejs_linux_amd64//:npm_files",
+    data = [
+        "//stacks/api"
     ],
+    entry_point = "//stacks/api:main.ts",
     visibility = ["//visibility:private"],
 )
 
@@ -72,9 +74,10 @@ container_image(
         "FUNCTION_GRPC_ADDRESS": "0.0.0.0:5688",
     },
     legacy_run_behavior = False,
-    symlinks = {
-        "/bin/npm": "/app/stacks/api/image_base.binary.runfiles/nodejs_linux_amd64/bin/npm",
-    },
+    stamp = True,
+    layers = [
+        "//stacks/api/function/runtimes/node:layer"
+    ]
 )
 
 container_push(

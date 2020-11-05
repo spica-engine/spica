@@ -170,7 +170,12 @@ export class FunctionEngine implements OnModuleDestroy {
         id: change.target.id,
         cwd: path.join(this.options.root, change.target.id),
         handler: change.target.handler,
+        runtime: new Event.Runtime({
+          name: "node",
+          version: "15.0.1"
+        }),
         context: new Event.SchedulingContext({
+          timeout: change.target.context.timeout,
           env: Object.keys(change.target.context.env).reduce((envs, key) => {
             envs.push(
               new Event.SchedulingContext.Env({
@@ -179,8 +184,7 @@ export class FunctionEngine implements OnModuleDestroy {
               })
             );
             return envs;
-          }, []),
-          timeout: change.target.context.timeout
+          }, [])
         })
       });
       enqueuer.subscribe(target, change.options);

@@ -156,6 +156,11 @@ const args = yargs
       description: "Amount of time in seconds that has to elapse before aborting a function.",
       default: 120
     },
+    "function-runtime-root": {
+      string: true,
+      description: "Root path to discover runtimes",
+      default: "/opt/runtimes"
+    },
     "experimental-function-devkit-database-cache": {
       boolean: true,
       description: "When true, @spica-devkit/database will be cached and run significantly fast.",
@@ -335,6 +340,7 @@ const modules = [
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
+    runtimeRoot: args["function-runtime-root"],
     corsOptions: {
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],
@@ -363,7 +369,8 @@ if (args["cert-file"] && args["key-file"]) {
 }
 NestFactory.create(RootModule, {
   httpsOptions,
-  bodyParser: false
+  bodyParser: false,
+  logger: false
 }).then(app => {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
@@ -378,3 +385,5 @@ NestFactory.create(RootModule, {
   );
   app.listen(args.port);
 });
+
+console.log(process.cwd());

@@ -16,9 +16,8 @@ import {PackageManager} from "@spica-server/function/pkgmanager";
 import {Npm} from "@spica-server/function/pkgmanager/node";
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {Event} from "@spica-server/function/queue/proto";
-import {Runtime, Worker} from "@spica-server/function/runtime";
+import {Worker, spawn, discovery} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
-import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
 import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
@@ -30,7 +29,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
 
-  readonly runtimes = new Map<string, Runtime>();
+  readonly runtimes = new Map<string, any>();
   readonly pkgmanagers = new Map<string, PackageManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
   readonly languages = new Map<string, Language>();
@@ -45,11 +44,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
+    discovery.root = options.runtimeRoot;
+
     this.output = new DatabaseOutput(database);
 
     this.languages.set("typescript", new Typescript());
     this.languages.set("javascript", new Javascript());
-    this.runtimes.set("node", new Node());
     this.pkgmanagers.set("node", new Npm());
 
     this.queue = new EventQueue(this.schedule.bind(this), this.yield.bind(this));
@@ -92,8 +92,23 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     await this.queue.listen();
 
-    for (let i = 0; i < this.options.poolSize; i++) {
-      this.schedule();
+    for (let index = 0; index < 6; index++) {
+      await spawn({
+        id: uniqid(),
+        environment: {
+          __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
+          __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
+          __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
+          __INTERNAL__SPICA__PUBLIC_URL__: this.options.apiUrl,
+          __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
+            ? "true"
+            : ""
+        },
+        runtime: {
+          name: "node",
+          version: ["10.23.0", "11.15.0", "12.19.0", "13.14.0", "14.15.0", "15.0.1"][index]
+        }
+      });
     }
   }
 
@@ -108,14 +123,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     return this.queue.kill();
   }
 
-  private schedule() {
-    if (this.pool.size >= this.options.poolMaxSize) {
-      return;
-    }
-    const id: string = uniqid();
-    const worker = this.runtimes.get("node").spawn({
-      id,
-      env: {
+  private schedule(event: Event.Event) {
+    spawn({
+      id: uniqid(),
+      environment: {
         __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
         __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
         __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
@@ -123,33 +134,42 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
           ? "true"
           : ""
-      }
+      },
+      runtime: event.target.runtime.toObject()
     });
-    this.pool.set(id, worker);
-    // Do not enable autospawn under testing
-    if (!process.env.TEST_TARGET) {
-      worker.once("exit", () => {
-        this.pool.delete(id);
-        this.schedule();
-      });
-    }
+    // if (this.pool.size >= this.options.poolMaxSize) {
+    //   return;
+    // }
+    // const id: string = uniqid();
+    // const worker = this.runtimes.get("node").spawn({
+    //   id,
+    //   env:
+    // });
+    // this.pool.set(id, worker);
+    // // Do not enable autospawn under testing
+    // if (!process.env.TEST_TARGET) {
+    //   worker.once("exit", () => {
+    //     this.pool.delete(id);
+    //     this.schedule();
+    //   });
+    // }
   }
 
   private yield(event: Event.Event, workerId: string) {
-    const worker = this.pool.get(workerId);
-    const [stdout, stderr] = this.output.create({
-      eventId: event.id,
-      functionId: event.target.id
-    });
-    const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
-    const timeout = setTimeout(() => {
-      stderr.write(
-        `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
-      );
-      worker.kill();
-    }, timeoutInSeconds * 1000);
-    worker.attach(stdout, stderr);
-    worker.once("exit", () => clearTimeout(timeout));
+    // const worker = this.pool.get(workerId);
+    // const [stdout, stderr] = this.output.create({
+    //   eventId: event.id,
+    //   functionId: event.target.id
+    // });
+    // const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
+    // const timeout = setTimeout(() => {
+    //   stderr.write(
+    //     `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
+    //   );
+    //   worker.kill();
+    // }, timeoutInSeconds * 1000);
+    // worker.attach(stdout, stderr);
+    // worker.once("exit", () => clearTimeout(timeout));
   }
 
   /**

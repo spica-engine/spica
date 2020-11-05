@@ -36,8 +36,6 @@ if (!process.env.WORKER_ID) {
     globalThis.require = _require;
   }
 
-  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} waiting for the event.`;
-
   const queue = new EventQueue();
   const pop = new Event.Pop({
     id: process.env.WORKER_ID
@@ -50,8 +48,6 @@ if (!process.env.WORKER_ID) {
   if (!event) {
     exitAbnormally("There is no event in the queue.");
   }
-
-  process.title = `Runtime: ${process.env.RUNTIME} - ${process.env.WORKER_ID} processing the event ${event.id}.`;
 
   process.chdir(event.target.cwd);
 

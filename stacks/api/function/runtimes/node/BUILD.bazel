@@ -3,35 +3,29 @@ package(default_visibility = ["//visibility:public"])
 load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
+load("@io_bazel_rules_docker//container:container.bzl", "container_layer")
 
-ts_library(
-    name = "node",
+
+filegroup(
+    name = "files",
     srcs = [
-        "index.ts",
-        "node.ts",
-    ],
-    data = [
-        ":runtime",
-    ],
-    module_name = "@spica-server/function/runtime/node",
-    deps = [
-        "//stacks/api/function/runtime",
-        "@npm//@types/node",
-    ],
+        "runtime.json",
+        "node.sh",
+        ":bootstrap",
+    ]
 )
 
-pkg_npm(
-    name = "runtime",
-    srcs = [
-        "package.json",
-    ],
-    deps = [
-        ":entrypoint",
-    ],
+container_layer(
+    name = "layer",
+    data_path = "/stacks/api/function/runtime/node",
+    directory = "/opt/runtimes/node",
+    files = [
+        ":files"
+    ]
 )
 
 rollup_bundle(
-    name = "entrypoint",
+    name = "bootstrap",
     srcs = [
         "experimental_database.js",
     ],
