@@ -17,8 +17,9 @@ import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 import {ToolbarActionDirective} from "../toolbar-action";
 import {HomeLayoutComponent} from "./home.layout";
 import {CanInteractDirectiveTest} from "../../../../src/passport/directives/can-interact.directive";
+import {MatMenuModule} from "@angular/material/menu";
 
-describe("Home Layout", () => {
+fdescribe("Home Layout", () => {
   describe("test for categories, routes", () => {
     let component: HomeLayoutComponent;
     let fixture: ComponentFixture<HomeLayoutComponent>;
@@ -30,6 +31,7 @@ describe("Home Layout", () => {
           MatSidenavModule,
           MatListModule,
           MatIconModule,
+          MatMenuModule,
           MatToolbarModule,
           RouterTestingModule,
           BrowserAnimationsModule,
@@ -97,10 +99,6 @@ describe("Home Layout", () => {
       )[1];
       contentCategory.click();
       fixture.detectChanges();
-      const selectedCategoryTitle = fixture.debugElement.nativeElement.querySelector(
-        "mat-nav-list:last-of-type > h4"
-      );
-      expect(selectedCategoryTitle.textContent).toEqual("Buckets");
       const selectedCategoryRoutes = fixture.debugElement.nativeElement.querySelectorAll(
         "mat-nav-list:last-of-type > mat-list-item"
       );
@@ -109,29 +107,34 @@ describe("Home Layout", () => {
       expect(selectedCategoryRoutes[1].textContent).toEqual(" content2 ");
     }));
 
-    it("should show quick-action links if the current tab is content", fakeAsync(() => {
+    it("should show sub menu", fakeAsync(() => {
       TestBed.get(RouteService).dispatch(
         new Retrieve([
-          {category: RouteCategory.System, id: "9", path: "", icon: "", display: "system1"},
-          {category: RouteCategory.System, id: "0", path: "", icon: "", display: "system2"},
-          {category: RouteCategory.Developer, id: "3", path: "", icon: "", display: "developer1"},
-          {category: RouteCategory.Developer, id: "4", path: "", icon: "", display: "developer2"},
-          {category: RouteCategory.Content, id: "7", path: "", icon: "", display: "content1"},
-          {category: RouteCategory.Content, id: "8", path: "", icon: "", display: "content2"},
-          {category: RouteCategory.Primary, id: "5", path: "", icon: "", display: "primary1"},
-          {category: RouteCategory.Primary, id: "6", path: "", icon: "", display: "primary2"}
+          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.Content, id: "0", path: "", icon: "", display: "system2"},
+          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"},
+          {category: RouteCategory.Content_Sub, id: "4", path: "", icon: "", display: "sub2"},
         ])
       );
       tick();
       fixture.detectChanges();
-      fixture.componentInstance.currentCategory.next(RouteCategory.Content);
-      tick(10);
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css(".quick-link-add-bucket"))).toBeTruthy();
-      fixture.componentInstance.currentCategory.next(RouteCategory.Developer);
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      expect(matMenu.length).toEqual(1);
+    }));
+
+    it("should show action button instead of mat menu", fakeAsync(() => {
+      TestBed.get(RouteService).dispatch(
+        new Retrieve([
+          {category: RouteCategory.Content, id: "9", path: "", icon: "", display: "system1"},
+          {category: RouteCategory.Content_Sub, id: "3", path: "", icon: "", display: "sub1"},
+        ])
+      );
       tick();
       fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css(".quick-link-add-bucket"))).toBeFalsy();
+      const matMenu = fixture.debugElement.nativeElement.querySelectorAll("h4 mat-menu");
+      expect(matMenu.length).toEqual(0);
+      const actionButton = fixture.debugElement.nativeElement.querySelectorAll("h4 button");
+      expect(actionButton.length).toEqual(1);
     }));
   });
 

@@ -1,62 +1,50 @@
 <mat-sidenav-container>
-  <mat-sidenav
-    #drawer
-    class="sidenav"
-    fixedInViewport="true"
-    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    [opened]="!(isHandset$ | async)"
-  >
+  <mat-sidenav #drawer class="sidenav" fixedInViewport="true"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    [opened]="!(isHandset$ | async)">
     <section class="routes">
       <mat-nav-list>
         <mat-list-item disableRipple>
           <img src="assets/astro-composer.svg" />
         </mat-list-item>
-        <mat-list-item
-          disableRipple
-          *ngFor="let category of  categories$ | async"
-          [class.active]="(currentCategory | async) == category.category"
-          (click)="currentCategory.next(category.category)"
-        >
+        <mat-list-item disableRipple *ngFor="let category of  categories$ | async"
+          [class.active]="(currentCategory | async) === category" (click)="currentCategory.next(category)">
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
         <mat-list-item disableRipple *ngIf="!(isHandset$ | async)" (click)="toggle()">
           <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
       </mat-nav-list>
-      <mat-nav-list>
-        <h4>{{ currentCategory | async }}</h4>
-        <mat-list-item
-          *ngFor="let route of routes$ | async"
-          [routerLink]="route.path"
-          routerLinkActive="active"
-          [queryParams]="route.queryParams"
-        >
+      <mat-nav-list *ngIf="currentCategory | async as currentCategory">
+        <h4>
+          {{ currentCategory.category }}
+          <div *ngIf="currentCategory.sub.items">
+            <button mat-icon-button *ngIf="currentCategory.sub.items.length == 1" [routerLink]="currentCategory.sub.items[0].path"
+            routerLinkActive="active" canInteract="currentCategory.sub.items[0].data?.action" matTooltip="{{currentCategory.sub.items[0].display}}">
+              <mat-icon>{{currentCategory.sub.icon}}</mat-icon>
+            </button>
+            <div *ngIf="currentCategory.sub.items.length > 1">
+              <button mat-icon-button [matMenuTriggerFor]="menu">
+                <mat-icon>{{currentCategory.sub.icon}}</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button mat-menu-item *ngFor="let subCategory of currentCategory.sub.items" [routerLink]="subCategory.path"
+                  routerLinkActive="active" canInteract="subCategory.data.action">{{subCategory.display}}</button>
+              </mat-menu>
+            </div>
+          </div>
+        </h4>
+        <mat-list-item *ngFor="let route of routes$ | async" [routerLink]="route.path" routerLinkActive="active"
+          [queryParams]="route.queryParams">
           <mat-icon>{{ route.icon }}</mat-icon>
           {{ route.display }}
         </mat-list-item>
-        <div *ngIf="categories$ | async as contentCategory; ">
-          <mat-list-item
-            canInteract="bucket:create"
-            class="quick-link-add-bucket"
-            [routerLink]="['/buckets/add']"
-            *ngIf="(currentCategory | async) == contentCategory[1]?.category;"
-          >
-            <mat-icon>add</mat-icon>
-            Add New Bucket
-          </mat-list-item>
-        </div>
       </mat-nav-list>
     </section>
   </mat-sidenav>
   <mat-sidenav-content>
     <mat-toolbar>
-      <button
-        type="button"
-        mat-icon-button
-        (click)="drawer.toggle(); expanded = true"
-        *ngIf="isHandset$ | async"
-      >
+      <button type="button" mat-icon-button (click)="drawer.toggle(); expanded = true" *ngIf="isHandset$ | async">
         <mat-icon>sort</mat-icon>
       </button>
       <span></span>

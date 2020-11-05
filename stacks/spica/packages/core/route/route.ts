@@ -6,7 +6,11 @@ export enum RouteCategory {
   Content = "Buckets",
   Developer = "Developer Area",
   System = "Access Management",
-  Function = "Functions"
+
+  Primary_Sub = "Settings",
+  Content_Sub = "All Buckets",
+  Developer_Sub = "Logs",
+  System_Sub = "IAM Settings"
 }
 
 export interface Route {
