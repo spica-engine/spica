@@ -143,8 +143,6 @@ export class IndexComponent implements OnInit {
       })
       .afterClosed()
       .toPromise()
-      .then(updatedId => {
-        this.refresh.next(updatedId);
-      });
+      .then(updatedId => this.refresh.next(updatedId));
   }
 }
