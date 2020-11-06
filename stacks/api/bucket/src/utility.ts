@@ -372,7 +372,7 @@ function createExpressionFromChange(
   operation: "set" | "unset"
 ) {
   let expressions = {};
-  targets.forEach(target => {
+  for (const target of targets) {
     let key = target.join(".");
     let value = "";
 
@@ -381,7 +381,7 @@ function createExpressionFromChange(
     }
 
     expressions[key] = value;
-  });
+  }
 
   return expressions;
 }
