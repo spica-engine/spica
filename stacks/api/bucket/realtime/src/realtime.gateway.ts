@@ -30,7 +30,8 @@ export class RealtimeGateway implements OnGatewayConnection {
       await this.guardService.checkAction({
         request: req,
         response: client,
-        actions: "bucket:data:stream"
+        actions: "bucket:data:stream",
+        options: {resourceFilter: true}
       });
     } catch (e) {
       client.send(JSON.stringify({code: e.status || 500, message: e.message}));
