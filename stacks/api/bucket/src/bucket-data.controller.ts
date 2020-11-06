@@ -48,8 +48,6 @@ import {
  */
 @Controller("bucket/:bucketId/data")
 export class BucketDataController {
-  validatorPipes: Map<ObjectId, PipeTransform<any, any>> = new Map();
-
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
@@ -471,7 +469,7 @@ export class BucketDataController {
 
     const patchedDocument = getPatchedDocument(previousDocument, patch);
 
-    await this.validateInput(bucketId, patchedDocument).catch(error => {
+    await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
       throw new BadRequestException(
         (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
         error.message
@@ -500,18 +498,6 @@ export class BucketDataController {
         currentDocument
       );
     }
-  }
-
-  validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {
-    let pipe: any = this.validatorPipes.get(bucketId);
-
-    if (!pipe) {
-      let validatorMixin = Schema.validate(bucketId.toHexString());
-      pipe = new validatorMixin(this.validator);
-      this.validatorPipes.set(bucketId, pipe);
-    }
-
-    return pipe.transform(input);
   }
 
   /**
