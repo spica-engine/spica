@@ -32,8 +32,8 @@ import {
   createHistory,
   clearRelations,
   deepCopy,
-  getUpdateQuery,
-  getPatchedDocument
+  getPatchedDocument,
+  updateQueryForPatch
 } from "../utility";
 import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
 
@@ -453,11 +453,7 @@ export class GraphqlController implements OnModuleInit {
         throwError(error.message, 400)
       );
 
-      let updateQuery = getUpdateQuery(previousDocument, patchedDocument);
-
-      if (!Object.keys(updateQuery).length) {
-        throw Error("There is no difference between previous and current documents.");
-      }
+      let updateQuery = updateQueryForPatch(input);
 
       let currentDocument = await this.bds.findOneAndUpdate(
         bucket._id,

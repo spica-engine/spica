@@ -39,7 +39,7 @@ import {
   createHistory,
   getRelationAggregation,
   getPatchedDocument,
-  getUpdateQuery
+  updateQueryForPatch
 } from "./utility";
 
 /**
@@ -447,6 +447,7 @@ export class BucketDataController {
    */
   @UseInterceptors(activity(createBucketDataActivity))
   @Patch(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
   async patch(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -477,13 +478,7 @@ export class BucketDataController {
       );
     });
 
-    const updateQuery = getUpdateQuery(previousDocument, patchedDocument);
-
-    if (!Object.keys(updateQuery).length) {
-      throw new BadRequestException(
-        "There is no difference between previous and current documents."
-      );
-    }
+    const updateQuery = updateQueryForPatch(patch);
 
     const currentDocument = await this.bds.findOneAndUpdate(
       bucketId,
@@ -505,8 +500,6 @@ export class BucketDataController {
         currentDocument
       );
     }
-
-    return currentDocument;
   }
 
   validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {

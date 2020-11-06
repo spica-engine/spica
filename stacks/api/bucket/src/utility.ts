@@ -321,42 +321,49 @@ export function getPatchedDocument(previousDocument: BucketDocument, patchQuery:
   return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
 }
 
-export function getUpdateQuery(previousDocument: BucketDocument, currentDocument: BucketDocument) {
-  let updateQuery: any = {};
+export function updateQueryForPatch(query: Partial<BucketDocument>) {
+  const unset = {};
+  const set = {};
 
-  let changes = diff(previousDocument, currentDocument);
+  const visit = (partialPatch: any, base: string = "") => {
+    for (const name in partialPatch) {
+      const key = base ? `${base}.${name}` : name;
+      const value = partialPatch[name];
+      const type = typeof value;
 
-  changes = changes.map(change => {
-    let numIndex = change.path.findIndex(t => typeof t == "number");
-    //item update is not possible with merge/patch,
-    //we must put the given array directly
-    if (numIndex > 0) {
-      //if paths include array index, the last path before any number is the array path that will be put
-      //we do not need to track rest of it
-      change.path = change.path.slice(0, numIndex);
-      //array updates will be handled with set operator.
-      change.kind = ChangeKind.Edit;
+      if (value == null) {
+        unset[key] = "";
+      } else if (
+        type == "boolean" ||
+        type == "string" ||
+        type == "number" ||
+        type == "bigint" ||
+        Array.isArray(value)
+      ) {
+        set[key] = value;
+      } else if (typeof value == "object") {
+        visit(value, key);
+      }
     }
-    return change;
-  });
+  };
 
-  const setTargets = changes
-    .filter(change => change.kind != ChangeKind.Delete)
-    .map(change => change.path);
-  let setExpressions = createExpressionFromChange(currentDocument, setTargets, "set");
-  if (Object.keys(setExpressions).length) {
-    updateQuery.$set = setExpressions;
+  visit(query);
+
+  let result: any = {};
+
+  if (Object.keys(set).length) {
+    result.$set = set;
   }
 
-  const unsetTargets = changes
-    .filter(change => change.kind == ChangeKind.Delete)
-    .map(change => change.path);
-  let unsetExpressions = createExpressionFromChange(currentDocument, unsetTargets, "unset");
-  if (Object.keys(unsetExpressions).length) {
-    updateQuery.$unset = unsetExpressions;
+  if (Object.keys(unset).length) {
+    result.$unset = unset;
   }
 
-  return updateQuery;
+  if (!Object.keys(result).length) {
+    return;
+  }
+
+  return result;
 }
 
 function createExpressionFromChange(

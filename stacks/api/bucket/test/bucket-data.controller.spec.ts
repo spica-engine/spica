@@ -1073,21 +1073,18 @@ describe("BucketDataController", () => {
       });
 
       it("should patch document", async () => {
-        const updatedDocument = (await req.patch(
-          `/bucket/${myBucketId}/data/${insertedDocument._id}`,
-          {
-            title: "new_title",
-            description: null
-          }
-        )).body;
+        const response = await req.patch(`/bucket/${myBucketId}/data/${insertedDocument._id}`, {
+          title: "new_title",
+          description: null
+        });
 
-        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${updatedDocument._id}`))
+        expect(response.statusCode).toEqual(204);
+        expect(response.body).toEqual(undefined);
+
+        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${insertedDocument._id}`))
           .body;
 
-        expect(bucketDocument).toEqual(updatedDocument);
-
-        delete updatedDocument._id;
-        expect(updatedDocument).toEqual({title: "new_title"});
+        expect(bucketDocument).toEqual({_id: insertedDocument._id, title: "new_title"});
       });
 
       it("should throw error when patched document is not valid", async () => {
