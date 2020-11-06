@@ -65,12 +65,10 @@ export class IndexComponent implements OnInit {
                 return storages;
               }
 
-              storages.data = storages.data.map(s => {
-                if (s._id == updatedId) {
-                  s.url = s.url + "?timestamp=" + new Date().getTime();
-                }
-                return s;
-              });
+              let index = storages.data.findIndex(s => s._id == updatedId);
+              if (index != -1) {
+                storages.data[index].url += "?timestamp=" + new Date().getTime();
+              }
 
               return storages;
             })
