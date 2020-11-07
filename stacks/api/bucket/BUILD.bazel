@@ -21,6 +21,7 @@ ts_library(
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/realtime",
         "//stacks/api/bucket/services",
+        "//stacks/api/bucket/expression",
         "//stacks/api/passport",
         "//stacks/api/passport/guard",
         "//stacks/api/preference",

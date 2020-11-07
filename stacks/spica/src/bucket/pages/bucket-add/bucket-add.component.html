@@ -157,6 +157,19 @@
               </div>
             </form>
           </mat-list-item>
+          <mat-list-item>
+            <mat-form-field style="width: 100%;">
+              <textarea
+                matInput
+                name="acl"
+                placeholder="ACL"
+                #dm="ngModel"
+                [(ngModel)]="bucket.acl"
+                cols="20"
+                rows="3"
+              ></textarea>
+            </mat-form-field>
+          </mat-list-item>
           <span>
             <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
             <span class="errors">

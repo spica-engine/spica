@@ -11,6 +11,10 @@
       "type": "boolean",
       "default": false
     },
+    "acl": {
+      "type": "string",
+      "default": "true"
+    },
     "title": {
       "type": "string",
       "title": "Title of the bucket",

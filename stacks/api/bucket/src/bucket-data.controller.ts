@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -21,9 +20,9 @@ import {
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter, ReviewDispatcher} from "@spica-server/bucket/hooks";
+import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER, OR, BooleanCheck} from "@spica-server/core";
+import {ARRAY, BOOLEAN, BooleanCheck, DEFAULT, JSONP, JSONPR, NUMBER, OR} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
@@ -32,11 +31,12 @@ import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
 import {
   buildRelationAggregation,
-  filterReviver,
   clearRelations,
   createHistory,
+  filterReviver,
   getRelationAggregation
 } from "./utility";
+import {run} from "@spica-server/bucket/expression";
 
 /**
  * All APIs related to bucket documents.
@@ -47,7 +47,6 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    @Optional() private reviewDispatcher: ReviewDispatcher,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService
   ) {}
@@ -72,9 +71,7 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @StrategyType() strategyType: string,
     @ResourceFilter() resourceFilter: object,
-    @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
@@ -162,16 +159,6 @@ export class BucketDataController {
       aggregation.push({$match: filter});
     }
 
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const hookAggregation = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "index"},
-        headers
-      );
-      if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
-        aggregation = aggregation.concat(hookAggregation);
-      }
-    }
-
     let data: Promise<unknown>;
 
     if (paginate && !skip && !limit) {
@@ -229,8 +216,6 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:show"))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
     @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
@@ -257,11 +242,12 @@ export class BucketDataController {
       req.res.header("Content-language", locale.best || locale.fallback);
     }
 
+    const schema = await this.bs.findOne({_id: bucketId});
+
     if (relation) {
-      const bucket = await this.bs.findOne({_id: bucketId});
       if (typeof relation == "boolean") {
-        for (const propertyKey in bucket.properties) {
-          const property = bucket.properties[propertyKey];
+        for (const propertyKey in schema.properties) {
+          const property = schema.properties[propertyKey];
           if (property.type == "relation") {
             aggregation.push(
               ...buildRelationAggregation(
@@ -277,7 +263,7 @@ export class BucketDataController {
         let fields: string[][] = relation.map(pattern => pattern.split("."));
 
         let relationAggregation = await getRelationAggregation(
-          bucket.properties,
+          schema.properties,
           fields,
           locale,
           (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
@@ -287,18 +273,17 @@ export class BucketDataController {
       }
     }
 
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const hookAggregation = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "get"},
-        headers,
-        documentId.toHexString()
-      );
-      if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
-        aggregation = aggregation.concat(hookAggregation);
-      }
-    }
-
     const [document] = await this.bds.find(bucketId, aggregation);
+
+    try {
+      const result = run(schema["acl"], {authorization: req.user, document});
+
+      if (!result) {
+        throw new ForbiddenException("ACL rules has rejected the access");
+      }
+    } catch (err) {
+      throw new ForbiddenException(err.message);
+    }
 
     if (!document) {
       throw new NotFoundException(`${documentId} could not be found.`);
@@ -335,19 +320,9 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async insertOne(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
+
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "insert"},
-        headers
-      );
-      if (!allowed) {
-        throw new ForbiddenException("Forbidden action.");
-      }
-    }
     const {
       ops: [currentDocument],
       insertedId
@@ -388,21 +363,8 @@ export class BucketDataController {
   async update(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
     @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
   ) {
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "update"},
-        headers,
-        documentId.toHexString()
-      );
-      if (!allowed) {
-        throw new ForbiddenException("Forbidden action.");
-      }
-    }
-
     const {value: previousDocument} = await this.bds.replaceOne(bucketId, {_id: documentId}, body, {
       returnOriginal: true
     });
@@ -435,22 +397,9 @@ export class BucketDataController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "delete"},
-        headers,
-        documentId.toHexString()
-      );
-      if (!allowed) {
-        throw new ForbiddenException("Forbidden action.");
-      }
-    }
-
     let deletedDocument: BucketDocument;
 
     if (this.changeEmitter) {
