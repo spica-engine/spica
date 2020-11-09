@@ -570,6 +570,38 @@ describe("Bucket acceptance", () => {
         ]);
       });
     });
+
+    describe("relation", () => {
+      it("should show error about bucketId and relationType", async () => {
+        let invalidBucket = {...validBucket};
+        invalidBucket.properties.books = {
+          type: "relation",
+          relationType: "onetoone"
+        };
+
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.message, response.body.error]).toEqual([
+          ".properties['books'] should have required property '.bucketId'",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about relationType", async () => {
+        let invalidBucket = {...validBucket};
+        invalidBucket.properties.books = {
+          type: "relation",
+          bucketId: validBucket._id
+        };
+
+        const response = await req.post("/bucket", invalidBucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.message, response.body.error]).toEqual([
+          ".properties['books'] should have required property '.relationType'",
+          "validation failed"
+        ]);
+      });
+    });
   });
 
   describe("clear removed and updated fields", () => {
