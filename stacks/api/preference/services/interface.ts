@@ -4,9 +4,7 @@ export interface Preference {
   [key: string]: any;
 }
 
-export const PREFERENCE_CHANGE_FINALIZER = Symbol.for("PREFERENCE_CHANGE_FINALIZER");
+export const BUCKET_LANGUAGE_FINALIZER = Symbol.for("BUCKET_LANGUAGE_FINALIZER");
+export const IDENTITY_SETTINGS_FINALIZER = Symbol.for("IDENTITY_SETTINGS_FINALIZER");
 
-export type LanguageChangeUpdater = (
-  previousSchema: object,
-  currentSchema: Object
-) => Promise<unknown>;
+export type changeFactory = (previousSchema: object, currentSchema: Object) => Promise<unknown>;

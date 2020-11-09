@@ -5,9 +5,8 @@ import {
   isArray,
   findUpdatedFields,
   getUpdateParams,
-  provideLanguageChangeUpdater
+  provideLanguageFinalizer
 } from "@spica-server/bucket/src/utility";
-import {ChangeKind} from "../history/differ";
 
 describe("Utilities", () => {
   it("should check whether schema is object or not", () => {
@@ -241,7 +240,7 @@ describe("Utilities", () => {
         updateMany
       };
 
-      updaterFactory = provideLanguageChangeUpdater(bucketService, bucketDataService);
+      updaterFactory = provideLanguageFinalizer(bucketService, bucketDataService);
     });
 
     it("should return updater function", () => {

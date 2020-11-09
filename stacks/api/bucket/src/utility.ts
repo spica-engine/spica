@@ -208,7 +208,7 @@ export function buildRelationAggregation(
   }
 }
 
-export function provideLanguageChangeUpdater(
+export function provideLanguageFinalizer(
   bucketService: BucketService,
   bucketDataService: BucketDataService
 ) {
