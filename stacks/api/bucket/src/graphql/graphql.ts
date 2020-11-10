@@ -21,18 +21,21 @@ import {
   getBucketName,
   createSchema,
   extractAggregationFromQuery,
-  getPatchedDocument,
-  getUpdateQuery,
   aggregationsFromRequestedFields,
   getProjectAggregation,
   requestedFieldsFromInfo,
   requestedFieldsFromExpression,
-  deepCopy,
   SchemaError
 } from "./schema";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
-import {createHistory, clearRelations} from "../utility";
+import {
+  createHistory,
+  clearRelations,
+  deepCopy,
+  getPatchedDocument,
+  updateQueryForPatch
+} from "../utility";
 import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
 
 interface FindResponse {
@@ -447,11 +450,7 @@ export class GraphqlController implements OnModuleInit {
         throwError(error.message, 400)
       );
 
-      let updateQuery = getUpdateQuery(previousDocument, patchedDocument);
-
-      if (!Object.keys(updateQuery).length) {
-        throw Error("There is no difference between previous and current documents.");
-      }
+      let updateQuery = updateQueryForPatch(input);
 
       let currentDocument = await this.bds.findOneAndUpdate(
         bucket._id,
