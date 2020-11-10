@@ -74,7 +74,7 @@ describe("Schema", () => {
 
     it("should create schema for bucket", () => {
       bucket.required = ["title"];
-      let schema = createSchema(bucket, staticTypes, []);
+      let schema = createSchema(bucket, staticTypes, [], []);
 
       expect(format(schema)).toEqual(
         format(
@@ -110,7 +110,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", []);
+      let schema = createSchema(bucket, "", [], []);
       expect(format(schema)).toEqual(
         format(
           `
@@ -151,7 +151,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", []);
+      let schema = createSchema(bucket, "", [], []);
 
       expect(format(schema)).toEqual(
         format(
@@ -192,7 +192,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", ["otherid", "anotherid"]);
+      let schema = createSchema(bucket, "", ["otherid", "anotherid"], []);
 
       expect(format(schema)).toEqual(
         format(`
@@ -243,7 +243,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", []);
+      let schema = createSchema(bucket, "", [], []);
 
       expect(format(schema)).toEqual(
         format(`
@@ -271,6 +271,140 @@ describe("Schema", () => {
         }
       `)
       );
+    });
+
+    describe("errors", () => {
+      it("should replace name of field, convert type of value to String and push errors", () => {
+        bucket.properties = {
+          "123invalid,name?*.": {
+            type: "object"
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            _123invalid_name___: String
+          }
+  
+          input Bucket_idInput{
+            _123invalid_name___: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.123invalid,name?*.",
+            reason:
+              "Name specification must start with an alphabetic character and can not include any non-letter character."
+          }
+        ]);
+      });
+
+      it("should convert enum type definition to String and push errors if enum includes invalid value", () => {
+        bucket.properties = {
+          shapes: {
+            type: "string",
+            enum: ["2D", "3D"]
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            shapes: String
+          }
+  
+          input Bucket_idInput{
+            shapes: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.shapes",
+            reason:
+              "Enums must start with an alphabetic character and can not include any non-letter character."
+          }
+        ]);
+      });
+
+      it("should convert relation type definition to String and push errors if related bucket does not exist", () => {
+        bucket.properties = {
+          books: {
+            type: "relation",
+            bucketId: "non_exist_bucket_id"
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            books: String
+          }
+  
+          input Bucket_idInput{
+            books: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.books",
+            reason: "Related bucket 'non_exist_bucket_id' does not exist."
+          },
+          {
+            target: "Bucket_id.books",
+            reason: "Relation type 'undefined' is invalid type."
+          }
+        ]);
+      });
+
+      it("should make type definition to String if type is invalid", () => {
+        bucket.properties = {
+          average: {
+            type: "float"
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            average: String
+          }
+  
+          input Bucket_idInput{
+            average: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.average",
+            reason: "Type 'float' is invalid type."
+          }
+        ]);
+      });
     });
   });
 

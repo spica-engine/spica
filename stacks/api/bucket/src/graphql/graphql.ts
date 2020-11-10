@@ -24,7 +24,8 @@ import {
   aggregationsFromRequestedFields,
   getProjectAggregation,
   requestedFieldsFromInfo,
-  requestedFieldsFromExpression
+  requestedFieldsFromExpression,
+  SchemaError
 } from "./schema";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
@@ -119,7 +120,7 @@ export class GraphqlController implements OnModuleInit {
 
   schema: GraphQLSchema;
 
-  errorFromLastSchemaGeneration: string;
+  schemaErrors: SchemaError[];
 
   constructor(
     private adapterHost: HttpAdapterHost,
@@ -131,15 +132,12 @@ export class GraphqlController implements OnModuleInit {
     @Optional() private history: HistoryService
   ) {
     this.bs.watchAll(true).subscribe(buckets => {
+      this.schemaErrors = [];
       this.buckets = buckets;
 
-      try {
-        this.schema = buckets.length ? this.getSchema(buckets) : this.defaultSchema;
-        this.errorFromLastSchemaGeneration = undefined;
-      } catch (error) {
-        this.schema = this.defaultSchema;
-        this.errorFromLastSchemaGeneration = error.message;
-      }
+      this.schema = buckets.length
+        ? this.getSchema(buckets, this.schemaErrors)
+        : this.defaultSchema;
     });
   }
 
@@ -155,9 +153,8 @@ export class GraphqlController implements OnModuleInit {
           resourceFilter: true
         });
 
-        if (this.errorFromLastSchemaGeneration) {
-          response.statusCode = 500;
-          response.statusMessage = this.errorFromLastSchemaGeneration;
+        if (this.schemaErrors.length) {
+          response.setHeader("Warnings", JSON.stringify(this.schemaErrors));
         }
 
         return {
@@ -175,9 +172,9 @@ export class GraphqlController implements OnModuleInit {
     );
   }
 
-  getSchema(buckets: Bucket[]): GraphQLSchema {
+  getSchema(buckets: Bucket[], errors: SchemaError[]): GraphQLSchema {
     let typeDefs = buckets.map(bucket =>
-      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()))
+      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()), errors)
     );
     let resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
 
