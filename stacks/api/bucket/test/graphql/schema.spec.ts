@@ -1,14 +1,13 @@
 import {
   createSchema,
   extractAggregationFromQuery,
-  getPatchedDocument,
-  getUpdateQuery,
   requestedFieldsFromInfo,
   aggregationsFromRequestedFields,
   getProjectAggregation,
   requestedFieldsFromExpression
 } from "../../src/graphql/schema";
 import {format as _format} from "prettier";
+import {getPatchedDocument, updateQueryForPatch} from "@spica-server/bucket/src/utility";
 
 export function format(text: string) {
   return _format(text, {parser: "graphql"});
@@ -997,16 +996,7 @@ describe("Schema", () => {
     });
 
     it("should get update query", () => {
-      let previousDocument = {
-        title: "title",
-        description: "description"
-      };
-
-      let currentDocument = {
-        title: "new_title"
-      };
-
-      let query = getUpdateQuery(previousDocument, currentDocument);
+      let query = updateQueryForPatch({title: "new_title", description: null});
 
       expect(query).toEqual({
         $set: {title: "new_title"},
@@ -1015,20 +1005,11 @@ describe("Schema", () => {
     });
 
     it("should get update query for nested objects", () => {
-      let previousDocument = {
+      let query = updateQueryForPatch({
         nested_object: {
-          field1: "dont_touch_me",
-          field2: "remove_me"
+          field2: null
         }
-      };
-
-      let currentDocument = {
-        nested_object: {
-          field1: "dont_touch_me"
-        }
-      };
-
-      let query = getUpdateQuery(previousDocument, currentDocument);
+      });
 
       expect(query).toEqual({
         $unset: {"nested_object.field2": ""}
@@ -1036,15 +1017,9 @@ describe("Schema", () => {
     });
 
     it("should get update query for arrays", () => {
-      let previousDocument = {
-        strings: ["value1", "value2"]
-      };
-
-      let currentDocument = {
+      let query = updateQueryForPatch({
         strings: ["new_value"]
-      };
-
-      let query = getUpdateQuery(previousDocument, currentDocument);
+      });
 
       expect(query).toEqual({
         $set: {strings: ["new_value"]}
