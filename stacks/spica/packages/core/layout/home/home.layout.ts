@@ -30,7 +30,7 @@ export class HomeLayoutComponent implements OnInit {
   private _categories = new Map([
     [
       RouteCategory.Primary,
-      {icon: "stars", index: 0, sub: {name: RouteCategory.Primary_Sub, icon: "list"}}
+      {icon: "stars", index: 0, children: {name: RouteCategory.Primary_Sub, icon: "list"}}
     ],
     [
       RouteCategory.Content,
@@ -42,16 +42,20 @@ export class HomeLayoutComponent implements OnInit {
     ],
     [
       RouteCategory.System,
-      {icon: "supervisor_account", index: 2, sub: {name: RouteCategory.System_Sub, icon: "list"}}
+      {
+        icon: "supervisor_account",
+        index: 2,
+        children: {name: RouteCategory.System_Sub, icon: "list"}
+      }
     ],
     [
       RouteCategory.Developer,
-      {icon: "memory", index: 3, sub: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
+      {icon: "memory", index: 3, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
     ]
   ]);
 
   categories$: Observable<
-    Array<{icon: string; category: RouteCategory; index: number; sub: object}>
+    Array<{icon: string; category: RouteCategory; index: number; children: object}>
   >;
 
   currentCategory = new BehaviorSubject(null);
@@ -81,9 +85,9 @@ export class HomeLayoutComponent implements OnInit {
               category: categoryName,
               index: category.index,
               children: {
-                    items: routes.filter(route => route.category == category.sub.name),
-                    icon: category.sub.icon
-               },
+                items: routes.filter(route => route.category == category.children.name),
+                icon: category.children.icon
+              }
             };
           })
           .sort((a, b) => a.index - b.index);
