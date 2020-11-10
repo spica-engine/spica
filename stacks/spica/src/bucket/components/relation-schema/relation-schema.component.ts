@@ -1,4 +1,4 @@
-import {Component, Inject, AfterViewInit} from "@angular/core";
+import {Component, Inject} from "@angular/core";
 import {INPUT_SCHEMA} from "@spica-client/common";
 import {Observable} from "rxjs";
 import {BucketService} from "../../services/bucket.service";
@@ -11,15 +11,13 @@ import {tap} from "rxjs/operators";
   templateUrl: "./relation-schema.component.html",
   styleUrls: ["./relation-schema.component.scss"]
 })
-export class RelationSchemaComponent implements AfterViewInit {
+export class RelationSchemaComponent {
   public buckets: Observable<Bucket[]>;
 
   constructor(
     @Inject(INPUT_SCHEMA) public schema: RelationSchema,
     private bucketService: BucketService
-  ) {}
-
-  ngAfterViewInit() {
+  ) {
     setTimeout(() => {
       if (!this.schema.relationType) {
         this.schema.relationType = RelationType.OneToOne;
