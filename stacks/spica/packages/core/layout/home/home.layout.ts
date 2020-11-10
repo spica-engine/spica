@@ -37,7 +37,7 @@ export class HomeLayoutComponent implements OnInit {
       {
         icon: "view_stream",
         index: 1,
-        sub: {name: RouteCategory.Content_Sub, icon: "format_list_numbered"}
+        children: {name: RouteCategory.Content_Sub, icon: "format_list_numbered"}
       }
     ],
     [
