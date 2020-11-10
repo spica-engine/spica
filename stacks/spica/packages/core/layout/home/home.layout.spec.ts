@@ -19,7 +19,7 @@ import {HomeLayoutComponent} from "./home.layout";
 import {CanInteractDirectiveTest} from "../../../../src/passport/directives/can-interact.directive";
 import {MatMenuModule} from "@angular/material/menu";
 
-fdescribe("Home Layout", () => {
+describe("Home Layout", () => {
   describe("test for categories, routes", () => {
     let component: HomeLayoutComponent;
     let fixture: ComponentFixture<HomeLayoutComponent>;
