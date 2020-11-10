@@ -47,7 +47,7 @@ export class AddComponent implements OnInit, OnDestroy {
   dependencies: Observable<any>;
   dependencyInstallPending = false;
 
-  isHandlerDuplicated = false;
+  isHandlerDuplicated: any = false;
   serverError: string;
 
   enableLogView: boolean = false;
@@ -63,6 +63,8 @@ export class AddComponent implements OnInit, OnDestroy {
   $save: Observable<SavingState>;
 
   $markers = new Subject<unknown[]>();
+
+  triggersEditMode = [true];
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -91,6 +93,7 @@ export class AddComponent implements OnInit, OnDestroy {
           this.isIndexPending = true;
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
+          this.function.triggers.map((trigger, index) => (this.triggersEditMode[index] = false));
           this.getDependencies();
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
@@ -118,6 +121,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   addTrigger() {
     this.function.triggers.push(emptyTrigger());
+    this.triggersEditMode[this.function.triggers.length - 1] = true;
   }
 
   deleteTrigger(i: number) {
@@ -136,7 +140,7 @@ export class AddComponent implements OnInit, OnDestroy {
   showExample(trigger: Trigger) {
     let code = this.functionService.getExample(trigger);
     this.dialog.open(CodeComponent, {
-      width: "700px",
+      width: "80%",
       data: {
         code: code
       }
@@ -247,7 +251,8 @@ export class AddComponent implements OnInit, OnDestroy {
         item => item.handler == trigger.handler
       );
       if (duplicatedHandler.length > 1) {
-        this.isHandlerDuplicated = true;
+        this.isHandlerDuplicated = duplicatedHandler[0];
+        console.log(this.isHandlerDuplicated);
       }
     });
   }

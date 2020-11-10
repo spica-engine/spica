@@ -123,7 +123,7 @@ describe("Function Add", () => {
     };
 
     fixture.componentInstance.checkHandlers();
-    expect(fixture.componentInstance.isHandlerDuplicated).toBe(true);
+    expect(fixture.componentInstance.isHandlerDuplicated).toBeTruthy();
   });
 
   it("should set isHandlerDuplicated false", () => {
