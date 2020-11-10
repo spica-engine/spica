@@ -79,16 +79,28 @@ ConditionalAndOperation = "&&" rhs:Relation {
 Relation = lhs:Addition rhs:(RelationOperation)* { 
   return __cel$ltr__(lhs, rhs) 
 } 
-RelationOperation = type:("<" / "<=" / ">=" / ">" / "==" / "!=" / "in")  rhs:Addition { 
+RelationOperation = type:RELATION_SYMBOL  rhs:Addition { 
   return {kind: "operator", type, category:"binary", rhs} 
 }
+RELATION_SYMBOL      
+  = "<" {return 'less'}
+  / "<=" {return 'lessOrEqual'}
+  / ">=" {return 'greaterOrEqual'}
+  / ">" {return 'greater'}
+  / "==" {return 'equal'}
+  / "!=" {return 'notEqual'}
+  / " in " {return 'in'}
 
 Addition = lhs:Multiplication rhs:(AdditionOperation)* { 
   return __cel$ltr__(lhs, rhs)
 } 
-AdditionOperation = type:("+"/"-") rhs:Multiplication { 
+AdditionOperation = type:SUM_SYMBOL rhs:Multiplication { 
   return {kind: "operator", type, category:"binary", rhs} 
 }
+SUM_SYMBOL 
+  = "+" {return 'add'}
+  / "-" {return 'subtract'}
+
 
 Multiplication = lhs:Unary rhs:(MultiplicationOperation)* { 
   return __cel$ltr__(lhs, rhs) 
