@@ -982,7 +982,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  describe("post requests", () => {
+  describe("post,put,patch requests", () => {
     let myBucketId: ObjectId;
     beforeEach(async () => {
       const myBucket = {
@@ -1009,59 +1009,98 @@ describe("BucketDataController", () => {
       myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
     });
 
-    it("should add document to bucket and return inserted document", async () => {
-      const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
-        title: "first title",
-        description: "first description"
-      })).body;
+    describe("post", () => {
+      it("should add document to bucket and return inserted document", async () => {
+        const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
+          title: "first title",
+          description: "first description"
+        })).body;
 
-      const bucketDocument = (await req.get(
-        `/bucket/${myBucketId}/data/${insertedDocument._id}`,
-        {}
-      )).body;
+        const bucketDocument = (await req.get(
+          `/bucket/${myBucketId}/data/${insertedDocument._id}`,
+          {}
+        )).body;
 
-      expect(bucketDocument).toEqual(insertedDocument);
+        expect(bucketDocument).toEqual(insertedDocument);
 
-      delete insertedDocument._id;
-      expect(insertedDocument).toEqual({title: "first title", description: "first description"});
+        delete insertedDocument._id;
+        expect(insertedDocument).toEqual({title: "first title", description: "first description"});
+      });
+
+      it("should return error if title isnt valid for bucket", async () => {
+        const response = await req
+          .post(`/bucket/${myBucketId}/data`, {
+            title: true,
+            description: "description"
+          })
+          .then(() => null)
+          .catch(e => e);
+        expect(response.statusCode).toBe(400);
+        expect(response.statusText).toBe("Bad Request");
+        expect(response.body).toEqual({
+          statusCode: 400,
+          message: ".title should be string",
+          error: "validation failed"
+        });
+      });
     });
 
-    it("should update document", async () => {
-      const insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
-        title: "first title",
-        description: "first description"
-      })).body;
+    describe("put/patch", () => {
+      let insertedDocument;
+      beforeEach(async () => {
+        insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
+          title: "first title",
+          description: "first description"
+        })).body;
+      });
 
-      const updatedDocument = (await req.put(`/bucket/${myBucketId}/data/${insertedDocument._id}`, {
-        ...insertedDocument,
-        title: "updated title"
-      })).body;
+      it("should update document", async () => {
+        const updatedDocument = (await req.put(
+          `/bucket/${myBucketId}/data/${insertedDocument._id}`,
+          {
+            ...insertedDocument,
+            title: "updated title"
+          }
+        )).body;
 
-      const bucketDocument = (await req.get(
-        `/bucket/${myBucketId}/data/${updatedDocument._id}`,
-        {}
-      )).body;
+        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${updatedDocument._id}`))
+          .body;
 
-      expect(bucketDocument).toEqual(updatedDocument);
+        expect(bucketDocument).toEqual(updatedDocument);
 
-      delete updatedDocument._id;
-      expect(updatedDocument).toEqual({title: "updated title", description: "first description"});
-    });
+        delete updatedDocument._id;
+        expect(updatedDocument).toEqual({title: "updated title", description: "first description"});
+      });
 
-    it("should return error if title isnt valid for bucket", async () => {
-      const response = await req
-        .post(`/bucket/${myBucketId}/data`, {
-          title: true,
-          description: "description"
-        })
-        .then(() => null)
-        .catch(e => e);
-      expect(response.statusCode).toBe(400);
-      expect(response.statusText).toBe("Bad Request");
-      expect(response.body).toEqual({
-        statusCode: 400,
-        message: ".title should be string",
-        error: "validation failed"
+      it("should patch document", async () => {
+        const response = await req.patch(`/bucket/${myBucketId}/data/${insertedDocument._id}`, {
+          title: "new_title",
+          description: null
+        });
+
+        expect(response.statusCode).toEqual(204);
+        expect(response.body).toEqual(undefined);
+
+        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${insertedDocument._id}`))
+          .body;
+
+        expect(bucketDocument).toEqual({_id: insertedDocument._id, title: "new_title"});
+      });
+
+      it("should throw error when patched document is not valid", async () => {
+        const response = await req
+          .patch(`/bucket/${myBucketId}/data/${insertedDocument._id}`, {
+            title: 1001
+          })
+          .catch(e => e);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.statusText).toBe("Bad Request");
+        expect(response.body).toEqual({
+          statusCode: 400,
+          message: ".title should be string",
+          error: "validation failed"
+        });
       });
     });
 
