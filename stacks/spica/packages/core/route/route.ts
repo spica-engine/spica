@@ -10,7 +10,7 @@ export enum RouteCategory {
   Primary_Sub = "Settings",
   Content_Sub = "All Buckets",
   Developer_Sub = "Logs",
-  System_Sub = "IAM Settings"
+  System_Sub = "IA Management"
 }
 
 export interface Route {
