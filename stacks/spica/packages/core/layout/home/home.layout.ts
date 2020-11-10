@@ -80,10 +80,10 @@ export class HomeLayoutComponent implements OnInit {
               icon: category.icon,
               category: categoryName,
               index: category.index,
-              sub: Object.assign(
-                {items: routes.filter(route => route.category == category.sub.name)},
-                {icon: category.sub.icon}
-              )
+              children: {
+                    items: routes.filter(route => route.category == category.sub.name),
+                    icon: category.sub.icon
+               },
             };
           })
           .sort((a, b) => a.index - b.index);
