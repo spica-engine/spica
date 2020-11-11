@@ -38,7 +38,7 @@ Event trigger will pass the data as parameters to the function when the event ra
 For example a function which has http trigger will look like this:
 
 ```typescript
-export default function (request, response) {
+export default function(request, response) {
   // Send the response
   response.send({
     message: "Spica is awesome!"
@@ -116,7 +116,7 @@ export default async function() {
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
 
-export default async function () {
+export default async function() {
   const db: Database = await database();
   const books: Collection = db.collection("books");
 
@@ -138,7 +138,7 @@ export default async function () {
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
 
-export default async function () {
+export default async function() {
   const db: Database = await database();
   const books: Collection = db.collection("books");
 
@@ -154,7 +154,7 @@ export default async function () {
 ```typescript
 import {database, Database, Collection} from "@spica-devkit/database";
 
-export default async function () {
+export default async function() {
   const db: Database = await database();
   const books: Collection = db.collection("books");
 
@@ -191,7 +191,7 @@ Bucket.initialize({apikey: "{APIKEY which as the needed policy}", publicUrl: ""}
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.get("{BUCKET ID}");
 }
@@ -202,7 +202,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.getAll();
 }
@@ -213,7 +213,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
   let bucket = {
@@ -243,7 +243,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
   let bucket = {
@@ -276,7 +276,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.remove("5f10302b4d858d1824e57e6d");
 }
@@ -287,7 +287,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.get("{BUCKET ID}", "{BUCKET DATA ID}");
 }
@@ -298,7 +298,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.getAll("{BUCKET ID}", {
     headers: {"accept-language": "TR"},
@@ -312,7 +312,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
   let document = {
@@ -329,7 +329,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
 
   let document = {
@@ -349,7 +349,7 @@ export default function (req, res) {
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
 
-export default function (req, res) {
+export default function(req, res) {
   Bucket.initialize({apikey: "{APIKEY}"});
   return Bucket.data.remove("{BUCKET ID}", "{BUCKET DATA ID}");
 }
@@ -416,7 +416,7 @@ Example:
 For **`/books/:bookId`** path, you can access the **bookId** parameter from **`request.params`** object.
 
 ```typescript
-export default function (request, response) {
+export default function(request, response) {
   // Print the bookId parameter
   console.log(request.params.bookId);
   // Send the response
@@ -441,7 +441,7 @@ Usually, every request contains a payload (body) along with the request. It can 
 Example function;
 
 ```typescript
-export default function (request, response) {
+export default function(request, response) {
   // A entry will appear in function logs.
   console.dir(request.body);
   // Send body as response right away
@@ -489,7 +489,7 @@ To be able to create a function that triggered by database event, you need two r
 A basic database function looks like this:
 
 ```typescript
-export default function (changes) {
+export default function(changes) {
   console.log(changes);
   // Business logic here
 }
@@ -530,7 +530,7 @@ To create a scheduled function you need a CRON time expression and Time-zone bec
 For example, if you want to run your function at every minute, you need a cron time expression like this [\* \* \* \* \*](https://crontab.guru/#*_*_*_*_*).
 
 ```typescript
-export default function () {
+export default function() {
   // Your business logic
 }
 ```
@@ -606,7 +606,7 @@ INSERT request object:
 INSERT example:
 
 ```typescript
-export default function (req, res) {
+export default function(req, res) {
   // Allow the ongoing insert operation if the authorization header does not contain this special string.
   return req.headers.authorization != "FORBIDDEN_APIKEY";
 }
@@ -637,7 +637,7 @@ ActionParameters {
 UPDATE example:
 
 ```typescript
-export default function (req, res) {
+export default function(req, res) {
   // Allow the ongoing update operation only if the id of the target document is not this special string
   return req.document != "MY_SECRET_DOCUMENT";
 }
@@ -668,7 +668,7 @@ GET request object:
 GET example:
 
 ```typescript
-export default function (req, res) {
+export default function(req, res) {
   const aggregation = [];
   // If the authorization header does not contain the "MY_SECRET_TOKEN" string literally, then strip out password field to prevent the user from fetching it.
   if (req.headers.authorization != "MY_SECRET_TOKEN") {
@@ -703,10 +703,57 @@ INDEX request object:
 INDEX example:
 
 ```typescript
-export default function (request, response) {
+export default function(request, response) {
   // Allow the user to only fetch those entries which belong to the user.
   // HINT: For security purposes, DO NOT get identifier of the user via plain HTTP header. At least extract it from a signed token and such.
   return [{$match: {user_id: request.headers["X-Authorized-User"]}}];
+}
+```
+
+STREAM request object:
+
+```typescript
+{
+  bucket: '5f203dd5ab89fd736fe79c07',
+  documentKey: undefined,
+  type: 'stream',
+  headers: Map {
+    'host' => 'master.spicaengine.com',
+    'upgrade' => 'websocket',
+    'connection' => 'upgrade',
+    'x-request-id' => '367e83880b4ca1aa2ab01757046bb03a',
+    'x-real-ip' => '10.4.0.1',
+    'x-forwarded-for' => '10.4.0.1',
+    'x-forwarded-proto' => 'https',
+    'x-forwarded-host' => 'master.spicaengine.com',
+    'x-forwarded-port' => '443',
+    'x-scheme' => 'https',
+    'origin' => 'http://localhost',
+    'pragma' => 'no-cache',
+    'cache-control' => 'no-cache',
+    'sec-websocket-key' => 'P/UvD94AzxQNZnDllOdzkw==',
+    'sec-websocket-version' => '13',
+    'sec-websocket-extensions' => 'x-webkit-deflate-frame',
+    'user-agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15',
+    'authorization' => 'APIKEY 5vr1kd7acp2h',
+    'strategy-type' => 'APIKEY'
+  }
+}
+```
+
+STREAM example:
+
+```typescript
+export default function(request) {
+  console.log(
+    "User with " +
+      request.headers.authorization +
+      " will display all documents of bucket that has id " +
+      request.bucket +
+      " via websocket"
+  );
+  const filter = {status: "active"};
+  return filter;
 }
 ```
 
@@ -744,7 +791,7 @@ Example change object:
 Example function:
 
 ```javascript
-export default function (changes) {
+export default function(changes) {
   console.log(changes);
   // Business logic here
 }
@@ -763,7 +810,7 @@ For example, let's assume we want to send a notification to a 3rd party API when
 System trigger includes system related event data and invokes a function whenever the chosen event happens. The system trigger is the best choice for using the dashboard module, configuring the instance, or setting up a starting state for your data. `READY` event will be triggered when a server restarts and ready to use. For the current version, the system trigger supports the `READY` event only.
 
 ```typescript
-export default function () {
+export default function() {
   console.log("Spica is ready");
 }
 ```
@@ -775,7 +822,7 @@ You can invoke a function in real-time from your client application. It is a gre
 As an example, if you are making a game and run a real-time server-side logic that will communicate with the client application such as real-time point calculating, you can calculate score and deliver the result in real-time using the firehose trigger.
 
 ```typescript
-export default function (message, {socket, pool}) {
+export default function(message, {socket, pool}) {
   console.log(message.name); // Outputs: connection
   console.log(message.data.url); // Outputs: /firehose
 
@@ -802,7 +849,7 @@ export default function (message, {socket, pool}) {
 You can define custom environment variables for your functions. If your team is a multi-disciplined team, you may need some roles to change just function variables. For this situtation, you can define environment variables which will be passed to function as a parameter. You can see an example of how environment variable works below:
 
 ```typescript
-export default function () {
+export default function() {
   return process.env.exampleVariable;
 }
 ```

@@ -135,7 +135,12 @@
         </mat-checkbox>
       </div>
     </div>
-    <button mat-button *ngIf="parentSchema.properties[propertyKey]" (click)="save()">
+    <button
+      mat-button
+      *ngIf="parentSchema.properties[propertyKey]"
+      [disabled]="dm?.invalid || pnm?.invalid"
+      (click)="save()"
+    >
       <mat-icon>add</mat-icon> Save
     </button>
   </div>

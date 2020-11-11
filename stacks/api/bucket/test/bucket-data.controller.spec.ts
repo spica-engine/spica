@@ -625,12 +625,14 @@ describe("BucketDataController", () => {
               achievement: {
                 type: "relation",
                 options: {position: "left", visible: true},
-                bucketId: achievementsBucket._id
+                bucketId: achievementsBucket._id,
+                relationType: "onetoone"
               },
               user: {
                 type: "relation",
                 options: {position: "right"},
-                bucketId: usersBucket._id
+                bucketId: usersBucket._id,
+                relationType: "onetoone"
               }
             }
           })
