@@ -1,9 +1,10 @@
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection, BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
+import {diff, ChangeKind, ChangePaths} from "../history/differ";
 import {BucketService, BucketDocument, Bucket} from "@spica-server/bucket/services";
-import {diff, ChangeKind} from "../history/differ";
 import {HistoryService} from "@spica-server/bucket/history";
+const JsonMergePatch = require("json-merge-patch");
 
 export function findRelations(
   schema: any,
@@ -311,4 +312,84 @@ export function createHistory(
       return history.createHistory(bucketId, previousDocument, currentDocument);
     }
   });
+}
+
+export function getPatchedDocument(previousDocument: BucketDocument, patchQuery: any) {
+  delete previousDocument._id;
+  delete patchQuery._id;
+
+  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
+}
+
+export function updateQueryForPatch(query: Partial<BucketDocument>) {
+  const unset = {};
+  const set = {};
+
+  const visit = (partialPatch: any, base: string = "") => {
+    for (const name in partialPatch) {
+      const key = base ? `${base}.${name}` : name;
+      const value = partialPatch[name];
+      const type = typeof value;
+
+      if (value == null) {
+        unset[key] = "";
+      } else if (
+        type == "boolean" ||
+        type == "string" ||
+        type == "number" ||
+        type == "bigint" ||
+        Array.isArray(value)
+      ) {
+        set[key] = value;
+      } else if (typeof value == "object") {
+        visit(value, key);
+      }
+    }
+  };
+
+  visit(query);
+
+  let result: any = {};
+
+  if (Object.keys(set).length) {
+    result.$set = set;
+  }
+
+  if (Object.keys(unset).length) {
+    result.$unset = unset;
+  }
+
+  if (!Object.keys(result).length) {
+    return;
+  }
+
+  return result;
+}
+
+function createExpressionFromChange(
+  document: BucketDocument,
+  targets: ChangePaths[],
+  operation: "set" | "unset"
+) {
+  let expressions = {};
+  for (const target of targets) {
+    let key = target.join(".");
+    let value = "";
+
+    if (operation == "set") {
+      value = findValueOfPath(target, document);
+    }
+
+    expressions[key] = value;
+  }
+
+  return expressions;
+}
+
+function findValueOfPath(path: (string | number)[], document: BucketDocument) {
+  return path.reduce((document, name) => document[name], document);
+}
+
+export function deepCopy(value: unknown) {
+  return JSON.parse(JSON.stringify(value));
 }

@@ -83,7 +83,7 @@ export class ImageEditorComponent implements OnInit {
         .updateOne(this.storage, file)
         .toPromise()
         .then(() => {
-          this.dialogRef.close();
+          this.dialogRef.close(this.storage._id);
         });
     });
   }
