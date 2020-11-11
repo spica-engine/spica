@@ -55,6 +55,10 @@
     },
     "properties": {
       "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "minProperties": 1,
       "additionalProperties": {
         "$ref": "http://spica.internal/bucket/schema/property-options"
       }

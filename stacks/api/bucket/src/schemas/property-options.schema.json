@@ -59,6 +59,22 @@
           "enum": ["left", "right", "bottom"]
         }
       }
+    },
+    "properties": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "http://spica.internal/bucket/schema/property-options"
+      }
+    },
+    "enum": {
+      "items": {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "minItems": 1
     }
   }
 }

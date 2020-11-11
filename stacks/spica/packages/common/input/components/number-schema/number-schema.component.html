@@ -16,12 +16,3 @@
     <input matInput type="number" [(ngModel)]="schema.default" />
   </mat-form-field>
 </div>
-<div class="enum">
-  <mat-slide-toggle
-    [ngModel]="schema.enum?.length > 0"
-    (ngModelChange)="$event ? (schema.enum = []) : removeEnum()"
-  >
-    Make field enumerated
-  </mat-slide-toggle>
-  <enum-schema *ngIf="schema.enum?.length != undefined"></enum-schema>
-</div>

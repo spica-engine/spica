@@ -46,7 +46,6 @@ describe("Common#number-schema", () => {
 
     expect(fixture.debugElement.query(By.css("div.min-max"))).toBeTruthy();
     expect(fixture.debugElement.query(By.css("div.default"))).toBeTruthy();
-    expect(fixture.debugElement.query(By.css("div.enum"))).toBeTruthy();
   }));
 
   it("The value entered must be the same as the variable value", fakeAsync(() => {
@@ -72,6 +71,5 @@ describe("Common#number-schema", () => {
         .query(By.css(".default > mat-form-field input"))
         .properties.value.toString()
     ).toBe(component.schema.default.toString());
-    expect(fixture.debugElement.query(By.css("enum-schema"))).toBeTruthy();
   }));
 });

@@ -7,8 +7,4 @@ import {INPUT_SCHEMA, InputSchema} from "../../input";
 })
 export class NumberSchemaComponent {
   constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema) {}
-
-  removeEnum() {
-    delete this.schema.enum;
-  }
 }
