@@ -3,7 +3,7 @@ import {HttpEventType} from "@angular/common/http";
 import {Component, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
-import {merge, Observable, of, Subject} from "rxjs";
+import {merge, Observable, of, BehaviorSubject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
@@ -20,7 +20,7 @@ export class IndexComponent implements OnInit {
 
   storages$: Observable<Storage[]>;
   progress: number;
-  refresh: Subject<void> = new Subject<void>();
+  refresh: BehaviorSubject<string> = new BehaviorSubject(undefined);
   sorter;
   cols: number = 4;
 
@@ -52,12 +52,27 @@ export class IndexComponent implements OnInit {
 
   ngOnInit(): void {
     this.storages$ = merge(this.paginator.page, of(null), this.refresh).pipe(
-      switchMap(() =>
-        this.storage.getAll(
-          this.paginator.pageSize || 12,
-          this.paginator.pageSize * this.paginator.pageIndex,
-          this.sorter
-        )
+      switchMap(updatedId =>
+        this.storage
+          .getAll(
+            this.paginator.pageSize || 12,
+            this.paginator.pageSize * this.paginator.pageIndex,
+            this.sorter
+          )
+          .pipe(
+            map(storages => {
+              if (!updatedId) {
+                return storages;
+              }
+
+              let index = storages.data.findIndex(s => s._id == updatedId);
+              if (index != -1) {
+                storages.data[index].url += "?timestamp=" + new Date().getTime();
+              }
+
+              return storages;
+            })
+          )
       ),
       map(storages => {
         this.paginator.length = 0;
@@ -78,7 +93,7 @@ export class IndexComponent implements OnInit {
             this.progress = Math.round((100 * event.loaded) / event.total);
           } else if (event.type === HttpEventType.Response) {
             this.progress = undefined;
-            this.refresh.next();
+            this.refresh.next(undefined);
           }
         },
         () => this.uploadDone()
@@ -89,7 +104,7 @@ export class IndexComponent implements OnInit {
   uploadDone() {
     this.sortStorage({direction: "desc", name: "_id"});
     this.progress = undefined;
-    this.refresh.next();
+    this.refresh.next(undefined);
   }
 
   delete(id: string): void {
@@ -97,14 +112,14 @@ export class IndexComponent implements OnInit {
       .delete(id)
       .toPromise()
       .catch()
-      .then(() => this.refresh.next());
+      .then(() => this.refresh.next(undefined));
   }
 
   sortStorage({...value}) {
     value.direction = value.direction === "asc" ? 1 : -1;
     this.sorter = {};
     this.sorter[value.name] = value.direction;
-    this.refresh.next();
+    this.refresh.next(undefined);
   }
 
   openPreview(storage: Storage): void {
@@ -126,6 +141,6 @@ export class IndexComponent implements OnInit {
       })
       .afterClosed()
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(updatedId => this.refresh.next(updatedId));
   }
 }

@@ -21,7 +21,8 @@ export interface Predict {
 export enum Action {
   POST = 1,
   PUT = 2,
-  DELETE = 3
+  DELETE = 3,
+  PATCH = 4
 }
 
 export interface ActivityOptions {
