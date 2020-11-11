@@ -55,9 +55,14 @@
     </mat-form-field>
     <div class="advanced-settings">
       <mat-label>Advanced Settings</mat-label>
-      <mat-divider *ngIf="field != 'object'"></mat-divider>
-      <div *ngIf="!parentSchema.properties[propertyKey].value.metaPlacer && field != 'date'">
-        There is no specific settings for this input type {{ placer }}
+      <mat-divider></mat-divider>
+      <div
+        *ngIf="
+          (!parentSchema.properties[propertyKey].value.metaPlacer && field != 'date') ||
+          field == 'object'
+        "
+      >
+        There is no specific settings for <b>{{ field }}</b> input type
       </div>
       <span
         *ngIf="field != 'object'"
