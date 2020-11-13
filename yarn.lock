@@ -1251,10 +1251,10 @@
     winston "3.2.1"
     wrap-ansi "^6.2.0"
 
-"@danielmoncada/angular-datetime-picker@^10.0.0":
-  version "10.0.0"
-  resolved "https://registry.yarnpkg.com/@danielmoncada/angular-datetime-picker/-/angular-datetime-picker-10.0.0.tgz#e04723ff6a0320aeea36823219f75abd3ffc59fc"
-  integrity sha512-ZIhGlSliQQOxpEkJuBL2/7LtBnKjT9N4tjU7CM5L8I9mhLzvOJkb/hyOXcA3mpruTSDnUo9sm8gofFENpvmT/g==
+"@danielmoncada/angular-datetime-picker@^10.1.0":
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/@danielmoncada/angular-datetime-picker/-/angular-datetime-picker-10.1.0.tgz#c9595946e8c3118780b00129d4ac1420952f8acd"
+  integrity sha512-HM9llDKOuplJNLfraDEXqEGD7ShEbjjUKb/rxdLDJp5Cf2J9u+eF95y5fdLls9EXuopZFUHBkqgQc4nqg47XcQ==
   dependencies:
     tslib "^2.0.0"
 

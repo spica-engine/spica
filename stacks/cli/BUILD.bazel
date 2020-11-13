@@ -12,7 +12,10 @@ ts_config(
 
 ts_library(
     name = "cli",
-    srcs = glob(["src/**/*.ts"]),
+    srcs = glob([
+        "src/**/*.ts",
+        "index.ts"
+    ]),
     data = ["bin/spica"],
     module_name = "@spica/cli",
     tsconfig = ":tsconfig",

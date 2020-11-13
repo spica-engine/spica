@@ -48,6 +48,7 @@ nodejs_binary(
         "ENABLE_BUCKET_HOOKS",
         "ENABLE_BUCKET_HISTORY",
         "ENABLE_ACTIVITY_STREAM",
+        "FUNCTION_POOL_SIZE"
     ],
     data = [":api"],
     entry_point = "//stacks/api:main.ts",

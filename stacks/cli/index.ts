@@ -1,7 +1,7 @@
 import {program} from "@caporal/core";
 import * as fs from "fs";
 import * as path from "path";
-import "./console";
+import "./src/console";
 
 // See: https://github.com/mattallty/Caporal.js/issues/197
 function cleanUpDts(dir: string) {
@@ -16,12 +16,17 @@ function cleanUpDts(dir: string) {
   }
 }
 
-cleanUpDts(path.join(__dirname, "commands"));
+export function run(argv?: string[]) {
+  const commandPath = path.join(__dirname, "src", "commands");
 
-program
-  .version("0.0.0-PLACEHOLDER")
-  .name("spica")
-  .description("Command line interface for spica.")
-  .discover(path.join(__dirname, "commands"));
+  cleanUpDts(commandPath);
 
-program.run();
+  program
+    .version("0.0.0-PLACEHOLDER")
+    .name("spica")
+    .bin("spica")
+    .description("Command line interface for spica.")
+    .discover(commandPath);
+
+  return program.run(argv);
+}

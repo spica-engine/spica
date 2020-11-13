@@ -28,7 +28,7 @@
     "material-community-components": "^9.0.3",
     "monaco-editor-core": "^0.18.1",
     "monaco-languages": "^1.7.0",
-    "@danielmoncada/angular-datetime-picker": "^10.0.0",
+    "@danielmoncada/angular-datetime-picker": "^10.1.0",
     "ng2-charts": "^2.4.2",
     "path-to-regexp": "^6.1.0",
     "rxjs": "^6.6.3",

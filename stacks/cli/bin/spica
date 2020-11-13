@@ -1,5 +1,4 @@
 #!/usr/bin/env node
- 
-process.title = "Spica";
-
-require("../src/bootstrap");
+process.title = "spica cli";
+const {run} = require("../index");
+run();

@@ -1,5 +1,7 @@
 import {cosmiconfig} from "cosmiconfig";
 import * as fs from "fs";
+import * as _path from "path";
+import * as os from "os";
 
 export namespace config {
   export interface Config {
@@ -20,8 +22,11 @@ export namespace config {
   });
 
   export async function get(): Promise<Config> {
-    const {config} = await explorer.search();
-    return config;
+    const config = await explorer.search();
+    if ( ! config  ) {
+      return {context: undefined};
+    }
+    return config.config;
   }
 
   export async function path(): Promise<string> {
@@ -29,7 +34,7 @@ export namespace config {
       const {filepath} = await explorer.search();
       return filepath;
     } catch {
-      return "./.spicarc";
+      return _path.join(os.homedir(), ".spicarc");
     }
   }
 

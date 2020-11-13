@@ -27,7 +27,7 @@ async function apply({options}: ActionParameters) {
     const {apiVersion, kind, metadata, spec} = document.toJSON();
 
     const resourceList = await machineryClient.get<any>(`/apis/${apiVersion}`);
-
+    
     if (isFailureStatus(resourceList)) {
       return console.error(formatFailureStatus(resourceList));
     }
