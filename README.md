@@ -1,5 +1,5 @@
 <p align="center">
-  <img height="100px" src="stacks/spica/assets/astro-composer.svg">
+  <img height="200px" src="stacks/spica/assets/astro-composer-filled.svg">
 </p>
 
 # Spica - development engine [![Build status](https://badge.buildkite.com/231efc3a5086b0db36206b21f04ee665939ca9186505894312.svg?style=square)](https://buildkite.com/spica/default)
