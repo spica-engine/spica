@@ -1,10 +1,11 @@
 import {Injectable} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Observable} from "rxjs";
-import {Function, Environment} from "./interface";
+import {Function, Environment, Triggers} from "./interface";
 
 @Injectable()
 export class FunctionService extends BaseCollection<Function>("function") {
+  cachedTriggers: Map<string, Triggers> = new Map<string, Triggers>();
   constructor(database: DatabaseService) {
     super(database);
   }
@@ -31,6 +32,7 @@ export class FunctionService extends BaseCollection<Function>("function") {
       };
       super.find().then(fns => {
         for (const fn of fns) {
+          this.cachedTriggers.set(fn._id.toString(), fn.triggers);
           emitHandlers(fn, ChangeKind.Added);
         }
       });
@@ -42,12 +44,18 @@ export class FunctionService extends BaseCollection<Function>("function") {
         switch (change.operationType) {
           case "replace":
           case "update":
-            emitHandlers(change.fullDocument as Function, ChangeKind.Updated);
+            let updatedChange = this.updateTriggers(change.fullDocument);
+            emitHandlers(updatedChange, ChangeKind.Updated);
             break;
           case "insert":
+            this.cachedTriggers.set(
+              change.fullDocument._id.toString(),
+              change.fullDocument.triggers
+            );
             emitHandlers(change.fullDocument as Function, ChangeKind.Added);
             break;
           case "delete":
+            this.cachedTriggers.delete(change.documentKey._id.toString());
             observer.next({
               kind: ChangeKind.Removed,
               target: {
@@ -61,6 +69,36 @@ export class FunctionService extends BaseCollection<Function>("function") {
         stream.close();
       };
     });
+  }
+
+  updateTriggers(fn: Function): Function {
+    let oldTriggers = this.cachedTriggers.get(fn._id.toString());
+
+    let newTriggers = fn.triggers;
+
+    let addedHandlers = Object.keys(newTriggers).filter(
+      handler => !Object.keys(oldTriggers).includes(handler)
+    );
+
+    for (const handler of addedHandlers) {
+      oldTriggers[handler] = newTriggers[handler];
+    }
+
+    let removedHandlers = Object.keys(oldTriggers).filter(
+      handler => !Object.keys(newTriggers).includes(handler)
+    );
+
+    for (const handler of removedHandlers) {
+      fn.triggers[handler] = {
+        ...oldTriggers[handler],
+        active: false
+      };
+      delete oldTriggers[handler];
+    }
+
+    this.cachedTriggers.set(fn._id.toString(), oldTriggers);
+
+    return fn;
   }
 }
 
