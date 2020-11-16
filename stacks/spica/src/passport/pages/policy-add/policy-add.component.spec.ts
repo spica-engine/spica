@@ -14,6 +14,7 @@ import {of} from "rxjs";
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyAddComponent} from "./policy-add.component";
+import {Statement} from "../../interfaces/statement";
 
 describe("Policy Add Component", () => {
   describe("Policy Add", () => {
@@ -87,9 +88,35 @@ describe("Policy Add Component", () => {
       });
     });
 
+    it("should set resource as empty array on action changes if statement is resourceable", () => {
+      let statement: Statement = {action: "bucket:show", module: "bucket"};
+
+      fixture.componentInstance.onActionChange(statement);
+      expect(statement).toEqual({
+        action: "bucket:show",
+        module: "bucket",
+        resource: []
+      });
+    });
+
+    it("should delete resource array on action changes if statement is not resourceable", () => {
+      //this case is possible when you switch to non-resourseable action after selected resourcable action
+      let statement: Statement = {
+        resource: ["bucket_id"],
+        action: "bucket:create",
+        module: "bucket"
+      };
+
+      fixture.componentInstance.onActionChange(statement);
+      expect(statement).toEqual({
+        action: "bucket:create",
+        module: "bucket"
+      });
+    });
+
     describe("onResourceSelection", () => {
       it("should set statement resource as empty array when selection is include", () => {
-        let statement = {resource: undefined, action: "bucket:show", module: "bucket"};
+        let statement: Statement = {action: "bucket:show", module: "bucket"};
 
         fixture.componentInstance.onResourceSelection(statement, "include");
         expect(statement).toEqual({resource: [], action: "bucket:show", module: "bucket"});
@@ -103,8 +130,8 @@ describe("Policy Add Component", () => {
           }
         };
 
-        let statement = {
-          resource: undefined,
+        let statement: Statement = {
+          resource: [],
           action: "bucket:data:create",
           module: "bucket:data"
         };
@@ -200,7 +227,7 @@ describe("Policy Add Component", () => {
       expect(fixture.componentInstance.policy).toEqual({
         name: undefined,
         description: undefined,
-        statement: [{action: undefined, resource: [], module: undefined}]
+        statement: [{action: undefined, module: undefined}]
       });
     });
 
