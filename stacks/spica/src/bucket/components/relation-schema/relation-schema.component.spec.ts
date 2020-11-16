@@ -13,7 +13,7 @@ describe("Relation Schema Component", () => {
   describe("basic behavior", () => {
     let fixture: ComponentFixture<RelationSchemaComponent>;
 
-    beforeEach(() => {
+    beforeEach(fakeAsync(() => {
       TestBed.configureTestingModule({
         imports: [FormsModule, MatOptionModule, MatSelectModule, NoopAnimationsModule],
         providers: [
@@ -40,17 +40,21 @@ describe("Relation Schema Component", () => {
 
       fixture = TestBed.createComponent(RelationSchemaComponent);
       fixture.detectChanges();
-    });
 
-    it("should show required bucket error", () => {
+      tick(10);
+      fixture.detectChanges(false);
+    }));
+
+    it("should show required bucket error", fakeAsync(() => {
       const ngModel = fixture.debugElement.query(By.directive(NgModel)).injector.get(NgModel);
+      ngModel.control.setValue(undefined);
       ngModel.control.markAsTouched();
       fixture.detectChanges();
 
       expect(fixture.debugElement.query(By.css("mat-error")).nativeElement.textContent).toBe(
         "You must select a bucket"
       );
-    });
+    }));
 
     it("should show buckets", () => {
       fixture.debugElement.query(By.css("mat-form-field mat-select")).nativeElement.click();
