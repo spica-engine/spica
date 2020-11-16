@@ -16,15 +16,17 @@ import {
   Put,
   Query,
   Req,
+  UseInterceptors,
+  Patch,
   UseGuards,
-  UseInterceptors
+  PipeTransform
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter, ReviewDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {Schema, Validator} from "@spica-server/core/schema";
 import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER, OR, BooleanCheck} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
@@ -35,7 +37,9 @@ import {
   filterReviver,
   clearRelations,
   createHistory,
-  getRelationAggregation
+  getRelationAggregation,
+  getPatchedDocument,
+  updateQueryForPatch
 } from "./utility";
 
 /**
@@ -47,6 +51,7 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
+    private validator: Validator,
     @Optional() private reviewDispatcher: ReviewDispatcher,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService
@@ -423,6 +428,76 @@ export class BucketDataController {
     }
 
     return currentDocument;
+  }
+
+  /**
+   * Update a document in the bucket.
+   * Body should be in format of JSON merge patch.
+   * @param bucketId Identifier of the bucket.
+   * @param documentId Identifier of the document.
+   * @body
+   * ```json
+   * {
+   *    "name": "Daniel",
+   *    "age": null
+   * }
+   * ```
+   */
+  @UseInterceptors(activity(createBucketDataActivity))
+  @Patch(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  async patch(
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Headers() headers: object,
+    @StrategyType() strategyType: string,
+    @Body() patch: Partial<BucketDocument>
+  ) {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
+      const allowed = await this.reviewDispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "update"},
+        headers,
+        documentId.toHexString()
+      );
+      if (!allowed) {
+        throw new ForbiddenException("Forbidden action.");
+      }
+    }
+
+    const previousDocument = await this.bds.findOne(bucketId, {_id: documentId});
+
+    const patchedDocument = getPatchedDocument(previousDocument, patch);
+
+    await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
+      throw new BadRequestException(
+        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.message
+      );
+    });
+
+    const updateQuery = updateQueryForPatch(patch);
+
+    const currentDocument = await this.bds.findOneAndUpdate(
+      bucketId,
+      {_id: documentId},
+      updateQuery,
+      {returnOriginal: false}
+    );
+
+    const _ = createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
+
+    if (this.changeEmitter) {
+      this.changeEmitter.emitChange(
+        {
+          bucket: bucketId.toHexString(),
+          type: "update"
+        },
+        documentId.toHexString(),
+        previousDocument,
+        currentDocument
+      );
+    }
   }
 
   /**

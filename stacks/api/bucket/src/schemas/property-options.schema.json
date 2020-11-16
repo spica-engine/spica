@@ -60,5 +60,15 @@
         }
       }
     }
+  },
+  "if": {
+    "properties": {
+      "type": {
+        "const": "relation"
+      }
+    }
+  },
+  "then": {
+    "required": ["bucketId", "relationType"]
   }
 }
