@@ -1,5 +1,5 @@
 import {Sequence, SequenceKind, ChunkKind} from "./interface";
-import * as WebSocket from "ws";
+const WebSocket = require("ws");
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
 import {webSocket} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
