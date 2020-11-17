@@ -7,7 +7,6 @@ ts_library(
     name = "test_lib",
     testonly = True,
     srcs = [
-        "change.spec.ts",
         "engine.spec.ts",
         "function.controller.spec.ts",
     ],
