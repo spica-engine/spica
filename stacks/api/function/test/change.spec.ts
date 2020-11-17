@@ -1,0 +1,201 @@
+import {Function, Trigger} from "../src/interface";
+import {ChangeKind, createTargetChanges, hasChange, changesFromTriggers} from "../src/change";
+
+describe("Change", () => {
+  let fn: Function;
+
+  beforeEach(() => {
+    fn = {
+      _id: "fn_id",
+      env: {test: "123"},
+      language: "javascript",
+      timeout: 50,
+      triggers: {}
+    };
+  });
+
+  it("should create target changes from given parameters", () => {
+    fn.triggers = {
+      default: {
+        active: true,
+        options: {
+          path: "/test"
+        },
+        type: "http"
+      },
+      another: {
+        active: true,
+        options: {
+          collection: "bucket"
+        },
+        type: "database"
+      }
+    };
+
+    let changes = createTargetChanges(fn, ChangeKind.Added);
+    expect(changes).toEqual([
+      {
+        kind: ChangeKind.Added,
+        options: {
+          path: "/test"
+        },
+        type: "http",
+        target: {
+          id: "fn_id",
+          handler: "default",
+          context: {
+            env: {test: "123"},
+            timeout: 50
+          }
+        }
+      },
+      {
+        kind: ChangeKind.Added,
+        options: {
+          collection: "bucket"
+        },
+        type: "database",
+        target: {
+          id: "fn_id",
+          handler: "another",
+          context: {
+            env: {test: "123"},
+            timeout: 50
+          }
+        }
+      }
+    ]);
+  });
+
+  it("should return change result that depends on the trigger configuration", () => {
+    const previousTrigger: Trigger = {
+      options: {collection: "bucket1", phase: "AFTER", action: "INSERT"},
+      type: "bucket",
+      active: true
+    };
+
+    const currentTrigger: Trigger = {
+      options: {collection: "bucket2", phase: "AFTER", action: "INSERT"},
+      type: "bucket",
+      active: true
+    };
+
+    let result = hasChange(previousTrigger, currentTrigger);
+    expect(result).toEqual(true);
+
+    currentTrigger.options["collection"] = "bucket1";
+
+    result = hasChange(previousTrigger, currentTrigger);
+    expect(result).toEqual(false);
+  });
+
+  it("should create trigger changes", () => {
+    const insertedTrigger = {
+      inserted: {
+        type: "http",
+        active: true,
+        options: {
+          path: "test"
+        }
+      }
+    };
+
+    //it should not be a part of inserted handlers
+    const deactiveInsertedTrigger = {
+      deactive_inserted: {
+        type: "http",
+        active: false,
+        options: {
+          path: "path"
+        }
+      }
+    };
+
+    const removedTrigger = {
+      removed: {
+        type: "database",
+        active: true,
+        options: {
+          collection: "test"
+        }
+      }
+    };
+
+    //trigger configuration will be updated. It should be a part of updated handlers
+    let updatedTrigger = {
+      updated: {
+        type: "bucket",
+        active: true,
+        options: {
+          phase: "AFTER"
+        }
+      }
+    };
+
+    //active status will be updated. It should be a part of removed handlers
+    let deactivatedTrigger = {
+      deactivated: {
+        type: "system",
+        active: true,
+        options: {
+          name: "READY"
+        }
+      }
+    };
+
+    const unchangedTrigger = {
+      unchanged: {
+        options: {
+          frequency: "* * * * *"
+        },
+        type: "schedule",
+        active: true
+      }
+    };
+
+    const previousFn = JSON.parse(
+      JSON.stringify({
+        ...fn,
+        triggers: {
+          ...removedTrigger,
+          ...updatedTrigger,
+          ...deactivatedTrigger,
+          ...unchangedTrigger
+        }
+      })
+    );
+
+    let currentFn = {
+      ...fn,
+      triggers: {
+        ...insertedTrigger,
+        ...deactiveInsertedTrigger,
+        ...updatedTrigger,
+        ...deactivatedTrigger,
+        ...unchangedTrigger
+      }
+    };
+
+    currentFn.triggers.updated.options.phase = "BEFORE";
+    currentFn.triggers.deactivated.active = false;
+
+    //for making more readable
+    let changes = changesFromTriggers(previousFn, currentFn);
+
+    let insertedHandlers = changes
+      .filter(change => change.kind == ChangeKind.Added)
+      .map(change => change.target.handler);
+
+    let updatedHandlers = changes
+      .filter(change => change.kind == ChangeKind.Updated)
+      .map(change => change.target.handler);
+
+    let removedHandlers = changes
+      .filter(change => change.kind == ChangeKind.Removed)
+      .map(change => change.target.handler);
+
+    expect(insertedHandlers).toEqual(["inserted"]);
+    expect(updatedHandlers).toEqual(["updated"]);
+    expect(removedHandlers).toEqual(["deactivated", "removed"]);
+  });
+});

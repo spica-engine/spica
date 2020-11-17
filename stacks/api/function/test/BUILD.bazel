@@ -7,6 +7,7 @@ ts_library(
     name = "test_lib",
     testonly = True,
     srcs = [
+        "change.spec.ts",
         "engine.spec.ts",
         "function.controller.spec.ts",
     ],
@@ -30,4 +31,21 @@ jasmine_node_test(
     tags = [
         "flaky",
     ],
+)
+
+ts_library(
+    name = "change_test_lib",
+    testonly = True,
+    srcs = [
+        "change.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/function",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "change_test",
+    srcs = [":change_test_lib"],
 )

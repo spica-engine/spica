@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Header,
-  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -31,9 +30,11 @@ import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
+import {ChangeKind} from "./change";
 import {Function, Trigger} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
+import {changesFromTriggers, createTargetChanges} from "./change";
 
 /**
  * @name Function
@@ -107,6 +108,10 @@ export class FunctionController {
     if (!fn) {
       throw new NotFoundException("Couldn't find the function.");
     }
+
+    let changes = createTargetChanges(fn, ChangeKind.Removed);
+    this.engine.categorizeChanges(changes);
+
     await this.engine.deleteFunction(fn);
   }
 
@@ -156,7 +161,13 @@ export class FunctionController {
     delete fn._id;
     // Language is immutable
     delete fn.language;
-    return this.fs.findOneAndUpdate({_id: id}, {$set: fn}, {returnOriginal: false});
+    const previousFn = await this.fs.findOneAndUpdate({_id: id}, {$set: fn});
+
+    fn._id = id;
+    let changes = changesFromTriggers(previousFn, fn);
+    this.engine.categorizeChanges(changes);
+
+    return fn;
   }
 
   /**
@@ -174,6 +185,10 @@ export class FunctionController {
       );
     }
     fn = await this.fs.insertOne(fn);
+
+    let changes = createTargetChanges(fn, ChangeKind.Added);
+    this.engine.categorizeChanges(changes);
+
     await this.engine.createFunction(fn);
     return fn;
   }
