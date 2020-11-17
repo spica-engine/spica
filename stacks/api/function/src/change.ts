@@ -22,31 +22,20 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
 
   for (const [handler, trigger] of Object.entries(currentFn.triggers)) {
     if (!Object.keys(previousFn.triggers).includes(handler) && trigger.active) {
-      insertedTriggers = {
-        ...insertedTriggers,
-        [handler]: trigger
-      };
+      insertedTriggers[handler] = trigger;
     } else if (Object.keys(previousFn.triggers).includes(handler)) {
       //soft delete
       if (!trigger.active) {
-        removedTriggers = {
-          ...removedTriggers,
-          [handler]: trigger
-        };
+        removedTriggers[handler] = trigger;
       } else if (hasChange(previousFn.triggers[handler], trigger)) {
-        updatedTriggers = {
-          [handler]: trigger
-        };
+        updatedTriggers[handler] = trigger;
       }
     }
   }
 
   for (const [handler, trigger] of Object.entries(previousFn.triggers)) {
     if (!Object.keys(currentFn.triggers).includes(handler)) {
-      removedTriggers = {
-        ...removedTriggers,
-        [handler]: trigger
-      };
+      removedTriggers[handler] = trigger;
     }
   }
 
