@@ -43,7 +43,12 @@ export class FilterComponent implements OnChanges {
 
   apply() {
     if (this.properties[this.property].type == "relation") {
-      this.filter = {[`${this.property}._id`]: this.value};
+      this.filter = {
+        [`${this.property}._id`]:
+          this.properties[this.property]["relationType"] == "onetomany"
+            ? {$in: this.value}
+            : this.value
+      };
     } else if (this.properties[this.property].type == "date") {
       this.filter = {
         [this.property]: {

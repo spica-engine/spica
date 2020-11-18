@@ -1,9 +1,10 @@
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection, BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
-import {BucketService, BucketDocument} from "@spica-server/bucket/services";
-import {diff, ChangeKind} from "../history/differ";
+import {diff, ChangeKind, ChangePaths} from "../history/differ";
+import {BucketService, BucketDocument, Bucket} from "@spica-server/bucket/services";
 import {HistoryService} from "@spica-server/bucket/history";
+const JsonMergePatch = require("json-merge-patch");
 
 export function findRelations(
   schema: any,
@@ -15,11 +16,45 @@ export function findRelations(
   for (const field of Object.keys(schema)) {
     if (isObject(schema[field])) {
       findRelations(schema[field].properties, bucketId, `${path}${field}`, targets);
-    } else if (isRelation(schema[field], bucketId)) {
+    } else if (isDesiredRelation(schema[field], bucketId)) {
       targets.set(`${path}${field}`, schema[field].relationType);
     }
   }
   return targets;
+}
+
+export async function getRelationAggregation(
+  properties: object,
+  fields: string[][],
+  locale: Locale,
+  getSchema: (bucketId: string) => Promise<Bucket>
+) {
+  let aggregations = [];
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.type == "relation") {
+      let relateds = fields.filter(field => field[0] == key);
+      if (relateds.length) {
+        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
+
+        let relatedBucket = await getSchema(value.bucketId);
+
+        //Remove first key to continue recursive lookup
+        relateds = relateds.map(field => field.slice(1));
+
+        let innerLookup = await getRelationAggregation(
+          relatedBucket.properties,
+          relateds,
+          locale,
+          getSchema
+        );
+
+        aggregation[0].$lookup.pipeline.push(...innerLookup);
+
+        aggregations.push(...aggregation);
+      }
+    }
+  }
+  return aggregations;
 }
 
 export function findUpdatedFields(
@@ -31,7 +66,8 @@ export function findUpdatedFields(
   for (const field of Object.keys(previousSchema)) {
     if (
       !currentSchema.hasOwnProperty(field) ||
-      currentSchema[field].type != previousSchema[field].type
+      currentSchema[field].type != previousSchema[field].type ||
+      hasRelationChanges(previousSchema[field], currentSchema[field])
     ) {
       updatedFields.push(path ? `${path}.${field}` : field);
       //we dont need to check child keys of this key anymore
@@ -89,12 +125,27 @@ export function isObject(schema: any) {
   return schema.type == "object";
 }
 
-export function isRelation(schema: any, bucketId: string) {
-  return schema.type == "relation" && schema.bucketId == bucketId;
+export function isRelation(schema: any) {
+  return schema.type == "relation";
+}
+
+export function isDesiredRelation(schema: any, bucketId: string) {
+  return isRelation(schema) && schema.bucketId == bucketId;
 }
 
 export function isArray(schema: any) {
   return schema.type == "array";
+}
+
+export function hasRelationChanges(previousSchema: any, currentSchema: any) {
+  if (isRelation(previousSchema) && isRelation(currentSchema)) {
+    return (
+      previousSchema.relationType != currentSchema.relationType ||
+      previousSchema.bucketId != currentSchema.bucketId
+    );
+  }
+
+  return false;
 }
 
 export function filterReviver(k: string, v: string) {
@@ -277,4 +328,84 @@ export function createHistory(
       return history.createHistory(bucketId, previousDocument, currentDocument);
     }
   });
+}
+
+export function getPatchedDocument(previousDocument: BucketDocument, patchQuery: any) {
+  delete previousDocument._id;
+  delete patchQuery._id;
+
+  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
+}
+
+export function updateQueryForPatch(query: Partial<BucketDocument>) {
+  const unset = {};
+  const set = {};
+
+  const visit = (partialPatch: any, base: string = "") => {
+    for (const name in partialPatch) {
+      const key = base ? `${base}.${name}` : name;
+      const value = partialPatch[name];
+      const type = typeof value;
+
+      if (value == null) {
+        unset[key] = "";
+      } else if (
+        type == "boolean" ||
+        type == "string" ||
+        type == "number" ||
+        type == "bigint" ||
+        Array.isArray(value)
+      ) {
+        set[key] = value;
+      } else if (typeof value == "object") {
+        visit(value, key);
+      }
+    }
+  };
+
+  visit(query);
+
+  let result: any = {};
+
+  if (Object.keys(set).length) {
+    result.$set = set;
+  }
+
+  if (Object.keys(unset).length) {
+    result.$unset = unset;
+  }
+
+  if (!Object.keys(result).length) {
+    return;
+  }
+
+  return result;
+}
+
+function createExpressionFromChange(
+  document: BucketDocument,
+  targets: ChangePaths[],
+  operation: "set" | "unset"
+) {
+  let expressions = {};
+  for (const target of targets) {
+    let key = target.join(".");
+    let value = "";
+
+    if (operation == "set") {
+      value = findValueOfPath(target, document);
+    }
+
+    expressions[key] = value;
+  }
+
+  return expressions;
+}
+
+function findValueOfPath(path: (string | number)[], document: BucketDocument) {
+  return path.reduce((document, name) => document[name], document);
+}
+
+export function deepCopy(value: unknown) {
+  return JSON.parse(JSON.stringify(value));
 }

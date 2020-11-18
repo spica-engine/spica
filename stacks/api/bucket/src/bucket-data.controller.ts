@@ -16,21 +16,31 @@ import {
   Put,
   Query,
   Req,
+  UseInterceptors,
+  Patch,
   UseGuards,
-  UseInterceptors
+  PipeTransform
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter, ReviewDispatcher} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core/schema";
+import {ARRAY, BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER, OR, BooleanCheck} from "@spica-server/core";
 import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
-import {buildRelationAggregation, filterReviver, clearRelations, createHistory} from "./utility";
+import {
+  buildRelationAggregation,
+  filterReviver,
+  clearRelations,
+  createHistory,
+  getRelationAggregation,
+  getPatchedDocument,
+  updateQueryForPatch
+} from "./utility";
 
 /**
  * All APIs related to bucket documents.
@@ -41,6 +51,7 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
+    private validator: Validator,
     @Optional() private reviewDispatcher: ReviewDispatcher,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService
@@ -71,7 +82,8 @@ export class BucketDataController {
     @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
-    @Query("relation", DEFAULT(false), BOOLEAN) relation?: boolean,
+    @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
+    relation?: boolean | string[],
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
@@ -115,18 +127,31 @@ export class BucketDataController {
     }
 
     if (relation) {
-      for (const propertyKey in bucket.properties) {
-        const property = bucket.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale
-            )
-          );
+      if (typeof relation == "boolean") {
+        for (const propertyKey in bucket.properties) {
+          const property = bucket.properties[propertyKey];
+          if (property.type == "relation") {
+            aggregation.push(
+              ...buildRelationAggregation(
+                propertyKey,
+                property["bucketId"],
+                property["relationType"],
+                locale
+              )
+            );
+          }
         }
+      } else {
+        let fields: string[][] = relation.map(pattern => pattern.split("."));
+
+        let relationAggregation = await getRelationAggregation(
+          bucket.properties,
+          fields,
+          locale,
+          (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+
+        aggregation.push(...relationAggregation);
       }
     }
 
@@ -215,7 +240,8 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("relation", DEFAULT(false), BOOLEAN) relation?: boolean
+    @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
+    relation?: boolean | string[]
   ) {
     let aggregation = [];
 
@@ -237,19 +263,32 @@ export class BucketDataController {
     }
 
     if (relation) {
-      const schema = await this.bs.findOne({_id: bucketId});
-      for (const propertyKey in schema.properties) {
-        const property = schema.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale
-            )
-          );
+      const bucket = await this.bs.findOne({_id: bucketId});
+      if (typeof relation == "boolean") {
+        for (const propertyKey in bucket.properties) {
+          const property = bucket.properties[propertyKey];
+          if (property.type == "relation") {
+            aggregation.push(
+              ...buildRelationAggregation(
+                propertyKey,
+                property["bucketId"],
+                property["relationType"],
+                locale
+              )
+            );
+          }
         }
+      } else {
+        let fields: string[][] = relation.map(pattern => pattern.split("."));
+
+        let relationAggregation = await getRelationAggregation(
+          bucket.properties,
+          fields,
+          locale,
+          (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        );
+
+        aggregation.push(...relationAggregation);
       }
     }
 
@@ -389,6 +428,76 @@ export class BucketDataController {
     }
 
     return currentDocument;
+  }
+
+  /**
+   * Update a document in the bucket.
+   * Body should be in format of JSON merge patch.
+   * @param bucketId Identifier of the bucket.
+   * @param documentId Identifier of the document.
+   * @body
+   * ```json
+   * {
+   *    "name": "Daniel",
+   *    "age": null
+   * }
+   * ```
+   */
+  @UseInterceptors(activity(createBucketDataActivity))
+  @Patch(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  async patch(
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Headers() headers: object,
+    @StrategyType() strategyType: string,
+    @Body() patch: Partial<BucketDocument>
+  ) {
+    if (this.reviewDispatcher && strategyType == "APIKEY") {
+      const allowed = await this.reviewDispatcher.dispatch(
+        {bucket: bucketId.toHexString(), type: "update"},
+        headers,
+        documentId.toHexString()
+      );
+      if (!allowed) {
+        throw new ForbiddenException("Forbidden action.");
+      }
+    }
+
+    const previousDocument = await this.bds.findOne(bucketId, {_id: documentId});
+
+    const patchedDocument = getPatchedDocument(previousDocument, patch);
+
+    await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
+      throw new BadRequestException(
+        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.message
+      );
+    });
+
+    const updateQuery = updateQueryForPatch(patch);
+
+    const currentDocument = await this.bds.findOneAndUpdate(
+      bucketId,
+      {_id: documentId},
+      updateQuery,
+      {returnOriginal: false}
+    );
+
+    const _ = createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
+
+    if (this.changeEmitter) {
+      this.changeEmitter.emitChange(
+        {
+          bucket: bucketId.toHexString(),
+          type: "update"
+        },
+        documentId.toHexString(),
+        previousDocument,
+        currentDocument
+      );
+    }
   }
 
   /**

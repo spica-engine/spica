@@ -1747,4 +1747,88 @@ describe("GraphQLController", () => {
       });
     });
   });
+
+  describe("Errors", () => {
+    it("should return response with warnings", async () => {
+      const bucket = await req
+        .post("/bucket", {
+          title: "bucket",
+          description: "bucket",
+          properties: {
+            title: {
+              type: "string"
+            },
+            relation_field: {
+              type: "relation",
+              bucketId: "unknown_bucket_id",
+              relationType: "manytomany"
+            },
+            "123asd?qwe*": {
+              type: "color"
+            },
+            invalid_enums: {
+              type: "string",
+              enum: ["1", "2", "3"]
+            }
+          }
+        })
+        .then(r => r.body);
+
+      const relatedDocumentId = new ObjectId();
+
+      await req.post(`/bucket/${bucket._id}/data`, {
+        title: "new_title",
+        relation_field: relatedDocumentId,
+        "123asd?qwe*": "#fff",
+        invalid_enums: "1"
+      });
+
+      const bucketName = getBucketName(bucket._id);
+
+      //wait until watcher send changes
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const params = {
+        query: `{
+            Find${bucketName}{
+              meta{
+                total
+              }
+            }
+          }`
+      };
+
+      const response = await req.get("/graphql", params);
+
+      expect(JSON.parse(response.headers.warnings)).toEqual([
+        {
+          target: `${bucketName}.relation_field`,
+          reason: "Related bucket 'unknown_bucket_id' does not exist."
+        },
+        {
+          target: `${bucketName}.relation_field`,
+          reason: "Relation type 'manytomany' is invalid type."
+        },
+        {
+          target: `${bucketName}.123asd?qwe*`,
+          reason:
+            "Name specification must start with an alphabetic character and can not include any non-letter character."
+        },
+        {
+          target: `${bucketName}.invalid_enums`,
+          reason:
+            "Enums must start with an alphabetic character and can not include any non-letter character."
+        }
+      ]);
+
+      expect(response.statusCode).toEqual(200);
+      expect(response.body).toEqual({
+        data: {
+          [`Find${bucketName}`]: {
+            meta: {total: 1}
+          }
+        }
+      });
+    });
+  });
 });

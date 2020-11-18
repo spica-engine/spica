@@ -5,7 +5,8 @@ describe("Interceptor Unit Test", () => {
     expect(getAction("POST")).toEqual(1);
     expect(getAction("PUT")).toEqual(2);
     expect(getAction("DELETE")).toEqual(3);
-    expect(getAction("PATCH")).toEqual(undefined);
+    expect(getAction("PATCH")).toEqual(4);
+    expect(getAction("OPTIONS")).toEqual(undefined);
   });
 
   it("should get identifier from user object", () => {

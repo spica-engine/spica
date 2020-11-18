@@ -94,6 +94,7 @@ export class BucketController {
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     const insertedDocument = await this.bs.insertOne(bucket);
     await this.bs.createCollection(`bucket_${insertedDocument._id}`);
+    this.bs.emitSchemaChanges();
     return insertedDocument;
   }
 
@@ -134,6 +135,8 @@ export class BucketController {
     });
 
     await this.clearUpdatedFields(this.bds, previousSchema, currentSchema);
+
+    this.bs.emitSchemaChanges();
 
     if (this.history) {
       await this.history.updateHistories(previousSchema, currentSchema);
@@ -177,11 +180,13 @@ export class BucketController {
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     const deletedCount = await this.bs.deleteOne({_id: id});
     if (deletedCount > 0) {
-      await this.bds.deleteAll(id);
-      await this.clearRelations(this.bs, this.bds, id);
+      let promises = [];
+      promises.push(this.bds.deleteAll(id), this.clearRelations(this.bs, this.bds, id));
       if (this.history) {
-        await this.history.deleteMany({bucket_id: id});
+        promises.push(this.history.deleteMany({bucket_id: id}));
       }
+      await Promise.all(promises);
+      this.bs.emitSchemaChanges();
     }
     return;
   }
@@ -191,8 +196,9 @@ export class BucketController {
     bucketDataService: BucketDataService,
     bucketId: ObjectId
   ) {
-    let buckets = await bucketService.find({_id: {$ne: bucketId}});
-    if (buckets.length < 1) return;
+    let buckets = await bucketService.find();
+
+    let updatePromises = [];
 
     for (const bucket of buckets) {
       let targets = Array.from(
@@ -207,15 +213,19 @@ export class BucketController {
         return acc;
       }, {});
 
-      await bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket});
+      updatePromises.push(bucketService.updateMany({_id: bucket._id}, {$unset: unsetFieldsBucket}));
 
       let unsetFieldsBucketData = targets.reduce((acc, current) => {
         acc = {...acc, [current]: ""};
         return acc;
       }, {});
 
-      await bucketDataService.updateMany(bucket._id, {}, {$unset: unsetFieldsBucketData});
+      updatePromises.push(
+        bucketDataService.updateMany(bucket._id, {}, {$unset: unsetFieldsBucketData})
+      );
     }
+
+    return Promise.all(updatePromises);
   }
   async clearUpdatedFields(
     bucketDataService: BucketDataService,
