@@ -88,7 +88,7 @@ describe("Policy Add Component", () => {
       });
     });
 
-    it("should set resource as empty array on action changes if statement is resourceable", () => {
+    it("should set resource as empty array on action changes if statement accepts resource", () => {
       let statement: Statement = {action: "bucket:show", module: "bucket"};
 
       fixture.componentInstance.onActionChange(statement);
@@ -99,8 +99,8 @@ describe("Policy Add Component", () => {
       });
     });
 
-    it("should delete resource array on action changes if statement is not resourceable", () => {
-      //this case is possible when you switch to non-resourseable action after selected resourcable action
+    it("should delete resource array on action changes if statement accepts resource", () => {
+      // this case is possible when you switch from a "resource-needed" statement to "no-resource-needed" statement
       let statement: Statement = {
         resource: ["bucket_id"],
         action: "bucket:create",

@@ -82,14 +82,14 @@ export class PolicyAddComponent implements OnInit {
   }
 
   onActionChange(statement: Statement) {
-    if (this.isResourceable(statement)) {
+    if (this.acceptsResource(statement)) {
       statement.resource = [];
     } else {
       delete statement.resource;
     }
   }
 
-  isResourceable(statement: Statement) {
+  acceptsResource(statement: Statement) {
     return (
       this.services[statement.module] &&
       this.services[statement.module][statement.action] &&
@@ -100,7 +100,7 @@ export class PolicyAddComponent implements OnInit {
   noResourceInserted() {
     return this.policy.statement
       .map(
-        statement => this.isResourceable(statement) && (statement.resource as string[]).length == 0
+        statement => this.acceptsResource(statement) && (statement.resource as string[]).length == 0
       )
       .some(invalid => invalid);
   }
