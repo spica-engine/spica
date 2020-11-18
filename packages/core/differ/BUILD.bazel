@@ -12,6 +12,7 @@ ts_library(
     module_name = "@spica-server/core/differ",
     deps = [
         "@npm//@types/deep-diff",
+        "@npm//@types/diff-match-patch",
         "@npm//deep-diff",
         "@npm//diff-match-patch",
     ],

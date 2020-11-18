@@ -17,6 +17,7 @@ ts_library(
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
+        "@npm//@types/diff-match-patch",
         "@npm//@types/json-schema",
         "@npm//diff-match-patch",
     ],
