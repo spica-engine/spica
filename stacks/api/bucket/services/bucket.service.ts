@@ -3,11 +3,12 @@ import {Default, Validator} from "@spica-server/core/schema";
 import {BaseCollection, Collection, DatabaseService, ObjectId} from "@spica-server/database";
 import {PreferenceService} from "@spica-server/preference/services";
 import {Bucket, BucketPreferences} from "./bucket";
-import {Observable} from "rxjs";
+import {Observable, BehaviorSubject} from "rxjs";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
   readonly buckets: Collection<Bucket>;
+  schemaChangeEmitter: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
 
   constructor(db: DatabaseService, private pref: PreferenceService, private validator: Validator) {
     super(db);
@@ -16,6 +17,10 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
   getPreferences() {
     return this.pref.get<BucketPreferences>("bucket");
+  }
+
+  emitSchemaChanges() {
+    this.schemaChangeEmitter.next(undefined);
   }
 
   watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
@@ -36,29 +41,6 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
         }
       );
       stream.on("change", change => observer.next(change.fullDocument));
-      return () => {
-        if (!stream.isClosed()) {
-          stream.close();
-        }
-      };
-    });
-  }
-
-  watchAll(propagateOnStart: boolean): Observable<Bucket[]> {
-    return new Observable(observer => {
-      if (propagateOnStart) {
-        this.buckets
-          .find()
-          .toArray()
-          .then(buckets => observer.next(buckets));
-      }
-      const stream = this.buckets.watch();
-      stream.on("change", () =>
-        this.buckets
-          .find()
-          .toArray()
-          .then(buckets => observer.next(buckets))
-      );
       return () => {
         if (!stream.isClosed()) {
           stream.close();
