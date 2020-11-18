@@ -131,13 +131,15 @@ export class GraphqlController implements OnModuleInit {
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService
   ) {
-    this.bs.watchAll(true).subscribe(buckets => {
-      this.schemaErrors = [];
-      this.buckets = buckets;
+    this.bs.schemaChangeEmitter.subscribe(() => {
+      this.bs.find().then(buckets => {
+        this.schemaErrors = [];
+        this.buckets = buckets;
 
-      this.schema = buckets.length
-        ? this.getSchema(buckets, this.schemaErrors)
-        : this.defaultSchema;
+        this.schema = buckets.length
+          ? this.getSchema(buckets, this.schemaErrors)
+          : this.defaultSchema;
+      });
     });
   }
 

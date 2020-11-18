@@ -94,6 +94,7 @@ export class BucketController {
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
     const insertedDocument = await this.bs.insertOne(bucket);
     await this.bs.createCollection(`bucket_${insertedDocument._id}`);
+    this.bs.emitSchemaChanges();
     return insertedDocument;
   }
 
@@ -134,6 +135,8 @@ export class BucketController {
     });
 
     await this.clearUpdatedFields(this.bds, previousSchema, currentSchema);
+
+    this.bs.emitSchemaChanges();
 
     if (this.history) {
       await this.history.updateHistories(previousSchema, currentSchema);
@@ -183,6 +186,7 @@ export class BucketController {
         promises.push(this.history.deleteMany({bucket_id: id}));
       }
       await Promise.all(promises);
+      this.bs.emitSchemaChanges();
     }
     return;
   }
