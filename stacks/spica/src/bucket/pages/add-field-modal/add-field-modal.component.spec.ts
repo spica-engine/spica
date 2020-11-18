@@ -36,7 +36,7 @@ export class CanInteractDirectiveTest {
   @Input("resource") resource: string;
 }
 
-fdescribe("Add Field Component", () => {
+describe("Add Field Component", () => {
   let fixture: ComponentFixture<AddFieldModalComponent>;
   let sampleSchema = {
     _id: "123",
