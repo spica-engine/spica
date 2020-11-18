@@ -5,9 +5,9 @@ import {
   isArray,
   findUpdatedFields,
   getUpdateParams,
-  provideLanguageChangeUpdater
+  provideLanguageChangeUpdater,
+  isDesiredRelation
 } from "@spica-server/bucket/src/utility";
-import {ChangeKind} from "../history/differ";
 
 describe("Utilities", () => {
   it("should check whether schema is object or not", () => {
@@ -28,12 +28,12 @@ describe("Utilities", () => {
       type: "relation",
       bucketId: "id1"
     };
-    expect(isRelation(schema, "id1")).toEqual(true);
+    expect(isDesiredRelation(schema, "id1")).toEqual(true);
 
-    expect(isRelation(schema, "id2")).toEqual(false);
+    expect(isDesiredRelation(schema, "id2")).toEqual(false);
 
     schema.type = "object";
-    expect(isRelation(schema, "id1")).toEqual(false);
+    expect(isDesiredRelation(schema, "id1")).toEqual(false);
   });
 
   it("should check whether schema is array or not", () => {
@@ -129,6 +129,16 @@ describe("Utilities", () => {
               type: "string"
             }
           }
+        },
+        relation_type_updated: {
+          type: "relation",
+          bucketId: "test_bucket",
+          relationType: "onetoone"
+        },
+        relation_bucketId_updated: {
+          type: "relation",
+          bucketId: "bucketid",
+          relationType: "onetoone"
         }
       }
     };
@@ -174,6 +184,16 @@ describe("Utilities", () => {
         },
         nested_root_updated: {
           type: "number"
+        },
+        relation_type_updated: {
+          type: "relation",
+          bucketId: "test_bucket",
+          relationType: "onetomany"
+        },
+        relation_bucketId_updated: {
+          type: "relation",
+          bucketId: "newbucketid",
+          relationType: "onetoone"
         }
       }
     };
@@ -195,7 +215,10 @@ describe("Utilities", () => {
       "root_updated",
 
       "nested_root_removed",
-      "nested_root_updated"
+      "nested_root_updated",
+
+      "relation_type_updated",
+      "relation_bucketId_updated"
     ]);
   });
 
