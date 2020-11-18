@@ -1,5 +1,5 @@
-import {Function, Trigger} from "../src/interface";
-import {ChangeKind, createTargetChanges, hasChange, changesFromTriggers} from "../src/change";
+import {Function} from "../src/interface";
+import {ChangeKind, createTargetChanges, changesFromTriggers} from "../src/change";
 
 describe("Change", () => {
   let fn: Function;
@@ -65,28 +65,6 @@ describe("Change", () => {
         }
       }
     ]);
-  });
-
-  it("should return change result that depends on the trigger configuration", () => {
-    const previousTrigger: Trigger = {
-      options: {collection: "bucket1", phase: "AFTER", action: "INSERT"},
-      type: "bucket",
-      active: true
-    };
-
-    const currentTrigger: Trigger = {
-      options: {collection: "bucket2", phase: "AFTER", action: "INSERT"},
-      type: "bucket",
-      active: true
-    };
-
-    let result = hasChange(previousTrigger, currentTrigger);
-    expect(result).toEqual(true);
-
-    currentTrigger.options["collection"] = "bucket1";
-
-    result = hasChange(previousTrigger, currentTrigger);
-    expect(result).toEqual(false);
   });
 
   it("should create trigger changes", () => {

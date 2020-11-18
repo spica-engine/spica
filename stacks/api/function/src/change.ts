@@ -1,17 +1,5 @@
 import {Triggers, Function, Environment} from "./interface";
-
-export function hasChange(pre: any, cur: any) {
-  let results = [];
-  if (typeof pre == "object" && typeof cur == "object") {
-    for (const [key, value] of Object.entries(cur)) {
-      results.push(hasChange(pre[key], value));
-    }
-  } else {
-    results.push(pre != cur);
-  }
-
-  return results.some(hasChange => hasChange);
-}
+import {diff} from "@spica-server/core/differ";
 
 export function changesFromTriggers(previousFn: Function, currentFn: Function) {
   let targetChanges: TargetChange[] = [];
@@ -27,7 +15,7 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
       //soft delete
       if (!trigger.active) {
         removedTriggers[handler] = trigger;
-      } else if (hasChange(previousFn.triggers[handler], trigger)) {
+      } else if (diff(previousFn.triggers[handler], trigger).length) {
         updatedTriggers[handler] = trigger;
       }
     }

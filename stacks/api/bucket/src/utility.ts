@@ -1,7 +1,7 @@
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection, BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
-import {diff, ChangeKind, ChangePaths} from "../history/differ";
+import {diff, ChangeKind, ChangePaths} from "@spica-server/core/differ";
 import {BucketService, BucketDocument, Bucket} from "@spica-server/bucket/services";
 import {HistoryService} from "@spica-server/bucket/history";
 const JsonMergePatch = require("json-merge-patch");

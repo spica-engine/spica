@@ -7,7 +7,6 @@ import {
   getUpdateParams,
   provideLanguageChangeUpdater
 } from "@spica-server/bucket/src/utility";
-import {ChangeKind} from "../history/differ";
 
 describe("Utilities", () => {
   it("should check whether schema is object or not", () => {
