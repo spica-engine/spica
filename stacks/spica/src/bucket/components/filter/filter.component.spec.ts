@@ -162,13 +162,27 @@ describe("FilterComponent", () => {
       });
     });
 
-    it("should generate the filter with relation", () => {
+    it("should generate the filter for onetoone relation", () => {
+      fixture.componentInstance.schema.properties.test2["relationType"] = "onetoone";
       fixture.componentInstance.property = "test2";
       fixture.componentInstance.value = "anobjectid";
       fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.componentInstance.filter).toEqual({
         "test2._id": "anobjectid"
+      });
+    });
+
+    it("should generate the filter for onetomany relation", () => {
+      fixture.componentInstance.schema.properties.test2["relationType"] = "onetomany";
+      fixture.componentInstance.property = "test2";
+      fixture.componentInstance.value = ["anobjectid"];
+      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.filter).toEqual({
+        "test2._id": {
+          $in: ["anobjectid"]
+        }
       });
     });
 
