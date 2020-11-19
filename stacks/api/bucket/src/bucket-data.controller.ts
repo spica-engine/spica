@@ -353,10 +353,30 @@ export class BucketDataController {
         throw new ForbiddenException("Forbidden action.");
       }
     }
-    const {
-      ops: [currentDocument],
-      insertedId
-    } = await this.bds.insertOne(bucketId, body);
+
+    let currentDocument;
+    let insertedId;
+
+    await this.bds
+      .insertOne(bucketId, body)
+      .then(res => {
+        currentDocument = res.ops[0];
+        insertedId = res.insertedId;
+      })
+      .catch(error => {
+        if (error.code === 11000) {
+          throw new BadRequestException(
+            `Value '${Object.values(error.keyValue)[0]}' for '${
+              Object.keys(error.keyValue)[0]
+            }' field has already exist.`
+          );
+        }
+        throw new InternalServerErrorException();
+      });
+
+    if (!currentDocument || !insertedId) {
+      return;
+    }
 
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
@@ -408,9 +428,27 @@ export class BucketDataController {
       }
     }
 
-    const {value: previousDocument} = await this.bds.replaceOne(bucketId, {_id: documentId}, body, {
-      returnOriginal: true
-    });
+    let previousDocument;
+
+    await this.bds
+      .replaceOne(bucketId, {_id: documentId}, body, {
+        returnOriginal: true
+      })
+      .then(res => (previousDocument = res.value))
+      .catch(error => {
+        if (error.code === 11000) {
+          throw new BadRequestException(
+            `Value '${Object.values(error.keyValue)[0]}' for '${
+              Object.keys(error.keyValue)[0]
+            }' field has already exist.`
+          );
+        }
+        throw new InternalServerErrorException();
+      });
+
+    if (!previousDocument) {
+      return;
+    }
 
     const currentDocument = {...body, _id: documentId};
     const _ = createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);

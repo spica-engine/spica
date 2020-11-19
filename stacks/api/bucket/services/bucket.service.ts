@@ -23,6 +23,19 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     this.schemaChangeEmitter.next(undefined);
   }
 
+  async insertOne(bucket: Bucket) {
+    const insertedBucket = await this.buckets.insertOne(bucket).then(t => t.ops[0]);
+    const bucketCollection = await this.db.createCollection(`bucket_${insertedBucket._id}`);
+
+    const indexDefinitions = this.createUniqueIndexDefs(bucket);
+    if (indexDefinitions.length) {
+      for (const definition of indexDefinitions) {
+        await bucketCollection.createIndex(definition, {unique: true});
+      }
+    }
+    return insertedBucket;
+  }
+
   watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
     return new Observable(observer => {
       if (propagateOnStart) {
@@ -55,5 +68,15 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
 
   getPredefinedDefaults(): Default[] {
     return this.validator.defaults;
+  }
+
+  createUniqueIndexDefs(bucket: Bucket) {
+    let indexDefinitions = [];
+    for (const [name, definition] of Object.entries(bucket.properties)) {
+      if (definition.options && definition.options.unique) {
+        indexDefinitions.push({[name]: 1});
+      }
+    }
+    return indexDefinitions;
   }
 }
