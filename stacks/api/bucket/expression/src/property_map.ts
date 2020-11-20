@@ -60,7 +60,7 @@ function visitNode(node) {
   const result = [];
 
   if (lhs) {
-    if (Array.isArray(lhs) && typeof lhs != "string") {
+    if (Array.isArray(lhs)) {
       result.push(...lhs);
     } else {
       result.push(lhs);
@@ -68,7 +68,7 @@ function visitNode(node) {
   }
 
   if (rhs) {
-    if (Array.isArray(rhs) && typeof rhs != "string") {
+    if (Array.isArray(rhs)) {
       result.push(...rhs);
     } else {
       result.push(rhs);

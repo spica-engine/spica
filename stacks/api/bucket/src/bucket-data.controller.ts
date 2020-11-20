@@ -315,7 +315,7 @@ export class BucketDataController {
    * }
    * ```
    */
-  //@UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity))
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async insertOne(

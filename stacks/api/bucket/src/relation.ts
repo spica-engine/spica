@@ -161,17 +161,17 @@ export function resetNonOverlappingPathsInRelationMap(
             }
           };
         }
-      }
-
-      if (relation.children) {
-        const subPaths = visit({
-          left: leftMatch,
-          right: rightMatch,
-          depth: depth + 1,
-          map: relation.children
-        });
-        if (subPaths) {
-          paths = {...paths, ...subPaths};
+      } else {
+        if (relation.children) {
+          const subPaths = visit({
+            left: leftMatch,
+            right: rightMatch,
+            depth: depth + 1,
+            map: relation.children
+          });
+          if (subPaths) {
+            paths = {...paths, ...subPaths};
+          }
         }
       }
     }

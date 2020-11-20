@@ -13,13 +13,15 @@ export const has: func.Func = context => {
   }
 
   return ctx => {
+    const propertyName: string = convert(context.arguments[0])(ctx);
     if (context.target == "aggregation") {
-      const propertyName: string = convert(context.arguments[0])(ctx);
       return {
         [propertyName.slice(1)]: {
           $exists: true
         }
       };
+    } else {
+      return ctx && propertyName in ctx;
     }
   };
 };
