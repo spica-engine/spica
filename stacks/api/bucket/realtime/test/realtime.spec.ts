@@ -92,6 +92,18 @@ describe("Realtime", () => {
     ]);
   });
 
+  it("should do the initial sync with _id filter", async () => {
+    const ws = wsc.get(url("/bucket/test/data", {filter: {_id: rows[0]["_id"]}}));
+    const message = jasmine.createSpy();
+    ws.onmessage = e => message(JSON.parse(e.data as string));
+    await ws.connect;
+    await ws.close();
+    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+      {kind: ChunkKind.Initial, document: rows[0]},
+      {kind: ChunkKind.EndOfInitial}
+    ]);
+  });
+
   it("should do the initial sync with limit", async () => {
     const ws = wsc.get(url("/bucket/test/data", {limit: 1}));
     const message = jasmine.createSpy();
