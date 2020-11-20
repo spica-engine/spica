@@ -81,7 +81,15 @@ export class PolicyAddComponent implements OnInit {
     }
   }
 
-  serviceAndParamsExist(statement: Statement) {
+  onActionChange(statement: Statement) {
+    if (this.acceptsResource(statement)) {
+      statement.resource = [];
+    } else {
+      delete statement.resource;
+    }
+  }
+
+  acceptsResource(statement: Statement) {
     return (
       this.services[statement.module] &&
       this.services[statement.module][statement.action] &&
@@ -92,8 +100,7 @@ export class PolicyAddComponent implements OnInit {
   noResourceInserted() {
     return this.policy.statement
       .map(
-        statement =>
-          this.serviceAndParamsExist(statement) && (statement.resource as string[]).length == 0
+        statement => this.acceptsResource(statement) && (statement.resource as string[]).length == 0
       )
       .some(invalid => invalid);
   }
@@ -110,7 +117,6 @@ export class PolicyAddComponent implements OnInit {
   addStatement() {
     this.policy.statement.push({
       action: undefined,
-      resource: [],
       module: undefined
     });
   }

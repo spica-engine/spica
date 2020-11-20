@@ -1,6 +1,6 @@
 export interface Statement {
   action: string;
-  resource:
+  resource?:
     | string[]
     | {
         include: string;
