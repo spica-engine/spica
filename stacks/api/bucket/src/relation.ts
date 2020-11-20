@@ -23,39 +23,33 @@ export function findRelations(
 
 export async function getRelationAggregation(
   properties: object,
-  paths: string[][],
+  fields: string[][],
   locale: Locale,
   getSchema: (bucketId: string) => Promise<Bucket>
 ) {
-  const aggregations = [];
+  let aggregations = [];
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.type == "relation") {
+      let relateds = fields.filter(field => field[0] == key);
+      if (relateds.length) {
+        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
 
-  for (const [propertyKey, propertySpec] of Object.entries(properties)) {
-    if (propertySpec.type != "relation") {
-      continue;
-    }
+        let relatedBucket = await getSchema(value.bucketId);
 
-    const matchingPaths = paths.filter(([firstSegment]) => firstSegment == propertyKey);
+        //Remove first key to continue recursive lookup
+        relateds = relateds.map(field => field.slice(1));
 
-    if (matchingPaths.length) {
-      const aggregation = buildRelationAggregation(
-        propertyKey,
-        propertySpec.bucketId,
-        propertySpec.relationType,
-        locale
-      );
-      const relatedBucket = await getSchema(propertySpec.bucketId);
+        let innerLookup = await getRelationAggregation(
+          relatedBucket.properties,
+          relateds,
+          locale,
+          getSchema
+        );
 
-      const innerLookup = await getRelationAggregation(
-        relatedBucket.properties,
-        // Remove first key to continue recursive lookup
-        matchingPaths.map(segments => segments.slice(1)),
-        locale,
-        getSchema
-      );
+        aggregation[0]["$lookup"].pipeline.push(...innerLookup);
 
-      aggregation[0]["$lookup"].pipeline.push(...innerLookup);
-
-      aggregations.push(...aggregation);
+        aggregations.push(...aggregation);
+      }
     }
   }
   return aggregations;
