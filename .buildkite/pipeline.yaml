@@ -62,7 +62,7 @@ steps:
     depends_on: "install_packages"
     plugins:
       - docker#v3.5.0:
-          image: "circleci/node:12-browsers"
+          image: "spicaengine/buildkite-node-with-mongodb:12"
           workdir: /spica
           volumes:
             - "/var/cache/spica/node_modules:/spica/node_modules"
