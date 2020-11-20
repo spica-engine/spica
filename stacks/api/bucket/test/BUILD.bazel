@@ -210,3 +210,23 @@ jasmine_node_test(
         "relation_test_lib",
     ],
 )
+
+ts_library(
+    name = "patch_test_lib",
+    testonly = True,
+    srcs = [
+        "patch.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/bucket",
+        "//stacks/api/bucket/history",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "patch_test",
+    deps = [
+        "patch_test_lib",
+    ],
+)

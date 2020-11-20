@@ -1,38 +1,36 @@
-import {graphqlHTTP} from "express-graphql";
+import {Injectable, OnModuleInit, Optional, PipeTransform} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {Injectable, Optional, PipeTransform, OnModuleInit} from "@nestjs/common";
-import {ObjectID, ObjectId} from "@spica-server/database";
-import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {
-  GraphQLScalarType,
-  ValueNode,
-  GraphQLError,
-  GraphQLSchema,
-  GraphQLResolveInfo
-} from "graphql";
-
-import {makeExecutableSchema, mergeTypeDefs, mergeResolvers} from "graphql-tools";
-import {GuardService} from "@spica-server/passport";
+import {Action, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
-import {createActivity, ActivityService, Action} from "@spica-server/activity/services";
-import {createBucketDataActivity} from "../activity.resource";
-import {Validator, Schema} from "@spica-server/core/schema";
+import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {Schema, Validator} from "@spica-server/core/schema";
+import {ObjectID, ObjectId} from "@spica-server/database";
+import {GuardService} from "@spica-server/passport";
+import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
+import {graphqlHTTP} from "express-graphql";
 import {
-  getBucketName,
-  createSchema,
-  extractAggregationFromQuery,
-  getPatchedDocument,
-  getUpdateQuery,
-  aggregationsFromRequestedFields,
-  getProjectAggregation,
-  requestedFieldsFromInfo,
-  requestedFieldsFromExpression,
-  deepCopy
-} from "./schema";
+  GraphQLError,
+  GraphQLResolveInfo,
+  GraphQLScalarType,
+  GraphQLSchema,
+  ValueNode
+} from "graphql";
+import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools";
+import {createBucketDataActivity} from "../activity.resource";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
-import {createHistory, clearRelations} from "../relation";
-import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
+import {applyPatch, deepCopy, getUpdateQueryForPatch} from "../patch";
+import {clearRelations, createHistory} from "../relation";
+import {
+  aggregationsFromRequestedFields,
+  createSchema,
+  extractAggregationFromQuery,
+  getBucketName,
+  getProjectAggregation,
+  requestedFieldsFromExpression,
+  requestedFieldsFromInfo,
+  SchemaError
+} from "./schema";
 
 interface FindResponse {
   meta: {total: number};
@@ -116,7 +114,7 @@ export class GraphqlController implements OnModuleInit {
 
   schema: GraphQLSchema;
 
-  errorFromLastSchemaGeneration: string;
+  schemaErrors: SchemaError[];
 
   constructor(
     private adapterHost: HttpAdapterHost,
@@ -127,16 +125,15 @@ export class GraphqlController implements OnModuleInit {
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService
   ) {
-    this.bs.watchAll(true).subscribe(buckets => {
-      this.buckets = buckets;
+    this.bs.schemaChangeEmitter.subscribe(() => {
+      this.bs.find().then(buckets => {
+        this.schemaErrors = [];
+        this.buckets = buckets;
 
-      try {
-        this.schema = buckets.length ? this.getSchema(buckets) : this.defaultSchema;
-        this.errorFromLastSchemaGeneration = undefined;
-      } catch (error) {
-        this.schema = this.defaultSchema;
-        this.errorFromLastSchemaGeneration = error.message;
-      }
+        this.schema = buckets.length
+          ? this.getSchema(buckets, this.schemaErrors)
+          : this.defaultSchema;
+      });
     });
   }
 
@@ -152,9 +149,8 @@ export class GraphqlController implements OnModuleInit {
           resourceFilter: true
         });
 
-        if (this.errorFromLastSchemaGeneration) {
-          response.statusCode = 500;
-          response.statusMessage = this.errorFromLastSchemaGeneration;
+        if (this.schemaErrors.length) {
+          response.setHeader("Warnings", JSON.stringify(this.schemaErrors));
         }
 
         return {
@@ -172,9 +168,9 @@ export class GraphqlController implements OnModuleInit {
     );
   }
 
-  getSchema(buckets: Bucket[]): GraphQLSchema {
+  getSchema(buckets: Bucket[], errors: SchemaError[]): GraphQLSchema {
     let typeDefs = buckets.map(bucket =>
-      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()))
+      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()), errors)
     );
     let resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
 
@@ -452,17 +448,13 @@ export class GraphqlController implements OnModuleInit {
 
       let previousDocument = await this.bds.children(bucket._id).findOne({_id: documentId});
 
-      let patchedDocument = getPatchedDocument(previousDocument, input);
+      let patchedDocument = applyPatch(previousDocument, input);
 
       await this.validateInput(bucket._id, patchedDocument).catch(error =>
         throwError(error.message, 400)
       );
 
-      let updateQuery = getUpdateQuery(previousDocument, patchedDocument);
-
-      if (!Object.keys(updateQuery).length) {
-        throw Error("There is no difference between previous and current documents.");
-      }
+      let updateQuery = getUpdateQueryForPatch(input);
 
       let currentDocument = await this.bds
         .children(bucket._id)

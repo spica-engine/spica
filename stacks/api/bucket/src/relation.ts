@@ -14,7 +14,7 @@ export function findRelations(
   for (const field of Object.keys(schema)) {
     if (isObject(schema[field])) {
       findRelations(schema[field].properties, bucketId, `${path}${field}`, targets);
-    } else if (isRelation(schema[field], bucketId)) {
+    } else if (isDesiredRelation(schema[field], bucketId)) {
       targets.set(`${path}${field}`, schema[field].relationType);
     }
   }
@@ -198,7 +198,8 @@ export function findUpdatedFields(
   for (const field of Object.keys(previousSchema)) {
     if (
       !currentSchema.hasOwnProperty(field) ||
-      currentSchema[field].type != previousSchema[field].type
+      currentSchema[field].type != previousSchema[field].type ||
+      hasRelationChanges(previousSchema[field], currentSchema[field])
     ) {
       updatedFields.push(path ? `${path}.${field}` : field);
       //we dont need to check child keys of this key anymore
@@ -256,12 +257,27 @@ export function isObject(schema: any) {
   return schema.type == "object";
 }
 
-export function isRelation(schema: any, bucketId: string) {
-  return schema.type == "relation" && schema.bucketId == bucketId;
+export function isRelation(schema: any) {
+  return schema.type == "relation";
+}
+
+export function isDesiredRelation(schema: any, bucketId: string) {
+  return isRelation(schema) && schema.bucketId == bucketId;
 }
 
 export function isArray(schema: any) {
   return schema.type == "array";
+}
+
+export function hasRelationChanges(previousSchema: any, currentSchema: any) {
+  if (isRelation(previousSchema) && isRelation(currentSchema)) {
+    return (
+      previousSchema.relationType != currentSchema.relationType ||
+      previousSchema.bucketId != currentSchema.bucketId
+    );
+  }
+
+  return false;
 }
 
 export function filterReviver(k: string, v: string) {

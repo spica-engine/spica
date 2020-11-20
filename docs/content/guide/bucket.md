@@ -45,6 +45,18 @@ You can drag and drop the Bucket Properties to the desired division.
 
 `Required`: Makes the field required on entry create and update.
 
+### Validations
+
+#### General Validations
+
+#### String
+
+#### Number
+
+#### Array
+
+#### Object
+
 ### Translation and Localization
 
 **Bucket entries**, in Spica are translatable and localizable out-of-the-box.

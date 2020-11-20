@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,6 +11,7 @@ import {
   NotFoundException,
   Optional,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -23,12 +25,13 @@ import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {ARRAY, BOOLEAN, BooleanCheck, DEFAULT, JSONP, JSONPR, NUMBER, OR} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
+import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
+import {applyPatch, getUpdateQueryForPatch} from "./patch";
 import {
   clearRelations,
   createHistory,
@@ -47,6 +50,7 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
+    private validator: Validator,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService
   ) {}
@@ -334,8 +338,7 @@ export class BucketDataController {
     const relationStage = getRelationPipeline(relationMap, undefined);
 
     const fullDocument = await this.bds
-      .children(bucketId)
-      .collection("buckets")
+      .children("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -406,8 +409,7 @@ export class BucketDataController {
     const relationStage = getRelationPipeline(relationMap, undefined);
 
     const fullDocument = await this.bds
-      .children(bucketId)
-      .collection("buckets")
+      .children("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -444,6 +446,92 @@ export class BucketDataController {
     }
 
     return currentDocument;
+  }
+
+  /**
+   * Update a document in the bucket.
+   * Body should be in format of JSON merge patch.
+   * @param bucketId Identifier of the bucket.
+   * @param documentId Identifier of the document.
+   * @body
+   * ```json
+   * {
+   *    "name": "Daniel",
+   *    "age": null
+   * }
+   * ```
+   */
+  @UseInterceptors(activity(createBucketDataActivity))
+  @Patch(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  async patch(
+    @Req() req,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Body() patch: Partial<BucketDocument>
+  ) {
+    const schema = await this.bs.findOne({_id: bucketId});
+
+    const bkt = this.bds.children(bucketId);
+
+    const previousDocument = await bkt.findOne({_id: documentId});
+
+    const patchedDocument = applyPatch(previousDocument, patch);
+
+    await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
+      throw new BadRequestException(
+        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.message
+      );
+    });
+
+    const paths = extractPropertyMap(schema.acl.write).map(path => path.split("."));
+
+    const relationMap = await createRelationMap({
+      properties: schema.properties,
+      paths,
+      resolve: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+    });
+
+    const relationStage = getRelationPipeline(relationMap, undefined);
+
+    const fullDocument = await this.bds
+      .children("buckets")
+      .aggregate([
+        {$limit: 1},
+        {
+          $replaceWith: patchedDocument
+        },
+        ...relationStage
+      ])
+      .next();
+
+    const aclResult = run(schema.acl.write, {auth: req.user, document: fullDocument});
+
+    if (!aclResult) {
+      throw new ForbiddenException("ACL rules has rejected this operation.");
+    }
+
+    const updateQuery = getUpdateQueryForPatch(patch);
+
+    const currentDocument = await bkt.findOneAndUpdate({_id: documentId}, updateQuery, {
+      returnOriginal: false
+    });
+
+    await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
+
+    if (this.changeEmitter) {
+      this.changeEmitter.emitChange(
+        {
+          bucket: bucketId.toHexString(),
+          type: "update"
+        },
+        documentId.toHexString(),
+        previousDocument,
+        currentDocument
+      );
+    }
   }
 
   /**
