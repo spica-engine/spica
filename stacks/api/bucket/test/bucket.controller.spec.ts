@@ -884,5 +884,79 @@ describe("Bucket acceptance", () => {
         }
       ]);
     });
+
+    it("should update scores when scores bucket schema relation type changed", async () => {
+      const updatedScoresBucket = {
+        title: "Scores",
+        description: "Scores bucket",
+        properties: {
+          score: {
+            type: "number",
+            options: {}
+          },
+          user: {
+            type: "relation",
+            bucketId: usersBucket._id,
+            //relation type changes
+            relationType: "onetomany",
+            options: {}
+          },
+          setting: {
+            type: "relation",
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          }
+        }
+      };
+      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+
+      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+
+      expect(body).toEqual([
+        {
+          _id: score._id,
+          score: 500,
+          setting: setting._id
+        }
+      ]);
+    });
+
+    it("should update scores when scores bucket schema relational bucket changed", async () => {
+      const updatedScoresBucket = {
+        title: "Scores",
+        description: "Scores bucket",
+        properties: {
+          score: {
+            type: "number",
+            options: {}
+          },
+          user: {
+            type: "relation",
+            //relational bucket changes
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          },
+          setting: {
+            type: "relation",
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          }
+        }
+      };
+      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+
+      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+
+      expect(body).toEqual([
+        {
+          _id: score._id,
+          score: 500,
+          setting: setting._id
+        }
+      ]);
+    });
   });
 });
