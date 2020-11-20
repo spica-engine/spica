@@ -109,7 +109,7 @@ export class FunctionController {
       throw new NotFoundException("Couldn't find the function.");
     }
 
-    let changes = createTargetChanges(fn, ChangeKind.Removed);
+    const changes = createTargetChanges(fn, ChangeKind.Removed);
     this.engine.categorizeChanges(changes);
 
     await this.engine.deleteFunction(fn);
@@ -164,7 +164,7 @@ export class FunctionController {
     const previousFn = await this.fs.findOneAndUpdate({_id: id}, {$set: fn});
 
     fn._id = id;
-    let changes = changesFromTriggers(previousFn, fn);
+    const changes = changesFromTriggers(previousFn, fn);
     this.engine.categorizeChanges(changes);
 
     return fn;
@@ -186,7 +186,7 @@ export class FunctionController {
     }
     fn = await this.fs.insertOne(fn);
 
-    let changes = createTargetChanges(fn, ChangeKind.Added);
+    const changes = createTargetChanges(fn, ChangeKind.Added);
     this.engine.categorizeChanges(changes);
 
     await this.engine.createFunction(fn);

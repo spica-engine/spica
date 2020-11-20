@@ -27,18 +27,18 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
     }
   }
 
-  let insertChanges = this.createTargetChanges(
+  const insertChanges = createTargetChanges(
     {...currentFn, triggers: insertedTriggers},
     ChangeKind.Added
   );
-  let updateChanges = this.createTargetChanges(
+  const updateChanges = createTargetChanges(
     {
       ...currentFn,
       triggers: updatedTriggers
     },
     ChangeKind.Updated
   );
-  let removeChanges = this.createTargetChanges(
+  const removeChanges = createTargetChanges(
     {
       ...currentFn,
       triggers: removedTriggers

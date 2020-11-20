@@ -32,7 +32,7 @@ describe("Change", () => {
       }
     };
 
-    let changes = createTargetChanges(fn, ChangeKind.Added);
+    const changes = createTargetChanges(fn, ChangeKind.Added);
     expect(changes).toEqual([
       {
         kind: ChangeKind.Added,
@@ -158,17 +158,17 @@ describe("Change", () => {
     currentFn.triggers.deactivated.active = false;
 
     //for making more readable
-    let changes = changesFromTriggers(previousFn, currentFn);
+    const changes = changesFromTriggers(previousFn, currentFn);
 
-    let insertedHandlers = changes
+    const insertedHandlers = changes
       .filter(change => change.kind == ChangeKind.Added)
       .map(change => change.target.handler);
 
-    let updatedHandlers = changes
+    const updatedHandlers = changes
       .filter(change => change.kind == ChangeKind.Updated)
       .map(change => change.target.handler);
 
-    let removedHandlers = changes
+    const removedHandlers = changes
       .filter(change => change.kind == ChangeKind.Removed)
       .map(change => change.target.handler);
 
