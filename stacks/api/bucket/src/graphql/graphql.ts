@@ -31,7 +31,7 @@ import {
 } from "./schema";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
-import {createHistory, clearRelations} from "../utility";
+import {createHistory, clearRelations} from "../relation";
 import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
 
 interface FindResponse {
@@ -275,12 +275,16 @@ export class GraphqlController implements OnModuleInit {
         {$unwind: "$meta"}
       );
 
-      return this.bds.find(bucket._id, aggregation).then(response => {
-        if (!response.length) {
-          return {meta: {total: 0}, entries: []};
-        }
-        return response[0] as FindResponse;
-      });
+      return this.bds
+        .children(bucket._id)
+        .aggregate<FindResponse>(aggregation)
+        .next()
+        .then(response => {
+          if (!response) {
+            return {meta: {total: 0}, entries: []};
+          }
+          return response[0] as FindResponse;
+        });
     };
   }
 
@@ -316,9 +320,10 @@ export class GraphqlController implements OnModuleInit {
       let project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => {
-        return documents;
-      });
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -339,7 +344,7 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      let insertResult = await this.bds.insertOne(bucket._id, input);
+      let insertResult = await this.bds.children(bucket._id).insertOne(input);
 
       if (this.activity) {
         const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
@@ -361,7 +366,10 @@ export class GraphqlController implements OnModuleInit {
       let project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -382,14 +390,11 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      const {value: previousDocument} = await this.bds.replaceOne(
-        bucket._id,
-        {_id: documentId},
-        input,
-        {
+      const previousDocument = await this.bds
+        .children(bucket._id)
+        .findOneAndReplace({_id: documentId}, input, {
           returnOriginal: true
-        }
-      );
+        });
 
       const currentDocument = {...input, _id: documentId};
 
@@ -423,7 +428,10 @@ export class GraphqlController implements OnModuleInit {
       let project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -442,7 +450,7 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      let previousDocument = await this.bds.findOne(bucket._id, {_id: documentId});
+      let previousDocument = await this.bds.children(bucket._id).findOne({_id: documentId});
 
       let patchedDocument = getPatchedDocument(previousDocument, input);
 
@@ -456,12 +464,9 @@ export class GraphqlController implements OnModuleInit {
         throw Error("There is no difference between previous and current documents.");
       }
 
-      let currentDocument = await this.bds.findOneAndUpdate(
-        bucket._id,
-        {_id: documentId},
-        updateQuery,
-        {returnOriginal: false}
-      );
+      let currentDocument = await this.bds
+        .children(bucket._id)
+        .findOneAndUpdate({_id: documentId}, updateQuery, {returnOriginal: false});
 
       if (this.history) {
         const promise = createHistory(
@@ -493,7 +498,10 @@ export class GraphqlController implements OnModuleInit {
       let project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
+      return this.bds
+        .children(bucket._id)
+        .find(aggregation)
+        .then(([documents]) => documents);
     };
   }
 
@@ -514,12 +522,12 @@ export class GraphqlController implements OnModuleInit {
 
       await clearRelations(this.bs, bucket._id, documentId);
       if (this.history) {
-        const promise = this.history.deleteMany({
+        await this.history.deleteMany({
           document_id: documentId
         });
       }
 
-      let result = await this.bds.deleteOne(bucket._id, {_id: documentId}).then(res => res.result);
+      await this.bds.children(bucket._id).deleteOne({_id: documentId});
 
       if (this.activity) {
         const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);

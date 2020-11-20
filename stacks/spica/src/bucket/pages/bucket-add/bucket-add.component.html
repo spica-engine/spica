@@ -151,24 +151,30 @@
                     <mat-icon>info</mat-icon>
                   </button>
                 </div>
-                <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)"
-                  >This feature is unavailable.</mat-error
-                >
+                <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">
+                  This feature is unavailable.
+                </mat-error>
               </div>
             </form>
           </mat-list-item>
+
+          <h4 mat-subheader>
+            <mat-icon>gavel</mat-icon> ACL
+            <mat-button-toggle-group #aclType="ngModel" ngModel="read">
+              <mat-button-toggle value="read">READ</mat-button-toggle>
+              <mat-button-toggle value="write">WRITE</mat-button-toggle>
+            </mat-button-toggle-group>
+          </h4>
           <mat-list-item>
-            <mat-form-field style="width: 100%;">
-              <textarea
-                matInput
-                name="acl"
-                placeholder="ACL"
-                #dm="ngModel"
-                [(ngModel)]="bucket.acl"
-                cols="20"
-                rows="3"
-              ></textarea>
-            </mat-form-field>
+            <code-editor
+              name="acl"
+              placeholder="ACL"
+              #dm="ngModel"
+              [(ngModel)]="bucket.acl[aclType.value]"
+              [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
+              language="cel"
+            >
+            </code-editor>
           </mat-list-item>
           <span>
             <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>

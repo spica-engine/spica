@@ -1,38 +1,89 @@
 {  
-  function merge(lhs, rhs)  { 
-    return rhs.reduce( (lhs,rhs) => ({...rhs, lhs}), lhs) 
+  function __cel$ltr__(lhs, rhs)  { 
+    return rhs.reduce( (t,h) => ({...h, lhs: t}), lhs) 
   }  
 }
 
-//Expr = condition:ConditionalOr "?" t:ConditionalOr ":" f:Expr { return {} }  / ConditionalOr
-Expr = ConditionalOr
-ConditionalOr  = "||"? lhs:ConditionalAnd rhs:ConditionalOr? {
-	return {lhs, rhs}
+Expr // "Common Expresxsion"
+  = t:ConditionalOr  "?"  s:Expr  ":"   p:Expr
+	{ return {kind: "operator", type: "conditional", category:"tenary", primary:p, rhs:p, tertiary:t} }    
+  / ConditionalOr
+
+
+ConditionalOr = lhs:ConditionalAnd rhs:(ConditionalOrOperation)* { 
+  return __cel$ltr__(lhs, rhs) 
+} 
+ConditionalOrOperation =  "||"  rhs:ConditionalAnd { 
+  return {kind: "operator", type:"or", category:"binary", rhs} 
 }
-ConditionalAnd = "&&"? Relation
-Relation       = Addition Relop*
-Relop          = "<" / "<=" / ">=" / ">" / "==" / "!=" / "in" {return text()}
-Addition       = ("+" / "-")? Multiplication Addition?
-Multiplication = ("*" / "/" / "%")? Unary Multiplication?
-Unary          = Member
-               / "!" "!"* Member
-               / "-" "-"* Member
-               ;
-Member         = Primary
-               / "." IDENT ("(" ExprList? ")")? Member
-               / "[" Expr "]" Member
-               / "{" FieldInits? "}" Member
 
-Primary        = "."? IDENT ("(" ExprList? ")")? 
-			   / "(" Expr ")"
-               / "[" ExprList? "]"
-               / "{" MapInits? "}"
-               / LITERAL
 
-ExprList       = Expr ("," Expr)*
+ConditionalAnd = lhs:Relation rhs:(ConditionalAndOperation)* { 
+  return __cel$ltr__(lhs, rhs) 
+} 
+ConditionalAndOperation = "&&" rhs:Relation { 
+  return {kind: "operator", type:"and", category:"binary", rhs}
+}
+
+
+Relation = lhs:Addition rhs:(RelationOperation)* { 
+  return __cel$ltr__(lhs, rhs) 
+} 
+RelationOperation = type:("<" / "<=" / ">=" / ">" / "==" / "!=" / "in")  rhs:Addition { 
+  return {kind: "operator", type, category:"binary", rhs} 
+}
+
+
+Addition = lhs:Multiplication rhs:(AdditionOperation)* { 
+  return __cel$ltr__(lhs, rhs)
+} 
+AdditionOperation = type:("+" / "-") rhs:Multiplication { 
+  return {kind: "operator", type, category:"binary", rhs} 
+}
+
+
+Multiplication = lhs:Unary rhs:(MultiplicationOperation)* { 
+  return __cel$ltr__(lhs, rhs) 
+} 
+MultiplicationOperation = type:("*" / "/" / "%")  rhs:Unary { 
+  return {kind: "operator", type, category:"binary", rhs} 
+}
+
+Unary      
+  = Member
+  / "!" "!"* member:Member { return {kind: "unary", type: "not", member} }
+  / "-" "-"* member:Member { return {kind: "unary", type: "negative", member} }
+
+Member
+  = lhs:(LITERAL / Atomic) rhs:(MemberOperation)* { return __cel$ltr__(lhs, rhs) }
+
+MemberOperation
+  =  "."  rhs:Atomic { return { kind: "operator", type:"select", category:"binary", rhs } }
+  /  "["  rhs:Expr  "]" { return { kind: "operator", type:"index", category:"binary", rhs } }
+  /  "{"  rhs:FieldInits  "}" { return { kind: "operator", type:"construct", category:"binary", rhs } }
+  /  "("  args:ExprList  ")" { return { kind: "call", arguments: args.expressions } }
+ 
+ 
+Atomic
+  = "["  exprList:ExprList  "]" { return exprList }
+  / "{"  mapInits:MapInits  "}" { return mapInits }
+  / "("  expr:Expr  ")" { return expr }
+  / "."  primary:IDENT { return {kind: "operator", type: "fully_qualify", category:"unary", primary}}
+  / IDENT
+
+
+ExprList       = lhs:Expr rhs:("," expr:Expr {return expr})* {
+	const expressions = [lhs];
+	if (rhs) {
+		expressions.push(...rhs);
+	} 
+	return {
+		kind: "expressionlist",
+		expressions
+	}
+}
 FieldInits     = IDENT ":" Expr ("," IDENT ":" Expr)*
 MapInits       = Expr ":" Expr ("," Expr ":" Expr)*
-
 
 
 // LEXIS
@@ -46,8 +97,8 @@ LITERAL = value:FLOAT_LIT { return { kind: "literal", type: "double", value } }
         / value:INT_LIT { return { kind: "literal", type: "int", value } }
         / value:BYTES_LIT { return { kind: "literal", type: "bytes", value } }
         / value:STRING_LIT { return { kind: "literal", type: "string", value } } 
-        / value:BOOL_LIT { return { kind: "literal", type: "bool", value } } 
-        / value:NULL_LIT { return { kind: "literal", type: "null", value } }
+        / value:BOOL_LIT { return { kind: "literal", type: "bool", value: value == "true" } } 
+        / NULL_LIT { return { kind: "literal", type: "null", value: null } }
 
 INT_LIT = "0x" HEXDIGIT+ { return parseInt(text(), 16) }
   / DIGIT+ { return parseInt(text(), 10) }

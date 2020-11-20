@@ -4,14 +4,16 @@ load("@npm//@bazel/typescript:index.bzl", "ts_library")
 
 ts_library(
     name = "expression",
-    module_name = "@spica-server/bucket/expression",
-    srcs = glob(["*.ts"]),
+    srcs = glob([
+        "src/*.ts",
+        "index.ts",
+    ]),
     data = [
-        "cel.grammar.pegjs",
-        "new.pegjs"
+        "src/grammar.pegjs",
     ],
+    module_name = "@spica-server/bucket/expression",
     deps = [
+        "@npm//@types/node",
         "@npm//pegjs",
-        "@npm//@types/node"
-    ]
+    ],
 )

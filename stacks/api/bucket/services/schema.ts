@@ -60,7 +60,7 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
     return schema;
   }
 
-  const bucket = map(schema) as Bucket;
+  const bucket = map(schema as unknown) as Bucket;
 
   delete bucket._id;
   delete bucket.icon;
@@ -85,5 +85,5 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
     delete property.options;
     return accumulator;
   }, {});
-  return bucket;
+  return bucket as JSONSchema7;
 }

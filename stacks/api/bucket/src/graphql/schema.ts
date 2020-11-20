@@ -3,7 +3,7 @@ import {ObjectId} from "@spica-server/database";
 import {diff, ChangeKind, ChangePaths} from "@spica-server/bucket/history/differ";
 import {GraphQLResolveInfo} from "graphql";
 import {Locale, buildI18nAggregation} from "../locale";
-import {getRelationAggregation} from "../utility";
+import {getRelationAggregation} from "../relation";
 const JsonMergePatch = require("json-merge-patch");
 
 enum Prefix {
