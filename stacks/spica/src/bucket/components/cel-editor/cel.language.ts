@@ -10,7 +10,6 @@ declare var monaco: typeof import("monaco-editor-core");
 })
 export class CelLanguageDirective {
   async onInit() {
-    console.log("dsadsa");
     const {configuration, language} = await import("./cel.syntax");
     monaco.languages.register({id: "cel"});
     monaco.languages.setLanguageConfiguration("cel", configuration);
