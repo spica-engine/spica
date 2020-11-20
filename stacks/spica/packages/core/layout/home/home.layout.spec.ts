@@ -18,6 +18,8 @@ import {ToolbarActionDirective} from "../toolbar-action";
 import {HomeLayoutComponent} from "./home.layout";
 import {CanInteractDirectiveTest} from "../../../../src/passport/directives/can-interact.directive";
 import {MatMenuModule} from "@angular/material/menu";
+import {MatTooltipModule} from "@angular/material/tooltip";
+
 
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
@@ -28,6 +30,7 @@ describe("Home Layout", () => {
       TestBed.configureTestingModule({
         declarations: [HomeLayoutComponent, ToolbarActionDirective, CanInteractDirectiveTest],
         imports: [
+          MatTooltipModule,
           MatSidenavModule,
           MatListModule,
           MatIconModule,
