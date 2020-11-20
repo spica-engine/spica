@@ -52,8 +52,8 @@
               <mat-select
                 [name]="statementIndex + 'action'"
                 placeholder="Actions"
-                (ngModelChange)="statement.resource = []"
                 [(ngModel)]="statement.action"
+                (ngModelChange)="onActionChange(statement)"
                 required
               >
                 <mat-option
@@ -66,7 +66,7 @@
                 </mat-option>
               </mat-select>
             </mat-form-field>
-            <mat-form-field *ngIf="serviceAndParamsExist(statement)">
+            <mat-form-field *ngIf="acceptsResource(statement)">
               <mat-select
                 placeholder="Resource Definition"
                 (selectionChange)="onResourceSelection(statement, $event.value)"
@@ -80,7 +80,7 @@
                 </mat-option>
               </mat-select>
             </mat-form-field>
-            <ng-container *ngIf="serviceAndParamsExist(statement)">
+            <ng-container *ngIf="acceptsResource(statement)">
               <ng-container *ngIf="getResourceSelection(statement) == 'include'">
                 <mat-label>Included resources</mat-label>
                 <div
