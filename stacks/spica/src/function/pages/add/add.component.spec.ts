@@ -21,7 +21,7 @@ import {of} from "rxjs";
 import {InputModule} from "@spica-client/common/input";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
-import {EditorComponent} from "../../components/editor/editor.component";
+import {EditorModule} from "@spica-client/common/code-editor";
 import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {Store} from "@ngrx/store";
@@ -65,6 +65,7 @@ describe("Function Add", () => {
         MatSliderModule,
         LayoutModule,
         InputModule,
+        EditorModule,
 
         //for log view component
         NoopAnimationsModule,
@@ -102,7 +103,6 @@ describe("Function Add", () => {
       ],
       declarations: [
         AddComponent,
-        EditorComponent,
         LogViewComponent,
         EnqueuerPipe,
         MockLanguageDirective,

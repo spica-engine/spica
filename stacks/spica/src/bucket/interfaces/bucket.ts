@@ -14,7 +14,7 @@ export interface Bucket {
   properties?: {
     [key: string]: Property;
   };
-  acl: {
+  acl?: {
     read: string;
     write: string;
   };
