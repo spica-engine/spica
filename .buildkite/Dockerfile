@@ -36,9 +36,10 @@ RUN apt-get update && apt-get install helm -y
 
 RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
 RUN apt-get update && apt-get install google-chrome-stable -y --allow-unauthenticated
-RUN google-chrome --version
+ENV CHROME_BIN=/usr/bin/google-chrome
 
 # Smoke tests
+RUN google-chrome --version
 RUN gcloud version
 RUN kubectl version --client
 RUN helm version
