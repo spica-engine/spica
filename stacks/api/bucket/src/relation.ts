@@ -1,9 +1,8 @@
-import {ObjectId} from "@spica-server/database";
-import {getBucketDataCollection, BucketDataService} from "./bucket-data.service";
-import {buildI18nAggregation, Locale} from "./locale";
-import {BucketService, BucketDocument} from "@spica-server/bucket/services";
-import {diff, ChangeKind} from "../history/differ";
 import {HistoryService} from "@spica-server/bucket/history";
+import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {ObjectId} from "@spica-server/database";
+import {getBucketDataCollection} from "./bucket-data.service";
+import {buildI18nAggregation, Locale} from "./locale";
 
 export function findRelations(
   schema: any,
@@ -15,11 +14,171 @@ export function findRelations(
   for (const field of Object.keys(schema)) {
     if (isObject(schema[field])) {
       findRelations(schema[field].properties, bucketId, `${path}${field}`, targets);
-    } else if (isRelation(schema[field], bucketId)) {
+    } else if (isDesiredRelation(schema[field], bucketId)) {
       targets.set(`${path}${field}`, schema[field].relationType);
     }
   }
   return targets;
+}
+
+export async function getRelationAggregation(
+  properties: object,
+  fields: string[][],
+  locale: Locale,
+  getSchema: (bucketId: string) => Promise<Bucket>
+) {
+  let aggregations = [];
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.type == "relation") {
+      let relateds = fields.filter(field => field[0] == key);
+      if (relateds.length) {
+        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
+
+        let relatedBucket = await getSchema(value.bucketId);
+
+        //Remove first key to continue recursive lookup
+        relateds = relateds.map(field => field.slice(1));
+
+        let innerLookup = await getRelationAggregation(
+          relatedBucket.properties,
+          relateds,
+          locale,
+          getSchema
+        );
+
+        aggregation[0]["$lookup"].pipeline.push(...innerLookup);
+
+        aggregations.push(...aggregation);
+      }
+    }
+  }
+  return aggregations;
+}
+
+export function getRelationPipeline(map: RelationMap[], locale: Locale): object[] {
+  const pipeline = [];
+
+  for (const relation of map) {
+    const stage = buildRelationAggregation(relation.path, relation.target, relation.type, locale);
+
+    if (relation.children) {
+      const subPipeline = getRelationPipeline(relation.children, locale);
+      stage[0]["$lookup"].pipeline.push(...subPipeline);
+    }
+
+    pipeline.push(...stage);
+  }
+
+  return pipeline;
+}
+
+interface RelationMap {
+  type: "onetoone" | "onetomany";
+  target: string;
+  path: string;
+  children?: RelationMap[];
+}
+
+interface RelationMapOptions {
+  resolve: (id: string) => Promise<Bucket>;
+  paths: string[][];
+  properties: object;
+}
+
+export async function createRelationMap(options: RelationMapOptions): Promise<RelationMap[]> {
+  const visit = async (
+    properties: object,
+    paths: string[][],
+    depth: number
+  ): Promise<RelationMap[]> => {
+    const maps: RelationMap[] = [];
+
+    for (const [propertyKey, propertySpec] of Object.entries(properties)) {
+      if (propertySpec.type != "relation") {
+        continue;
+      }
+
+      const matchingPaths = paths.filter(segments => segments[depth] == propertyKey);
+
+      if (!matchingPaths.length) {
+        continue;
+      }
+
+      const schema = await options.resolve(propertySpec.bucketId);
+
+      const children = await visit(schema.properties, matchingPaths, depth + 1);
+
+      maps.push({
+        path: propertyKey,
+        target: propertySpec.bucketId,
+        type: propertySpec.relationType,
+        children: children.length ? children : undefined
+      });
+    }
+
+    return maps;
+  };
+
+  return visit(options.properties, options.paths, 0);
+}
+
+interface ResetNonOverlappingPathsOptions {
+  left: string[][];
+  right: string[][];
+  map: RelationMap[];
+}
+
+export function resetNonOverlappingPathsInRelationMap(
+  options: ResetNonOverlappingPathsOptions
+): object {
+  const visit = ({
+    left,
+    right,
+    map,
+    depth
+  }: ResetNonOverlappingPathsOptions & {
+    depth: number;
+  }): {[path: string]: object | string} => {
+    let paths: {[path: string]: object | string} = {};
+    let hasKeys = false;
+    for (const relation of map) {
+      const leftMatch = left.filter(segments => segments[depth] == relation.path);
+      const rightMatch = right.filter(segments => segments[depth] == relation.path);
+
+      if (!leftMatch.length && rightMatch.length) {
+        hasKeys = true;
+
+        const path = rightMatch[0].slice(0, depth + 1).join(".");
+
+        if (relation.type == "onetoone") {
+          paths[path] = `$${path}._id`;
+        } else {
+          paths[path] = {
+            $map: {
+              input: `$${path}`,
+              as: "doc",
+              in: `$$doc._id`
+            }
+          };
+        }
+      } else if (relation.children) {
+        const subPaths = visit({
+          left: leftMatch,
+          right: rightMatch,
+          depth: depth + 1,
+          map: relation.children
+        });
+        if (subPaths) {
+          paths = {...paths, ...subPaths};
+        }
+      }
+    }
+
+    return hasKeys ? paths : undefined;
+  };
+
+  const expressions = visit({left: options.left, right: options.right, map: options.map, depth: 0});
+  return expressions ? {$set: expressions} : undefined;
 }
 
 export function findUpdatedFields(
@@ -31,7 +190,8 @@ export function findUpdatedFields(
   for (const field of Object.keys(previousSchema)) {
     if (
       !currentSchema.hasOwnProperty(field) ||
-      currentSchema[field].type != previousSchema[field].type
+      currentSchema[field].type != previousSchema[field].type ||
+      hasRelationChanges(previousSchema[field], currentSchema[field])
     ) {
       updatedFields.push(path ? `${path}.${field}` : field);
       //we dont need to check child keys of this key anymore
@@ -89,12 +249,27 @@ export function isObject(schema: any) {
   return schema.type == "object";
 }
 
-export function isRelation(schema: any, bucketId: string) {
-  return schema.type == "relation" && schema.bucketId == bucketId;
+export function isRelation(schema: any) {
+  return schema.type == "relation";
+}
+
+export function isDesiredRelation(schema: any, bucketId: string) {
+  return isRelation(schema) && schema.bucketId == bucketId;
 }
 
 export function isArray(schema: any) {
   return schema.type == "array";
+}
+
+export function hasRelationChanges(previousSchema: any, currentSchema: any) {
+  if (isRelation(previousSchema) && isRelation(currentSchema)) {
+    return (
+      previousSchema.relationType != currentSchema.relationType ||
+      previousSchema.bucketId != currentSchema.bucketId
+    );
+  }
+
+  return false;
 }
 
 export function filterReviver(k: string, v: string) {
@@ -119,7 +294,7 @@ export function buildRelationAggregation(
   bucketId: string,
   type: "onetomany" | "onetoone",
   locale: Locale
-) {
+): object[] {
   if (type == "onetomany") {
     return [
       {
@@ -138,14 +313,14 @@ export function buildRelationAggregation(
               ]
             }
           },
+          as: property,
           pipeline: [
             {$match: {$expr: {$in: ["$_id", "$$documentIds"]}}},
             locale
               ? {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)}
               : undefined,
             {$set: {_id: {$toString: "$_id"}}}
-          ].filter(Boolean),
-          as: property
+          ].filter(Boolean)
         }
       }
     ];
@@ -172,76 +347,6 @@ export function buildRelationAggregation(
       {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
     ];
   }
-}
-
-export function provideLanguageChangeUpdater(
-  bucketService: BucketService,
-  bucketDataService: BucketDataService
-) {
-  return async (previousSchema: object, currentSchema: object) => {
-    let deletedLanguages = diff(previousSchema, currentSchema)
-      .filter(
-        change =>
-          change.kind == ChangeKind.Delete &&
-          change.path[0] == "language" &&
-          change.path[1] == "available"
-      )
-      .map(change => change.path[2]);
-
-    if (!deletedLanguages.length) {
-      return Promise.resolve();
-    }
-
-    let buckets = await bucketService
-      .aggregate([
-        {
-          $project: {
-            properties: {
-              $objectToArray: "$properties"
-            }
-          }
-        },
-        {
-          $match: {
-            "properties.v.options.translate": true
-          }
-        },
-        {
-          $project: {
-            properties: {
-              $filter: {
-                input: "$properties",
-                as: "property",
-                cond: {$eq: ["$$property.v.options.translate", true]}
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            properties: {
-              $arrayToObject: "$properties"
-            }
-          }
-        }
-      ])
-      .toArray();
-
-    let promises = buckets.map(bucket => {
-      let targets = {};
-
-      Object.keys(bucket.properties).forEach(field => {
-        targets = deletedLanguages.reduce((acc, language) => {
-          acc = {...acc, [`${field}.${language}`]: ""};
-          return acc;
-        }, targets);
-      });
-
-      return bucketDataService.updateMany(bucket._id, {}, {$unset: targets});
-    });
-
-    return Promise.all(promises);
-  };
 }
 
 export async function clearRelations(

@@ -19,6 +19,7 @@ import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {By} from "@angular/platform-browser";
+import {EditorModule} from "@spica-client/common/code-editor";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {InputModule} from "@spica-client/common";
@@ -33,6 +34,7 @@ import {BucketAddComponent} from "./bucket-add.component";
 import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 import {BucketIndexComponent} from "../bucket-index/bucket-index.component";
 import {RouterTestingModule} from "@angular/router/testing";
+import {MatButtonToggleModule} from "@angular/material/button-toggle";
 
 describe("BucketAddComponent", () => {
   let fixture: ComponentFixture<BucketAddComponent>;
@@ -46,6 +48,10 @@ describe("BucketAddComponent", () => {
     required: ["prop1"],
     readOnly: false,
     history: true,
+    acl: {
+      write: "true==true",
+      read: "true==true"
+    },
     properties: {
       prop1: {
         type: "string",
@@ -75,6 +81,7 @@ describe("BucketAddComponent", () => {
       imports: [
         DragDropModule,
         MatProgressSpinnerModule,
+        MatButtonToggleModule,
         MatCardModule,
         MatGridListModule,
         MatSelectModule,
@@ -92,7 +99,9 @@ describe("BucketAddComponent", () => {
         MatTooltipModule,
         MatPaginatorModule,
         MatToolbarModule,
+        EditorModule,
         NoopAnimationsModule,
+
         InputModule.withPlacers([]),
         MatSaveModule,
         MatAwareDialogModule,
@@ -110,11 +119,6 @@ describe("BucketAddComponent", () => {
         {
           provide: BucketService,
           useValue: {
-            getPredefinedDefaults: jasmine
-              .createSpy("getPredefinedDefaults")
-              .and.returnValues(
-                of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "type2"}])
-              ),
             getBucket: jasmine.createSpy("getBucket").and.returnValue(of(myBucket)),
             replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(myBucket)),
             getBuckets: jasmine.createSpy("getBuckets").and.returnValue(of([myBucket]))
@@ -142,20 +146,6 @@ describe("BucketAddComponent", () => {
 
   describe("basic behaviours", () => {
     it("should be defined when component created", () => {
-      expect(fixture.componentInstance.predefinedDefaults).toEqual({
-        type: [
-          {
-            keyword: "keyword",
-            type: "type"
-          }
-        ],
-        type2: [
-          {
-            keyword: "keyword2",
-            type: "type2"
-          }
-        ]
-      });
       expect(fixture.componentInstance.bucket).toEqual(myBucket as Bucket);
       expect(fixture.componentInstance.propertyPositionMap).toEqual({
         left: [
@@ -280,7 +270,7 @@ describe("BucketAddComponent", () => {
 
       expect(
         fixture.debugElement.query(By.css(".toggles mat-error")).nativeElement.textContent
-      ).toEqual("This feature is unavailable.");
+      ).toEqual(" This feature is unavailable. ");
     });
   });
 
@@ -309,6 +299,10 @@ describe("BucketAddComponent", () => {
         required: [],
         readOnly: false,
         history: true,
+        acl: {
+          write: "true==true",
+          read: "true==true"
+        },
         properties: {
           prop2: {
             type: "textarea",

@@ -98,10 +98,6 @@ export class EditorComponent
   }
 
   async ngOnInit() {
-    const formatter = new Worker("./format.worker", {type: "module"});
-    const format = fromEvent<MessageEvent>(formatter, "message").pipe(
-      map(event => event.data as string)
-    );
     this.monaco = await import("monaco-editor-core");
     this.editorRef = this.monaco.editor.create(this.elementRef.nativeElement, this._options);
 
@@ -112,38 +108,7 @@ export class EditorComponent
 
     this.init.emit(this.editorRef);
 
-    this.disposables.push(
-      monaco.languages.registerDocumentFormattingEditProvider("typescript", {
-        provideDocumentFormattingEdits: (model, options) => {
-          formatter.postMessage({
-            value: model.getValue(),
-            tabSize: options.tabSize,
-            useSpaces: options.insertSpaces
-          });
-          return format
-            .pipe(take(1))
-            .pipe(
-              map(formattedText => {
-                const model = this.editorRef.getModel();
-                const lastLine = model.getLineCount() - 1;
-                const lastColumn = model.getLinesContent()[lastLine].length;
-                return [
-                  {
-                    range: {
-                      startLineNumber: 0,
-                      startColumn: 0,
-                      endLineNumber: lastLine + 1,
-                      endColumn: lastColumn + 1
-                    },
-                    text: formattedText
-                  }
-                ];
-              })
-            )
-            .toPromise();
-        }
-      })
-    );
+    this.disposables.push();
 
     this.editorRef.addCommand(this.monaco.KeyMod.CtrlCmd | this.monaco.KeyCode.KEY_S, () =>
       this.zone.run(() => this.save.emit())

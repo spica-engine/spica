@@ -19,8 +19,11 @@ Here, in this section, you will define what kind of data the Bucket will hold. B
 
 To enter a new property, find the text-box with "Enter a property name" placeholder. Enter a unique, lowercase property name and then click the button next to it to save.
 
-Remember: Spica stores the property names as JSON keys. For this, special characters, spaces and such are forbidden.
+> Remember: Spica stores the property names as JSON keys. For this, special characters, spaces and such are forbidden.
+
 You'll see the name of the newly created property is added to the list. Click on it to edit the property and its options.
+
+> Warning: If you change a field type after the creation (e.g. changing a `string` field to `array`), that field's data on bucket entries will be **removed**.
 
 #### View
 
@@ -42,11 +45,23 @@ You can drag and drop the Bucket Properties to the desired division.
 
 `Required`: Makes the field required on entry create and update.
 
+### Validations
+
+#### General Validations
+
+#### String
+
+#### Number
+
+#### Array
+
+#### Object
+
 ### Translation and Localization
 
 **Bucket entries**, in Spica are translatable and localizable out-of-the-box.
 
-To set up the supported language of the Spica instance, navigate to **Developer** -> **Bucket** and find the Bucket Settings button represented by a **cog** icon on the top right toolbar. Click on it and you will see the available languages of the Spica instance. To add a new one, select the language from the Language Selection menu and press **"+ Add new language"** button and click to  **Save**.
+To set up the supported language of the Spica instance, navigate to **Developer** -> **Bucket** and find the Bucket Settings button represented by a **cog** icon on the top right toolbar. Click on it and you will see the available languages of the Spica instance. To add a new one, select the language from the Language Selection menu and press **"+ Add new language"** button and click to **Save**.
 
 To add translation and localization feature to a Bucket:
 
@@ -55,7 +70,7 @@ To add translation and localization feature to a Bucket:
 - Click on the **cog** icon to open field options
 - Check **Translate** option and save the Bucket
 
-> Warning: This action is irreversible which means, once you make a field to have translations, you can't take it back. 
+> Warning: This action is irreversible which means, once you make a field to have translations, you can't take it back.
 
 > Note: Only the following type of properties can have localization; `string`, `textarea` and `richtext`
 

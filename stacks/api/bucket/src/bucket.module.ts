@@ -12,7 +12,7 @@ import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {DocumentScheduler} from "./scheduler";
-import {provideLanguageChangeUpdater} from "./utility";
+import {provideLanguageChangeUpdater} from "./locale";
 import {GraphqlController} from "./graphql/graphql";
 
 function assingTitleIfNeeded(schema, name) {

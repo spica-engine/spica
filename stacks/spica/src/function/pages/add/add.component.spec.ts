@@ -1,36 +1,38 @@
+import {ScrollingModule} from "@angular/cdk/scrolling";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {Directive, Input} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
+import {MatNativeDateModule, MatOptionModule} from "@angular/material/core";
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatSliderModule} from "@angular/material/slider";
 import {MatToolbarModule} from "@angular/material/toolbar";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
+import {Store} from "@ngrx/store";
+import {EditorModule} from "@spica-client/common/code-editor";
+import {InputModule} from "@spica-client/common/input";
 import {LayoutModule} from "@spica-client/core/layout";
 import {MatSaveModule} from "@spica/client/packages/material";
 import {of} from "rxjs";
-import {InputModule} from "@spica-client/common/input";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
-import {EditorComponent} from "../../components/editor/editor.component";
-import {FunctionService} from "../../function.service";
-import {emptyTrigger, FUNCTION_OPTIONS} from "../../interface";
+import {examples} from "../../examples/examples";
+import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {LogViewComponent} from "../log-view/log-view.component";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {MatOptionModule, MatNativeDateModule} from "@angular/material/core";
-import {MatInputModule} from "@angular/material/input";
-import {ScrollingModule} from "@angular/cdk/scrolling";
-import {MatDatepickerModule} from "@angular/material/datepicker";
 
 @Directive({
   selector: "code-editor[language]",
@@ -63,8 +65,7 @@ describe("Function Add", () => {
         MatSliderModule,
         LayoutModule,
         InputModule,
-
-        //for log view component
+        EditorModule,
         NoopAnimationsModule,
         MatOptionModule,
         MatInputModule,
@@ -74,18 +75,22 @@ describe("Function Add", () => {
       ],
       providers: [
         {
-          provide: FunctionService,
-          useValue: {
-            information: () => {
-              return of();
-            }
-          }
+          provide: Store,
+          useValue: {}
+        },
+        {
+          provide: WEBSOCKET_INTERCEPTOR,
+          useValue: {}
         },
         {
           provide: ActivatedRoute,
           useValue: {
             params: of()
           }
+        },
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {}
         },
         {
           provide: FUNCTION_OPTIONS,
@@ -96,13 +101,13 @@ describe("Function Add", () => {
       ],
       declarations: [
         AddComponent,
-        EditorComponent,
         LogViewComponent,
         EnqueuerPipe,
         MockLanguageDirective,
         CanInteractDirectiveTest
       ]
     }).compileComponents();
+
     fixture = TestBed.createComponent(AddComponent);
   });
 
@@ -156,15 +161,105 @@ describe("Function Add", () => {
     expect(fixture.componentInstance.isHandlerDuplicated).toBe(false);
   });
 
-  //  it("enter should not add trigger", () => {
-  //    console.log(fixture.debugElement);
-  //    const form = fixture.debugElement.query(By.directive(NgForm)).nativeElement;
-  //    console.log(form);
-  //    const kEventDown = new KeyboardEvent("keydown", {key: "enter"});
-  //    form.dispatchEvent(kEventDown);
-  //
-  //    fixture.detectChanges();
-  //
-  //    expect(fixture.componentInstance.function.triggers.length).toEqual(0);
-  //  });
+  describe("example codes", () => {
+    let getExample;
+    beforeEach(() => {
+      getExample = fixture.componentInstance["functionService"].getExample;
+    });
+
+    it("should get system example code ", () => {
+      let trigger = {
+        type: "system"
+      };
+      let code = getExample(trigger as any);
+      expect(code).toEqual(examples.system);
+    });
+
+    it("should return information about unknown trigger", () => {
+      let trigger = {
+        type: "unknown",
+        options: {}
+      };
+      let code = getExample(trigger as any);
+      expect(code).toEqual("Example code does not exist for this trigger.");
+    });
+
+    describe("bucket", () => {
+      it("should return information about missing inputs", () => {
+        let trigger = {
+          type: "bucket",
+          options: {}
+        };
+        let code = getExample(trigger as any);
+        expect(code).toEqual("Select the phase and operation type to display example code.");
+      });
+
+      describe("before", () => {
+        it("should get insert example code", () => {
+          let trigger = {
+            type: "bucket",
+            options: {
+              phase: "BEFORE",
+              type: "INSERT"
+            }
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual(examples.bucket.BEFORE.INSERT);
+        });
+
+        it("should return information about missing inputs", () => {
+          let trigger = {
+            type: "bucket",
+            options: {phase: "BEFORE"}
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual("Select the phase and operation type to display example code.");
+        });
+      });
+      describe("after", () => {
+        it("should get all example code", () => {
+          let trigger = {
+            type: "bucket",
+            options: {
+              phase: "AFTER",
+              type: "ALL"
+            }
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual(examples.bucket.AFTER.ALL);
+        });
+
+        it("should return information about missing inputs", () => {
+          let trigger = {
+            type: "bucket",
+            options: {phase: "AFTER"}
+          };
+          let code = getExample(trigger as any);
+          expect(code).toEqual("Select the phase and operation type to display example code.");
+        });
+      });
+    });
+
+    describe("database", () => {
+      it("should get delete example code", () => {
+        let trigger = {
+          type: "database",
+          options: {
+            type: "DELETE"
+          }
+        };
+        let code = getExample(trigger as any);
+        expect(code).toEqual(examples.database.DELETE);
+      });
+
+      it("should return information about missing inputs", () => {
+        let trigger = {
+          type: "database",
+          options: {}
+        };
+        let code = getExample(trigger as any);
+        expect(code).toEqual("Select an operation type to display example code.");
+      });
+    });
+  });
 });

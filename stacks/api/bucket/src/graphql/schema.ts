@@ -1,10 +1,9 @@
-import {Bucket, BucketDocument} from "@spica-server/bucket/services";
+import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {diff, ChangeKind, ChangePaths} from "@spica-server/bucket/history/differ";
 import {GraphQLResolveInfo} from "graphql";
-import {Locale, buildI18nAggregation} from "../locale";
-import {buildRelationAggregation} from "../utility";
-const JsonMergePatch = require("json-merge-patch");
+import {buildI18nAggregation, Locale} from "../locale";
+import {deepCopy} from "../patch";
+import {getRelationAggregation} from "../relation";
 
 enum Prefix {
   Type = "type",
@@ -16,12 +15,17 @@ enum Suffix {
   Input = "Input"
 }
 
-enum UpdateType {
-  Set,
-  Unset
+export interface SchemaError {
+  target: string;
+  reason: string;
 }
 
-export function createSchema(bucket: Bucket, staticTypes: string) {
+export function createSchema(
+  bucket: Bucket,
+  staticTypes: string,
+  bucketIds: string[],
+  errors: SchemaError[]
+) {
   let name = getBucketName(bucket._id);
 
   let schema = `
@@ -33,7 +37,7 @@ export function createSchema(bucket: Bucket, staticTypes: string) {
       }
 
       type Query{
-        Find${name}(limit: Int, skip: Int, sort: JSON ,language: String,schedule:Boolean ,query: JSON): ${name}FindResponse
+        Find${name}(limit: Int, skip: Int, sort: JSON, language: String, schedule:Boolean, query: JSON): ${name}FindResponse
         FindBy${name}Id(_id: ObjectID!, language: String):${name}
       }
 
@@ -45,9 +49,9 @@ export function createSchema(bucket: Bucket, staticTypes: string) {
       }
     `;
 
-  let types = createInterface(Prefix.Type, Suffix.Type, name, bucket, []);
+  let types = createInterface(Prefix.Type, Suffix.Type, name, bucket, [], bucketIds, errors);
 
-  let inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, []);
+  let inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, [], bucketIds, errors);
 
   schema = schema + types + inputs;
 
@@ -59,7 +63,9 @@ function createInterface(
   suffix: string,
   name: string,
   schema: any,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[],
+  errors: SchemaError[]
 ) {
   let properties = [];
 
@@ -70,7 +76,17 @@ function createInterface(
   for (const [key, value] of Object.entries(schema.properties) as any) {
     let isRequired = schema.required && schema.required.includes(key);
 
-    let property = createProperty(name, prefix, suffix, key, value, isRequired, extras);
+    let property = createProperty(
+      name,
+      prefix,
+      suffix,
+      key,
+      value,
+      isRequired,
+      extras,
+      bucketIds,
+      errors
+    );
 
     properties.push(property);
   }
@@ -88,7 +104,7 @@ function createInterface(
 function createEnum(name: string, values: string[]) {
   return `
       enum ${name}{
-        ${values.join("\n")}
+        ${Array.from(new Set(values).values()).join("\n")}
       }
     `;
 }
@@ -100,9 +116,56 @@ function createProperty(
   key: string,
   value: any,
   isRequired: Boolean,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[],
+  errors: SchemaError[]
 ) {
-  return `${key} : ${createPropertyValue(name, prefix, suffix, key, value, isRequired, extras)}`;
+  if (!validateName(key)) {
+    //we dont need to push errors for input definitions
+    if (prefix == Prefix.Type) {
+      errors.push({
+        target: name + "." + key,
+        reason:
+          "Name specification must start with an alphabetic character and can not include any non-letter character."
+      });
+    }
+
+    key = replaceName(key);
+    //we do not need to check actual type of this field, it will be ignored cause of the replacements of name
+    value = defaultDefinition();
+    isRequired = false;
+  }
+
+  return `${key}: ${createPropertyValue(
+    name,
+    prefix,
+    suffix,
+    key,
+    value,
+    isRequired,
+    extras,
+    bucketIds,
+    errors
+  )}`;
+}
+
+function defaultDefinition() {
+  return {
+    type: "string"
+  };
+}
+
+function validateName(name: string) {
+  return /^[_A-Za-z][_0-9A-Za-z]*$/.test(name);
+}
+
+function replaceName(name: string) {
+  name = /^[0-9]/.test(name) ? "_" + name : name;
+  return name.replace(/[^_a-zA-Z0-9]/g, "_");
+}
+
+function validateEnum(values: string[]) {
+  return values.every(value => validateName(value));
 }
 
 function createPropertyValue(
@@ -112,15 +175,29 @@ function createPropertyValue(
   key: string,
   value: any,
   isRequired: Boolean,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[],
+  errors: SchemaError[]
 ) {
   let result;
 
   if (value.enum) {
+    if (!validateEnum(value.enum)) {
+      if (prefix == Prefix.Type) {
+        errors.push({
+          target: name + "." + key,
+          reason:
+            "Enums must start with an alphabetic character and can not include any non-letter character."
+        });
+      }
+      return "String";
+    }
+
     if (prefix == Prefix.Type) {
       let extra = createEnum(`${name}_${key}`, value.enum);
       extras.push(extra);
     }
+
     return `${name}_${key}`;
   }
 
@@ -133,7 +210,9 @@ function createPropertyValue(
         key,
         value.items,
         false,
-        extras
+        extras,
+        bucketIds,
+        errors
       )}]`;
       break;
 
@@ -153,8 +232,12 @@ function createPropertyValue(
       result = "String";
       break;
 
+    case "storage":
+      result = "String";
+      break;
+
     case "object":
-      let extra = createInterface(prefix, suffix, `${name}_${key}`, value, []);
+      let extra = createInterface(prefix, suffix, `${name}_${key}`, value, [], bucketIds, errors);
       extras.push(extra);
       result = `${name}_${key}` + suffix;
       break;
@@ -176,17 +259,47 @@ function createPropertyValue(
       break;
 
     case "relation":
-      if (!value.bucketId) {
-        throw Error(`Related bucket must be provided for ${key} field of ${name}.`);
+      let validBucketId = relatedBucketValid(value.bucketId, bucketIds);
+      let validRelationType = relationTypeValid(value.relationType);
+
+      if (!validBucketId || !validRelationType) {
+        if (prefix == Prefix.Type) {
+          if (!validBucketId) {
+            errors.push({
+              target: name + "." + key,
+              reason: `Related bucket '${value.bucketId}' does not exist.`
+            });
+          }
+
+          if (!validRelationType) {
+            errors.push({
+              target: name + "." + key,
+              reason: `Relation type '${value.relationType}' is invalid type.`
+            });
+          }
+        }
+
+        result = value.relationType == "onetomany" ? "[String]" : "String";
+        break;
       }
 
-      let relatedBucketName = getBucketName(value.bucketId);
-      result = prefix == Prefix.Type ? relatedBucketName : "String";
-      result = value.relationType == "onetoone" ? result : `[${result}]`;
+      result = prefix == Prefix.Type ? getBucketName(value.bucketId) : "String";
+
+      if (value.relationType == "onetomany") {
+        result = `[${result}]`;
+      }
+
       break;
 
     default:
-      throw Error(`Unknown type ${value.type} on ${key} field of ${name}.`);
+      if (prefix == Prefix.Type) {
+        errors.push({
+          target: name + "." + key,
+          reason: `Type '${value.type}' is invalid type.`
+        });
+      }
+
+      result = "String";
   }
 
   if (isRequired && prefix == Prefix.Input) {
@@ -194,6 +307,14 @@ function createPropertyValue(
   }
 
   return result;
+}
+
+function relatedBucketValid(bucketId: string, bucketIds: string[]) {
+  return bucketIds.includes(bucketId);
+}
+
+function relationTypeValid(relationType: string) {
+  return relationType == "onetoone" || relationType == "onetomany";
 }
 
 export function getBucketName(uniqueField: string | ObjectId): string {
@@ -213,11 +334,11 @@ export async function aggregationsFromRequestedFields(
   if (requestedFields.length) {
     if (relationalFieldRequested(bucket.properties, requestedFields)) {
       locale = await localeFactory(language);
-      let relationAggregation = getRelationAggregation(
+      let relationAggregation = await getRelationAggregation(
         bucket.properties,
-        JSON.parse(JSON.stringify(requestedFields)),
+        deepCopy(requestedFields),
         locale,
-        buckets
+        (bucketId: string) => Promise.resolve(buckets.find(b => b._id.toString() == bucketId))
       );
       aggregations.push(...relationAggregation);
     }
@@ -279,38 +400,6 @@ export function getProjectAggregation(requestedFields: string[][]) {
     result[path] = 1;
   });
   return {$project: result};
-}
-
-function getRelationAggregation(
-  properties: object,
-  fields: string[][],
-  locale: Locale,
-  buckets: Bucket[]
-) {
-  let aggregations = [];
-  for (const [key, value] of Object.entries(properties)) {
-    if (value.type == "relation") {
-      let relateds = fields.filter(field => field[0] == key);
-      if (relateds.length) {
-        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
-
-        let relatedBucket = buckets.find(bucket => bucket._id.toString() == value.bucketId);
-
-        //Remove first key to continue recursive lookup
-        relateds = relateds.map(field => {
-          field.splice(0, 1);
-          return field;
-        });
-
-        aggregation[0].$lookup.pipeline.push(
-          ...getRelationAggregation(relatedBucket.properties, relateds, locale, buckets)
-        );
-
-        aggregations.push(...aggregation);
-      }
-    }
-  }
-  return aggregations;
 }
 
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
@@ -451,79 +540,6 @@ function isParsableObject(object: any): boolean {
   );
 }
 
-export function getPatchedDocument(previousDocument: BucketDocument, patchQuery: any) {
-  delete previousDocument._id;
-  delete patchQuery._id;
-
-  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
-}
-
-export function getUpdateQuery(previousDocument: BucketDocument, currentDocument: BucketDocument) {
-  let updateQuery: any = {};
-
-  let changes = diff(previousDocument, currentDocument);
-
-  changes = changes.map(change => {
-    let numIndex = change.path.findIndex(t => typeof t == "number");
-    //item update is not possible with merge/patch,
-    //we must put the given array directly
-    if (numIndex > 0) {
-      //if paths include array index, the last path before any number is the array path that will be put
-      //we do not need to track rest of it
-      change.path = change.path.slice(0, numIndex);
-      //array updates will be handled with set operator.
-      change.kind = ChangeKind.Edit;
-    }
-    return change;
-  });
-
-  const setTargets = changes
-    .filter(change => change.kind != ChangeKind.Delete)
-    .map(change => change.path);
-  let setExpressions = createExpressionFromChange(currentDocument, setTargets, UpdateType.Set);
-  if (Object.keys(setExpressions).length) {
-    updateQuery.$set = setExpressions;
-  }
-
-  const unsetTargets = changes
-    .filter(change => change.kind == ChangeKind.Delete)
-    .map(change => change.path);
-  let unsetExpressions = createExpressionFromChange(
-    currentDocument,
-    unsetTargets,
-    UpdateType.Unset
-  );
-  if (Object.keys(unsetExpressions).length) {
-    updateQuery.$unset = unsetExpressions;
-  }
-
-  return updateQuery;
-}
-
-function createExpressionFromChange(
-  document: BucketDocument,
-  targets: ChangePaths[],
-  operation: UpdateType
-) {
-  let expressions = {};
-  targets.forEach(target => {
-    let key = target.join(".");
-    let value = "";
-
-    if (operation == UpdateType.Set) {
-      value = findValueOfPath(target, document);
-    }
-
-    expressions[key] = value;
-  });
-
-  return expressions;
-}
-
-function findValueOfPath(path: (string | number)[], document: BucketDocument) {
-  return path.reduce((document, name) => document[name], document);
-}
-
 function relationalFieldRequested(properties: object, requestedFields: string[][]): boolean {
   let relatedFields = [];
   Object.keys(properties).forEach(key => {
@@ -556,8 +572,4 @@ export function requestedFieldsFromExpression(expression: object, requestedField
     }
   }
   return requestedFields;
-}
-
-export function deepCopy(value: unknown) {
-  return JSON.parse(JSON.stringify(value));
 }

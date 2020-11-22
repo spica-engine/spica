@@ -1,14 +1,12 @@
+import {format as _format} from "prettier";
 import {
+  aggregationsFromRequestedFields,
   createSchema,
   extractAggregationFromQuery,
-  getPatchedDocument,
-  getUpdateQuery,
-  requestedFieldsFromInfo,
-  aggregationsFromRequestedFields,
   getProjectAggregation,
-  requestedFieldsFromExpression
+  requestedFieldsFromExpression,
+  requestedFieldsFromInfo
 } from "../../src/graphql/schema";
-import {format as _format} from "prettier";
 
 export function format(text: string) {
   return _format(text, {parser: "graphql"});
@@ -75,7 +73,7 @@ describe("Schema", () => {
 
     it("should create schema for bucket", () => {
       bucket.required = ["title"];
-      let schema = createSchema(bucket, staticTypes);
+      let schema = createSchema(bucket, staticTypes, [], []);
 
       expect(format(schema)).toEqual(
         format(
@@ -111,7 +109,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", [], []);
       expect(format(schema)).toEqual(
         format(
           `
@@ -142,11 +140,17 @@ describe("Schema", () => {
       bucket.properties = {
         roles: {
           type: "string",
-          enum: ["AUTHOR", "ADMIN", "USER"]
+          enum: [
+            "AUTHOR",
+            "ADMIN",
+            "USER",
+            //duplicated value
+            "AUTHOR"
+          ]
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", [], []);
 
       expect(format(schema)).toEqual(
         format(
@@ -168,7 +172,8 @@ describe("Schema", () => {
             roles : Bucket_id_roles
           }
         `
-        )
+        ),
+        "should work if duplicated value removed"
       );
     });
 
@@ -186,7 +191,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", ["otherid", "anotherid"], []);
 
       expect(format(schema)).toEqual(
         format(`
@@ -223,6 +228,9 @@ describe("Schema", () => {
         number: {
           type: "number"
         },
+        storage: {
+          type: "storage"
+        },
         array: {
           type: "array",
           items: {
@@ -234,7 +242,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "");
+      let schema = createSchema(bucket, "", [], []);
 
       expect(format(schema)).toEqual(
         format(`
@@ -247,6 +255,7 @@ describe("Schema", () => {
           boolean: Boolean
           color: String
           number: Int
+          storage: String
           array: [[String]]
         }
 
@@ -256,10 +265,145 @@ describe("Schema", () => {
           boolean: Boolean
           color: String
           number: Int
+          storage: String
           array: [[String]]
         }
       `)
       );
+    });
+
+    describe("errors", () => {
+      it("should replace name of field, convert type of value to String and push errors", () => {
+        bucket.properties = {
+          "123invalid,name?*.": {
+            type: "object"
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            _123invalid_name___: String
+          }
+  
+          input Bucket_idInput{
+            _123invalid_name___: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.123invalid,name?*.",
+            reason:
+              "Name specification must start with an alphabetic character and can not include any non-letter character."
+          }
+        ]);
+      });
+
+      it("should convert enum type definition to String and push errors if enum includes invalid value", () => {
+        bucket.properties = {
+          shapes: {
+            type: "string",
+            enum: ["2D", "3D"]
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            shapes: String
+          }
+  
+          input Bucket_idInput{
+            shapes: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.shapes",
+            reason:
+              "Enums must start with an alphabetic character and can not include any non-letter character."
+          }
+        ]);
+      });
+
+      it("should convert relation type definition to String and push errors if related bucket does not exist", () => {
+        bucket.properties = {
+          books: {
+            type: "relation",
+            bucketId: "non_exist_bucket_id"
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            books: String
+          }
+  
+          input Bucket_idInput{
+            books: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.books",
+            reason: "Related bucket 'non_exist_bucket_id' does not exist."
+          },
+          {
+            target: "Bucket_id.books",
+            reason: "Relation type 'undefined' is invalid type."
+          }
+        ]);
+      });
+
+      it("should make type definition to String if type is invalid", () => {
+        bucket.properties = {
+          average: {
+            type: "float"
+          }
+        };
+
+        let errors = [];
+        let schema = createSchema(bucket, "", [], errors);
+        expect(format(schema)).toEqual(
+          format(`
+          ${commonDefinitions}
+  
+          type Bucket_id{
+            _id: ObjectID
+            average: String
+          }
+  
+          input Bucket_idInput{
+            average: String
+          }
+        `)
+        );
+        expect(errors).toEqual([
+          {
+            target: "Bucket_id.average",
+            reason: "Type 'float' is invalid type."
+          }
+        ]);
+      });
     });
   });
 
@@ -830,78 +974,6 @@ describe("Schema", () => {
             translatable_field: 1
           }
         });
-      });
-    });
-  });
-
-  describe("Merge/Patch", () => {
-    it("should get patched document", () => {
-      let previousDocument = {
-        title: "title",
-        description: "description"
-      };
-      let patchQuery = {
-        title: "new_title",
-        description: null
-      };
-      let patchedDocument = getPatchedDocument(previousDocument, patchQuery);
-      expect(patchedDocument).toEqual({
-        title: "new_title"
-      });
-    });
-
-    it("should get update query", () => {
-      let previousDocument = {
-        title: "title",
-        description: "description"
-      };
-
-      let currentDocument = {
-        title: "new_title"
-      };
-
-      let query = getUpdateQuery(previousDocument, currentDocument);
-
-      expect(query).toEqual({
-        $set: {title: "new_title"},
-        $unset: {description: ""}
-      });
-    });
-
-    it("should get update query for nested objects", () => {
-      let previousDocument = {
-        nested_object: {
-          field1: "dont_touch_me",
-          field2: "remove_me"
-        }
-      };
-
-      let currentDocument = {
-        nested_object: {
-          field1: "dont_touch_me"
-        }
-      };
-
-      let query = getUpdateQuery(previousDocument, currentDocument);
-
-      expect(query).toEqual({
-        $unset: {"nested_object.field2": ""}
-      });
-    });
-
-    it("should get update query for arrays", () => {
-      let previousDocument = {
-        strings: ["value1", "value2"]
-      };
-
-      let currentDocument = {
-        strings: ["new_value"]
-      };
-
-      let query = getUpdateQuery(previousDocument, currentDocument);
-
-      expect(query).toEqual({
-        $set: {strings: ["new_value"]}
       });
     });
   });

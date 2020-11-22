@@ -111,7 +111,7 @@ describe("Add Field Component", () => {
             getPredefinedDefaults: jasmine
               .createSpy("getPredefinedDefaults")
               .and.returnValues(
-                of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "type2"}])
+                of([{keyword: "keyword", type: "type"}, {keyword: "keyword2", type: "date"}])
               )
           }
         },
@@ -123,8 +123,7 @@ describe("Add Field Component", () => {
           provide: MAT_DIALOG_DATA,
           useValue: {
             parentSchema: sampleSchema,
-            propertyKey: "prop1",
-            predefinedDefaults: {date: [{keyword: "created_at", type: "true"}]}
+            propertyKey: "prop1"
           }
         }
       ],
@@ -171,7 +170,13 @@ describe("Add Field Component", () => {
       fixture.componentInstance.step = 1;
       fixture.componentInstance.propertyKv =
         fixture.componentInstance.parentSchema.properties["prop3"];
-      fixture.componentInstance.propertyKv.value = {type: "date"};
+      fixture.componentInstance.fieldConfig = {
+        origin: "string",
+        type: "date",
+        placer: {},
+        color: "#fff",
+        icon: "sample_icon"
+      };
       fixture.componentInstance.field = "date";
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css(".input-defaults mat-select"))).toBeTruthy();
@@ -189,7 +194,7 @@ describe("Add Field Component", () => {
     });
 
     it("should hide general settings if parent schema is not the bucket", () => {
-      fixture.componentInstance.parentSchema.primary = undefined;
+      delete fixture.componentInstance.parentSchema.primary;
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css(".general-settings"))).toBeFalsy();
 

@@ -57,8 +57,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   isHistoryEndpointEnabled$: Observable<boolean>;
 
-  predefinedDefaults: {[key: string]: PredefinedDefault[]};
-
   propertyPositionMap: {[k: string]: any[]} = {};
 
   private onDestroy: Subject<void> = new Subject<void>();
@@ -88,18 +86,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
     this.activatedRoute.params
       .pipe(
-        flatMap(params =>
-          this.bs.getPredefinedDefaults().pipe(
-            map(predefs => {
-              this.predefinedDefaults = predefs.reduce((accumulator, item) => {
-                accumulator[item.type] = accumulator[item.type] || [];
-                accumulator[item.type].push(item);
-                return accumulator;
-              }, {});
-              return params;
-            })
-          )
-        ),
         tap(params => {
           this.$save = of(SavingState.Pristine);
           this.$remove = of(SavingState.Pristine);
@@ -208,7 +194,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       maxHeight: "800px",
       data: {
         parentSchema: this.bucket,
-        predefinedDefaults: this.predefinedDefaults,
         propertyKey: propertyKey
       }
     });
