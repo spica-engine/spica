@@ -1,5 +1,8 @@
 {
     "0.5.2": [
         "0.5.2/add_phase_to_bucket_triggers"
+    ],
+    "0.6.1": [
+        "0.6.1/add_acl_to_buckets"
     ]
 }

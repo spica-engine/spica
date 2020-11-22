@@ -1,0 +1,19 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+
+ts_library(
+    name = "expression",
+    srcs = glob([
+        "src/*.ts",
+        "index.ts",
+    ]),
+    data = [
+        "src/grammar.pegjs",
+    ],
+    module_name = "@spica-server/bucket/expression",
+    deps = [
+        "@npm//@types/node",
+        "@npm//pegjs",
+    ],
+)
