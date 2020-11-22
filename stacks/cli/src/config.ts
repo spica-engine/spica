@@ -23,7 +23,7 @@ export namespace config {
 
   export async function get(): Promise<Config> {
     const config = await explorer.search();
-    if ( ! config  ) {
+    if (!config) {
       return {context: undefined};
     }
     return config.config;
