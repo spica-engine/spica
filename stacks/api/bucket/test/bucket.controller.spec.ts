@@ -10,24 +10,25 @@ import {
   UPDATED_AT
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe("Bucket acceptance", () => {
+describe("BucketController", () => {
   let app: INestApplication;
   let req: Request;
 
   const bucket = {
-    _id: new ObjectId(),
+    _id: "__skip__",
     title: "New Bucket",
     description: "Describe your new bucket",
     icon: "view_stream",
     primary: "title",
     readOnly: false,
     history: true,
+    acl: {write: "true==true", read: "true==true"},
     properties: {
       title: {
         type: "string",
@@ -66,11 +67,17 @@ describe("Bucket acceptance", () => {
     req = module.get(Request);
     app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(req.socket);
+
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "__skip__" && typeof actual == typeof expected) {
+        return true;
+      }
+    });
   });
 
   afterEach(() => app.close());
 
-  describe("get requests", () => {
+  describe("get", () => {
     it("should get predefinedDefaults", async () => {
       const response = await req.get("/bucket/predefineddefaults", {});
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
@@ -84,41 +91,14 @@ describe("Bucket acceptance", () => {
     });
 
     it("should get specific bucket", async () => {
-      //add bucket
-      const insertedBucket = (await req.post("/bucket", bucket)).body;
-
-      //get bucket
-      const response = await req.get(`/bucket/${insertedBucket._id}`, {});
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-      expect(response.body).toEqual({
-        _id: insertedBucket._id,
-        title: "New Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        history: true,
-        properties: {
-          title: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          description: {
-            type: "textarea",
-            title: "description",
-            description: "Description of the row",
-            options: {position: "right"}
-          }
-        }
-      });
+      const {body: inserted} = await req.post("/bucket", bucket);
+      const {body: bkt} = await req.get(`/bucket/${inserted._id}`);
+      expect(bkt).toEqual(bucket);
     });
 
     it("should get all buckets", async () => {
-      //add buckets
-      const firstBucket = (await req.post("/bucket", bucket)).body;
-      const secondBucket = (await req.post("/bucket", {
+      const {body: firstBucket} = await req.post("/bucket", bucket);
+      const {body: secondBucket} = await req.post("/bucket", {
         ...bucket,
         properties: {
           name: {
@@ -134,78 +114,27 @@ describe("Bucket acceptance", () => {
             options: {position: "right", visible: true}
           }
         }
-      })).body;
+      });
 
-      const response = await req.get("/bucket", {});
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-
-      const buckets = response.body;
+      const {body: buckets} = await req.get("/bucket");
       expect(buckets.length).toBe(2);
       expect(buckets).toEqual([firstBucket, secondBucket]);
     });
   });
 
-  describe("add/update requests", () => {
+  describe("add/update", () => {
     it("should add new bucket and return it", async () => {
-      let response = await req.post("/bucket", bucket);
-      delete response.body._id;
-      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
-      expect(response.body).toEqual({
-        title: "New Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        history: true,
-        properties: {
-          title: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          description: {
-            type: "textarea",
-            title: "description",
-            description: "Description of the row",
-            options: {position: "right"}
-          }
-        }
-      });
+      const {body: inserted} = await req.post("/bucket", bucket);
+      expect(inserted).toEqual(bucket);
 
-      //get buckets to check updates
-      let buckets = (await req.get("/bucket", {})).body;
+      const {body: buckets} = await req.get("/bucket");
+
       expect(buckets.length).toBe(1);
-      delete buckets[0]._id;
-      expect(buckets[0]).toEqual({
-        title: "New Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        history: true,
-        properties: {
-          title: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          description: {
-            type: "textarea",
-            title: "description",
-            description: "Description of the row",
-            options: {position: "right"}
-          }
-        }
-      });
+      expect(buckets[0]).toEqual(bucket);
     });
 
     it("should replace a single bucket", async () => {
-      // add bucket
-      const insertedBucket = (await req.post("/bucket", bucket)).body;
-
-      //update bucket
+      const {body: insertedBucket} = await req.post("/bucket", bucket);
       const updatedBucket = {
         ...insertedBucket,
         primary: "firstname",
@@ -225,23 +154,19 @@ describe("Bucket acceptance", () => {
         }
       };
 
-      const response = await req.put(`/bucket/${updatedBucket._id}`, updatedBucket);
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-      expect(response.body).toEqual(updatedBucket);
+      const {body: updateResult} = await req.put(`/bucket/${updatedBucket._id}`, updatedBucket);
+      expect(updateResult).toEqual(updatedBucket);
 
-      //get buckets to check updates
-      const buckets = (await req.get("/bucket", {})).body;
+      const {body: buckets} = await req.get("/bucket");
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual(updatedBucket);
     });
 
     it("should update bucket indexes", async () => {
-      //add buckets
-      const firstBucket = (await req.post("/bucket", {...bucket, title: "First Bucket"})).body;
-      const secondBucket = (await req.post("/bucket", {...bucket, title: "Second Bucket"})).body;
-      const thirdBucket = (await req.post("/bucket", {...bucket, title: "Third Bucket"})).body;
+      const {body: firstBucket} = await req.post("/bucket", {...bucket, title: "First Bucket"});
+      const {body: secondBucket} = await req.post("/bucket", {...bucket, title: "Second Bucket"});
+      const {body: thirdBucket} = await req.post("/bucket", {...bucket, title: "Third Bucket"});
 
-      //update their indexes
       await req.patch(
         `/bucket/${firstBucket._id}`,
         {order: 3},
@@ -264,8 +189,7 @@ describe("Bucket acceptance", () => {
         }
       );
 
-      const buckets = (await req.get("/bucket", {})).body;
-
+      const {body: buckets} = await req.get("/bucket");
       expect(buckets.map(bucket => bucket.title)).toEqual([
         "Second Bucket",
         "Third Bucket",
@@ -274,7 +198,7 @@ describe("Bucket acceptance", () => {
     });
   });
 
-  describe("delete requests", () => {
+  describe("delete", () => {
     it("should delete spesific bucket and it's documents", async () => {
       const firstInsertedBukcet = (await req.post("/bucket", bucket)).body;
       const secondInsertedBucket = (await req.post("/bucket", bucket)).body;
@@ -300,33 +224,36 @@ describe("Bucket acceptance", () => {
   });
 
   describe("validation", () => {
-    const validBucket: any = {
-      _id: new ObjectId(),
-      title: "New Bucket",
-      description: "Describe your new bucket",
-      icon: "view_stream",
-      primary: "title",
-      readOnly: false,
-      properties: {
-        title: {
-          type: "string",
-          title: "title",
-          description: "Title of the row",
-          options: {position: "left", visible: true}
-        },
-        description: {
-          type: "textarea",
-          title: "description",
-          description: "Description of the row",
-          options: {position: "right"}
+    let bucket;
+
+    beforeEach(() => {
+      bucket = {
+        title: "New Bucket",
+        description: "Describe your new bucket",
+        icon: "view_stream",
+        primary: "title",
+        readOnly: false,
+        properties: {
+          title: {
+            type: "string",
+            title: "title",
+            description: "Title of the row",
+            options: {position: "left", visible: true}
+          },
+          description: {
+            type: "textarea",
+            title: "description",
+            description: "Description of the row",
+            options: {position: "right"}
+          }
         }
-      }
-    };
+      };
+    });
 
     describe("title", () => {
       it("should show error about minLength ", async () => {
-        const invalidBucket = {...validBucket, title: "asd"};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.title = "asd";
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".title should NOT be shorter than 4 characters",
@@ -335,8 +262,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about maxLength ", async () => {
-        const invalidBucket = {...validBucket, title: "a".repeat(101)};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.title = "a".repeat(101);
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".title should NOT be longer than 100 characters",
@@ -347,8 +274,8 @@ describe("Bucket acceptance", () => {
 
     describe("description", () => {
       it("should show error about minlength ", async () => {
-        const invalidBucket = {...validBucket, description: "asde"};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.description = "asde";
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".description should NOT be shorter than 5 characters",
@@ -357,8 +284,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about maxLength ", async () => {
-        const invalidBucket = {...validBucket, description: "a".repeat(251)};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.description = "a".repeat(251);
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".description should NOT be longer than 250 characters",
@@ -369,8 +296,8 @@ describe("Bucket acceptance", () => {
 
     describe("icon", () => {
       it("should show error about type", async () => {
-        const invalidBucket = {...validBucket, icon: 333};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.icon = 333;
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".icon should be string",
@@ -379,17 +306,16 @@ describe("Bucket acceptance", () => {
       });
 
       it("should set 'view_stream' as default value", async () => {
-        let newBucket = {...validBucket};
-        delete newBucket.icon;
-        const response = await req.post("/bucket", newBucket);
+        delete bucket.icon;
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
         expect(response.body.icon).toEqual("view_stream");
       });
     });
 
     it("should show error about primary type", async () => {
-      const invalidBucket = {...validBucket, primary: []};
-      const response = await req.post("/bucket", invalidBucket);
+      bucket.primary = [];
+      const response = await req.post("/bucket", bucket);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.message, response.body.error]).toEqual([
         ".primary should be string",
@@ -398,8 +324,8 @@ describe("Bucket acceptance", () => {
     });
 
     it("should show error about order type", async () => {
-      const invalidBucket = {...validBucket, order: "1"};
-      const response = await req.post("/bucket", invalidBucket);
+      bucket.order = "1";
+      const response = await req.post("/bucket", bucket);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.message, response.body.error]).toEqual([
         ".order should be number",
@@ -409,8 +335,8 @@ describe("Bucket acceptance", () => {
 
     describe("required", () => {
       it("should show error about type", async () => {
-        const invalidBucket = {...validBucket, required: {asd: "qwe"}};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.required = {asd: "qwe"};
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".required should be array",
@@ -419,8 +345,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about array items type", async () => {
-        const invalidBucket = {...validBucket, required: ["asd", 1]};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.required = ["asd", 1];
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".required[1] should be string",
@@ -429,8 +355,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error when array items arent unique ", async () => {
-        const invalidBucket = {...validBucket, required: ["asd", "asd", "qwe", "zxc"]};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.required = ["asd", "asd", "qwe", "zxc"];
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".required should NOT have duplicate items (items ## 1 and 0 are identical)",
@@ -440,8 +366,8 @@ describe("Bucket acceptance", () => {
     });
 
     it("should show error about readonly type", async () => {
-      const invalidBucket = {...validBucket, readOnly: "true"};
-      const response = await req.post("/bucket", invalidBucket);
+      bucket.readOnly = "true";
+      const response = await req.post("/bucket", bucket);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.message, response.body.error]).toEqual([
         ".readOnly should be boolean",
@@ -451,8 +377,8 @@ describe("Bucket acceptance", () => {
 
     describe("properties", () => {
       it("should show error about type", async () => {
-        const invalidBucket = {...validBucket, properties: 1};
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties = 1;
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties should be object",
@@ -461,9 +387,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title type", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.type = 333;
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.type = 333;
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].type should be string",
@@ -472,9 +397,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title type which isnt available", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.type = "hashmap";
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.type = "hashmap";
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].type should be equal to one of the allowed values",
@@ -483,9 +407,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title title", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.title = 333;
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.title = 333;
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].title should be string",
@@ -494,9 +417,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title description", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.description = ["asdqwe", "ahsgdasd"];
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.description = ["asdqwe", "ahsgdasd"];
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].description should be string",
@@ -505,9 +427,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title options type", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.options = "asd";
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.options = "asd";
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options should be object",
@@ -516,9 +437,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title visible type", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.options.visible = "asd";
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.options.visible = "asd";
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.visible should be boolean",
@@ -527,9 +447,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title translate type", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.options.translate = 33;
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.options.translate = 33;
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.translate should be boolean",
@@ -538,9 +457,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title history type", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.options.history = "false";
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.options.history = "false";
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.history should be boolean",
@@ -549,9 +467,8 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title position type", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.options.position = ["bottom,left"];
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.options.position = ["bottom,left"];
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.position should be string",
@@ -560,12 +477,41 @@ describe("Bucket acceptance", () => {
       });
 
       it("should show error about title position value which isn't available", async () => {
-        const invalidBucket = JSON.parse(JSON.stringify(validBucket));
-        invalidBucket.properties.title.options.position = "top";
-        const response = await req.post("/bucket", invalidBucket);
+        bucket.properties.title.options.position = "top";
+        const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties['title'].options.position should be equal to one of the allowed values",
+          "validation failed"
+        ]);
+      });
+    });
+
+    describe("relation", () => {
+      it("should show error about bucketId", async () => {
+        bucket.properties.books = {
+          type: "relation",
+          relationType: "onetoone"
+        };
+
+        const response = await req.post("/bucket", bucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.message, response.body.error]).toEqual([
+          ".properties['books'] should have required property '.bucketId'",
+          "validation failed"
+        ]);
+      });
+
+      it("should show error about relationType", async () => {
+        bucket.properties.books = {
+          type: "relation",
+          bucketId: "id"
+        };
+
+        const response = await req.post("/bucket", bucket);
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect([response.body.message, response.body.error]).toEqual([
+          ".properties['books'] should have required property '.relationType'",
           "validation failed"
         ]);
       });
@@ -855,6 +801,80 @@ describe("Bucket acceptance", () => {
 
       let {body: scoresDocumentResponse} = await req.get(`/bucket/${scoresBucket._id}/data`, {});
       expect(scoresDocumentResponse).toEqual([
+        {
+          _id: score._id,
+          score: 500,
+          setting: setting._id
+        }
+      ]);
+    });
+
+    it("should update scores when scores bucket schema relation type changed", async () => {
+      const updatedScoresBucket = {
+        title: "Scores",
+        description: "Scores bucket",
+        properties: {
+          score: {
+            type: "number",
+            options: {}
+          },
+          user: {
+            type: "relation",
+            bucketId: usersBucket._id,
+            //relation type changes
+            relationType: "onetomany",
+            options: {}
+          },
+          setting: {
+            type: "relation",
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          }
+        }
+      };
+      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+
+      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+
+      expect(body).toEqual([
+        {
+          _id: score._id,
+          score: 500,
+          setting: setting._id
+        }
+      ]);
+    });
+
+    it("should update scores when scores bucket schema relational bucket changed", async () => {
+      const updatedScoresBucket = {
+        title: "Scores",
+        description: "Scores bucket",
+        properties: {
+          score: {
+            type: "number",
+            options: {}
+          },
+          user: {
+            type: "relation",
+            //relational bucket changes
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          },
+          setting: {
+            type: "relation",
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          }
+        }
+      };
+      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+
+      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+
+      expect(body).toEqual([
         {
           _id: score._id,
           score: 500,

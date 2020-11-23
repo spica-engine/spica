@@ -47,6 +47,17 @@ export function createBucketDataActivity(
         ]
       });
       break;
+    case Action.PATCH:
+      activities.push({
+        ...preActivity,
+        resource: [
+          "bucket",
+          req.params.bucketId.toString(),
+          "data",
+          req.params.documentId.toString()
+        ]
+      });
+      break;
     case Action.DELETE:
       if (req.params.documentId) {
         activities.push({

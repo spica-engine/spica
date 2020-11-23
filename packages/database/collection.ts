@@ -17,7 +17,7 @@ import {DatabaseService} from "./database.service";
 // Rebase: export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 
-export function BaseCollection<T extends OptionalId<T>>(collection: string) {
+export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
   return class MixinCollection {
     _coll: Collection<T>;
 
@@ -25,7 +25,14 @@ export function BaseCollection<T extends OptionalId<T>>(collection: string) {
       this._coll = db.collection(this._collection);
     }
 
-    aggregate(pipeline?: object[], options?: CollectionAggregationOptions): AggregationCursor<T> {
+    estimatedDocumentCount(): Promise<number> {
+      return this._coll.estimatedDocumentCount();
+    }
+
+    aggregate<ResponseType>(
+      pipeline?: object[],
+      options?: CollectionAggregationOptions
+    ): AggregationCursor<ResponseType> {
       return this._coll.aggregate(pipeline, options);
     }
 
