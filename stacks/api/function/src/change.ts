@@ -2,11 +2,11 @@ import {Triggers, Function, Environment} from "./interface";
 import {diff} from "@spica-server/core/differ";
 
 export function changesFromTriggers(previousFn: Function, currentFn: Function) {
-  let targetChanges: TargetChange[] = [];
+  const targetChanges: TargetChange[] = [];
 
-  let insertedTriggers: Triggers = {};
-  let updatedTriggers: Triggers = {};
-  let removedTriggers: Triggers = {};
+  const insertedTriggers: Triggers = {};
+  const updatedTriggers: Triggers = {};
+  const removedTriggers: Triggers = {};
 
   for (const [handler, trigger] of Object.entries(currentFn.triggers)) {
     if (!Object.keys(previousFn.triggers).includes(handler) && trigger.active) {
@@ -54,7 +54,7 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
 }
 
 export function createTargetChanges(fn: Function, changeKind: ChangeKind): TargetChange[] {
-  let changes: TargetChange[] = [];
+  const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
     changes.push({
       kind: changeKind,

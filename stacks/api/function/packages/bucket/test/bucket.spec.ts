@@ -1,8 +1,11 @@
 import * as Bucket from "@spica-devkit/bucket";
+import * as Operators from "../src/operators";
 import * as Fetch from "node-fetch";
+import {of} from "rxjs";
 
 describe("@spica-devkit/bucket", () => {
   let fetchSpy: jasmine.SpyObj<any>;
+  let wsSpy: jasmine.SpyObj<any>;
 
   beforeEach(() => {
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
@@ -14,6 +17,8 @@ describe("@spica-devkit/bucket", () => {
         } as any)
       )
     );
+
+    wsSpy = spyOn(Operators, "getWsObs").and.returnValue(of());
   });
 
   describe("errors", () => {
@@ -221,6 +226,74 @@ describe("@spica-devkit/bucket", () => {
           "accept-language": "TR",
           Authorization: "APIKEY TEST_APIKEY"
         }
+      });
+    });
+  });
+
+  describe("bucket-data realtime", () => {
+    describe("getAll", () => {
+      it("should get all bucket-data", () => {
+        Bucket.data.realtime.getAll("bucket_id");
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          "ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY",
+          undefined
+        );
+      });
+
+      it("should get all with filter", () => {
+        Bucket.data.realtime.getAll("bucket_id", {
+          filter: {
+            name: "test"
+          }
+        });
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter={"name":"test"}',
+          undefined
+        );
+      });
+
+      it("should get all with sort", () => {
+        Bucket.data.realtime.getAll("bucket_id", {
+          sort: {
+            age: 1
+          }
+        });
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&sort={"age":1}',
+          {
+            age: 1
+          }
+        );
+      });
+
+      it("should get all with limit and skip", () => {
+        Bucket.data.realtime.getAll("bucket_id", {
+          limit: 1,
+          skip: 1
+        });
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          "ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&limit=1&skip=1",
+          undefined
+        );
+      });
+    });
+
+    describe("get", () => {
+      it("should get specific bucket-data", () => {
+        Bucket.data.realtime.get("bucket_id", "document_id");
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter={"_id":"document_id"}'
+        );
       });
     });
   });

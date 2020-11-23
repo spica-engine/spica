@@ -15,11 +15,11 @@ import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
+import {EditorModule} from "@spica-client/common/code-editor";
 import {LayoutModule} from "@spica-client/core/layout";
 import {MatSaveModule} from "@spica-client/material";
 import {of, Subject} from "rxjs";
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
-import {EditorComponent} from "../../components/editor/editor.component";
 import {HandlebarsLanguageDirective} from "../../components/editor/handlebars.language";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
@@ -57,14 +57,10 @@ describe("Webhook", () => {
         LayoutModule,
         HttpClientTestingModule,
         MatProgressSpinnerModule,
-        MatSaveModule
+        MatSaveModule,
+        EditorModule
       ],
-      declarations: [
-        WebhookAddComponent,
-        EditorComponent,
-        HandlebarsLanguageDirective,
-        CanInteractDirectiveTest
-      ],
+      declarations: [WebhookAddComponent, HandlebarsLanguageDirective, CanInteractDirectiveTest],
       providers: [
         {
           provide: WebhookService,

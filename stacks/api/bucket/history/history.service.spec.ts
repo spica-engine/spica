@@ -454,6 +454,7 @@ describe("History Service", () => {
           {
             _id: bucketId,
             primary: "",
+            acl: {write: "", read: ""},
             properties: {
               name: {
                 type: "string",
@@ -472,6 +473,7 @@ describe("History Service", () => {
           {
             _id: bucketId,
             primary: "",
+            acl: {write: "", read: ""},
             properties: {
               name: {
                 type: "string",

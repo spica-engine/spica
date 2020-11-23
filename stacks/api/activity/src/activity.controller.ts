@@ -75,7 +75,7 @@ export class ActivityController {
 
     if (limit) aggregation.push({$limit: limit});
 
-    return this.activityService.aggregate(aggregation).toArray();
+    return this.activityService.aggregate<Activity>(aggregation).toArray();
   }
 
   @Delete(":id")

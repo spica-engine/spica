@@ -17,6 +17,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
+        "//stacks/api/bucket/expression",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",

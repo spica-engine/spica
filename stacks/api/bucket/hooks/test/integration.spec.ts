@@ -15,7 +15,7 @@ import * as os from "os";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:7681";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
-describe("Hooks Integration", () => {
+xdescribe("Hooks Integration", () => {
   let app: INestApplication;
   let req: Request;
   let wsc: Websocket;
