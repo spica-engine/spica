@@ -1,9 +1,11 @@
+import {ScrollingModule} from "@angular/cdk/scrolling";
 import {CommonModule} from "@angular/common";
 import {ModuleWithProviders, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatDividerModule} from "@angular/material/divider";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatFormFieldModule} from "@angular/material/form-field";
@@ -15,6 +17,7 @@ import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatSliderModule} from "@angular/material/slider";
 import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from "@angular/material/table";
 import {MatTabsModule} from "@angular/material/tabs";
@@ -23,11 +26,12 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
+import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {provideActivityFactory} from "@spica-client/function/providers/activity";
 import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
-import {MatAwareDialogModule, MatSaveModule, MatClipboardModule} from "@spica-client/material";
+import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {PassportModule} from "../passport/passport.module";
@@ -37,16 +41,13 @@ import {FunctionInitializer} from "./function.initializer";
 import {FunctionService} from "./function.service";
 import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
+import {CodeComponent} from "./pages/add/code/code.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
-import {MatSliderModule} from "@angular/material/slider";
-import {MatDatepickerModule} from "@angular/material/datepicker";
-import {ScrollingModule} from "@angular/cdk/scrolling";
-import {CodeComponent} from "./pages/add/code/code.component";
 
 @NgModule({
   declarations: [
@@ -94,7 +95,8 @@ import {CodeComponent} from "./pages/add/code/code.component";
     MatSaveModule,
     MatDatepickerModule,
     ScrollingModule,
-    MatClipboardModule
+    MatClipboardModule,
+    EditorModule
   ]
 })
 export class FunctionModule {

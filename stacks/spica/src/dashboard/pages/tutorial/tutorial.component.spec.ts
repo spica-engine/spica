@@ -179,6 +179,10 @@ describe("TutorialComponent", () => {
       primary: "test",
       readOnly: false,
       history: false,
+      acl: {
+        write: "true==true",
+        read: "true==true"
+      },
       properties: {
         test: {
           title: "test",

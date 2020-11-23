@@ -2,7 +2,7 @@ import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
 import {Component, Inject, OnInit, Optional, Type, ViewChild} from "@angular/core";
 import {MatSidenavContainer} from "@angular/material/sidenav";
 import {BehaviorSubject, Observable} from "rxjs";
-import {debounceTime, map, shareReplay, switchMap} from "rxjs/operators";
+import {debounceTime, map, shareReplay, switchMap, tap} from "rxjs/operators";
 import {Route, RouteCategory, RouteService} from "../../route";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 
@@ -28,14 +28,35 @@ export class HomeLayoutComponent implements OnInit {
     );
 
   private _categories = new Map([
-    [RouteCategory.Primary, {icon: "stars", index: 0}],
-    [RouteCategory.Content, {icon: "view_stream", index: 1}],
-    [RouteCategory.System, {icon: "supervisor_account", index: 2}],
-    [RouteCategory.Developer, {icon: "settings", index: 3}],
-    [RouteCategory.Function, {icon: "memory", index: 4}]
+    [
+      RouteCategory.Primary,
+      {icon: "stars", index: 0, children: {name: RouteCategory.Primary_Sub, icon: "list"}}
+    ],
+    [
+      RouteCategory.Content,
+      {
+        icon: "view_stream",
+        index: 1,
+        children: {name: RouteCategory.Content_Sub, icon: "format_list_numbered"}
+      }
+    ],
+    [
+      RouteCategory.System,
+      {
+        icon: "supervisor_account",
+        index: 2,
+        children: {name: RouteCategory.System_Sub, icon: "list"}
+      }
+    ],
+    [
+      RouteCategory.Developer,
+      {icon: "memory", index: 3, children: {name: RouteCategory.Developer_Sub, icon: "bug_report"}}
+    ]
   ]);
 
-  categories$: Observable<Array<{icon: string; category: RouteCategory; index: number}>>;
+  categories$: Observable<
+    Array<{icon: string; category: RouteCategory; index: number; children: object}>
+  >;
 
   currentCategory = new BehaviorSubject(null);
 
@@ -49,7 +70,9 @@ export class HomeLayoutComponent implements OnInit {
       map(routes => {
         const categoryNames = Array.from(
           routes.reduce((prev, current) => {
-            prev.add(current.category);
+            if (this._categories.has(current.category)) {
+              prev.add(current.category);
+            }
             return prev;
           }, new Set<RouteCategory>())
         );
@@ -60,13 +83,16 @@ export class HomeLayoutComponent implements OnInit {
             return {
               icon: category.icon,
               category: categoryName,
-              index: category.index
+              index: category.index,
+              children: {
+                items: routes.filter(route => route.category == category.children.name),
+                icon: category.children.icon
+              }
             };
           })
           .sort((a, b) => a.index - b.index);
-
         if (!this.currentCategory.value) {
-          this.currentCategory.next(categories[0].category);
+          this.currentCategory.next(categories[0]);
         }
 
         return categories;
@@ -78,7 +104,7 @@ export class HomeLayoutComponent implements OnInit {
           this.toggle();
         }
         return this.routeService.routes.pipe(
-          map(routes => routes.filter(r => r.category == currentCategory))
+          map(routes => routes.filter(r => r.category == currentCategory.category))
         );
       })
     );

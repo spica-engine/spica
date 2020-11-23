@@ -23,7 +23,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
-import {findRelations, findUpdatedFields} from "./utility";
+import {findRelations, findUpdatedFields} from "./relation";
 
 /**
  * All APIs related to bucket schemas.
@@ -179,7 +179,10 @@ export class BucketController {
     const deletedCount = await this.bs.deleteOne({_id: id});
     if (deletedCount > 0) {
       let promises = [];
-      promises.push(this.bds.deleteAll(id), this.clearRelations(this.bs, this.bds, id));
+      promises.push(
+        this.bds.children(id).deleteMany({}),
+        this.clearRelations(this.bs, this.bds, id)
+      );
       if (this.history) {
         promises.push(this.history.deleteMany({bucket_id: id}));
       }
@@ -219,7 +222,7 @@ export class BucketController {
       }, {});
 
       updatePromises.push(
-        bucketDataService.updateMany(bucket._id, {}, {$unset: unsetFieldsBucketData})
+        bucketDataService.children(bucket._id).updateMany({}, {$unset: unsetFieldsBucketData})
       );
     }
 
@@ -243,6 +246,6 @@ export class BucketController {
       return acc;
     }, {});
 
-    await bucketDataService.updateMany(previousSchema._id, {}, {$unset: unsetFields});
+    await bucketDataService.children(previousSchema._id).updateMany({}, {$unset: unsetFields});
   }
 }

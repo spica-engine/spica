@@ -54,11 +54,6 @@
       </mat-error>
     </mat-form-field>
     <div class="advanced-settings">
-      <mat-label>Advanced Settings</mat-label>
-      <mat-divider *ngIf="field != 'object'"></mat-divider>
-      <div *ngIf="!fieldConfig.metaPlacer && field != 'date'">
-        There is no specific settings for this input type {{ placer }}
-      </div>
       <span
         *ngIf="field != 'object'"
         class="input-placer-area"
@@ -140,13 +135,15 @@
         </mat-checkbox>
       </div>
     </div>
+    <button mat-button *ngIf="parentSchema.properties[propertyKey]" (click)="save()">
+      Save
+    </button>
     <button
       mat-button
       *ngIf="parentSchema.properties[propertyKey]"
-      [disabled]="dm?.invalid || pnm?.invalid"
-      (click)="save()"
+      (click)="step = 0; field = null; propertyKey = ''"
     >
-      <mat-icon>add</mat-icon> Save
+      Add Another Field
     </button>
   </div>
 

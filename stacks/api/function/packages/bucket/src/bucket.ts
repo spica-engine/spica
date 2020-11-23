@@ -1,8 +1,13 @@
 import fetch from "node-fetch";
-import {Bucket, BucketDocument, IndexResult} from "./interface";
+import {Bucket, BucketDocument, IndexResult, GetAllParams} from "./interface";
+import {getWsObs} from "./index";
+import {Observable} from "rxjs";
+import {map} from "rxjs/operators";
 
 let apikey;
 let url;
+
+let wsUrl;
 
 export function initialize(options: {apikey: string; publicUrl?: string}) {
   apikey = `APIKEY ${options.apikey}`;
@@ -15,6 +20,7 @@ export function initialize(options: {apikey: string; publicUrl?: string}) {
   }
 
   url = `${_publicUrl}/bucket`;
+  wsUrl = _publicUrl.replace("http", "ws");
 }
 
 function checkInitialized() {
@@ -189,5 +195,49 @@ export namespace data {
       }
     };
     return fetch(`${url}/${bucketId}/data/${documentId}`, request);
+  }
+
+  export namespace realtime {
+    export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
+      checkInitialized();
+
+      let filter = {
+        _id: documentId
+      };
+
+      let url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}&filter=${JSON.stringify(
+        filter
+      )}`;
+
+      return getWsObs<BucketDocument[]>(url).pipe(map(([documents]) => documents));
+    }
+    export function getAll(bucketId: string, params?: GetAllParams): Observable<BucketDocument[]> {
+      checkInitialized();
+
+      let url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}`;
+
+      let sort;
+
+      if (params) {
+        if (params.filter) {
+          url += `&filter=${JSON.stringify(params.filter)}`;
+        }
+
+        if (params.sort) {
+          url += `&sort=${JSON.stringify(params.sort)}`;
+          sort = params.sort;
+        }
+
+        if (params.limit) {
+          url += `&limit=${params.limit}`;
+        }
+
+        if (params.skip) {
+          url += `&skip=${params.skip}`;
+        }
+      }
+
+      return getWsObs<BucketDocument[]>(url, sort);
+    }
   }
 }

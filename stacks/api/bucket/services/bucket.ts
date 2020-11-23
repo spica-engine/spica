@@ -14,6 +14,10 @@ export interface Bucket {
   };
   order?: number;
   required?: string[];
+  acl: {
+    read: string;
+    write: string;
+  };
 }
 
 interface PropertyOptions {
