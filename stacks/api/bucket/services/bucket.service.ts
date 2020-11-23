@@ -28,10 +28,8 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     const bucketCollection = await this.db.createCollection(`bucket_${insertedBucket._id}`);
 
     const indexDefinitions = this.createUniqueIndexDefs(bucket);
-    if (indexDefinitions.length) {
-      for (const definition of indexDefinitions) {
-        await bucketCollection.createIndex(definition, {unique: true});
-      }
+    for (const definition of indexDefinitions) {
+      await bucketCollection.createIndex(definition, {unique: true});
     }
     return insertedBucket;
   }
@@ -71,7 +69,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   createUniqueIndexDefs(bucket: Bucket) {
-    let indexDefinitions = [];
+    const indexDefinitions = [];
     for (const [name, definition] of Object.entries(bucket.properties)) {
       if (definition.options && definition.options.unique) {
         indexDefinitions.push({[name]: 1});
