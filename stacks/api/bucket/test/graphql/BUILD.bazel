@@ -51,6 +51,7 @@ ts_library(
 
 jasmine_node_test(
     name = "graphql_controller_test",
+    tags = ["e2e"],
     deps = [
         "graphql_controller_test_lib",
     ],
