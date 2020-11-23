@@ -47,7 +47,7 @@ export class AddComponent implements OnInit, OnDestroy {
   dependencies: Observable<any>;
   dependencyInstallPending = false;
 
-  isHandlerDuplicated: any = false;
+  isHandlerDuplicated = false;
   serverError: string;
 
   enableLogView: boolean = false;
@@ -246,14 +246,11 @@ export class AddComponent implements OnInit, OnDestroy {
 
   checkHandlers() {
     this.isHandlerDuplicated = false;
-    this.function.triggers.forEach(trigger => {
-      const duplicatedHandler = this.function.triggers.filter(
-        item => item.handler == trigger.handler
-      );
-      if (duplicatedHandler.length > 1) {
-        this.isHandlerDuplicated = duplicatedHandler[0];
-        console.log(this.isHandlerDuplicated);
+    for (const trigger of this.function.triggers) {
+      if (this.function.triggers.filter(item => item.handler == trigger.handler).length > 1) {
+        this.isHandlerDuplicated = true;
+        break;
       }
-    });
+    }
   }
 }
