@@ -32,7 +32,14 @@ RUN curl -fsSL https://helm.baltorepo.com/organization/signing.asc | apt-key add
 RUN echo "deb https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
 RUN apt-get update && apt-get install helm -y
 
+# Install chrome
+
+RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
+RUN apt-get update && apt-get install google-chrome-stable -y --allow-unauthenticated
+ENV CHROME_BIN=/usr/bin/google-chrome
+
 # Smoke tests
+RUN google-chrome --version
 RUN gcloud version
 RUN kubectl version --client
 RUN helm version

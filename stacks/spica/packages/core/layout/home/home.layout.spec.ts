@@ -20,7 +20,6 @@ import {CanInteractDirectiveTest} from "../../../../src/passport/directives/can-
 import {MatMenuModule} from "@angular/material/menu";
 import {MatTooltipModule} from "@angular/material/tooltip";
 
-
 describe("Home Layout", () => {
   describe("test for categories, routes", () => {
     let component: HomeLayoutComponent;

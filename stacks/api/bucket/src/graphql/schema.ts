@@ -1,8 +1,9 @@
 import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {GraphQLResolveInfo} from "graphql";
-import {Locale, buildI18nAggregation} from "../locale";
-import {getRelationAggregation, deepCopy} from "../utility";
+import {buildI18nAggregation, Locale} from "../locale";
+import {deepCopy} from "../patch";
+import {getRelationAggregation} from "../relation";
 
 enum Prefix {
   Type = "type",
