@@ -110,7 +110,7 @@ export class WebhookLogViewComponent extends DataSource<WebhookLog> implements O
               .pipe(map(logs => this.logs.concat(logs)))
               .toPromise();
           } else {
-            return this.webhookService.getLogs(filter).toPromise();
+            return this.webhookService.getLogs(filter);
           }
         })
       )
