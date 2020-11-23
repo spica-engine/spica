@@ -101,10 +101,11 @@ export class Validator {
   registerKeyword(nameOrDef: string | KeywordDefinition, def?: KeywordDefinition): void {
     if (typeof nameOrDef == "string") {
       this._ajv.removeKeyword(nameOrDef);
+      this._ajv.addKeyword(nameOrDef, def);
     } else {
       this._ajv.removeKeyword(def.keyword as string);
+      this._ajv.addKeyword(def);
     }
-    this._ajv.addKeyword(def);
   }
 
   removeSchema(schemaUri?: string) {

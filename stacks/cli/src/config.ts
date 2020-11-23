@@ -1,7 +1,5 @@
 import {cosmiconfig} from "cosmiconfig";
 import * as fs from "fs";
-import * as _path from "path";
-import * as os from "os";
 
 export namespace config {
   export interface Config {
@@ -16,9 +14,8 @@ export namespace config {
       `.spicarc.yml`,
       `.spicarc.js`,
       `.spicarc.cjs`,
-      `spica.config.js`,
-      `spica.config.cjs`
-    ]
+    ],
+
   });
 
   export async function get(): Promise<Config> {
@@ -29,12 +26,12 @@ export namespace config {
     return config.config;
   }
 
-  export async function path(): Promise<string> {
+  export async function path(): Promise<string | undefined> {
     try {
       const {filepath} = await explorer.search();
       return filepath;
     } catch {
-      return _path.join(os.homedir(), ".spicarc");
+      return undefined;
     }
   }
 

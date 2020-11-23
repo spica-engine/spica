@@ -24,6 +24,7 @@ export namespace machinery {
         return value.data;
       },
       error => {
+        console.log(error);
         return error;
       }
     );

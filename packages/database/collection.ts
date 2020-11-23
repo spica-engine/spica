@@ -29,11 +29,8 @@ export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
       return this._coll.estimatedDocumentCount();
     }
 
-    aggregate<ResponseType>(
-      pipeline?: object[],
-      options?: CollectionAggregationOptions
-    ): AggregationCursor<ResponseType> {
-      return this._coll.aggregate(pipeline, options);
+    aggregate<ResponseType>(pipeline: object[]) {
+      return this._coll.aggregate<ResponseType>(pipeline);
     }
 
     createCollection(name: string, options?: CollectionCreateOptions): Promise<Collection<any>> {

@@ -19,6 +19,7 @@
     "cosmiconfig": "^7.0.0",
     "axios": "^0.21.0",
     "yaml": "^1.8.3",
+    "open": "^7.3.0",
     "jsonpath": "^1.0.2"
   },
   "devDependencies": {

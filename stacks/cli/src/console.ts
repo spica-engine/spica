@@ -1,4 +1,4 @@
-import {blue, bold, green, red, yellow} from "colorette";
+import {blue, bold, red, yellow} from "colorette";
 import * as columnify from "columnify";
 import * as ora from "ora";
 import * as util from "util";
@@ -57,4 +57,4 @@ export class Logger extends console.Console {
   }
 }
 
-globalThis.console = new Logger(process.stdout, process.stderr);
+global.console = new Logger(process.stdout, process.stderr);
