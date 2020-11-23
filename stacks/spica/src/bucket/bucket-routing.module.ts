@@ -92,7 +92,7 @@ const routes: Routes = [
 const route: Route[] = [
   {
     id: "bucket",
-    category: RouteCategory.Developer,
+    category: RouteCategory.Content_Sub,
     icon: "view_day",
     path: "/buckets/add",
     display: "Buckets",
