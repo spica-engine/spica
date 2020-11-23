@@ -355,30 +355,6 @@ export class BucketDataController {
       throw new ForbiddenException("ACL rules has rejected this operation.");
     }
 
-    // let currentDocument;
-    // let insertedId;
-
-    // await this.bds
-    //   .insertOne(bucketId, body)
-    //   .then(res => {
-    //     currentDocument = res.ops[0];
-    //     insertedId = res.insertedId;
-    //   })
-    //   .catch(error => {
-    //     if (error.code === 11000) {
-    //       throw new BadRequestException(
-    //         `Value '${Object.values(error.keyValue)[0]}' for '${
-    //           Object.keys(error.keyValue)[0]
-    //         }' field has already exist.`
-    //       );
-    //     }
-    //     throw new InternalServerErrorException();
-    //   });
-
-    // if (!currentDocument || !insertedId) {
-    //   return;
-    // }
-
     const document = await bkt.insertOne(rawDocument).catch(error => {
       if (error.code === 11000) {
         throw new BadRequestException(
@@ -462,28 +438,6 @@ export class BucketDataController {
     if (!aclResult) {
       throw new ForbiddenException("ACL rules has rejected this operation.");
     }
-
-    // let previousDocument;
-
-    // await this.bds
-    //   .replaceOne(bucketId, {_id: documentId}, body, {
-    //     returnOriginal: true
-    //   })
-    //   .then(res => (previousDocument = res.value))
-    //   .catch(error => {
-    //     if (error.code === 11000) {
-    //       throw new BadRequestException(
-    //         `Value '${Object.values(error.keyValue)[0]}' for '${
-    //           Object.keys(error.keyValue)[0]
-    //         }' field has already exist.`
-    //       );
-    //     }
-    //     throw new InternalServerErrorException();
-    //   });
-
-    // if (!previousDocument) {
-    //   return;
-    // }
 
     const previousDocument = await bkt
       .findOneAndReplace({_id: documentId}, document, {
