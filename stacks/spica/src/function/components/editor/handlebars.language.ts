@@ -1,5 +1,7 @@
 import {Directive} from "@angular/core";
 
+declare var monaco: typeof import("monaco-editor-core");
+
 @Directive({
   selector: "code-editor[language='handlebars']",
   host: {"(init)": "onEditorInit()"}

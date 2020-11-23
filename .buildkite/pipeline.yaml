@@ -1,7 +1,7 @@
 var_1: &api_test_docker_plugin
   plugins:
     - docker#v3.5.0:
-        image: "spicaengine/buildkite-node-with-mongodb:12"
+        image: "spicaengine/buildkite-node-with-mongodb@sha256:f7cd5ed3576528833a3a47819ab28e38d915094fa1904c39b248f3ee2ff395ce"
         workdir: /spica
         volumes:
           - "/var/cache/spica:/var/cache/spica"
@@ -60,15 +60,9 @@ steps:
     key: test_spica
     if: build.branch != "master"
     depends_on: "install_packages"
-    plugins:
-      - docker#v3.5.0:
-          image: "circleci/node:12-browsers"
-          workdir: /spica
-          volumes:
-            - "/var/cache/spica/node_modules:/spica/node_modules"
-            - "/var/cache/spica/stacks/spica/node_modules:/spica/stacks/spica/node_modules"
+    <<: *api_test_docker_plugin
     commands:
-      - yarn --cwd ./stacks/spica ng test --browsers=ChromeHeadless --watch=false --progress=false --reporters=spec
+      - yarn --cwd ./stacks/spica ng test --browsers=ChromeHeadlessNoSandbox --watch=false --progress=false --reporters=spec
 
   - label: ":docker: + :bazel: Test APIs"
     key: test_api
