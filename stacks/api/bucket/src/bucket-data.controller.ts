@@ -27,7 +27,7 @@ import {BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {ARRAY, BOOLEAN, BooleanCheck, DEFAULT, JSONP, JSONPR, NUMBER, OR} from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
 import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
@@ -338,7 +338,8 @@ export class BucketDataController {
     const relationStage = getRelationPipeline(relationMap, undefined);
 
     const fullDocument = await this.bds
-      .children("buckets")
+      .children(bucketId)
+      .collection("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -409,7 +410,8 @@ export class BucketDataController {
     const relationStage = getRelationPipeline(relationMap, undefined);
 
     const fullDocument = await this.bds
-      .children("buckets")
+      .children(bucketId)
+      .collection("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -497,7 +499,8 @@ export class BucketDataController {
     const relationStage = getRelationPipeline(relationMap, undefined);
 
     const fullDocument = await this.bds
-      .children("buckets")
+      .children(bucketId)
+      .collection("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -565,7 +568,8 @@ export class BucketDataController {
     const relationStage = getRelationPipeline(relationMap, undefined);
 
     const fullDocument = await this.bds
-      .children("buckets")
+      .children(bucketId)
+      .collection("buckets")
       .aggregate([
         {$limit: 1},
         {

@@ -93,7 +93,7 @@ function visitBinaryOperatorSelect(node) {
   return ctx => {
     const lhs = visit(node.lhs);
     const data = lhs(ctx);
-    if (typeof data == "object" && node.rhs.name in data) {
+    if (typeof data == "object" && data != null && node.rhs.name in data) {
       return data[node.rhs.name];
     }
     return undefined;
