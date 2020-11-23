@@ -237,7 +237,7 @@ export function getUpdateParams(
 ): {filter: object; update: object} {
   if (type == "onetoone") {
     return {filter: {[target]: documentId}, update: {$unset: {[target]: ""}}};
-  } else if ((type = "onetomany")) {
+  } else if (type == "onetomany") {
     return {
       filter: {[target]: {$in: [documentId]}},
       update: {$pull: {[target]: documentId}}

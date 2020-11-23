@@ -339,6 +339,8 @@ export class BucketDataController {
 
     const fullDocument = await this.bds
       .children(bucketId)
+      // unlike others, we have to run this pipeline against buckets in case the target
+      // collection is empty.
       .collection("buckets")
       .aggregate([
         {$limit: 1},
@@ -411,7 +413,6 @@ export class BucketDataController {
 
     const fullDocument = await this.bds
       .children(bucketId)
-      .collection("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -500,7 +501,6 @@ export class BucketDataController {
 
     const fullDocument = await this.bds
       .children(bucketId)
-      .collection("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -551,10 +551,6 @@ export class BucketDataController {
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    const bkt = this.bds.children(bucketId);
-
-    const deletedDocument = await bkt.findOne({_id: documentId});
-
     const schema = await this.bs.findOne({_id: bucketId});
 
     const paths = extractPropertyMap(schema.acl.write).map(path => path.split("."));
@@ -567,9 +563,12 @@ export class BucketDataController {
 
     const relationStage = getRelationPipeline(relationMap, undefined);
 
+    const bkt = this.bds.children(bucketId);
+
+    const deletedDocument = await bkt.findOne({_id: documentId});
+
     const fullDocument = await this.bds
       .children(bucketId)
-      .collection("buckets")
       .aggregate([
         {$limit: 1},
         {
@@ -587,7 +586,7 @@ export class BucketDataController {
 
     const deletedCount = await bkt.deleteOne({_id: documentId});
 
-    if (deletedCount > 0) {
+    if (deletedCount == 1) {
       if (this.changeEmitter) {
         this.changeEmitter.emitChange(
           {
