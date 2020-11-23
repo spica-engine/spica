@@ -14,6 +14,10 @@ export interface Bucket {
   properties?: {
     [key: string]: Property;
   };
+  acl?: {
+    read: string;
+    write: string;
+  };
 }
 
 export interface PropertyOptions {
@@ -54,6 +58,10 @@ export function emptyBucket(): Bucket {
           position: "right"
         }
       }
+    },
+    acl: {
+      write: "true==true",
+      read: "true==true"
     }
   };
 }

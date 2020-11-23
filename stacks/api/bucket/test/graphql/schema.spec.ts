@@ -1,13 +1,12 @@
+import {format as _format} from "prettier";
 import {
+  aggregationsFromRequestedFields,
   createSchema,
   extractAggregationFromQuery,
-  requestedFieldsFromInfo,
-  aggregationsFromRequestedFields,
   getProjectAggregation,
-  requestedFieldsFromExpression
+  requestedFieldsFromExpression,
+  requestedFieldsFromInfo
 } from "../../src/graphql/schema";
-import {format as _format} from "prettier";
-import {getPatchedDocument, updateQueryForPatch} from "@spica-server/bucket/src/utility";
 
 export function format(text: string) {
   return _format(text, {parser: "graphql"});
@@ -975,54 +974,6 @@ describe("Schema", () => {
             translatable_field: 1
           }
         });
-      });
-    });
-  });
-
-  describe("Merge/Patch", () => {
-    it("should get patched document", () => {
-      let previousDocument = {
-        title: "title",
-        description: "description"
-      };
-      let patchQuery = {
-        title: "new_title",
-        description: null
-      };
-      let patchedDocument = getPatchedDocument(previousDocument, patchQuery);
-      expect(patchedDocument).toEqual({
-        title: "new_title"
-      });
-    });
-
-    it("should get update query", () => {
-      let query = updateQueryForPatch({title: "new_title", description: null});
-
-      expect(query).toEqual({
-        $set: {title: "new_title"},
-        $unset: {description: ""}
-      });
-    });
-
-    it("should get update query for nested objects", () => {
-      let query = updateQueryForPatch({
-        nested_object: {
-          field2: null
-        }
-      });
-
-      expect(query).toEqual({
-        $unset: {"nested_object.field2": ""}
-      });
-    });
-
-    it("should get update query for arrays", () => {
-      let query = updateQueryForPatch({
-        strings: ["new_value"]
-      });
-
-      expect(query).toEqual({
-        $set: {strings: ["new_value"]}
       });
     });
   });
