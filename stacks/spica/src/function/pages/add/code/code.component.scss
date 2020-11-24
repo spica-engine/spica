@@ -12,10 +12,6 @@
     display: flex;
     &:first-of-type {
       justify-content: space-between;
-      > button {
-        margin-right: -24px;
-        margin-top: -24px;
-      }
     }
     &:last-of-type {
       justify-content: center;
