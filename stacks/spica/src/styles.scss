@@ -108,11 +108,8 @@ mat-form-field {
 }
 
 $custom-typography: mat-typography-config(
-  $font-family: 'Roboto, monospace',
   $subheading-2: mat-typography-level(1rem, 1.5rem, 700),
-  $body-1: mat-typography-level(1rem, 24px, 500)
+  $body-1: mat-typography-level(1rem, 1.5rem, 500)
 );
 
 @include mat-core($custom-typography);
-
-
