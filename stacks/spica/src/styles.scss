@@ -107,6 +107,12 @@ mat-form-field {
   }
 }
 
-.mat-list-base .mat-list-item {
-  font-size: 1rem;
-}
+$custom-typography: mat-typography-config(
+  $font-family: 'Roboto, monospace',
+  $subheading-2: mat-typography-level(1rem, 1.5rem, 700),
+  $body-1: mat-typography-level(1rem, 24px, 500)
+);
+
+@include mat-core($custom-typography);
+
+
