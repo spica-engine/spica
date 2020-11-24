@@ -1,5 +1,5 @@
 import {Component, DebugElement, ViewChild} from "@angular/core";
-import {ComponentFixture, TestBed, tick, fakeAsync, async} from "@angular/core/testing";
+import { ComponentFixture, TestBed, tick, fakeAsync, waitForAsync } from "@angular/core/testing";
 import {MatClipboardDirective} from "./clipboard.directive";
 import {MatClipboardModule} from "./clipboard.module";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";

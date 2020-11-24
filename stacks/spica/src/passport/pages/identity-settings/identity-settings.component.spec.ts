@@ -76,7 +76,7 @@ describe("Identity Setting Component", () => {
     };
     TestBed.configureTestingModule({
       imports: [
-        RouterModule.forRoot([]),
+        RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }),
         MatIconModule,
         MatToolbarModule,
         MatMenuModule,
