@@ -20,12 +20,14 @@ export namespace machinery {
       baseURL: baseUrl
     });
     instance.interceptors.response.use(
-      value => {
-        return value.data;
+      response => {
+        return response.data;
       },
       error => {
-        console.log(error);
-        return error;
+        if (!error.response) {
+          return Promise.reject(error);
+        }
+        return error.response.data;
       }
     );
     instance.defaults.headers.common["Authorization"] = authorization;

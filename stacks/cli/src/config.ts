@@ -1,5 +1,7 @@
 import {cosmiconfig} from "cosmiconfig";
 import * as fs from "fs";
+import * as os from "os";
+import * as _path from "path";
 
 export namespace config {
   export interface Config {
@@ -18,7 +20,11 @@ export namespace config {
   });
 
   export async function get(): Promise<Config> {
-    const config = await explorer.search();
+    let config = await explorer.search(process.cwd());
+    if (!config) {
+      config = await explorer.search(os.homedir());
+    }
+
     if (!config) {
       return {context: undefined};
     }
@@ -26,16 +32,22 @@ export namespace config {
   }
 
   export async function path(): Promise<string | undefined> {
-    try {
-      const {filepath} = await explorer.search();
-      return filepath;
-    } catch {
-      return undefined;
+    let config = await explorer.search(process.cwd());
+    if (!config) {
+      config = await explorer.search(os.homedir());
     }
+
+    if (config) {
+      return config.filepath;
+    }
+    return undefined;
   }
 
   export async function set(config: Config) {
-    const configPath = await path();
+    let configPath = await path();
+    if (!configPath) {
+      configPath = _path.join(os.homedir(), ".spicarc");
+    }
     fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2));
   }
 }

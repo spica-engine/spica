@@ -1,4 +1,5 @@
 import {getLineNumberAndColumnFromRange} from "./range";
+import * as path from "path";
 
 export interface Status<Details = StatusDetails> {
   metadata?: StatusMetadata;
@@ -52,10 +53,20 @@ export function formatValidationErrors(
   documentContent: string,
   documentName: string
 ) {
+  if (
+    !path.isAbsolute(documentName) &&
+    !documentName.startsWith("./") &&
+    !documentName.startsWith("../")
+  ) {
+    documentName = `./${documentName}`;
+  }
+
   const errors = [];
+
   for (const error of status.details.errors as any[]) {
     const range = getRange(document, documentContent, error.path).join(":");
-    errors.push(`./${documentName}:${range} - ${error.path} ${error.message}`);
+
+    errors.push(`${documentName}:${range} - ${error.path} ${error.message}`);
   }
   return `Error from server (${status.reason}): ${status.message}\n${errors.join("\n")}`;
 }
@@ -65,7 +76,10 @@ function getRange(document, documentContent, path: string) {
   let current = document.contents;
 
   for (const key of tree.slice(1)) {
-    current = current.get(key, true);
+    const children = current.get(key, true);
+    if (children) {
+      current = children;
+    }
   }
 
   return getLineNumberAndColumnFromRange(documentContent, current.range[0]);
