@@ -36,18 +36,19 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
+
   <mat-form-field>
-    <input
-      matInput
-      [ngModel]="filter.date"
-      (ngModelChange)="setDate($event.begin, $event.end)"
-      placeholder="Select a date range"
-      [satDatepicker]="picker"
-      [max]="maxDate"
-    />
-    <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
-    <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
+    <mat-label>Enter a date range</mat-label>
+    <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
+      <input matStartDate placeholder="Start date" #begin="ngModel" [ngModel]="filter.date.begin" />
+      <input matEndDate placeholder="End date" #end="ngModel" [ngModel]="filter.date.end" />
+    </mat-date-range-input>
+
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-date-range-picker #picker (closed)="setDate(begin.value, end.value)">
+    </mat-date-range-picker>
   </mat-form-field>
+
   <button mat-button (click)="applyFilter()">
     Apply
   </button>

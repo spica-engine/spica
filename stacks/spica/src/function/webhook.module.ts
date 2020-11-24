@@ -4,6 +4,7 @@ import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
+import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
@@ -18,7 +19,6 @@ import {InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
 import {PassportModule} from "@spica-client/passport";
-import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {HandlebarsLanguageDirective} from "./components/editor/handlebars.language";
 import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
 import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
@@ -31,6 +31,9 @@ import {WebhookRoutingModule} from "./webhook-routing.module";
     CommonModule,
     FormsModule,
     InputModule,
+    PassportModule.forChild(),
+    WebhookRoutingModule,
+    EditorModule,
     MatAwareDialogModule,
     MatIconModule,
     MatToolbarModule,
@@ -40,17 +43,13 @@ import {WebhookRoutingModule} from "./webhook-routing.module";
     MatCardModule,
     MatListModule,
     MatSelectModule,
+    MatDatepickerModule,
     MatInputModule,
     MatSlideToggleModule,
-    PassportModule.forChild(),
-    WebhookRoutingModule,
-    SatDatepickerModule,
-    SatNativeDateModule,
     MatProgressSpinnerModule,
     ScrollingModule,
     MatExpansionModule,
-    MatSaveModule,
-    EditorModule
+    MatSaveModule
   ],
   declarations: [
     WebhookAddComponent,

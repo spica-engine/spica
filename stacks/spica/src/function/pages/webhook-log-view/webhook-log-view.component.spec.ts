@@ -9,7 +9,7 @@ import {MatInputModule} from "@angular/material/input";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
+import {MatDatepickerModule} from "@angular/material/datepicker";
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {FormsModule} from "@angular/forms";
@@ -43,8 +43,7 @@ describe("WebhookLogViewComponent", () => {
         MatCardModule,
         MatInputModule,
         FormsModule,
-        SatDatepickerModule,
-        SatNativeDateModule,
+        MatDatepickerModule,
         MatButtonModule,
         ScrollingModule,
         MatProgressSpinnerModule,

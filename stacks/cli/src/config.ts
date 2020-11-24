@@ -13,9 +13,8 @@ export namespace config {
       `.spicarc.yaml`,
       `.spicarc.yml`,
       `.spicarc.js`,
-      `.spicarc.cjs`,
-    ],
-
+      `.spicarc.cjs`
+    ]
   });
 
   export async function get(): Promise<Config> {
@@ -26,7 +25,7 @@ export namespace config {
     return config.config;
   }
 
-  export async function path(): Promise<string | undefined> {
+  export async function path(): Promise<string | undefined> {
     try {
       const {filepath} = await explorer.search();
       return filepath;

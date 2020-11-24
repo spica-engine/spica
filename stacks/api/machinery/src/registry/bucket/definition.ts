@@ -62,18 +62,6 @@ const bucketSchema: JSONSchema7 = {
     //   format: "uri-reference"
     // },
 
-
-    acl: {
-      type: "object",
-      properties: {
-        
-      },
-      default: {
-        write: "true==true",
-        read: "true==true"
-      }
-    },
-
     $comment: {
       type: "string"
     },

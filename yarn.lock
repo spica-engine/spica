@@ -10030,6 +10030,14 @@ open@^6.4.0:
   dependencies:
     is-wsl "^1.1.0"
 
+open@^7.3.0:
+  version "7.3.0"
+  resolved "https://registry.yarnpkg.com/open/-/open-7.3.0.tgz#45461fdee46444f3645b6e14eb3ca94b82e1be69"
+  integrity sha512-mgLwQIx2F/ye9SmbrUkurZCnkoXyXyu9EbHtJZrICjVAJfyMArdHp3KkixGdZx1ZHFPNIwl0DDM1dFFqXbTLZw==
+  dependencies:
+    is-docker "^2.0.0"
+    is-wsl "^2.1.1"
+
 opn@^5.5.0:
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/opn/-/opn-5.5.0.tgz#fc7164fab56d235904c51c3b27da6758ca3b9bfc"
@@ -12143,13 +12151,6 @@ sass@1.26.5:
   integrity sha512-FG2swzaZUiX53YzZSjSakzvGtlds0lcbF+URuU9mxOv7WBh7NhXEVDa4kPKN4hN6fC2TkOTOKqiqp6d53N9X5Q==
   dependencies:
     chokidar ">=2.0.0 <4.0.0"
-
-saturn-datepicker@^8.0.5:
-  version "8.0.5"
-  resolved "https://registry.yarnpkg.com/saturn-datepicker/-/saturn-datepicker-8.0.5.tgz#3606b06769327aa286528173a9df47b4995f9b52"
-  integrity sha512-LEJftfa/mDNYFLdOZRETU4SEjXPtd5xve8hjyUHmxmc/znYD4PqBfS044+C1uekN4M92YZlsLUXWKmPKSdAQbg==
-  dependencies:
-    tslib "^1.9.0"
 
 saucelabs@^1.5.0:
   version "1.5.0"
