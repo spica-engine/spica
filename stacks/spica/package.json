@@ -29,7 +29,7 @@
     "jwt-decode": "^2.2.0",
     "leaflet": "^1.5.1",
     "matcher": "^2.1.0",
-    "material-community-components": "^9.0.3",
+    "material-community-components": "^10.0.0",
     "monaco-editor-core": "^0.18.1",
     "monaco-languages": "^1.7.0",
     "ng2-charts": "^2.4.2",

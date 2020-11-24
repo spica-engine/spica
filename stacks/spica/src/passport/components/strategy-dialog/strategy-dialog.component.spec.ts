@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, tick, fakeAsync, waitForAsync } from "@angular/core/testing";
+import {ComponentFixture, TestBed, tick, fakeAsync, waitForAsync} from "@angular/core/testing";
 import {StrategyDialogComponent} from "./strategy-dialog.component";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MAT_DIALOG_DATA} from "@angular/material/dialog";

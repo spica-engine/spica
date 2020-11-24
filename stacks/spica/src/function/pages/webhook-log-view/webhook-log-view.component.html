@@ -39,7 +39,7 @@
 
   <mat-form-field>
     <mat-label>Enter a date range</mat-label>
-    <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
+    <mat-date-range-input [rangePicker]="picker">
       <input matStartDate placeholder="Start date" #begin="ngModel" [ngModel]="filter.date.begin" />
       <input matEndDate placeholder="End date" #end="ngModel" [ngModel]="filter.date.end" />
     </mat-date-range-input>

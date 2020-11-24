@@ -1,5 +1,5 @@
 import {SchemeSwitcherComponent} from "./scheme-switcher.component";
-import { ComponentFixture, TestBed, waitForAsync } from "@angular/core/testing";
+import {ComponentFixture, TestBed, waitForAsync} from "@angular/core/testing";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {MatIconModule} from "@angular/material/icon";
 import {SchemeObserver, Scheme} from "../scheme.observer";
