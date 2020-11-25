@@ -21,6 +21,21 @@ export function findRelations(
   return targets;
 }
 
+export function getRelationPaths(target: Bucket | string[]) {
+  if (Array.isArray(target)) {
+    return target.map(pattern => pattern.split("."));
+  }
+
+  const relationPaths = [];
+  for (const propertyKey in target.properties) {
+    if (target.properties[propertyKey].type != "relation") {
+      continue;
+    }
+    relationPaths.push([propertyKey]);
+  }
+  return relationPaths;
+}
+
 export async function getRelationAggregation(
   properties: object,
   fields: string[][],

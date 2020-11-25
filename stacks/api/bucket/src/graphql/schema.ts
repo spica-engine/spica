@@ -33,7 +33,7 @@ export function createSchema(
       
       type ${name}FindResponse{
         meta: Meta
-        entries: [${name}]
+        data: [${name}]
       }
 
       type Query{
@@ -355,7 +355,7 @@ export async function aggregationsFromRequestedFields(
 }
 
 export function requestedFieldsFromInfo(info: GraphQLResolveInfo, rootKey?: string): string[][] {
-  let [result] = info.fieldNodes.map(node =>
+  const [result] = info.fieldNodes.map(node =>
     extractFieldsFromNode(rootKey ? mergeNodes(node, rootKey) : node, [])
   );
 
