@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://spica.internal/bucket/schema",
-  "type": "object",
   "required": ["title", "description", "properties"],
+  "type": "object",
   "definitions": {
     "property": {
       "type": "object",
@@ -45,12 +45,17 @@
     }
   },
   "properties": {
+    "type": {
+      "type": "string",
+      "const": "object"
+    },
     "history": {
       "type": "boolean",
       "default": false
     },
     "acl": {
       "type": "object",
+      "required": ["write", "read"],
       "default": {
         "write": "true==true",
         "read": "true==true"

@@ -8,7 +8,11 @@ import {PreferenceService, PREFERENCE_CHANGE_FINALIZER} from "@spica-server/pref
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
-import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
+import {
+  BucketSchemaResolver,
+  bucketSpecificDefault,
+  provideBucketSchemaResolver
+} from "./bucket.schema.resolver";
 import {GraphqlController} from "./graphql/graphql";
 import {provideLanguageChangeUpdater} from "./locale";
 import {registerInformers} from "./machinery";
@@ -19,7 +23,11 @@ export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
     const imports: (Type<any> | DynamicModule)[] = [
       SchemaModule.forChild({
-        schemas: [require("./schemas/bucket.schema.json"), require("./schemas/buckets.schema.json")]
+        schemas: [
+          require("./schemas/bucket.schema.json"),
+          require("./schemas/buckets.schema.json")
+        ],
+        keywords: [bucketSpecificDefault]
       }),
       ServicesModule
     ];
@@ -49,8 +57,8 @@ export class BucketModule {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
           inject: [Validator, BucketService]
-        },
-        GraphqlController
+        }
+        // GraphqlController
       ],
       exports: [BucketDataService, ServicesModule]
     };

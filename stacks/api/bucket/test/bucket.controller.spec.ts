@@ -3,12 +3,8 @@ import {Test} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {
-  CREATED_AT,
-  OBJECTID_STRING,
-  OBJECT_ID,
-  UPDATED_AT
-} from "@spica-server/core/schema/defaults";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";

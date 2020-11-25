@@ -20,7 +20,8 @@
     "axios": "^0.21.0",
     "yaml": "^1.8.3",
     "open": "^7.3.0",
-    "jsonpath": "^1.0.2"
+    "jsonpath": "^1.0.2",
+    "cli-color": "^2.0.0"
   },
   "devDependencies": {
     "@types/dockerode": "^2.5.34"

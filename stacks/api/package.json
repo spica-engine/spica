@@ -1,5 +1,7 @@
 {
   "name": "@spica/server",
   "version": "0.0.0-PLACEHOLDER",
-  "private": true
+  "devDependencies": {
+    "@types/node-fetch": "^2.5.7"
+  }
 }

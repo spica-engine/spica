@@ -1,4 +1,10 @@
-import {FormatDefinition, KeywordDefinition} from "ajv";
+import {
+  CodeKeywordDefinition,
+  FormatDefinition,
+  KeywordDefinition,
+  FuncKeywordDefinition,
+  MacroKeywordDefinition
+} from "ajv";
 import {Observable} from "rxjs";
 
 export const GLOBAL_SCHEMA_MODULE_OPTIONS = "GLOBAL_SCHEMA_MODULE_OPTIONS";
@@ -18,7 +24,11 @@ export type Format = FormatDefinition<any> & {
   coerce?: (val: any) => any;
 };
 
-export type Keyword = KeywordDefinition & {name: string};
+export type Keyword =
+  | KeywordDefinition
+  | CodeKeywordDefinition
+  | FuncKeywordDefinition
+  | MacroKeywordDefinition;
 
 export interface ModuleOptions {
   schemas?: Object[];

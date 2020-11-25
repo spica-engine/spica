@@ -1,5 +1,4 @@
-import {Default, Format} from "@spica-server/core/schema";
-import {ObjectId} from "@spica-server/database";
+import {Default} from "@spica-server/core/schema";
 
 export const CREATED_AT: Default = {
   match: ":created_at",

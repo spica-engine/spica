@@ -1,5 +1,6 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import {default as Ajv, KeywordDefinition} from "ajv";
+import {default as Ajv, ValidateFunction} from "ajv";
+import formats from "ajv-formats";
 import {ValidationError} from "ajv/dist/compile/error_classes";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
@@ -15,9 +16,8 @@ import {
   SCHEMA_MODULE_OPTIONS,
   UriResolver
 } from "./interface";
-export {ErrorObject, _} from "ajv";
+export {CodeKeywordDefinition, ErrorObject, KeywordCxt, _} from "ajv";
 export {ValidationError} from "ajv/dist/compile/error_classes";
-import formats from "ajv-formats";
 
 @Injectable()
 export class Validator {
@@ -37,8 +37,8 @@ export class Validator {
       [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.match, def])
     );
     this._ajv = new Ajv({
-      removeAdditional: true,
       useDefaults: true,
+      removeAdditional: true,
       loadSchema: uri => this._fetch(uri),
       formats: new Array<Format>()
         .concat(local.formats || [])
@@ -48,21 +48,20 @@ export class Validator {
           return formats;
         }, {}),
       schemas: new Array().concat(local.schemas || []).concat(global.schemas || []),
-      ["defaults" as any]: this._defaults,
-      strict: false
+      strict: false,
+      ["defaults" as any]: this._defaults
     });
+
+    this.registerKeyword(defaultVocabulary);
+    this.registerKeyword(formatVocabulary);
 
     for (const keyword of new Array<Keyword>()
       .concat(local.keywords || [])
       .concat(global.keywords || [])) {
-      this.registerKeyword(keyword.name, keyword);
+      this.registerKeyword(keyword);
     }
 
-    this._ajv.removeKeyword("default");
-    this._ajv.addKeyword(defaultVocabulary);
-    this._ajv.removeKeyword("format");
-    this._ajv.addKeyword(formatVocabulary);
-    formats(this._ajv, {formats: ["date-time", "regex"]});
+    formats(this._ajv, {formats: ["regex"]});
   }
 
   private _fetch(uri: string): Promise<Object> {
@@ -84,7 +83,7 @@ export class Validator {
       }
     }
     return request({uri, json: true}).catch(() =>
-      Promise.reject(new Error(`Cannot resolve the schema ${uri}`))
+      Promise.reject(new Error(`Could not resolve the schema ${uri}`))
     );
   }
 
@@ -96,25 +95,27 @@ export class Validator {
     this._defaults.set(def.match, def);
   }
 
-  registerKeyword(def: KeywordDefinition): void;
-  registerKeyword(name: string, def: KeywordDefinition): void;
-  registerKeyword(nameOrDef: string | KeywordDefinition, def?: KeywordDefinition): void {
-    if (typeof nameOrDef == "string") {
-      this._ajv.removeKeyword(nameOrDef);
-      this._ajv.addKeyword(nameOrDef, def);
-    } else {
-      this._ajv.removeKeyword(def.keyword as string);
-      this._ajv.addKeyword(def);
-    }
+  registerKeyword(def: Keyword): void {
+    this._ajv.removeKeyword(def.keyword as string);
+    this._ajv.addKeyword(def);
   }
 
   removeSchema(schemaUri?: string) {
     this._ajv.removeSchema(schemaUri);
   }
 
-  async validate<T = unknown>(schema: object, value: T): Promise<void> {
-    const validate = await this._ajv.compileAsync(schema);
+  async validate<T = unknown>(schemaOrUrl: object | string, value: T): Promise<void> {
+    let schema: object;
+    if (typeof schemaOrUrl == "string") {
+      schema = {$ref: schemaOrUrl};
+    } else if (typeof schemaOrUrl == "object" && schemaOrUrl != null) {
+      schema = schemaOrUrl;
+    } else {
+      throw new TypeError(`invalid schema type received ${typeof schemaOrUrl}`);
+    }
+
     try {
+      const validate = await this._ajv.compileAsync(schema);
       const valid = validate(value);
       if (!valid) {
         throw new ValidationError(validate.errors);

@@ -3,13 +3,8 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {SchemaModule} from "@spica-server/core/schema";
-import {
-  CREATED_AT,
-  DATE_TIME,
-  OBJECTID_STRING,
-  OBJECT_ID,
-  UPDATED_AT
-} from "@spica-server/core/schema/defaults";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -353,8 +348,8 @@ describe("BucketDataController", () => {
           const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
             filter: JSON.stringify({
               created_at: {
-                $gte: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`,
-                $lt: `Date(${new Date("2020-05-20T10:00:00.000Z").toISOString()})`
+                $gte: `Date(2020-04-20T10:00:00.000Z)`,
+                $lt: `Date(2020-05-20T10:00:00.000Z)`
               }
             })
           });
@@ -388,7 +383,6 @@ describe("BucketDataController", () => {
               })
             })
             .catch(e => e);
-
           expect(error).toEqual({
             statusCode: 400,
             message:
@@ -985,7 +979,7 @@ describe("BucketDataController", () => {
   });
 
   describe("post,put,patch requests", () => {
-    let myBucketId: ObjectId;
+    let myBucketId: string;
     beforeEach(async () => {
       const myBucket = {
         title: "New Bucket",
@@ -1008,7 +1002,8 @@ describe("BucketDataController", () => {
           }
         }
       };
-      myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
+      const {body} = await req.post("/bucket", myBucket);
+      myBucketId = body._id;
     });
 
     describe("post", () => {
@@ -1050,28 +1045,30 @@ describe("BucketDataController", () => {
     describe("put/patch", () => {
       let insertedDocument;
       beforeEach(async () => {
-        insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
+        const {body} = await req.post(`/bucket/${myBucketId}/data`, {
           title: "first title",
           description: "first description"
-        })).body;
+        });
+        insertedDocument = body;
       });
 
       it("should update document", async () => {
-        const updatedDocument = (await req.put(
+        const {body: updatedDocument} = await req.put(
           `/bucket/${myBucketId}/data/${insertedDocument._id}`,
           {
             ...insertedDocument,
             title: "updated title"
           }
-        )).body;
-
-        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${updatedDocument._id}`))
-          .body;
-
+        );
+        const {body: bucketDocument} = await req.get(
+          `/bucket/${myBucketId}/data/${updatedDocument._id}`
+        );
         expect(bucketDocument).toEqual(updatedDocument);
-
-        delete updatedDocument._id;
-        expect(updatedDocument).toEqual({title: "updated title", description: "first description"});
+        expect(updatedDocument).toEqual({
+          _id: "__skip__",
+          title: "updated title",
+          description: "first description"
+        });
       });
 
       it("should patch document", async () => {
@@ -1106,34 +1103,13 @@ describe("BucketDataController", () => {
       });
     });
 
-    // Flaky: This test fails with a clean run. Probably schema invalidator has a race condition with this it block.
-    // Failures:
-    // 1) Bucket-Data acceptance post requests should return error if description isnt valid for bucket
-    //   Message:
-    // [31m    Expected $[0] = 201 to equal 400.
-    //     Expected $[1] = 'Created' to equal 'Bad Request'.[0m
-    //   Stack:
-    //     Error: Expected $[0] = 201 to equal 400.
-    //     Expected $[1] = 'Created' to equal 'Bad Request'.
-    //         at <Jasmine>
-    //         at UserContext.<anonymous> (stacks/api/bucket/bucket-data.controller.spec.ts:945:58)
-    //         at <Jasmine>
-    //         at processTicksAndRejections (internal/process/task_queues.js:93:5)
-    //   Message:
-    // [31m    Expected $[0] = undefined to equal '.description should be string'.
-    //     Expected $[1] = undefined to equal 'validation failed'.[0m
-    //   Stack:
-    //     Error: Expected $[0] = undefined to equal '.description should be string'.
-    //     Expected $[1] = undefined to equal 'validation failed'.
-    //         at <Jasmine>
-    //         at UserContext.<anonymous> (stacks/api/bucket/bucket-data.controller.spec.ts:946:60)
-    //         at <Jasmine>
-    //         at processTicksAndRejections (internal/process/task_queues.js:93:5)
-    xit("should return error if description isnt valid for bucket", async () => {
-      const response = await req.post(`/bucket/${myBucketId}/data`, {
-        title: "title",
-        description: [1, 2, 3]
-      });
+    it("should return error if description isnt valid for bucket", async () => {
+      const response = await req
+        .post(`/bucket/${myBucketId}/data`, {
+          title: "title",
+          description: [1, 2, 3]
+        })
+        .catch(e => e);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.error, response.body.message]).toEqual([
         "validation failed",
@@ -1196,7 +1172,7 @@ describe("BucketDataController", () => {
     });
   });
 
-  describe("Relation disposal", () => {
+  describe("relation disposal", () => {
     let userBucket: string;
     let ticketBucket: string;
     let hallBucket: string;
@@ -1328,19 +1304,13 @@ describe("BucketDataController", () => {
         readOnly: false,
         properties: {
           //this value is the value of the field on document, if it is not specified, default value will be used.
-          create_date: {
+          created_at: {
             type: "date",
-            title: "registiration_date",
-            description: "Description of the row",
-            options: {position: "right"},
             default: ":created_at"
           },
           //this value always the create date of document. Value of the field on document will be ignored.
-          create_date_readonly: {
+          created_at_readonly: {
             type: "date",
-            title: "registiration_date",
-            description: "Description of the row",
-            options: {position: "right"},
             default: ":created_at",
             readOnly: true
           }
@@ -1352,16 +1322,16 @@ describe("BucketDataController", () => {
     it("should work with default and readonly values", async () => {
       const date = new Date("1980-01-01");
       let document = {
-        create_date: date,
-        create_date_readonly: date
+        created_at: date,
+        created_at_readonly: date
       };
       const insertedDocument = (await req.post(`/bucket/${bucketId}/data`, document)).body;
 
-      expect(new Date(insertedDocument.create_date)).toEqual(
+      expect(new Date(insertedDocument.created_at)).toEqual(
         date,
         "should be equal if document value inserted"
       );
-      expect(new Date(insertedDocument.create_date_readonly)).not.toEqual(
+      expect(new Date(insertedDocument.created_at_readonly)).not.toEqual(
         date,
         "should not be equal if document value ignored"
       );
@@ -1370,8 +1340,8 @@ describe("BucketDataController", () => {
     it("should put default values if field does not exist on document", async () => {
       const insertedDocument = (await req.post(`/bucket/${bucketId}/data`)).body;
 
-      expect(new Date(insertedDocument.create_date)).toEqual(jasmine.any(Date));
-      expect(new Date(insertedDocument.create_date_readonly)).toEqual(jasmine.any(Date));
+      expect(new Date(insertedDocument.created_at)).toEqual(jasmine.any(Date));
+      expect(new Date(insertedDocument.created_at_readonly)).toEqual(jasmine.any(Date));
     });
   });
 });

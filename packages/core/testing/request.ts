@@ -5,6 +5,7 @@ import * as querystring from "querystring";
 @Injectable()
 export class Request {
   reject: boolean = false;
+  debug: boolean = false;
 
   constructor(@Inject("SOCKET") readonly socket: string) {}
 
@@ -88,7 +89,10 @@ export class Request {
           headers: response.headers as any,
           body: response.body ? response.body : undefined,
           statusCode: response.statusCode,
-          statusText: response.statusMessage
+          statusText: response.statusMessage,
+          toString() {
+            return JSON.stringify({...this, path: options.path});
+          }
         };
         if (this.reject) {
           return Promise.reject(response);

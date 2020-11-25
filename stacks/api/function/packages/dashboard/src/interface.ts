@@ -48,7 +48,7 @@ export namespace Chart {
   export type SingleLineLabel = string;
   export type MultiLineLabel = string[];
   export type Label = SingleLineLabel | MultiLineLabel;
-  export type ChartColor = string | CanvasGradient | CanvasPattern | string[];
+  export type ChartColor = string | string[];
   export type PositionType = "left" | "right" | "top" | "bottom" | "chartArea";
 
   type Scriptable<T> = (ctx: {

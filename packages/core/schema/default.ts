@@ -8,17 +8,15 @@ const def: CodeKeywordDefinition = {
     const {gen, data, schema, it} = cxt;
     const {opts, parentData, parentDataProperty} = it;
     const defaults = opts["defaults"];
-    let defaulter;
-
-    if ((defaulter = defaults.has(schema))) {
-      if (defaulter.type != ruleType) return;
-      const defsRef = gen.scopeValue("formats", {
+    if (defaults.has(schema)) {
+      // TODO: investigate why rule type is empty
+      //if (defaulter.type != ruleType) return;
+      const defsRef = gen.scopeValue("obj", {
         ref: opts["defaults"]
       });
-      const defRef = gen.const("defRef", _`${defsRef}.get(${schema}).create`);
-
+      const defRef = gen.const("defRef", _`${defsRef}.get(${schema})`);
       gen.block(
-        _`${parentData}[${parentDataProperty}] = ${defRef}(${data} == ${schema} ? undefined : ${data})`
+        _`${data} = ${parentData}[${parentDataProperty}] = ${defRef}.create(${data} == ${schema} ? undefined : ${data})`
       );
     }
   }

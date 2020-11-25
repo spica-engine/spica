@@ -29,7 +29,6 @@ const def: CodeKeywordDefinition = {
   keyword: "format",
   type: ["number", "string"],
   schemaType: "string",
-  $data: true,
   error,
   code(cxt: KeywordCxt, ruleType?: string) {
     const {gen, data, $data, schema, schemaCode, it} = cxt;
@@ -68,7 +67,7 @@ const def: CodeKeywordDefinition = {
           : _`${format}(${data})`;
         const validData = _`(typeof ${format} == "function" ? ${callFormat} : ${format}.test(${data}))`;
 
-        return _`${format} && ${format} !== true && ${fType} === ${ruleType} && !${validData}`;
+        return _`console.log(${data});${format} && ${format} !== true && ${fType} === ${ruleType} && !${validData}`;
       }
     }
 

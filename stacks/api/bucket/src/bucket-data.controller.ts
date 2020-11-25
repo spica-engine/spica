@@ -413,13 +413,7 @@ export class BucketDataController {
 
     const fullDocument = await this.bds
       .children(bucketId)
-      .aggregate([
-        {$limit: 1},
-        {
-          $replaceWith: document
-        },
-        ...relationStage
-      ])
+      .aggregate([{$limit: 1}, {$replaceWith: document}, ...relationStage])
       .next();
 
     const aclResult = run(schema.acl.write, {auth: req.user, document: fullDocument});
@@ -484,7 +478,14 @@ export class BucketDataController {
 
     await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
       throw new BadRequestException(
-        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.errors
+          ? error.errors
+              .map(e => {
+                const dataPath = e.dataPath.replace(/\//g, ".");
+                return `${dataPath} ${e.message}`;
+              })
+              .join("\n")
+          : [],
         error.message
       );
     });

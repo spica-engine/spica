@@ -72,20 +72,13 @@ steps:
     commands:
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
 
-  - label: ":docker: + :bazel: Test APIs (Flaky)"
+  - label: ":docker: + :bazel: Test APIs (e2e)"
     key: test_api_flaky
     if: build.branch != "master"
     depends_on: "install_packages"
     <<: *api_test_docker_plugin
     commands:
-      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5
-
-  - label: ":docker: + :bazel: Test APIs (E2E)"
-    key: test_api_e2e
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    <<: *api_test_docker_plugin
-    commands:
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-e2e,flaky --flaky_test_attempts=5
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5
 
   - label: ":k8s: + :docker: Deploy"
