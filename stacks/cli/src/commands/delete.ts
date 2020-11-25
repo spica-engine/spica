@@ -5,7 +5,7 @@ import * as YAML from "yaml";
 import {machinery} from "../machinery";
 import {formatFailureStatus, isFailureStatus} from "../status";
 
-async function del({options}: ActionParameters) {
+async function _delete({options}: ActionParameters) {
   const machineryClient = await machinery.createFromConfig();
 
   const filename = path.normalize(options.filename as string);
@@ -63,5 +63,5 @@ export default function({createCommand}: CreateCommandParameters): Command {
         default: false
       }
     )
-    .action(del);
+    .action(_delete);
 }

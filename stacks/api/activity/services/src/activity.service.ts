@@ -10,6 +10,6 @@ export class ActivityService extends BaseCollection<Activity>(COLLECTION_NAME) {
     super(db);
     this.createCollection(COLLECTION_NAME)
       .then(() => this.upsertTTLIndex(options.expireAfterSeconds))
-      .catch(() => {});
+      .catch(error => console.error(`Could not create TTL indexes.`, error));
   }
 }

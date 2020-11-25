@@ -17,11 +17,11 @@ type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
 };
 
-export function store(groupResource: GroupResource) {
-  return new Store(groupResource);
+export function store<SpecType = unknown, StatusType = unknown>(groupResource: GroupResource) {
+  return new Store<SpecType, StatusType>(groupResource);
 }
 
-export class Store<SpecType = unknown, StatusType = unknown> {
+class Store<SpecType = unknown, StatusType = unknown> {
   private store = new ObjectStore(db);
   private groupKey: string;
 

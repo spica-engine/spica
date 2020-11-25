@@ -46,23 +46,6 @@ export async function validate({object, scheme, versionName}: ValidationOptions)
   }
 }
 
-// function groupErrors(errors: Partial<ErrorObject>[]): Partial<ErrorObject>[] {
-//     const oneOfIndex = errors.findIndex(error => error.keyword == "oneOf" );
-//     if ( oneOfIndex != -1 ) {
-//         const oneOf = errors[oneOfIndex];
-//         const oneOfRelatedErrors = errors.filter((error, index) => error.dataPath == oneOf.dataPath && index != oneOfIndex);
-//         if (! oneOf.params.passingSchemas ) {
-//             oneOf.message = `either ${oneOfRelatedErrors.map(error => error.message).join(" or ")}`;
-//             errors = errors.filter((error, index) => error.dataPath != oneOf.dataPath || index == oneOfIndex);
-//         } else {
-//             console.log(oneOf);
-//         }
-
-//     }
-
-//     return errors;
-// }
-
 function mapErrorObjectToDataError(error: ErrorObject): DataError {
   const path = `.spec${error.dataPath.replace(/\//g, ".")}`;
   let message: string = error.message;

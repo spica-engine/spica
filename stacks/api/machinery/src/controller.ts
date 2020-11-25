@@ -3,16 +3,16 @@ import {
   Body,
   Catch,
   Controller,
+  Delete,
   ExceptionFilter,
   Get,
+  Headers,
   Param,
   Patch,
   Post,
   Put,
   UseFilters,
-  UseInterceptors,
-  Headers,
-  Delete
+  UseInterceptors
 } from "@nestjs/common";
 import {DatabaseService} from "@spica-server/database";
 import {Resource} from "./definition";
@@ -27,7 +27,7 @@ import {
   schemes
 } from "./scheme";
 import {alreadyExists, isStatusKind, notFound, status, StatusMetadata} from "./status";
-import {Store, __setDb} from "./store";
+import {store, __setDb} from "./store";
 import {acceptsTable, table} from "./table";
 import {validate} from "./validation";
 
@@ -178,8 +178,8 @@ export class ApiMachineryObjectController {
         message: "the server could not find the requested resource"
       });
     }
-    const store = new Store(groupVersionResource);
-    const objects = await store.values();
+    const objectStore = store(groupVersionResource);
+    const objects = await objectStore.values();
 
     if (acceptsTable(accepts)) {
       return table(objects, getVersionFromScheme(scheme, versionName));
@@ -209,7 +209,7 @@ export class ApiMachineryObjectController {
       });
     }
 
-    const objects = new Store(groupVersionResource);
+    const objects = store(groupVersionResource);
 
     return objects.get(objectName);
   }
@@ -235,7 +235,7 @@ export class ApiMachineryObjectController {
       });
     }
 
-    const objects = new Store(groupVersionResource);
+    const objects = store(groupVersionResource);
 
     const objectName = object.metadata.name;
 
@@ -290,7 +290,7 @@ export class ApiMachineryObjectController {
       });
     }
 
-    const objects = new Store(groupVersionResource);
+    const objects = store(groupVersionResource);
 
     if (!(await objects.has(objectName))) {
       throw notFound({
@@ -340,7 +340,7 @@ export class ApiMachineryObjectController {
       });
     }
 
-    const objects = new Store(groupVersionResource);
+    const objects = store(groupVersionResource);
 
     if (!(await objects.has(objectName))) {
       throw notFound({

@@ -2,78 +2,17 @@ import {DynamicModule, Global, Module, Type} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
-import {Bucket, BucketService, ServicesModule} from "@spica-server/bucket/services";
+import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {ObjectId} from "@spica-server/database";
-import {register, store, Store} from "@spica-server/machinery";
 import {PreferenceService, PREFERENCE_CHANGE_FINALIZER} from "@spica-server/preference/services";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "./bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
-import {DocumentScheduler} from "./scheduler";
-import {provideLanguageChangeUpdater} from "./locale";
 import {GraphqlController} from "./graphql/graphql";
-
-function assingTitleIfNeeded(schema, name) {
-  if (!schema.title) {
-    schema.title = name;
-  }
-
-  if (schema.type == "object") {
-    for (const propertyName in schema.properties) {
-      const prop = schema.properties[propertyName];
-      assingTitleIfNeeded(prop, propertyName);
-    }
-  } else if (schema.type == "array") {
-    assingTitleIfNeeded(schema.items, name);
-  }
-}
-
-async function v1_schema_to_internal(obj): Promise<Bucket> {
-  const {spec} = obj;
-
-  const store = new Store({group: "bucket", resource: "schemas"});
-
-  const raw = {...spec, properties: {...spec.properties}};
-
-  if (!raw.icon) {
-    raw.icon = "outbond";
-  }
-
-  for (const propertyName in spec.properties) {
-    const property = {...spec.properties[propertyName]};
-
-    if (!raw.visible) {
-      raw.primary = propertyName;
-    }
-
-    if (!property.options) {
-      property.options = {
-        position: "bottom"
-      };
-    }
-
-    assingTitleIfNeeded(property, propertyName);
-
-    raw.properties[propertyName] = property;
-
-    if (property.type == "relation" && typeof property.bucket == "object") {
-      const bucketName = property.bucket.resourceFieldRef.bucketName;
-
-      const relatedBucket = await store.get(bucketName);
-
-      raw.properties[propertyName] = {
-        ...property,
-        bucketId: relatedBucket.metadata.uid
-      };
-
-      delete raw.properties[propertyName].bucket;
-    }
-  }
-
-  return raw;
-}
+import {provideLanguageChangeUpdater} from "./locale";
+import {registerInformers} from "./machinery";
+import {DocumentScheduler} from "./scheduler";
 
 @Module({})
 export class BucketModule {
@@ -129,34 +68,7 @@ export class BucketModule {
       }
     });
 
-    register(
-      {
-        group: "bucket",
-        resource: "schemas",
-        version: "v1"
-      },
-      {
-        add: async (obj: any) => {
-          const bucketSchemaInternal = await v1_schema_to_internal(obj);
-          const bkt = await bs.insertOne(bucketSchemaInternal);
-          const st = store({
-            group: "bucket",
-            resource: "schemas"
-          });
-          await st.patch(obj.metadata.name, {metadata: {uid: String(bkt._id)}, status: "Ready"});
-        },
-        update: async (_, newObj: any) => {
-          const bucketSchemaInternal = await v1_schema_to_internal(newObj);
-          await bs.updateOne(
-            {_id: new ObjectId(newObj.metadata.uid)},
-            {$set: bucketSchemaInternal}
-          );
-        },
-        delete: async obj => {
-          await bs.deleteOne({_id: new ObjectId(obj.metadata.uid)});
-        }
-      }
-    );
+    registerInformers(bs);
   }
 }
 
