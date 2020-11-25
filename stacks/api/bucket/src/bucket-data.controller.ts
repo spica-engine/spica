@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Headers,
   HttpCode,
@@ -20,7 +19,6 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {extractPropertyMap, run} from "@spica-server/bucket/expression";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -30,15 +28,8 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketDataActivity} from "./activity.resource";
 import {BucketDataService} from "./bucket-data.service";
-import {applyPatch, getUpdateQueryForPatch} from "./patch";
-import {
-  clearRelations,
-  createHistory,
-  createRelationMap,
-  filterReviver,
-  getRelationPipeline,
-  getRelationPaths
-} from "./relation";
+import {applyPatch} from "./patch";
+import {clearRelations, createHistory, filterReviver, getRelationPaths} from "./relation";
 import {
   findDocuments,
   insertDocument,
@@ -128,104 +119,6 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     );
-
-    // const pipeline: object[] = [
-    //   resourceFilter,
-    //   {
-    //     $match: {
-    //       _schedule: {
-    //         $exists: schedule
-    //       }
-    //     }
-    //   }
-    // ];
-
-    // if (sort) {
-    //   pipeline.push({
-    //     $sort: sort
-    //   });
-    // }
-
-    // const locale = findLocale(acceptedLanguage, await this.bs.getPreferences());
-
-    // if (localize && hasTranslatedProperties(schema.properties)) {
-    //   pipeline.push({
-    //     $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-    //   });
-    //   req.res.header("Content-language", locale.best || locale.fallback);
-    // }
-
-    // const propertyMap = extractPropertyMap(schema.acl.read).map(path => path.split("."));
-
-    // const relationMap = await createRelationMap({
-    //   paths: [...relationPaths, ...propertyMap],
-    //   properties: schema.properties,
-    //   resolve: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-    // });
-
-    // // ACL
-    // const relationStage = getRelationPipeline(relationMap, locale);
-
-    // pipeline.push(...relationStage);
-
-    // const match = aggregate(schema.acl.read, {auth: req.user});
-
-    // pipeline.push({
-    //   $match: match
-    // });
-
-    // const resetStage = resetNonOverlappingPathsInRelationMap({
-    //   left: relationPaths,
-    //   right: propertyMap,
-    //   map: relationMap
-    // });
-
-    // if (resetStage) {
-    //   // Reset those relations which have been requested by acl rules.
-    //   pipeline.push(resetStage);
-    // }
-
-    // if (typeof filter == "object") {
-    //   pipeline.push({
-    //     $set: {
-    //       _id: {
-    //         $toString: `$_id`
-    //       }
-    //     }
-    //   });
-
-    //   pipeline.push({$match: filter});
-    // }
-
-    // const data = this.bds.children(bucketId);
-
-    // const seekingPipeline = [];
-
-    // if (skip) {
-    //   seekingPipeline.push({$skip: skip});
-    // }
-
-    // if (limit) {
-    //   seekingPipeline.push({$limit: limit});
-    // }
-
-    // if (paginate) {
-    //   pipeline.push(
-    //     {
-    //       $facet: {
-    //         meta: [{$count: "total"}],
-    //         data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
-    //       }
-    //     },
-    //     {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
-    //   );
-
-    //   const result = await data.aggregate(pipeline).next();
-
-    //   return result ? result : {meta: {total: 0}, data: []};
-    // } else {
-    //   return data.aggregate([...pipeline, ...seekingPipeline]).toArray();
-    // }
   }
 
   /**
@@ -275,52 +168,6 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     );
-
-    // const pipeline: object[] = [{$match: {_id: documentId}}, {$limit: 1}];
-
-    // const locale = findLocale(acceptedLanguage, await this.bs.getPreferences());
-
-    // if (localize) {
-    //   pipeline.unshift({
-    //     $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-    //   });
-    //   req.res.header("Content-language", locale.best || locale.fallback);
-    // }
-
-    // const propertyMap = extractPropertyMap(schema.acl.read).map(path => path.split("."));
-
-    // const relationMap = await createRelationMap({
-    //   paths: [...relationPaths, ...propertyMap],
-    //   properties: schema.properties,
-    //   resolve: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-    // });
-
-    // // ACL
-    // const relationStage = getRelationPipeline(relationMap, locale);
-
-    // pipeline.push(...relationStage);
-
-    // const match = aggregate(schema.acl.read, {auth: req.user});
-
-    // pipeline.push({
-    //   $match: match
-    // });
-
-    // const resetStage = resetNonOverlappingPathsInRelationMap({
-    //   left: relationPaths,
-    //   right: propertyMap,
-    //   map: relationMap
-    // });
-
-    // if (resetStage) {
-    //   // Reset those relations which have been requested by acl rules.
-    //   pipeline.push(resetStage);
-    // }
-
-    // return this.bds
-    //   .children(bucketId)
-    //   .aggregate(pipeline)
-    //   .next();
   }
 
   /**
@@ -386,56 +233,6 @@ export class BucketDataController {
     }
 
     return document;
-
-    // const schema = await this.bs.findOne({_id: bucketId});
-
-    // const bkt = this.bds.children(bucketId);
-
-    // const paths = extractPropertyMap(schema.acl.write).map(path => path.split("."));
-
-    // const relationMap = await createRelationMap({
-    //   properties: schema.properties,
-    //   paths,
-    //   resolve: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-    // });
-
-    // const relationStage = getRelationPipeline(relationMap, undefined);
-
-    // const fullDocument = await this.bds
-    //   .children(bucketId)
-    //   // unlike others, we have to run this pipeline against buckets in case the target
-    //   // collection is empty.
-    //   .collection("buckets")
-    //   .aggregate([
-    //     {$limit: 1},
-    //     {
-    //       $replaceWith: rawDocument
-    //     },
-    //     ...relationStage
-    //   ])
-    //   .next();
-
-    // const aclResult = run(schema.acl.write, {auth: req.user, document: fullDocument});
-
-    // if (!aclResult) {
-    //   throw new ForbiddenException("ACL rules has rejected this operation.");
-    // }
-
-    // const document = await bkt.insertOne(rawDocument);
-
-    // if (this.changeEmitter) {
-    //   this.changeEmitter.emitChange(
-    //     {
-    //       bucket: bucketId.toHexString(),
-    //       type: "insert"
-    //     },
-    //     document._id.toHexString(),
-    //     undefined,
-    //     document
-    //   );
-    // }
-
-    // return document;
   }
 
   /**
@@ -588,37 +385,6 @@ export class BucketDataController {
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
-
-    const bkt = this.bds.children(bucketId);
-
-    // const paths = extractPropertyMap(schema.acl.write).map(path => path.split("."));
-
-    // const relationMap = await createRelationMap({
-    //   properties: schema.properties,
-    //   paths,
-    //   resolve: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-    // });
-
-    // const relationStage = getRelationPipeline(relationMap, undefined);
-
-    // const deletedDocument = await bkt.findOne({_id: documentId});
-
-    // const fullDocument = await this.bds
-    //   .children(bucketId)
-    //   .aggregate([
-    //     {$limit: 1},
-    //     {
-    //       $replaceWith: deletedDocument
-    //     },
-    //     ...relationStage
-    //   ])
-    //   .next();
-
-    // const aclResult = run(schema.acl.write, {auth: req.user, document: fullDocument});
-
-    // if (!aclResult) {
-    //   throw new ForbiddenException("ACL rules has rejected this operation.");
-    // }
 
     const deletedDocument = await deleteDocument(
       schema,
