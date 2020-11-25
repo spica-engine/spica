@@ -10,11 +10,11 @@ ts_library(
     ]),
     module_name = "@spica-server/machinery",
     deps = [
-        "//packages/database",
         "//packages/core/schema",
+        "//packages/database",
         "@npm//@nestjs/common",
         "@npm//@types/json-schema",
+        "@npm//body-parser",
         "@npm//rxjs",
-        "@npm//body-parser"
     ],
 )
