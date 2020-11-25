@@ -34,7 +34,12 @@ export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
     }
 
     createCollection(name: string, options?: CollectionCreateOptions): Promise<Collection<any>> {
-      return this.db.createCollection(name, options);
+      return this.db.createCollection(name, options).catch(error => {
+        if (error.codeName == "NamespaceExists") {
+          return Promise.resolve(this.db.collection(name));
+        }
+        return Promise.reject(error);
+      });
     }
 
     // Insert
@@ -127,6 +132,12 @@ export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
               }
             });
           }
+        })
+        .catch(error => {
+          if (error.codeName == "NamespaceExists") {
+            return Promise.resolve();
+          }
+          return Promise.reject(error);
         });
     }
 
