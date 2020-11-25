@@ -1,38 +1,36 @@
-import {graphqlHTTP} from "express-graphql";
+import {Injectable, OnModuleInit, Optional, PipeTransform} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {Injectable, Optional, PipeTransform, OnModuleInit} from "@nestjs/common";
-import {ObjectID, ObjectId} from "@spica-server/database";
-import {BucketService, Bucket, BucketDocument} from "@spica-server/bucket/services";
-import {
-  GraphQLScalarType,
-  ValueNode,
-  GraphQLError,
-  GraphQLSchema,
-  GraphQLResolveInfo
-} from "graphql";
-
-import {makeExecutableSchema, mergeTypeDefs, mergeResolvers} from "graphql-tools";
-import {GuardService} from "@spica-server/passport";
+import {Action, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
-import {createActivity, ActivityService, Action} from "@spica-server/activity/services";
-import {createBucketDataActivity} from "../activity.resource";
-import {Validator, Schema} from "@spica-server/core/schema";
+import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {Schema, Validator} from "@spica-server/core/schema";
+import {ObjectID, ObjectId} from "@spica-server/database";
+import {GuardService} from "@spica-server/passport";
+import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
+import {graphqlHTTP} from "express-graphql";
 import {
-  getBucketName,
-  createSchema,
-  extractAggregationFromQuery,
-  getPatchedDocument,
-  getUpdateQuery,
-  aggregationsFromRequestedFields,
-  getProjectAggregation,
-  requestedFieldsFromInfo,
-  requestedFieldsFromExpression,
-  deepCopy
-} from "./schema";
+  GraphQLError,
+  GraphQLResolveInfo,
+  GraphQLScalarType,
+  GraphQLSchema,
+  ValueNode
+} from "graphql";
+import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools";
+import {createBucketDataActivity} from "../activity.resource";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
-import {createHistory, clearRelations} from "../utility";
-import {resourceFilterFunction} from "@spica-server/passport/guard/src/action.guard";
+import {applyPatch, deepCopy, getUpdateQueryForPatch} from "../patch";
+import {clearRelations, createHistory} from "../relation";
+import {
+  aggregationsFromRequestedFields,
+  createSchema,
+  extractAggregationFromQuery,
+  getBucketName,
+  getProjectAggregation,
+  requestedFieldsFromExpression,
+  requestedFieldsFromInfo,
+  SchemaError
+} from "./schema";
 
 interface FindResponse {
   meta: {total: number};
@@ -89,7 +87,7 @@ export class GraphqlController implements OnModuleInit {
         return value.toString();
       },
       parseLiteral(ast: ValueNode) {
-        let value = ast["value"];
+        const value = ast["value"];
         if (ObjectID.isValid(value)) {
           return new ObjectID(value);
         }
@@ -116,7 +114,7 @@ export class GraphqlController implements OnModuleInit {
 
   schema: GraphQLSchema;
 
-  errorFromLastSchemaGeneration: string;
+  schemaErrors: SchemaError[];
 
   constructor(
     private adapterHost: HttpAdapterHost,
@@ -127,21 +125,20 @@ export class GraphqlController implements OnModuleInit {
     @Optional() private activity: ActivityService,
     @Optional() private history: HistoryService
   ) {
-    this.bs.watchAll(true).subscribe(buckets => {
-      this.buckets = buckets;
+    this.bs.schemaChangeEmitter.subscribe(() => {
+      this.bs.find().then(buckets => {
+        this.schemaErrors = [];
+        this.buckets = buckets;
 
-      try {
-        this.schema = buckets.length ? this.getSchema(buckets) : this.defaultSchema;
-        this.errorFromLastSchemaGeneration = undefined;
-      } catch (error) {
-        this.schema = this.defaultSchema;
-        this.errorFromLastSchemaGeneration = error.message;
-      }
+        this.schema = buckets.length
+          ? this.getSchema(buckets, this.schemaErrors)
+          : this.defaultSchema;
+      });
     });
   }
 
   onModuleInit() {
-    let app = this.adapterHost.httpAdapter.getInstance();
+    const app = this.adapterHost.httpAdapter.getInstance();
 
     app.use(
       "/graphql",
@@ -152,9 +149,8 @@ export class GraphqlController implements OnModuleInit {
           resourceFilter: true
         });
 
-        if (this.errorFromLastSchemaGeneration) {
-          response.statusCode = 500;
-          response.statusMessage = this.errorFromLastSchemaGeneration;
+        if (this.schemaErrors.length) {
+          response.setHeader("Warnings", JSON.stringify(this.schemaErrors));
         }
 
         return {
@@ -172,11 +168,11 @@ export class GraphqlController implements OnModuleInit {
     );
   }
 
-  getSchema(buckets: Bucket[]): GraphQLSchema {
-    let typeDefs = buckets.map(bucket =>
-      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()))
+  getSchema(buckets: Bucket[], errors: SchemaError[]): GraphQLSchema {
+    const typeDefs = buckets.map(bucket =>
+      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()), errors)
     );
-    let resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
+    const resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
 
     return makeExecutableSchema({
       typeDefs: mergeTypeDefs(typeDefs),
@@ -185,8 +181,8 @@ export class GraphqlController implements OnModuleInit {
   }
 
   createResolver(bucket: Bucket, staticResolvers: object) {
-    let name = getBucketName(bucket._id);
-    let resolver = {
+    const name = getBucketName(bucket._id);
+    const resolver = {
       ...staticResolvers,
 
       Query: {
@@ -212,7 +208,7 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ): Promise<FindResponse> => {
-      let resourceFilterAggregation = await this.authenticate(
+      const resourceFilterAggregation = await this.authenticate(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
@@ -220,7 +216,7 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: true}
       );
 
-      let aggregation = [];
+      const aggregation = [];
 
       aggregation.push(resourceFilterAggregation);
       aggregation.push({$match: {_schedule: {$exists: schedule}}});
@@ -234,11 +230,11 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
-      let requestedFields = requestedFieldsFromExpression(matchExpression, []).concat(
+      const requestedFields = requestedFieldsFromExpression(matchExpression, []).concat(
         requestedFieldsFromInfo(info, "entries")
       );
 
-      let relationAndLocalization = await aggregationsFromRequestedFields(
+      const relationAndLocalization = await aggregationsFromRequestedFields(
         deepCopy(bucket),
         requestedFields,
         this.getLocale,
@@ -250,11 +246,11 @@ export class GraphqlController implements OnModuleInit {
       aggregation.push({$match: matchExpression});
 
       if (requestedFields.length) {
-        let project = getProjectAggregation(requestedFields);
+        const project = getProjectAggregation(requestedFields);
         aggregation.push(project);
       }
 
-      let subAggregation = [];
+      const subAggregation = [];
       if (sort && Object.keys(sort).length) {
         subAggregation.push({$sort: sort});
       }
@@ -275,12 +271,16 @@ export class GraphqlController implements OnModuleInit {
         {$unwind: "$meta"}
       );
 
-      return this.bds.find(bucket._id, aggregation).then(response => {
-        if (!response.length) {
-          return {meta: {total: 0}, entries: []};
-        }
-        return response[0] as FindResponse;
-      });
+      return this.bds
+        .children(bucket._id)
+        .aggregate<FindResponse>(aggregation)
+        .next()
+        .then(response => {
+          if (!response) {
+            return {meta: {total: 0}, entries: []};
+          }
+          return response;
+        });
     };
   }
 
@@ -299,10 +299,10 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      let aggregation = [];
+      const aggregation = [];
 
-      let requestedFields = requestedFieldsFromInfo(info);
-      let relationAndLocalization = await aggregationsFromRequestedFields(
+      const requestedFields = requestedFieldsFromInfo(info);
+      const relationAndLocalization = await aggregationsFromRequestedFields(
         deepCopy(bucket),
         requestedFields,
         this.getLocale,
@@ -313,12 +313,13 @@ export class GraphqlController implements OnModuleInit {
 
       aggregation.push({$match: {_id: documentId}});
 
-      let project = getProjectAggregation(requestedFields);
+      const project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => {
-        return documents;
-      });
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -339,16 +340,16 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      let insertResult = await this.bds.insertOne(bucket._id, input);
+      const insertResult = await this.bds.children(bucket._id).insertOne(input);
 
       if (this.activity) {
         const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
       }
 
-      let aggregation = [];
+      const aggregation = [];
 
-      let requestedFields = requestedFieldsFromInfo(info);
-      let relationAndLocalization = await aggregationsFromRequestedFields(
+      const requestedFields = requestedFieldsFromInfo(info);
+      const relationAndLocalization = await aggregationsFromRequestedFields(
         deepCopy(bucket),
         requestedFields,
         this.getLocale,
@@ -356,12 +357,15 @@ export class GraphqlController implements OnModuleInit {
       );
       aggregation.push(...relationAndLocalization);
 
-      aggregation.push({$match: {_id: insertResult.insertedId}});
+      aggregation.push({$match: {_id: insertResult._id}});
 
-      let project = getProjectAggregation(requestedFields);
+      const project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -382,14 +386,11 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      const {value: previousDocument} = await this.bds.replaceOne(
-        bucket._id,
-        {_id: documentId},
-        input,
-        {
+      const previousDocument = await this.bds
+        .children(bucket._id)
+        .findOneAndReplace({_id: documentId}, input, {
           returnOriginal: true
-        }
-      );
+        });
 
       const currentDocument = {...input, _id: documentId};
 
@@ -407,10 +408,10 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
-      let aggregation = [];
+      const aggregation = [];
 
-      let requestedFields = requestedFieldsFromInfo(info);
-      let relationAndLocalization = await aggregationsFromRequestedFields(
+      const requestedFields = requestedFieldsFromInfo(info);
+      const relationAndLocalization = await aggregationsFromRequestedFields(
         deepCopy(bucket),
         requestedFields,
         this.getLocale,
@@ -420,10 +421,13 @@ export class GraphqlController implements OnModuleInit {
 
       aggregation.push({$match: {_id: documentId}});
 
-      let project = getProjectAggregation(requestedFields);
+      const project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -442,26 +446,19 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      let previousDocument = await this.bds.findOne(bucket._id, {_id: documentId});
+      const previousDocument = await this.bds.children(bucket._id).findOne({_id: documentId});
 
-      let patchedDocument = getPatchedDocument(previousDocument, input);
+      const patchedDocument = applyPatch(previousDocument, input);
 
       await this.validateInput(bucket._id, patchedDocument).catch(error =>
         throwError(error.message, 400)
       );
 
-      let updateQuery = getUpdateQuery(previousDocument, patchedDocument);
+      const updateQuery = getUpdateQueryForPatch(input);
 
-      if (!Object.keys(updateQuery).length) {
-        throw Error("There is no difference between previous and current documents.");
-      }
-
-      let currentDocument = await this.bds.findOneAndUpdate(
-        bucket._id,
-        {_id: documentId},
-        updateQuery,
-        {returnOriginal: false}
-      );
+      const currentDocument = await this.bds
+        .children(bucket._id)
+        .findOneAndUpdate({_id: documentId}, updateQuery, {returnOriginal: false});
 
       if (this.history) {
         const promise = createHistory(
@@ -477,10 +474,10 @@ export class GraphqlController implements OnModuleInit {
         const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
       }
 
-      let aggregation = [];
+      const aggregation = [];
 
-      let requestedFields = requestedFieldsFromInfo(info);
-      let relationAndLocalization = await aggregationsFromRequestedFields(
+      const requestedFields = requestedFieldsFromInfo(info);
+      const relationAndLocalization = await aggregationsFromRequestedFields(
         deepCopy(bucket),
         requestedFields,
         this.getLocale,
@@ -490,10 +487,13 @@ export class GraphqlController implements OnModuleInit {
 
       aggregation.push({$match: {_id: documentId}});
 
-      let project = getProjectAggregation(requestedFields);
+      const project = getProjectAggregation(requestedFields);
       aggregation.push(project);
 
-      return this.bds.find(bucket._id, aggregation).then(([documents]) => documents);
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -514,12 +514,12 @@ export class GraphqlController implements OnModuleInit {
 
       await clearRelations(this.bs, bucket._id, documentId);
       if (this.history) {
-        const promise = this.history.deleteMany({
+        await this.history.deleteMany({
           document_id: documentId
         });
       }
 
-      let result = await this.bds.deleteOne(bucket._id, {_id: documentId}).then(res => res.result);
+      await this.bds.children(bucket._id).deleteOne({_id: documentId});
 
       if (this.activity) {
         const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
@@ -559,7 +559,7 @@ export class GraphqlController implements OnModuleInit {
     let pipe: any = this.validatorPipes.get(bucketId);
 
     if (!pipe) {
-      let validatorMixin = Schema.validate(bucketId.toHexString());
+      const validatorMixin = Schema.validate(bucketId.toHexString());
       pipe = new validatorMixin(this.validator);
       this.validatorPipes.set(bucketId, pipe);
     }

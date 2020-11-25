@@ -54,11 +54,6 @@
       </mat-error>
     </mat-form-field>
     <div class="advanced-settings">
-      <mat-label>Advanced Settings</mat-label>
-      <mat-divider *ngIf="field != 'object'"></mat-divider>
-      <div *ngIf="!parentSchema.properties[propertyKey].value.metaPlacer && field != 'date'">
-        There is no specific settings for this input type {{ placer }}
-      </div>
       <span
         *ngIf="field != 'object'"
         class="input-placer-area"
@@ -72,14 +67,14 @@
         *ngIf="
           field == 'date' &&
           predefinedDefaults &&
-          predefinedDefaults.hasOwnProperty(propertyKv.value.type)
+          predefinedDefaults.hasOwnProperty(fieldConfig.type)
         "
       >
         <mat-form-field *ngIf="predefinedDefaults">
           <mat-label>Default value</mat-label>
           <mat-select [(ngModel)]="propertyKv.default">
             <mat-option>None</mat-option>
-            <ng-container *ngFor="let predef of predefinedDefaults[propertyKv.value.type]">
+            <ng-container *ngFor="let predef of predefinedDefaults[fieldConfig.type]">
               <mat-option [value]="predef.keyword">
                 {{ predef.keyword }}
               </mat-option>
@@ -90,7 +85,7 @@
       <mat-divider></mat-divider>
       <div class="general-settings" *ngIf="parentSchema.hasOwnProperty('primary')">
         <div
-          *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
+          *ngIf="basicPropertyTypes.includes(fieldConfig.type)"
           matTooltip="To change primary property select another property as primary"
           [matTooltipDisabled]="parentSchema.primary != propertyKey"
         >
@@ -103,13 +98,13 @@
             Primary field
           </mat-checkbox>
         </div>
-        <div *ngIf="visibleTypes.includes(propertyKv.value.type)">
+        <div *ngIf="visibleTypes.includes(fieldConfig.type)">
           <mat-checkbox [(ngModel)]="propertyKv.options.visible">
             Visible on list
           </mat-checkbox>
         </div>
         <div
-          *ngIf="translatableTypes.includes(propertyKv.value.type)"
+          *ngIf="translatableTypes.includes(fieldConfig.type)"
           matTooltip="You can't change this property after creation."
         >
           <mat-checkbox
@@ -126,7 +121,7 @@
         </div>
       </div>
 
-      <div *ngIf="propertyKv.value.type != 'boolean'">
+      <div *ngIf="fieldConfig.type != 'boolean'">
         <mat-checkbox
           [ngModel]="parentSchema.required && parentSchema.required.indexOf(propertyKey) > -1"
           (ngModelChange)="toggleRequired(propertyKey, $event)"
@@ -136,7 +131,14 @@
       </div>
     </div>
     <button mat-button *ngIf="parentSchema.properties[propertyKey]" (click)="save()">
-      <mat-icon>add</mat-icon> Save
+      Save
+    </button>
+    <button
+      mat-button
+      *ngIf="parentSchema.properties[propertyKey]"
+      (click)="step = 0; field = null; propertyKey = ''"
+    >
+      Add Another Field
     </button>
   </div>
 

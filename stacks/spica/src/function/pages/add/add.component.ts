@@ -64,6 +64,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   $markers = new Subject<unknown[]>();
 
+  triggersEditMode = [true];
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
@@ -91,6 +93,7 @@ export class AddComponent implements OnInit, OnDestroy {
           this.isIndexPending = true;
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
+          this.function.triggers.map((trigger, index) => (this.triggersEditMode[index] = false));
           this.getDependencies();
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
@@ -118,6 +121,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   addTrigger() {
     this.function.triggers.push(emptyTrigger());
+    this.triggersEditMode[this.function.triggers.length - 1] = true;
   }
 
   deleteTrigger(i: number) {
@@ -136,7 +140,7 @@ export class AddComponent implements OnInit, OnDestroy {
   showExample(trigger: Trigger) {
     let code = this.functionService.getExample(trigger);
     this.dialog.open(CodeComponent, {
-      width: "700px",
+      width: "80%",
       data: {
         code: code
       }
@@ -242,13 +246,11 @@ export class AddComponent implements OnInit, OnDestroy {
 
   checkHandlers() {
     this.isHandlerDuplicated = false;
-    this.function.triggers.forEach(trigger => {
-      const duplicatedHandler = this.function.triggers.filter(
-        item => item.handler == trigger.handler
-      );
-      if (duplicatedHandler.length > 1) {
+    for (const trigger of this.function.triggers) {
+      if (this.function.triggers.filter(item => item.handler == trigger.handler).length > 1) {
         this.isHandlerDuplicated = true;
+        break;
       }
-    });
+    }
   }
 }

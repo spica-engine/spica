@@ -11,7 +11,9 @@ export class DocumentScheduler {
   constructor(database: MongoClient, private bds: BucketDataService, private bs: BucketService) {
     this.bs.find().then(buckets => {
       for (const bucket of buckets) {
-        this.bds.updateMany(bucket._id, {_schedule: {$lt: new Date()}}, {$unset: {_schedule: ""}});
+        this.bds
+          .children(bucket._id)
+          .updateMany({_schedule: {$lt: new Date()}}, {$unset: {_schedule: ""}});
       }
     });
 
@@ -36,7 +38,8 @@ export class DocumentScheduler {
   schedule(bucket: ObjectId, document: ObjectId, time: Date) {
     const key = `${bucket}_${document}`;
 
-    const publish = () => this.bds.updateOne(bucket, {_id: document}, {$unset: {_schedule: ""}});
+    const publish = () =>
+      this.bds.children(bucket).updateOne({_id: document}, {$unset: {_schedule: ""}});
 
     if (time.getTime() <= Date.now() + 1) {
       return publish();

@@ -15,8 +15,8 @@
         <mat-list-item
           disableRipple
           *ngFor="let category of  categories$ | async"
-          [class.active]="(currentCategory | async) == category.category"
-          (click)="currentCategory.next(category.category)"
+          [class.active]="(currentCategory | async) === category"
+          (click)="currentCategory.next(category)"
         >
           <mat-icon>{{ category.icon }}</mat-icon>
         </mat-list-item>
@@ -24,8 +24,38 @@
           <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
       </mat-nav-list>
-      <mat-nav-list>
-        <h4>{{ currentCategory | async }}</h4>
+      <mat-nav-list *ngIf="currentCategory | async as currentCategory">
+        <h4>
+          {{ currentCategory.category }}
+          <div *ngIf="currentCategory.children.items">
+            <button
+              mat-icon-button
+              *ngIf="currentCategory.children.items.length == 1"
+              [routerLink]="currentCategory.children.items[0].path"
+              routerLinkActive="active"
+              canInteract="currentCategory.children.items[0].data?.action"
+              matTooltip="currentCategory.children.items[0].display"
+            >
+              <mat-icon>{{currentCategory.children.icon}}</mat-icon>
+            </button>
+            <div *ngIf="currentCategory.children.items.length > 1">
+              <button mat-icon-button [matMenuTriggerFor]="menu">
+                <mat-icon>{{currentCategory.children.icon}}</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button
+                  mat-menu-item
+                  *ngFor="let subCategory of currentCategory.children.items"
+                  [routerLink]="subCategory.path"
+                  routerLinkActive="active"
+                  canInteract="subCategory.data.action"
+                >
+                  {{subCategory.display}}
+                </button>
+              </mat-menu>
+            </div>
+          </div>
+        </h4>
         <mat-list-item
           *ngFor="let route of routes$ | async"
           [routerLink]="route.path"
@@ -35,17 +65,6 @@
           <mat-icon>{{ route.icon }}</mat-icon>
           {{ route.display }}
         </mat-list-item>
-        <div *ngIf="categories$ | async as contentCategory; ">
-          <mat-list-item
-            canInteract="bucket:create"
-            class="quick-link-add-bucket"
-            [routerLink]="['/buckets/add']"
-            *ngIf="(currentCategory | async) == contentCategory[1]?.category;"
-          >
-            <mat-icon>add</mat-icon>
-            Add New Bucket
-          </mat-list-item>
-        </div>
       </mat-nav-list>
     </section>
   </mat-sidenav>
