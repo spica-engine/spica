@@ -68,7 +68,6 @@ export class HomeLayoutComponent implements OnInit {
   ) {
     this.categories$ = this.routeService.routes.pipe(
       map(routes => {
-        console.log(routes);
         const categoryNames = Array.from(
           routes.reduce((prev, current) => {
             if (this._categories.has(current.category)) {
