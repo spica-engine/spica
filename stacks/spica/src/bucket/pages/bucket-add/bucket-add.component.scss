@@ -84,10 +84,6 @@
     }
   }
 
-  mat-card > mat-card-actions {
-    padding: 10px 20px !important;
-  }
-
   .input-defaults {
     width: 50%;
     margin-top: 20px;
@@ -106,7 +102,7 @@
   .bucket-settings {
     margin: 30px;
     margin-top: -85px;
-
+    padding: 16px 36px;
     mat-list {
       > span {
         display: flex;
@@ -127,22 +123,37 @@
       }
 
       h4[mat-subheader] {
+        mat-icon {
+          margin-right: 10px;
+        }
         mat-button-toggle-group {
-          margin-left: 40px;
+          margin-left: auto;
+        }
+      }
+
+      .code-editors {
+        display: flex;
+        gap: 10px;
+        div {
+          flex: 1;
+          b {
+            line-height: 2rem;
+            font-weight: 400;
+          }
+          code-editor {
+            min-height: 140px;
+            border-radius: 3px;
+          }
         }
       }
 
       mat-list-item {
         &:first-of-type {
-          mat-form-field {
-            margin-left: 10px;
-          }
-
           form {
             display: flex;
             flex-flow: row;
             align-items: center;
-            justify-content: space-around;
+            justify-content: space-between;
             mat-form-field:first-of-type {
               width: 35%;
             }
@@ -159,7 +170,6 @@
         }
 
         &.properties {
-          padding: 0px 20px;
           .property-meta {
             display: flex;
             justify-content: space-between;
@@ -223,9 +233,6 @@
     ::ng-deep mat-card-content {
       margin-bottom: 0px;
       mat-list {
-        > div:nth-child(2) {
-          padding: 0px 20px !important;
-        }
         mat-list-item {
           height: auto;
           padding-top: 34px;
@@ -270,7 +277,6 @@
 
     .remove-history {
       margin: 50px 0px;
-      padding: 0px 20px;
       display: block;
       button {
         float: right;
@@ -284,7 +290,6 @@
 
   .toggles {
     width: 200px;
-    padding: 0px 10px;
 
     div {
       display: flex;
