@@ -195,12 +195,12 @@
 
   .sidecar-log-view {
     position: fixed;
-    top: 0px;
+    top: 64px;
     right: 0px;
     width: 450px;
-    height: 100%;
-    border-left: 1px solid #eeefee;
-    background: #fafafa;
+    height: calc(100% - 64px);
+    border-left: 1px solid rgba(var(--foreground-divider-rgb), 0.05);
+    background: var(--background-background);
     ::ng-deep {
       mat-form-field {
         margin: 0px !important;
