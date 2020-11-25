@@ -37,7 +37,7 @@
               [routerLink]="currentCategory.children.items[0].path"
               routerLinkActive="active"
               canInteract="currentCategory.children.items[0].data?.action"
-              matTooltip="{{currentCategory.children.items[0].display}}"
+              matTooltip="currentCategory.children.items[0].display"
             >
               <mat-icon>{{currentCategory.children.icon}}</mat-icon>
             </button>

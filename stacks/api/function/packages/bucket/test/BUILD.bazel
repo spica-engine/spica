@@ -13,6 +13,8 @@ ts_library(
         "@npm//@types/jasmine",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
+        "@npm//rxjs",
+        "@npm//ws",
     ],
 )
 

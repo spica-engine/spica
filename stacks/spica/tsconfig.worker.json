@@ -9,6 +9,7 @@
     "types": []
   },
   "include": [
-    "src/**/*.worker.ts"
+    "src/**/*.worker.ts",
+    "packages/**/*.worker.ts"
   ]
 }
