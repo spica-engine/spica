@@ -41,8 +41,15 @@ function visitUnary(node) {
 }
 
 function visitUnaryNot(node) {
-  return () => {
-    return {$not: visit(node.member)};
+  if (node.member.type == "select" || node.member.type == "identifier") {
+    throw new TypeError(
+      `unary operator 'not' does not support "${node.member.type}".\nDid you mean to wrap your expression with brackets?\n!document.title=="test" -> !(document.title=="test")`
+    );
+  }
+  return ctx => {
+    // $not is not accepted as a top level operator
+    // see: https://jira.mongodb.org/browse/SERVER-10708
+    return {$nor: [visit(node.member)(ctx)]};
   };
 }
 
