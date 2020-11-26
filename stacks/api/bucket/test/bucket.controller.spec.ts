@@ -81,8 +81,8 @@ describe("BucketController", () => {
       const defaults = response.body;
       expect(defaults.length).toBe(2);
       expect(defaults).toEqual([
-        {keyword: ":created_at", type: "date"},
-        {keyword: ":updated_at", type: "date"}
+        {match: ":created_at", type: "date"},
+        {match: ":updated_at", type: "date"}
       ]);
     });
 
@@ -252,7 +252,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".title should NOT be shorter than 4 characters",
+          ".title should NOT have fewer than 4 items",
           "validation failed"
         ]);
       });
@@ -262,7 +262,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".title should NOT be longer than 100 characters",
+          ".title should NOT have more than 100 items",
           "validation failed"
         ]);
       });
@@ -274,7 +274,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".description should NOT be shorter than 5 characters",
+          ".description should NOT have fewer than 5 items",
           "validation failed"
         ]);
       });
@@ -284,7 +284,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".description should NOT be longer than 250 characters",
+          ".description should NOT have more than 250 items",
           "validation failed"
         ]);
       });
@@ -345,7 +345,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".required[1] should be string",
+          ".required.1 should be string",
           "validation failed"
         ]);
       });
@@ -387,7 +387,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].type should be string",
+          ".properties.title.type should be equal to one of the allowed values",
           "validation failed"
         ]);
       });
@@ -397,17 +397,17 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].type should be equal to one of the allowed values",
+          ".properties.title.type should be equal to one of the allowed values",
           "validation failed"
         ]);
       });
 
-      it("should show error about title title", async () => {
+      it("should show error about title", async () => {
         bucket.properties.title.title = 333;
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].title should be string",
+          ".properties.title.title should be string",
           "validation failed"
         ]);
       });
@@ -417,7 +417,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].description should be string",
+          ".properties.title.description should be string",
           "validation failed"
         ]);
       });
@@ -427,7 +427,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].options should be object",
+          ".properties.title.options should be object",
           "validation failed"
         ]);
       });
@@ -437,7 +437,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].options.visible should be boolean",
+          ".properties.title.options.visible should be boolean",
           "validation failed"
         ]);
       });
@@ -447,7 +447,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].options.translate should be boolean",
+          ".properties.title.options.translate should be boolean",
           "validation failed"
         ]);
       });
@@ -457,7 +457,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].options.history should be boolean",
+          ".properties.title.options.history should be boolean",
           "validation failed"
         ]);
       });
@@ -467,7 +467,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].options.position should be string",
+          ".properties.title.options.position should be string",
           "validation failed"
         ]);
       });
@@ -477,7 +477,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['title'].options.position should be equal to one of the allowed values",
+          ".properties.title.options.position should be equal to one of the allowed values",
           "validation failed"
         ]);
       });
@@ -493,7 +493,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['books'] should have required property '.bucketId'",
+          ".properties.books should have required property 'bucketId'",
           "validation failed"
         ]);
       });
@@ -507,7 +507,7 @@ describe("BucketController", () => {
         const response = await req.post("/bucket", bucket);
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
-          ".properties['books'] should have required property '.relationType'",
+          ".properties.books should have required property 'relationType'",
           "validation failed"
         ]);
       });

@@ -13,19 +13,19 @@ ts_library(
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "@npm//@types/json-schema",
+        "@npm//@types/node",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
         "@npm//rxjs",
         "@npm//ws",
-        "@npm//@types/node"
     ],
 )
 
 ROLLUP_DEPS = [
     ":bucket",
-    "@npm//rollup-plugin-commonjs",
-    "@npm//rollup-plugin-node-resolve",
     "@npm//@rollup/plugin-json",
+    "@npm//@rollup/plugin-commonjs",
+    "@npm//@rollup/plugin-node-resolve",
 ]
 
 rollup_bundle(

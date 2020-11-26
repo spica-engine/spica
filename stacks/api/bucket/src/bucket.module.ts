@@ -57,8 +57,8 @@ export class BucketModule {
           provide: BucketSchemaResolver,
           useFactory: provideBucketSchemaResolver,
           inject: [Validator, BucketService]
-        }
-        // GraphqlController
+        },
+        GraphqlController
       ],
       exports: [BucketDataService, ServicesModule]
     };

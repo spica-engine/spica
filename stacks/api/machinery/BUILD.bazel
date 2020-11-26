@@ -13,6 +13,7 @@ ts_library(
         "//packages/core/schema",
         "//packages/database",
         "@npm//@nestjs/common",
+        "@npm//@types/body-parser",
         "@npm//@types/json-schema",
         "@npm//body-parser",
         "@npm//rxjs",
