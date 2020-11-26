@@ -1,4 +1,4 @@
-import {ChangeKind, diff} from "./differ";
+import {ChangeKind, diff} from "../src/differ";
 
 describe("differ", () => {
   it("should return no difference", () => {
