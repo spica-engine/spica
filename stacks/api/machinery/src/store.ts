@@ -62,7 +62,7 @@ class Store<SpecType = unknown, StatusType = unknown> {
         } else if (type == "boolean" || type == "string" || type == "number" || type == "bigint") {
           set[key] = value;
         } else if (Array.isArray(value)) {
-          throw new Error("TODO: handle arrays");
+          set[key] = value;
         } else if (typeof value == "object") {
           visit(value, key);
         }
