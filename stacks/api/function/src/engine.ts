@@ -8,12 +8,13 @@ import {JSONSchema7} from "json-schema";
 import * as path from "path";
 import * as rimraf from "rimraf";
 import {Observable, Subject} from "rxjs";
-import {bufferTime, takeUntil} from "rxjs/operators";
 import * as util from "util";
-import {ChangeKind, FunctionService, TargetChange} from "./function.service";
+import {FunctionService} from "./function.service";
+import {ChangeKind, TargetChange} from "./change";
 import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
+import {createTargetChanges} from "./change";
 
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
@@ -43,31 +44,29 @@ export class FunctionEngine implements OnModuleDestroy {
     if (schema1) {
       this.schemas.set(schema1.name, schema1.schema);
     }
-    this.fs
-      .targets()
-      .pipe(
-        bufferTime(1),
-        takeUntil(this.dispose)
-      )
-      .subscribe(changes => {
-        this.categorizeChanges(changes);
-      });
+
+    this.fs.find().then(fns => {
+      let targetChanges: TargetChange[] = [];
+      for (const fn of fns) {
+        let initialChanges = createTargetChanges(fn, ChangeKind.Added);
+        targetChanges.push(...initialChanges);
+      }
+      this.categorizeChanges(targetChanges);
+    });
   }
 
   onModuleDestroy() {
     this.dispose.next();
   }
 
-  private categorizeChanges(changes: TargetChange[]) {
-    for (const [index, change] of changes.entries()) {
+  categorizeChanges(changes: TargetChange[]) {
+    for (const change of changes) {
       switch (change.kind) {
         case ChangeKind.Added:
           this.subscribe(change);
           break;
         case ChangeKind.Updated:
-          if (changes.findIndex(c => c.target.id == change.target.id) == index) {
-            this.unsubscribe(change);
-          }
+          this.unsubscribe(change);
           this.subscribe(change);
           break;
         case ChangeKind.Removed:

@@ -24,7 +24,10 @@
           <mat-icon>{{expanded ? 'chevron_left': 'chevron_right'}}</mat-icon>
         </mat-list-item>
       </mat-nav-list>
-      <mat-nav-list *ngIf="currentCategory | async as currentCategory">
+      <mat-nav-list
+        *ngIf="currentCategory | async as currentCategory"
+        [attr.category]="currentCategory.category.toLowerCase()"
+      >
         <h4>
           {{ currentCategory.category }}
           <div *ngIf="currentCategory.children.items">

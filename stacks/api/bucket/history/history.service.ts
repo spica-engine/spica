@@ -8,7 +8,7 @@ import {
   InsertOneWriteOpResult,
   ObjectId
 } from "@spica-server/database";
-import {ChangePaths, ChangeKind, diff} from "./differ";
+import {ChangePaths, ChangeKind, diff} from "@spica-server/core/differ";
 import {History} from "./interfaces";
 import {schemaDiff} from "./schema";
 
