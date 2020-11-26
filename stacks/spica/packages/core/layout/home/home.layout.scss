@@ -40,6 +40,12 @@
         display: flex;
         flex-flow: row;
         justify-content: stretch;
+        [category="buckets"] {
+          mat-list-item:last-of-type {
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+          }
+        }
         mat-nav-list:last-child {
           min-height: 100vh;
         }
