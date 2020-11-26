@@ -16,7 +16,10 @@ describe("FunctionController", () => {
       providers: [FunctionService]
     }).compile();
     functionService = module.get(FunctionService);
-    functionEngine = jasmine.createSpyObj<FunctionEngine>("engine", ["createFunction"]);
+    functionEngine = jasmine.createSpyObj<FunctionEngine>("engine", [
+      "createFunction",
+      "categorizeChanges"
+    ]);
     controller = new FunctionController(functionService, functionEngine, undefined, {
       root: "",
       timeout: 60
