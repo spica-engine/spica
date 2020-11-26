@@ -3,7 +3,7 @@ import * as docker from "dockerode";
 import {spin} from "../../console";
 import {projectName} from "../../validator";
 
-async function remove({args}: ActionParameters) {
+async function remove({args, options}: ActionParameters) {
   const {name} = args;
 
   const machine = new docker();
@@ -66,7 +66,7 @@ async function remove({args}: ActionParameters) {
     });
   }
 
-  if (!args.retainVolumes) {
+  if (!options.retainVolumes) {
     const foundVolumes = (await machine.listVolumes({
       filters: JSON.stringify({label: [`namespace=${name}`]})
     })).Volumes;
