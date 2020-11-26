@@ -57,7 +57,7 @@
       <span
         [inputPlacer]="schema.items"
         [disabled]="_disabled"
-        [name]="schema.$name + ' item ' + this._activeIndex.toString()"
+        [name]="schema.$name + _activeIndex.toString()"
         [(ngModel)]="_values[_activeIndex]"
         (ngModelChange)="arrayContainer.propagateChanges()"
         (click)="arrayContainer._onTouched()"

@@ -21,36 +21,38 @@ describe("Common#object-schema", () => {
     entries: jasmine.createSpy("entries").and.returnValue([])
   };
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatMenuModule,
-        MatIconModule,
-        MatCheckboxModule,
-        MatInputModule,
-        MatDialogModule,
-        FormsModule,
-        MatOptionModule,
-        MatSelectModule,
-        BrowserAnimationsModule
-      ],
-      declarations: [ObjectSchemaComponent, InputSchemaPlacer],
-      providers: [
-        {
-          provide: INPUT_SCHEMA,
-          useValue: {
-            type: "string"
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        imports: [
+          MatMenuModule,
+          MatIconModule,
+          MatCheckboxModule,
+          MatInputModule,
+          MatDialogModule,
+          FormsModule,
+          MatOptionModule,
+          MatSelectModule,
+          BrowserAnimationsModule
+        ],
+        declarations: [ObjectSchemaComponent, InputSchemaPlacer],
+        providers: [
+          {
+            provide: INPUT_SCHEMA,
+            useValue: {
+              type: "string"
+            }
+          },
+          {
+            provide: InputResolver,
+            useValue: inputResolver
           }
-        },
-        {
-          provide: InputResolver,
-          useValue: inputResolver
-        }
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(ObjectSchemaComponent);
-    component = fixture.componentInstance;
-  }));
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(ObjectSchemaComponent);
+      component = fixture.componentInstance;
+    })
+  );
 
   xit("Should be visible items", fakeAsync(() => {
     fixture.detectChanges();

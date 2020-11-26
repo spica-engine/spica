@@ -11,21 +11,23 @@ describe("Common#enum-schema", () => {
   let component: EnumSchemaComponent;
   let fixture: ComponentFixture<EnumSchemaComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      imports: [MatIconModule, FormsModule, InputModule, NoopAnimationsModule],
-      providers: [
-        {
-          provide: INPUT_SCHEMA,
-          useValue: {
-            type: "boolean"
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        imports: [MatIconModule, FormsModule, InputModule, NoopAnimationsModule],
+        providers: [
+          {
+            provide: INPUT_SCHEMA,
+            useValue: {
+              type: "boolean"
+            }
           }
-        }
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(EnumSchemaComponent);
-    component = fixture.componentInstance;
-  }));
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(EnumSchemaComponent);
+      component = fixture.componentInstance;
+    })
+  );
 
   it("add button should be working", () => {
     const mockChipListEvent = {input: {value: "test"}, value: "test"};

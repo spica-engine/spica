@@ -3,7 +3,7 @@ import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing"
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
-import {MatOptionModule} from "@angular/material/core";
+import {MatNativeDateModule, MatOptionModule} from "@angular/material/core";
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
@@ -53,6 +53,7 @@ describe("IndexComponent", () => {
         MatSelectModule,
         MatInputModule,
         MatDatepickerModule,
+        MatNativeDateModule,
         FormsModule,
         MatButtonModule,
         ScrollingModule,

@@ -3,7 +3,7 @@ import {WebhookLogViewComponent} from "./webhook-log-view.component";
 import {WebhookService} from "../../webhook.service";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
-import {MatOptionModule} from "@angular/material/core";
+import {MatNativeDateModule, MatOptionModule} from "@angular/material/core";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
@@ -44,6 +44,7 @@ describe("WebhookLogViewComponent", () => {
         MatInputModule,
         FormsModule,
         MatDatepickerModule,
+        MatNativeDateModule,
         MatButtonModule,
         ScrollingModule,
         MatProgressSpinnerModule,

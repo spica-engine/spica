@@ -32,15 +32,17 @@ describe("SnackbarComponent", () => {
   let component: TestComponent;
   let fixture: ComponentFixture<TestComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      imports: [TestModule, MatSnackBarModule, NoopAnimationsModule]
-    }).compileComponents();
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        imports: [TestModule, MatSnackBarModule, NoopAnimationsModule]
+      }).compileComponents();
 
-    fixture = TestBed.createComponent(TestComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  }));
+      fixture = TestBed.createComponent(TestComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+    })
+  );
 
   it("should render component with given data", () => {
     fixture.componentInstance.open();
