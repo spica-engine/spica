@@ -1,0 +1,36 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
+
+ts_library(
+    name = "differ",
+    srcs = [
+        "index.ts",
+        "src/differ.ts",
+    ],
+    module_name = "@spica-server/core/differ",
+    deps = [
+        "@npm//@types/deep-diff",
+        "@npm//@types/diff-match-patch",
+        "@npm//deep-diff",
+        "@npm//diff-match-patch",
+    ],
+)
+
+ts_library(
+    name = "test_lib",
+    testonly = True,
+    srcs = [
+        "test/differ.spec.ts",
+    ],
+    deps = [
+        ":differ",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "test",
+    srcs = [":test_lib"],
+)

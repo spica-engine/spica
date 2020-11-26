@@ -1,9 +1,6 @@
 import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {GraphQLResolveInfo} from "graphql";
-import {buildI18nAggregation, Locale} from "../locale";
-import {deepCopy} from "../patch";
-import {getRelationAggregation} from "../relation";
 
 enum Prefix {
   Type = "type",
@@ -319,39 +316,6 @@ function relationTypeValid(relationType: string) {
 
 export function getBucketName(uniqueField: string | ObjectId): string {
   return `Bucket_${uniqueField.toString()}`;
-}
-
-export async function aggregationsFromRequestedFields(
-  bucket: Bucket,
-  requestedFields: string[][],
-  localeFactory: (language?: string) => Promise<Locale>,
-  buckets: Bucket[],
-  language?: string
-) {
-  let aggregations = [];
-
-  let locale: Locale;
-  if (requestedFields.length) {
-    if (relationalFieldRequested(bucket.properties, requestedFields)) {
-      locale = await localeFactory(language);
-      let relationAggregation = await getRelationAggregation(
-        bucket.properties,
-        deepCopy(requestedFields),
-        locale,
-        (bucketId: string) => Promise.resolve(buckets.find(b => b._id.toString() == bucketId))
-      );
-      aggregations.push(...relationAggregation);
-    }
-
-    if (translatableFieldRequested(bucket.properties, requestedFields)) {
-      locale = locale ? locale : await localeFactory(language);
-      aggregations.push({
-        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-      });
-    }
-  }
-
-  return aggregations;
 }
 
 export function requestedFieldsFromInfo(info: GraphQLResolveInfo, rootKey?: string): string[][] {

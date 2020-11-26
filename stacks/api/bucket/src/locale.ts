@@ -1,7 +1,7 @@
 import {Bucket, BucketPreferences, BucketService} from "@spica-server/bucket/services";
 import {JSONSchema7} from "json-schema";
 import * as locale from "locale";
-import {ChangeKind, diff} from "../history/differ";
+import {ChangeKind, diff} from "@spica-server/core/differ";
 import {BucketDataService} from "./bucket-data.service";
 
 export function buildI18nAggregation(property: any, locale: string, fallback: string) {

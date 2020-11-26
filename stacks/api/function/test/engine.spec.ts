@@ -5,8 +5,9 @@ import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
 import {FunctionEngine} from "@spica-server/function/src/engine";
 import {from} from "rxjs";
 import {bufferCount, take} from "rxjs/operators";
-import {ChangeKind, FunctionService, TargetChange} from "../src/function.service";
+import {FunctionService} from "../src/function.service";
 import {INestApplication} from "@nestjs/common";
+import {TargetChange, ChangeKind} from "../src/change";
 
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
 
@@ -109,20 +110,13 @@ describe("Engine", () => {
     expect(subscribeSpy).toHaveBeenCalledTimes(0);
   });
 
-  it("should call unsubscribe for once then call subsribe for all triggers if ChangeKind is Updated", () => {
+  it("should call unsubscribe for once then call subscribe if ChangeKind is Updated", () => {
     let changes: TargetChange[] = [
       {
         kind: ChangeKind.Updated,
         target: {
           id: "test_id",
           handler: "test_handler"
-        }
-      },
-      {
-        kind: ChangeKind.Updated,
-        target: {
-          id: "test_id",
-          handler: "test_handler2"
         }
       }
     ];
@@ -132,8 +126,8 @@ describe("Engine", () => {
     expect(unsubscribeSpy).toHaveBeenCalledTimes(1);
     expect(unsubscribeSpy).toHaveBeenCalledWith(changes[0]);
 
-    expect(subscribeSpy).toHaveBeenCalledTimes(2);
-    expect(subscribeSpy.calls.all().map(call => call.args)).toEqual([[changes[0]], [changes[1]]]);
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(changes[0]);
   });
 
   it("should set the handler when a handler is disabled", () => {

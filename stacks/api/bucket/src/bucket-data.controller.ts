@@ -110,8 +110,7 @@ export class BucketDataController {
       {
         localize,
         paginate,
-        schedule,
-        type: "findAll"
+        schedule
       },
       {
         collection: (bucketId: string) => this.bds.children(bucketId),
@@ -148,19 +147,18 @@ export class BucketDataController {
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
 
-    return findDocuments(
+    const [document] = await findDocuments(
       schema,
       {
-        documentId,
         relationPaths,
         language: acceptedLanguage,
         limit: 1,
+        filter: {_id: documentId},
         req,
         projectMap: []
       },
       {
-        localize,
-        type: "findOne"
+        localize
       },
       {
         collection: (bucketId: string) => this.bds.children(bucketId),
@@ -168,6 +166,8 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     );
+
+    return document;
   }
 
   /**
@@ -262,8 +262,7 @@ export class BucketDataController {
 
     const previousDocument = await replaceDocument(
       schema,
-      document,
-      documentId,
+      {...document, _id: documentId},
       {req: req},
       {
         collection: bucketId => this.bds.children(bucketId),
@@ -336,8 +335,7 @@ export class BucketDataController {
 
     const currentDocument = await patchDocument(
       schema,
-      patchedDocument,
-      documentId,
+      {...patchedDocument, _id: documentId},
       patch,
       {req: req},
       {

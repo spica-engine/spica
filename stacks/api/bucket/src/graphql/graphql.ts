@@ -1,4 +1,10 @@
-import {Injectable, OnModuleInit, Optional, PipeTransform} from "@nestjs/common";
+import {
+  Injectable,
+  OnModuleInit,
+  Optional,
+  PipeTransform,
+  ForbiddenException
+} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {Action, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
@@ -246,7 +252,7 @@ export class GraphqlController implements OnModuleInit {
           filter: matchExpression,
           projectMap: responseFields
         },
-        {localize: true, paginate: true, schedule, type: "findAll"},
+        {localize: true, paginate: true, schedule},
         {
           collection: (bucketId: string) => this.bds.children(bucketId),
           preference: () => this.bs.getPreferences(),
@@ -273,16 +279,16 @@ export class GraphqlController implements OnModuleInit {
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      return findDocuments(
+      const [document] = await findDocuments(
         bucket,
         {
           language,
-          documentId,
           req: context,
           relationPaths: requestedFields,
-          projectMap: requestedFields
+          projectMap: requestedFields,
+          filter: {_id: new ObjectId(documentId)}
         },
-        {localize: true, paginate: false, type: "findOne"},
+        {localize: true, paginate: false},
         {
           collection: (bucketId: string) => this.bds.children(bucketId),
           preference: () => this.bs.getPreferences(),
@@ -290,6 +296,8 @@ export class GraphqlController implements OnModuleInit {
             Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
         }
       );
+
+      return document;
     };
   }
 
@@ -310,7 +318,7 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      const document = await insertDocument(
+      const insertedDocument = await insertDocument(
         bucket,
         input,
         {req: context},
@@ -318,34 +326,34 @@ export class GraphqlController implements OnModuleInit {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
-      )
-        // catch ACL errors
-        .catch(error => throwError(error, 400));
-      if (!document) {
+      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
+      if (!insertedDocument) {
         return;
       }
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.POST, bucket._id, document._id);
+        const _ = this.insertActivity(context, Action.POST, bucket._id, insertedDocument._id);
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      return findDocuments(
+      const [document] = await findDocuments(
         bucket,
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId: document._id,
+          filter: {_id: insertedDocument._id},
           req: context
         },
-        {type: "findOne", localize: true},
+        {localize: true},
         {
           collection: (bucketId: string) => this.bds.children(bucketId),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
+
+      return document;
     };
   }
 
@@ -368,14 +376,13 @@ export class GraphqlController implements OnModuleInit {
 
       const previousDocument = await replaceDocument(
         bucket,
-        input,
-        documentId,
+        {...input, _id: documentId},
         {req: context},
         {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
-      ).catch(error => throwError(error, 400));
+      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!previousDocument) {
         return;
@@ -399,21 +406,23 @@ export class GraphqlController implements OnModuleInit {
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      return findDocuments(
+      const [document] = await findDocuments(
         bucket,
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId,
+          filter: {_id: new ObjectId(documentId)},
           req: context
         },
-        {type: "findOne", localize: true},
+        {localize: true},
         {
           collection: (bucketId: string) => this.bds.children(bucketId),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
+
+      return document;
     };
   }
 
@@ -442,8 +451,7 @@ export class GraphqlController implements OnModuleInit {
 
       const currentDocument = await patchDocument(
         bucket,
-        patchedDocument,
-        documentId,
+        {...patchedDocument, _id: documentId},
         input,
         {req: context},
         {
@@ -451,9 +459,7 @@ export class GraphqlController implements OnModuleInit {
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         },
         {returnOriginal: false}
-      ).catch(error => {
-        throw error;
-      });
+      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!currentDocument) {
         return;
@@ -475,21 +481,23 @@ export class GraphqlController implements OnModuleInit {
 
       const requestedFields = requestedFieldsFromInfo(info);
 
-      return findDocuments(
+      const [document] = await findDocuments(
         bucket,
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          documentId,
+          filter: {_id: currentDocument._id},
           req: context
         },
-        {type: "findOne", localize: true},
+        {localize: true},
         {
           collection: (bucketId: string) => this.bds.children(bucketId),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
+
+      return document;
     };
   }
 
@@ -516,9 +524,7 @@ export class GraphqlController implements OnModuleInit {
           collection: bucketId => this.bds.children(bucketId),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
-      ).catch(error => {
-        throw error;
-      });
+      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
 
       if (!deletedDocument) {
         return;

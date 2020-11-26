@@ -14,7 +14,6 @@ export async function findDocuments(
   schema: Bucket,
   params: {
     resourceFilter?: object;
-    documentId?: ObjectId;
     filter?: object;
     language?: string;
     relationPaths: string[][];
@@ -28,7 +27,6 @@ export async function findDocuments(
     schedule?: boolean;
     localize?: boolean;
     paginate?: boolean;
-    type: "findOne" | "findAll";
   },
   factories: {
     collection: (id: string | ObjectId) => any;
@@ -43,11 +41,6 @@ export async function findDocuments(
   // resourcefilter
   if (Object.keys(params.resourceFilter || {}).length) {
     aggregations.push(params.resourceFilter);
-  }
-
-  // for findOne request
-  if (params.documentId) {
-    aggregations.push({$match: {_id: params.documentId}});
   }
 
   // scheduled contents
@@ -91,16 +84,7 @@ export async function findDocuments(
 
   // filter
   if (Object.keys(params.filter || {}).length) {
-    aggregations.push(
-      {
-        $set: {
-          _id: {
-            $toString: `$_id`
-          }
-        }
-      },
-      {$match: params.filter}
-    );
+    aggregations.push({$match: params.filter});
   }
 
   // for graphql responses
@@ -139,10 +123,6 @@ export async function findDocuments(
 
   const cursor = collection.aggregate([...aggregations, ...seekingPipeline]);
 
-  if (options.type == "findOne") {
-    return cursor.next();
-  }
-
   return cursor.toArray();
 }
 
@@ -169,7 +149,6 @@ export async function insertDocument(
     .next();
 
   const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
-
   if (!aclResult) {
     return Promise.reject(new ForbiddenException("ACL rules has rejected this operation."));
   }
@@ -180,7 +159,6 @@ export async function insertDocument(
 export async function replaceDocument(
   schema: Bucket,
   document: BucketDocument,
-  documentId: ObjectId,
   params: {
     req: any;
   },
@@ -208,6 +186,9 @@ export async function replaceDocument(
     return Promise.reject(new ForbiddenException("ACL rules has rejected this operation."));
   }
 
+  const documentId = document._id;
+  delete document._id;
+
   return collection.findOneAndReplace({_id: documentId}, document, {
     returnOriginal: options.returnOriginal
   });
@@ -216,7 +197,6 @@ export async function replaceDocument(
 export async function patchDocument(
   schema: Bucket,
   document: BucketDocument,
-  documentId: ObjectId,
   patch: any,
   params: {
     req: any;
@@ -242,6 +222,9 @@ export async function patchDocument(
   }
 
   const updateQuery = getUpdateQueryForPatch(patch);
+
+  const documentId = document._id;
+  delete document._id;
 
   return collection.findOneAndUpdate({_id: documentId}, updateQuery, {
     returnOriginal: options.returnOriginal
