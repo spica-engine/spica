@@ -27,18 +27,18 @@
 
 :host {
   app-header {
-    margin-bottom: 250px;
     .headline {
       align-items: center !important;
       max-width: 80%;
       margin-left: 10%;
-      text-align: center;
       > div {
         &:first-of-type {
+          padding-right: 180px;
           h1 {
-            margin-top: 200px;
-            font-size: 4.5rem;
-            font-weight: 100;
+            margin-top: 160px;
+            font-size: 2.5rem;
+            line-height: 3.5rem;
+            font-weight: 400;
           }
           p {
             font-weight: 200;
@@ -54,7 +54,7 @@
                 padding-top: 4px;
                 padding-bottom: 4px;
                 background-color: #15bde8;
-                border-radius: 15px;
+                border-radius: 50px;
               }
             }
           }
@@ -83,40 +83,29 @@
     }
 
     .modules {
+      margin-top: -150px;
       div {
         position: relative;
         width: 300px;
-        margin-top: 140px;
-        font-size: 1.25rem;
+        margin-top: 0px;
+        font-size: 1rem;
+        text-align: center;
         cursor: pointer;
         &.active {
-          color: #15bde8;
-          &:after {
-            background: #15bde8;
-          }
-        }
-        &:after {
-          content: "";
-          position: absolute;
-          left: calc(50% - 12px);
-          top: 40px;
-          width: 14px;
-          height: 14px;
-          background: #fff;
-          border-radius: 15px;
+          color: #7adff9;
         }
       }
     }
     .images {
-      margin: 80px auto 0px;
-      width: 80%;
+      margin: 20px auto;
+      width: 100%;
       position: relative;
       text-align: left;
       div {
         position: relative;
         top: 0px;
         width: 400%;
-        transition: all 0.4s cubic-bezier(0.02, 0.48, 0.37, 0.99);
+        transition: all .4s cubic-bezier(0.02, 0.48, 0.37, 0.99);
         display: flex;
         justify-content: space-around;
         margin-bottom: -35%;
@@ -124,20 +113,22 @@
           cursor: pointer;
           height: intrinsic;
           width: 25%;
-          border-radius: 15px;
+          border-radius: 10px;
           margin: 0px;
+          opacity: 0;
           box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
-          transition: all 0.4s cubic-bezier(0.02, 0.48, 0.37, 0.99);
-          transform: scale(0.75);
+          transition: all .4s cubic-bezier(0.02, 0.48, 0.37, 0.99);
+          transform: scale(0.5);
           &.active {
             transform: unset;
+            opacity: 1;
           }
         }
       }
     }
 
     .wave {
-      margin-bottom: -1px;
+      margin-top: -200px;
       ::ng-deep svg {
         display: block;
         fill: white;

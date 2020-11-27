@@ -5,14 +5,17 @@
     fxLayoutAlign="space-between flex-start"
     ngClass.gt-md="desktop"
   >
-    <div fxFlex="100">
+    <div fxFlex="50">
       <h1>
-        The first open source <br />
-        backend development engine!
+        Build backend with a <br>
+        backend development engine
       </h1>
+      <p>
+        Tripple the backend development speed, access to function libraries and forget managing infrastructure. Spica gives you a chance to build a fully flexible backend with low code.
+      </p>
       <div
         fxLayout="row"
-        fxLayoutAlign="center center"
+        fxLayoutAlign="left center"
         fxLayout.lt-sm="column"
         class="button-group"
       >
@@ -39,15 +42,17 @@
           <a mat-flat-button href="/calendar">Book a free call</a>
         </div>
       </div>
-      <div fxLayout="row" fxLayoutAlign="center" class="modules">
+    </div>
+    <div fxFlex="50">
+      <div fxLayout="row" fxLayoutAlign="right center" class="modules">
         <div (click)="slideIndex = 0" [class.active]="slideIndex == 0">Data Management</div>
         <div (click)="slideIndex = 1" [class.active]="slideIndex == 1">
-          Data Model Customization
+          GraphQL / Rest API
         </div>
         <div (click)="slideIndex = 2" [class.active]="slideIndex == 2">
-          Flexibility & Extendibility
+          Cloud Functions
         </div>
-        <div (click)="slideIndex = 3" [class.active]="slideIndex == 3">Access Management</div>
+        <div (click)="slideIndex = 3" [class.active]="slideIndex == 3">Identity Management</div>
       </div>
       <div class="images">
         <div [style.transform]="'translateX(' + -1 * slideIndex * 25 + '%)'">

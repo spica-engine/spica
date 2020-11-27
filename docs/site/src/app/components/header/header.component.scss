@@ -29,8 +29,9 @@
 :host {
   background-image: url("../../../assets/images/background.svg");
   background-size: cover;
-  min-height: 850px;
-  display: flex;
+  min-height: 650px;
+  margin-bottom: 100px;
+  display: block;
   flex-flow: column;
   justify-content: space-between;
   nav {
