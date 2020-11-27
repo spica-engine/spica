@@ -4,7 +4,8 @@ import {
   extractAggregationFromQuery,
   getProjectAggregation,
   requestedFieldsFromExpression,
-  requestedFieldsFromInfo
+  requestedFieldsFromInfo,
+  validateBuckets
 } from "../../src/graphql/schema";
 
 export function format(text: string) {
@@ -12,10 +13,139 @@ export function format(text: string) {
 }
 
 describe("Schema", () => {
+  describe("ValidateBuckets", () => {
+    let bucket;
+    beforeEach(() => {
+      bucket = {
+        _id: "id",
+        properties: {}
+      };
+    });
+    describe("errors", () => {
+      it("should replace name of field, convert type of field to string, remove it from requireds, create warning for invalid name specification", () => {
+        bucket.properties = {
+          "123invalid,name?*.": {
+            type: "object"
+          }
+        };
+        bucket.required = ["123invalid,name?*."];
+
+        const {warnings, buckets} = validateBuckets([bucket]);
+
+        expect(buckets).toEqual([
+          {
+            _id: "id",
+            properties: {
+              _123invalid_name___: {
+                type: "string"
+              }
+            },
+            required: []
+          }
+        ] as any);
+
+        expect(warnings).toEqual([
+          {
+            target: "Bucket_id.123invalid,name?*.",
+            reason:
+              "Name specification must start with an alphabetic character and can not include any non-letter character."
+          }
+        ]);
+      });
+
+      it("should remove enum option, create warning for invalid enum values", () => {
+        bucket.properties = {
+          shapes: {
+            type: "string",
+            enum: ["2D", "3D"]
+          }
+        };
+
+        const {warnings, buckets} = validateBuckets([bucket]);
+
+        expect(buckets).toEqual([
+          {
+            _id: "id",
+            properties: {
+              shapes: {
+                type: "string"
+              }
+            }
+          }
+        ] as any);
+        expect(warnings).toEqual([
+          {
+            target: "Bucket_id.shapes",
+            reason:
+              "Enum values must start with an alphabetic character and can not include any non-letter character."
+          }
+        ]);
+      });
+
+      it("should convert type of the field to string, create warning for invalid relation definition", () => {
+        bucket.properties = {
+          books: {
+            type: "relation",
+            bucketId: "non_exist_bucket_id"
+          }
+        };
+
+        const {warnings, buckets} = validateBuckets([bucket]);
+
+        expect(buckets).toEqual([
+          {
+            _id: "id",
+            properties: {
+              books: {
+                type: "string"
+              }
+            }
+          }
+        ] as any);
+        expect(warnings).toEqual([
+          {
+            target: "Bucket_id.books",
+            reason: "Relation type 'undefined' is invalid."
+          },
+          {
+            target: "Bucket_id.books",
+            reason: "Related bucket 'non_exist_bucket_id' does not exist."
+          }
+        ]);
+      });
+
+      it("should convert type of the field to String, create warning for non-exist types", () => {
+        bucket.properties = {
+          average: {
+            type: "float"
+          }
+        };
+
+        const {warnings, buckets} = validateBuckets([bucket]);
+
+        expect(buckets).toEqual([
+          {
+            _id: "id",
+            properties: {
+              average: {
+                type: "string"
+              }
+            }
+          }
+        ] as any);
+        expect(warnings).toEqual([
+          {
+            target: "Bucket_id.average",
+            reason: "Type 'float' is invalid type."
+          }
+        ]);
+      });
+    });
+  });
   describe("CreateSchema", () => {
     let bucket;
 
-    let staticTypes = `
+    const staticTypes = `
     scalar Date
 
     scalar JSON
@@ -37,7 +167,7 @@ describe("Schema", () => {
     }
     `;
 
-    let commonDefinitions = `
+    const commonDefinitions = `
     type Bucket_idFindResponse{
       meta: Meta
       data: [Bucket_id]
@@ -72,7 +202,7 @@ describe("Schema", () => {
 
     it("should create schema for bucket", () => {
       bucket.required = ["title"];
-      let schema = createSchema(bucket, staticTypes, [], []);
+      const schema = createSchema(bucket, staticTypes, []);
 
       expect(format(schema)).toEqual(
         format(
@@ -108,7 +238,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", [], []);
+      const schema = createSchema(bucket, "", []);
       expect(format(schema)).toEqual(
         format(
           `
@@ -149,7 +279,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", [], []);
+      const schema = createSchema(bucket, "", []);
 
       expect(format(schema)).toEqual(
         format(
@@ -190,7 +320,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", ["otherid", "anotherid"], []);
+      const schema = createSchema(bucket, "", ["otherid", "anotherid"]);
 
       expect(format(schema)).toEqual(
         format(`
@@ -241,7 +371,7 @@ describe("Schema", () => {
         }
       };
 
-      let schema = createSchema(bucket, "", [], []);
+      const schema = createSchema(bucket, "", []);
 
       expect(format(schema)).toEqual(
         format(`
@@ -270,140 +400,6 @@ describe("Schema", () => {
       `)
       );
     });
-
-    describe("errors", () => {
-      it("should replace name of field, convert type of value to String and push errors", () => {
-        bucket.properties = {
-          "123invalid,name?*.": {
-            type: "object"
-          }
-        };
-
-        let errors = [];
-        let schema = createSchema(bucket, "", [], errors);
-        expect(format(schema)).toEqual(
-          format(`
-          ${commonDefinitions}
-  
-          type Bucket_id{
-            _id: ObjectID
-            _123invalid_name___: String
-          }
-  
-          input Bucket_idInput{
-            _123invalid_name___: String
-          }
-        `)
-        );
-        expect(errors).toEqual([
-          {
-            target: "Bucket_id.123invalid,name?*.",
-            reason:
-              "Name specification must start with an alphabetic character and can not include any non-letter character."
-          }
-        ]);
-      });
-
-      it("should convert enum type definition to String and push errors if enum includes invalid value", () => {
-        bucket.properties = {
-          shapes: {
-            type: "string",
-            enum: ["2D", "3D"]
-          }
-        };
-
-        let errors = [];
-        let schema = createSchema(bucket, "", [], errors);
-        expect(format(schema)).toEqual(
-          format(`
-          ${commonDefinitions}
-  
-          type Bucket_id{
-            _id: ObjectID
-            shapes: String
-          }
-  
-          input Bucket_idInput{
-            shapes: String
-          }
-        `)
-        );
-        expect(errors).toEqual([
-          {
-            target: "Bucket_id.shapes",
-            reason:
-              "Enums must start with an alphabetic character and can not include any non-letter character."
-          }
-        ]);
-      });
-
-      it("should convert relation type definition to String and push errors if related bucket does not exist", () => {
-        bucket.properties = {
-          books: {
-            type: "relation",
-            bucketId: "non_exist_bucket_id"
-          }
-        };
-
-        let errors = [];
-        let schema = createSchema(bucket, "", [], errors);
-        expect(format(schema)).toEqual(
-          format(`
-          ${commonDefinitions}
-  
-          type Bucket_id{
-            _id: ObjectID
-            books: String
-          }
-  
-          input Bucket_idInput{
-            books: String
-          }
-        `)
-        );
-        expect(errors).toEqual([
-          {
-            target: "Bucket_id.books",
-            reason: "Related bucket 'non_exist_bucket_id' does not exist."
-          },
-          {
-            target: "Bucket_id.books",
-            reason: "Relation type 'undefined' is invalid type."
-          }
-        ]);
-      });
-
-      it("should make type definition to String if type is invalid", () => {
-        bucket.properties = {
-          average: {
-            type: "float"
-          }
-        };
-
-        let errors = [];
-        let schema = createSchema(bucket, "", [], errors);
-        expect(format(schema)).toEqual(
-          format(`
-          ${commonDefinitions}
-  
-          type Bucket_id{
-            _id: ObjectID
-            average: String
-          }
-  
-          input Bucket_idInput{
-            average: String
-          }
-        `)
-        );
-        expect(errors).toEqual([
-          {
-            target: "Bucket_id.average",
-            reason: "Type 'float' is invalid type."
-          }
-        ]);
-      });
-    });
   });
 
   describe("AggregationFromQuery", () => {
@@ -426,13 +422,13 @@ describe("Schema", () => {
 
     it("should extract aggregation from query that includes basic equality", () => {
       query = {title: "test"};
-      let aggregation = extractAggregationFromQuery(bucket, query, []);
+      const aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({title: "test"});
     });
 
     it("should extract aggregation from query that includes comparision operators", () => {
       query = {title_ne: "test", age_gte: 15};
-      let aggregation = extractAggregationFromQuery(bucket, query, []);
+      const aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({title: {$ne: "test"}, age: {$gte: 15}});
     });
 
@@ -451,7 +447,7 @@ describe("Schema", () => {
           }
         ]
       };
-      let aggregation = extractAggregationFromQuery(bucket, query, []);
+      const aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({
         $or: [
           {
@@ -497,7 +493,7 @@ describe("Schema", () => {
           no_lte: "100"
         }
       };
-      let aggregation = extractAggregationFromQuery(bucket, query, []);
+      const aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({
         name: "Jim",
         "address.city": "Antalya",
@@ -507,12 +503,12 @@ describe("Schema", () => {
 
     it("should ignore part of query that does not match with any bucket property", () => {
       query = {title_ne: "test", country: "some_country"};
-      let aggregation = extractAggregationFromQuery(bucket, query, []);
+      const aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({title: {$ne: "test"}});
     });
 
     it("should cast expression values to own original formats", () => {
-      let date = new Date().toString();
+      const date = new Date().toString();
 
       bucket.properties = {
         created_at: {
@@ -530,7 +526,7 @@ describe("Schema", () => {
         created_at_lt: date,
         dates_in: [date]
       };
-      let aggregation = extractAggregationFromQuery(bucket, query, []);
+      const aggregation = extractAggregationFromQuery(bucket, query, []);
       expect(aggregation).toEqual({
         created_at: {
           $lt: new Date(date)
@@ -544,7 +540,7 @@ describe("Schema", () => {
 
   describe("RequestedFields", () => {
     it("should find requested fields", () => {
-      let info: any = {
+      const info: any = {
         fieldNodes: [
           {
             name: {
@@ -587,7 +583,7 @@ describe("Schema", () => {
         ]
       };
 
-      let requestedFields = requestedFieldsFromInfo(info);
+      const requestedFields = requestedFieldsFromInfo(info);
 
       expect(requestedFields).toEqual([
         ["name"],
@@ -598,7 +594,7 @@ describe("Schema", () => {
     });
 
     it("should extract requested fields from expression", () => {
-      let expression = {
+      const expression = {
         status: true,
         $or: [
           {
@@ -620,7 +616,7 @@ describe("Schema", () => {
         ]
       };
 
-      let requestedFields = requestedFieldsFromExpression(expression, []);
+      const requestedFields = requestedFieldsFromExpression(expression, []);
       expect(requestedFields).toEqual([
         ["status"],
         ["name"],
@@ -631,7 +627,7 @@ describe("Schema", () => {
     });
 
     it("should find requested fields from specified root key,and merge them", () => {
-      let info: any = {
+      const info: any = {
         fieldNodes: [
           {
             name: {
@@ -692,7 +688,7 @@ describe("Schema", () => {
         ]
       };
 
-      let requestedFields = requestedFieldsFromInfo(info, "data");
+      const requestedFields = requestedFieldsFromInfo(info, "data");
 
       expect(requestedFields).toEqual([["name"], ["surname"], ["created_at"]]);
     });
@@ -747,7 +743,7 @@ describe("Schema", () => {
       });
 
       it("should create project aggregation from requested fields", () => {
-        let fields = [
+        const fields = [
           ["name"],
           ["to_second_bucket", "title"],
           ["to_second_bucket", "to_first_bucket", "name"],
@@ -755,7 +751,7 @@ describe("Schema", () => {
           ["translatable_field"]
         ];
 
-        let project = getProjectAggregation(fields);
+        const project = getProjectAggregation(fields);
         expect(project).toEqual({
           $project: {
             name: 1,

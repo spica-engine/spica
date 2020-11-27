@@ -15,11 +15,10 @@ export const has: func.Func = context => {
   return ctx => {
     const propertyName: string = convert(context.arguments[0])(ctx);
     if (context.target == "aggregation") {
-      return {
-        [propertyName.slice(1)]: {
-          $exists: true
-        }
-      };
+      // we can not use $exists since it is a query operator which we can't use as an logical operator
+      // so we use a clever trick to see if "type number" of the field is greater than "null's" type number
+      // https://docs.mongodb.com/manual/reference/bson-types/#bson-types-comparison-order
+      return {$expr: {$gt: [propertyName, null]}};
     } else {
       return ctx && propertyName in ctx;
     }
