@@ -137,11 +137,25 @@
         div {
           flex: 1;
           b {
-            line-height: 2rem;
+            line-height: 2.5rem;
             font-weight: 400;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            mat-icon {
+              margin-right: 10px;
+            }
+          }
+          &:last-of-type {
+            b {
+              justify-content: flex-end;
+              mat-icon {
+                margin-left: 10px;
+                margin-right: 0px;
+              }
+            }
           }
           code-editor {
-            min-height: 140px;
             border-radius: 3px;
           }
         }
