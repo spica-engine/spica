@@ -44,9 +44,7 @@ export async function findDocuments(
   }
 
   // scheduled contents
-  if (!options.schedule) {
-    aggregations.push({$match: {_schedule: {$exists: false}}});
-  }
+  aggregations.push({$match: {_schedule: {$exists: !!options.schedule}}});
 
   //localization
   const locale = findLocale(params.language, await factories.preference());
