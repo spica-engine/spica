@@ -43,12 +43,17 @@
       </h4>
     </span>
     <div class="actions">
-      <button
-        mat-button
-        (click)="configurationState = configurationState == 'meta' ? 'view' : 'meta'"
-      >
-        <mat-icon>{{ configurationState == "view" ? "text_fields" : "view_module" }}</mat-icon>
-        {{ configurationState == "view" ? "Configure the meta" : "Configure the view" }}
+      <button mat-button (click)="configurationState = 'meta'">
+        <mat-icon>view_module</mat-icon>
+        Configure the meta
+      </button>
+      <button mat-button (click)="configurationState = 'view'">
+        <mat-icon>text_fields</mat-icon>
+        Configure the view
+      </button>
+      <button mat-button (click)="configurationState = 'rules'">
+        <mat-icon>gavel</mat-icon>
+        Configure rules
       </button>
     </div>
   </mat-toolbar>
@@ -157,38 +162,18 @@
               </div>
             </form>
           </mat-list-item>
-
-          <h4 mat-subheader>
-            <mat-icon>gavel</mat-icon> ACL
-            <mat-button-toggle-group #aclType="matButtonToggleGroup" value="read">
-              <mat-button-toggle value="read">READ</mat-button-toggle>
-              <mat-button-toggle value="write">WRITE</mat-button-toggle>
-            </mat-button-toggle-group>
-          </h4>
-          <mat-list-item>
-            <code-editor
-              name="acl"
-              placeholder="ACL"
-              #dm="ngModel"
-              [(ngModel)]="bucket.acl[aclType.value]"
-              [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
-              language="cel"
-            >
-            </code-editor>
-          </mat-list-item>
-          <span>
-            <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
-            <span class="errors">
-              <mat-error *ngIf="(bucket.properties | keyvalue)?.length < 1">
-                Please add at least one property.
-              </mat-error>
-              <mat-error *ngIf="bucket.primary == undefined">
-                Please select a primary property.
-              </mat-error>
-              <mat-error *ngIf="!isThereVisible">
-                You have to make at least a property visible at the list.
-              </mat-error>
-            </span>
+          <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
+          <mat-divider></mat-divider>
+          <span class="errors">
+            <mat-error *ngIf="(bucket.properties | keyvalue)?.length < 1">
+              Please add at least one property.
+            </mat-error>
+            <mat-error *ngIf="bucket.primary == undefined">
+              Please select a primary property.
+            </mat-error>
+            <mat-error *ngIf="!isThereVisible">
+              You have to make at least a property visible at the list.
+            </mat-error>
           </span>
 
           <mat-list-item class="properties">
@@ -246,6 +231,42 @@
             <button class="add-property" (click)="createNewField()" mat-button>
               <mat-icon>add</mat-icon> Add new property
             </button>
+          </mat-list-item>
+        </div>
+        <div [class.hide]="configurationState != 'rules'">
+          <h4 mat-subheader><mat-icon>gavel</mat-icon> Access Control Rules</h4>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <div class="code-editors">
+              <div>
+                <b>
+                  <mat-icon>contact_support</mat-icon>
+                  <span>Reading rules</span>
+                </b>
+                <code-editor
+                  *ngIf="configurationState == 'rules'"
+                  placeholder="ACL"
+                  [(ngModel)]="bucket.acl.read"
+                  [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
+                  language="cel"
+                >
+                </code-editor>
+              </div>
+              <div>
+                <b>
+                  <span>Writing Rules</span>
+                  <mat-icon>contact_support</mat-icon>
+                </b>
+                <code-editor
+                  *ngIf="configurationState == 'rules'"
+                  placeholder="ACL"
+                  [(ngModel)]="bucket.acl.write"
+                  [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
+                  language="cel"
+                >
+                </code-editor>
+              </div>
+            </div>
           </mat-list-item>
         </div>
         <div [class.hide]="configurationState != 'view'">
