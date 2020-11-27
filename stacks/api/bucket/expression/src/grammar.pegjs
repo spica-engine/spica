@@ -29,7 +29,7 @@ ConditionalAndOperation = "&&" rhs:Relation {
 Relation = lhs:Addition rhs:(RelationOperation)* { 
   return __cel$ltr__(lhs, rhs) 
 } 
-RelationOperation = type:("<" / "<=" / ">=" / ">" / "==" / "!=" / "in")  rhs:Addition { 
+RelationOperation = type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in")  rhs:Addition { 
   return {kind: "operator", type, category:"binary", rhs} 
 }
 

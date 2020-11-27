@@ -39,6 +39,11 @@ function visitUnary(node) {
 }
 
 function visitUnaryNot(node) {
+  if (node.member.type == "select" || node.member.type == "identifier") {
+    throw new TypeError(
+      `unary operator 'not' does not support "${node.member.type}".\nDid you mean to wrap your expression with brackets?\n!document.title=="test" -> !(document.title=="test")`
+    );
+  }
   return () => !visit(node.member);
 }
 

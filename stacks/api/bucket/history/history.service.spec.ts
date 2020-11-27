@@ -7,7 +7,7 @@ import {
   InsertOneWriteOpResult
 } from "@spica-server/database/testing";
 import {HistoryService} from "./history.service";
-import {diff} from "./differ";
+import {diff} from "@spica-server/core/differ";
 
 describe("History Service", () => {
   let module: TestingModule;
