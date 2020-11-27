@@ -463,7 +463,7 @@ describe("BucketAddComponent", () => {
         fixture.componentInstance.bucket.properties = {};
         fixture.detectChanges();
         expect(
-          fixture.debugElement.query(By.css("mat-card mat-list span:nth-child(2) mat-error"))
+          fixture.debugElement.query(By.css("mat-card mat-list span.errors mat-error"))
             .nativeElement.textContent
         ).toBe(" Please add at least one property. ");
       });
@@ -472,7 +472,7 @@ describe("BucketAddComponent", () => {
         fixture.componentInstance.bucket.primary = undefined;
         fixture.detectChanges();
         expect(
-          fixture.debugElement.query(By.css("mat-card mat-list span:nth-child(2) mat-error"))
+          fixture.debugElement.query(By.css("mat-card mat-list span.errors mat-error"))
             .nativeElement.textContent
         ).toBe(" Please select a primary property. ");
       });
@@ -482,7 +482,7 @@ describe("BucketAddComponent", () => {
         fixture.componentInstance.updatePositionProperties();
         fixture.detectChanges();
         expect(
-          fixture.debugElement.query(By.css("mat-card mat-list span:nth-child(2) mat-error"))
+          fixture.debugElement.query(By.css("mat-card mat-list span.errors mat-error"))
             .nativeElement.textContent
         ).toBe(" You have to make at least a property visible at the list. ");
       });

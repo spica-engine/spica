@@ -29,7 +29,8 @@ import {
   getProjectAggregation,
   requestedFieldsFromExpression,
   requestedFieldsFromInfo,
-  SchemaError
+  SchemaWarning,
+  validateBuckets
 } from "./schema";
 
 interface FindResponse {
@@ -114,7 +115,7 @@ export class GraphqlController implements OnModuleInit {
 
   schema: GraphQLSchema;
 
-  schemaErrors: SchemaError[];
+  schemaWarnings: SchemaWarning[] = [];
 
   constructor(
     private adapterHost: HttpAdapterHost,
@@ -127,12 +128,18 @@ export class GraphqlController implements OnModuleInit {
   ) {
     this.bs.schemaChangeEmitter.subscribe(() => {
       this.bs.find().then(buckets => {
-        this.schemaErrors = [];
-        this.buckets = buckets;
+        this.schemaWarnings = [];
 
-        this.schema = buckets.length
-          ? this.getSchema(buckets, this.schemaErrors)
-          : this.defaultSchema;
+        if (!buckets.length) {
+          this.schema = this.defaultSchema;
+          return;
+        }
+
+        const result = validateBuckets(buckets);
+        this.buckets = result.buckets;
+        this.schemaWarnings = result.warnings;
+
+        this.schema = this.getSchema(this.buckets);
       });
     });
   }
@@ -149,8 +156,8 @@ export class GraphqlController implements OnModuleInit {
           resourceFilter: true
         });
 
-        if (this.schemaErrors.length) {
-          response.setHeader("Warnings", JSON.stringify(this.schemaErrors));
+        if (this.schemaWarnings.length) {
+          response.setHeader("Warnings", JSON.stringify(this.schemaWarnings));
         }
 
         return {
@@ -168,9 +175,9 @@ export class GraphqlController implements OnModuleInit {
     );
   }
 
-  getSchema(buckets: Bucket[], errors: SchemaError[]): GraphQLSchema {
+  getSchema(buckets: Bucket[]): GraphQLSchema {
     const typeDefs = buckets.map(bucket =>
-      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()), errors)
+      createSchema(bucket, this.staticTypes, this.buckets.map(b => b._id.toString()))
     );
     const resolvers = buckets.map(bucket => this.createResolver(bucket, this.staticResolvers));
 
