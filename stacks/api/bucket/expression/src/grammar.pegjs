@@ -4,7 +4,8 @@
   }  
 }
 
-Expr // "Common Expresxsion"
+
+Expr // "Common Expression"
   = t:ConditionalOr  "?"  s:Expr  ":"   p:Expr
 	{ return {kind: "operator", type: "conditional", category:"tenary", primary:p, rhs:p, tertiary:t} }    
   / ConditionalOr
@@ -13,7 +14,7 @@ Expr // "Common Expresxsion"
 ConditionalOr = lhs:ConditionalAnd rhs:(ConditionalOrOperation)* { 
   return __cel$ltr__(lhs, rhs) 
 } 
-ConditionalOrOperation =  "||"  rhs:ConditionalAnd { 
+ConditionalOrOperation = WHITESPACE "||" WHITESPACE rhs:ConditionalAnd { 
   return {kind: "operator", type:"or", category:"binary", rhs} 
 }
 
@@ -21,7 +22,7 @@ ConditionalOrOperation =  "||"  rhs:ConditionalAnd {
 ConditionalAnd = lhs:Relation rhs:(ConditionalAndOperation)* { 
   return __cel$ltr__(lhs, rhs) 
 } 
-ConditionalAndOperation = "&&" rhs:Relation { 
+ConditionalAndOperation = WHITESPACE "&&" WHITESPACE rhs:Relation { 
   return {kind: "operator", type:"and", category:"binary", rhs}
 }
 
@@ -29,7 +30,7 @@ ConditionalAndOperation = "&&" rhs:Relation {
 Relation = lhs:Addition rhs:(RelationOperation)* { 
   return __cel$ltr__(lhs, rhs) 
 } 
-RelationOperation = type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in")  rhs:Addition { 
+RelationOperation = WHITESPACE type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in") WHITESPACE  rhs:Addition { 
   return {kind: "operator", type, category:"binary", rhs} 
 }
 
@@ -37,7 +38,7 @@ RelationOperation = type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in")  rhs:Add
 Addition = lhs:Multiplication rhs:(AdditionOperation)* { 
   return __cel$ltr__(lhs, rhs)
 } 
-AdditionOperation = type:("+" / "-") rhs:Multiplication { 
+AdditionOperation = WHITESPACE type:("+" / "-") WHITESPACE rhs:Multiplication { 
   return {kind: "operator", type, category:"binary", rhs} 
 }
 
@@ -45,7 +46,7 @@ AdditionOperation = type:("+" / "-") rhs:Multiplication {
 Multiplication = lhs:Unary rhs:(MultiplicationOperation)* { 
   return __cel$ltr__(lhs, rhs) 
 } 
-MultiplicationOperation = type:("*" / "/" / "%")  rhs:Unary { 
+MultiplicationOperation = WHITESPACE type:("*" / "/" / "%") WHITESPACE rhs:Unary { 
   return {kind: "operator", type, category:"binary", rhs} 
 }
 
