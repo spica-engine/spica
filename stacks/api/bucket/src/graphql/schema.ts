@@ -375,7 +375,7 @@ function createPropertyValue(
   return result;
 }
 
-function relatedBucketExist(bucketId: string, bucketIds: string[]) {
+function relatedBucketExists(bucketId: string, bucketIds: string[]) {
   return bucketIds.includes(bucketId);
 }
 
