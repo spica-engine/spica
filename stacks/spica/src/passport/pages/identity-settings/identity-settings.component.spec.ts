@@ -1,24 +1,24 @@
-import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {IdentitySettingsComponent} from "./identity-settings.component";
-import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
-import {of} from "rxjs";
-import {ActivatedRoute, RouterModule} from "@angular/router";
-import {IdentityService} from "../../services/identity.service";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule, NgModel} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatExpansionModule} from "@angular/material/expansion";
+import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
-import {MatMenuModule} from "@angular/material/menu";
-import {MatToolbarModule} from "@angular/material/toolbar";
-import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
-import {FormsModule, NgModel} from "@angular/forms";
-import {InputModule} from "@spica-client/common";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatSelectModule} from "@angular/material/select";
 import {MatListModule} from "@angular/material/list";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatSelectModule} from "@angular/material/select";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {ActivatedRoute, RouterModule} from "@angular/router";
+import {InputModule} from "@spica-client/common";
+import {of} from "rxjs";
+import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
+import {IdentityService} from "../../services/identity.service";
+import {IdentitySettingsComponent} from "./identity-settings.component";
 
 describe("Identity Setting Component", () => {
   let fixture: ComponentFixture<IdentitySettingsComponent>;
@@ -32,11 +32,11 @@ describe("Identity Setting Component", () => {
         of([
           {
             type: "string",
-            keyword: "keyword1"
+            match: "keyword1"
           },
           {
             type: "number",
-            keyword: "keyword2"
+            match: "keyword2"
           }
         ])
       )
