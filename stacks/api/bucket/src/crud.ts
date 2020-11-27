@@ -99,7 +99,9 @@ export async function findDocuments(
     seekingPipeline.push({$sort: params.sort});
   }
 
-  seekingPipeline.push({$skip: params.skip || 0});
+  if (params.skip) {
+    seekingPipeline.push({$skip: params.skip});
+  }
 
   if (params.limit) {
     seekingPipeline.push({$limit: params.limit});
@@ -121,9 +123,7 @@ export async function findDocuments(
     return result.data.length ? result : {meta: {total: 0}, data: []};
   }
 
-  const cursor = collection.aggregate([...aggregations, ...seekingPipeline]);
-
-  return cursor.toArray();
+  return collection.aggregate([...aggregations, ...seekingPipeline]).toArray();
 }
 
 export async function insertDocument(
@@ -174,11 +174,7 @@ export async function replaceDocument(
 
   const ruleAggregation = await getWriteRuleAggregation(schema, factories.schema, document);
 
-  const fullDocument = await collection
-    // unlike others, we have to run this pipeline against buckets in case the target
-    // collection is empty.
-    .aggregate(ruleAggregation)
-    .next();
+  const fullDocument = await collection.aggregate(ruleAggregation).next();
 
   const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
 
@@ -223,10 +219,7 @@ export async function patchDocument(
 
   const updateQuery = getUpdateQueryForPatch(patch);
 
-  const documentId = document._id;
-  delete document._id;
-
-  return collection.findOneAndUpdate({_id: documentId}, updateQuery, {
+  return collection.findOneAndUpdate({_id: document._id}, updateQuery, {
     returnOriginal: options.returnOriginal
   });
 }

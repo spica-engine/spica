@@ -42,6 +42,7 @@ import {
   patchDocument,
   deleteDocument
 } from "../crud";
+import {ChangeEmitter} from "@spica-server/bucket/hooks";
 
 interface FindResponse {
   meta: {total: number};
@@ -134,7 +135,8 @@ export class GraphqlController implements OnModuleInit {
     private guardService: GuardService,
     private validator: Validator,
     @Optional() private activity: ActivityService,
-    @Optional() private history: HistoryService
+    @Optional() private history: HistoryService,
+    @Optional() private hookChangeEmitter: ChangeEmitter
   ) {
     this.bs.schemaChangeEmitter.subscribe(() => {
       this.bs.find().then(buckets => {
@@ -353,6 +355,18 @@ export class GraphqlController implements OnModuleInit {
         }
       );
 
+      if (this.hookChangeEmitter) {
+        this.hookChangeEmitter.emitChange(
+          {
+            bucket: bucket._id.toHexString(),
+            type: "insert"
+          },
+          document._id.toHexString(),
+          undefined,
+          document
+        );
+      }
+
       return document;
     };
   }
@@ -421,6 +435,18 @@ export class GraphqlController implements OnModuleInit {
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       );
+
+      if (this.hookChangeEmitter) {
+        this.hookChangeEmitter.emitChange(
+          {
+            bucket: bucket._id.toHexString(),
+            type: "update"
+          },
+          documentId,
+          previousDocument,
+          currentDocument
+        );
+      }
 
       return document;
     };
@@ -497,6 +523,18 @@ export class GraphqlController implements OnModuleInit {
         }
       );
 
+      if (this.hookChangeEmitter) {
+        this.hookChangeEmitter.emitChange(
+          {
+            bucket: bucket._id.toHexString(),
+            type: "update"
+          },
+          documentId,
+          previousDocument,
+          currentDocument
+        );
+      }
+
       return document;
     };
   }
@@ -540,6 +578,18 @@ export class GraphqlController implements OnModuleInit {
 
       if (this.activity) {
         const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
+      }
+
+      if (this.hookChangeEmitter) {
+        this.hookChangeEmitter.emitChange(
+          {
+            bucket: bucket._id.toHexString(),
+            type: "delete"
+          },
+          documentId,
+          deletedDocument,
+          undefined
+        );
       }
 
       return "";
