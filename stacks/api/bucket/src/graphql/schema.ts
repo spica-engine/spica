@@ -125,7 +125,7 @@ function validateDefinition(
         reasons.push(`Relation type '${definition.relationType}' is invalid.`);
       }
 
-      if (!relatedBucketExist(definition.bucketId, bucketIds)) {
+      if (!relatedBucketExists(definition.bucketId, bucketIds)) {
         reasons.push(`Related bucket '${definition.bucketId}' does not exist.`);
       }
 
