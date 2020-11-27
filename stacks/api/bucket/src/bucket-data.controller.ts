@@ -212,9 +212,7 @@ export class BucketDataController {
         collection: bucketId => this.bds.children(bucketId),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    ).catch(error => {
-      throw error;
-    });
+    );
 
     if (!document) {
       return;
@@ -268,9 +266,7 @@ export class BucketDataController {
         collection: bucketId => this.bds.children(bucketId),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    ).catch(error => {
-      throw error;
-    });
+    );
 
     if (!previousDocument) {
       return;
@@ -343,9 +339,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       {returnOriginal: false}
-    ).catch(error => {
-      throw error;
-    });
+    );
 
     if (!currentDocument) {
       return;
@@ -392,9 +386,7 @@ export class BucketDataController {
         collection: bucketId => this.bds.children(bucketId),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    ).catch(error => {
-      throw error;
-    });
+    );
 
     if (!deletedDocument) {
       return;

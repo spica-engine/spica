@@ -44,7 +44,9 @@ export async function findDocuments(
   }
 
   // scheduled contents
-  aggregations.push({$match: {_schedule: {$exists: !!options.schedule}}});
+  if (!options.schedule) {
+    aggregations.push({$match: {_schedule: {$exists: false}}});
+  }
 
   //localization
   const locale = findLocale(params.language, await factories.preference());
@@ -150,7 +152,7 @@ export async function insertDocument(
 
   const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
   if (!aclResult) {
-    return Promise.reject(new ForbiddenException("ACL rules has rejected this operation."));
+    throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 
   return collection.insertOne(document);
@@ -179,7 +181,7 @@ export async function replaceDocument(
   const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
 
   if (!aclResult) {
-    return Promise.reject(new ForbiddenException("ACL rules has rejected this operation."));
+    throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 
   const documentId = document._id;
@@ -214,7 +216,7 @@ export async function patchDocument(
   const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
 
   if (!aclResult) {
-    return Promise.reject(new ForbiddenException("ACL rules has rejected this operation."));
+    throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 
   const updateQuery = getUpdateQueryForPatch(patch);
@@ -246,7 +248,7 @@ export async function deleteDocument(
   const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
 
   if (!aclResult) {
-    return Promise.reject(new ForbiddenException("ACL rules has rejected this operation."));
+    throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 
   const deletedCount = await collection.deleteOne({_id: documentId});
