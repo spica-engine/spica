@@ -17,6 +17,7 @@ ts_library(
         "@npm//node-fetch",
         "@npm//rxjs",
         "@npm//ws",
+        "@npm//@types/ws",
     ],
 )
 
