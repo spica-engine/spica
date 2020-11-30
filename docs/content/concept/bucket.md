@@ -72,7 +72,29 @@ You can drag and drop the Bucket Properties to the desired division.
 
 ## Rules
 
-[TODO]
+Bucket rules give you a chance to add another security level before accessing bucket APIs. Rules system is working with integrated `Passport System` and can access to `Identity` information. For the business domain accounts, we recommend you to create a bucket which will include all the application users' information. You can link your bucket entry with unique identifier in Passport module. Passport module will pass both `auth._id` and `auth.identifier` to rules engine. You can apply different rules for writing and reading API calls. Writing rules will be applied to every `UPDATE`, `INSERT`, `DELETE`, `PATCH` endpoints while reading rules will be applied to every `INDEX`, `GET` endpoints. You can access bucket entries with using `document` variable. 
+
+>Note: Rules engine will effect bucket view as well since the bucket views are consuming the same APIs.
+
+Example Bucket Schema:
+- identifier: string
+- name: string
+- address: location
+- age: number
+
+Example Rules
+- Writing: (`auth.identifier` == `document.identifier`) && (`document.age` > 18)
+- Reading: `true` == `true`
+
+In the example above, we force the request to have the same identity with the bucket entry identity and bucket entry age to be more than 18 for writing API calls. This means, every user have writing access for itself. But for reading API calls, we allow every requests to get the data in the bucket.
+
+All accepted operators are listed below: 
+- Comparing: `<`, `<=`, `>=`, `>`, `==`, `!=`
+  - Example: `document.age` >= 18
+- Math Operators: `*`, `+`, `-`, `/`, `%`
+  - Example: `document.age` >= `document.allowed_age` - 20
+- Macros: `has(propertyName)`
+  - Example: `document.age` >= 18 && has(`document.access`) && !has(`document.banned`)
 
 ### Translation and Localization
 
