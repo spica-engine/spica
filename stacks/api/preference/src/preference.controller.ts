@@ -43,14 +43,18 @@ export class PreferenceController {
   @UseGuards(AuthGuard(), ActionGuard("preference:update"))
   async replaceOne(@Param("scope") scope: string, @Body() preference: Preference) {
     if (scope == "bucket" && this.bucketFactory) {
-      let previousPrefs = await this.preference.get("bucket");
+      const previousPrefs = await this.preference.get("bucket");
+
       await this.bucketFactory(previousPrefs, preference);
     } else if (scope == "passport" && this.identityFactory) {
-      let previousPrefs = await this.preference.get("passport");
+      const previousPrefs = await this.preference.get("passport");
+
       await this.identityFactory(previousPrefs, preference);
     }
+
     delete preference._id;
     preference.scope = scope;
+
     return this.preference.replaceOne({scope}, preference, {upsert: true, returnOriginal: false});
   }
 }

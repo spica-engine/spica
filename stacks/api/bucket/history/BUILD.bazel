@@ -89,7 +89,6 @@ ts_library(
     testonly = True,
     srcs = [
         "path.spec.ts",
-        "schema.spec.ts",
     ],
     deps = [
         ":history",
