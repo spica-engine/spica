@@ -4,5 +4,17 @@ load("//tools/dgeni:index.bzl", "docs")
 
 docs(
     name = "concept",
-    srcs = glob(["*.md"]),
+    srcs = [
+        "index.md",
+        "getting-started.md",
+        "bucket.md",
+        "function.md",
+        "dashboard.md",
+        "passport.md",
+        "storage.md",
+        "user-activities.md",
+        "webhook.md",
+        "l10n.md",
+        "cli.md",
+    ],
 )
