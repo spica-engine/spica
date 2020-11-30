@@ -24,7 +24,9 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "bazel": "bazelisk",
     "preinstall": "bash -c 'git apply -R stacks/spica/patches/fix-devkit-for-monaco.patch||true'",
-    "postinstall": "git apply stacks/spica/patches/fix-devkit-for-monaco.patch"
+    "postinstall": "git apply stacks/spica/patches/fix-devkit-for-monaco.patch",
+    "run-api": "bazel run //stacks/api:bin",
+    "run-cli": "bazel run //stacks/cli:bin"
   },
   "dependencies": {
     "@google-cloud/storage": "^5.0.1",

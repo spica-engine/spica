@@ -63,27 +63,25 @@ async function v1_function_to_internal(object: any) {
   const env = {};
 
   for (const {name, value, valueFrom} of spec.environment) {
-    if (value) {
+    if (typeof value == "string") {
       env[name] = String(value);
-    } else if (valueFrom) {
+    } else if (typeof valueFrom == "object") {
       const ref = valueFrom.resourceFieldRef;
-      if (ref) {
-        if (ref.bucketName) {
-          const bucket = await bucketStore.get(ref.bucketName);
-          if (bucket) {
-            env[name] = String(bucket.metadata.uid);
-          } else {
-            // TODO: Handle missing buckets
-            continue;
-          }
-        } else if (ref.apiKeyName) {
-          const apiKey = await apiKeyStore.get(ref.apiKeyName);
-          if (apiKey) {
-            env[name] = String(apiKey.spec.key);
-          } else {
-            // TODO: Handle missing apikeys
-            continue;
-          }
+      let value: string;
+
+      if (ref.schemaName) {
+        const bucket = await bucketStore.get(ref.schemaName);
+        if (bucket) {
+          env[name] = String(bucket.metadata.uid);
+        } else {
+          value = `missing schema ${ref.schemaName}`;
+        }
+      } else if (ref.apiKeyName) {
+        const apiKey = await apiKeyStore.get(ref.apiKeyName);
+        if (apiKey) {
+          env[name] = String(apiKey.spec.key);
+        } else {
+          value = `missing apikey ${ref.schemaName}`;
         }
       }
     }
@@ -99,28 +97,66 @@ async function v1_function_to_internal(object: any) {
   };
 }
 
-export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
-  const handle = async (object: any) => {
-    const triggerStore = store({
-      group: "function",
-      resource: "functions"
-    });
-    const functionStore = store({
-      group: "function",
-      resource: "functions"
-    });
-    const fn = await functionStore.get(object.spec.func);
+async function applyDependencyChanges(
+  before: any[],
+  after: any[],
+  fe: FunctionEngine,
+  fn: Function
+) {
+  const newPackages = [];
+  const removedPackages = [];
 
+  const newPackageMap = new Map<string, string>();
+
+  for (const dependency of after) {
+    newPackageMap.set(dependency.name, dependency.version);
+  }
+
+  const oldPackageMap = new Map<string, string>();
+
+  for (const dependency of before) {
+    oldPackageMap.set(dependency.name, dependency.version);
+  }
+
+  for (const [name, version] of newPackageMap.entries()) {
+    if (!oldPackageMap.has(name) || oldPackageMap.get(name) != version) {
+      newPackages.push(`${name}@${version}`);
+    }
+  }
+
+  for (const name of oldPackageMap.keys()) {
+    if (!newPackageMap.has(name)) {
+      removedPackages.push(name);
+    }
+  }
+
+  await fe.removePackage(fn, removedPackages.join(" "));
+  await fe.addPackage(fn, newPackages.join(" "));
+}
+
+export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
+  const functionStore = store({
+    group: "function",
+    resource: "functions"
+  });
+  const triggerStore = store({
+    group: "function",
+    resource: "functions"
+  });
+
+  const handle = async (object: any) => {
+    const fn = await functionStore.get(object.spec.func);
     if (fn) {
       const trigger = await v1_trigger_to_internal(object);
       await fs.updateOne(
         {_id: new ObjectId(fn.metadata.uid)},
-        {$set: {triggers: {[object.spec.name]: trigger}}}
+        {$set: {[`triggers.${object.spec.name}`]: trigger}}
       );
     } else {
       await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
     }
   };
+
   register(
     {
       group: "function",
@@ -131,17 +167,9 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
       add: handle,
       update: handle,
       delete: async object => {
-        const functionStore = store({
-          group: "function",
-          resource: "functions"
-        });
-        const triggerStore = store({
-          group: "function",
-          resource: "functions"
-        });
         const fn = await functionStore.get(object.spec.func);
         if (fn) {
-          const trigger = await v1_trigger_to_internal(object);
+          await v1_trigger_to_internal(object);
           await fs.updateOne(
             {_id: new ObjectId(fn.metadata.uid)},
             {$unset: {[`triggers.${object.spec.name}`]: ""}}
@@ -152,6 +180,7 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
       }
     }
   );
+
   register(
     {
       group: "function",
@@ -160,36 +189,20 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
     },
     {
       add: async (obj: any) => {
-        const st = store({
-          group: "function",
-          resource: "functions"
-        });
-        await st.patch(obj.metadata.name, {status: "Pending"});
+        await functionStore.patch(obj.metadata.name, {status: "Pending"});
         const raw = await v1_function_to_internal(obj);
         const fn = await fs.insertOne(raw);
-        await st.patch(obj.metadata.name, {metadata: {uid: String(fn._id)}, status: "Creating"});
+        await functionStore.patch(obj.metadata.name, {
+          metadata: {uid: String(fn._id)},
+          status: "Creating"
+        });
 
-        try {
-          await fe.createFunction(fn);
-          await fe.update(fn, obj.spec.code);
-          await fe.compile(fn);
+        await fe.createFunction(fn);
+        await fe.update(fn, obj.spec.code);
+        await fe.compile(fn);
 
-          try {
-            const packagesToInstall = [];
-
-            for (const dependency of obj.spec.dependency) {
-              packagesToInstall.push(`${dependency.name}@${dependency.version}`);
-            }
-
-            await fe.addPackage(fn, packagesToInstall).toPromise();
-
-            await st.patch(obj.metadata.name, {status: "Ready"});
-          } catch {
-            await st.patch(obj.metadata.name, {status: "ErrInstallB"});
-          }
-        } catch {
-          await st.patch(obj.metadata.name, {status: "ErrCreate"});
-        }
+        await applyDependencyChanges([], obj.spec.dependency, fe, fn);
+        await functionStore.patch(obj.metadata.name, {status: "Ready"});
       },
       update: async (oldObj, obj: any) => {
         const raw = await v1_function_to_internal(obj);
@@ -202,30 +215,7 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
           await fe.update(fn, obj.spec.code);
           await fe.compile(fn);
         }
-
-        const newPackageMap = new Map<string, string>();
-
-        for (const dependency of obj.spec.dependency) {
-          newPackageMap.set(dependency.name, dependency.version);
-        }
-
-        const oldPackageMap = new Map<string, string>();
-
-        for (const dependency of oldObj.spec.dependency) {
-          oldPackageMap.set(dependency.name, dependency.version);
-        }
-
-        for (const [name, version] of newPackageMap.entries()) {
-          if (!oldPackageMap.has(name) || oldPackageMap.get(name) != version) {
-            await fe.addPackage(fn, `${name}@${version}`).toPromise();
-          }
-        }
-
-        for (const name of oldPackageMap.keys()) {
-          if (!newPackageMap.has(name)) {
-            await fe.removePackage(fn, name);
-          }
-        }
+        await applyDependencyChanges(oldObj.spec.dependency, obj.spec.dependency, fe, fn);
       },
       delete: async (obj: any) => {
         const id = new ObjectId(obj.metadata.uid);

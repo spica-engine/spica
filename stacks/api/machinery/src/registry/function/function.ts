@@ -7,96 +7,76 @@ const FunctionV1: JSONSchema7 = {
   required: ["title", "description", "timeout", "runtime"],
   properties: {
     title: {
-      $id: "#/properties/title",
       type: "string"
     },
     description: {
-      $id: "#/properties/description",
       type: "string"
     },
     timeout: {
-      $id: "#/properties/timeout",
       type: "integer",
       default: 10
     },
     runtime: {
-      $id: "#/properties/runtime",
       type: "object",
-      required: ["name", "language"],
+      required: ["name", "language", "version"],
       properties: {
         name: {
-          $id: "#/properties/runtime/properties/name",
           type: "string",
-          enum: ["Node"]
+          enum: ["Node"],
+          default: "Node"
         },
         version: {
-          $id: "#/properties/runtime/properties/version",
-          type: "string"
+          type: "string",
+          default: "default"
         },
         language: {
-          $id: "#/properties/runtime/properties/language",
           type: "string",
           enum: ["Javascript", "Typescript"]
         }
       }
     },
     dependency: {
-      $id: "#/properties/dependency",
       type: "array",
       default: [],
       items: {
-        $id: "#/properties/dependency/items",
         type: "object",
         required: ["name", "version"],
         properties: {
           name: {
-            $id: "#/properties/dependency/items/properties/name",
             type: "string"
           },
           version: {
-            $id: "#/properties/dependency/items/properties/version",
             type: "string"
           }
         }
       }
     },
     environment: {
-      $id: "#/properties/environment",
       type: "array",
       default: [],
       items: {
-        $id: "#/properties/environment/items",
         type: "object",
         required: ["name"],
         oneOf: [{required: ["value"]}, {required: ["valueFrom"]}],
         properties: {
           name: {
-            $id: "#/properties/environment/items/properties/name",
             type: "string"
           },
           value: {
-            $id: "#/properties/environment/items/properties/value",
             type: "string"
           },
           valueFrom: {
-            $id: "#/properties/environment/items/properties/valueFrom",
             type: "object",
             required: ["resourceFieldRef"],
             properties: {
               resourceFieldRef: {
-                $id:
-                  "#/properties/environment/items/properties/valueFrom/properties/resourceFieldRef",
                 type: "object",
-                oneOf: [{required: ["bucketName"]}, {required: ["apiKeyName"]}],
+                oneOf: [{required: ["schemaName"]}, {required: ["apiKeyName"]}],
                 properties: {
                   bucketName: {
-                    $id:
-                      "#/properties/environment/items/properties/valueFrom/properties/resourceFieldRef/properties/bucketName",
                     type: "string"
                   },
                   apiKeyName: {
-                    $id:
-                      "#/properties/environment/items/properties/valueFrom/properties/resourceFieldRef/properties/apiKeyName",
                     type: "string"
                   }
                 }
