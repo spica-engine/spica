@@ -1,9 +1,12 @@
 import {Component, Inject, OnInit} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
+import {BucketService} from "@spica-client/bucket/services/bucket.service";
 import {InputPlacerWithMetaPlacer} from "@spica-client/common";
 import {InputResolver} from "@spica-client/common/input/input.resolver";
 import {PredefinedDefault} from "@spica-client/passport/interfaces/predefined-default";
 import {Property} from "@spica-client/passport/pages/identity-settings/identity-settings.component";
+import {map} from "rxjs/internal/operators/map";
+import {take} from "rxjs/operators";
 
 @Component({
   selector: "app-add-field-modal",
@@ -33,25 +36,37 @@ export class AddFieldModalComponent implements OnInit {
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
   systemFields: InputPlacerWithMetaPlacer[] = [];
+  fieldConfig: InputPlacerWithMetaPlacer;
   constructor(
     private _inputResolver: InputResolver,
+    private bs: BucketService,
     public dialogRef: MatDialogRef<AddFieldModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data
   ) {}
 
   ngOnInit(): void {
+    this.bs
+      .getPredefinedDefaults()
+      .pipe(
+        map(predefs => {
+          this.predefinedDefaults = predefs.reduce((accumulator, item) => {
+            accumulator[item.type] = accumulator[item.type] || [];
+            accumulator[item.type].push(item);
+            return accumulator;
+          }, {});
+        }),
+        take(1)
+      )
+      .subscribe();
     this._inputResolver.entries().map(e => this.systemFields.push(this._inputResolver.resolve(e)));
     this.parentSchema = this.data.parentSchema;
-    this.predefinedDefaults = this.data.predefinedDefaults;
     this.immutableProperties = Object.keys(this.parentSchema.properties);
     if (this.data.propertyKey) {
       this.step = 1;
       this.propertyKey = this.data.propertyKey;
       this.propertyKv = this.parentSchema.properties[this.propertyKey];
       this.field = this.propertyKv.type;
-      this.propertyKv.value = this.systemFields.filter(
-        systemField => systemField.type == this.field
-      )[0];
+      this.fieldConfig = this.systemFields.filter(systemField => systemField.type == this.field)[0];
     }
   }
 
@@ -70,9 +85,9 @@ export class AddFieldModalComponent implements OnInit {
         description: description,
         options: {
           position: "bottom"
-        },
-        value: this.systemFields.filter(systemField => systemField.type == this.field)[0]
+        }
       };
+      this.fieldConfig = this.systemFields.filter(systemField => systemField.type == this.field)[0];
     }
   }
 

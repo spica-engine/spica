@@ -22,6 +22,7 @@ import {SnackbarComponent} from "./snackbar/snackbar.component";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
+import {MatMenuModule} from "@angular/material/menu";
 
 const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
@@ -39,7 +40,8 @@ const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {la
     MatSlideToggleModule,
     CdkLayoutModule,
     RouterModule.forChild(routes),
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatMenuModule
   ],
   providers: [SchemeObserver],
   declarations: [

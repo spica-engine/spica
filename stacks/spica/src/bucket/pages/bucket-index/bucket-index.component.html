@@ -9,7 +9,7 @@
     <div class="actions">
       <button canInteract="bucket:create" mat-button [routerLink]="['../add']">
         <mat-icon>add</mat-icon>
-        Add New
+        Add New Bucket
       </button>
       <button
         mat-button
@@ -39,11 +39,10 @@
         class="bucket-card drag-box mat-elevation-1"
         canInteract="bucket:show"
         [resource]="bucket._id"
-        [routerLink]="['../' + bucket._id]"
         cdkDrag
         (cdkDragMoved)="dragMoved($event)"
       >
-        <div class="bucket-title">
+        <div class="bucket-title" [routerLink]="['../' + bucket._id]">
           <div>
             <mat-icon>{{ bucket.icon }}</mat-icon>
             <span>{{ bucket.title }}</span>

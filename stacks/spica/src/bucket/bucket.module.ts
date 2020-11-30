@@ -30,17 +30,19 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {LeafletModule} from "@asymmetrik/ngx-leaflet";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {StoreModule} from "@ngrx/store";
 import {provideActivityFactory} from "@spica-client/bucket/providers/activity";
 import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
+import {EditorModule} from "@spica-client/common/code-editor";
 import {LAYOUT_INITIALIZER, PreferencesModule, RouteService} from "@spica-client/core";
 import {ACTIVITY_FACTORY} from "@spica-client/core/factories/factory";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
-import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
 import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
 import {BucketRoutingModule} from "./bucket-routing.module";
+import {CelLanguageDirective} from "./components/cel-editor/cel.language";
 import {FilterComponent} from "./components/filter/filter.component";
 import {PropertyLanguageComponent} from "./components/language/language.component";
 import {createLocation, LocationComponent} from "./components/location/location.component";
@@ -48,6 +50,7 @@ import {RelationSchemaComponent} from "./components/relation-schema/relation-sch
 import {RelationComponent} from "./components/relation/relation.component";
 import {RichTextEditorComponent} from "./components/richtext/richtext";
 import {PersistHeaderWidthDirective} from "./directives/persist-header-width/persist-header-width.directive";
+import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.component";
 import {AddComponent} from "./pages/add/add.component";
 import {BucketAddComponent} from "./pages/bucket-add/bucket-add.component";
 import {BucketIndexComponent} from "./pages/bucket-index/bucket-index.component";
@@ -60,7 +63,7 @@ import {BucketInitializer} from "./services/bucket.initializer";
 import {BucketService} from "./services/bucket.service";
 import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
-import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.component";
+import {MatButtonToggleModule} from "@angular/material/button-toggle";
 
 @NgModule({
   imports: [
@@ -115,6 +118,7 @@ import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.co
     MatAwareDialogModule,
     MatGridListModule,
     MatExpansionModule,
+    MatButtonToggleModule,
     MatChipsModule,
     MatToolbarModule,
     MatRadioModule,
@@ -131,7 +135,8 @@ import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.co
     MatClipboardModule,
     MatSaveModule,
     PassportModule.forChild(),
-    SpicaCommon
+    SpicaCommon,
+    EditorModule
   ],
   declarations: [
     IndexComponent,
@@ -150,7 +155,8 @@ import {AddFieldModalComponent} from "./pages/add-field-modal/add-field-modal.co
     FilterComponent,
     RequiredTranslate,
     PersistHeaderWidthDirective,
-    AddFieldModalComponent
+    AddFieldModalComponent,
+    CelLanguageDirective
   ]
 })
 export class BucketModule {

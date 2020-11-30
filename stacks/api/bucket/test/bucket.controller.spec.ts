@@ -10,24 +10,25 @@ import {
   UPDATED_AT
 } from "@spica-server/core/schema/defaults";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-describe("Bucket acceptance", () => {
+describe("BucketController", () => {
   let app: INestApplication;
   let req: Request;
 
   const bucket = {
-    _id: new ObjectId(),
+    _id: "__skip__",
     title: "New Bucket",
     description: "Describe your new bucket",
     icon: "view_stream",
     primary: "title",
     readOnly: false,
     history: true,
+    acl: {write: "true==true", read: "true==true"},
     properties: {
       title: {
         type: "string",
@@ -66,11 +67,17 @@ describe("Bucket acceptance", () => {
     req = module.get(Request);
     app.use(Middlewares.MergePatchJsonParser(10));
     await app.listen(req.socket);
+
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "__skip__" && typeof actual == typeof expected) {
+        return true;
+      }
+    });
   });
 
   afterEach(() => app.close());
 
-  describe("get requests", () => {
+  describe("get", () => {
     it("should get predefinedDefaults", async () => {
       const response = await req.get("/bucket/predefineddefaults", {});
       expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
@@ -84,41 +91,14 @@ describe("Bucket acceptance", () => {
     });
 
     it("should get specific bucket", async () => {
-      //add bucket
-      const insertedBucket = (await req.post("/bucket", bucket)).body;
-
-      //get bucket
-      const response = await req.get(`/bucket/${insertedBucket._id}`, {});
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-      expect(response.body).toEqual({
-        _id: insertedBucket._id,
-        title: "New Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        history: true,
-        properties: {
-          title: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          description: {
-            type: "textarea",
-            title: "description",
-            description: "Description of the row",
-            options: {position: "right"}
-          }
-        }
-      });
+      const {body: inserted} = await req.post("/bucket", bucket);
+      const {body: bkt} = await req.get(`/bucket/${inserted._id}`);
+      expect(bkt).toEqual(bucket);
     });
 
     it("should get all buckets", async () => {
-      //add buckets
-      const firstBucket = (await req.post("/bucket", bucket)).body;
-      const secondBucket = (await req.post("/bucket", {
+      const {body: firstBucket} = await req.post("/bucket", bucket);
+      const {body: secondBucket} = await req.post("/bucket", {
         ...bucket,
         properties: {
           name: {
@@ -134,78 +114,27 @@ describe("Bucket acceptance", () => {
             options: {position: "right", visible: true}
           }
         }
-      })).body;
+      });
 
-      const response = await req.get("/bucket", {});
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-
-      const buckets = response.body;
+      const {body: buckets} = await req.get("/bucket");
       expect(buckets.length).toBe(2);
       expect(buckets).toEqual([firstBucket, secondBucket]);
     });
   });
 
-  describe("add/update requests", () => {
+  describe("add/update", () => {
     it("should add new bucket and return it", async () => {
-      let response = await req.post("/bucket", bucket);
-      delete response.body._id;
-      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
-      expect(response.body).toEqual({
-        title: "New Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        history: true,
-        properties: {
-          title: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          description: {
-            type: "textarea",
-            title: "description",
-            description: "Description of the row",
-            options: {position: "right"}
-          }
-        }
-      });
+      const {body: inserted} = await req.post("/bucket", bucket);
+      expect(inserted).toEqual(bucket);
 
-      //get buckets to check updates
-      let buckets = (await req.get("/bucket", {})).body;
+      const {body: buckets} = await req.get("/bucket");
+
       expect(buckets.length).toBe(1);
-      delete buckets[0]._id;
-      expect(buckets[0]).toEqual({
-        title: "New Bucket",
-        description: "Describe your new bucket",
-        icon: "view_stream",
-        primary: "title",
-        readOnly: false,
-        history: true,
-        properties: {
-          title: {
-            type: "string",
-            title: "title",
-            description: "Title of the row",
-            options: {position: "left", visible: true}
-          },
-          description: {
-            type: "textarea",
-            title: "description",
-            description: "Description of the row",
-            options: {position: "right"}
-          }
-        }
-      });
+      expect(buckets[0]).toEqual(bucket);
     });
 
     it("should replace a single bucket", async () => {
-      // add bucket
-      const insertedBucket = (await req.post("/bucket", bucket)).body;
-
-      //update bucket
+      const {body: insertedBucket} = await req.post("/bucket", bucket);
       const updatedBucket = {
         ...insertedBucket,
         primary: "firstname",
@@ -225,23 +154,19 @@ describe("Bucket acceptance", () => {
         }
       };
 
-      const response = await req.put(`/bucket/${updatedBucket._id}`, updatedBucket);
-      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-      expect(response.body).toEqual(updatedBucket);
+      const {body: updateResult} = await req.put(`/bucket/${updatedBucket._id}`, updatedBucket);
+      expect(updateResult).toEqual(updatedBucket);
 
-      //get buckets to check updates
-      const buckets = (await req.get("/bucket", {})).body;
+      const {body: buckets} = await req.get("/bucket");
       expect(buckets.length).toBe(1);
       expect(buckets[0]).toEqual(updatedBucket);
     });
 
     it("should update bucket indexes", async () => {
-      //add buckets
-      const firstBucket = (await req.post("/bucket", {...bucket, title: "First Bucket"})).body;
-      const secondBucket = (await req.post("/bucket", {...bucket, title: "Second Bucket"})).body;
-      const thirdBucket = (await req.post("/bucket", {...bucket, title: "Third Bucket"})).body;
+      const {body: firstBucket} = await req.post("/bucket", {...bucket, title: "First Bucket"});
+      const {body: secondBucket} = await req.post("/bucket", {...bucket, title: "Second Bucket"});
+      const {body: thirdBucket} = await req.post("/bucket", {...bucket, title: "Third Bucket"});
 
-      //update their indexes
       await req.patch(
         `/bucket/${firstBucket._id}`,
         {order: 3},
@@ -264,8 +189,7 @@ describe("Bucket acceptance", () => {
         }
       );
 
-      const buckets = (await req.get("/bucket", {})).body;
-
+      const {body: buckets} = await req.get("/bucket");
       expect(buckets.map(bucket => bucket.title)).toEqual([
         "Second Bucket",
         "Third Bucket",
@@ -274,7 +198,7 @@ describe("Bucket acceptance", () => {
     });
   });
 
-  describe("delete requests", () => {
+  describe("delete", () => {
     it("should delete spesific bucket and it's documents", async () => {
       const firstInsertedBukcet = (await req.post("/bucket", bucket)).body;
       const secondInsertedBucket = (await req.post("/bucket", bucket)).body;
@@ -581,7 +505,7 @@ describe("Bucket acceptance", () => {
       it("should show error about relationType", async () => {
         bucket.properties.books = {
           type: "relation",
-          bucketId: new ObjectId()
+          bucketId: "id"
         };
 
         const response = await req.post("/bucket", bucket);
@@ -877,6 +801,80 @@ describe("Bucket acceptance", () => {
 
       let {body: scoresDocumentResponse} = await req.get(`/bucket/${scoresBucket._id}/data`, {});
       expect(scoresDocumentResponse).toEqual([
+        {
+          _id: score._id,
+          score: 500,
+          setting: setting._id
+        }
+      ]);
+    });
+
+    it("should update scores when scores bucket schema relation type changed", async () => {
+      const updatedScoresBucket = {
+        title: "Scores",
+        description: "Scores bucket",
+        properties: {
+          score: {
+            type: "number",
+            options: {}
+          },
+          user: {
+            type: "relation",
+            bucketId: usersBucket._id,
+            //relation type changes
+            relationType: "onetomany",
+            options: {}
+          },
+          setting: {
+            type: "relation",
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          }
+        }
+      };
+      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+
+      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+
+      expect(body).toEqual([
+        {
+          _id: score._id,
+          score: 500,
+          setting: setting._id
+        }
+      ]);
+    });
+
+    it("should update scores when scores bucket schema relational bucket changed", async () => {
+      const updatedScoresBucket = {
+        title: "Scores",
+        description: "Scores bucket",
+        properties: {
+          score: {
+            type: "number",
+            options: {}
+          },
+          user: {
+            type: "relation",
+            //relational bucket changes
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          },
+          setting: {
+            type: "relation",
+            bucketId: settingsBucket._id,
+            relationType: "onetoone",
+            options: {}
+          }
+        }
+      };
+      await req.put(`/bucket/${scoresBucket._id}`, updatedScoresBucket);
+
+      const {body} = await req.get(`/bucket/${scoresBucket._id}/data`);
+
+      expect(body).toEqual([
         {
           _id: score._id,
           score: 500,

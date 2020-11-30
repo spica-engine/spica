@@ -64,6 +64,9 @@
               transition: opacity 0.5s ease-in-out;
             }
           }
+          mat-error {
+            margin-left: 10px;
+          }
         }
 
         mat-list-item {
@@ -140,16 +143,18 @@
               padding: 0 2px;
             }
 
-            button:first-of-type {
-              margin-left: 5px;
+            button {
+              margin-left: 15px;
             }
           }
 
           &.triggers {
             display: inline-table;
-            padding-bottom: 20px;
-            height: 80px;
-
+            border: 1px solid rgba(var(--foreground-base-rgb), 0.1);
+            border-radius: 5px;
+            padding: 0px;
+            margin: 10px 24px;
+            width: calc(100% - 48px);
             ::ng-deep .mat-list-item-content > *:not(:first-child) {
               margin-left: 10px;
             }
@@ -166,8 +171,19 @@
                 }
               }
             }
-            button {
-              margin-left: 30px;
+
+            &:before {
+              content: "";
+              position: absolute;
+              top: -13px;
+              left: 24px;
+              width: 24px;
+              height: 24px;
+              border-top-left-radius: 5px;
+              border-top: 1px solid rgba(var(--foreground-base-rgb), 0.1);
+              border-left: 1px solid rgba(var(--foreground-base-rgb), 0.1);
+              transform: rotateZ(45deg);
+              background: var(--background-card);
             }
           }
 
@@ -179,12 +195,29 @@
             mat-form-field:not(:first-of-type) {
               margin-left: 10px;
             }
+            button {
+              margin-left: 15px;
+            }
+          }
+        }
+
+        .trigger-explanation {
+          padding: 0px 24px;
+          &:first-of-type {
+            padding-top: 10px;
+          }
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          &.error {
+            color: var(--warn-default);
           }
         }
 
         .new-trigger {
           width: calc(100% - 48px);
-          border: 1px dashed rgba(0, 0, 0, 0.07);
+          border: 1px dashed rgba(var(--foreground-base-rgb), 0.07);
           border-radius: 5px;
           margin: 16px 24px;
           padding: 15px;
@@ -195,12 +228,12 @@
 
   .sidecar-log-view {
     position: fixed;
-    top: 0px;
+    top: 64px;
     right: 0px;
     width: 450px;
-    height: 100%;
-    border-left: 1px solid #eeefee;
-    background: #fafafa;
+    height: calc(100% - 64px);
+    border-left: 1px solid rgba(var(--foreground-divider-rgb), 0.05);
+    background: var(--background-background);
     ::ng-deep {
       mat-form-field {
         margin: 0px !important;
@@ -237,5 +270,9 @@
         }
       }
     }
+  }
+
+  .hidden {
+    display: none !important;
   }
 }
