@@ -92,8 +92,9 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
+    const insertedBucket = await this.bs.insertOne(bucket);
     this.bs.emitSchemaChanges();
-    return this.bs.insertOne(bucket);
+    return insertedBucket;
   }
 
   /**
