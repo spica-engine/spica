@@ -16,7 +16,8 @@
   "dependencies": {
     "node-fetch": "^2.6.0",
     "@types/json-schema": "^7.0.3",
-    "rxjs": "6.6.3",
+    "rxjs": "^6.6.3",
+    "@types/ws": "^7.4.0",
     "ws":"^7.4.0"
   },
   "devDependencies": {

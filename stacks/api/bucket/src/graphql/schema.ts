@@ -1,9 +1,6 @@
 import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {GraphQLResolveInfo} from "graphql";
-import {buildI18nAggregation, Locale} from "../locale";
-import {deepCopy} from "../patch";
-import {getRelationAggregation} from "../relation";
 
 enum Prefix {
   Type = "type",
@@ -15,25 +12,151 @@ enum Suffix {
   Input = "Input"
 }
 
-export interface SchemaError {
+export interface SchemaWarning {
   target: string;
   reason: string;
 }
 
-export function createSchema(
-  bucket: Bucket,
-  staticTypes: string,
-  bucketIds: string[],
-  errors: SchemaError[]
-) {
-  let name = getBucketName(bucket._id);
+export function validateBuckets(buckets: Bucket[]) {
+  const warnings: SchemaWarning[] = [];
+  for (const bucket of buckets) {
+    validateProperties(
+      bucket,
+      getBucketName(bucket._id),
+      buckets.map(bucket => bucket._id.toString()),
+      warnings
+    );
+  }
+  return {warnings, buckets};
+}
 
+function validateProperties(
+  bucket: Bucket,
+  baseName: string,
+  bucketIds: string[],
+  errors: SchemaWarning[]
+) {
+  for (const [key, definition] of Object.entries(bucket.properties)) {
+    if (!validateName(key)) {
+      errors.push({
+        target: baseName + "." + key,
+        reason:
+          "Name specification must start with an alphabetic character and can not include any non-letter character."
+      });
+
+      delete bucket.properties[key];
+      bucket.properties[replaceName(key)] = getDefaultDefinition();
+
+      if (bucket.required) {
+        const requiredIndex = bucket.required.findIndex(field => field == key);
+        if (requiredIndex != -1) {
+          bucket.required.splice(requiredIndex, 1);
+        }
+      }
+
+      //name and definition changed, skip the definition validation
+      continue;
+    }
+
+    validateDefinition(definition, baseName + "." + key, bucketIds, errors);
+  }
+}
+
+function validateDefinition(
+  definition: any,
+  name: string,
+  bucketIds: string[],
+  errors: SchemaWarning[]
+) {
+  if (definition.enum && !validateEnum(definition.enum)) {
+    const reason = !definition.enum.length
+      ? "Enum values must contain at least one item."
+      : "Enum values must start with an alphabetic character and can not include any non-letter character.";
+    errors.push({
+      target: name,
+      reason: reason
+    });
+
+    delete definition.enum;
+  }
+
+  switch (definition.type) {
+    case "array":
+      validateDefinition(definition.items, `${name}_array`, bucketIds, errors);
+      break;
+
+    case "string":
+      break;
+
+    case "textarea":
+      break;
+
+    case "richtext":
+      break;
+
+    case "color":
+      break;
+
+    case "storage":
+      break;
+
+    case "object":
+      validateProperties(definition as Bucket, name, bucketIds, errors);
+      break;
+
+    case "date":
+      break;
+
+    case "number":
+      break;
+
+    case "boolean":
+      break;
+
+    case "location":
+      break;
+
+    case "relation":
+      const reasons = [];
+      if (!relationTypeValid(definition.relationType)) {
+        reasons.push(`Relation type '${definition.relationType}' is invalid.`);
+      }
+
+      if (!relatedBucketExists(definition.bucketId, bucketIds)) {
+        reasons.push(`Related bucket '${definition.bucketId}' does not exist.`);
+      }
+
+      if (reasons.length) {
+        for (const reason of reasons) {
+          errors.push({
+            target: name,
+            reason: reason
+          });
+        }
+
+        writeDefaultDefinition(definition);
+      }
+
+      break;
+
+    default:
+      errors.push({
+        target: name,
+        reason: `Type '${definition.type}' is invalid type.`
+      });
+      writeDefaultDefinition(definition);
+      break;
+  }
+}
+
+export function createSchema(bucket: Bucket, staticTypes: string, bucketIds: string[]) {
+  const name = getBucketName(bucket._id);
   let schema = `
       ${staticTypes}
       
       type ${name}FindResponse{
         meta: Meta
-        entries: [${name}]
+        data: [${name}]
       }
 
       type Query{
@@ -49,11 +172,11 @@ export function createSchema(
       }
     `;
 
-  let types = createInterface(Prefix.Type, Suffix.Type, name, bucket, [], bucketIds, errors);
+  const types = createInterface(Prefix.Type, Suffix.Type, name, bucket, [], bucketIds);
 
-  let inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, [], bucketIds, errors);
+  const inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, [], bucketIds);
 
-  schema = schema + types + inputs;
+  schema += types + inputs;
 
   return schema;
 }
@@ -64,19 +187,18 @@ function createInterface(
   name: string,
   schema: any,
   extras: string[],
-  bucketIds: string[],
-  errors: SchemaError[]
+  bucketIds: string[]
 ) {
-  let properties = [];
+  const properties = [];
 
   if (schema._id && prefix == Prefix.Type) {
     properties.push("_id: ObjectID");
   }
 
-  for (const [key, value] of Object.entries(schema.properties) as any) {
-    let isRequired = schema.required && schema.required.includes(key);
+  for (const [key, value] of Object.entries(schema.properties)) {
+    const isRequired = schema.required && schema.required.includes(key);
 
-    let property = createProperty(
+    const property = createProperty(
       name,
       prefix,
       suffix,
@@ -84,14 +206,13 @@ function createInterface(
       value,
       isRequired,
       extras,
-      bucketIds,
-      errors
+      bucketIds
     );
 
     properties.push(property);
   }
 
-  let result =
+  const result =
     `
       ${prefix} ${name + suffix}{
         ${properties.join("\n")}
@@ -117,25 +238,8 @@ function createProperty(
   value: any,
   isRequired: Boolean,
   extras: string[],
-  bucketIds: string[],
-  errors: SchemaError[]
+  bucketIds: string[]
 ) {
-  if (!validateName(key)) {
-    //we dont need to push errors for input definitions
-    if (prefix == Prefix.Type) {
-      errors.push({
-        target: name + "." + key,
-        reason:
-          "Name specification must start with an alphabetic character and can not include any non-letter character."
-      });
-    }
-
-    key = replaceName(key);
-    //we do not need to check actual type of this field, it will be ignored cause of the replacements of name
-    value = defaultDefinition();
-    isRequired = false;
-  }
-
   return `${key}: ${createPropertyValue(
     name,
     prefix,
@@ -144,15 +248,21 @@ function createProperty(
     value,
     isRequired,
     extras,
-    bucketIds,
-    errors
+    bucketIds
   )}`;
 }
 
-function defaultDefinition() {
+function getDefaultDefinition() {
   return {
     type: "string"
-  };
+  } as any;
+}
+
+function writeDefaultDefinition(definition: any) {
+  for (const key of Object.keys(definition)) {
+    delete definition[key];
+  }
+  definition.type = "string";
 }
 
 function validateName(name: string) {
@@ -165,7 +275,7 @@ function replaceName(name: string) {
 }
 
 function validateEnum(values: string[]) {
-  return values.every(value => validateName(value));
+  return values.length ? values.every(value => validateName(value)) : false;
 }
 
 function createPropertyValue(
@@ -176,25 +286,13 @@ function createPropertyValue(
   value: any,
   isRequired: Boolean,
   extras: string[],
-  bucketIds: string[],
-  errors: SchemaError[]
+  bucketIds: string[]
 ) {
   let result;
 
   if (value.enum) {
-    if (!validateEnum(value.enum)) {
-      if (prefix == Prefix.Type) {
-        errors.push({
-          target: name + "." + key,
-          reason:
-            "Enums must start with an alphabetic character and can not include any non-letter character."
-        });
-      }
-      return "String";
-    }
-
     if (prefix == Prefix.Type) {
-      let extra = createEnum(`${name}_${key}`, value.enum);
+      const extra = createEnum(`${name}_${key}`, value.enum);
       extras.push(extra);
     }
 
@@ -211,8 +309,7 @@ function createPropertyValue(
         value.items,
         false,
         extras,
-        bucketIds,
-        errors
+        bucketIds
       )}]`;
       break;
 
@@ -237,7 +334,7 @@ function createPropertyValue(
       break;
 
     case "object":
-      let extra = createInterface(prefix, suffix, `${name}_${key}`, value, [], bucketIds, errors);
+      const extra = createInterface(prefix, suffix, `${name}_${key}`, value, [], bucketIds);
       extras.push(extra);
       result = `${name}_${key}` + suffix;
       break;
@@ -259,30 +356,6 @@ function createPropertyValue(
       break;
 
     case "relation":
-      let validBucketId = relatedBucketValid(value.bucketId, bucketIds);
-      let validRelationType = relationTypeValid(value.relationType);
-
-      if (!validBucketId || !validRelationType) {
-        if (prefix == Prefix.Type) {
-          if (!validBucketId) {
-            errors.push({
-              target: name + "." + key,
-              reason: `Related bucket '${value.bucketId}' does not exist.`
-            });
-          }
-
-          if (!validRelationType) {
-            errors.push({
-              target: name + "." + key,
-              reason: `Relation type '${value.relationType}' is invalid type.`
-            });
-          }
-        }
-
-        result = value.relationType == "onetomany" ? "[String]" : "String";
-        break;
-      }
-
       result = prefix == Prefix.Type ? getBucketName(value.bucketId) : "String";
 
       if (value.relationType == "onetomany") {
@@ -290,16 +363,6 @@ function createPropertyValue(
       }
 
       break;
-
-    default:
-      if (prefix == Prefix.Type) {
-        errors.push({
-          target: name + "." + key,
-          reason: `Type '${value.type}' is invalid type.`
-        });
-      }
-
-      result = "String";
   }
 
   if (isRequired && prefix == Prefix.Input) {
@@ -309,7 +372,7 @@ function createPropertyValue(
   return result;
 }
 
-function relatedBucketValid(bucketId: string, bucketIds: string[]) {
+function relatedBucketExists(bucketId: string, bucketIds: string[]) {
   return bucketIds.includes(bucketId);
 }
 
@@ -317,45 +380,12 @@ function relationTypeValid(relationType: string) {
   return relationType == "onetoone" || relationType == "onetomany";
 }
 
-export function getBucketName(uniqueField: string | ObjectId): string {
-  return `Bucket_${uniqueField.toString()}`;
-}
-
-export async function aggregationsFromRequestedFields(
-  bucket: Bucket,
-  requestedFields: string[][],
-  localeFactory: (language?: string) => Promise<Locale>,
-  buckets: Bucket[],
-  language?: string
-) {
-  let aggregations = [];
-
-  let locale: Locale;
-  if (requestedFields.length) {
-    if (relationalFieldRequested(bucket.properties, requestedFields)) {
-      locale = await localeFactory(language);
-      let relationAggregation = await getRelationAggregation(
-        bucket.properties,
-        deepCopy(requestedFields),
-        locale,
-        (bucketId: string) => Promise.resolve(buckets.find(b => b._id.toString() == bucketId))
-      );
-      aggregations.push(...relationAggregation);
-    }
-
-    if (translatableFieldRequested(bucket.properties, requestedFields)) {
-      locale = locale ? locale : await localeFactory(language);
-      aggregations.push({
-        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-      });
-    }
-  }
-
-  return aggregations;
+export function getBucketName(id: string | ObjectId): string {
+  return `Bucket_${id.toString()}`;
 }
 
 export function requestedFieldsFromInfo(info: GraphQLResolveInfo, rootKey?: string): string[][] {
-  let [result] = info.fieldNodes.map(node =>
+  const [result] = info.fieldNodes.map(node =>
     extractFieldsFromNode(rootKey ? mergeNodes(node, rootKey) : node, [])
   );
 
@@ -365,7 +395,7 @@ export function requestedFieldsFromInfo(info: GraphQLResolveInfo, rootKey?: stri
 function extractFieldsFromNode(node: any, fields: string[]) {
   let result = [];
   node.selectionSet.selections.forEach(selection => {
-    let currentPath = fields.concat([selection.name.value]);
+    const currentPath = fields.concat([selection.name.value]);
 
     if (selection.selectionSet) {
       result = result.concat(extractFieldsFromNode(selection, currentPath));
@@ -394,16 +424,16 @@ function mergeNodes(node: any, rootKey: string) {
 }
 
 export function getProjectAggregation(requestedFields: string[][]) {
-  let result = {};
-  requestedFields.forEach(pattern => {
-    let path = pattern.join(".");
+  const result = {};
+  for (const pattern of requestedFields) {
+    const path = pattern.join(".");
     result[path] = 1;
-  });
+  }
   return {$project: result};
 }
 
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
-  let bucketProperties = bucket.properties;
+  const bucketProperties = bucket.properties;
   if (ObjectId.isValid(bucket._id)) {
     bucketProperties._id = {
       type: "objectid"
@@ -413,26 +443,27 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
   let finalExpression = {};
   for (const [key, value] of Object.entries(query)) {
     if (key == "OR" || key == "AND") {
-      let conditions = [];
-      let operator = `$${key.toLowerCase()}`;
-      value.forEach(condition => {
-        let conditionExpression = extractAggregationFromQuery(bucket, condition, buckets);
+      const conditions = [];
+      const operator = `$${key.toLowerCase()}`;
+
+      for (const condition of value) {
+        const conditionExpression = extractAggregationFromQuery(bucket, condition, buckets);
 
         if (Object.keys(conditionExpression).length) {
           conditions.push(conditionExpression);
         }
-      });
+      }
 
       if (conditions.length) {
-        let expression = {
+        const expression = {
           [operator]: conditions
         };
         finalExpression = {...finalExpression, ...expression};
       }
     } else if (isParsableObject(value)) {
       if (bucket.properties[key].type == "relation") {
-        let relatedBucketId = bucket.properties[key].bucketId;
-        let relatedBucket = buckets.find(bucket => bucket._id == relatedBucketId);
+        const relatedBucketId = bucket.properties[key].bucketId;
+        const relatedBucket = buckets.find(bucket => bucket._id == relatedBucketId);
 
         bucket.properties[key] = {
           _id: relatedBucketId,
@@ -447,7 +478,7 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
         finalExpression = {...finalExpression, ...expression};
       }
     } else {
-      let expression = createExpression(key, value, bucketProperties);
+      const expression = createExpression(key, value, bucketProperties);
 
       if (expression) {
         //deep merge
@@ -466,7 +497,9 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
 }
 
 function createExpression(key: string, value: any, bucketProperties: any): object {
-  let desiredProperty = Object.keys(bucketProperties).find(bucketProperty => bucketProperty == key);
+  const desiredProperty = Object.keys(bucketProperties).find(
+    bucketProperty => bucketProperty == key
+  );
 
   if (desiredProperty) {
     value = castToOriginalType(value, bucketProperties[desiredProperty]);
@@ -474,9 +507,9 @@ function createExpression(key: string, value: any, bucketProperties: any): objec
       [desiredProperty]: value
     };
   } else {
-    let property = key.substring(0, key.lastIndexOf("_"));
-    let operator = key.substring(key.lastIndexOf("_") + 1);
-    let desiredProperty = Object.keys(bucketProperties).find(
+    const property = key.substring(0, key.lastIndexOf("_"));
+    const operator = key.substring(key.lastIndexOf("_") + 1);
+    const desiredProperty = Object.keys(bucketProperties).find(
       bucketProperty => bucketProperty == property
     );
 
@@ -512,20 +545,20 @@ function mergeNestedExpression(expression: any, path: string[]) {
   if (isParsableObject(expression)) {
     for (const [key, value] of Object.entries(expression)) {
       if (key.startsWith("$")) {
-        let expPath = path.join(".");
-        let result = {[expPath]: expression};
+        const expPath = path.join(".");
+        const result = {[expPath]: expression};
         finalResult = {...finalResult, ...result};
         continue;
       }
 
-      let result = mergeNestedExpression(value, path.concat([key]));
+      const result = mergeNestedExpression(value, path.concat([key]));
       if (isParsableObject(expression)) {
         finalResult = {...finalResult, ...result};
       }
     }
   } else {
-    let expPath = path.join(".");
-    let result = {[expPath]: expression};
+    const expPath = path.join(".");
+    const result = {[expPath]: expression};
     finalResult = {...finalResult, ...result};
   }
   return finalResult;
@@ -541,7 +574,7 @@ function isParsableObject(object: any): boolean {
 }
 
 function relationalFieldRequested(properties: object, requestedFields: string[][]): boolean {
-  let relatedFields = [];
+  const relatedFields = [];
   Object.keys(properties).forEach(key => {
     if (properties[key].type == "relation") {
       relatedFields.push(key);
@@ -552,7 +585,7 @@ function relationalFieldRequested(properties: object, requestedFields: string[][
 }
 
 function translatableFieldRequested(properties: object, requestedFields: string[][]): boolean {
-  let translatableFields = [];
+  const translatableFields = [];
   for (const [key, value] of Object.entries(properties)) {
     if (value.options && value.options.translate) {
       translatableFields.push(key);
@@ -567,7 +600,7 @@ export function requestedFieldsFromExpression(expression: object, requestedField
     if (key == "$or" || key == "$and") {
       value.forEach(condition => requestedFieldsFromExpression(condition, requestedFields));
     } else {
-      let field = key.split(".");
+      const field = key.split(".");
       requestedFields.push(field);
     }
   }

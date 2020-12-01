@@ -53,22 +53,22 @@ describe("GraphQLController", () => {
   afterEach(() => app.close());
 
   describe("No Bucket", () => {
-    beforeEach(async () => {
+    it("should return default response when there is no bucket ", async () => {
+      //remove existing buckets
       const {body: buckets} = await req.get("/bucket");
       if (buckets) {
-        let deletes = buckets.map(bucket => req.delete(`/bucket/${bucket._id}`));
+        const deletes = buckets.map(bucket => req.delete(`/bucket/${bucket._id}`));
         await Promise.all(deletes);
       }
 
       //wait until watcher send changes
       await new Promise(resolve => setTimeout(resolve, 500));
-    });
 
-    it("should return default response when there is no bucket ", async () => {
-      let params = {
+      const params = {
         query: "{spica}"
       };
-      let {body} = await req.get("/graphql", params);
+      const {body} = await req.get("/graphql", params);
+
       expect(body).toEqual({data: {spica: "Spica"}});
     });
   });
@@ -141,7 +141,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   _id
                   name
                   age
@@ -156,7 +156,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 5},
-              entries: [
+              data: [
                 {_id: rows[0]._id, name: "Jim", age: 20},
                 {_id: rows[1]._id, name: "Michael", age: 22},
                 {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -175,7 +175,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   name
                 }
               }
@@ -188,7 +188,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 5},
-              entries: [
+              data: [
                 {name: "Jim"},
                 {name: "Michael"},
                 {name: "Kevin"},
@@ -208,7 +208,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -223,7 +223,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [
+                data: [
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
                   {_id: rows[3]._id, name: "Dwight", age: 38},
@@ -241,7 +241,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -256,7 +256,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [{_id: rows[0]._id, name: "Jim", age: 20}]
+                data: [{_id: rows[0]._id, name: "Jim", age: 20}]
               }
             }
           });
@@ -269,7 +269,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -284,7 +284,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [{_id: rows[1]._id, name: "Michael", age: 22}]
+                data: [{_id: rows[1]._id, name: "Michael", age: 22}]
               }
             }
           });
@@ -299,7 +299,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -314,7 +314,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [
+                data: [
                   {_id: rows[0]._id, name: "Jim", age: 20},
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -332,7 +332,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   _id
                   name
                   age
@@ -347,7 +347,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [
+                data: [
                   {_id: rows[4]._id, name: "Toby", age: 30},
                   {_id: rows[3]._id, name: "Dwight", age: 38},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -366,7 +366,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -381,7 +381,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [
+                data: [
                   {_id: rows[3]._id, name: "Dwight", age: 38},
                   {_id: rows[0]._id, name: "Jim", age: 20},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -400,7 +400,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -415,7 +415,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [
+                data: [
                   {_id: rows[4]._id, name: "Toby", age: 30},
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -436,7 +436,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -451,7 +451,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 1},
-                entries: [{_id: rows[2]._id, name: "Kevin", age: 25}]
+                data: [{_id: rows[2]._id, name: "Kevin", age: 25}]
               }
             }
           });
@@ -489,7 +489,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -504,7 +504,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 3},
-                entries: [
+                data: [
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
                   {_id: rows[3]._id, name: "Dwight", age: 38}
@@ -573,7 +573,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     title
                     description
@@ -588,7 +588,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${languageBucketName}`]: {
                 meta: {total: 3},
-                entries: [
+                data: [
                   {
                     _id: languageRows[0]._id,
                     title: "english words",
@@ -617,7 +617,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     title
                     description
@@ -632,7 +632,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${languageBucketName}`]: {
                 meta: {total: 3},
-                entries: [
+                data: [
                   {
                     _id: languageRows[0]._id,
                     title: "türkçe kelimeler",
@@ -661,7 +661,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     title
                     description
@@ -676,7 +676,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${languageBucketName}`]: {
                 meta: {total: 3},
-                entries: [
+                data: [
                   {
                     _id: languageRows[0]._id,
                     title: "english words",
@@ -723,9 +723,9 @@ describe("GraphQLController", () => {
       });
 
       describe("relation", () => {
-        let today = new Date("2020-10-19T12:00:00.000Z");
-        let yesterday = new Date("2020-10-18T12:00:00.000Z");
-        let tomorrow = new Date("2020-10-20T12:00:00.000Z");
+        const today = new Date("2020-10-19T12:00:00.000Z");
+        const yesterday = new Date("2020-10-18T12:00:00.000Z");
+        const tomorrow = new Date("2020-10-20T12:00:00.000Z");
 
         let authorsBucket;
         let authorsBucketName;
@@ -942,7 +942,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   _id
                   title
                   publisher{
@@ -962,7 +962,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 3
                 },
-                entries: [
+                data: [
                   {
                     _id: books[0]._id,
                     title: "Priest With Vigor",
@@ -1031,7 +1031,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   _id
                   title
                   publisher{
@@ -1051,7 +1051,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 2
                 },
-                entries: [
+                data: [
                   {
                     _id: books[0]._id,
                     title: "Priest With Vigor",
@@ -1081,7 +1081,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   _id
                   name
                   books{
@@ -1101,7 +1101,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 1
                 },
-                entries: [
+                data: [
                   {
                     _id: publishers[0]._id,
                     name: "Comcast",
@@ -1129,7 +1129,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   _id
                   name
                   books{
@@ -1149,7 +1149,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 1
                 },
-                entries: [
+                data: [
                   {
                     _id: publishers[1]._id,
                     name: "Newell Brands",
@@ -1167,8 +1167,8 @@ describe("GraphQLController", () => {
         });
 
         it("should get publishers which has book that will be published at tomorrow", async () => {
-          let begin = new Date("2020-10-20T00:00:00.000Z");
-          let end = new Date("2020-10-20T23:59:59.999Z");
+          const begin = new Date("2020-10-20T00:00:00.000Z");
+          const end = new Date("2020-10-20T23:59:59.999Z");
 
           const params = {
             query: `{
@@ -1176,7 +1176,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   _id
                   name
                   books{
@@ -1196,7 +1196,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 1
                 },
-                entries: [
+                data: [
                   {
                     _id: publishers[1]._id,
                     name: "Newell Brands",
@@ -1220,7 +1220,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   title
                   publisher{
                     name
@@ -1244,7 +1244,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 3
                 },
-                entries: [
+                data: [
                   {
                     title: "Priest With Vigor",
                     publisher: {
@@ -1311,7 +1311,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                entries{
+                data{
                   title
                 }
               }
@@ -1325,7 +1325,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 2
                 },
-                entries: [
+                data: [
                   {
                     title: "Priest With Vigor"
                   },
@@ -1343,7 +1343,7 @@ describe("GraphQLController", () => {
         let scheduledDocument;
         beforeEach(async () => {
           //change this api request with graphql request after complete the support for inserting schedule document from graphql
-          let tomorrow = new Date(new Date().getTime() + 24 * 60 * 60 * 5000);
+          const tomorrow = new Date(new Date().getTime() + 24 * 60 * 60 * 5000);
           scheduledDocument = await req
             .post(`/bucket/${bucket._id}/data`, {name: "Julian", age: 77, _schedule: tomorrow})
             .then(r => r.body);
@@ -1355,7 +1355,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -1370,7 +1370,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 1},
-                entries: [{_id: scheduledDocument._id, name: "Julian", age: 77}]
+                data: [{_id: scheduledDocument._id, name: "Julian", age: 77}]
               }
             }
           });
@@ -1383,7 +1383,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  entries{
+                  data{
                     _id
                     name
                     age
@@ -1398,7 +1398,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                entries: [
+                data: [
                   {_id: rows[0]._id, name: "Jim", age: 20},
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -1451,7 +1451,7 @@ describe("GraphQLController", () => {
       });
 
       it("should insert new person", async () => {
-        let insertBody = {
+        const insertBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
                 _id
@@ -1461,7 +1461,7 @@ describe("GraphQLController", () => {
             }`
         };
 
-        let {body} = await req.post("/graphql", insertBody);
+        const {body} = await req.post("/graphql", insertBody);
 
         expect(body).toEqual({
           data: {
@@ -1478,7 +1478,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              entries{
+              data{
                 _id
                 name
                 age
@@ -1487,13 +1487,13 @@ describe("GraphQLController", () => {
           }`
         };
 
-        let {body: findBody} = await req.post("/graphql", params);
+        const {body: findBody} = await req.post("/graphql", params);
 
         expect(findBody).toEqual({
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 1},
-              entries: [{_id: insertedId, name: "James", age: 66}]
+              data: [{_id: insertedId, name: "James", age: 66}]
             }
           }
         });
@@ -1510,7 +1510,7 @@ describe("GraphQLController", () => {
               }
             }`
         };
-        let {body: insertBody} = await req.post("/graphql", requestBody);
+        const {body: insertBody} = await req.post("/graphql", requestBody);
         insertedId = insertBody.data[`insert${bucketName}`]._id;
 
         //update
@@ -1523,7 +1523,7 @@ describe("GraphQLController", () => {
             }
           }`
         };
-        let {body: replaceBody} = await req.post("/graphql", requestBody);
+        const {body: replaceBody} = await req.post("/graphql", requestBody);
         expect(replaceBody).toEqual({
           data: {
             [`replace${bucketName}`]: {_id: "__skip__", name: "John", age: 12}
@@ -1536,7 +1536,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              entries{
+              data{
                 _id
                 name
                 age
@@ -1544,12 +1544,12 @@ describe("GraphQLController", () => {
             }
           }`
         };
-        let {body: getBody} = await req.post("/graphql", params);
+        const {body: getBody} = await req.post("/graphql", params);
         expect(getBody).toEqual({
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 1},
-              entries: [{_id: insertedId, name: "John", age: 12}]
+              data: [{_id: insertedId, name: "John", age: 12}]
             }
           }
         });
@@ -1566,7 +1566,7 @@ describe("GraphQLController", () => {
               }
             }`
         };
-        let {body: insertBody} = await req.post("/graphql", requestBody);
+        const {body: insertBody} = await req.post("/graphql", requestBody);
         insertedId = insertBody.data[`insert${bucketName}`]._id;
 
         //patch
@@ -1579,7 +1579,7 @@ describe("GraphQLController", () => {
             }
           }`
         };
-        let {body} = await req.post("/graphql", requestBody);
+        const {body} = await req.post("/graphql", requestBody);
         expect(body).toEqual({
           data: {
             [`patch${bucketName}`]: {_id: "__skip__", name: "John", age: 66}
@@ -1592,7 +1592,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              entries{
+              data{
                 _id
                 name
                 age
@@ -1600,19 +1600,19 @@ describe("GraphQLController", () => {
             }
           }`
         };
-        let {body: getBody} = await req.post("/graphql", params);
+        const {body: getBody} = await req.post("/graphql", params);
         expect(getBody).toEqual({
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 1},
-              entries: [{_id: insertedId, name: "John", age: 66}]
+              data: [{_id: insertedId, name: "John", age: 66}]
             }
           }
         });
       });
 
       it("should delete person", async () => {
-        let requestBody = {
+        const requestBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
                 _id
@@ -1622,17 +1622,17 @@ describe("GraphQLController", () => {
             }`
         };
 
-        let {body} = await req.post("/graphql", requestBody);
+        const {body} = await req.post("/graphql", requestBody);
 
         insertedId = body.data[`insert${bucketName}`]._id;
 
-        let deleteBody = {
+        const deleteBody = {
           query: `mutation {
               delete${bucketName}(_id: "${insertedId}")
             }`
         };
 
-        let {body: deleteResponse} = await req.post("/graphql", deleteBody);
+        const {body: deleteResponse} = await req.post("/graphql", deleteBody);
 
         expect(deleteResponse).toEqual({
           data: {[`delete${bucketName}`]: ""}
@@ -1645,7 +1645,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              entries{
+              data{
                 _id
                 name
                 age
@@ -1654,13 +1654,13 @@ describe("GraphQLController", () => {
           }`
         };
 
-        let {body: getBody} = await req.post("/graphql", params);
+        const {body: getBody} = await req.post("/graphql", params);
 
         expect(getBody).toEqual({
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 0},
-              entries: []
+              data: []
             }
           }
         });
@@ -1668,7 +1668,7 @@ describe("GraphQLController", () => {
 
       describe("errors", () => {
         it("should throw error if name is not one of the enums", async () => {
-          let body = {
+          const body = {
             query: `mutation {
                 insert${bucketName}(input: { name: "David", age: 66 } ){
                   _id
@@ -1678,7 +1678,7 @@ describe("GraphQLController", () => {
               }`
           };
 
-          let error = await req.post("/graphql", body).catch(err => err);
+          const error = await req.post("/graphql", body).catch(err => err);
 
           expect(error.statusCode).toEqual(400);
           expect(error.statusText).toEqual("Bad Request");
@@ -1688,7 +1688,7 @@ describe("GraphQLController", () => {
         });
 
         it("should throw error if required field age is not provided", async () => {
-          let body = {
+          const body = {
             query: `mutation {
                 insert${bucketName}(input: { name: "David" } ){
                   _id
@@ -1698,7 +1698,7 @@ describe("GraphQLController", () => {
               }`
           };
 
-          let error = await req.post("/graphql", body).catch(e => e);
+          const error = await req.post("/graphql", body).catch(e => e);
 
           expect(error.statusCode).toEqual(400);
           expect(error.statusText).toEqual("Bad Request");
@@ -1718,7 +1718,7 @@ describe("GraphQLController", () => {
               }
             }`
           };
-          let {body: insertBody} = await req.post("/graphql", body);
+          const {body: insertBody} = await req.post("/graphql", body);
           insertedId = insertBody.data[`insert${bucketName}`]._id;
 
           //patch
@@ -1731,7 +1731,7 @@ describe("GraphQLController", () => {
             }
           }`
           };
-          let error = await req.post("/graphql", body).catch(e => e);
+          const error = await req.post("/graphql", body).catch(e => e);
 
           expect(error.statusCode).toEqual(400);
           expect(error.statusText).toEqual("Bad Request");
@@ -1744,8 +1744,10 @@ describe("GraphQLController", () => {
   });
 
   describe("Errors", () => {
-    it("should return response with warnings", async () => {
-      const bucket = await req
+    let bucket;
+    let bucketName;
+    beforeEach(async () => {
+      bucket = await req
         .post("/bucket", {
           title: "bucket",
           description: "bucket",
@@ -1763,26 +1765,19 @@ describe("GraphQLController", () => {
             },
             invalid_enums: {
               type: "string",
-              enum: ["1", "2", "3"]
+              enum: ["?invalid*", "valid"]
             }
-          }
+          },
+          required: ["relation_field", "123asd?qwe*", "invalid_enums"]
         })
         .then(r => r.body);
-
-      const relatedDocumentId = new ObjectId();
-
-      await req.post(`/bucket/${bucket._id}/data`, {
-        title: "new_title",
-        relation_field: relatedDocumentId,
-        "123asd?qwe*": "#fff",
-        invalid_enums: "1"
-      });
-
-      const bucketName = getBucketName(bucket._id);
+      bucketName = getBucketName(bucket._id);
 
       //wait until watcher send changes
       await new Promise(resolve => setTimeout(resolve, 500));
+    });
 
+    it("should return response with warnings", async () => {
       const params = {
         query: `{
             Find${bucketName}{
@@ -1798,11 +1793,11 @@ describe("GraphQLController", () => {
       expect(JSON.parse(response.headers.warnings)).toEqual([
         {
           target: `${bucketName}.relation_field`,
-          reason: "Related bucket 'unknown_bucket_id' does not exist."
+          reason: "Relation type 'manytomany' is invalid."
         },
         {
           target: `${bucketName}.relation_field`,
-          reason: "Relation type 'manytomany' is invalid type."
+          reason: "Related bucket 'unknown_bucket_id' does not exist."
         },
         {
           target: `${bucketName}.123asd?qwe*`,
@@ -1812,7 +1807,7 @@ describe("GraphQLController", () => {
         {
           target: `${bucketName}.invalid_enums`,
           reason:
-            "Enums must start with an alphabetic character and can not include any non-letter character."
+            "Enum values must start with an alphabetic character and can not include any non-letter character."
         }
       ]);
 
@@ -1820,7 +1815,7 @@ describe("GraphQLController", () => {
       expect(response.body).toEqual({
         data: {
           [`Find${bucketName}`]: {
-            meta: {total: 1}
+            meta: {total: 0}
           }
         }
       });
