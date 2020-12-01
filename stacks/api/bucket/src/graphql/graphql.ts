@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  OnModuleInit,
-  Optional,
-  PipeTransform,
-  ForbiddenException
-} from "@nestjs/common";
+import {Injectable, OnModuleInit, Optional, PipeTransform} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {Action, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
@@ -25,29 +19,23 @@ import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools
 import {createBucketDataActivity} from "../activity.resource";
 import {BucketDataService} from "../bucket-data.service";
 import {findLocale} from "../locale";
-import {applyPatch, deepCopy} from "../patch";
+import {applyPatch, deepCopy, getUpdateQueryForPatch} from "../patch";
 import {clearRelations, createHistory} from "../relation";
 import {
+  aggregationsFromRequestedFields,
   createSchema,
   extractAggregationFromQuery,
   getBucketName,
+  getProjectAggregation,
   requestedFieldsFromExpression,
   requestedFieldsFromInfo,
   SchemaWarning,
   validateBuckets
 } from "./schema";
-import {
-  findDocuments,
-  insertDocument,
-  replaceDocument,
-  patchDocument,
-  deleteDocument
-} from "../crud";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
 
 interface FindResponse {
   meta: {total: number};
-  data: BucketDocument[];
+  entries: BucketDocument[];
 }
 
 @Injectable()
@@ -136,8 +124,7 @@ export class GraphqlController implements OnModuleInit {
     private guardService: GuardService,
     private validator: Validator,
     @Optional() private activity: ActivityService,
-    @Optional() private history: HistoryService,
-    @Optional() private hookChangeEmitter: ChangeEmitter
+    @Optional() private history: HistoryService
   ) {
     this.bs.schemaChangeEmitter.subscribe(() => {
       this.bs.find().then(buckets => {
@@ -228,13 +215,18 @@ export class GraphqlController implements OnModuleInit {
       context: any,
       info: GraphQLResolveInfo
     ): Promise<FindResponse> => {
-      const resourceFilter = await this.authenticate(
+      const resourceFilterAggregation = await this.authenticate(
         context,
         "/bucket/:bucketId/data",
         {bucketId: bucket._id},
         ["bucket:data:index"],
         {resourceFilter: true}
       );
+
+      const aggregation = [];
+
+      aggregation.push(resourceFilterAggregation);
+      aggregation.push({$match: {_schedule: {$exists: schedule}}});
 
       let matchExpression = {};
       if (query && Object.keys(query).length) {
@@ -245,29 +237,57 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
-      const expressionFields = requestedFieldsFromExpression(matchExpression, []);
-      const responseFields = requestedFieldsFromInfo(info, "data");
-
-      return findDocuments(
-        bucket,
-        {
-          language,
-          req: context,
-          limit,
-          skip,
-          sort,
-          resourceFilter,
-          relationPaths: [...expressionFields, ...responseFields],
-          filter: matchExpression,
-          projectMap: responseFields
-        },
-        {localize: true, paginate: true, schedule},
-        {
-          collection: (bucketId: string) => this.bds.children(bucketId),
-          preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+      const requestedFields = requestedFieldsFromExpression(matchExpression, []).concat(
+        requestedFieldsFromInfo(info, "entries")
       );
+
+      const relationAndLocalization = await aggregationsFromRequestedFields(
+        deepCopy(bucket),
+        requestedFields,
+        this.getLocale,
+        deepCopy(this.buckets),
+        language
+      );
+      aggregation.push(...relationAndLocalization);
+
+      aggregation.push({$match: matchExpression});
+
+      if (requestedFields.length) {
+        const project = getProjectAggregation(requestedFields);
+        aggregation.push(project);
+      }
+
+      const subAggregation = [];
+      if (sort && Object.keys(sort).length) {
+        subAggregation.push({$sort: sort});
+      }
+
+      subAggregation.push({$skip: skip | 0});
+
+      if (limit) {
+        subAggregation.push({$limit: limit});
+      }
+
+      aggregation.push(
+        {
+          $facet: {
+            meta: [{$count: "total"}],
+            entries: subAggregation
+          }
+        },
+        {$unwind: "$meta"}
+      );
+
+      return this.bds
+        .children(bucket._id)
+        .aggregate<FindResponse>(aggregation)
+        .next()
+        .then(response => {
+          if (!response) {
+            return {meta: {total: 0}, entries: []};
+          }
+          return response;
+        });
     };
   }
 
@@ -286,27 +306,27 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
+      const aggregation = [];
+
       const requestedFields = requestedFieldsFromInfo(info);
-
-      const [document] = await findDocuments(
-        bucket,
-        {
-          language,
-          req: context,
-          relationPaths: requestedFields,
-          projectMap: requestedFields,
-          filter: {_id: new ObjectId(documentId)}
-        },
-        {localize: true, paginate: false},
-        {
-          collection: (bucketId: string) => this.bds.children(bucketId),
-          preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) =>
-            Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
-        }
+      const relationAndLocalization = await aggregationsFromRequestedFields(
+        deepCopy(bucket),
+        requestedFields,
+        this.getLocale,
+        deepCopy(this.buckets),
+        language
       );
+      aggregation.push(...relationAndLocalization);
 
-      return document;
+      aggregation.push({$match: {_id: documentId}});
+
+      const project = getProjectAggregation(requestedFields);
+      aggregation.push(project);
+
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -327,54 +347,32 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      const insertedDocument = await insertDocument(
-        bucket,
-        input,
-        {req: context},
-        {
-          collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
-      if (!insertedDocument) {
-        return;
-      }
+      const insertResult = await this.bds.children(bucket._id).insertOne(input);
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.POST, bucket._id, insertedDocument._id);
+        const _ = this.insertActivity(context, Action.POST, bucket._id, insertResult.insertedId);
       }
+
+      const aggregation = [];
 
       const requestedFields = requestedFieldsFromInfo(info);
-
-      const [document] = await findDocuments(
-        bucket,
-        {
-          relationPaths: requestedFields,
-          projectMap: requestedFields,
-          filter: {_id: insertedDocument._id},
-          req: context
-        },
-        {localize: true},
-        {
-          collection: (bucketId: string) => this.bds.children(bucketId),
-          preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+      const relationAndLocalization = await aggregationsFromRequestedFields(
+        deepCopy(bucket),
+        requestedFields,
+        this.getLocale,
+        deepCopy(this.buckets)
       );
+      aggregation.push(...relationAndLocalization);
 
-      if (this.hookChangeEmitter) {
-        this.hookChangeEmitter.emitChange(
-          {
-            bucket: bucket._id.toHexString(),
-            type: "insert"
-          },
-          document._id.toHexString(),
-          undefined,
-          document
-        );
-      }
+      aggregation.push({$match: {_id: insertResult._id}});
 
-      return document;
+      const project = getProjectAggregation(requestedFields);
+      aggregation.push(project);
+
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -395,19 +393,11 @@ export class GraphqlController implements OnModuleInit {
 
       await this.validateInput(bucket._id, input).catch(error => throwError(error.message, 400));
 
-      const previousDocument = await replaceDocument(
-        bucket,
-        {...input, _id: documentId},
-        {req: context},
-        {
-          collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
-
-      if (!previousDocument) {
-        return;
-      }
+      const previousDocument = await this.bds
+        .children(bucket._id)
+        .findOneAndReplace({_id: documentId}, input, {
+          returnOriginal: true
+        });
 
       const currentDocument = {...input, _id: documentId};
 
@@ -425,37 +415,26 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
+      const aggregation = [];
+
       const requestedFields = requestedFieldsFromInfo(info);
-
-      const [document] = await findDocuments(
-        bucket,
-        {
-          relationPaths: requestedFields,
-          projectMap: requestedFields,
-          filter: {_id: new ObjectId(documentId)},
-          req: context
-        },
-        {localize: true},
-        {
-          collection: (bucketId: string) => this.bds.children(bucketId),
-          preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+      const relationAndLocalization = await aggregationsFromRequestedFields(
+        deepCopy(bucket),
+        requestedFields,
+        this.getLocale,
+        deepCopy(this.buckets)
       );
+      aggregation.push(...relationAndLocalization);
 
-      if (this.hookChangeEmitter) {
-        this.hookChangeEmitter.emitChange(
-          {
-            bucket: bucket._id.toHexString(),
-            type: "update"
-          },
-          documentId,
-          previousDocument,
-          currentDocument
-        );
-      }
+      aggregation.push({$match: {_id: documentId}});
 
-      return document;
+      const project = getProjectAggregation(requestedFields);
+      aggregation.push(project);
+
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -482,21 +461,11 @@ export class GraphqlController implements OnModuleInit {
         throwError(error.message, 400)
       );
 
-      const currentDocument = await patchDocument(
-        bucket,
-        {...patchedDocument, _id: documentId},
-        input,
-        {req: context},
-        {
-          collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        },
-        {returnOriginal: false}
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
+      const updateQuery = getUpdateQueryForPatch(input);
 
-      if (!currentDocument) {
-        return;
-      }
+      const currentDocument = await this.bds
+        .children(bucket._id)
+        .findOneAndUpdate({_id: documentId}, updateQuery, {returnOriginal: false});
 
       if (this.history) {
         const promise = createHistory(
@@ -512,37 +481,26 @@ export class GraphqlController implements OnModuleInit {
         const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
       }
 
+      const aggregation = [];
+
       const requestedFields = requestedFieldsFromInfo(info);
-
-      const [document] = await findDocuments(
-        bucket,
-        {
-          relationPaths: requestedFields,
-          projectMap: requestedFields,
-          filter: {_id: currentDocument._id},
-          req: context
-        },
-        {localize: true},
-        {
-          collection: (bucketId: string) => this.bds.children(bucketId),
-          preference: () => this.bs.getPreferences(),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
+      const relationAndLocalization = await aggregationsFromRequestedFields(
+        deepCopy(bucket),
+        requestedFields,
+        this.getLocale,
+        deepCopy(this.buckets)
       );
+      aggregation.push(...relationAndLocalization);
 
-      if (this.hookChangeEmitter) {
-        this.hookChangeEmitter.emitChange(
-          {
-            bucket: bucket._id.toHexString(),
-            type: "update"
-          },
-          documentId,
-          previousDocument,
-          currentDocument
-        );
-      }
+      aggregation.push({$match: {_id: documentId}});
 
-      return document;
+      const project = getProjectAggregation(requestedFields);
+      aggregation.push(project);
+
+      return this.bds
+        .children(bucket._id)
+        .aggregate(aggregation)
+        .next();
     };
   }
 
@@ -561,42 +519,17 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      const deletedDocument = await deleteDocument(
-        bucket,
-        documentId,
-        {req: context},
-        {
-          collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
-        }
-      ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
-
-      if (!deletedDocument) {
-        return;
-      }
-
       await clearRelations(this.bs, bucket._id, documentId);
-
       if (this.history) {
         await this.history.deleteMany({
           document_id: documentId
         });
       }
 
+      await this.bds.children(bucket._id).deleteOne({_id: documentId});
+
       if (this.activity) {
         const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
-      }
-
-      if (this.hookChangeEmitter) {
-        this.hookChangeEmitter.emitChange(
-          {
-            bucket: bucket._id.toHexString(),
-            type: "delete"
-          },
-          documentId,
-          deletedDocument,
-          undefined
-        );
       }
 
       return "";
@@ -604,14 +537,14 @@ export class GraphqlController implements OnModuleInit {
   }
 
   insertActivity(
-    request: any,
+    context: any,
     method: Action,
     bucketId: string | ObjectId,
     documentId: string | ObjectId
   ) {
-    request.params.bucketId = bucketId;
-    request.params.documentId = documentId;
-    request.method = Action[method];
+    context.params.bucketId = bucketId;
+    context.params.documentId = documentId;
+    context.method = Action[method];
 
     const response = {
       _id: documentId
@@ -620,7 +553,7 @@ export class GraphqlController implements OnModuleInit {
     return createActivity(
       {
         switchToHttp: () => ({
-          getRequest: () => request
+          getRequest: () => context
         })
       } as any,
       response,

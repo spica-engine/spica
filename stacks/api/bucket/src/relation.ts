@@ -21,19 +21,38 @@ export function findRelations(
   return targets;
 }
 
-export function getRelationPaths(target: Bucket | string[]) {
-  if (Array.isArray(target)) {
-    return target.map(pattern => pattern.split("."));
-  }
+export async function getRelationAggregation(
+  properties: object,
+  fields: string[][],
+  locale: Locale,
+  getSchema: (bucketId: string) => Promise<Bucket>
+) {
+  let aggregations = [];
+  for (const [key, value] of Object.entries(properties)) {
+    if (value.type == "relation") {
+      let relateds = fields.filter(field => field[0] == key);
+      if (relateds.length) {
+        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
 
-  const relationPaths = [];
-  for (const propertyKey in target.properties) {
-    if (target.properties[propertyKey].type != "relation") {
-      continue;
+        let relatedBucket = await getSchema(value.bucketId);
+
+        //Remove first key to continue recursive lookup
+        relateds = relateds.map(field => field.slice(1));
+
+        let innerLookup = await getRelationAggregation(
+          relatedBucket.properties,
+          relateds,
+          locale,
+          getSchema
+        );
+
+        aggregation[0]["$lookup"].pipeline.push(...innerLookup);
+
+        aggregations.push(...aggregation);
+      }
     }
-    relationPaths.push([propertyKey]);
   }
-  return relationPaths;
+  return aggregations;
 }
 
 export function getRelationPipeline(map: RelationMap[], locale: Locale): object[] {

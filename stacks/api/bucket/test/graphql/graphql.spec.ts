@@ -146,7 +146,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   _id
                   name
                   age
@@ -161,7 +161,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 5},
-              data: [
+              entries: [
                 {_id: rows[0]._id, name: "Jim", age: 20},
                 {_id: rows[1]._id, name: "Michael", age: 22},
                 {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -180,7 +180,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   name
                 }
               }
@@ -193,7 +193,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 5},
-              data: [
+              entries: [
                 {name: "Jim"},
                 {name: "Michael"},
                 {name: "Kevin"},
@@ -213,7 +213,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -228,7 +228,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [
+                entries: [
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
                   {_id: rows[3]._id, name: "Dwight", age: 38},
@@ -246,7 +246,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -261,7 +261,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [{_id: rows[0]._id, name: "Jim", age: 20}]
+                entries: [{_id: rows[0]._id, name: "Jim", age: 20}]
               }
             }
           });
@@ -274,7 +274,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -289,7 +289,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [{_id: rows[1]._id, name: "Michael", age: 22}]
+                entries: [{_id: rows[1]._id, name: "Michael", age: 22}]
               }
             }
           });
@@ -304,7 +304,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -319,7 +319,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [
+                entries: [
                   {_id: rows[0]._id, name: "Jim", age: 20},
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -337,7 +337,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   _id
                   name
                   age
@@ -352,7 +352,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [
+                entries: [
                   {_id: rows[4]._id, name: "Toby", age: 30},
                   {_id: rows[3]._id, name: "Dwight", age: 38},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -371,7 +371,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -386,7 +386,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [
+                entries: [
                   {_id: rows[3]._id, name: "Dwight", age: 38},
                   {_id: rows[0]._id, name: "Jim", age: 20},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -405,7 +405,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -420,7 +420,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [
+                entries: [
                   {_id: rows[4]._id, name: "Toby", age: 30},
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -441,7 +441,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -456,7 +456,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 1},
-                data: [{_id: rows[2]._id, name: "Kevin", age: 25}]
+                entries: [{_id: rows[2]._id, name: "Kevin", age: 25}]
               }
             }
           });
@@ -494,7 +494,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -509,7 +509,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 3},
-                data: [
+                entries: [
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
                   {_id: rows[3]._id, name: "Dwight", age: 38}
@@ -578,7 +578,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     title
                     description
@@ -593,7 +593,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${languageBucketName}`]: {
                 meta: {total: 3},
-                data: [
+                entries: [
                   {
                     _id: languageRows[0]._id,
                     title: "english words",
@@ -622,7 +622,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     title
                     description
@@ -637,7 +637,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${languageBucketName}`]: {
                 meta: {total: 3},
-                data: [
+                entries: [
                   {
                     _id: languageRows[0]._id,
                     title: "türkçe kelimeler",
@@ -666,7 +666,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     title
                     description
@@ -681,7 +681,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${languageBucketName}`]: {
                 meta: {total: 3},
-                data: [
+                entries: [
                   {
                     _id: languageRows[0]._id,
                     title: "english words",
@@ -947,7 +947,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   _id
                   title
                   publisher{
@@ -967,7 +967,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 3
                 },
-                data: [
+                entries: [
                   {
                     _id: books[0]._id,
                     title: "Priest With Vigor",
@@ -1036,7 +1036,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   _id
                   title
                   publisher{
@@ -1056,7 +1056,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 2
                 },
-                data: [
+                entries: [
                   {
                     _id: books[0]._id,
                     title: "Priest With Vigor",
@@ -1086,7 +1086,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   _id
                   name
                   books{
@@ -1106,7 +1106,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 1
                 },
-                data: [
+                entries: [
                   {
                     _id: publishers[0]._id,
                     name: "Comcast",
@@ -1134,7 +1134,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   _id
                   name
                   books{
@@ -1154,7 +1154,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 1
                 },
-                data: [
+                entries: [
                   {
                     _id: publishers[1]._id,
                     name: "Newell Brands",
@@ -1181,7 +1181,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   _id
                   name
                   books{
@@ -1201,7 +1201,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 1
                 },
-                data: [
+                entries: [
                   {
                     _id: publishers[1]._id,
                     name: "Newell Brands",
@@ -1225,7 +1225,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   title
                   publisher{
                     name
@@ -1249,7 +1249,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 3
                 },
-                data: [
+                entries: [
                   {
                     title: "Priest With Vigor",
                     publisher: {
@@ -1316,7 +1316,7 @@ describe("GraphQLController", () => {
                 meta{
                   total
                 }
-                data{
+                entries{
                   title
                 }
               }
@@ -1330,7 +1330,7 @@ describe("GraphQLController", () => {
                 meta: {
                   total: 2
                 },
-                data: [
+                entries: [
                   {
                     title: "Priest With Vigor"
                   },
@@ -1360,7 +1360,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -1375,7 +1375,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 1},
-                data: [{_id: scheduledDocument._id, name: "Julian", age: 77}]
+                entries: [{_id: scheduledDocument._id, name: "Julian", age: 77}]
               }
             }
           });
@@ -1388,7 +1388,7 @@ describe("GraphQLController", () => {
                   meta{
                     total
                   }
-                  data{
+                  entries{
                     _id
                     name
                     age
@@ -1403,7 +1403,7 @@ describe("GraphQLController", () => {
             data: {
               [`Find${bucketName}`]: {
                 meta: {total: 5},
-                data: [
+                entries: [
                   {_id: rows[0]._id, name: "Jim", age: 20},
                   {_id: rows[1]._id, name: "Michael", age: 22},
                   {_id: rows[2]._id, name: "Kevin", age: 25},
@@ -1483,7 +1483,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              data{
+              entries{
                 _id
                 name
                 age
@@ -1498,7 +1498,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 1},
-              data: [{_id: insertedId, name: "James", age: 66}]
+              entries: [{_id: insertedId, name: "James", age: 66}]
             }
           }
         });
@@ -1541,7 +1541,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              data{
+              entries{
                 _id
                 name
                 age
@@ -1554,7 +1554,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 1},
-              data: [{_id: insertedId, name: "John", age: 12}]
+              entries: [{_id: insertedId, name: "John", age: 12}]
             }
           }
         });
@@ -1597,7 +1597,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              data{
+              entries{
                 _id
                 name
                 age
@@ -1610,7 +1610,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 1},
-              data: [{_id: insertedId, name: "John", age: 66}]
+              entries: [{_id: insertedId, name: "John", age: 66}]
             }
           }
         });
@@ -1650,7 +1650,7 @@ describe("GraphQLController", () => {
               meta{
                 total
               }
-              data{
+              entries{
                 _id
                 name
                 age
@@ -1665,7 +1665,7 @@ describe("GraphQLController", () => {
           data: {
             [`Find${bucketName}`]: {
               meta: {total: 0},
-              data: []
+              entries: []
             }
           }
         });
