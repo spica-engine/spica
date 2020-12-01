@@ -169,7 +169,6 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
       delete: async object => {
         const fn = await functionStore.get(object.spec.func);
         if (fn) {
-          await v1_trigger_to_internal(object);
           await fs.updateOne(
             {_id: new ObjectId(fn.metadata.uid)},
             {$unset: {[`triggers.${object.spec.name}`]: ""}}
