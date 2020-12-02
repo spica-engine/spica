@@ -25,14 +25,34 @@ export function inform<T>(options: InformAdd<T> | InformUpdate<T> | InformDelete
 
   // TODO: conversion of the objects from to desired version
 
-  for (const func of funcs) {
-    if (options.type == "add" && func.add) {
-      func.add(options.obj);
-    } else if (options.type == "update" && func.update) {
-      func.update(options.oldObj, options.newObj);
-    } else if (options.type == "delete" && func.delete) {
-      func.delete(options.obj);
+  const MAX_RETRY = 5;
+
+  const process = async (func, retry = 1) => {
+    try {
+      if (options.type == "add" && func.add) {
+        await func.add(options.obj);
+      } else if (options.type == "update" && func.update) {
+        await func.update(options.oldObj, options.newObj);
+      } else if (options.type == "delete" && func.delete) {
+        await func.delete(options.obj);
+      }
+    } catch(err) {
+      if (retry - 1 >= MAX_RETRY) {
+        return console.debug(
+          `bail: informer has reached the exponetial back-off limit ${MAX_RETRY} for event ${options.type} on ${options.groupResource.group} ${options.groupResource.resource}`
+        );
+      }
+      console.log(err);
+      console.debug(
+        `retrying (${retry}) the event ${options.type} on ${options.groupResource.group} ${options.groupResource.resource}`
+      );
+      await new Promise(resolve => setTimeout(resolve, retry * 1000));
+      await process(func, retry++);
     }
+  };
+
+  for (const func of funcs) {
+    process(func);
   }
 }
 

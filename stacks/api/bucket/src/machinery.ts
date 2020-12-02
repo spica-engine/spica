@@ -46,9 +46,9 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
     raw.properties[propertyName] = property;
 
     if (property.type == "relation" && typeof property.bucket == "object") {
-      const bucketName = property.bucket.resourceFieldRef.bucketName;
+      const schemaName = property.bucket.resourceFieldRef.schemaName;
 
-      const relatedBucket = await bucketStore.get(bucketName);
+      const relatedBucket = await bucketStore.get(schemaName);
 
       raw.properties[propertyName] = {
         ...property,

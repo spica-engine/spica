@@ -1,5 +1,6 @@
 import {ObjectId} from "@spica-server/database";
 import {register, store} from "@spica-server/machinery";
+import {ChangeKind} from "./change";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
 import {Function} from "./interface";
@@ -21,17 +22,18 @@ async function v1_trigger_to_internal(object: any) {
   } else if (object.spec.type == "bucket") {
     const bkt = object.spec.bucketOptions.bucket;
 
-    const bucket = await bucketStore.get(bkt.resourceFieldRef.bucketName);
+    const bucket = await bucketStore.get(bkt.resourceFieldRef.schemaName);
+
+    triggerRaw.options = {
+      type: object.spec.bucketOptions.type,
+      phase: object.spec.bucketOptions.phase.toUpperCase()
+    };
 
     // TODO: think about a better way to handle this
     if (!bucket) {
       triggerRaw.active = false;
     } else {
-      triggerRaw.options = {
-        ...object.spec.bucketOptions,
-        bucket: bucket.metadata.uid,
-        phase: object.spec.bucketOptions.phase.toUpperCase()
-      };
+      triggerRaw.options["bucket"] = bucket.metadata.uid;
     }
   } else if (object.spec.type == "firehose") {
     triggerRaw.options = object.spec.firehoseOptions;
@@ -49,7 +51,17 @@ async function v1_trigger_to_internal(object: any) {
 
 async function v1_function_to_internal(object: any) {
   const {spec} = object;
+  return <Function>{
+    name: spec.title,
+    description: spec.description,
+    language: spec.runtime.language.toLowerCase(),
+    timeout: spec.timeout,
+    triggers: {},
+    env: await v1_function_env_to_internal(spec.environment)
+  };
+}
 
+async function v1_function_env_to_internal(environment: any[]) {
   const bucketStore = store({
     group: "bucket",
     resource: "schemas"
@@ -62,7 +74,7 @@ async function v1_function_to_internal(object: any) {
 
   const env = {};
 
-  for (const {name, value, valueFrom} of spec.environment) {
+  for (const {name, value, valueFrom} of environment) {
     if (typeof value == "string") {
       env[name] = String(value);
     } else if (typeof valueFrom == "object") {
@@ -72,29 +84,24 @@ async function v1_function_to_internal(object: any) {
       if (ref.schemaName) {
         const bucket = await bucketStore.get(ref.schemaName);
         if (bucket) {
-          env[name] = String(bucket.metadata.uid);
+          value = String(bucket.metadata.uid);
         } else {
           value = `missing schema ${ref.schemaName}`;
         }
       } else if (ref.apiKeyName) {
         const apiKey = await apiKeyStore.get(ref.apiKeyName);
         if (apiKey) {
-          env[name] = String(apiKey.spec.key);
+          value = String(apiKey.spec.key);
         } else {
           value = `missing apikey ${ref.schemaName}`;
         }
       }
+
+      env[name] = value;
     }
   }
 
-  return <Function>{
-    name: spec.title,
-    description: spec.description,
-    language: spec.runtime.language.toLowerCase(),
-    timeout: spec.timeout,
-    triggers: {},
-    env
-  };
+  return env;
 }
 
 async function applyDependencyChanges(
@@ -130,32 +137,22 @@ async function applyDependencyChanges(
     }
   }
 
-  await fe.removePackage(fn, removedPackages.join(" "));
-  await fe.addPackage(fn, newPackages.join(" "));
+  for (const removePackage of removedPackages) {
+    await fe.removePackage(fn, removePackage);
+  }
+
+  await fe.addPackage(fn, newPackages).toPromise();
 }
 
 export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
-  const functionStore = store({
+  const functionStore = store<any>({
     group: "function",
     resource: "functions"
   });
-  const triggerStore = store({
+  const triggerStore = store<any>({
     group: "function",
-    resource: "functions"
+    resource: "triggers"
   });
-
-  const handle = async (object: any) => {
-    const fn = await functionStore.get(object.spec.func);
-    if (fn) {
-      const trigger = await v1_trigger_to_internal(object);
-      await fs.updateOne(
-        {_id: new ObjectId(fn.metadata.uid)},
-        {$set: {[`triggers.${object.spec.name}`]: trigger}}
-      );
-    } else {
-      await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
-    }
-  };
 
   register(
     {
@@ -164,8 +161,62 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
       version: "v1"
     },
     {
-      add: handle,
-      update: handle,
+      add: async (object: any) => {
+        const fn = await functionStore.get(object.spec.func);
+        if (fn) {
+          const trigger = await v1_trigger_to_internal(object);
+          await fs.updateOne(
+            {_id: new ObjectId(fn.metadata.uid)},
+            {$set: {[`triggers.${object.spec.name}`]: trigger}}
+          );
+
+          fe.categorizeChanges([
+            {
+              kind: ChangeKind.Added,
+              target: {
+                id: fn.metadata.uid,
+                handler: object.spec.name,
+                context: {
+                  timeout: fn.spec.timeout,
+                  env: await v1_function_env_to_internal(fn.spec.environment)
+                }
+              },
+              type: trigger.type,
+              options: trigger.options
+            }
+          ]);
+        } else {
+          await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
+        }
+      },
+      update: async (_, object: any) => {
+        const fn = await functionStore.get(object.spec.func);
+        if (fn) {
+          const trigger = await v1_trigger_to_internal(object);
+          console.log(trigger);
+          await fs.updateOne(
+            {_id: new ObjectId(fn.metadata.uid)},
+            {$set: {[`triggers.${object.spec.name}`]: trigger}}
+          );
+          fe.categorizeChanges([
+            {
+              kind: ChangeKind.Updated,
+              target: {
+                id: fn.metadata.uid,
+                handler: object.spec.name,
+                context: {
+                  timeout: fn.spec.timeout,
+                  env: await v1_function_env_to_internal(fn.spec.environment)
+                }
+              },
+              type: trigger.type,
+              options: trigger.options
+            }
+          ]);
+        } else {
+          await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
+        }
+      },
       delete: async object => {
         const fn = await functionStore.get(object.spec.func);
         if (fn) {
@@ -173,6 +224,15 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
             {_id: new ObjectId(fn.metadata.uid)},
             {$unset: {[`triggers.${object.spec.name}`]: ""}}
           );
+          fe.categorizeChanges([
+            {
+              kind: ChangeKind.Removed,
+              target: {
+                id: fn.metadata.uid,
+                handler: object.spec.name
+              }
+            }
+          ]);
         } else {
           await triggerStore.patch(object.metadata.name, {status: "ErrFuncNotFound"});
         }
@@ -189,22 +249,33 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
     {
       add: async (obj: any) => {
         await functionStore.patch(obj.metadata.name, {status: "Pending"});
-        const raw = await v1_function_to_internal(obj);
-        const fn = await fs.insertOne(raw);
-        await functionStore.patch(obj.metadata.name, {
-          metadata: {uid: String(fn._id)},
-          status: "Creating"
-        });
+        let fn;
+        try {
+          const raw = await v1_function_to_internal(obj);
+          fn = await fs.insertOne(raw);
+          await functionStore.patch(obj.metadata.name, {
+            metadata: {uid: String(fn._id)},
+            status: "Creating"
+          });
 
-        await fe.createFunction(fn);
-        await fe.update(fn, obj.spec.code);
-        await fe.compile(fn);
+          await fe.createFunction(fn);
+          await fe.update(fn, obj.spec.code);
+          await fe.compile(fn);
 
-        await applyDependencyChanges([], obj.spec.dependency, fe, fn);
+          await applyDependencyChanges([], obj.spec.dependency, fe, fn);
+        } catch (e) {
+          if ( fn ) {
+            await fs.deleteOne({_id: fn._id});
+          }
+
+          throw e;
+        }
+
         await functionStore.patch(obj.metadata.name, {status: "Ready"});
       },
       update: async (oldObj, obj: any) => {
         const raw = await v1_function_to_internal(obj);
+        delete raw.triggers;
         const fn = await fs.findOneAndUpdate(
           {_id: new ObjectId(obj.metadata.uid)},
           {$set: raw},
@@ -220,6 +291,14 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
         const id = new ObjectId(obj.metadata.uid);
         const fn = await fs.findOneAndDelete({_id: id});
         fe.deleteFunction(fn);
+        fe.categorizeChanges([
+          {
+            kind: ChangeKind.Removed,
+            target: {
+              id: obj.metadata.uid
+            }
+          }
+        ]);
       }
     }
   );

@@ -42,6 +42,36 @@ const bucketSchema: JSONSchema7 = {
     },
     schema: {
       type: "object",
+       // Bucket relation
+       if: {
+        properties: {
+          type: {
+            const: "relation"
+          }
+        },
+      },
+      then: {
+        required: ["bucket", "relationType"],
+        properties: {
+          relationType: {
+            type: "string",
+            enum: ["onetoone", "onetomany"]
+          },
+          bucket: {
+            type: "object",
+            required: ["resourceFieldRef"],
+            properties: {
+              resourceFieldRef: {
+                type: "object",
+                required: ["schemaName"],
+                properties: {
+                  schemaName: {type: "string"}
+                }
+              }
+            }
+          }
+        }
+      },
       properties: {
         // Unsupported
         // $id: {
@@ -231,30 +261,6 @@ const bucketSchema: JSONSchema7 = {
     properties: {
       patternProperties: {
         "": {
-          if: {
-            properties: {
-              type: {
-                const: "relation"
-              }
-            },
-            then: {
-              properties: {
-                bucket: {
-                  type: "object",
-                  required: ["resourceFieldRef"],
-                  properties: {
-                    resourceFieldRef: {
-                      type: "object",
-                      required: ["bucketName"],
-                      properties: {
-                        bucketName: {type: "string"}
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
           allOf: [
             {$ref: "#/definitions/schema"},
             {

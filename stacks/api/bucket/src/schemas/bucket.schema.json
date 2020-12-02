@@ -48,7 +48,17 @@
         }
       },
       "then": {
-        "required": ["bucketId", "relationType"]
+        "required": ["bucketId", "relationType"],
+        "properties": {
+          "bucketId": {
+            "type": "string",
+            "format": "objectid-string"
+          },
+          "relationType": {
+            "type": "string",
+            "enum": ["onetoone", "onetomany"]
+          }
+        }
       },
       "properties": {
         "title": {

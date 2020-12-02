@@ -265,7 +265,7 @@ export class ApiMachineryObjectController {
 
     await objects.set(objectName, object);
 
-    setImmediate(() => inform({type: "add", obj: object, groupResource: groupVersionResource}));
+    inform({type: "add", obj: object, groupResource: groupVersionResource});
   }
 
   @Put(":name")
@@ -314,9 +314,7 @@ export class ApiMachineryObjectController {
 
     await objects.set(objectName, newObj);
 
-    setImmediate(() =>
-      inform({type: "update", oldObj, newObj, groupResource: groupVersionResource})
-    );
+    inform({type: "update", oldObj, newObj, groupResource: groupVersionResource});
   }
 
   @Delete(":name")
@@ -358,7 +356,7 @@ export class ApiMachineryObjectController {
 
     await objects.delete(objectName);
 
-    setImmediate(() => inform({type: "delete", obj, groupResource: groupVersionResource}));
+    inform({type: "delete", obj, groupResource: groupVersionResource});
   }
 
   @UseInterceptors(PatchBodyParser())
