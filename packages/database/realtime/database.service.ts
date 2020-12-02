@@ -12,21 +12,6 @@ import {levenshtein} from "./levenshtein";
 import {late} from "./operators";
 import {ChunkKind, StreamChunk} from "./stream";
 
-/**
- * Converts the filter to not form
- * @example { 'subfilter': true } -> { 'fullDocument.subfilter': { '$ne': true } }
- * @example { 'fullDocument.stars': { '$gt': 1 } }  -> { 'fullDocument.stars': { '$not': { $gt: 1 } } }
- */
-function reverseFilter<T>(filter: FilterQuery<T>) {
-  return Object.keys(filter).map(key => {
-    const value = filter[key];
-    return {
-      [`fullDocument.${key}`]:
-        typeof value == "object" && !(value instanceof ObjectId) ? {$not: value} : {$ne: value}
-    };
-  });
-}
-
 function getSortedKeys(sort: {[k: string]: -1 | 1}) {
   return Object.keys(sort);
 }
@@ -94,8 +79,23 @@ function fetchSortedIdsOfTheCursor<T>(
     .then(r => r.map(r => r._id.toString()));
 }
 
-function hasChangeAlreadyPresentInCursor(ids: Set<string>, change: {documentKey: {_id: ObjectId}}) {
+function isChangeAlreadyPresentInCursor(ids: Set<string>, change: {documentKey: {_id: ObjectId}}) {
   return ids.has(change.documentKey._id.toString());
+}
+
+function generateMatchingPipeline(filter) {
+  return [
+    {
+      $set: {
+        "fullDocument.__changeStream__": "$$ROOT"
+      }
+    },
+    {$replaceWith: "$fullDocument"},
+    // TODO: reconsider this
+    {$set: {_id: {$toString: "$_id"}}},
+    {$match: filter},
+    {$replaceWith: "$__changeStream__"}
+  ];
 }
 
 @Injectable()
@@ -108,14 +108,9 @@ export class RealtimeDatabaseService {
   ): Observable<StreamChunk<T>> {
     options = options || {};
 
-    if (options.filter && options.filter._id && ObjectId.isValid(options.filter._id)) {
-      options.filter._id = new ObjectId(options.filter._id);
-    }
-
     let ids = new Set<string>();
     return new Observable<StreamChunk<T>>(observer => {
       const streams = new Set<ChangeStream>();
-      const pipeline: object[] = [];
       const sort = new Subject<any>();
       let sortSubscription: Subscription;
 
@@ -154,41 +149,22 @@ export class RealtimeDatabaseService {
       }
 
       if (options.filter) {
-        pipeline.push({
-          $match: {
-            $or: [
-              {
-                operationType: "delete"
-              },
-              Object.keys(options.filter).reduce(
-                (accumulator, key) => {
-                  accumulator[`fullDocument.${key}`] = options.filter[key];
-                  return accumulator;
-                },
-                {operationType: {$not: {$eq: "delete"}}}
-              )
-            ]
-          }
-        });
-
         streams.add(
           this.database
             .collection(name)
             .watch(
               [
-                {
-                  $match: {
-                    $or: reverseFilter(options.filter),
-                    operationType: {$regex: "update|replace"}
-                  }
-                }
+                ...generateMatchingPipeline({
+                  $nor: [options.filter]
+                }),
+                {$match: {$or: [{operationType: "update"}, {operationType: "replace"}]}}
               ],
               {
                 fullDocument: "updateLookup"
               }
             )
             .on("change", change => {
-              if (hasChangeAlreadyPresentInCursor(ids, change)) {
+              if (isChangeAlreadyPresentInCursor(ids, change)) {
                 observer.next({
                   kind: ChunkKind.Expunge,
                   document: change.documentKey
@@ -214,9 +190,29 @@ export class RealtimeDatabaseService {
       streams.add(
         this.database
           .collection(name)
-          .watch(pipeline, {
-            fullDocument: "updateLookup"
-          })
+
+          .watch(
+            options.filter
+              ? generateMatchingPipeline({
+                  $or: [
+                    {
+                      operationType: "delete"
+                    },
+                    {
+                      $and: [
+                        {operationType: "insert"},
+                        {operationType: "replace"},
+                        {operationType: "update"},
+                        options.filter
+                      ]
+                    }
+                  ]
+                })
+              : [],
+            {
+              fullDocument: "updateLookup"
+            }
+          )
           .on("change", change => {
             switch (change.operationType) {
               case "insert":
@@ -250,8 +246,8 @@ export class RealtimeDatabaseService {
                 }
                 // prettier-ignore
                 if (
-                  (!options.filter && options.skip && !hasChangeAlreadyPresentInCursor(ids, change)) ||
-                  (options.limit && ids.size >= options.limit && !hasChangeAlreadyPresentInCursor(ids, change))
+                  (!options.filter && options.skip && !isChangeAlreadyPresentInCursor(ids, change)) ||
+                  (options.limit && ids.size >= options.limit && !isChangeAlreadyPresentInCursor(ids, change))
                 ) {
                   return;
                 }
@@ -285,16 +281,38 @@ export class RealtimeDatabaseService {
     }).pipe(
       share(),
       late((subscriber, connect) => {
-        let stream = this.database.collection(name).find(options.filter);
+        const pipeline = [];
+
+        if (options.filter) {
+          // TODO: reconsider this
+          pipeline.push({
+            $set: {_id: {$toString: "$_id"}}
+          });
+          pipeline.push({
+            $match: options.filter
+          });
+        }
+
         if (options.sort) {
-          stream = stream.sort(options.sort);
+          pipeline.push({
+            $sort: options.sort
+          });
         }
+
         if (options.skip) {
-          stream = stream.skip(options.skip);
+          pipeline.push({
+            $skip: options.skip
+          });
         }
+
         if (options.limit) {
-          stream = stream.limit(options.limit);
+          pipeline.push({
+            $limit: options.limit
+          });
         }
+
+        const stream = this.database.collection(name).aggregate(pipeline);
+
         stream.on("data", data => {
           subscriber.next({kind: ChunkKind.Initial, document: data});
           ids.add(data._id.toString());

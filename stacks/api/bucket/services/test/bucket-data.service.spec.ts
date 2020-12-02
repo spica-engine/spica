@@ -1,5 +1,5 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketDataService} from "@spica-server/bucket";
+import {BucketDataService} from "@spica-server/bucket/services";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
 describe("Bucket Data Service", () => {
@@ -8,10 +8,9 @@ describe("Bucket Data Service", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseTestingModule.create()],
+      imports: [DatabaseTestingModule.standalone()],
       providers: [BucketDataService]
     }).compile();
-
     bds = module.get(BucketDataService);
   });
 

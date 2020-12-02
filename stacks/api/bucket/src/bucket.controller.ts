@@ -17,12 +17,11 @@ import {
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
-import {Bucket, BucketService} from "@spica-server/bucket/services";
+import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/services";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createBucketActivity} from "./activity.resource";
-import {BucketDataService} from "./bucket-data.service";
 import {findRelations, findUpdatedFields} from "./relation";
 
 /**

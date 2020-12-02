@@ -1,55 +1,84 @@
-import {Bucket, BucketPreferences, BucketDocument} from "../services";
-import {ObjectId} from "@spica-server/database";
-import {findLocale, hasTranslatedProperties, buildI18nAggregation} from "./locale";
-import * as ACL from "../expression";
+import {ForbiddenException} from "@nestjs/common";
+import {BaseCollection, ObjectId} from "@spica-server/database";
+import * as expression from "@spica-server/bucket/expression";
+import {Bucket, BucketDocument, BucketPreferences} from "@spica-server/bucket/services";
+import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
+import {getUpdateQueryForPatch} from "./patch";
 import {
   createRelationMap,
   getRelationPipeline,
   resetNonOverlappingPathsInRelationMap
 } from "./relation";
-import {ForbiddenException} from "@nestjs/common";
-import {getUpdateQueryForPatch} from "./patch";
 
-export async function findDocuments(
+interface CrudOptions<Paginate> {
+  schedule?: boolean;
+  localize?: boolean;
+  paginate?: Paginate;
+}
+
+interface CrudParams {
+  resourceFilter?: object;
+  filter?: object;
+  language?: string;
+  relationPaths: string[][];
+  req: any;
+  sort?: object;
+  skip?: number;
+  limit?: number;
+  projectMap: string[][];
+}
+
+interface CrudFactories<T> {
+  collection: (id: string | ObjectId) => BaseCollection<T>;
+  preference: () => Promise<BucketPreferences>;
+  schema: (id: string | ObjectId) => Promise<Bucket>;
+}
+
+export interface CrudPagination<T> {
+  meta: {total: number};
+  data: T[];
+}
+
+export async function findDocuments<T>(
   schema: Bucket,
-  params: {
-    resourceFilter?: object;
-    filter?: object;
-    language?: string;
-    relationPaths: string[][];
-    req: any;
-    sort?: object;
-    skip?: number;
-    limit?: number;
-    projectMap: string[][];
-  },
-  options: {
-    schedule?: boolean;
-    localize?: boolean;
-    paginate?: boolean;
-  },
-  factories: {
-    collection: (id: string | ObjectId) => any;
-    preference: () => Promise<BucketPreferences>;
-    schema: (id: string | ObjectId) => Promise<Bucket>;
-  }
-) {
+  params: CrudParams,
+  options: CrudOptions<false>,
+  factories: CrudFactories<T>
+): Promise<T[]>;
+export async function findDocuments<T>(
+  schema: Bucket,
+  params: CrudParams,
+  options: CrudOptions<true>,
+  factories: CrudFactories<T>
+): Promise<CrudPagination<T>>;
+export async function findDocuments<T>(
+  schema: Bucket,
+  params: CrudParams,
+  options: CrudOptions<boolean>,
+  factories: CrudFactories<T>
+): Promise<T[] | CrudPagination<T>>;
+export async function findDocuments<T>(
+  schema: Bucket,
+  params: CrudParams,
+  options: CrudOptions<boolean>,
+  factories: CrudFactories<T>
+): Promise<unknown> {
   const collection = factories.collection(schema._id);
 
-  const aggregations = [];
+  const pipeline: object[] = [];
 
   // resourcefilter
-  if (Object.keys(params.resourceFilter || {}).length) {
-    aggregations.push(params.resourceFilter);
+  if (params.resourceFilter) {
+    pipeline.push(params.resourceFilter);
   }
 
   // scheduled contents
-  aggregations.push({$match: {_schedule: {$exists: !!options.schedule}}});
+  pipeline.push({$match: {_schedule: {$exists: !!options.schedule}}});
 
   //localization
   const locale = findLocale(params.language, await factories.preference());
-  if (options.localize && hasTranslatedProperties(schema.properties)) {
-    aggregations.push({
+  if (options.localize && hasTranslatedProperties(schema)) {
+    pipeline.push({
       $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
     });
 
@@ -57,7 +86,7 @@ export async function findDocuments(
   }
 
   // rules
-  const propertyMap = ACL.extractPropertyMap(schema.acl.read).map(path => path.split("."));
+  const propertyMap = expression.extractPropertyMap(schema.acl.read).map(path => path.split("."));
 
   const relationMap = await createRelationMap({
     paths: [...params.relationPaths, ...propertyMap],
@@ -66,10 +95,10 @@ export async function findDocuments(
   });
 
   const relationStage = getRelationPipeline(relationMap, locale);
-  aggregations.push(...relationStage);
+  pipeline.push(...relationStage);
 
-  const match = ACL.aggregate(schema.acl.read, {auth: params.req.user});
-  aggregations.push({$match: match});
+  const match = expression.aggregate(schema.acl.read, {auth: params.req.user});
+  pipeline.push({$match: match});
 
   const resetStage = resetNonOverlappingPathsInRelationMap({
     left: params.relationPaths,
@@ -79,23 +108,23 @@ export async function findDocuments(
 
   if (resetStage) {
     // Reset those relations which have been requested by acl rules.
-    aggregations.push(resetStage);
+    pipeline.push(resetStage);
   }
 
   // filter
-  if (Object.keys(params.filter || {}).length) {
-    aggregations.push({$match: params.filter});
+  if (params.filter) {
+    pipeline.push({$match: params.filter});
   }
 
   // for graphql responses
   if (params.projectMap.length) {
-    aggregations.push(getProjectAggregation(params.projectMap));
+    pipeline.push(getProjectAggregation(params.projectMap));
   }
 
   // sort,skip and limit
   const seekingPipeline = [];
 
-  if (Object.keys(params.sort || {}).length) {
+  if (params.sort) {
     seekingPipeline.push({$sort: params.sort});
   }
 
@@ -108,7 +137,7 @@ export async function findDocuments(
   }
 
   if (options.paginate) {
-    aggregations.push(
+    pipeline.push(
       {
         $facet: {
           meta: [{$count: "total"}],
@@ -118,12 +147,12 @@ export async function findDocuments(
       {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
     );
 
-    const result = await collection.aggregate(aggregations).next();
+    const result = await collection.aggregate<CrudPagination<T>>(pipeline).next();
 
     return result.data.length ? result : {meta: {total: 0}, data: []};
   }
 
-  return collection.aggregate([...aggregations, ...seekingPipeline]).toArray();
+  return collection.aggregate<T>([...pipeline, ...seekingPipeline]).toArray();
 }
 
 export async function insertDocument(
@@ -148,7 +177,10 @@ export async function insertDocument(
     .aggregate(ruleAggregation)
     .next();
 
-  const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
+  const aclResult = expression.run(schema.acl.write, {
+    auth: params.req.user,
+    document: fullDocument
+  });
   if (!aclResult) {
     throw new ForbiddenException("ACL rules has rejected this operation.");
   }
@@ -176,7 +208,10 @@ export async function replaceDocument(
 
   const fullDocument = await collection.aggregate(ruleAggregation).next();
 
-  const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
+  const aclResult = expression.run(schema.acl.write, {
+    auth: params.req.user,
+    document: fullDocument
+  });
 
   if (!aclResult) {
     throw new ForbiddenException("ACL rules has rejected this operation.");
@@ -211,7 +246,10 @@ export async function patchDocument(
 
   const fullDocument = await collection.aggregate(ruleAggregation).next();
 
-  const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
+  const aclResult = expression.run(schema.acl.write, {
+    auth: params.req.user,
+    document: fullDocument
+  });
 
   if (!aclResult) {
     throw new ForbiddenException("ACL rules has rejected this operation.");
@@ -243,7 +281,10 @@ export async function deleteDocument(
 
   const fullDocument = await collection.aggregate(ruleAggregation).next();
 
-  const aclResult = ACL.run(schema.acl.write, {auth: params.req.user, document: fullDocument});
+  const aclResult = expression.run(schema.acl.write, {
+    auth: params.req.user,
+    document: fullDocument
+  });
 
   if (!aclResult) {
     throw new ForbiddenException("ACL rules has rejected this operation.");
@@ -257,7 +298,7 @@ export async function deleteDocument(
 }
 
 async function getWriteRuleAggregation(schema: Bucket, resolve: any, document: BucketDocument) {
-  const paths = ACL.extractPropertyMap(schema.acl.write).map(path => path.split("."));
+  const paths = expression.extractPropertyMap(schema.acl.write).map(path => path.split("."));
 
   const relationMap = await createRelationMap({
     properties: schema.properties,
