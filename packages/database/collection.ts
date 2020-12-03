@@ -114,7 +114,7 @@ export class _MixinCollection<T> {
           return this._coll.createIndex({created_at: 1}, {expireAfterSeconds: expireAfterSeconds});
         } else if (ttlIndex && ttlIndex.expireAfterSeconds != expireAfterSeconds) {
           return this.db.command({
-            collMod: this.collection,
+            collMod: this._collection,
             index: {
               keyPattern: {created_at: 1},
               expireAfterSeconds: expireAfterSeconds
