@@ -17,7 +17,7 @@
 }
 
 :host {
-  margin-left: 30px;
+  margin-left: 15px;
   display: block;
   .indent {
     border-left: 1px solid rgba(0, 0, 0, 0.08);
@@ -25,7 +25,6 @@
   .property {
     padding-left: 10px;
     border-radius: 4px;
-    margin-bottom: 15px;
     border-bottom: unset !important;
     .meta-info {
       position: relative;
@@ -42,12 +41,16 @@
         background: rgba(0, 0, 0, 0.08);
       }
     }
+    > span {
+      padding-left: 10px;
+    }
   }
 
   button.add-new-property {
     width: 100%;
     padding: 5px;
     border: 1px dashed rgba(0, 0, 0, 0.08);
+    margin-top: 15px;
   }
 
   .object-field {

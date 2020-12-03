@@ -79,3 +79,46 @@ describe("Aware Dialog Directive", () => {
     expect(fixture.componentInstance.confirm).toHaveBeenCalledTimes(1);
   }));
 });
+
+@Component({
+  template: `
+    <button
+      [matAwareDialog]="{
+        title: 'asd',
+        templateOrDescription: '111',
+        answer: '111'
+      }"
+      (confirm)="confirm($event)"
+      (cancel)="cancel($event)"
+      [matAwareDialogDisabled]="true"
+    >
+      click me
+    </button>
+  `
+})
+class TestAwareDialogComponentDisabled {
+  confirm = jasmine.createSpy("confirm");
+  cancel = jasmine.createSpy("cancel");
+}
+
+describe("Aware Dialog Directive Disabled", () => {
+  let fixture: ComponentFixture<TestAwareDialogComponentDisabled>;
+  let spy: jasmine.Spy;
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MatAwareDialogModule, NoopAnimationsModule],
+      providers: [MatAwareDialogDirective],
+      declarations: [TestAwareDialogComponentDisabled]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(TestAwareDialogComponentDisabled);
+    fixture.detectChanges();
+    spy = spyOn(TestBed.get(MatDialog), "open").and.callThrough();
+  });
+
+  it("should emit confirm if directive disabled", fakeAsync(() => {
+    fixture.debugElement.query(By.css("button")).nativeElement.click();
+    tick(1000);
+    expect(fixture.componentInstance.confirm).toHaveBeenCalledTimes(1);
+  }));
+});

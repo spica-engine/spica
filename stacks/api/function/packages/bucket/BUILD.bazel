@@ -14,7 +14,10 @@ ts_library(
     deps = [
         "@npm//@types/json-schema",
         "@npm//@types/node-fetch",
+        "@npm//@types/ws",
         "@npm//node-fetch",
+        "@npm//rxjs",
+        "@npm//ws",
     ],
 )
 

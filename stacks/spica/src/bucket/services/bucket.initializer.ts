@@ -28,6 +28,18 @@ export class BucketInitializer {
           );
         }
       }
+      this.routeService.dispatch(
+        new Upsert({
+          id: "add-bucket",
+          category: RouteCategory.Content,
+          icon: "add",
+          path: "/buckets/add",
+          display: "Add New Bucket",
+          data: {
+            action: "bucket:create"
+          }
+        })
+      );
     });
   }
 

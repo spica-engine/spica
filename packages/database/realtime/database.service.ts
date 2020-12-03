@@ -21,7 +21,8 @@ function reverseFilter<T>(filter: FilterQuery<T>) {
   return Object.keys(filter).map(key => {
     const value = filter[key];
     return {
-      [`fullDocument.${key}`]: typeof value == "object" ? {$not: value} : {$ne: value}
+      [`fullDocument.${key}`]:
+        typeof value == "object" && !(value instanceof ObjectId) ? {$not: value} : {$ne: value}
     };
   });
 }
@@ -106,6 +107,11 @@ export class RealtimeDatabaseService {
     options: FindOptions<T> = {}
   ): Observable<StreamChunk<T>> {
     options = options || {};
+
+    if (options.filter && options.filter._id && ObjectId.isValid(options.filter._id)) {
+      options.filter._id = new ObjectId(options.filter._id);
+    }
+
     let ids = new Set<string>();
     return new Observable<StreamChunk<T>>(observer => {
       const streams = new Set<ChangeStream>();

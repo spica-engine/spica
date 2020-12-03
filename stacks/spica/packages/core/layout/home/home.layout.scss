@@ -20,15 +20,15 @@
   mat-sidenav-container {
     height: 100vh;
     mat-sidenav {
-      min-width: 250px;
-      max-width: 250px;
+      min-width: 275px;
+      max-width: 275px;
       word-break: break-word;
       transition-property: min-width, max-width;
       transition-duration: 0.4s;
       transition-timing-function: ease-in-out;
 
       .mat-nav-list:nth-child(2) {
-        min-width: 190px;
+        min-width: 180px;
         opacity: 1;
         transition: opacity 0.4s ease-in-out;
       }
@@ -40,6 +40,12 @@
         display: flex;
         flex-flow: row;
         justify-content: stretch;
+        [category="buckets"] {
+          mat-list-item:last-of-type {
+            border-top: 1px dashed rgba(255, 255, 255, 0.2);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+          }
+        }
         mat-nav-list:last-child {
           min-height: 100vh;
         }
@@ -70,18 +76,29 @@
           &:last-of-type {
             flex: 1;
             h4 {
-              padding-left: 18px;
+              padding: 0px 10px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              line-height: 36px;
+              button {
+                width: 36px;
+                height: 36px;
+                line-height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
             }
             mat-list-item {
               ::ng-deep .mat-list-item-content {
                 padding: 8px;
-                font-size: 0.9rem;
               }
               height: auto;
               mat-icon {
                 margin-right: 5px;
               }
-              &.quick-link-add-bucket {
+              &.quick-link-add {
                 border-top: 1px dashed rgba(255, 255, 255, 0.3);
                 border-bottom: 1px dashed rgba(255, 255, 255, 0.3);
               }
@@ -89,31 +106,13 @@
           }
         }
       }
-
-      mat-accordion {
-        mat-expansion-panel {
-          mat-nav-list {
-            padding-top: unset;
-            mat-list-item {
-              mat-icon {
-                vertical-align: middle;
-              }
-              h4 {
-                vertical-align: middle;
-                margin-left: 5px;
-                margin-bottom: unset;
-              }
-            }
-          }
-        }
-      }
     }
     mat-sidenav-content {
-      margin-left: 250px !important;
+      margin-left: 275px !important;
       transition: margin-left 0.4s ease-in-out;
       mat-toolbar {
         padding: 0 30px;
-        background-color: var(--current-color, var(--primary-default, black));
+        background-color: transparent;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         button[mat-icon-button] {
           margin-left: -10px;
@@ -127,6 +126,7 @@
       }
       ::ng-deep div.slot mat-toolbar {
         padding-top: 30px;
+        background: transparent;
       }
     }
   }

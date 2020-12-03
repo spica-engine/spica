@@ -23,7 +23,7 @@ export class FunctionInitializer {
       funcs.forEach(func => {
         this.routeService.dispatch(
           new Upsert({
-            category: RouteCategory.Function,
+            category: RouteCategory.Developer,
             id: func._id,
             icon: "memory",
             path: `/function/${func._id}`,
@@ -38,8 +38,6 @@ export class FunctionInitializer {
     const allowed = await this.passport.checkAllowed("function:index", "*").toPromise();
     if (this.passport.identified && allowed) {
       this.functionService.loadFunctions().toPromise();
-    } else {
-      this.routeService.dispatch(new RemoveCategory(RouteCategory.Function));
     }
   }
 }

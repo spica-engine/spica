@@ -1,10 +1,6 @@
-import {Bucket, BucketDocument} from "@spica-server/bucket/services";
+import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {diff, ChangeKind, ChangePaths} from "@spica-server/bucket/history/differ";
 import {GraphQLResolveInfo} from "graphql";
-import {Locale, buildI18nAggregation} from "../locale";
-import {buildRelationAggregation} from "../utility";
-const JsonMergePatch = require("json-merge-patch");
 
 enum Prefix {
   Type = "type",
@@ -16,24 +12,155 @@ enum Suffix {
   Input = "Input"
 }
 
-enum UpdateType {
-  Set,
-  Unset
+export interface SchemaWarning {
+  target: string;
+  reason: string;
 }
 
-export function createSchema(bucket: Bucket, staticTypes: string) {
-  let name = getBucketName(bucket._id);
+export function validateBuckets(buckets: Bucket[]) {
+  const warnings: SchemaWarning[] = [];
+  for (const bucket of buckets) {
+    validateProperties(
+      bucket,
+      getBucketName(bucket._id),
+      buckets.map(bucket => bucket._id.toString()),
+      warnings
+    );
+  }
+  return {warnings, buckets};
+}
 
+function validateProperties(
+  bucket: Bucket,
+  baseName: string,
+  bucketIds: string[],
+  errors: SchemaWarning[]
+) {
+  for (const [key, definition] of Object.entries(bucket.properties)) {
+    if (!validateName(key)) {
+      errors.push({
+        target: baseName + "." + key,
+        reason:
+          "Name specification must start with an alphabetic character and can not include any non-letter character."
+      });
+
+      delete bucket.properties[key];
+      bucket.properties[replaceName(key)] = getDefaultDefinition();
+
+      if (bucket.required) {
+        const requiredIndex = bucket.required.findIndex(field => field == key);
+        if (requiredIndex != -1) {
+          bucket.required.splice(requiredIndex, 1);
+        }
+      }
+
+      //name and definition changed, skip the definition validation
+      continue;
+    }
+
+    validateDefinition(definition, baseName + "." + key, bucketIds, errors);
+  }
+}
+
+function validateDefinition(
+  definition: any,
+  name: string,
+  bucketIds: string[],
+  errors: SchemaWarning[]
+) {
+  if (definition.enum && !validateEnum(definition.enum)) {
+    const reason = !definition.enum.length
+      ? "Enum values must contain at least one item."
+      : "Enum values must start with an alphabetic character and can not include any non-letter character.";
+    errors.push({
+      target: name,
+      reason: reason
+    });
+
+    delete definition.enum;
+  }
+
+  switch (definition.type) {
+    case "array":
+      validateDefinition(definition.items, `${name}_array`, bucketIds, errors);
+      break;
+
+    case "string":
+      break;
+
+    case "textarea":
+      break;
+
+    case "richtext":
+      break;
+
+    case "color":
+      break;
+
+    case "storage":
+      break;
+
+    case "object":
+      validateProperties(definition as Bucket, name, bucketIds, errors);
+      break;
+
+    case "date":
+      break;
+
+    case "number":
+      break;
+
+    case "boolean":
+      break;
+
+    case "location":
+      break;
+
+    case "relation":
+      const reasons = [];
+      if (!relationTypeValid(definition.relationType)) {
+        reasons.push(`Relation type '${definition.relationType}' is invalid.`);
+      }
+
+      if (!relatedBucketExists(definition.bucketId, bucketIds)) {
+        reasons.push(`Related bucket '${definition.bucketId}' does not exist.`);
+      }
+
+      if (reasons.length) {
+        for (const reason of reasons) {
+          errors.push({
+            target: name,
+            reason: reason
+          });
+        }
+
+        writeDefaultDefinition(definition);
+      }
+
+      break;
+
+    default:
+      errors.push({
+        target: name,
+        reason: `Type '${definition.type}' is invalid type.`
+      });
+      writeDefaultDefinition(definition);
+      break;
+  }
+}
+
+export function createSchema(bucket: Bucket, staticTypes: string, bucketIds: string[]) {
+  const name = getBucketName(bucket._id);
   let schema = `
       ${staticTypes}
       
       type ${name}FindResponse{
         meta: Meta
-        entries: [${name}]
+        data: [${name}]
       }
 
       type Query{
-        Find${name}(limit: Int, skip: Int, sort: JSON ,language: String,schedule:Boolean ,query: JSON): ${name}FindResponse
+        Find${name}(limit: Int, skip: Int, sort: JSON, language: String, schedule:Boolean, query: JSON): ${name}FindResponse
         FindBy${name}Id(_id: ObjectID!, language: String):${name}
       }
 
@@ -45,11 +172,11 @@ export function createSchema(bucket: Bucket, staticTypes: string) {
       }
     `;
 
-  let types = createInterface(Prefix.Type, Suffix.Type, name, bucket, []);
+  const types = createInterface(Prefix.Type, Suffix.Type, name, bucket, [], bucketIds);
 
-  let inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, []);
+  const inputs = createInterface(Prefix.Input, Suffix.Input, name, bucket, [], bucketIds);
 
-  schema = schema + types + inputs;
+  schema += types + inputs;
 
   return schema;
 }
@@ -59,23 +186,33 @@ function createInterface(
   suffix: string,
   name: string,
   schema: any,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[]
 ) {
-  let properties = [];
+  const properties = [];
 
   if (schema._id && prefix == Prefix.Type) {
     properties.push("_id: ObjectID");
   }
 
-  for (const [key, value] of Object.entries(schema.properties) as any) {
-    let isRequired = schema.required && schema.required.includes(key);
+  for (const [key, value] of Object.entries(schema.properties)) {
+    const isRequired = schema.required && schema.required.includes(key);
 
-    let property = createProperty(name, prefix, suffix, key, value, isRequired, extras);
+    const property = createProperty(
+      name,
+      prefix,
+      suffix,
+      key,
+      value,
+      isRequired,
+      extras,
+      bucketIds
+    );
 
     properties.push(property);
   }
 
-  let result =
+  const result =
     `
       ${prefix} ${name + suffix}{
         ${properties.join("\n")}
@@ -88,7 +225,7 @@ function createInterface(
 function createEnum(name: string, values: string[]) {
   return `
       enum ${name}{
-        ${values.join("\n")}
+        ${Array.from(new Set(values).values()).join("\n")}
       }
     `;
 }
@@ -100,9 +237,45 @@ function createProperty(
   key: string,
   value: any,
   isRequired: Boolean,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[]
 ) {
-  return `${key} : ${createPropertyValue(name, prefix, suffix, key, value, isRequired, extras)}`;
+  return `${key}: ${createPropertyValue(
+    name,
+    prefix,
+    suffix,
+    key,
+    value,
+    isRequired,
+    extras,
+    bucketIds
+  )}`;
+}
+
+function getDefaultDefinition() {
+  return {
+    type: "string"
+  } as any;
+}
+
+function writeDefaultDefinition(definition: any) {
+  for (const key of Object.keys(definition)) {
+    delete definition[key];
+  }
+  definition.type = "string";
+}
+
+function validateName(name: string) {
+  return /^[_A-Za-z][_0-9A-Za-z]*$/.test(name);
+}
+
+function replaceName(name: string) {
+  name = /^[0-9]/.test(name) ? "_" + name : name;
+  return name.replace(/[^_a-zA-Z0-9]/g, "_");
+}
+
+function validateEnum(values: string[]) {
+  return values.length ? values.every(value => validateName(value)) : false;
 }
 
 function createPropertyValue(
@@ -112,15 +285,17 @@ function createPropertyValue(
   key: string,
   value: any,
   isRequired: Boolean,
-  extras: string[]
+  extras: string[],
+  bucketIds: string[]
 ) {
   let result;
 
   if (value.enum) {
     if (prefix == Prefix.Type) {
-      let extra = createEnum(`${name}_${key}`, value.enum);
+      const extra = createEnum(`${name}_${key}`, value.enum);
       extras.push(extra);
     }
+
     return `${name}_${key}`;
   }
 
@@ -133,7 +308,8 @@ function createPropertyValue(
         key,
         value.items,
         false,
-        extras
+        extras,
+        bucketIds
       )}]`;
       break;
 
@@ -153,8 +329,12 @@ function createPropertyValue(
       result = "String";
       break;
 
+    case "storage":
+      result = "String";
+      break;
+
     case "object":
-      let extra = createInterface(prefix, suffix, `${name}_${key}`, value, []);
+      const extra = createInterface(prefix, suffix, `${name}_${key}`, value, [], bucketIds);
       extras.push(extra);
       result = `${name}_${key}` + suffix;
       break;
@@ -176,17 +356,13 @@ function createPropertyValue(
       break;
 
     case "relation":
-      if (!value.bucketId) {
-        throw Error(`Related bucket must be provided for ${key} field of ${name}.`);
+      result = prefix == Prefix.Type ? getBucketName(value.bucketId) : "String";
+
+      if (value.relationType == "onetomany") {
+        result = `[${result}]`;
       }
 
-      let relatedBucketName = getBucketName(value.bucketId);
-      result = prefix == Prefix.Type ? relatedBucketName : "String";
-      result = value.relationType == "onetoone" ? result : `[${result}]`;
       break;
-
-    default:
-      throw Error(`Unknown type ${value.type} on ${key} field of ${name}.`);
   }
 
   if (isRequired && prefix == Prefix.Input) {
@@ -196,45 +372,20 @@ function createPropertyValue(
   return result;
 }
 
-export function getBucketName(uniqueField: string | ObjectId): string {
-  return `Bucket_${uniqueField.toString()}`;
+function relatedBucketExists(bucketId: string, bucketIds: string[]) {
+  return bucketIds.includes(bucketId);
 }
 
-export async function aggregationsFromRequestedFields(
-  bucket: Bucket,
-  requestedFields: string[][],
-  localeFactory: (language?: string) => Promise<Locale>,
-  buckets: Bucket[],
-  language?: string
-) {
-  let aggregations = [];
+function relationTypeValid(relationType: string) {
+  return relationType == "onetoone" || relationType == "onetomany";
+}
 
-  let locale: Locale;
-  if (requestedFields.length) {
-    if (relationalFieldRequested(bucket.properties, requestedFields)) {
-      locale = await localeFactory(language);
-      let relationAggregation = getRelationAggregation(
-        bucket.properties,
-        JSON.parse(JSON.stringify(requestedFields)),
-        locale,
-        buckets
-      );
-      aggregations.push(...relationAggregation);
-    }
-
-    if (translatableFieldRequested(bucket.properties, requestedFields)) {
-      locale = locale ? locale : await localeFactory(language);
-      aggregations.push({
-        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-      });
-    }
-  }
-
-  return aggregations;
+export function getBucketName(id: string | ObjectId): string {
+  return `Bucket_${id.toString()}`;
 }
 
 export function requestedFieldsFromInfo(info: GraphQLResolveInfo, rootKey?: string): string[][] {
-  let [result] = info.fieldNodes.map(node =>
+  const [result] = info.fieldNodes.map(node =>
     extractFieldsFromNode(rootKey ? mergeNodes(node, rootKey) : node, [])
   );
 
@@ -244,7 +395,7 @@ export function requestedFieldsFromInfo(info: GraphQLResolveInfo, rootKey?: stri
 function extractFieldsFromNode(node: any, fields: string[]) {
   let result = [];
   node.selectionSet.selections.forEach(selection => {
-    let currentPath = fields.concat([selection.name.value]);
+    const currentPath = fields.concat([selection.name.value]);
 
     if (selection.selectionSet) {
       result = result.concat(extractFieldsFromNode(selection, currentPath));
@@ -273,48 +424,16 @@ function mergeNodes(node: any, rootKey: string) {
 }
 
 export function getProjectAggregation(requestedFields: string[][]) {
-  let result = {};
-  requestedFields.forEach(pattern => {
-    let path = pattern.join(".");
+  const result = {};
+  for (const pattern of requestedFields) {
+    const path = pattern.join(".");
     result[path] = 1;
-  });
+  }
   return {$project: result};
 }
 
-function getRelationAggregation(
-  properties: object,
-  fields: string[][],
-  locale: Locale,
-  buckets: Bucket[]
-) {
-  let aggregations = [];
-  for (const [key, value] of Object.entries(properties)) {
-    if (value.type == "relation") {
-      let relateds = fields.filter(field => field[0] == key);
-      if (relateds.length) {
-        let aggregation = buildRelationAggregation(key, value.bucketId, value.relationType, locale);
-
-        let relatedBucket = buckets.find(bucket => bucket._id.toString() == value.bucketId);
-
-        //Remove first key to continue recursive lookup
-        relateds = relateds.map(field => {
-          field.splice(0, 1);
-          return field;
-        });
-
-        aggregation[0].$lookup.pipeline.push(
-          ...getRelationAggregation(relatedBucket.properties, relateds, locale, buckets)
-        );
-
-        aggregations.push(...aggregation);
-      }
-    }
-  }
-  return aggregations;
-}
-
 export function extractAggregationFromQuery(bucket: any, query: object, buckets: Bucket[]): object {
-  let bucketProperties = bucket.properties;
+  const bucketProperties = bucket.properties;
   if (ObjectId.isValid(bucket._id)) {
     bucketProperties._id = {
       type: "objectid"
@@ -324,26 +443,27 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
   let finalExpression = {};
   for (const [key, value] of Object.entries(query)) {
     if (key == "OR" || key == "AND") {
-      let conditions = [];
-      let operator = `$${key.toLowerCase()}`;
-      value.forEach(condition => {
-        let conditionExpression = extractAggregationFromQuery(bucket, condition, buckets);
+      const conditions = [];
+      const operator = `$${key.toLowerCase()}`;
+
+      for (const condition of value) {
+        const conditionExpression = extractAggregationFromQuery(bucket, condition, buckets);
 
         if (Object.keys(conditionExpression).length) {
           conditions.push(conditionExpression);
         }
-      });
+      }
 
       if (conditions.length) {
-        let expression = {
+        const expression = {
           [operator]: conditions
         };
         finalExpression = {...finalExpression, ...expression};
       }
     } else if (isParsableObject(value)) {
       if (bucket.properties[key].type == "relation") {
-        let relatedBucketId = bucket.properties[key].bucketId;
-        let relatedBucket = buckets.find(bucket => bucket._id == relatedBucketId);
+        const relatedBucketId = bucket.properties[key].bucketId;
+        const relatedBucket = buckets.find(bucket => bucket._id == relatedBucketId);
 
         bucket.properties[key] = {
           _id: relatedBucketId,
@@ -358,7 +478,7 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
         finalExpression = {...finalExpression, ...expression};
       }
     } else {
-      let expression = createExpression(key, value, bucketProperties);
+      const expression = createExpression(key, value, bucketProperties);
 
       if (expression) {
         //deep merge
@@ -377,7 +497,9 @@ export function extractAggregationFromQuery(bucket: any, query: object, buckets:
 }
 
 function createExpression(key: string, value: any, bucketProperties: any): object {
-  let desiredProperty = Object.keys(bucketProperties).find(bucketProperty => bucketProperty == key);
+  const desiredProperty = Object.keys(bucketProperties).find(
+    bucketProperty => bucketProperty == key
+  );
 
   if (desiredProperty) {
     value = castToOriginalType(value, bucketProperties[desiredProperty]);
@@ -385,9 +507,9 @@ function createExpression(key: string, value: any, bucketProperties: any): objec
       [desiredProperty]: value
     };
   } else {
-    let property = key.substring(0, key.lastIndexOf("_"));
-    let operator = key.substring(key.lastIndexOf("_") + 1);
-    let desiredProperty = Object.keys(bucketProperties).find(
+    const property = key.substring(0, key.lastIndexOf("_"));
+    const operator = key.substring(key.lastIndexOf("_") + 1);
+    const desiredProperty = Object.keys(bucketProperties).find(
       bucketProperty => bucketProperty == property
     );
 
@@ -423,20 +545,20 @@ function mergeNestedExpression(expression: any, path: string[]) {
   if (isParsableObject(expression)) {
     for (const [key, value] of Object.entries(expression)) {
       if (key.startsWith("$")) {
-        let expPath = path.join(".");
-        let result = {[expPath]: expression};
+        const expPath = path.join(".");
+        const result = {[expPath]: expression};
         finalResult = {...finalResult, ...result};
         continue;
       }
 
-      let result = mergeNestedExpression(value, path.concat([key]));
+      const result = mergeNestedExpression(value, path.concat([key]));
       if (isParsableObject(expression)) {
         finalResult = {...finalResult, ...result};
       }
     }
   } else {
-    let expPath = path.join(".");
-    let result = {[expPath]: expression};
+    const expPath = path.join(".");
+    const result = {[expPath]: expression};
     finalResult = {...finalResult, ...result};
   }
   return finalResult;
@@ -451,81 +573,8 @@ function isParsableObject(object: any): boolean {
   );
 }
 
-export function getPatchedDocument(previousDocument: BucketDocument, patchQuery: any) {
-  delete previousDocument._id;
-  delete patchQuery._id;
-
-  return JsonMergePatch.apply(JSON.parse(JSON.stringify(previousDocument)), patchQuery);
-}
-
-export function getUpdateQuery(previousDocument: BucketDocument, currentDocument: BucketDocument) {
-  let updateQuery: any = {};
-
-  let changes = diff(previousDocument, currentDocument);
-
-  changes = changes.map(change => {
-    let numIndex = change.path.findIndex(t => typeof t == "number");
-    //item update is not possible with merge/patch,
-    //we must put the given array directly
-    if (numIndex > 0) {
-      //if paths include array index, the last path before any number is the array path that will be put
-      //we do not need to track rest of it
-      change.path = change.path.slice(0, numIndex);
-      //array updates will be handled with set operator.
-      change.kind = ChangeKind.Edit;
-    }
-    return change;
-  });
-
-  const setTargets = changes
-    .filter(change => change.kind != ChangeKind.Delete)
-    .map(change => change.path);
-  let setExpressions = createExpressionFromChange(currentDocument, setTargets, UpdateType.Set);
-  if (Object.keys(setExpressions).length) {
-    updateQuery.$set = setExpressions;
-  }
-
-  const unsetTargets = changes
-    .filter(change => change.kind == ChangeKind.Delete)
-    .map(change => change.path);
-  let unsetExpressions = createExpressionFromChange(
-    currentDocument,
-    unsetTargets,
-    UpdateType.Unset
-  );
-  if (Object.keys(unsetExpressions).length) {
-    updateQuery.$unset = unsetExpressions;
-  }
-
-  return updateQuery;
-}
-
-function createExpressionFromChange(
-  document: BucketDocument,
-  targets: ChangePaths[],
-  operation: UpdateType
-) {
-  let expressions = {};
-  targets.forEach(target => {
-    let key = target.join(".");
-    let value = "";
-
-    if (operation == UpdateType.Set) {
-      value = findValueOfPath(target, document);
-    }
-
-    expressions[key] = value;
-  });
-
-  return expressions;
-}
-
-function findValueOfPath(path: (string | number)[], document: BucketDocument) {
-  return path.reduce((document, name) => document[name], document);
-}
-
 function relationalFieldRequested(properties: object, requestedFields: string[][]): boolean {
-  let relatedFields = [];
+  const relatedFields = [];
   Object.keys(properties).forEach(key => {
     if (properties[key].type == "relation") {
       relatedFields.push(key);
@@ -536,7 +585,7 @@ function relationalFieldRequested(properties: object, requestedFields: string[][
 }
 
 function translatableFieldRequested(properties: object, requestedFields: string[][]): boolean {
-  let translatableFields = [];
+  const translatableFields = [];
   for (const [key, value] of Object.entries(properties)) {
     if (value.options && value.options.translate) {
       translatableFields.push(key);
@@ -551,13 +600,9 @@ export function requestedFieldsFromExpression(expression: object, requestedField
     if (key == "$or" || key == "$and") {
       value.forEach(condition => requestedFieldsFromExpression(condition, requestedFields));
     } else {
-      let field = key.split(".");
+      const field = key.split(".");
       requestedFields.push(field);
     }
   }
   return requestedFields;
-}
-
-export function deepCopy(value: unknown) {
-  return JSON.parse(JSON.stringify(value));
 }
