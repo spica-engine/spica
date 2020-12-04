@@ -170,7 +170,7 @@ export default async function() {
 }
 ```
 
-#### Bucket
+### Bucket
 
 > Bucket module imported from `@spica-devkit/bucket`.
 
@@ -293,6 +293,19 @@ export default function(req, res) {
 }
 ```
 
+Note: Additionally, `Bucket.data.get()` function accepts a third optional `options` parameter. The following is the structure of the `options` parameter:
+
+```json
+{
+  headers: {
+    "{HTTP HEADER KEY}": "{VALUE}"
+  },
+  queryParams: {
+    "{SPICA QUERY PARAMS}": "{VALUE}"
+  }
+}
+```
+
 ###### Bucket Data Get with Parameters
 
 ```typescript
@@ -304,6 +317,19 @@ export default function(req, res) {
     headers: {"accept-language": "TR"},
     queryParams: {paginate: true, skip: 1}
   });
+}
+```
+
+Note: `Bucket.data.getAll()` function accepts a third optional `options` parameter. The following is the structure of the `options` parameter:
+
+```json
+{
+  headers: {
+    "{HTTP HEADER KEY}": "{VALUE}"
+  },
+  queryParams: {
+    "{SPICA QUERY PARAMS}": "{VALUE}"
+  }
 }
 ```
 
@@ -344,7 +370,7 @@ export default function(req, res) {
 }
 ```
 
-###### Bucket Data Get
+###### Bucket Data Remove
 
 ```typescript
 import * as Bucket from "@spica-devkit/bucket";
