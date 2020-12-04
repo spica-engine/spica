@@ -72,10 +72,11 @@ export async function findDocuments(
   const ruleExpression = ACL.aggregate(schema.acl.read, {auth: params.req.user});
   aggregations.push({$match: ruleExpression});
 
+  let filterPropertyMap = [];
   let filterRelationMap = [];
   // filter
   if (Object.keys(params.filter || {}).length) {
-    const filterPropertyMap = extractFilterPropertyMap(params.filter);
+    filterPropertyMap = extractFilterPropertyMap(params.filter);
 
     filterRelationMap = await createRelationMap({
       paths: filterPropertyMap,
@@ -109,6 +110,7 @@ export async function findDocuments(
     seekingPipeline.push({$limit: params.limit});
   }
 
+  let relationPropertyMap = params.relationPaths || [];
   let relationMap = [];
   if (params.relationPaths && params.relationPaths.length) {
     relationMap = await createRelationMap({
@@ -124,9 +126,9 @@ export async function findDocuments(
   }
 
   const ruleResetStage = resetNonOverlappingPathsInRelationMap({
-    left: [...relationMap, ...filterRelationMap],
+    left: [...relationPropertyMap, ...filterPropertyMap],
     right: rulePropertyMap,
-    map: ruleRelationMap
+    map: [...ruleRelationMap, ...relationMap, ...filterRelationMap]
   });
 
   if (ruleResetStage) {
