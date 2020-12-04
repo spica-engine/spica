@@ -298,13 +298,17 @@ Note: Additionally, `Bucket.data.get()` function accepts a third optional `optio
 ```json
 {
   headers: {
-    "{HTTP HEADER KEY}": "{VALUE}"
+    {HTTP HEADER KEY}: "{VALUE}"
   },
   queryParams: {
-    "{SPICA QUERY PARAMS}": "{VALUE}"
+    {SPICA QUERY PARAMS}: "{VALUE}",
+    filter: "{Access Control Rules}"
   }
 }
 ```
+
+For more informations about `Access Control Rules`, please visit [this page](https://spicaengine.com/docs/guide/bucket#rules).
+
 
 ###### Bucket Data Get with Parameters
 
@@ -325,13 +329,16 @@ Note: `Bucket.data.getAll()` function accepts a third optional `options` paramet
 ```json
 {
   headers: {
-    "{HTTP HEADER KEY}": "{VALUE}"
+    {HTTP HEADER KEY}: "{VALUE}"
   },
   queryParams: {
-    "{SPICA QUERY PARAMS}": "{VALUE}"
+    {SPICA QUERY PARAMS}: "{VALUE}",
+    filter: "{Access Control Rules}"
   }
 }
 ```
+
+For more informations about Access Control Rules, please visit [this page](https://spicaengine.com/docs/guide/bucket#rules).
 
 ###### Bucket Data Insert
 
