@@ -3,6 +3,7 @@ import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/servic
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
+import {diff} from "@spica-server/core/differ";
 
 export function findRelations(
   schema: any,
@@ -160,6 +161,17 @@ export function resetNonOverlappingPathsInRelationMap(
 
   const expressions = visit({left: options.left, right: options.right, map: options.map, depth: 0});
   return expressions ? {$set: expressions} : undefined;
+}
+
+export function eliminateRelationsAlreadyUsed(
+  previousRelationMap: RelationMap[],
+  currentRelationMap: RelationMap[]
+) {
+  const filteredRelationMap = currentRelationMap.filter(
+    newMap => previousRelationMap.findIndex(usedMap => !diff(usedMap, newMap).length) == -1
+  );
+
+  return filteredRelationMap;
 }
 
 export function findUpdatedFields(

@@ -5,7 +5,8 @@ import * as ACL from "../expression";
 import {
   createRelationMap,
   getRelationPipeline,
-  resetNonOverlappingPathsInRelationMap
+  resetNonOverlappingPathsInRelationMap,
+  eliminateRelationsAlreadyUsed
 } from "./relation";
 import {ForbiddenException} from "@nestjs/common";
 import {getUpdateQueryForPatch} from "./patch";
@@ -57,33 +58,34 @@ export async function findDocuments(
   }
 
   // rules
-  const propertyMap = ACL.extractPropertyMap(schema.acl.read).map(path => path.split("."));
+  const rulePropertyMap = ACL.extractPropertyMap(schema.acl.read).map(path => path.split("."));
 
-  const relationMap = await createRelationMap({
-    paths: [...params.relationPaths, ...propertyMap],
+  const ruleRelationMap = await createRelationMap({
+    paths: rulePropertyMap,
     properties: schema.properties,
     resolve: factories.schema
   });
 
-  const relationStage = getRelationPipeline(relationMap, locale);
-  aggregations.push(...relationStage);
+  const ruleRelationStage = getRelationPipeline(ruleRelationMap, locale);
+  aggregations.push(...ruleRelationStage);
 
-  const match = ACL.aggregate(schema.acl.read, {auth: params.req.user});
-  aggregations.push({$match: match});
+  const ruleExpression = ACL.aggregate(schema.acl.read, {auth: params.req.user});
+  aggregations.push({$match: ruleExpression});
 
-  const resetStage = resetNonOverlappingPathsInRelationMap({
-    left: params.relationPaths,
-    right: propertyMap,
-    map: relationMap
-  });
-
-  if (resetStage) {
-    // Reset those relations which have been requested by acl rules.
-    aggregations.push(resetStage);
-  }
-
+  let filterRelationMap = [];
   // filter
   if (Object.keys(params.filter || {}).length) {
+    const filterPropertyMap = extractFilterPropertyMap(params.filter);
+
+    filterRelationMap = await createRelationMap({
+      paths: filterPropertyMap,
+      properties: schema.properties,
+      resolve: factories.schema
+    }).then(filterRelationMap => eliminateRelationsAlreadyUsed(ruleRelationMap, filterRelationMap));
+
+    const filterRelationStage = getRelationPipeline(filterRelationMap, locale);
+    aggregations.push(...filterRelationStage);
+
     aggregations.push({$match: params.filter});
   }
 
@@ -107,6 +109,31 @@ export async function findDocuments(
     seekingPipeline.push({$limit: params.limit});
   }
 
+  let relationMap = [];
+  if (params.relationPaths && params.relationPaths.length) {
+    relationMap = await createRelationMap({
+      paths: params.relationPaths,
+      properties: schema.properties,
+      resolve: factories.schema
+    }).then(relationMap =>
+      eliminateRelationsAlreadyUsed([...ruleRelationMap, ...filterRelationMap], relationMap)
+    );
+
+    const relationStage = getRelationPipeline(relationMap, locale);
+    seekingPipeline.push(...relationStage);
+  }
+
+  const ruleResetStage = resetNonOverlappingPathsInRelationMap({
+    left: [...relationMap, ...filterRelationMap],
+    right: rulePropertyMap,
+    map: ruleRelationMap
+  });
+
+  if (ruleResetStage) {
+    // Reset those relations which have been requested by acl rules.
+    aggregations.push(ruleResetStage);
+  }
+
   if (options.paginate) {
     aggregations.push(
       {
@@ -124,6 +151,16 @@ export async function findDocuments(
   }
 
   return collection.aggregate([...aggregations, ...seekingPipeline]).toArray();
+}
+
+// it will work on only basic filters => {"user.name" : "John"}
+function extractFilterPropertyMap(filter: any) {
+  const map: string[][] = [];
+  for (const fields of Object.keys(filter)) {
+    const field = fields.split(".");
+    map.push(field);
+  }
+  return map;
 }
 
 export async function insertDocument(
