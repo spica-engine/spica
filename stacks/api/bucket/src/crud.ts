@@ -48,8 +48,9 @@ export async function findDocuments(
   aggregations.push({$match: {_schedule: {$exists: !!options.schedule}}});
 
   //localization
-  const locale = findLocale(params.language, await factories.preference());
+  let locale;
   if (options.localize && hasTranslatedProperties(schema.properties)) {
+    locale = findLocale(params.language, await factories.preference());
     aggregations.push({
       $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
     });
