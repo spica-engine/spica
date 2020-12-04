@@ -41,21 +41,27 @@ You can drag and drop the Bucket Properties to the desired division.
 
 `Translate`: Marks the field as translatable. For more information please check [Translation and Localization](###translation-and-localization) section.
 
-`Read-only`: This one is used to prevent value changes on entry create and update.
-
-`Required`: Makes the field required on entry create and update.
-
 ### Validations
 
 #### General Validations
 
+- **Required**: Makes the field required. If the field is empty, the data won't be saved.
+- **Read-only**: This one is used to prevent value changes on entry create and update.
+- **Default value**: If the value is empty on data creation, this value will be placed instead. 
+
 #### String
+
+- **Define pattern**: Regex field to validate the string values. If the regex pattern doesn't match, the data won't be saved.
+- **Enumerated field**: If toggled on, only the given values will be accepted as field values. 
 
 #### Number
 
+- **Minimum and Maximum Values**: Constrains the number values. 
+
 #### Array
 
-#### Object
+- **Item should be unique**: If toggled on, each items in the array should be unique. Otherwise, the data won't be saved.
+- **Minimum and Maximum Items**: The element lenght of the array should be within this boundaries. 
 
 ### Translation and Localization
 
