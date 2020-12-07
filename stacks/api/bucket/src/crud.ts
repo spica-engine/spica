@@ -99,11 +99,6 @@ export async function findDocuments(
     aggregations.push({$match: params.filter});
   }
 
-  // for graphql responses
-  if (params.projectMap.length) {
-    aggregations.push(getProjectAggregation(params.projectMap));
-  }
-
   // sort,skip and limit
   const seekingPipeline = [];
 
@@ -121,13 +116,12 @@ export async function findDocuments(
 
   let relationPropertyMap = params.relationPaths || [];
   let relationMap = [];
-  if (params.relationPaths && params.relationPaths.length) {
+  if (relationPropertyMap.length) {
     relationMap = await createRelationMap({
       paths: params.relationPaths,
       properties: schema.properties,
       resolve: factories.schema
     });
-
     const updatedRelationMap = compareAndUpdateRelations(deepCopy(relationMap), usedRelationPaths);
 
     const relationStage = getRelationPipeline(updatedRelationMap, locale);
@@ -142,7 +136,12 @@ export async function findDocuments(
 
   if (ruleResetStage) {
     // Reset those relations which have been requested by acl rules.
-    aggregations.push(ruleResetStage);
+    seekingPipeline.push(ruleResetStage);
+  }
+
+  // for graphql responses
+  if (params.projectMap.length) {
+    seekingPipeline.push(getProjectAggregation(params.projectMap));
   }
 
   if (options.paginate) {
