@@ -6,10 +6,10 @@ import {
   createRelationMap,
   getRelationPipeline,
   resetNonOverlappingPathsInRelationMap,
-  eliminateRelationsAlreadyUsed
+  compareAndUpdateRelations
 } from "./relation";
 import {ForbiddenException} from "@nestjs/common";
-import {getUpdateQueryForPatch} from "./patch";
+import {getUpdateQueryForPatch, deepCopy} from "./patch";
 
 export async function findDocuments(
   schema: Bucket,
@@ -61,11 +61,14 @@ export async function findDocuments(
   // rules
   const rulePropertyMap = ACL.extractPropertyMap(schema.acl.read).map(path => path.split("."));
 
-  const ruleRelationMap = await createRelationMap({
+  let ruleRelationMap = await createRelationMap({
     paths: rulePropertyMap,
     properties: schema.properties,
     resolve: factories.schema
   });
+
+  const usedRelationPaths: string[] = [];
+  ruleRelationMap = compareAndUpdateRelations(ruleRelationMap, usedRelationPaths);
 
   const ruleRelationStage = getRelationPipeline(ruleRelationMap, locale);
   aggregations.push(...ruleRelationStage);
@@ -83,9 +86,14 @@ export async function findDocuments(
       paths: filterPropertyMap,
       properties: schema.properties,
       resolve: factories.schema
-    }).then(filterRelationMap => eliminateRelationsAlreadyUsed(ruleRelationMap, filterRelationMap));
+    });
 
-    const filterRelationStage = getRelationPipeline(filterRelationMap, locale);
+    const updatedFilterRelationMap = compareAndUpdateRelations(
+      deepCopy(filterRelationMap),
+      usedRelationPaths
+    );
+
+    const filterRelationStage = getRelationPipeline(updatedFilterRelationMap, locale);
     aggregations.push(...filterRelationStage);
 
     aggregations.push({$match: params.filter});
@@ -118,18 +126,18 @@ export async function findDocuments(
       paths: params.relationPaths,
       properties: schema.properties,
       resolve: factories.schema
-    }).then(relationMap =>
-      eliminateRelationsAlreadyUsed([...ruleRelationMap, ...filterRelationMap], relationMap)
-    );
+    });
 
-    const relationStage = getRelationPipeline(relationMap, locale);
+    const updatedRelationMap = compareAndUpdateRelations(deepCopy(relationMap), usedRelationPaths);
+
+    const relationStage = getRelationPipeline(updatedRelationMap, locale);
     seekingPipeline.push(...relationStage);
   }
 
   const ruleResetStage = resetNonOverlappingPathsInRelationMap({
     left: [...relationPropertyMap, ...filterPropertyMap],
     right: rulePropertyMap,
-    map: [...ruleRelationMap, ...relationMap, ...filterRelationMap]
+    map: [...ruleRelationMap, ...relationMap, ...relationMap]
   });
 
   if (ruleResetStage) {
