@@ -1,4 +1,4 @@
-<mat-toolbar *ngIf="storages$ | async">
+<mat-toolbar>
   <div>
     <h4 class="mat-h4">
       <mat-icon>filter_drama</mat-icon>
@@ -32,7 +32,7 @@
       </mat-menu>
     </button>
 
-    <button mat-button>
+    <button mat-button (click)="clearLastUpdates()">
       <mat-icon>refresh</mat-icon>
       Refresh
     </button>
@@ -63,8 +63,18 @@
   </div>
 </mat-toolbar>
 
+<mat-progress-spinner
+  [style.visibility]="(loading$ | async) ? 'visible' : 'hidden'"
+  class="content-spinner"
+  color="accent"
+  [diameter]="40"
+  mode="indeterminate"
+></mat-progress-spinner>
 <mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
-  <mat-grid-tile *ngFor="let storage of storages$ | async; let i = index">
+  <mat-grid-tile
+    [style.visibility]="(loading$ | async) ? 'hidden' : 'visible'"
+    *ngFor="let storage of storages$ | async; let i = index"
+  >
     <mat-card class="mat-elevation-z25">
       <mat-card-content>
         <storage-view
