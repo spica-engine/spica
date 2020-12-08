@@ -71,6 +71,8 @@ To attach Policies, enter either **Identity Edit Page** or **API Key Edit Page**
 
 To attach the policy, click the `link` buttom. To detach click on `unlink` button.
 
+![Example Policies](assets/images/docs/passport/policies.png)
+
 ### Creating a Custom Policy
 
 It is possible to create your own Custom Policy by clicking on the `+` button on Policies page to create from scratch or clone a Policy and start to work where it left off by clicking the `copy` button on Policies page next to each policy.
@@ -86,3 +88,5 @@ Click on `Add Statement` button to add new statement. You'll see a new statement
 `Actions`: After selecting the scope, this input will show up. You'll see a list of actions on the selected scope. Select one or more actions to add them to your Statement.
 
 `Add Resource`: Optional. If you want to allow/deny actions on resource based, add resource and enter the \_id of the resource. You can add infinite number of resources to a Statement.
+
+![Example Custom Policy](assets/images/docs/passport/custom_policies.png)

@@ -20,6 +20,8 @@ You'll see the name of the newly created property is added to the list. Click on
 
 > Warning: If you change a field type after the creation (e.g. changing a `string` field to `array`), that field's data on bucket entries will be **removed**.
 
+![Property Add](assets/images/docs/bucket/add_property.png)
+
 ### Property Options
 
 `Primary field`: Primary field is mainly used for building relations between data.
@@ -52,19 +54,23 @@ You'll see the name of the newly created property is added to the list. Click on
 
 ### Some Examples
 
-Agency name: `string`
+For the Bucket stores User information: 
+
+Full Name: `string`
 
 Age: `number`
 
-Project release date: `date` with predefined values.
+Birthday: `date`
 
-Company address: `richtext` (if you want to enable HTML codes) or `textarea`.
+Bio: `richtext`
 
-Thumbnail image: `storage`
+Address: `textarea`.
 
-Phone: `string`
+Avatar: `storage`
 
-Product name: `string`
+Current Location: `string`
+
+![Example Bucket](assets/images/docs/bucket/bucket_example.png)
 
 ## View
 
@@ -73,6 +79,10 @@ You can customize the Bucket Data Create/Edit page from this section. Left, Righ
 You can drag and drop the Bucket Properties to the desired division.
 
 > Remember: You can't save a Bucket if you left one or more Properties on No Position list.
+
+![Configure View](assets/images/docs/bucket/configure_view.png)
+
+![View configureation result](assets/images/docs/bucket/view_result.png)
 
 ## Rules
 
@@ -138,6 +148,8 @@ For scheduled publish, there is an auto-publish feature in the bucket module. So
 Spica, optionally can track down the change history of bucket entries. To enable the history feature for the specific bucket, simply go to a Bucket Schema edit page and toggle the History option. Once it is toggled on, the changes made on the bucket's entries will be stored.
 
 Navigate to one of the Bucket's entries, look for the **History** button on the top right toolbar. Clicking on it will reveal the last 10 versions of the entry. Clicking the version numbers will only show that version of the data. If you intend to revert the entry to a certain point, just click on the revision number then hit the save button.
+
+![Example Bucket](assets/images/docs/bucket/history.png)
 
 ## Real-time
 

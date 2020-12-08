@@ -22,6 +22,9 @@ There are events in the Spica. As an example there is an event when there is a c
 
 If you attach a trigger to your function, your function will be executed when the event raised.
 
+
+![Example Triggers](assets/images/docs/function/triggers.png)
+
 Currently, the Functions supports following triggers:
 
 - [HTTP](#http)
@@ -900,3 +903,5 @@ An unhandled error will crash your function, when the error happens it will be l
 #### Logging
 
 A function code can have statements like `console.log`, `console.error`, when code calls a console function the output of log will be written to function's log.
+
+![Logs](assets/images/docs/function/logs.png)
