@@ -24,9 +24,10 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     const job = new cron.CronJob({
       cronTime: options.frequency,
       onTick: () => {
-        const ev = new event.Event();
-        ev.target = target;
-        ev.type = event.Type.SCHEDULE;
+        const ev = new event.Event({
+          target,
+          type: event.Type.SCHEDULE
+        });
         this.queue.enqueue(ev);
       },
       start: true,
