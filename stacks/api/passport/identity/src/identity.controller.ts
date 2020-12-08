@@ -108,11 +108,14 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:update", undefined, attachIdentityAccess))
-  updateOne(
+  async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
     identity: Identity
   ) {
+    if (identity.password) {
+      identity.password = await hash(identity.password);
+    }
     return this.identity.findOneAndUpdate({_id: id}, {$set: identity});
   }
 
