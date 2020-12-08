@@ -1,6 +1,6 @@
 import {Middlewares} from "@spica-server/core";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {Event, Http} from "@spica-server/function/queue/proto";
+import {event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 import bodyParser = require("body-parser");
@@ -55,7 +55,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     this.router.use(this.handleUnhandled);
   }
 
-  subscribe(target: Event.Target, options: HttpOptions): void {
+  subscribe(target: event.Target, options: HttpOptions): void {
     const method = options.method.toLowerCase();
     const path = options.path.replace(/^\/?(.*?)\/?$/, "/$1");
 
@@ -73,10 +73,11 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     }
 
     const fn = (req: express.Request, res: express.Response) => {
-      const event = new Event.Event();
-      event.target = target;
-      event.type = Event.Type.HTTP;
-      this.queue.enqueue(event);
+      const ev = new event.Event({
+        target,
+        type: event.Type.HTTP
+      });
+      this.queue.enqueue(ev);
       const request = new Http.Request({
         method: req.method,
         url: req.url,
@@ -105,10 +106,12 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         acc.push(header);
         return acc;
       }, []);
-      this.http.enqueue(event.id, request, res);
+      this.http.enqueue(ev.id, request, res);
       req.once("close", () => {
-        this.queue.dequeue(event);
-        this.http.dequeue(event.id);
+        if (!req.res.headersSent) {
+          this.queue.dequeue(ev);
+          this.http.dequeue(ev.id);
+        }
       });
     };
 
@@ -119,7 +122,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     this.reorderUnhandledHandle();
   }
 
-  unsubscribe(target: Event.Target): void {
+  unsubscribe(target: event.Target): void {
     this.router.stack = this.router.stack.filter(layer => {
       if (layer.route) {
         return !layer.route.stack.some(layer => {

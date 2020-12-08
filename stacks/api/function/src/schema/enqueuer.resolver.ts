@@ -41,7 +41,8 @@ export function generate({body}: {body: Function}) {
             properties: Object.keys(body.triggers).reduce((props, key) => {
               props[key] = {
                 type: "object",
-                required: ["type"],
+                required: ["type", "options"],
+                additionalProperties: false,
                 properties: {
                   type: {
                     type: "string"
@@ -49,6 +50,20 @@ export function generate({body}: {body: Function}) {
                   active: {
                     type: "boolean",
                     default: true
+                  },
+                  batch: {
+                    type: "object",
+                    required: ["limit", "deadline"],
+                    properties: {
+                      limit: {
+                        type: "number",
+                        min: 1
+                      },
+                      deadline: {
+                        type: "number",
+                        min: 1
+                      }
+                    }
                   },
                   options: {
                     $ref: `http://spica.internal/function/enqueuer/${body.triggers[key].type}`
