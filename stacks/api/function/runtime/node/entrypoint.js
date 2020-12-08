@@ -210,13 +210,13 @@ async function _process(ev, queue) {
   try {
     // Call the function
     if (!(ev.target.handler in module)) {
-      console.error(`This function does not export any symbol named '${ev.target.handler}'.`);
-      throw Symbol.for("UNRETRYABLE");
+      await queue.complete(new event.Complete({id: ev.id, succedded: false}));
+      exitAbnormally(`This function does not export any symbol named '${ev.target.handler}'.`);
     } else if (typeof module[ev.target.handler] != "function") {
-      console.error(
+      await queue.complete(new event.Complete({id: ev.id, succedded: false}));
+      exitAbnormally(
         `This function does export a symbol named '${ev.target.handler}' but it is not a function.`
       );
-      throw Symbol.for("UNRETRYABLE");
     }
     await callback(module[ev.target.handler](...callArguments));
     queue.complete(new event.Complete({id: ev.id, succedded: true}));

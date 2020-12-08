@@ -1,7 +1,7 @@
 import {INestApplication} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 import {Worker} from "@spica-server/function/runtime";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import {Scheduler, SchedulerModule} from "@spica-server/function/scheduler";
@@ -72,11 +72,11 @@ describe("Scheduler", () => {
 
   it("should spawn max N process", () => {
     expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
-    const event = new Event.Event({
-      target: new Event.Target({
+    const ev = new event.Event({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new Event.SchedulingContext({env: [], timeout: 1000})
+        context: new event.SchedulingContext({env: [], timeout: 1000})
       }),
       type: -1
     });
@@ -90,18 +90,18 @@ describe("Scheduler", () => {
   });
 
   it("should attach outputs when the worker scheduled", () => {
-    const event = new Event.Event({
-      target: new Event.Target({
+    const ev = new event.Event({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new Event.SchedulingContext({env: [], timeout: 1000})
+        context: new event.SchedulingContext({env: [], timeout: 1000})
       }),
       type: -1
     });
     const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
     const attachSpy = spyOn(worker, "attach");
     // @ts-expect-error
-    scheduler.yield(event, id);
+    scheduler.yield(ev, id);
     expect(attachSpy).toHaveBeenCalled();
   });
 
@@ -112,11 +112,11 @@ describe("Scheduler", () => {
   });
 
   it("should kill the worker when the execution times out", () => {
-    const event = new Event.Event({
-      target: new Event.Target({
+    const ev = new event.Event({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new Event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
@@ -131,11 +131,11 @@ describe("Scheduler", () => {
   });
 
   it("should pick the minimum timeout value when scheduling", () => {
-    const event = new Event.Event({
-      target: new Event.Target({
+    const event = new event.Event({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new Event.SchedulingContext({env: [], timeout: schedulerOptions.timeout * 2})
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout * 2})
       }),
       type: -1
     });
@@ -150,11 +150,11 @@ describe("Scheduler", () => {
   });
 
   it("should write to stderr when the execution of a function times out", () => {
-    const event = new Event.Event({
-      target: new Event.Target({
+    const event = new event.Event({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new Event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
@@ -174,11 +174,11 @@ describe("Scheduler", () => {
   });
 
   it("should not write to stderr when the function quits within the timeout frame", () => {
-    const event = new Event.Event({
-      target: new Event.Target({
+    const event = new event.Event({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new Event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
