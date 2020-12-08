@@ -200,55 +200,6 @@ function createRelationPaths(relationMap: RelationMap): string[] {
   return paths;
 }
 
-export function findUpdatedFields(
-  previousSchema: any,
-  currentSchema: any,
-  updatedFields: string[],
-  path: string
-) {
-  for (const field of Object.keys(previousSchema)) {
-    if (
-      !currentSchema.hasOwnProperty(field) ||
-      currentSchema[field].type != previousSchema[field].type ||
-      hasRelationChanges(previousSchema[field], currentSchema[field])
-    ) {
-      updatedFields.push(path ? `${path}.${field}` : field);
-      //we dont need to check child keys of this key anymore
-      continue;
-    }
-    if (isObject(previousSchema[field]) && isObject(currentSchema[field])) {
-      findUpdatedFields(
-        previousSchema[field].properties,
-        currentSchema[field].properties,
-        updatedFields,
-        path ? `${path}.${field}` : field
-      );
-    } else if (isArray(previousSchema[field]) && isArray(currentSchema[field])) {
-      addArrayPattern(
-        previousSchema[field].items,
-        currentSchema[field].items,
-        updatedFields,
-        path ? `${path}.${field}` : field
-      );
-    }
-  }
-  return updatedFields;
-}
-
-export function addArrayPattern(
-  previousSchema: any,
-  currentSchema: any,
-  updatedFields: string[],
-  path: string
-) {
-  path = `${path}.$[]`;
-  if (isArray(previousSchema) && isArray(currentSchema)) {
-    addArrayPattern(previousSchema.items, currentSchema.items, updatedFields, path);
-  } else if (isObject(previousSchema) && isObject(currentSchema)) {
-    findUpdatedFields(previousSchema.properties, currentSchema.properties, updatedFields, path);
-  }
-}
-
 export function getUpdateParams(
   target: string,
   type: "onetoone" | "onetomany",
