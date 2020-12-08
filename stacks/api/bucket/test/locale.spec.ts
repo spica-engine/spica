@@ -1,31 +1,23 @@
-import {provideLanguageChangeUpdater} from "@spica-server/bucket/src/locale";
+import {provideLanguageFinalizer} from "@spica-server/bucket/src/locale";
 
 describe("provideLanguageChangeUpdater", () => {
-  let updaterFactory;
-  let bucketService;
-  let bucketDataService;
-  let translatableBuckets;
+  const translatableBuckets = [
+    {_id: "bucket1", properties: {title: {}, description: {}}},
+    {_id: "bucket2", properties: {name: {}}}
+  ];
 
-  let aggregate: jasmine.Spy = jasmine.createSpy("aggregate").and.returnValue({
-    toArray: () => Promise.resolve(translatableBuckets)
-  });
-  let updateMany: jasmine.Spy = jasmine.createSpy("updateMany").and.returnValue(Promise.resolve());
+  const bucketDataService: any = {
+    updateMany: jasmine.createSpy("updateMany").and.returnValue(Promise.resolve()),
+    children: () => bucketDataService
+  };
 
-  beforeAll(() => {
-    translatableBuckets = [
-      {_id: "bucket1", properties: {title: {}, description: {}}},
-      {_id: "bucket2", properties: {name: {}}}
-    ];
+  const bucketService: any = {
+    aggregate: jasmine.createSpy("aggregate").and.returnValue({
+      toArray: () => Promise.resolve(translatableBuckets)
+    })
+  };
 
-    bucketService = {
-      aggregate
-    };
-    bucketDataService = {
-      updateMany
-    };
-
-    updaterFactory = provideLanguageChangeUpdater(bucketService, bucketDataService);
-  });
+  const updaterFactory = provideLanguageFinalizer(bucketService, bucketDataService);
 
   it("should return updater function", () => {
     expect(typeof updaterFactory == "function").toBe(true);
@@ -73,8 +65,8 @@ describe("provideLanguageChangeUpdater", () => {
       }
     );
 
-    expect(aggregate).toHaveBeenCalledTimes(1);
-    expect(aggregate).toHaveBeenCalledWith([
+    expect(bucketService.aggregate).toHaveBeenCalledTimes(1);
+    expect(bucketService.aggregate).toHaveBeenCalledWith([
       {
         $project: {
           properties: {
@@ -107,8 +99,8 @@ describe("provideLanguageChangeUpdater", () => {
       }
     ]);
 
-    expect(updateMany).toHaveBeenCalledTimes(2);
-    expect(updateMany.calls.allArgs()).toEqual([
+    expect(bucketDataService.updateMany).toHaveBeenCalledTimes(2);
+    expect(bucketDataService.updateMany.calls.allArgs()).toEqual([
       [
         "bucket1",
         {},

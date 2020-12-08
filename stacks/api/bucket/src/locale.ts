@@ -77,12 +77,12 @@ export function hasTranslatedProperties(schema: Bucket) {
   return false;
 }
 
-export function provideLanguageChangeUpdater(
+export function provideLanguageFinalizer(
   bucketService: BucketService,
   bucketDataService: BucketDataService
 ) {
   return async (previousSchema: object, currentSchema: object) => {
-    let deletedLanguages = diff(previousSchema, currentSchema)
+    const deletedLanguages = diff(previousSchema, currentSchema)
       .filter(
         change =>
           change.kind == ChangeKind.Delete &&
@@ -95,7 +95,7 @@ export function provideLanguageChangeUpdater(
       return Promise.resolve();
     }
 
-    let buckets = await bucketService
+    const buckets = await bucketService
       .aggregate<Bucket>([
         {
           $project: {
@@ -130,15 +130,15 @@ export function provideLanguageChangeUpdater(
       ])
       .toArray();
 
-    let promises = buckets.map(bucket => {
-      let targets = {};
+    const promises = buckets.map(bucket => {
+      const targets = {};
 
-      Object.keys(bucket.properties).forEach(field => {
-        targets = deletedLanguages.reduce((acc, language) => {
-          acc = {...acc, [`${field}.${language}`]: ""};
-          return acc;
-        }, targets);
-      });
+      for (const fieldName of Object.keys(bucket.properties)) {
+        for (const language of deletedLanguages) {
+          const target = fieldName + "." + language;
+          targets[target] = "";
+        }
+      }
 
       return bucketDataService.children(bucket._id).updateMany({}, {$unset: targets});
     });

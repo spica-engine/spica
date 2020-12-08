@@ -4,13 +4,13 @@ import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {PreferenceService, PREFERENCE_CHANGE_FINALIZER} from "@spica-server/preference/services";
+import {PreferenceService, BUCKET_LANGUAGE_FINALIZER} from "@spica-server/preference/services";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketDataService} from "../services/src/bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {DocumentScheduler} from "./scheduler";
-import {provideLanguageChangeUpdater} from "./locale";
+import {provideLanguageFinalizer} from "./locale";
 import {GraphqlController} from "./graphql/graphql";
 
 @Module({})
@@ -78,12 +78,12 @@ export class BucketModule {
   providers: [
     BucketDataService,
     {
-      provide: PREFERENCE_CHANGE_FINALIZER,
-      useFactory: provideLanguageChangeUpdater,
+      provide: BUCKET_LANGUAGE_FINALIZER,
+      useFactory: provideLanguageFinalizer,
       inject: [BucketService, BucketDataService]
     }
   ],
-  exports: [PREFERENCE_CHANGE_FINALIZER]
+  exports: [BUCKET_LANGUAGE_FINALIZER]
 })
 export class BucketCoreModule {}
 
