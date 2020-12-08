@@ -8,10 +8,7 @@
   <span class="fill-space"></span>
 </mat-toolbar>
 
-<mat-sidenav-container
-  [class.handset]="isHandset$ | async"
-  autosize
->
+<mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
   <mat-sidenav
     #drawer
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
