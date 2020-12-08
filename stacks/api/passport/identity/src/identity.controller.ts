@@ -51,11 +51,15 @@ export class IdentityController {
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
     @ResourceFilter() resourceFilter: object
   ) {
-    let dataPipeline: object[] = [];
+    const dataPipeline: object[] = [];
 
     dataPipeline.push({$skip: skip});
 
-    if (limit) dataPipeline.push({$limit: limit});
+    if (limit) {
+      dataPipeline.push({$limit: limit});
+    }
+
+    dataPipeline.push({$project: {password: 0}});
 
     const aggregate = [
       resourceFilter,
@@ -116,7 +120,7 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
-    return this.identity.findOneAndUpdate({_id: id}, {$set: identity});
+    return this.identity.findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false});
   }
 
   @UseInterceptors(activity(createIdentityActivity))
