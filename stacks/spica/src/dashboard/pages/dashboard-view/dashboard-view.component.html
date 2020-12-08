@@ -1,29 +1,31 @@
-<div *ngIf="widgets$ | async; let dashboard">
+<div *ngIf="dashboard$ | async; let dashboard">
   <mat-toolbar>
     <h1>
-      <mat-icon> {{ dashboard?.icon }} </mat-icon>
+      <mat-icon> {{ dashboard.icon }} </mat-icon>
       <span> {{ dashboard.name }}</span>
     </h1>
   </mat-toolbar>
   <div>
-    <div class="widgets">
-      <mat-card *ngFor="let widget of dashboard?.components">
+    <div class="components">
+      <mat-card *ngFor="let component of dashboard.components">
         <app-dashboard-chart
           *ngIf="
-            widget.type == 'line' ||
-            widget.type == 'pie' ||
-            widget.type == 'doughnut' ||
-            widget.type == 'polarArea' ||
-            widget.type == 'scatter' ||
-            widget.type == 'bubble' ||
-            widget.type == 'radar' ||
-            widget.type == 'bar'
+            component.type == 'line' ||
+            component.type == 'pie' ||
+            component.type == 'doughnut' ||
+            component.type == 'polarArea' ||
+            component.type == 'scatter' ||
+            component.type == 'bubble' ||
+            component.type == 'radar' ||
+            component.type == 'bar'
           "
-          [data]="widget"
+          [component]="component"
         ></app-dashboard-chart>
-        <app-dashboard-table *ngIf="widget.type == 'table'" [data]="widget"></app-dashboard-table>
-
-        <span *ngIf="!widget.type || !widget">This widget is unavailable.</span>
+        <!-- <app-dashboard-table
+        [data]="ds.executeComponent(component.url) | async"
+          [data]="componentData$[i] | async"
+        ></app-dashboard-table> -->
+        <span *ngIf="!component.type || !component">This component is unavailable.</span>
       </mat-card>
     </div>
   </div>

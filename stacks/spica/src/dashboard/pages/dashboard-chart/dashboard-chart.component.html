@@ -1,14 +1,14 @@
-<div *ngIf="observable | async">
+<div *ngIf="componentData$ | async; let componentData">
   <div class="refresh">
-    <button mat-icon-button mat-flat-button matTooltip="Refresh data" (click)="getData()">
+    <button mat-icon-button mat-flat-button matTooltip="Refresh data" (click)="refresh()">
       <mat-icon>refresh</mat-icon>
     </button>
   </div>
-  <h3>{{ chartData.title }}</h3>
+  <h3>{{ component.title }}</h3>
 
-  <div *ngIf="chartData?.filters?.length > 0">
+  <div *ngIf="componentData.filters?.length > 0">
     <span
-      *ngFor="let filter of chartData?.filters"
+      *ngFor="let filter of componentData.filters"
       [inputPlacer]="filter"
       [(ngModel)]="filter.value"
       (ngModelChange)="filter?.type == 'date' ? callOnChange(filter.key, filter.value) : undefined"
@@ -17,13 +17,13 @@
   </div>
   <canvas
     baseChart
-    [data]="chartData?.data"
-    [datasets]="chartData?.datasets"
-    [labels]="chartData?.label"
-    [options]="chartData?.options"
-    [colors]="chartData?.colors"
-    [legend]="chartData?.legend"
-    [chartType]="chartData?.type"
+    [data]="componentData.data"
+    [datasets]="componentData.datasets"
+    [labels]="componentData.label"
+    [options]="componentData.options"
+    [colors]="componentData.colors"
+    [legend]="componentData.legend"
+    [chartType]="component.type"
   >
   </canvas>
 </div>

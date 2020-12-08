@@ -1,8 +1,9 @@
 import {Component} from "@angular/core";
 import {ActivatedRoute} from "@angular/router";
 import {Observable} from "rxjs";
-import {switchMap} from "rxjs/operators";
+import {switchMap, tap} from "rxjs/operators";
 import {DashboardService} from "../../services/dashboard.service";
+import {Dashboard} from "@spica-client/dashboard/interfaces";
 
 @Component({
   selector: "app-dashboard-view",
@@ -10,12 +11,12 @@ import {DashboardService} from "../../services/dashboard.service";
   styleUrls: ["./dashboard-view.component.scss"]
 })
 export class DashboardViewComponent {
-  widgets$: Observable<any>;
+  dashboard$: Observable<Dashboard>;
 
   constructor(private activatedRoute: ActivatedRoute, private ds: DashboardService) {}
 
   ngOnInit() {
-    this.widgets$ = this.activatedRoute.params.pipe(
+    this.dashboard$ = this.activatedRoute.params.pipe(
       switchMap(params => this.ds.getDashboard(params.id))
     );
   }

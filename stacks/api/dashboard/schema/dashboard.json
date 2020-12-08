@@ -2,11 +2,8 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://spica.internal/dashboard",
   "type": "object",
-  "required": ["key", "name"],
+  "required": ["name"],
   "properties": {
-    "key": {
-      "type": "string"
-    },
     "name": {
       "type": "string"
     },
@@ -17,17 +14,16 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["key", "type", "url"],
+        "required": ["name", "type", "url"],
         "properties": {
-          "key": {
+          "name": {
             "type": "string"
           },
           "type": {
             "type": "string"
           },
           "url": {
-            "type": "string",
-            "format": "uri"
+            "type": "string"
           }
         },
         "additionalProperties": false

@@ -1,11 +1,14 @@
-export interface Component {
-  type: string;
-  url: string;
-  key: string;
-}
+import {ObjectId} from "@spica-server/database";
+
 export interface Dashboard {
-  key: string;
+  _id?: string | ObjectId;
   name: string;
   icon: string;
   components: Component[];
+}
+
+export interface Component {
+  name: string;
+  type: string;
+  url: string;
 }

@@ -25,17 +25,17 @@ export class DashboardTableComponent implements OnInit {
     this.getData();
   }
   getData() {
-    this.dashboardService.executeComponent(this.data.url, this.params).subscribe(d => {
-      Object.values(d).map(f => {
-        if (f[this.data.key]) {
-          this.dataSource = new MatTableDataSource(f[this.data.key].data);
-          this.tableData = f[this.data.key];
-          this.dataSource.paginator = this.paginator;
-          this.displayedColumns = f[this.data.key].displayedColumns;
-          this.dataSource.sort = this.sort;
-        }
-      });
-    });
+    // this.dashboardService.executeTarget(this.data.url, this.params).subscribe(d => {
+    //   Object.values(d).map(f => {
+    //     if (f[this.data.key]) {
+    //       this.dataSource = new MatTableDataSource(f[this.data.key].data);
+    //       this.tableData = f[this.data.key];
+    //       this.dataSource.paginator = this.paginator;
+    //       this.displayedColumns = f[this.data.key].displayedColumns;
+    //       this.dataSource.sort = this.sort;
+    //     }
+    //   });
+    // });
   }
   callOnChange(key: string, value: string) {
     this.params = this.params.set(key, value);

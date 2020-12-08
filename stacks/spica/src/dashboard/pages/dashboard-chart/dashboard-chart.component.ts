@@ -11,30 +11,16 @@ import {DashboardService} from "@spica-client/dashboard/services/dashboard.servi
   styleUrls: ["./dashboard-chart.component.scss"]
 })
 export class DashboardChartComponent implements OnInit {
-  @Input() data: DashboardComponent;
-  chartData: any;
-  observable: Observable<any>;
+  @Input() component: DashboardComponent;
+  componentData$: Observable<object>;
   params: HttpParams = new HttpParams();
   constructor(private dashboardService: DashboardService) {}
-
   ngOnInit() {
-    this.getData();
+    this.componentData$ = this.dashboardService.executeComponent(this.component.url);
   }
-  getData() {
-    this.observable = this.dashboardService.executeComponent(this.data.url, this.params).pipe(
-      tap(d => {
-        Object.values(d).map(f => {
-          if (f[this.data.key]) {
-            f[this.data.key].type = this.data.type;
-            this.chartData = f[this.data.key];
-          }
-        });
-      })
-    );
-  }
-
+  
   callOnChange(key: string, value: string) {
     this.params = this.params.set(key, value);
-    this.getData();
+    // execute again
   }
 }
