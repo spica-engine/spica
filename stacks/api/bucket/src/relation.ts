@@ -3,6 +3,7 @@ import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/servic
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
+import {deepCopy} from "./patch";
 
 export function findRelations(
   schema: any,
@@ -160,6 +161,43 @@ export function resetNonOverlappingPathsInRelationMap(
 
   const expressions = visit({left: options.left, right: options.right, map: options.map, depth: 0});
   return expressions ? {$set: expressions} : undefined;
+}
+
+export function compareAndUpdateRelations(relationMap: RelationMap[], usedRelations: string[]) {
+  const updatedRelationMap: RelationMap[] = [];
+
+  for (const map of relationMap) {
+    if (!usedRelations.includes(map.path)) {
+      const paths = createRelationPaths(deepCopy(map));
+      usedRelations.push(...paths);
+      updatedRelationMap.push(map);
+      continue;
+    }
+
+    if (map.children && map.children.length) {
+      for (const child of map.children) {
+        child.path = map.path + "." + child.path;
+      }
+      const updatedChilds = compareAndUpdateRelations(map.children, usedRelations);
+      updatedRelationMap.push(...updatedChilds);
+    }
+  }
+  return updatedRelationMap;
+}
+
+function createRelationPaths(relationMap: RelationMap): string[] {
+  const paths = [];
+  paths.push(relationMap.path);
+
+  if (relationMap.children && relationMap.children.length) {
+    for (const childMap of relationMap.children) {
+      childMap.path = relationMap.path + "." + childMap.path;
+      const path = createRelationPaths(childMap);
+      paths.push(...path);
+    }
+  }
+
+  return paths;
 }
 
 export function getUpdateParams(
