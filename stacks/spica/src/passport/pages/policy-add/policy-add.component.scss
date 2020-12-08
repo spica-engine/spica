@@ -7,6 +7,10 @@
       > button:not(:last-of-type) {
         margin-right: 10px;
       }
+
+      mat-error {
+        font-size: 12px !important;
+      }
     }
   }
   mat-form-field {
