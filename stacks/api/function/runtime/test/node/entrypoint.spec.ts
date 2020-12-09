@@ -1,5 +1,5 @@
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
-import {Database, Event, Firehose, Http} from "@spica-server/function/queue/proto";
+import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {Compilation, Language} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";
@@ -23,6 +23,8 @@ describe("Entrypoint", () => {
     entrypoint: undefined
   };
   let id = 0;
+
+  let queueSize = 0;
 
   function initializeFn(index: string) {
     compilation.entrypoint = `index.${language.description.extension}`;
@@ -57,9 +59,27 @@ describe("Entrypoint", () => {
   }
 
   beforeEach(async () => {
-    enqueueSpy = jasmine.createSpy("enqueue");
-    popSpy = jasmine.createSpy("pop");
-    queue = new EventQueue(enqueueSpy, popSpy);
+    let schedule;
+    let event;
+
+    function process() {
+      if (schedule && event) {
+        queueSize--;
+        schedule(event);
+      }
+    }
+
+    enqueueSpy = jasmine.createSpy("enqueue").and.callFake(e => {
+      queueSize++;
+      event = e;
+      process();
+    });
+    popSpy = jasmine.createSpy("pop").and.callFake((_, sc) => {
+      schedule = sc;
+      process();
+    });
+
+    queue = new EventQueue(popSpy, enqueueSpy, () => {}, () => {});
     await queue.listen();
     runtime = new Node();
     language = new Javascript();
@@ -72,21 +92,20 @@ describe("Entrypoint", () => {
   it("should pop the latest event from queue", async () => {
     await initializeFn(`export default function() {}`);
     queue.enqueue(
-      new Event.Event({
+      new event.Event({
         type: -1,
-        target: new Event.Target({
+        target: new event.Target({
           handler: "default",
           cwd: compilation.cwd,
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       })
     );
-    expect(queue.size).toBe(1);
     await spawn();
-    expect(queue.size).toBe(0);
+    expect(queueSize).toBe(0);
   });
 
   it("should exit abnormally when worker id was not set", async () => {
@@ -115,18 +134,18 @@ describe("Entrypoint", () => {
   it("should exit abnormally if it can not find the exported handler", async () => {
     await initializeFn(`export const exists = ''`);
 
-    const event = new Event.Event({
+    const ev = new event.Event({
       type: -1,
-      target: new Event.Target({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "shouldhaveexisted",
-        context: new Event.SchedulingContext({
+        context: new event.SchedulingContext({
           env: [],
           timeout: 60
         })
       })
     });
-    queue.enqueue(event);
+    queue.enqueue(ev);
 
     const stream = new PassThrough();
     const writeSpy = spyOn(stream, "write").and.callThrough();
@@ -140,25 +159,25 @@ describe("Entrypoint", () => {
   it("should exit abnormally if the exported symbol is not a function", async () => {
     await initializeFn(`export const notafunction = ''`);
 
-    const event = new Event.Event({
+    const ev = new event.Event({
       type: -1,
-      target: new Event.Target({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "notafunction",
-        context: new Event.SchedulingContext({
+        context: new event.SchedulingContext({
           env: [],
           timeout: 60
         })
       })
     });
-    queue.enqueue(event);
+    queue.enqueue(ev);
 
     const stream = new PassThrough();
     const writeSpy = spyOn(stream, "write").and.callThrough();
 
     await expectAsync(spawn(stream)).toBeRejectedWith(126);
     expect(writeSpy.calls.allArgs().map(args => args[0].toString())).toEqual([
-      "This function does export a symbol named 'notafunction' yet it is not a function.\n"
+      "This function does export a symbol named 'notafunction' but it is not a function.\n"
     ]);
   });
 
@@ -168,12 +187,12 @@ describe("Entrypoint", () => {
       console.warn('this also should appear in the logs');
     }`);
     queue.enqueue(
-      new Event.Event({
+      new event.Event({
         type: -1,
-        target: new Event.Target({
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
@@ -221,18 +240,18 @@ describe("Entrypoint", () => {
       }
     }`);
 
-    const event = new Event.Event({
+    const ev = new event.Event({
       type: -1,
-      target: new Event.Target({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new Event.SchedulingContext({
+        context: new event.SchedulingContext({
           env: [],
           timeout: 60
         })
       })
     });
-    queue.enqueue(event);
+    queue.enqueue(ev);
 
     const exitCode = await spawn().catch(e => e);
     expect(exitCode).toBe(4);
@@ -246,18 +265,18 @@ describe("Entrypoint", () => {
       }
     }`);
 
-    const event = new Event.Event({
+    const ev = new event.Event({
       type: -1,
-      target: new Event.Target({
+      target: new event.Target({
         cwd: compilation.cwd,
         handler: "env",
-        context: new Event.SchedulingContext({
-          env: [new Event.SchedulingContext.Env({key: "SET_FROM_CTX", value: "true"})],
+        context: new event.SchedulingContext({
+          env: [new event.SchedulingContext.Env({key: "SET_FROM_CTX", value: "true"})],
           timeout: 60
         })
       })
     });
-    queue.enqueue(event);
+    queue.enqueue(ev);
 
     const exitCode = await spawn().catch(e => e);
     expect(exitCode).toBe(4);
@@ -275,12 +294,12 @@ describe("Entrypoint", () => {
         process.exit(4); 
       }`);
       queue.enqueue(
-        new Event.Event({
+        new event.Event({
           type: -1,
-          target: new Event.Target({
+          target: new event.Target({
             handler: "default",
             cwd: compilation.cwd,
-            context: new Event.SchedulingContext({
+            context: new event.SchedulingContext({
               env: [],
               timeout: 60
             })
@@ -298,12 +317,12 @@ describe("Entrypoint", () => {
         process.exit(4); 
       }`);
       queue.enqueue(
-        new Event.Event({
+        new event.Event({
           type: -1,
-          target: new Event.Target({
+          target: new event.Target({
             handler: "test",
             cwd: compilation.cwd,
-            context: new Event.SchedulingContext({
+            context: new event.SchedulingContext({
               env: [],
               timeout: 60
             })
@@ -328,24 +347,24 @@ describe("Entrypoint", () => {
     it("should pop from the queue", async () => {
       await initializeFn(`export default function() {}`);
 
-      const event = new Event.Event({
-        type: Event.Type.HTTP,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const request = new Http.Request();
-      httpQueue.enqueue(event.id, request, undefined);
+      httpQueue.enqueue(ev.id, request, undefined);
 
       expect(httpQueue.size).toBe(1);
-      expect(queue.size).toBe(1);
+      expect(queueSize).toBe(1);
 
       await spawn();
 
@@ -361,24 +380,24 @@ describe("Entrypoint", () => {
         }
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.HTTP,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
 
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const request = new Http.Request({
         headers: [new Http.Header({key: "content-type", value: "application/json"})]
       });
-      httpQueue.enqueue(event.id, request, undefined);
+      httpQueue.enqueue(ev.id, request, undefined);
 
       const exitCode = await spawn().catch(e => e);
       expect(exitCode).toBe(4);
@@ -392,21 +411,21 @@ describe("Entrypoint", () => {
         }
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.HTTP,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const request = new Http.Request();
-      httpQueue.enqueue(event.id, request, undefined);
+      httpQueue.enqueue(ev.id, request, undefined);
 
       const exitCode = await spawn().catch(e => e);
 
@@ -418,24 +437,24 @@ describe("Entrypoint", () => {
         res.send({ oughtToSerialize: true  });
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.HTTP,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
         end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
       };
-      httpQueue.enqueue(event.id, new Http.Request(), serverResponse as any);
+      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
 
       await spawn();
       expect(serverResponse.end).toHaveBeenCalledTimes(1);
@@ -446,24 +465,24 @@ describe("Entrypoint", () => {
         return {worksViaReturn: true};
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.HTTP,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
         end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
       };
-      httpQueue.enqueue(event.id, new Http.Request(), serverResponse as any);
+      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
 
       await spawn();
       expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
@@ -477,24 +496,24 @@ describe("Entrypoint", () => {
         return {worksViaReturn: true};
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.HTTP,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.HTTP,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const serverResponse = {
         writeHead: jasmine.createSpy("writeHead"),
         end: jasmine.createSpy("end").and.callFake((_, __, callback) => callback())
       };
-      httpQueue.enqueue(event.id, new Http.Request(), serverResponse as any);
+      httpQueue.enqueue(ev.id, new Http.Request(), serverResponse as any);
       await spawn();
       expect(serverResponse.end.calls.allArgs().map(args => args[0].toString())).toEqual([
         JSON.stringify({hasBeenSentViaSend: true})
@@ -515,21 +534,21 @@ describe("Entrypoint", () => {
     it("should pop from the queue", async () => {
       await initializeFn(`export default function() {}`);
 
-      const event = new Event.Event({
-        type: Event.Type.DATABASE,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.DATABASE,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const change = new Database.Change();
-      databaseQueue.enqueue(event.id, change);
+      databaseQueue.enqueue(ev.id, change);
 
       expect(databaseQueue.size).toBe(1);
 
@@ -545,24 +564,24 @@ describe("Entrypoint", () => {
           process.exit(4);
         }
       }`);
-      const event = new Event.Event({
-        type: Event.Type.DATABASE,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.DATABASE,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const change = new Database.Change({
         kind: Database.Change.Kind.INSERT,
         collection: "test"
       });
-      databaseQueue.enqueue(event.id, change);
+      databaseQueue.enqueue(ev.id, change);
 
       const exitCode = await spawn().catch(e => e);
 
@@ -594,21 +613,21 @@ describe("Entrypoint", () => {
         }
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.FIREHOSE,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.FIREHOSE,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       firehoseQueue.enqueue(
-        event.id,
+        ev.id,
         new Firehose.Message.Incoming({
           client: new Firehose.ClientDescription({
             id: "1",
@@ -629,23 +648,23 @@ describe("Entrypoint", () => {
         socket.send('test', 'thisisthedata');
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.FIREHOSE,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.FIREHOSE,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const socketSpy = jasmine.createSpyObj("Socket", ["send"]);
 
       firehoseQueue.enqueue(
-        event.id,
+        ev.id,
         new Firehose.Message.Incoming({
           client: new Firehose.ClientDescription({
             id: "1",
@@ -667,24 +686,24 @@ describe("Entrypoint", () => {
         socket.close();
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.FIREHOSE,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.FIREHOSE,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const socketSpy = jasmine.createSpyObj("Socket", ["close"]);
       socketSpy.readyState = 1;
 
       firehoseQueue.enqueue(
-        event.id,
+        ev.id,
         new Firehose.Message.Incoming({
           client: new Firehose.ClientDescription({
             id: "1",
@@ -706,18 +725,18 @@ describe("Entrypoint", () => {
         pool.send('test', 'thisisthedata');
       }`);
 
-      const event = new Event.Event({
-        type: Event.Type.FIREHOSE,
-        target: new Event.Target({
+      const ev = new event.Event({
+        type: event.Type.FIREHOSE,
+        target: new event.Target({
           cwd: compilation.cwd,
           handler: "default",
-          context: new Event.SchedulingContext({
+          context: new event.SchedulingContext({
             env: [],
             timeout: 60
           })
         })
       });
-      queue.enqueue(event);
+      queue.enqueue(ev);
 
       const pool = new Firehose.PoolDescription({size: 21}),
         message = new Firehose.Message({name: "connection"});
@@ -726,7 +745,7 @@ describe("Entrypoint", () => {
       firstSocket.readyState = 1; /* OPEN */
 
       firehoseQueue.enqueue(
-        event.id,
+        ev.id,
         new Firehose.Message.Incoming({
           client: new Firehose.ClientDescription({
             id: "1",
@@ -742,7 +761,7 @@ describe("Entrypoint", () => {
       secondSocket.readyState = 1; /* OPEN */
 
       firehoseQueue.enqueue(
-        event.id,
+        ev.id,
         new Firehose.Message.Incoming({
           client: new Firehose.ClientDescription({
             id: "2",

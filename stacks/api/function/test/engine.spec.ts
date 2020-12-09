@@ -31,7 +31,7 @@ describe("Engine", () => {
           databaseReplicaSet: undefined,
           databaseUri: undefined,
           poolSize: 1,
-          poolMaxSize: 2,
+          poolMaxSize: 1,
           apiUrl: undefined,
           timeout: 60000,
           corsOptions: {
@@ -181,7 +181,11 @@ describe("Engine", () => {
       id: "test_id",
       cwd: "test_root/test_id",
       handler: "test_handler",
-      context: {env: [{key: "TEST", value: "true"}], timeout: 60}
+      context: {
+        env: [{key: "TEST", value: "true"}],
+        timeout: 60,
+        batch: {deadline: undefined, limit: undefined}
+      }
     });
   });
   describe("Database Schema", () => {

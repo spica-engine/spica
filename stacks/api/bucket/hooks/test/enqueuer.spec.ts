@@ -1,13 +1,13 @@
 import {EventQueue} from "@spica-server/function/queue";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 import {ChangeAndReviewEnqueuer} from "@spica-server/bucket/hooks/src/enqueuer";
 import {ReviewDispatcher} from "@spica-server/bucket/hooks/src/dispatcher";
 import {ChangeEmitter} from "@spica-server/bucket/hooks/src/emitter";
 
 describe("ChangeAndReviewEnqueuer", () => {
   let changeOrReviewEnqeuer: ChangeAndReviewEnqueuer;
-  let noopTarget: Event.Target;
-  let noopTarget2: Event.Target;
+  let noopTarget: event.Target;
+  let noopTarget2: event.Target;
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let reviewDispatcher: jasmine.SpyObj<ReviewDispatcher>;
   let changeEmitter: jasmine.SpyObj<ChangeEmitter>;
@@ -24,12 +24,12 @@ describe("ChangeAndReviewEnqueuer", () => {
       changeEmitter
     );
 
-    noopTarget = new Event.Target({
+    noopTarget = new event.Target({
       cwd: "/tmp/fn1",
       handler: "default"
     });
 
-    noopTarget2 = new Event.Target({
+    noopTarget2 = new event.Target({
       cwd: "/tmp/fn2",
       handler: "default"
     });
