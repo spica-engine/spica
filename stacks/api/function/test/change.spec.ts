@@ -46,7 +46,6 @@ describe("Change", () => {
           context: {
             env: {test: "123"},
             timeout: 50,
-            batch: undefined
           }
         }
       },
@@ -62,7 +61,6 @@ describe("Change", () => {
           context: {
             env: {test: "123"},
             timeout: 50,
-            batch: undefined
           }
         }
       }
