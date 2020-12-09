@@ -1,6 +1,6 @@
 import {Middlewares} from "@spica-server/core";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {Event, Http} from "@spica-server/function/queue/proto";
+import {event, Http} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 import express = require("express");
 import bodyParser = require("body-parser");
@@ -55,7 +55,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     this.router.use(this.handleUnhandled);
   }
 
-  subscribe(target: Event.Target, options: HttpOptions): void {
+  subscribe(target: event.Target, options: HttpOptions): void {
     const method = options.method.toLowerCase();
     const path = options.path.replace(/^\/?(.*?)\/?$/, "/$1");
 
@@ -73,17 +73,20 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     }
 
     const fn = (req: express.Request, res: express.Response) => {
-      const event = new Event.Event();
-      event.target = target;
-      event.type = Event.Type.HTTP;
-      this.queue.enqueue(event);
-      const request = new Http.Request();
-      request.method = req.method;
-      request.url = req.url;
-      request.path = req.path;
-      request.statusCode = req.statusCode;
-      request.statusMessage = req.statusMessage;
-      request.query = JSON.stringify(req.query);
+      const ev = new event.Event({
+        target,
+        type: event.Type.HTTP
+      });
+      this.queue.enqueue(ev);
+      const request = new Http.Request({
+        method: req.method,
+        url: req.url,
+        path: req.path,
+        statusCode: req.statusCode,
+        statusMessage: req.statusMessage,
+        query: JSON.stringify(req.query),
+        body: new Uint8Array(req.body)
+      });
       request.params = Object.keys(req.params).reduce((acc, key) => {
         const param = new Http.Param();
         param.key = key;
@@ -91,7 +94,6 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         acc.push(param);
         return acc;
       }, []);
-      request.body = new Uint8Array(req.body);
       request.headers = Object.keys(req.headers).reduce((acc, key) => {
         const header = new Http.Header();
         header.key = key;
@@ -104,8 +106,13 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
         acc.push(header);
         return acc;
       }, []);
-      this.http.enqueue(event.id, request, res);
-      req.once("close", () => this.http.dequeue(event.id));
+      this.http.enqueue(ev.id, request, res);
+      req.once("close", () => {
+        if (!req.res.headersSent) {
+          this.queue.dequeue(ev);
+          this.http.dequeue(ev.id);
+        }
+      });
     };
 
     Object.defineProperty(fn, "target", {writable: false, value: target});
@@ -115,7 +122,7 @@ export class HttpEnqueuer extends Enqueuer<HttpOptions> {
     this.reorderUnhandledHandle();
   }
 
-  unsubscribe(target: Event.Target): void {
+  unsubscribe(target: event.Target): void {
     this.router.stack = this.router.stack.filter(layer => {
       if (layer.route) {
         return !layer.route.stack.some(layer => {

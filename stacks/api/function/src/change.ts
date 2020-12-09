@@ -65,7 +65,8 @@ export function createTargetChanges(fn: Function, changeKind: ChangeKind): Targe
         handler,
         context: {
           env: fn.env,
-          timeout: fn.timeout
+          timeout: fn.timeout,
+          batch: trigger.batch
         }
       }
     });
@@ -82,6 +83,10 @@ export enum ChangeKind {
 export interface Context {
   timeout: number;
   env: Environment;
+  batch?: {
+    limit: number;
+    deadline: number;
+  };
 }
 
 export interface TargetChange {
