@@ -1,6 +1,6 @@
 import {Description, Enqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue} from "@spica-server/function/queue";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 import {hooks} from "@spica-server/bucket/hooks/proto";
 import {ReviewDispatcher, reviewKey} from "./dispatcher";
 import {ChangeAndReviewQueue} from "./queue";
@@ -66,12 +66,12 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
   };
 
   private reviewTargets = new Map<
-    Event.Target,
+    event.Target,
     {options: ReviewOrChangeOptions; handler: (callback, headers, document) => void}
   >();
 
   private changeTargets = new Map<
-    Event.Target,
+    event.Target,
     {options: ReviewOrChangeOptions; handler: (type, documentKey, previous, current) => void}
   >();
 
@@ -84,16 +84,16 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
     super();
   }
 
-  subscribe(target: Event.Target, options: ReviewOrChangeOptions) {
+  subscribe(target: event.Target, options: ReviewOrChangeOptions) {
     if (options.phase == "BEFORE") {
       const handler = (callback, headers, document) => {
-        const event = new Event.Event({
+        const ev = new event.Event({
           target,
-          type: Event.Type.BUCKET
+          type: event.Type.BUCKET
         });
-        this.queue.enqueue(event);
+        this.queue.enqueue(ev);
         this.reviewAndChangeQueue.enqueue(
-          event.id,
+          ev.id,
           new hooks.ChangeOrReview({
             review: new hooks.Review({
               headers: mapHeaders(headers),
@@ -109,13 +109,13 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
       this.reviewDispatcher.on(reviewKey(options.bucket, options.type), handler);
     } else {
       const enqueuer = (type, documentKey, previous, current) => {
-        const event = new Event.Event({
+        const ev = new event.Event({
           target,
-          type: Event.Type.BUCKET
+          type: event.Type.BUCKET
         });
-        this.queue.enqueue(event);
+        this.queue.enqueue(ev);
         this.reviewAndChangeQueue.enqueue(
-          event.id,
+          ev.id,
           new hooks.ChangeOrReview({
             change: new hooks.Change({
               bucket: options.bucket,
@@ -132,7 +132,7 @@ export class ChangeAndReviewEnqueuer extends Enqueuer<ReviewOrChangeOptions> {
     }
   }
 
-  unsubscribe(target: Event.Target) {
+  unsubscribe(target: event.Target) {
     for (const [actionTarget, {handler, options}] of this.reviewTargets) {
       if (
         (!target.handler && actionTarget.cwd == target.cwd) ||

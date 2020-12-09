@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {HttpEnqueuer, HttpMethod} from "@spica-server/function/enqueuer";
 import {EventQueue, HttpQueue} from "@spica-server/function/queue";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 
 /**
  * TODO: Provide some tests for req.query, req.headers and req.params
@@ -13,7 +13,7 @@ describe("http enqueuer", () => {
   let app: INestApplication;
   let req: Request;
   let httpEnqueuer: HttpEnqueuer;
-  let noopTarget: Event.Target;
+  let noopTarget: event.Target;
 
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let httpQueue: jasmine.SpyObj<HttpQueue>;
@@ -26,7 +26,7 @@ describe("http enqueuer", () => {
   };
 
   beforeAll(async () => {
-    noopTarget = new Event.Target();
+    noopTarget = new event.Target();
     noopTarget.cwd = "/tmp/fn1";
     noopTarget.handler = "default";
     const module = await Test.createTestingModule({
@@ -36,7 +36,7 @@ describe("http enqueuer", () => {
     app = module.createNestApplication();
     req = module.get(Request);
 
-    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
+    eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue", "dequeue"]);
     httpQueue = jasmine.createSpyObj("httpQueue", ["enqueue", "dequeue"]);
 
     await app.listen(req.socket);
@@ -124,7 +124,7 @@ describe("http enqueuer", () => {
     });
 
     // PUT
-    const putTarget = new Event.Target();
+    const putTarget = new event.Target();
     putTarget.cwd = "/tmp/fn1";
     putTarget.handler = "put";
 
@@ -147,7 +147,7 @@ describe("http enqueuer", () => {
     spy.calls.reset();
 
     // POST
-    const postTarget = new Event.Target();
+    const postTarget = new event.Target();
     postTarget.cwd = "/tmp/fn1";
     postTarget.handler = "post";
     httpEnqueuer.subscribe(postTarget, {
@@ -180,7 +180,7 @@ describe("http enqueuer", () => {
 
   it("should handle preflight conflicts with get, head and post method on same path", async () => {
     // HEAD
-    const headTarget = new Event.Target();
+    const headTarget = new event.Target();
     headTarget.cwd = "/tmp/fn2";
     headTarget.handler = "fn1";
     httpEnqueuer.subscribe(headTarget, {
@@ -190,7 +190,7 @@ describe("http enqueuer", () => {
     });
 
     // GET
-    const getTarget = new Event.Target();
+    const getTarget = new event.Target();
     getTarget.cwd = "/tmp/fn2";
     getTarget.handler = "default";
     httpEnqueuer.subscribe(getTarget, {
@@ -200,7 +200,7 @@ describe("http enqueuer", () => {
     });
 
     // POST
-    const postTarget = new Event.Target();
+    const postTarget = new event.Target();
     postTarget.cwd = "/tmp/fn2";
     postTarget.handler = "default";
     httpEnqueuer.subscribe(postTarget, {
