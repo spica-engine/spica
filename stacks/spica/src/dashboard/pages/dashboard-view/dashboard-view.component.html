@@ -5,27 +5,43 @@
       <span> {{ dashboard.name }}</span>
     </h1>
   </mat-toolbar>
-  <div>
+  <div class="content">
     <div class="components">
-      <mat-card *ngFor="let component of dashboard.components">
-        <app-dashboard-chart
-          *ngIf="
-            component.type == 'line' ||
-            component.type == 'pie' ||
-            component.type == 'doughnut' ||
-            component.type == 'polarArea' ||
-            component.type == 'scatter' ||
-            component.type == 'bubble' ||
-            component.type == 'radar' ||
-            component.type == 'bar'
-          "
-          [component]="component"
-        ></app-dashboard-chart>
-        <!-- <app-dashboard-table
-        [data]="ds.executeComponent(component.url) | async"
-          [data]="componentData$[i] | async"
-        ></app-dashboard-table> -->
-        <span *ngIf="!component.type || !component">This component is unavailable.</span>
+      <mat-card *ngFor="let component of dashboard.components; index as i">
+        <ng-container *ngIf="componentData$[i] | async; let componentData">
+          <div class="refresh">
+            <button mat-icon-button mat-flat-button matTooltip="Refresh data" (click)="refresh(i)">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+          <h3>{{ componentData.title }}</h3>
+          <div class="chart" *ngIf="defaultTypes.indexOf(componentData.type) != -1">
+            <canvas
+              baseChart
+              [data]="componentData.data"
+              [datasets]="componentData.datasets"
+              [labels]="componentData.label"
+              [options]="componentData.options"
+              [colors]="componentData.colors"
+              [legend]="componentData.legend"
+              [plugins]="componentData.plugins"
+              [chartType]="componentData.type"
+            >
+            </canvas>
+          </div>
+          <app-dashboard-table *ngIf="customTypes.indexOf(componentData.type) != -1" [componentData]="componentData">
+          </app-dashboard-table>
+
+          <span
+            class="nonexist-type"
+            *ngIf="
+              defaultTypes.indexOf(componentData.type) == -1 &&
+              customTypes.indexOf(componentData.type) == -1
+            "
+          >
+            This component type does not exist.
+          </span>
+        </ng-container>
       </mat-card>
     </div>
   </div>
