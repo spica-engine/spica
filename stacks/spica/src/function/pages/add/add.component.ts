@@ -102,6 +102,7 @@ export class AddComponent implements OnInit, OnDestroy {
           for (const [index, trigger] of this.function.triggers.entries()) {
             this.triggersEditMode[index] = true;
             if (trigger.batch) {
+              this.batching = true;
               this.maxBatchCount = Math.max(this.maxBatchCount, trigger.batch.limit);
               this.batchingDeadline = Math.max(this.batchingDeadline, trigger.batch.deadline);
             }
