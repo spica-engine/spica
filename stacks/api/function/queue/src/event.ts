@@ -1,30 +1,43 @@
-import {Event} from "@spica-server/function/queue/proto";
 import * as grpc from "@grpc/grpc-js";
+import {event} from "@spica-server/function/queue/proto";
 import * as uniqid from "uniqid";
 import * as util from "util";
 import {Queue} from "./queue";
 
 export class EventQueue {
   private server: grpc.Server;
-  private queue = new Map<string, Event.Event>();
-
-  private _next = new Array<(event: Event.Event) => void>();
-
-  get size(): number {
-    return this.queue.size;
-  }
 
   constructor(
-    private _enqueueCallback: (event: Event.Event) => void,
-    private _popCallback: (event: Event.Event, worker: string) => void
+    private _ready: (id: string, schedule: (event: event.Event | undefined) => void) => void,
+    private _enqueue: (event: event.Event) => void,
+    private _cancel: (id: string) => void,
+    private _complete: (id: string, succedded: boolean) => void
   ) {
     this._create();
   }
 
   private _create() {
     this.server = new grpc.Server();
-    this.server.addService(Event.Queue, {
-      pop: this.pop.bind(this)
+    this.server.addService(event.Queue, {
+      pop: async (
+        call: grpc.ServerUnaryCall<event.Pop, event.Event>,
+        callback: grpc.sendUnaryData<event.Event>
+      ) => {
+        this._ready(call.request.id, event => {
+          if (!event) {
+            callback({code: 5, details: "there is no next event."}, undefined);
+          } else {
+            callback(undefined, event);
+          }
+        });
+      },
+      complete: async (
+        call: grpc.ServerUnaryCall<event.Complete, event.Event>,
+        callback: grpc.sendUnaryData<event.Complete.Result>
+      ) => {
+        this._complete(call.request.id, call.request.succedded);
+        callback(undefined, new event.Complete.Result());
+      }
     });
   }
 
@@ -51,34 +64,13 @@ export class EventQueue {
     return util.promisify(this.server.tryShutdown).call(this.server);
   }
 
-  enqueue(event: Event.Event) {
+  enqueue(event: event.Event) {
     event.id = uniqid();
-    this.queue.set(event.id, event);
-    this._enqueueCallback(event);
-    if (this._next[0]) {
-      this._next.shift()(event);
-    }
+    this._enqueue(event);
   }
 
-  dequeue(event: Event.Event) {
-    this.queue.delete(event.id);
-  }
-
-  async pop(
-    call: grpc.ServerUnaryCall<Event.Pop, Event.Event>,
-    callback: grpc.sendUnaryData<Event.Event>
-  ) {
-    let event: Event.Event;
-
-    if (this.size == 0) {
-      event = await new Promise(resolve => this._next.push(resolve));
-    } else {
-      event = this.queue.values().next().value;
-    }
-
-    this.queue.delete(event.id);
-    this._popCallback(event, call.request.id);
-    callback(undefined, event);
+  dequeue(event: event.Event) {
+    this._cancel(event.id);
   }
 
   addQueue<T>(queue: Queue<T>) {

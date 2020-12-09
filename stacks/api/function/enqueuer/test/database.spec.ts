@@ -2,12 +2,12 @@ import {Test} from "@nestjs/testing";
 import {DatabaseService, DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {DatabaseEnqueuer} from "@spica-server/function/enqueuer";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
-import {Database, Event} from "@spica-server/function/queue/proto";
+import {Database, event} from "@spica-server/function/queue/proto";
 
 describe("DatabaseEnqueuer", () => {
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let databaseQueue: jasmine.SpyObj<DatabaseQueue>;
-  let noopTarget: Event.Target;
+  let noopTarget: event.Target;
   let databaseEnqueuer: DatabaseEnqueuer;
   let database: DatabaseService;
 
@@ -17,7 +17,7 @@ describe("DatabaseEnqueuer", () => {
     }).compile();
     database = module.get(DatabaseService);
 
-    noopTarget = new Event.Target();
+    noopTarget = new event.Target();
     noopTarget.cwd = "/tmp/fn1";
     noopTarget.handler = "default";
 

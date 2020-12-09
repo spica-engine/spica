@@ -64,7 +64,13 @@ export class AddComponent implements OnInit, OnDestroy {
 
   $markers = new Subject<unknown[]>();
 
-  triggersEditMode = [true];
+  triggersEditMode = [];
+
+  batchingDeadline: number = 0;
+
+  maxBatchCount: number = 0;
+
+  batching: boolean = false;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -93,7 +99,13 @@ export class AddComponent implements OnInit, OnDestroy {
           this.isIndexPending = true;
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
-          this.function.triggers.map((trigger, index) => (this.triggersEditMode[index] = false));
+          for (const [index, trigger] of this.function.triggers.entries()) {
+            this.triggersEditMode[index] = true;
+            if (trigger.batch) {
+              this.maxBatchCount = Math.max(this.maxBatchCount, trigger.batch.limit);
+              this.batchingDeadline = Math.max(this.batchingDeadline, trigger.batch.deadline);
+            }
+          }
           this.getDependencies();
         }),
         switchMap(fn => this.functionService.getIndex(fn._id)),
@@ -180,6 +192,18 @@ export class AddComponent implements OnInit, OnDestroy {
     if (this.isIndexPending) return;
 
     this.serverError = undefined;
+
+    for (const trigger of this.function.triggers) {
+      if (this.batching) {
+        trigger.batch = {
+          deadline: this.batchingDeadline,
+          limit: this.maxBatchCount
+        };
+      } else {
+        delete trigger.batch;
+      }
+    }
+
     const fn = denormalizeFunction(this.function);
 
     const isInsert = !this.function._id;
