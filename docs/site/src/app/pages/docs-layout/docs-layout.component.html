@@ -8,11 +8,7 @@
   <span class="fill-space"></span>
 </mat-toolbar>
 
-<mat-sidenav-container
-  ngStyle.gt-md="margin-left: 12%;margin-right: 12%;"
-  [class.handset]="isHandset$ | async"
-  autosize
->
+<mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
   <mat-sidenav
     #drawer
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
