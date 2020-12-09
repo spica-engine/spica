@@ -263,11 +263,18 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   lostWorker(id: string) {
+    if (process.env.TEST_TARGET) {
+      return console.log(`lost a worker ${id} and skipping auto spawn under testing`);
+    }
     console.debug(`lost a worker ${id}`);
     this.pool.delete(id);
     this.workers.delete(id);
     this.batching.delete(id);
-    this.spawn();
+    if (!process.env.TEST_TARGET) {
+      this.spawn();
+    } else {
+      console.log(`skipping auto spawn under testing`);
+    }
   }
 
   private spawn() {
