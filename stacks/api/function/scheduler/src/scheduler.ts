@@ -270,11 +270,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.pool.delete(id);
     this.workers.delete(id);
     this.batching.delete(id);
-    if (!process.env.TEST_TARGET) {
-      this.spawn();
-    } else {
-      console.log(`skipping auto spawn under testing`);
-    }
+    this.spawn();
   }
 
   private spawn() {

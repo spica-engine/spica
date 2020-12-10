@@ -178,10 +178,12 @@ export class FunctionEngine implements OnModuleDestroy {
             );
             return envs;
           }, []),
-          timeout: change.target.context.timeout,
-          batch: new event.SchedulingContext.Batch(change.target.context.batch)
+          timeout: change.target.context.timeout
         })
       });
+      if (change.target.context.batch) {
+        target.context.batch = new event.SchedulingContext.Batch(change.target.context.batch);
+      }
       enqueuer.subscribe(target, change.options);
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);

@@ -184,7 +184,7 @@ describe("Engine", () => {
       context: {
         env: [{key: "TEST", value: "true"}],
         timeout: 60,
-        batch: {deadline: undefined, limit: undefined}
+        batch: undefined
       }
     });
   });

@@ -15,7 +15,8 @@
   }
 
   mat-sidenav-container {
-    max-width: 100%;
+    max-width: 1024px;
+    margin: auto;
     background-color: #fff;
     min-height: 95vh;
     color: #1c1c50;
@@ -48,6 +49,7 @@
 
         a.mat-list-item {
           height: 35px;
+          font-weight: 100;
         }
 
         a.active {
