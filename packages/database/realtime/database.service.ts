@@ -6,8 +6,8 @@ import {
   FilterQuery,
   ObjectId
 } from "@spica-server/database";
-import {Observable, Subject, Subscription} from "rxjs";
-import {bufferTime, filter, share} from "rxjs/operators";
+import {asyncScheduler, Observable, Subject, Subscription} from "rxjs";
+import {bufferTime, filter, share, switchMap} from "rxjs/operators";
 import {levenshtein} from "./levenshtein";
 import {late} from "./operators";
 import {ChunkKind, StreamChunk} from "./stream";
@@ -32,6 +32,7 @@ function doesTheChangeAffectTheSortedCursor(
     return changedKeys.some(k => sortedKeys.indexOf(k) > -1);
   }
 
+  // if the event is not a update then it might affect the cursor
   return true;
 }
 
@@ -116,36 +117,46 @@ export class RealtimeDatabaseService {
 
       if (options.sort) {
         const sortedKeys = getSortedKeys(options.sort);
-
         sortSubscription = sort
           .pipe(
             filter(change => doesTheChangeAffectTheSortedCursor(sortedKeys, change)),
-            bufferTime(70),
-            filter(changes => changes.length > 0)
-          )
-          .subscribe(async events => {
-            // This optimizes sorting by sending inserts in reverse order
-            // if the cursor sorted by _id property.
-            if (
-              sortedKeys.length == 1 &&
-              sortedKeys[0] == "_id" &&
-              events.length > 1 &&
-              options.sort._id == -1
-            ) {
-              events = events.reverse();
-            }
-            for (const change of events) {
-              if (change.operationType == "insert") {
-                observer.next({kind: ChunkKind.Insert, document: change.fullDocument});
-                ids.add(change.documentKey._id.toString());
+            // since we can't predict the cascading updates that followed by an order packet
+            // we have to buffer all incoming events and process them as soon as the queue lets us
+            // also, this could be taken as cursor option to allow the users to change this value as needed.
+            // IMPORTANT: if you see a weird behavior such as a order packet precedes an update or insert packet
+            // then this bufferTime is the culprit that leads to such behavior. in that case if you increase
+            // the buffer time, it is less likely that you'll see such weird behavior.
+            // There's no optimal value for this buffering logic since it depends on how frequently the cursor
+            // affected by cascading updates or inserts.
+            bufferTime(1, asyncScheduler),
+            filter(changes => changes.length > 0),
+            switchMap(async events => {
+              // This optimizes sorting by sending inserts in reverse order
+              // if the cursor sorted by _id property.
+              if (
+                sortedKeys.length == 1 &&
+                sortedKeys[0] == "_id" &&
+                events.length > 1 &&
+                options.sort._id == -1
+              ) {
+                events = events.reverse();
               }
-            }
+              for (const change of events) {
+                if (change.operationType == "insert") {
+                  observer.next({kind: ChunkKind.Insert, document: change.fullDocument});
+                  ids.add(change.documentKey._id.toString());
+                }
+              }
 
-            const syncedIds = await fetchSortedIdsOfTheCursor(name, this.database, options);
-            const changeSequence = levenshtein(ids, syncedIds);
-            ids = new Set(syncedIds);
-            observer.next({kind: ChunkKind.Order, sequence: changeSequence.sequence});
-          });
+              const syncedIds = await fetchSortedIdsOfTheCursor(name, this.database, options);
+              const changeSequence = levenshtein(ids, syncedIds);
+              if (changeSequence.distance) {
+                ids = new Set(syncedIds);
+                observer.next({kind: ChunkKind.Order, sequence: changeSequence.sequence});
+              }
+            })
+          )
+          .subscribe();
       }
 
       if (options.filter) {
@@ -181,38 +192,36 @@ export class RealtimeDatabaseService {
           .find(options.filter)
           .skip(options.skip ? options.skip + ids.size : ids.size)
           .limit(options.limit - ids.size)
+          .on("error", error => {
+            observer.error(error);
+          })
           .on("data", data => {
             observer.next({kind: ChunkKind.Initial, document: data});
             ids.add(data._id.toString());
           });
       };
 
+      let pipeline = [];
+
+      if (options.filter) {
+        pipeline = generateMatchingPipeline({
+          $or: [
+            {
+              "__changeStream__.operationType": "delete"
+            },
+            {
+              $and: [{"__changeStream__.operationType": {$not: {$eq: "delete"}}}, options.filter]
+            }
+          ]
+        });
+      }
+
       streams.add(
         this.database
           .collection(name)
-
-          .watch(
-            options.filter
-              ? generateMatchingPipeline({
-                  $or: [
-                    {
-                      operationType: "delete"
-                    },
-                    {
-                      $and: [
-                        {operationType: "insert"},
-                        {operationType: "replace"},
-                        {operationType: "update"},
-                        options.filter
-                      ]
-                    }
-                  ]
-                })
-              : [],
-            {
-              fullDocument: "updateLookup"
-            }
-          )
+          .watch(pipeline, {
+            fullDocument: "updateLookup"
+          })
           .on("change", change => {
             switch (change.operationType) {
               case "insert":
@@ -241,14 +250,14 @@ export class RealtimeDatabaseService {
                 break;
               case "replace":
               case "update":
-                if (options.sort) {
-                  sort.next(change);
-                }
                 // prettier-ignore
                 if (
                   (!options.filter && options.skip && !isChangeAlreadyPresentInCursor(ids, change)) ||
                   (options.limit && ids.size >= options.limit && !isChangeAlreadyPresentInCursor(ids, change))
                 ) {
+                  if (options.sort) {
+                    sort.next(change);
+                  }
                   return;
                 }
 
@@ -259,6 +268,9 @@ export class RealtimeDatabaseService {
                     kind: change.operationType == "update" ? ChunkKind.Update : ChunkKind.Replace,
                     document: change.fullDocument
                   });
+                }
+                if (options.sort) {
+                  sort.next(change);
                 }
                 break;
               case "drop":
@@ -316,6 +328,9 @@ export class RealtimeDatabaseService {
         stream.on("data", data => {
           subscriber.next({kind: ChunkKind.Initial, document: data});
           ids.add(data._id.toString());
+        });
+        stream.on("error", e => {
+          subscriber.error(e);
         });
         stream.on("end", () => {
           subscriber.next({kind: ChunkKind.EndOfInitial});
