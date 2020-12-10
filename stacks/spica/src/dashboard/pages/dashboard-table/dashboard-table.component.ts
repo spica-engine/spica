@@ -1,18 +1,12 @@
-import {HttpParams} from "@angular/common/http";
 import {
   Component,
   Input,
   OnInit,
   ViewChild,
-  EventEmitter,
-  Output,
-  AfterViewInit
 } from "@angular/core";
 import {MatSort} from "@angular/material/sort";
 import {MatTableDataSource} from "@angular/material/table";
 import {MatPaginator} from "@angular/material/paginator";
-import {Component as DashboardComponent} from "../../interfaces";
-import {DashboardService} from "@spica-client/dashboard/services/dashboard.service";
 
 @Component({
   selector: "app-dashboard-table",
