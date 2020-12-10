@@ -1,53 +1,70 @@
 {  
-  function __cel$ltr__(lhs, rhs)  { 
-    return rhs.reduce( (t,h) => ({...h, lhs: t}), lhs) 
-  }  
+  function _ltr_(left, right)  {
+  
+    const node = right.reduce( (left, head) => {
+      return {...head, left};
+    }, left); 
+
+    if ( node.left ) {
+      node.left.parent = node;
+    } 
+    if ( node.right ) {
+      node.right.parent = node;
+    }
+
+    return node;
+  }
+
 }
 
 
 Expr // "Common Expression"
-  = t:ConditionalOr  "?"  s:Expr  ":"   p:Expr
-	{ return {kind: "operator", type: "conditional", category:"tenary", primary:p, rhs:p, tertiary:t} }    
+  = test:ConditionalOr  WHITESPACE "?" WHITESPACE consequent:Expr WHITESPACE ":" WHITESPACE alternative:Expr
+	{ 
+    return {
+      kind: "operator", type: "conditional", category:"tenary", test, consequent, alternative
+    } 
+  }    
   / ConditionalOr
 
 
-ConditionalOr = lhs:ConditionalAnd rhs:(ConditionalOrOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+ConditionalOr = left:ConditionalAnd right:(ConditionalOrOperation)* { 
+  return _ltr_(left, right) 
 } 
-ConditionalOrOperation = WHITESPACE "||" WHITESPACE rhs:ConditionalAnd { 
-  return {kind: "operator", type:"or", category:"binary", rhs} 
+ConditionalOrOperation = WHITESPACE "||" WHITESPACE right:ConditionalAnd { 
+  return {kind: "operator", type:"or", category:"binary", right} 
 }
 
 
-ConditionalAnd = lhs:Relation rhs:(ConditionalAndOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+ConditionalAnd = left:Relation right:(ConditionalAndOperation)* { 
+  return _ltr_(left, right) 
 } 
-ConditionalAndOperation = WHITESPACE "&&" WHITESPACE rhs:Relation { 
-  return {kind: "operator", type:"and", category:"binary", rhs}
+ConditionalAndOperation = WHITESPACE "&&" WHITESPACE right:Relation { 
+  return {kind: "operator", type:"and", category:"binary", right}
 }
 
 
-Relation = lhs:Addition rhs:(RelationOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+Relation = left:Addition right:(RelationOperation)* { 
+  return _ltr_(left, right) 
 } 
-RelationOperation = WHITESPACE type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in") WHITESPACE  rhs:Addition { 
-  return {kind: "operator", type, category:"binary", rhs} 
+RelationOperation = WHITESPACE type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in") WHITESPACE  right:Addition { 
+  return {kind: "operator", type, category:"binary", right} 
 }
 
 
-Addition = lhs:Multiplication rhs:(AdditionOperation)* { 
-  return __cel$ltr__(lhs, rhs)
+Addition = left:Multiplication right:(AdditionOperation)* { 
+  return _ltr_(left, right)
 } 
-AdditionOperation = WHITESPACE type:("+" / "-") WHITESPACE rhs:Multiplication { 
-  return {kind: "operator", type, category:"binary", rhs} 
+AdditionOperation = WHITESPACE type:("+" / "-") WHITESPACE right:Multiplication { 
+  return {kind: "operator", type, category:"binary", right} 
 }
 
 
-Multiplication = lhs:Unary rhs:(MultiplicationOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+Multiplication = left:Unary right:(MultiplicationOperation)* { 
+  return _ltr_(left, right) 
 } 
-MultiplicationOperation = WHITESPACE type:("*" / "/" / "%") WHITESPACE rhs:Unary { 
-  return {kind: "operator", type, category:"binary", rhs} 
+MultiplicationOperation = WHITESPACE type:("*" / "/" / "%") WHITESPACE right:Unary { 
+  return {kind: "operator", type, category:"binary", right} 
 }
 
 Unary      
@@ -56,13 +73,13 @@ Unary
   / "-" "-"* member:Member { return {kind: "unary", type: "negative", member} }
 
 Member
-  = lhs:(LITERAL / Atomic) rhs:(MemberOperation)* { return __cel$ltr__(lhs, rhs) }
+  = left:(LITERAL / Atomic) right:(MemberOperation)* { return _ltr_(left, right) }
 
 MemberOperation
-  =  "."  rhs:Atomic { return { kind: "operator", type:"select", category:"binary", rhs } }
-  /  "["  rhs:Expr  "]" { return { kind: "operator", type:"index", category:"binary", rhs } }
-  /  "{"  rhs:FieldInits  "}" { return { kind: "operator", type:"construct", category:"binary", rhs } }
-  /  "("  args:ExprList  ")" { return { kind: "call", arguments: args.expressions } }
+  =  "."  right:Atomic { return { kind: "operator", type:"select", category:"binary", right } }
+  /  "["  right:Expr  "]" { return { kind: "operator", type:"index", category:"binary", right } }
+  /  "{"  right:FieldInits  "}" { return { kind: "operator", type:"construct", category:"binary", right } }
+  /  "("  args:ExprList  ")" { return { kind: "call", arguments: args } }
  
  
 Atomic
@@ -73,15 +90,12 @@ Atomic
   / IDENT
 
 
-ExprList       = lhs:Expr rhs:("," expr:Expr {return expr})* {
-	const expressions = [lhs];
-	if (rhs) {
-		expressions.push(...rhs);
+ExprList = left:Expr right:("," expr:Expr {return expr})* {
+	const expressions = [left];
+	if (right) {
+		expressions.push(...right);
 	} 
-	return {
-		kind: "expressionlist",
-		expressions
-	}
+	return expressions;
 }
 FieldInits     = IDENT ":" Expr ("," IDENT ":" Expr)*
 MapInits       = Expr ":" Expr ("," Expr ":" Expr)*

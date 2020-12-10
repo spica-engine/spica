@@ -31,7 +31,7 @@ function visitUnaryNot(node) {
 }
 
 function visitBinaryOperatorSelect(node) {
-  const lhs = visit(node.lhs);
+  const left = visit(node.left);
 
   const mostLeft = getMostLeftSelectIdentifier(node);
 
@@ -39,12 +39,12 @@ function visitBinaryOperatorSelect(node) {
     return undefined;
   }
 
-  const rhs = visit(node.rhs);
+  const right = visit(node.right);
 
-  let path = `${lhs}.${rhs}`;
+  let path = `${left}.${right}`;
 
-  if (lhs == "document") {
-    path = rhs;
+  if (left == "document") {
+    path = right;
   }
 
   return path;
@@ -55,23 +55,23 @@ function visitNode(node) {
     const result = visitBinaryOperatorSelect(node);
     return result ? [result] : [];
   }
-  const lhs = visit(node.lhs);
-  const rhs = visit(node.rhs);
+  const left = visit(node.left);
+  const right = visit(node.right);
   const result = [];
 
-  if (lhs) {
-    if (Array.isArray(lhs)) {
-      result.push(...lhs);
+  if (left) {
+    if (Array.isArray(left)) {
+      result.push(...left);
     } else {
-      result.push(lhs);
+      result.push(left);
     }
   }
 
-  if (rhs) {
-    if (Array.isArray(rhs)) {
-      result.push(...rhs);
+  if (right) {
+    if (Array.isArray(right)) {
+      result.push(...right);
     } else {
-      result.push(rhs);
+      result.push(right);
     }
   }
 

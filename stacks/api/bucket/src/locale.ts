@@ -1,8 +1,11 @@
-import {Bucket, BucketPreferences, BucketService} from "@spica-server/bucket/services";
-import {JSONSchema7} from "json-schema";
+import {
+  Bucket,
+  BucketDataService,
+  BucketPreferences,
+  BucketService
+} from "@spica-server/bucket/services";
 import * as locale from "locale";
 import {ChangeKind, diff} from "@spica-server/core/differ";
-import {BucketDataService} from "./bucket-data.service";
 
 export function buildI18nAggregation(property: any, locale: string, fallback: string) {
   return {
@@ -64,12 +67,14 @@ export function findLocale(language: string, preferences: BucketPreferences): Lo
   return {best, fallback};
 }
 
-export function hasTranslatedProperties(properties: JSONSchema7) {
-  return Object.values(properties).some(property => property.options && property.options.translate);
-}
-
-export function hasRelationalProperties(properties: JSONSchema7) {
-  return Object.values(properties).some(value => value.type == "relation");
+export function hasTranslatedProperties(schema: Bucket) {
+  for (const property in schema.properties) {
+    const definition = schema.properties[property];
+    if (definition.options && definition.options.translate) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function provideLanguageFinalizer(
