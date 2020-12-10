@@ -4,5 +4,18 @@ load("//tools/dgeni:index.bzl", "docs")
 
 docs(
     name = "concept",
-    srcs = glob(["*.md"]),
+    # buildifier: leave-alone
+    srcs = [
+        "index.md",
+        "getting-started.md",
+        "bucket.md",
+        "function.md",
+        "passport.md",
+        "storage.md",
+        "dashboard.md",
+        "user-activities.md",
+        "webhook.md",
+        "l10n.md",
+        "cli.md",
+    ],
 )

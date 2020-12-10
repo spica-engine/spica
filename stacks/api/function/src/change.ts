@@ -56,7 +56,7 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
 export function createTargetChanges(fn: Function, changeKind: ChangeKind): TargetChange[] {
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
-    changes.push({
+    const change: TargetChange = {
       kind: changeKind,
       options: trigger.options,
       type: trigger.type,
@@ -65,11 +65,16 @@ export function createTargetChanges(fn: Function, changeKind: ChangeKind): Targe
         handler,
         context: {
           env: fn.env,
-          timeout: fn.timeout,
-          batch: trigger.batch
+          timeout: fn.timeout
         }
       }
-    });
+    };
+
+    if (trigger.batch) {
+      change.target.context.batch = trigger.batch;
+    }
+
+    changes.push(change);
   }
   return changes;
 }
