@@ -15,11 +15,11 @@ describe("DashboardController", () => {
     components: [
       {
         name: "chart1",
-        url: "test_url"
+        url: "https://spica.internal"
       },
       {
         name: "chart2",
-        url: "test_url"
+        url: "https://spica.internal"
       }
     ]
   };
@@ -62,11 +62,11 @@ describe("DashboardController", () => {
       components: [
         {
           name: "chart1",
-          url: "test_url"
+          url: "https://spica.internal"
         },
         {
           name: "chart2",
-          url: "test_url"
+          url: "https://spica.internal"
         }
       ]
     });
@@ -86,11 +86,11 @@ describe("DashboardController", () => {
         components: [
           {
             name: "chart1",
-            url: "test_url"
+            url: "https://spica.internal"
           },
           {
             name: "chart2",
-            url: "test_url"
+            url: "https://spica.internal"
           }
         ]
       }
@@ -110,11 +110,11 @@ describe("DashboardController", () => {
       components: [
         {
           name: "chart1",
-          url: "test_url"
+          url: "https://spica.internal"
         },
         {
           name: "chart2",
-          url: "test_url"
+          url: "https://spica.internal"
         }
       ]
     });
@@ -135,11 +135,11 @@ describe("DashboardController", () => {
       components: [
         {
           name: "chart1",
-          url: "test_url"
+          url: "https://spica.internal"
         },
         {
           name: "chart2",
-          url: "test_url"
+          url: "https://spica.internal"
         }
       ]
     });
