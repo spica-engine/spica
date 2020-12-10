@@ -105,12 +105,11 @@ describe("Realtime", () => {
         }
       });
 
-      ws.onclose = done;
       ws.onmessage = e => {
         expect(e.data).toEqual(`{"kind":1}`);
+        done();
       };
       await ws.connect;
-      await ws.close();
     });
 
     it("should show error messages", done => {
