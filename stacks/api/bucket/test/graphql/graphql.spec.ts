@@ -1795,7 +1795,7 @@ describe("GraphQLController", () => {
 
       const response = await req.get("/graphql", params);
 
-      expect(JSON.parse(response.headers.warnings)).toEqual([
+      expect(JSON.parse(response.headers.warning)).toEqual([
         {
           target: `${bucketName}.relation_field`,
           reason: "Relation type 'manytomany' is invalid."
