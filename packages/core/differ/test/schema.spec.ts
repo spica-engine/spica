@@ -1,5 +1,5 @@
 import {JSONSchema7} from "json-schema";
-import {clearSchemaPaths, getLastNonSchemaPaths, schemaDiff} from "./schema";
+import {clearSchemaPaths, getLastNonSchemaPaths, schemaDiff} from "../src/schema";
 
 describe("schema path", () => {
   const schema: JSONSchema7 = {

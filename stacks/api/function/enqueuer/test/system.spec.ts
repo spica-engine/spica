@@ -1,9 +1,9 @@
 import {SystemEnqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue} from "@spica-server/function/queue";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 
 describe("SystemEnqueuer", () => {
-  const noopTarget = new Event.Target({cwd: "/tmp/fn1", handler: "default"});
+  const noopTarget = new event.Target({cwd: "/tmp/fn1", handler: "default"});
   let enqueuer: SystemEnqueuer;
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let nextSpy: jasmine.Spy;
@@ -36,9 +36,9 @@ describe("SystemEnqueuer", () => {
 
     expect(invokerSpy).toHaveBeenCalledTimes(1);
     expect(eventQueue.enqueue).toHaveBeenCalledTimes(1);
-    const [event] = eventQueue.enqueue.calls.argsFor(0);
-    expect(event.target).toBe(noopTarget);
-    expect(event.type).toBe(Event.Type.SYSTEM);
+    const [ev] = eventQueue.enqueue.calls.argsFor(0);
+    expect(ev.target).toBe(noopTarget);
+    expect(ev.type).toBe(event.Type.SYSTEM);
   });
 
   it("should debounce the calls to subscribe method", () => {

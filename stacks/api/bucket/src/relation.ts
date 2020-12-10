@@ -3,6 +3,7 @@ import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/servic
 import {ObjectId} from "@spica-server/database";
 import {getBucketDataCollection} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
+import {deepCopy} from "./patch";
 
 export function findRelations(
   schema: any,
@@ -162,53 +163,41 @@ export function resetNonOverlappingPathsInRelationMap(
   return expressions ? {$set: expressions} : undefined;
 }
 
-export function findUpdatedFields(
-  previousSchema: any,
-  currentSchema: any,
-  updatedFields: string[],
-  path: string
-) {
-  for (const field of Object.keys(previousSchema)) {
-    if (
-      !currentSchema.hasOwnProperty(field) ||
-      currentSchema[field].type != previousSchema[field].type ||
-      hasRelationChanges(previousSchema[field], currentSchema[field])
-    ) {
-      updatedFields.push(path ? `${path}.${field}` : field);
-      //we dont need to check child keys of this key anymore
+export function compareAndUpdateRelations(relationMap: RelationMap[], usedRelations: string[]) {
+  const updatedRelationMap: RelationMap[] = [];
+
+  for (const map of relationMap) {
+    if (!usedRelations.includes(map.path)) {
+      const paths = createRelationPaths(deepCopy(map));
+      usedRelations.push(...paths);
+      updatedRelationMap.push(map);
       continue;
     }
-    if (isObject(previousSchema[field]) && isObject(currentSchema[field])) {
-      findUpdatedFields(
-        previousSchema[field].properties,
-        currentSchema[field].properties,
-        updatedFields,
-        path ? `${path}.${field}` : field
-      );
-    } else if (isArray(previousSchema[field]) && isArray(currentSchema[field])) {
-      addArrayPattern(
-        previousSchema[field].items,
-        currentSchema[field].items,
-        updatedFields,
-        path ? `${path}.${field}` : field
-      );
+
+    if (map.children && map.children.length) {
+      for (const child of map.children) {
+        child.path = map.path + "." + child.path;
+      }
+      const updatedChilds = compareAndUpdateRelations(map.children, usedRelations);
+      updatedRelationMap.push(...updatedChilds);
     }
   }
-  return updatedFields;
+  return updatedRelationMap;
 }
 
-export function addArrayPattern(
-  previousSchema: any,
-  currentSchema: any,
-  updatedFields: string[],
-  path: string
-) {
-  path = `${path}.$[]`;
-  if (isArray(previousSchema) && isArray(currentSchema)) {
-    addArrayPattern(previousSchema.items, currentSchema.items, updatedFields, path);
-  } else if (isObject(previousSchema) && isObject(currentSchema)) {
-    findUpdatedFields(previousSchema.properties, currentSchema.properties, updatedFields, path);
+function createRelationPaths(relationMap: RelationMap): string[] {
+  const paths = [];
+  paths.push(relationMap.path);
+
+  if (relationMap.children && relationMap.children.length) {
+    for (const childMap of relationMap.children) {
+      childMap.path = relationMap.path + "." + childMap.path;
+      const path = createRelationPaths(childMap);
+      paths.push(...path);
+    }
   }
+
+  return paths;
 }
 
 export function getUpdateParams(

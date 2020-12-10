@@ -8,7 +8,7 @@ describe("DatabaseQueue", () => {
   let databaseQueueClient: any;
 
   beforeEach(() => {
-    queue = new EventQueue(() => {}, () => {});
+    queue = new EventQueue(() => {}, () => {}, () => {}, () => {});
     databaseQueue = new DatabaseQueue();
     queue.addQueue(databaseQueue);
     queue.listen();

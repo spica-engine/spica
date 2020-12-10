@@ -1,5 +1,5 @@
 import {EventQueue} from "@spica-server/function/queue";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 import {Subject} from "rxjs";
 import {debounceTime, take} from "rxjs/operators";
 import {Description, Enqueuer} from "./enqueuer";
@@ -9,7 +9,7 @@ interface EventOptions {
 }
 
 export class SystemEnqueuer implements Enqueuer<EventOptions> {
-  private readyTargets = new Set<Event.Target>();
+  private readyTargets = new Set<event.Target>();
   private subscriptionSubject = new Subject();
 
   description: Description = {
@@ -31,22 +31,22 @@ export class SystemEnqueuer implements Enqueuer<EventOptions> {
   private invokeReadyEventTargets() {
     for (const target of this.readyTargets) {
       this.queue.enqueue(
-        new Event.Event({
-          type: Event.Type.SYSTEM,
+        new event.Event({
+          type: event.Type.SYSTEM,
           target
         })
       );
     }
   }
 
-  subscribe(target: Event.Target, options: EventOptions): void {
+  subscribe(target: event.Target, options: EventOptions): void {
     if (options.name == "READY") {
       this.readyTargets.add(target);
       this.subscriptionSubject.next(target);
     }
   }
 
-  unsubscribe(target: Event.Target): void {
+  unsubscribe(target: event.Target): void {
     for (const eventTarget of this.readyTargets) {
       if (
         (!target.handler && eventTarget.cwd == target.cwd) ||

@@ -16,18 +16,28 @@
           placeholder="Policy Name"
           name="policyName"
           [(ngModel)]="policy.name"
+          #nameModel="ngModel"
           required
         />
+        <mat-error *ngIf="nameModel?.errors?.required">
+          This field is required.
+        </mat-error>
       </mat-form-field>
+
       <mat-form-field>
         <textarea
           matInput
           placeholder="Description"
           name="policyDescription"
           [(ngModel)]="policy.description"
+          #descriptionModel="ngModel"
           required
         ></textarea>
+        <mat-error *ngIf="descriptionModel?.errors?.required">
+          This field is required.
+        </mat-error>
       </mat-form-field>
+
       <button mat-button (click)="addStatement()">Add Statement <mat-icon>add</mat-icon></button>
       <div *ngFor="let statement of policy.statement; index as statementIndex">
         <mat-accordion>

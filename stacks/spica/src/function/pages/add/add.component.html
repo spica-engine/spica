@@ -115,10 +115,38 @@
               >
               </mat-slider>
               <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
-              <mat-error *ngIf="timeoutModel?.errors?.min"
-                >Timeout value must be positive.</mat-error
-              >
+              <mat-error *ngIf="timeoutModel?.errors?.min">
+                Timeout value must be positive.
+              </mat-error>
             </span>
+            <mat-checkbox [(ngModel)]="batching" name="batching">Batching</mat-checkbox>
+
+            <mat-form-field>
+              <mat-label>Deadline (s)</mat-label>
+              <input
+                matInput
+                type="number"
+                placeholder="Deadline"
+                #nameModel="ngModel"
+                min="1"
+                [(ngModel)]="batchingDeadline"
+                name="deadline"
+                [required]="batching"
+              />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Maximum batch amount</mat-label>
+              <input
+                matInput
+                type="number"
+                placeholder="Amount"
+                #nameModel="ngModel"
+                min="2"
+                [(ngModel)]="maxBatchCount"
+                name="limit"
+                [required]="batching"
+              />
+            </mat-form-field>
           </mat-list-item>
 
           <h4 mat-subheader>
