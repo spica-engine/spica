@@ -45,7 +45,7 @@ describe("Change", () => {
           handler: "default",
           context: {
             env: {test: "123"},
-            timeout: 50,
+            timeout: 50
           }
         }
       },
@@ -60,7 +60,7 @@ describe("Change", () => {
           handler: "another",
           context: {
             env: {test: "123"},
-            timeout: 50,
+            timeout: 50
           }
         }
       }

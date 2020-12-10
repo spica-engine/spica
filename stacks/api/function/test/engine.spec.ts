@@ -183,9 +183,10 @@ describe("Engine", () => {
       handler: "test_handler",
       context: {
         env: [{key: "TEST", value: "true"}],
-        timeout: 60
+        timeout: 60,
+        batch: undefined
       }
-    } as any);
+    });
   });
   describe("Database Schema", () => {
     it("should get initial schema", async () => {
