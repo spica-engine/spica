@@ -4,26 +4,6 @@ load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "service_test_lib",
-    testonly = True,
-    srcs = [
-        "dashboard.service.spec.ts",
-    ],
-    deps = [
-        "//stacks/api/dashboard",
-        "@npm//@nestjs/common",
-        "@npm//@types/jasmine",
-    ],
-)
-
-jasmine_node_test(
-    name = "service_test",
-    deps = [
-        ":service_test_lib",
-    ],
-)
-
-ts_library(
     name = "controller_test_lib",
     testonly = True,
     srcs = [
@@ -32,6 +12,7 @@ ts_library(
     deps = [
         "//packages/core/schema",
         "//packages/core/testing",
+        "//packages/database/testing",
         "//stacks/api/dashboard",
         "//stacks/api/passport/testing",
         "@npm//@nestjs/common",
