@@ -20,7 +20,8 @@
             "type": "string"
           },
           "url": {
-            "type": "string"
+            "type": "string",
+            "format": "url"
           }
         },
         "additionalProperties": false
