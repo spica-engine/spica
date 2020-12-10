@@ -7,6 +7,5 @@ export interface Dashboard {
 
 export interface Component {
   name: string;
-  type: string;
   url: string;
 }

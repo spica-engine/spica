@@ -29,7 +29,10 @@
             >
             </canvas>
           </div>
-          <app-dashboard-table *ngIf="customTypes.indexOf(componentData.type) != -1" [componentData]="componentData">
+          <app-dashboard-table
+            *ngIf="customTypes.indexOf(componentData.type) != -1"
+            [componentData]="componentData"
+          >
           </app-dashboard-table>
 
           <span

@@ -31,7 +31,7 @@ export class DashboardViewComponent {
             if (!dashboard.components) {
               return;
             }
-            
+
             for (const component of dashboard.components) {
               const refresh$ = new BehaviorSubject(undefined);
               this.refreshSubjects$.push(refresh$);

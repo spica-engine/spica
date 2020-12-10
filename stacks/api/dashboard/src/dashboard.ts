@@ -1,7 +1,7 @@
 import {ObjectId} from "@spica-server/database";
 
 export interface Dashboard {
-  _id?: string | ObjectId;
+  _id?: ObjectId;
   name: string;
   icon: string;
   components: Component[];
@@ -9,6 +9,5 @@ export interface Dashboard {
 
 export interface Component {
   name: string;
-  type: string;
   url: string;
 }
