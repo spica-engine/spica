@@ -22,25 +22,25 @@ export class DashboardController {
   constructor(private dashboardService: DashboardService) {}
 
   @Get()
-  @UseGuards(AuthGuard())
-  findAll() {
-    return this.dashboardService.find();
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
+  findAll(@ResourceFilter() resourceFilter: object) {
+    return this.dashboardService.aggregate([resourceFilter]).toArray();
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:show"))
   findById(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.dashboardService.findOne({_id: id});
   }
 
   @Post()
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:create"))
   insert(@Body(Schema.validate("http://spica.internal/dashboard")) dashboard: Dashboard) {
     return this.dashboardService.insertOne(dashboard);
   }
 
   @Put(":id")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:update"))
   update(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/dashboard"))
@@ -50,7 +50,7 @@ export class DashboardController {
   }
 
   @Delete(":id")
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.dashboardService.deleteOne({_id: id});

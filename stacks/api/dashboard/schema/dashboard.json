@@ -14,12 +14,9 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "type", "url"],
+        "required": ["name", "url"],
         "properties": {
           "name": {
-            "type": "string"
-          },
-          "type": {
             "type": "string"
           },
           "url": {
