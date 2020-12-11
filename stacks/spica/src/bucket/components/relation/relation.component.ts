@@ -96,12 +96,20 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
   }
 
   _fetchRows() {
-    const ids = this._oneToManyRelation ? this.value : [this.value];
+    const ids: string[] = (this._oneToManyRelation
+      ? (this.value as string[])
+      : [this.value as string]
+    ).filter(Boolean);
+
     if (ids.length == 0) {
       this.selectedRows$ = undefined;
     } else {
       this.selectedRows$ = this.schema$.pipe(
-        switchMap(schema => this.bds.find(schema._id, {filter: {_id: {$in: ids}}})),
+        switchMap(schema =>
+          this.bds.find(schema._id, {
+            filter: {_id: {$in: ids.map(id => `ObjectId(${id})`)}}
+          })
+        ),
         map(data => data.data)
       );
     }
