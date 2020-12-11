@@ -19,7 +19,7 @@ interface CrudOptions<Paginate> {
 
 interface CrudParams {
   resourceFilter?: object;
-  filter?: object;
+  filter?: object | string;
   language?: string;
   relationPaths: string[][];
   req: any;
@@ -107,11 +107,21 @@ export async function findDocuments<T>(
   const ruleExpression = expression.aggregate(schema.acl.read, {auth: params.req.user});
   pipeline.push({$match: ruleExpression});
 
-  let filterPropertyMap = [];
-  let filterRelationMap = [];
+  let filterPropertyMap: string[][] = [];
+  let filterRelationMap: object[] = [];
   // filter
-  if (Object.keys(params.filter || {}).length) {
-    filterPropertyMap = extractFilterPropertyMap(params.filter);
+  if (params.filter) {
+    let filterExpression: object;
+
+    if (typeof params.filter == "object" && Object.keys(params.filter).length) {
+      filterPropertyMap = extractFilterPropertyMap(params.filter);
+
+      filterExpression = params.filter;
+    } else if (typeof params.filter == "string") {
+      filterPropertyMap = expression.extractPropertyMap(params.filter).map(path => path.split("."));
+
+      filterExpression = expression.aggregate(params.filter, {});
+    }
 
     filterRelationMap = await createRelationMap({
       paths: filterPropertyMap,
@@ -127,7 +137,9 @@ export async function findDocuments<T>(
     const filterRelationStage = getRelationPipeline(updatedFilterRelationMap, locale);
     pipeline.push(...filterRelationStage);
 
-    pipeline.push({$match: params.filter});
+    if (filterExpression) {
+      pipeline.push({$match: filterExpression});
+    }
   }
 
   // sort,skip and limit

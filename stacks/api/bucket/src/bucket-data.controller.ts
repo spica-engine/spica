@@ -105,7 +105,7 @@ export class BucketDataController {
         );
       } else {
         try {
-          filter = expression.aggregate(filter, {});
+          expression.aggregate(filter, {});
         } catch (e) {
           throw new BadRequestException(`filter has to be a valid expression.`, e.message);
         }
@@ -118,7 +118,7 @@ export class BucketDataController {
         resourceFilter,
         relationPaths,
         language: acceptedLanguage,
-        filter: filter as object,
+        filter,
         limit,
         skip,
         sort,
