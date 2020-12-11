@@ -19,7 +19,7 @@ interface CrudOptions<Paginate> {
 
 interface CrudParams {
   resourceFilter?: object;
-  filter?: object;
+  filter?: object | string;
   language?: string;
   relationPaths: string[][];
   req: any;
@@ -110,8 +110,13 @@ export async function findDocuments<T>(
   let filterPropertyMap = [];
   let filterRelationMap = [];
   // filter
-  if (Object.keys(params.filter || {}).length) {
-    filterPropertyMap = extractFilterPropertyMap(params.filter);
+  if (params.filter) {
+    let filterPropertyMap: string[][] = [];
+    if (typeof params.filter == "object" && Object.keys(params.filter).length) {
+      filterPropertyMap = extractFilterPropertyMap(params.filter);
+    } else if (typeof params.filter == "string") {
+      filterPropertyMap = expression.extractPropertyMap(params.filter).map(path => path.split("."));
+    }
 
     filterRelationMap = await createRelationMap({
       paths: filterPropertyMap,
