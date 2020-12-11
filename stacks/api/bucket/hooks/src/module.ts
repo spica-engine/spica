@@ -2,14 +2,14 @@ import {Global, Module} from "@nestjs/common";
 import {ServicesModule} from "@spica-server/bucket/services";
 import {DatabaseService} from "@spica-server/database";
 import {SCHEMA} from "@spica-server/function";
-import {ENQUEUER} from "@spica-server/function/scheduler";
 import {EventQueue} from "@spica-server/function/queue";
+import {ENQUEUER} from "@spica-server/function/scheduler";
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
 import {ReviewDispatcher} from "./dispatcher";
+import {ChangeEmitter} from "./emitter";
 import {ChangeAndReviewEnqueuer} from "./enqueuer";
 import {ChangeAndReviewQueue} from "./queue";
-import {ChangeEmitter} from "./emitter";
 
 export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
   return new Observable(observer => {

@@ -3,7 +3,8 @@ import {
   getUpdateParams,
   isArray,
   isObject,
-  isDesiredRelation
+  isDesiredRelation,
+  RelationType
 } from "@spica-server/bucket/src/relation";
 
 describe("Relation", () => {
@@ -66,7 +67,7 @@ describe("Relation", () => {
   });
 
   it("should get update operation params for one to one relation", () => {
-    const updateParams = getUpdateParams("test_key", "onetoone", "document_id");
+    const updateParams = getUpdateParams("test_key", RelationType.One, "document_id");
     expect(updateParams).toEqual({
       filter: {test_key: "document_id"},
       update: {$unset: {test_key: ""}}
@@ -74,7 +75,7 @@ describe("Relation", () => {
   });
 
   it("should get update operation params for one to many relation", () => {
-    const updateParams = getUpdateParams("test_key", "onetomany", "document_id");
+    const updateParams = getUpdateParams("test_key", RelationType.Many, "document_id");
     expect(updateParams).toEqual({
       filter: {test_key: {$in: ["document_id"]}},
       update: {$pull: {test_key: "document_id"}}

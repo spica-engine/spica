@@ -1,15 +1,19 @@
 export function getMostLeftSelectIdentifier(node) {
-  if (node.lhs && node.lhs.kind == "identifier") {
-    return node.lhs.name;
+  if (node.left && node.left.kind == "identifier") {
+    return node.left.name;
   }
-  return getMostLeftSelectIdentifier(node.lhs);
+  return getMostLeftSelectIdentifier(node.left);
 }
 
 export function isSelectChain(node) {
-  if (node.lhs && node.lhs.kind != "identifier") {
+  if (node.left && node.left.kind != "identifier") {
     return false;
-  } else if (!node.lhs && node.kind == "identifier") {
+  } else if (!node.left && node.kind == "identifier") {
     return true;
   }
-  return isSelectChain(node.lhs);
+  return isSelectChain(node.left);
+}
+
+export function isIdentifier(node) {
+  return node.kind == "identifier";
 }

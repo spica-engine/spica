@@ -6,7 +6,7 @@ import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {PreferenceService, BUCKET_LANGUAGE_FINALIZER} from "@spica-server/preference/services";
 import {BucketDataController} from "./bucket-data.controller";
-import {BucketDataService} from "./bucket-data.service";
+import {BucketDataService} from "../services/src/bucket-data.service";
 import {BucketController} from "./bucket.controller";
 import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
 import {DocumentScheduler} from "./scheduler";
@@ -46,7 +46,6 @@ export class BucketModule {
       controllers: [BucketController, BucketDataController],
       imports: imports,
       providers: [
-        BucketDataService,
         DocumentScheduler,
         {
           provide: BucketSchemaResolver,
@@ -55,7 +54,7 @@ export class BucketModule {
         },
         GraphqlController
       ],
-      exports: [BucketDataService, ServicesModule]
+      exports: [ServicesModule]
     };
   }
 

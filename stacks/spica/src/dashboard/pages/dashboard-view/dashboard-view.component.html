@@ -1,29 +1,50 @@
-<div *ngIf="widgets$ | async; let dashboard">
+<div *ngIf="dashboard$ | async; let dashboard">
   <mat-toolbar>
     <h1>
-      <mat-icon> {{ dashboard?.icon }} </mat-icon>
+      <mat-icon> {{ dashboard.icon }} </mat-icon>
       <span> {{ dashboard.name }}</span>
     </h1>
   </mat-toolbar>
-  <div>
-    <div class="widgets">
-      <mat-card *ngFor="let widget of dashboard?.components">
-        <app-dashboard-chart
-          *ngIf="
-            widget.type == 'line' ||
-            widget.type == 'pie' ||
-            widget.type == 'doughnut' ||
-            widget.type == 'polarArea' ||
-            widget.type == 'scatter' ||
-            widget.type == 'bubble' ||
-            widget.type == 'radar' ||
-            widget.type == 'bar'
-          "
-          [data]="widget"
-        ></app-dashboard-chart>
-        <app-dashboard-table *ngIf="widget.type == 'table'" [data]="widget"></app-dashboard-table>
+  <div class="content">
+    <div class="components">
+      <mat-card *ngFor="let component of dashboard.components; index as i">
+        <ng-container *ngIf="componentData$[i] | async; let componentData">
+          <div class="refresh">
+            <button mat-icon-button mat-flat-button matTooltip="Refresh data" (click)="refresh(i)">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+          <h3>{{ componentData.title }}</h3>
+          <div class="chart" *ngIf="defaultTypes.indexOf(componentData.type) != -1">
+            <canvas
+              baseChart
+              [data]="componentData.data"
+              [datasets]="componentData.datasets"
+              [labels]="componentData.label"
+              [options]="componentData.options"
+              [colors]="componentData.colors"
+              [legend]="componentData.legend"
+              [plugins]="componentData.plugins"
+              [chartType]="componentData.type"
+            >
+            </canvas>
+          </div>
+          <app-dashboard-table
+            *ngIf="customTypes.indexOf(componentData.type) != -1"
+            [componentData]="componentData"
+          >
+          </app-dashboard-table>
 
-        <span *ngIf="!widget.type || !widget">This widget is unavailable.</span>
+          <span
+            class="nonexist-type"
+            *ngIf="
+              defaultTypes.indexOf(componentData.type) == -1 &&
+              customTypes.indexOf(componentData.type) == -1
+            "
+          >
+            This component type does not exist.
+          </span>
+        </ng-container>
       </mat-card>
     </div>
   </div>

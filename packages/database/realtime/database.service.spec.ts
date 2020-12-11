@@ -1,5 +1,10 @@
-import {Test} from "@nestjs/testing";
-import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {Test, TestingModule} from "@nestjs/testing";
+import {
+  DatabaseService,
+  DatabaseTestingModule,
+  ObjectId,
+  stream
+} from "@spica-server/database/testing";
 import {timer} from "rxjs";
 import {bufferCount, delay, first, skip, take, takeUntil, tap} from "rxjs/operators";
 import {RealtimeDatabaseService} from "./database.service";
@@ -8,7 +13,7 @@ import {ChunkKind} from "./stream";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
 
-const LATENCY = 70;
+const LATENCY = 500;
 
 const SKIP = new Object();
 
@@ -19,9 +24,9 @@ function wait(time: number = LATENCY) {
 describe("realtime database", () => {
   let realtime: RealtimeDatabaseService;
   let database: DatabaseService;
-
-  beforeAll(async () => {
-    const bed = await Test.createTestingModule({
+  let bed: TestingModule;
+  beforeEach(async () => {
+    bed = await Test.createTestingModule({
       imports: [DatabaseTestingModule.replicaSet()],
       providers: [RealtimeDatabaseService]
     }).compile();
@@ -42,6 +47,8 @@ describe("realtime database", () => {
       }
     });
   });
+
+  afterEach(() => bed.close());
 
   it("should sync late subscribers", async done => {
     await database.collection("test21").insertMany([{stars: 3}, {stars: 4}, {stars: 5}]);
@@ -168,7 +175,8 @@ describe("realtime database", () => {
           expect(updated.document.test).toBe(4);
           done();
         });
-      setTimeout(() => coll.findOneAndUpdate({test: 2}, {$set: {test: 4}}), LATENCY);
+      await wait();
+      await coll.findOneAndUpdate({test: 2}, {$set: {test: 4}});
     });
   });
 
@@ -201,11 +209,8 @@ describe("realtime database", () => {
           expect(third.document.anotherfilter).toBe(true);
           done();
         });
-      setTimeout(
-        () =>
-          database.collection("test6").insertMany([{stars: 6}, {stars: 7, anotherfilter: true}]),
-        LATENCY
-      );
+      await wait();
+      await database.collection("test6").insertMany([{stars: 6}, {stars: 7, anotherfilter: true}]);
     });
 
     it("should return deleted document", async done => {
@@ -226,10 +231,9 @@ describe("realtime database", () => {
           expect(inserted.insertedIds[1].equals(deleted.document._id)).toBeTruthy();
           done();
         });
-      setTimeout(async () => {
-        await coll.deleteOne({test: 3, has_star: false});
-        await coll.deleteOne({test: 3, has_star: true});
-      }, LATENCY);
+      await wait();
+      await coll.deleteOne({test: 3, has_star: false});
+      await coll.deleteOne({test: 3, has_star: true});
     });
 
     it("should return edited document", async done => {
@@ -246,7 +250,8 @@ describe("realtime database", () => {
           expect(updated.document.test).toBe(4);
           done();
         });
-      setTimeout(() => coll.findOneAndUpdate({test: 2}, {$set: {test: 4}}), LATENCY);
+      await wait();
+      await coll.findOneAndUpdate({test: 2}, {$set: {test: 4}});
     });
 
     it("should expunge updated document if it does not match the filter anymore", async done => {
@@ -262,7 +267,8 @@ describe("realtime database", () => {
           expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
           done();
         });
-      setTimeout(() => coll.findOneAndUpdate({_id: id}, {$set: {subfilter: false}}), LATENCY);
+      await wait();
+      await coll.findOneAndUpdate({_id: id}, {$set: {subfilter: false}});
     });
 
     it("should expunge updated document if it does not match the filter condition anymore", async done => {
@@ -295,7 +301,8 @@ describe("realtime database", () => {
           expect(updated).toEqual({kind: ChunkKind.Expunge, document: {_id: id}});
           done();
         });
-      setTimeout(() => coll.findOneAndReplace({_id: id}, {test: 2, subfilter: false}), LATENCY);
+      await wait();
+      await coll.findOneAndReplace({_id: id}, {test: 2, subfilter: false});
     });
   });
 
@@ -311,8 +318,7 @@ describe("realtime database", () => {
         .find("test11", {skip: 2})
         .pipe(
           tap(() => (totalEmit += 1)),
-          bufferCount(7),
-          takeUntil(timer(500))
+          bufferCount(7)
         )
         .subscribe({
           next: chunks => {
@@ -332,15 +338,16 @@ describe("realtime database", () => {
           }
         });
 
-      setTimeout(async () => {
-        laterInsertedId = await coll.insertOne({test: 7}).then(r => r.insertedId);
-        await coll.findOneAndReplace({_id: laterInsertedId}, {test: 3});
-        await coll.findOneAndUpdate({_id: laterInsertedId}, {$set: {test: 10}}).then(() => wait());
-        await coll.deleteOne({_id: laterInsertedId});
-        // These operations should not affect anything in our cursor
-        await coll.updateOne({_id: insertedIds[1]}, {$set: {test: 25}});
-        await coll.deleteOne({_id: insertedIds[1]});
-      }, LATENCY);
+      await wait();
+      laterInsertedId = await coll.insertOne({test: 7}).then(r => r.insertedId);
+      await coll.findOneAndReplace({_id: laterInsertedId}, {test: 3});
+      await coll.findOneAndUpdate({_id: laterInsertedId}, {$set: {test: 10}}).then(() => wait());
+      await coll.deleteOne({_id: laterInsertedId});
+      // These operations should not affect anything in our cursor
+      await coll.updateOne({_id: insertedIds[1]}, {$set: {test: 25}});
+      await coll.deleteOne({_id: insertedIds[1]});
+      await wait();
+      await coll.drop();
     });
 
     it("should limit to N items", async done => {
@@ -353,8 +360,7 @@ describe("realtime database", () => {
         .find("test12", {limit: 2})
         .pipe(
           tap(() => (totalEmit += 1)),
-          bufferCount(7),
-          takeUntil(timer(500))
+          bufferCount(7)
         )
         .subscribe({
           next: chunks => {
@@ -374,18 +380,19 @@ describe("realtime database", () => {
           }
         });
 
-      setTimeout(async () => {
-        await coll.findOneAndReplace({_id: insertedIds[1]}, {test: 3});
-        await wait();
-        await coll.findOneAndUpdate({_id: insertedIds[1]}, {$set: {test: 10}});
-        await wait();
-        await coll.deleteOne({_id: insertedIds[1]});
-        await coll.deleteOne({_id: insertedIds[2]});
-        // These operations should not affect anything in our cursor
-        // They here to ensure correctness of our cursor despite the concurrent changes
-        await coll.insertMany([{q: "do we rock?"}, {a: true}]);
-        await coll.insertMany([{test: 12}, {test: 19.5}]);
-      }, LATENCY);
+      await wait();
+      await coll.findOneAndReplace({_id: insertedIds[1]}, {test: 3});
+      await wait();
+      await coll.findOneAndUpdate({_id: insertedIds[1]}, {$set: {test: 10}});
+      await wait();
+      await coll.deleteOne({_id: insertedIds[1]});
+      await coll.deleteOne({_id: insertedIds[2]});
+      // These operations should not affect anything in our cursor
+      // They here to ensure correctness of our cursor despite the concurrent changes
+      await coll.insertMany([{q: "do we rock?"}, {a: true}]);
+      await coll.insertMany([{test: 12}, {test: 19.5}]);
+      await wait();
+      await coll.drop();
     });
 
     it("should skip and limit to N items", async done => {
@@ -398,8 +405,7 @@ describe("realtime database", () => {
         .find("test13", {limit: 2, skip: 2})
         .pipe(
           tap(() => (totalEmit += 1)),
-          bufferCount(5),
-          takeUntil(timer(500))
+          bufferCount(5)
         )
         .subscribe({
           next: chunks => {
@@ -416,8 +422,10 @@ describe("realtime database", () => {
             done();
           }
         });
-
-      setTimeout(async () => await coll.deleteOne({_id: insertedIds[3]}), LATENCY);
+      await wait();
+      await coll.deleteOne({_id: insertedIds[3]});
+      await wait();
+      await coll.drop();
     });
   });
 

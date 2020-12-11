@@ -1,13 +1,14 @@
 import {
+  ForbiddenException,
   Injectable,
   OnModuleInit,
   Optional,
-  PipeTransform,
-  ForbiddenException
+  PipeTransform
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {Action, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
+import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectID, ObjectId} from "@spica-server/database";
@@ -22,11 +23,19 @@ import {
   ValueNode
 } from "graphql";
 import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools";
+import {BucketDataService} from "../../services/src/bucket-data.service";
 import {createBucketDataActivity} from "../activity.resource";
-import {BucketDataService} from "../bucket-data.service";
+import {
+  deleteDocument,
+  findDocuments,
+  insertDocument,
+  patchDocument,
+  replaceDocument
+} from "../crud";
+import {createHistory} from "../history";
 import {findLocale} from "../locale";
 import {applyPatch, deepCopy} from "../patch";
-import {clearRelations, createHistory} from "../relation";
+import {clearRelations} from "../relation";
 import {
   createSchema,
   extractAggregationFromQuery,
@@ -36,14 +45,6 @@ import {
   SchemaWarning,
   validateBuckets
 } from "./schema";
-import {
-  findDocuments,
-  insertDocument,
-  replaceDocument,
-  patchDocument,
-  deleteDocument
-} from "../crud";
-import {ChangeEmitter} from "@spica-server/bucket/hooks";
 
 interface FindResponse {
   meta: {total: number};
@@ -170,7 +171,7 @@ export class GraphqlController implements OnModuleInit {
         });
 
         if (this.schemaWarnings.length) {
-          response.setHeader("Warnings", JSON.stringify(this.schemaWarnings));
+          response.setHeader("Warning", JSON.stringify(this.schemaWarnings));
         }
 
         return {

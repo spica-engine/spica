@@ -4,13 +4,10 @@ load("@npm//@bazel/typescript:index.bzl", "ts_library")
 
 ts_library(
     name = "services",
-    srcs = [
-        "bucket.service.ts",
-        "bucket.ts",
+    srcs = glob([
+        "src/*.ts",
         "index.ts",
-        "schema.ts",
-        "services.module.ts",
-    ],
+    ]),
     module_name = "@spica-server/bucket/services",
     deps = [
         "//packages/core",
