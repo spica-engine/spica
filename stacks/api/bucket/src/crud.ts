@@ -107,15 +107,20 @@ export async function findDocuments<T>(
   const ruleExpression = expression.aggregate(schema.acl.read, {auth: params.req.user});
   pipeline.push({$match: ruleExpression});
 
-  let filterPropertyMap = [];
-  let filterRelationMap = [];
+  let filterPropertyMap: string[][] = [];
+  let filterRelationMap: object[] = [];
   // filter
   if (params.filter) {
-    let filterPropertyMap: string[][] = [];
+    let filterExpression: object;
+
     if (typeof params.filter == "object" && Object.keys(params.filter).length) {
       filterPropertyMap = extractFilterPropertyMap(params.filter);
+
+      filterExpression = params.filter;
     } else if (typeof params.filter == "string") {
       filterPropertyMap = expression.extractPropertyMap(params.filter).map(path => path.split("."));
+
+      filterExpression = expression.aggregate(params.filter, {});
     }
 
     filterRelationMap = await createRelationMap({
@@ -132,7 +137,9 @@ export async function findDocuments<T>(
     const filterRelationStage = getRelationPipeline(updatedFilterRelationMap, locale);
     pipeline.push(...filterRelationStage);
 
-    pipeline.push({$match: params.filter});
+    if (filterExpression) {
+      pipeline.push({$match: filterExpression});
+    }
   }
 
   // sort,skip and limit
