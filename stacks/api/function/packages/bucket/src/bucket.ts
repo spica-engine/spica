@@ -201,13 +201,9 @@ export namespace data {
     export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
       checkInitialized();
 
-      let filter = {
-        _id: documentId
-      };
+      const filter = `_id=="${documentId}"`;
 
-      let url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}&filter=${JSON.stringify(
-        filter
-      )}`;
+      const url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}&filter=${filter}`;
 
       return getWsObs<BucketDocument[]>(url).pipe(map(([documents]) => documents));
     }
@@ -220,7 +216,7 @@ export namespace data {
 
       if (params) {
         if (params.filter) {
-          url += `&filter=${JSON.stringify(params.filter)}`;
+          url += `&filter=${params.filter}`;
         }
 
         if (params.sort) {
