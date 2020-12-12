@@ -3,7 +3,7 @@ import {register, store} from "@spica-server/machinery";
 import {ChangeKind} from "./change";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
-import {Function} from "./interface";
+import {Function, Trigger} from "./interface";
 
 async function v1_trigger_to_internal(object: any) {
   const bucketStore = store({
@@ -11,9 +11,10 @@ async function v1_trigger_to_internal(object: any) {
     resource: "schemas"
   });
 
-  const triggerRaw = {
+  const triggerRaw: Trigger = {
     active: true,
     type: object.spec.type,
+    batch: object.spec.batch,
     options: {}
   };
 
@@ -45,6 +46,7 @@ async function v1_trigger_to_internal(object: any) {
   } else if (object.spec.type == "system") {
     triggerRaw.options = object.spec.systemOptions;
   }
+
 
   return triggerRaw;
 }

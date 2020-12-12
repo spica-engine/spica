@@ -16,9 +16,25 @@ const TriggerV1: JSONSchema7 = {
       type: "string",
       enum: ["http", "bucket", "schedule", "firehose", "system"]
     },
+    batch: {
+      type: "object",
+      additionalProperties: false,
+      required: ["deadline", "limit"],
+      properties: {
+        deadline: {
+          type: "number",
+          minimum: 1
+        },
+        limit: {
+          type: "number",
+          minimum: 2
+        }
+      }
+    },
     scheduleOptions: {
       type: "object",
       required: ["cronSpec", "timezone"],
+      additionalProperties: false,
       properties: {
         cronSpec: {
           type: "string"
@@ -31,6 +47,7 @@ const TriggerV1: JSONSchema7 = {
     firehoseOptions: {
       type: "object",
       required: ["event"],
+      additionalProperties: false,
       properties: {
         event: {
           type: "string"
@@ -40,6 +57,7 @@ const TriggerV1: JSONSchema7 = {
     httpOptions: {
       type: "object",
       required: ["method", "path"],
+      additionalProperties: false,
       properties: {
         method: {
           type: "string"
@@ -52,6 +70,7 @@ const TriggerV1: JSONSchema7 = {
     systemOptions: {
       type: "object",
       required: ["event"],
+      additionalProperties: false,
       properties: {
         event: {
           type: "string",
@@ -62,6 +81,7 @@ const TriggerV1: JSONSchema7 = {
     bucketOptions: {
       type: "object",
       required: ["phase"],
+      additionalProperties: false,
       if: {properties: {phase: {const: "BEFORE"}}},
       then: {
         properties: {
