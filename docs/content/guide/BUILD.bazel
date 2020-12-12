@@ -6,15 +6,8 @@ docs(
     name = "guide",
     # buildifier: leave-alone
     srcs = [
-        "getting-started.md",
-        "passport.md",
-        "bucket.md",
-        "function.md",
-        "dashboard.md",
-        "storage.md",
-        "webhook.md",
-        "user-activities.md",
         "index.md",
-        "cli.md",
+        "contributing.md",
+        "open-source-build.md",
     ],
 )

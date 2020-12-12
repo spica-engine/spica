@@ -86,15 +86,16 @@ export function BooleanCheck(value) {
 export function OR(
   condition: (value) => boolean,
   coerceTrue: PipeTransform,
-  coerceFalse: PipeTransform
+  coerceFalse?: PipeTransform
 ): PipeTransform {
   return {
     transform: value => {
       if (condition(value)) {
         return coerceTrue.transform(value, undefined);
-      } else {
+      } else if (coerceFalse) {
         return coerceFalse.transform(value, undefined);
       }
+      return value;
     }
   };
 }

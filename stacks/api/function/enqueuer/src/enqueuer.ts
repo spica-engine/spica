@@ -1,4 +1,4 @@
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 
 export interface Description {
   name: string;
@@ -9,6 +9,6 @@ export interface Description {
 
 export abstract class Enqueuer<OptionsT> {
   abstract description: Description;
-  abstract subscribe(target: Event.Target, options: OptionsT): void;
-  abstract unsubscribe(target: Event.Target): void;
+  abstract subscribe(target: event.Target, options: OptionsT): void;
+  abstract unsubscribe(target: event.Target): void;
 }

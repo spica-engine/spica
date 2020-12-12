@@ -293,9 +293,27 @@ describe("BucketDataController", () => {
         expect(documents).toEqual([{_id: "__skip__", name: "Jim", age: 20}]);
       });
 
+      it("should return the persons whose name is Jim (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `name == "Jim"`
+        });
+
+        expect(documents.length).toBe(1);
+        expect(documents).toEqual([{_id: "__skip__", name: "Jim", age: 20}]);
+      });
+
       it("should return the persons whose age is 38", async () => {
         const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           filter: JSON.stringify({age: 38})
+        });
+
+        expect(documents.length).toBe(1);
+        expect(documents).toEqual([{_id: "__skip__", name: "Dwight", age: 38}]);
+      });
+
+      it("should return the persons whose age is 38 (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `age == 38`
         });
 
         expect(documents.length).toBe(1);
@@ -315,9 +333,34 @@ describe("BucketDataController", () => {
         ]);
       });
 
+      it("should return the persons who is older than 22 (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `age > 22`
+        });
+
+        expect(documents.length).toBe(3);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
+        ]);
+      });
+
       it("should return the persons who is younger than 25", async () => {
         const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           filter: JSON.stringify({age: {$lt: 25}})
+        });
+
+        expect(documents.length).toBe(2);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22}
+        ]);
+      });
+
+      it("should return the persons who is younger than 25 (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `age < 25`
         });
 
         expect(documents.length).toBe(2);

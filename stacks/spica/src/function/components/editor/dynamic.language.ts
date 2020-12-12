@@ -121,7 +121,9 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.formatter.terminate();
+    if (this.formatter) {
+      this.formatter.terminate();
+    }
     this.disposables.forEach(d => d.dispose());
   }
 }

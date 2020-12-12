@@ -14,4 +14,8 @@
   img {
     max-width: 100%; /* This rule is very important, please do not ignore this! */
   }
+
+  mat-progress-spinner.save-spinner {
+    margin: auto;
+  }
 }

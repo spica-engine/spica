@@ -1,6 +1,6 @@
 import {ChangeStream, DatabaseService} from "@spica-server/database";
 import {DatabaseQueue, EventQueue} from "@spica-server/function/queue";
-import {Database, Event} from "@spica-server/function/queue/proto";
+import {Database, event} from "@spica-server/function/queue/proto";
 import {Description, Enqueuer} from "./enqueuer";
 
 interface DatabaseOptions {
@@ -26,7 +26,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     super();
   }
 
-  subscribe(target: Event.Target, options: DatabaseOptions): void {
+  subscribe(target: event.Target, options: DatabaseOptions): void {
     const stream = this.db.collection(options.collection).watch(
       [
         {
@@ -51,12 +51,12 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
         });
       }
 
-      const event = new Event.Event({
+      const ev = new event.Event({
         target,
-        type: Event.Type.DATABASE
+        type: event.Type.DATABASE
       });
-      this.queue.enqueue(event);
-      this.databaseQueue.enqueue(event.id, change);
+      this.queue.enqueue(ev);
+      this.databaseQueue.enqueue(ev.id, change);
     });
 
     Object.defineProperty(stream, "target", {writable: false, value: target});
@@ -64,7 +64,7 @@ export class DatabaseEnqueuer extends Enqueuer<DatabaseOptions> {
     this.streams.add(stream);
   }
 
-  unsubscribe(target: Event.Target): void {
+  unsubscribe(target: event.Target): void {
     for (const stream of this.streams) {
       if (
         (!target.handler && stream["target"].cwd == target.cwd) ||

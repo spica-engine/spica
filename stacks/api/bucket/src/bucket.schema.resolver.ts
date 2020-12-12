@@ -1,7 +1,6 @@
 import {Injectable} from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket/services";
-import {Bucket, BucketPreferences} from "@spica-server/bucket/services/bucket";
-import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core/schema";
+import {Bucket, BucketPreferences, BucketService, compile} from "@spica-server/bucket/services";
+import {Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {combineLatest, Observable} from "rxjs";
 import {map} from "rxjs/operators";

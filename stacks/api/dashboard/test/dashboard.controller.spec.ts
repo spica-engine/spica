@@ -3,14 +3,35 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DashboardModule} from "@spica-server/dashboard";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 
 describe("DashboardController", () => {
   let request: Request;
   let app: INestApplication;
 
+  const dashboard = {
+    name: "First Dashboard",
+    icon: "offline_bolt",
+    components: [
+      {
+        name: "chart1",
+        url: "https://spica.internal"
+      },
+      {
+        name: "chart2",
+        url: "https://spica.internal"
+      }
+    ]
+  };
+
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [CoreTestingModule, PassportTestingModule.initialize(), DashboardModule]
+      imports: [
+        CoreTestingModule,
+        PassportTestingModule.initialize(),
+        DashboardModule,
+        DatabaseTestingModule.standalone()
+      ]
     }).compile();
 
     request = module.get(Request);
@@ -18,64 +39,58 @@ describe("DashboardController", () => {
     app = module.createNestApplication();
 
     await app.listen(request.socket);
+
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "__skip__" && typeof actual == typeof expected) {
+        return true;
+      }
+    });
   });
 
   afterEach(async () => {
     await app.close();
   });
 
-  it("should get all dashboards", async () => {
-    await request.put("/dashboard", {
-      key: "first_dashboard",
+  it("should insert a dashboard", async () => {
+    const response = await request.post("/dashboard", dashboard);
+
+    expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+    expect(response.body).toEqual({
+      _id: "__skip__",
       name: "First Dashboard",
-      icon: "none",
+      icon: "offline_bolt",
       components: [
         {
-          key: "bar_component",
-          type: "bar",
-          url: "http://www.test.com"
+          name: "chart1",
+          url: "https://spica.internal"
+        },
+        {
+          name: "chart2",
+          url: "https://spica.internal"
         }
       ]
     });
+  });
 
-    await request.put("/dashboard", {
-      key: "second_dashboard",
-      name: "Second Dashboard",
-      icon: "none",
-      components: [
-        {
-          key: "table_component",
-          type: "table",
-          url: "http://www.test.com"
-        }
-      ]
-    });
+  it("should get all dashboards", async () => {
+    const {body: insertedDashboard} = await request.post("/dashboard", dashboard);
 
-    let response = await request.get("/dashboard", {});
+    const response = await request.get("/dashboard");
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual([
       {
-        key: "first_dashboard",
+        _id: insertedDashboard._id,
         name: "First Dashboard",
-        icon: "none",
+        icon: "offline_bolt",
         components: [
           {
-            key: "bar_component",
-            type: "bar",
-            url: "http://www.test.com"
-          }
-        ]
-      },
-      {
-        key: "second_dashboard",
-        name: "Second Dashboard",
-        icon: "none",
-        components: [
+            name: "chart1",
+            url: "https://spica.internal"
+          },
           {
-            key: "table_component",
-            type: "table",
-            url: "http://www.test.com"
+            name: "chart2",
+            url: "https://spica.internal"
           }
         ]
       }
@@ -83,162 +98,61 @@ describe("DashboardController", () => {
   });
 
   it("should get specific dashboard", async () => {
-    await request.put("/dashboard", {
-      key: "first_dashboard",
-      name: "First Dashboard",
-      icon: "none",
-      components: [
-        {
-          key: "bar_component",
-          type: "bar",
-          url: "http://www.test.com"
-        }
-      ]
-    });
+    const {body: insertedDashboard} = await request.post("/dashboard", dashboard);
 
-    let response = await request.get(`/dashboard/first_dashboard`, {});
+    const response = await request.get(`/dashboard/${insertedDashboard._id}`);
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual({
-      key: "first_dashboard",
+      _id: insertedDashboard._id,
       name: "First Dashboard",
-      icon: "none",
+      icon: "offline_bolt",
       components: [
         {
-          key: "bar_component",
-          type: "bar",
-          url: "http://www.test.com"
+          name: "chart1",
+          url: "https://spica.internal"
+        },
+        {
+          name: "chart2",
+          url: "https://spica.internal"
         }
       ]
     });
-  });
-
-  it("should register a new dashboard", async () => {
-    let response = await request.put("/dashboard", {
-      key: "first_dashboard",
-      name: "First Dashboard",
-      icon: "none",
-      components: [
-        {
-          key: "bar_component",
-          type: "bar",
-          url: "http://www.test.com"
-        }
-      ]
-    });
-
-    expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
-    expect(response.body).toEqual({
-      key: "first_dashboard",
-      name: "First Dashboard",
-      icon: "none",
-      components: [
-        {
-          key: "bar_component",
-          type: "bar",
-          url: "http://www.test.com"
-        }
-      ]
-    });
-
-    let {body: dashboards} = await request.get("/dashboard", {});
-
-    expect(dashboards).toEqual([
-      {
-        key: "first_dashboard",
-        name: "First Dashboard",
-        icon: "none",
-        components: [
-          {
-            key: "bar_component",
-            type: "bar",
-            url: "http://www.test.com"
-          }
-        ]
-      }
-    ]);
   });
 
   it("should update dashboard", async () => {
-    await request.put("/dashboard", {
-      key: "first_dashboard",
-      name: "First Dashboard",
-      icon: "none",
-      components: [
-        {
-          key: "bar_component",
-          type: "bar",
-          url: "http://www.test.com"
-        }
-      ]
-    });
+    let {body: insertedDashboard} = await request.post("/dashboard", dashboard);
 
-    let response = await request.put("/dashboard", {
-      key: "first_dashboard",
-      name: "First Updated Dashboard",
-      icon: "none",
-      components: [
-        {
-          key: "pie_component",
-          type: "pie",
-          url: "http://www.test.com"
-        }
-      ]
-    });
+    insertedDashboard.name = "Updated name";
+
+    const response = await request.put(`/dashboard/${insertedDashboard._id}`, insertedDashboard);
 
     expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
     expect(response.body).toEqual({
-      key: "first_dashboard",
-      name: "First Updated Dashboard",
-      icon: "none",
+      _id: insertedDashboard._id,
+      name: "Updated name",
+      icon: "offline_bolt",
       components: [
         {
-          key: "pie_component",
-          type: "pie",
-          url: "http://www.test.com"
+          name: "chart1",
+          url: "https://spica.internal"
+        },
+        {
+          name: "chart2",
+          url: "https://spica.internal"
         }
       ]
     });
-
-    let {body: dashboards} = await request.get("/dashboard", {});
-
-    expect(dashboards).toEqual([
-      {
-        key: "first_dashboard",
-        name: "First Updated Dashboard",
-        icon: "none",
-        components: [
-          {
-            key: "pie_component",
-            type: "pie",
-            url: "http://www.test.com"
-          }
-        ]
-      }
-    ]);
   });
 
-  it("should unregister dashboard", async () => {
-    await request.put("/dashboard", {
-      key: "first_dashboard",
-      name: "First Dashboard",
-      icon: "none",
-      components: [
-        {
-          key: "bar_component",
-          type: "bar",
-          url: "http://www.test.com"
-        }
-      ]
-    });
+  it("should delete dashboard", async () => {
+    const {body: insertedDashboard} = await request.post("/dashboard", dashboard);
 
-    let response = await request.delete(`/dashboard/first_dashboard`);
+    const response = await request.delete(`/dashboard/${insertedDashboard._id}`);
 
     expect([response.statusCode, response.statusText]).toEqual([204, "No Content"]);
-    expect(response.body).toBeUndefined();
 
-    let {body: dashboards} = await request.get("/dashboard", {});
-
+    const {body: dashboards} = await request.get("/dashboard");
     expect(dashboards).toEqual([]);
   });
 });
