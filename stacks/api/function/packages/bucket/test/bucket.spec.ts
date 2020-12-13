@@ -244,14 +244,12 @@ describe("@spica-devkit/bucket", () => {
 
       it("should get all with filter", () => {
         Bucket.data.realtime.getAll("bucket_id", {
-          filter: {
-            name: "test"
-          }
+          filter: "name=='test'"
         });
 
         expect(wsSpy).toHaveBeenCalledTimes(1);
         expect(wsSpy).toHaveBeenCalledWith(
-          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter={"name":"test"}',
+          `ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter=name=='test'`,
           undefined
         );
       });
@@ -292,7 +290,7 @@ describe("@spica-devkit/bucket", () => {
 
         expect(wsSpy).toHaveBeenCalledTimes(1);
         expect(wsSpy).toHaveBeenCalledWith(
-          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter={"_id":"document_id"}'
+          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter=_id=="document_id"'
         );
       });
     });
