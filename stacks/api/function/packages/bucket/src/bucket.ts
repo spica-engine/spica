@@ -30,9 +30,9 @@ function checkInitialized() {
 }
 
 const completeResponse = (response: any) => {
-  const warnings = response.headers.get("warning");
-  if (warnings) {
-    console.warn(warnings);
+  const warning = response.headers.get("warning");
+  if (warning) {
+    console.warn(warning);
   }
   return response.json();
 };
