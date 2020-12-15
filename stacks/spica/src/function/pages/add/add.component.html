@@ -441,7 +441,7 @@
                 type="number"
                 placeholder="Amount"
                 #nameModel="ngModel"
-                [min]="batching ? '2' : '0'"
+                [min]="batching ? 2 : 0"
                 [(ngModel)]="maxBatchCount"
                 name="limit"
                 [required]="batching"
