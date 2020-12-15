@@ -296,7 +296,7 @@ export class GraphqlController implements OnModuleInit {
           req: context,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: new ObjectId(documentId)}
+          filter: {_id: documentId}
         },
         {localize: true, paginate: false},
         {
@@ -352,7 +352,7 @@ export class GraphqlController implements OnModuleInit {
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: insertedDocument._id},
+          filter: {_id: insertedDocument._id.toString()},
           req: context
         },
         {localize: true},
@@ -433,7 +433,7 @@ export class GraphqlController implements OnModuleInit {
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: new ObjectId(documentId)},
+          filter: {_id: documentId},
           req: context
         },
         {localize: true},
@@ -520,7 +520,7 @@ export class GraphqlController implements OnModuleInit {
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: currentDocument._id},
+          filter: {_id: documentId},
           req: context
         },
         {localize: true},

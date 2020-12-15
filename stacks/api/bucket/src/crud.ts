@@ -87,6 +87,15 @@ export async function findDocuments<T>(
     params.req.res.header("Content-language", locale.best || locale.fallback);
   }
 
+  // matching for rules and filters
+  pipeline.push({
+    $set: {
+      _id: {
+        $toString: "$_id"
+      }
+    }
+  });
+
   // rules
   const rulePropertyMap = expression
     .extractPropertyMap(schema.acl.read)
