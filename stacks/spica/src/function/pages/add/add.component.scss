@@ -77,7 +77,8 @@
             padding-top: 25px !important;
           }
 
-          &:first-of-type {
+          &.describe,
+          &.optional-settings {
             ::ng-deep .mat-list-item-content {
               display: grid !important;
               gap: 15px;
