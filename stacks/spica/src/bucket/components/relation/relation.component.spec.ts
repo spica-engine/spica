@@ -101,10 +101,6 @@ describe("Relation Component", () => {
       ];
       let data = rows;
       if (options.filter) {
-        // 'ObjectId(object_id)' => 'object_id'
-        options.filter._id.$in = options.filter._id.$in.map(
-          id => id.match(/(?<=\()(.*?)(?=\))/m)[0]
-        );
         data = data.filter(r => options.filter._id.$in.indexOf(r._id) > -1);
       }
       return of({meta: {total: rows.length}, data: data});
