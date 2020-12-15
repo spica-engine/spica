@@ -36,10 +36,14 @@ describe("Entrypoint", () => {
     return new Promise((resolve, reject) => {
       const worker = runtime.spawn({
         id: idOverride != undefined ? idOverride : String(++id),
-        env: {
+        environment: {
           __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
           __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
           __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+        },
+        runtime: {
+          name: 'node',
+          version: '12.0.0.',
         }
       });
       worker.attach(stdout || process.stdout, stdout || process.stderr);
