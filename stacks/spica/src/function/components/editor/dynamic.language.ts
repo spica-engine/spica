@@ -2,6 +2,8 @@ import {Directive, Input, OnChanges, OnDestroy, SimpleChanges} from "@angular/co
 import {fromEvent} from "rxjs";
 import {map, take} from "rxjs/operators";
 
+declare var monaco: typeof import("monaco-editor-core");
+
 @Directive({
   selector: "code-editor[language]",
   host: {"(init)": "_editorReady($event)"},
@@ -77,6 +79,7 @@ export class LanguageDirective implements OnChanges, OnDestroy {
     this.disposables.push(
       monaco.languages.registerDocumentFormattingEditProvider("javascript", formatProvider)
     );
+
     const snippetProvider = {
       provideCompletionItems: () => {
         return import("./snippets").then(({suggestions}) => {
@@ -118,7 +121,9 @@ export class LanguageDirective implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.formatter.terminate();
+    if (this.formatter) {
+      this.formatter.terminate();
+    }
     this.disposables.forEach(d => d.dispose());
   }
 }

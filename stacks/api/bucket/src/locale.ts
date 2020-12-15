@@ -1,6 +1,11 @@
-import {BucketPreferences} from "@spica-server/bucket/services";
+import {
+  Bucket,
+  BucketDataService,
+  BucketPreferences,
+  BucketService
+} from "@spica-server/bucket/services";
 import * as locale from "locale";
-import {JSONSchema7} from "json-schema";
+import {ChangeKind, diff} from "@spica-server/core/differ";
 
 export function buildI18nAggregation(property: any, locale: string, fallback: string) {
   return {
@@ -62,10 +67,82 @@ export function findLocale(language: string, preferences: BucketPreferences): Lo
   return {best, fallback};
 }
 
-export function hasTranslatedProperties(properties: JSONSchema7) {
-  return Object.values(properties).some(property => property.options && property.options.translate);
+export function hasTranslatedProperties(schema: Bucket) {
+  for (const property in schema.properties) {
+    const definition = schema.properties[property];
+    if (definition.options && definition.options.translate) {
+      return true;
+    }
+  }
+  return false;
 }
 
-export function hasRelationalProperties(properties: JSONSchema7) {
-  return Object.values(properties).some(value => value.type == "relation");
+export function provideLanguageFinalizer(
+  bucketService: BucketService,
+  bucketDataService: BucketDataService
+) {
+  return async (previousSchema: object, currentSchema: object) => {
+    const deletedLanguages = diff(previousSchema, currentSchema)
+      .filter(
+        change =>
+          change.kind == ChangeKind.Delete &&
+          change.path[0] == "language" &&
+          change.path[1] == "available"
+      )
+      .map(change => change.path[2]);
+
+    if (!deletedLanguages.length) {
+      return Promise.resolve();
+    }
+
+    const buckets = await bucketService
+      .aggregate<Bucket>([
+        {
+          $project: {
+            properties: {
+              $objectToArray: "$properties"
+            }
+          }
+        },
+        {
+          $match: {
+            "properties.v.options.translate": true
+          }
+        },
+        {
+          $project: {
+            properties: {
+              $filter: {
+                input: "$properties",
+                as: "property",
+                cond: {$eq: ["$$property.v.options.translate", true]}
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            properties: {
+              $arrayToObject: "$properties"
+            }
+          }
+        }
+      ])
+      .toArray();
+
+    const promises = buckets.map(bucket => {
+      const targets = {};
+
+      for (const fieldName of Object.keys(bucket.properties)) {
+        for (const language of deletedLanguages) {
+          const target = fieldName + "." + language;
+          targets[target] = "";
+        }
+      }
+
+      return bucketDataService.children(bucket._id).updateMany({}, {$unset: targets});
+    });
+
+    return Promise.all(promises);
+  };
 }

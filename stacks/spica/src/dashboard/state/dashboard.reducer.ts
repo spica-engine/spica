@@ -16,7 +16,7 @@ export type DashboardAction = Retrieve;
 export interface State extends EntityState<Dashboard> {
   loaded: boolean;
 }
-export const adapter = createEntityAdapter<Dashboard>({selectId: dashboard => dashboard.key});
+export const adapter = createEntityAdapter<Dashboard>({selectId: dashboard => dashboard._id});
 
 export const initialState: State = adapter.getInitialState({loaded: false});
 

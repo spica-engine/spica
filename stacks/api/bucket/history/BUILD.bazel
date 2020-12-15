@@ -12,14 +12,13 @@ ts_library(
     ),
     module_name = "@spica-server/bucket/history",
     deps = [
+        "//packages/core/differ",
         "//packages/database",
         "//stacks/api/bucket/services",
         "//stacks/api/passport",
         "@npm//@nestjs/common",
-        "@npm//@types/deep-diff",
         "@npm//@types/diff-match-patch",
         "@npm//@types/json-schema",
-        "@npm//deep-diff",
         "@npm//diff-match-patch",
     ],
 )
@@ -71,6 +70,7 @@ ts_library(
     deps = [
         ":history",
         "//packages/core",
+        "//packages/core/differ",
         "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/bucket/services",
@@ -88,9 +88,7 @@ ts_library(
     name = "history_unit_test_lib",
     testonly = True,
     srcs = [
-        "differ.spec.ts",
         "path.spec.ts",
-        "schema.spec.ts",
     ],
     deps = [
         ":history",

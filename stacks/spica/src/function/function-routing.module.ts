@@ -49,25 +49,25 @@ const route: Route[] = [
   },
   {
     id: "webhook_logs",
-    category: RouteCategory.Developer,
+    category: RouteCategory.Developer_Sub,
     icon: "pest_control",
     path: "/webhook/logs",
     display: "Webhook Logs",
     data: {action: "webhook:logs:index"}
   },
   {
-    category: RouteCategory.Function,
+    category: RouteCategory.Developer,
     id: `list_all_functions`,
     icon: "format_list_numbered",
     path: `/function`,
     display: "Functions"
   },
   {
-    category: RouteCategory.Function,
+    category: RouteCategory.Developer_Sub,
     id: `list_all_logs`,
     icon: "pest_control",
     path: "/function/logs",
-    display: "Logs",
+    display: "Function Logs",
     queryParams: {
       begin: new Date(new Date().setHours(0, 0, 0, 0)),
       end: new Date(new Date().setHours(23, 59, 59, 999)),

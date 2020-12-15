@@ -1,7 +1,14 @@
 import * as pb_1 from "google-protobuf";
 import * as grpc_1 from "@grpc/grpc-js";
-
-export namespace Event {
+export namespace event {
+  export enum Type {
+    HTTP = 0,
+    DATABASE = 1,
+    SCHEDULE = 3,
+    FIREHOSE = 4,
+    SYSTEM = 5,
+    BUCKET = 6
+  }
   export class SchedulingContext extends pb_1.Message {
     constructor(
       data?:
@@ -9,6 +16,7 @@ export namespace Event {
         | {
             env?: SchedulingContext.Env[];
             timeout?: number;
+            batch?: SchedulingContext.Batch;
           }
     ) {
       super();
@@ -16,6 +24,7 @@ export namespace Event {
       if (!Array.isArray(data) && typeof data == "object") {
         this.env = data.env;
         this.timeout = data.timeout;
+        this.batch = data.batch;
       }
     }
     get env(): SchedulingContext.Env[] {
@@ -34,10 +43,21 @@ export namespace Event {
     set timeout(value: number) {
       pb_1.Message.setField(this, 3, value);
     }
+    get batch(): SchedulingContext.Batch {
+      return pb_1.Message.getWrapperField(
+        this,
+        SchedulingContext.Batch,
+        4
+      ) as SchedulingContext.Batch;
+    }
+    set batch(value: SchedulingContext.Batch) {
+      pb_1.Message.setWrapperField(this, 4, value);
+    }
     toObject() {
       return {
         env: this.env.map((item: SchedulingContext.Env) => item.toObject()),
-        timeout: this.timeout
+        timeout: this.timeout,
+        batch: this.batch && this.batch.toObject()
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
@@ -47,6 +67,8 @@ export namespace Event {
           item.serialize(writer)
         );
       if (this.timeout !== undefined) writer.writeInt32(3, this.timeout);
+      if (this.batch !== undefined)
+        writer.writeMessage(4, this.batch, () => this.batch.serialize(writer));
       if (!w) return writer.getResultBuffer();
     }
     serializeBinary(): Uint8Array {
@@ -70,6 +92,12 @@ export namespace Event {
             break;
           case 3:
             message.timeout = reader.readInt32();
+            break;
+          case 4:
+            reader.readMessage(
+              message.batch,
+              () => (message.batch = SchedulingContext.Batch.deserialize(reader))
+            );
             break;
           default:
             reader.skipField();
@@ -133,6 +161,68 @@ export namespace Event {
               break;
             case 2:
               message.value = reader.readString();
+              break;
+            default:
+              reader.skipField();
+          }
+        }
+        return message;
+      }
+    }
+    export class Batch extends pb_1.Message {
+      constructor(
+        data?:
+          | any[]
+          | {
+              limit?: number;
+              deadline?: number;
+            }
+      ) {
+        super();
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+          this.limit = data.limit;
+          this.deadline = data.deadline;
+        }
+      }
+      get limit(): number {
+        return pb_1.Message.getFieldWithDefault(this, 1, undefined) as number;
+      }
+      set limit(value: number) {
+        pb_1.Message.setField(this, 1, value);
+      }
+      get deadline(): number {
+        return pb_1.Message.getFieldWithDefault(this, 2, undefined) as number;
+      }
+      set deadline(value: number) {
+        pb_1.Message.setField(this, 2, value);
+      }
+      toObject() {
+        return {
+          limit: this.limit,
+          deadline: this.deadline
+        };
+      }
+      serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
+        const writer = w || new pb_1.BinaryWriter();
+        if (this.limit !== undefined) writer.writeUint64(1, this.limit);
+        if (this.deadline !== undefined) writer.writeUint64(2, this.deadline);
+        if (!w) return writer.getResultBuffer();
+      }
+      serializeBinary(): Uint8Array {
+        throw new Error("Method not implemented.");
+      }
+      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Batch {
+        const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
+          message = new Batch();
+        while (reader.nextField()) {
+          if (reader.isEndGroup()) break;
+          switch (reader.getFieldNumber()) {
+            case 1:
+              message.limit = reader.readUint64();
+              break;
+            case 2:
+              message.deadline = reader.readUint64();
               break;
             default:
               reader.skipField();
@@ -392,15 +482,6 @@ export namespace Event {
     }
   }
 
-  export enum Type {
-    HTTP = 0,
-    DATABASE = 1,
-    SCHEDULE = 3,
-    FIREHOSE = 4,
-    SYSTEM = 5,
-    BUCKET = 6
-  }
-
   export class Pop extends pb_1.Message {
     constructor(
       data?:
@@ -450,17 +531,122 @@ export namespace Event {
       return message;
     }
   }
+  export class Complete extends pb_1.Message {
+    constructor(
+      data?:
+        | any[]
+        | {
+            id?: string;
+            succedded?: boolean;
+          }
+    ) {
+      super();
+      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+      if (!Array.isArray(data) && typeof data == "object") {
+        this.id = data.id;
+        this.succedded = data.succedded;
+      }
+    }
+    get id(): string {
+      return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string;
+    }
+    set id(value: string) {
+      pb_1.Message.setField(this, 1, value);
+    }
+    get succedded(): boolean {
+      return pb_1.Message.getFieldWithDefault(this, 2, undefined) as boolean;
+    }
+    set succedded(value: boolean) {
+      pb_1.Message.setField(this, 2, value);
+    }
+    toObject() {
+      return {
+        id: this.id,
+        succedded: this.succedded
+      };
+    }
+    serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
+      const writer = w || new pb_1.BinaryWriter();
+      if (typeof this.id === "string" && this.id.length) writer.writeString(1, this.id);
+      if (this.succedded !== undefined) writer.writeBool(2, this.succedded);
+      if (!w) return writer.getResultBuffer();
+    }
+    serializeBinary(): Uint8Array {
+      throw new Error("Method not implemented.");
+    }
+    static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Complete {
+      const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
+        message = new Complete();
+      while (reader.nextField()) {
+        if (reader.isEndGroup()) break;
+        switch (reader.getFieldNumber()) {
+          case 1:
+            message.id = reader.readString();
+            break;
+          case 2:
+            message.succedded = reader.readBool();
+            break;
+          default:
+            reader.skipField();
+        }
+      }
+      return message;
+    }
+  }
+  export namespace Complete {
+    export class Result extends pb_1.Message {
+      constructor(data?: any[] | {}) {
+        super();
+        pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
+        if (!Array.isArray(data) && typeof data == "object") {
+        }
+      }
+      toObject() {
+        return {};
+      }
+      serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
+        const writer = w || new pb_1.BinaryWriter();
+        if (!w) return writer.getResultBuffer();
+      }
+      serializeBinary(): Uint8Array {
+        throw new Error("Method not implemented.");
+      }
+      static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Result {
+        const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
+          message = new Result();
+        while (reader.nextField()) {
+          if (reader.isEndGroup()) break;
+          switch (reader.getFieldNumber()) {
+            default:
+              reader.skipField();
+          }
+        }
+        return message;
+      }
+    }
+  }
   export var Queue = {
     pop: {
-      path: "/Event.Queue/pop",
+      path: "/event.Queue/pop",
       requestStream: false,
       responseStream: false,
-      requestType: Pop,
-      responseType: Event,
+      requestType: event.Pop,
+      responseType: event.Event,
       requestSerialize: (message: Pop) => Buffer.from(message.serialize()),
       requestDeserialize: (bytes: Buffer) => Pop.deserialize(new Uint8Array(bytes)),
       responseSerialize: (message: Event) => Buffer.from(message.serialize()),
       responseDeserialize: (bytes: Buffer) => Event.deserialize(new Uint8Array(bytes))
+    },
+    complete: {
+      path: "/event.Queue/complete",
+      requestStream: false,
+      responseStream: false,
+      requestType: event.Complete,
+      responseType: event.Complete.Result,
+      requestSerialize: (message: Complete) => Buffer.from(message.serialize()),
+      requestDeserialize: (bytes: Buffer) => Complete.deserialize(new Uint8Array(bytes)),
+      responseSerialize: (message: Complete.Result) => Buffer.from(message.serialize()),
+      responseDeserialize: (bytes: Buffer) => Complete.Result.deserialize(new Uint8Array(bytes))
     }
   };
   export class QueueClient extends grpc_1.makeGenericClientConstructor(Queue, "Queue", {}) {

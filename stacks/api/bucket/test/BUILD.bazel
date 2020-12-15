@@ -4,37 +4,6 @@ load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "bucket_data_service_test_lib",
-    testonly = True,
-    srcs = [
-        "bucket-data.service.spec.ts",
-    ],
-    deps = [
-        "//packages/core",
-        "//packages/core/schema",
-        "//packages/core/testing",
-        "//packages/database",
-        "//packages/database/testing",
-        "//stacks/api/bucket",
-        "//stacks/api/passport/testing",
-        "//stacks/api/preference",
-        "@npm//@nestjs/common",
-        "@npm//@nestjs/testing",
-        "@npm//@types/bson",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-        "@npm//bson",
-    ],
-)
-
-jasmine_node_test(
-    name = "bucket_data_service_acceptance_test",
-    deps = [
-        ":bucket_data_service_test_lib",
-    ],
-)
-
-ts_library(
     name = "bucket_data_acceptance_test_lib",
     testonly = True,
     srcs = [
@@ -192,10 +161,10 @@ jasmine_node_test(
 )
 
 ts_library(
-    name = "utility_test_lib",
+    name = "relation_test_lib",
     testonly = True,
     srcs = [
-        "utility.spec.ts",
+        "relation.spec.ts",
     ],
     deps = [
         "//stacks/api/bucket",
@@ -205,61 +174,28 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "utility_test",
+    name = "relation_test",
     deps = [
-        "utility_test_lib",
+        "relation_test_lib",
     ],
 )
 
 ts_library(
-    name = "graphql_schema_test_lib",
+    name = "patch_test_lib",
     testonly = True,
     srcs = [
-        "graphql/schema.spec.ts",
+        "patch.spec.ts",
     ],
     deps = [
-        "//packages/database",
         "//stacks/api/bucket",
+        "//stacks/api/bucket/history",
         "@npm//@types/jasmine",
-        "@npm//@types/prettier",
-        "@npm//prettier",
     ],
 )
 
 jasmine_node_test(
-    name = "graphql_schema_test",
+    name = "patch_test",
     deps = [
-        "graphql_schema_test_lib",
-    ],
-)
-
-ts_library(
-    name = "graphql_controller_test_lib",
-    testonly = True,
-    srcs = [
-        "graphql/graphql.spec.ts",
-    ],
-    deps = [
-        "//packages/core",
-        "//packages/core/schema",
-        "//packages/core/testing",
-        "//packages/core/websocket",
-        "//packages/database/testing",
-        "//stacks/api/activity",
-        "//stacks/api/bucket",
-        "//stacks/api/bucket/services",
-        "//stacks/api/passport/testing",
-        "//stacks/api/preference/testing",
-        "@npm//@nestjs/common",
-        "@npm//@nestjs/testing",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "graphql_controller_test",
-    deps = [
-        "graphql_controller_test_lib",
+        "patch_test_lib",
     ],
 )

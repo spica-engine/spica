@@ -13,9 +13,11 @@ ts_library(
     module_name = "@spica-server/bucket",
     deps = [
         "//packages/core",
+        "//packages/core/differ",
         "//packages/core/schema",
         "//packages/database",
         "//stacks/api/activity/services",
+        "//stacks/api/bucket/expression",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",

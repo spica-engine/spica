@@ -3,15 +3,14 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Headers,
   HttpCode,
   HttpStatus,
-  InternalServerErrorException,
   NotFoundException,
   Optional,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -21,16 +20,25 @@ import {
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
-import {ChangeEmitter, ReviewDispatcher} from "@spica-server/bucket/hooks";
-import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {BOOLEAN, DEFAULT, JSONP, JSONPR, NUMBER} from "@spica-server/core";
-import {Schema} from "@spica-server/core/schema";
-import {MongoError, ObjectId, OBJECT_ID} from "@spica-server/database";
-import {ActionGuard, AuthGuard, ResourceFilter, StrategyType} from "@spica-server/passport/guard";
+import {ChangeEmitter} from "@spica-server/bucket/hooks";
+import {BucketDataService, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {ARRAY, BOOLEAN, BooleanCheck, DEFAULT, JSONP, JSONPR, NUMBER, OR} from "@spica-server/core";
+import {Schema, Validator} from "@spica-server/core/schema";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
+import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import * as expression from "../expression";
 import {createBucketDataActivity} from "./activity.resource";
-import {BucketDataService} from "./bucket-data.service";
-import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
-import {buildRelationAggregation, filterReviver, clearRelations, createHistory} from "./utility";
+import {
+  deleteDocument,
+  findDocuments,
+  insertDocument,
+  patchDocument,
+  replaceDocument
+} from "./crud";
+import {filterReviver, isJSONExpression} from "./filter";
+import {createHistory} from "./history";
+import {applyPatch} from "./patch";
+import {clearRelations, getRelationPaths} from "./relation";
 
 /**
  * All APIs related to bucket documents.
@@ -41,7 +49,7 @@ export class BucketDataController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    @Optional() private reviewDispatcher: ReviewDispatcher,
+    private validator: Validator,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService
   ) {}
@@ -55,8 +63,8 @@ export class BucketDataController {
    * @param relation When true, relations in the documents will be replaced with the related document in the response.
    * @param localize When true, documents that have translations is localized to `accept-language`.
    * @param schedule When true, only scheduled documents is present.
-   * @param filter A JSON string that has conditions to filter documents. Example: `{"name": "James"}` OR `{"age": {$gt: 35}}`
-   * @param paginate When true, a meta property that contains the total number of documents are present.
+   * @param filter An expression to filter documents. Example: `name == James" `, `age > 35`, `age > 35 && age < 50`, `gender == "F" && age > 20`
+   * @param paginate When true, a meta property that contains the total number of documents is present.
    * @param limit The maximum amount documents that can be present in the response.
    * @param skip The amount of documents to skip.
    * @param sort A JSON string to sort the documents by its properties.
@@ -66,132 +74,67 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @StrategyType() strategyType: string,
     @ResourceFilter() resourceFilter: object,
-    @Headers() headers: object,
     @Req() req: any,
     @Headers("accept-language") acceptedLanguage?: string,
-    @Query("relation", DEFAULT(false), BOOLEAN) relation?: boolean,
+    @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
+    relation?: boolean | string[],
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("filter", JSONPR(filterReviver)) filter?: object,
+    @Query("filter", OR(isJSONExpression, JSONPR(filterReviver))) filter?: string | object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
   ) {
-    let aggregation: unknown[] = [
-      resourceFilter,
+    const schema = await this.bs.findOne({_id: bucketId});
+
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
+    const relationPaths: string[][] = getRelationPaths(
+      relation == true ? schema : Array.isArray(relation) ? relation : []
+    );
+
+    if (filter) {
+      if (typeof filter == "object") {
+        req.res.append(
+          "Warning",
+          `100 "using MongoDB operators in filter has been deprecated and highly discouraged"`
+        );
+      } else {
+        try {
+          expression.aggregate(filter, {});
+        } catch (e) {
+          throw new BadRequestException(`filter has to be a valid expression.`, e.message);
+        }
+      }
+    }
+
+    return findDocuments(
+      schema,
       {
-        $match: {
-          _schedule: {
-            $exists: schedule
-          }
-        }
+        resourceFilter,
+        relationPaths,
+        language: acceptedLanguage,
+        filter,
+        limit,
+        skip,
+        sort,
+        req,
+        projectMap: []
+      },
+      {
+        localize,
+        paginate,
+        schedule
+      },
+      {
+        collection: (bucketId: string) => this.bds.children(bucketId),
+        preference: () => this.bs.getPreferences(),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    ];
-
-    const bucket = await this.bs.findOne({_id: bucketId});
-
-    if (!bucket) {
-      throw new NotFoundException(`Could not find the bucket with id ${bucketId}`);
-    }
-
-    let locale: Locale;
-
-    if (localize && hasTranslatedProperties(bucket.properties)) {
-      const preferences = await this.bs.getPreferences();
-      locale = findLocale(acceptedLanguage, preferences);
-      aggregation.push({
-        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-      });
-      req.res.header("Content-language", locale.best || locale.fallback);
-    }
-
-    if (sort) {
-      aggregation.push({
-        $sort: sort
-      });
-    }
-
-    if (relation) {
-      for (const propertyKey in bucket.properties) {
-        const property = bucket.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale
-            )
-          );
-        }
-      }
-    }
-
-    if (typeof filter == "object") {
-      aggregation.push({
-        $set: {
-          _id: {
-            $toString: `$_id`
-          }
-        }
-      });
-
-      aggregation.push({$match: filter});
-    }
-
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const hookAggregation = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "index"},
-        headers
-      );
-      if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
-        aggregation = aggregation.concat(hookAggregation);
-      }
-    }
-
-    let data: Promise<unknown>;
-
-    if (paginate && !skip && !limit) {
-      data = this.bds
-        .find(bucketId, aggregation)
-        .then(data => ({meta: {total: data.length}, data}));
-    } else if (paginate && (skip || limit)) {
-      const subAggregation = [];
-      if (skip) {
-        subAggregation.push({$skip: skip});
-      }
-
-      if (limit) {
-        subAggregation.push({$limit: limit});
-      }
-      aggregation.push(
-        {
-          $facet: {
-            meta: [{$count: "total"}],
-            data: subAggregation
-          }
-        },
-        {$unwind: "$meta"}
-      );
-      data = this.bds
-        .find(bucketId, aggregation)
-        .then(([result]) => (result ? result : {meta: {total: 0}, data: []}));
-    } else {
-      if (skip) {
-        aggregation.push({$skip: skip});
-      }
-
-      if (limit) {
-        aggregation.push({$limit: limit});
-      }
-
-      data = this.bds.find(bucketId, aggregation);
-    }
-    return data.catch((error: MongoError) =>
-      Promise.reject(new InternalServerErrorException(`${error.message}; code ${error.code}.`))
     );
   }
 
@@ -209,66 +152,39 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:show"))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
     @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("relation", DEFAULT(false), BOOLEAN) relation?: boolean
+    @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
+    relation?: boolean | string[]
   ) {
-    let aggregation = [];
+    const schema = await this.bs.findOne({_id: bucketId});
 
-    aggregation.push({
-      $match: {
-        _id: documentId
+    const relationPaths: string[][] = getRelationPaths(
+      relation == true ? schema : Array.isArray(relation) ? relation : []
+    );
+
+    const [document] = await findDocuments(
+      schema,
+      {
+        relationPaths,
+        language: acceptedLanguage,
+        limit: 1,
+        filter: {_id: documentId},
+        req,
+        projectMap: []
+      },
+      {
+        localize
+      },
+      {
+        collection: (bucketId: string) => this.bds.children(bucketId),
+        preference: () => this.bs.getPreferences(),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    });
+    );
 
-    let locale: Locale;
-
-    if (localize) {
-      const preferences = await this.bs.getPreferences();
-      locale = findLocale(acceptedLanguage, preferences);
-      aggregation.unshift({
-        $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
-      });
-      req.res.header("Content-language", locale.best || locale.fallback);
-    }
-
-    if (relation) {
-      const schema = await this.bs.findOne({_id: bucketId});
-      for (const propertyKey in schema.properties) {
-        const property = schema.properties[propertyKey];
-        if (property.type == "relation") {
-          aggregation.push(
-            ...buildRelationAggregation(
-              propertyKey,
-              property["bucketId"],
-              property["relationType"],
-              locale
-            )
-          );
-        }
-      }
-    }
-
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const hookAggregation = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "get"},
-        headers,
-        documentId.toHexString()
-      );
-      if (Array.isArray(hookAggregation) && hookAggregation.length > 0) {
-        aggregation = aggregation.concat(hookAggregation);
-      }
-    }
-
-    const [document] = await this.bds.find(bucketId, aggregation);
-
-    if (!document) {
-      throw new NotFoundException(`${documentId} could not be found.`);
-    }
     return document;
   }
 
@@ -300,24 +216,25 @@ export class BucketDataController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async insertOne(
+    @Req() req,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
-    @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
+    @Body(Schema.validate(req => req.params.bucketId)) rawDocument: BucketDocument
   ) {
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "insert"},
-        headers
-      );
-      if (!allowed) {
-        throw new ForbiddenException("Forbidden action.");
+    const schema = await this.bs.findOne({_id: bucketId});
+
+    const document = await insertDocument(
+      schema,
+      rawDocument,
+      {req: req},
+      {
+        collection: bucketId => this.bds.children(bucketId),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
+    );
+
+    if (!document) {
+      return;
     }
-    const {
-      ops: [currentDocument],
-      insertedId
-    } = await this.bds.insertOne(bucketId, body);
 
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
@@ -325,13 +242,13 @@ export class BucketDataController {
           bucket: bucketId.toHexString(),
           type: "insert"
         },
-        insertedId.toHexString(),
+        document._id.toHexString(),
         undefined,
-        currentDocument
+        document
       );
     }
 
-    return currentDocument;
+    return document;
   }
 
   /**
@@ -351,30 +268,102 @@ export class BucketDataController {
   @UseInterceptors(activity(createBucketDataActivity))
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
-  async update(
+  async replace(
+    @Req() req,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId,
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
-    @Body(Schema.validate(req => req.params.bucketId)) body: BucketDocument
+    @Body(Schema.validate(req => req.params.bucketId)) document: BucketDocument
   ) {
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "update"},
-        headers,
-        documentId.toHexString()
-      );
-      if (!allowed) {
-        throw new ForbiddenException("Forbidden action.");
+    const schema = await this.bs.findOne({_id: bucketId});
+
+    const previousDocument = await replaceDocument(
+      schema,
+      {...document, _id: documentId},
+      {req: req},
+      {
+        collection: bucketId => this.bds.children(bucketId),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
+    );
+
+    if (!previousDocument) {
+      return;
     }
 
-    const {value: previousDocument} = await this.bds.replaceOne(bucketId, {_id: documentId}, body, {
-      returnOriginal: true
+    const currentDocument = {...document, _id: documentId};
+
+    await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
+
+    if (this.changeEmitter) {
+      this.changeEmitter.emitChange(
+        {
+          bucket: bucketId.toHexString(),
+          type: "update"
+        },
+        documentId.toHexString(),
+        previousDocument,
+        currentDocument
+      );
+    }
+
+    return currentDocument;
+  }
+
+  /**
+   * Update a document in the bucket.
+   * Body should be in format of JSON merge patch.
+   * @param bucketId Identifier of the bucket.
+   * @param documentId Identifier of the document.
+   * @body
+   * ```json
+   * {
+   *    "name": "Daniel",
+   *    "age": null
+   * }
+   * ```
+   */
+  @UseInterceptors(activity(createBucketDataActivity))
+  @Patch(":documentId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
+  async patch(
+    @Req() req,
+    @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
+    @Body() patch: Partial<BucketDocument>
+  ) {
+    const schema = await this.bs.findOne({_id: bucketId});
+
+    const bkt = this.bds.children(bucketId);
+
+    const previousDocument = await bkt.findOne({_id: documentId});
+
+    const patchedDocument = applyPatch(previousDocument, patch);
+
+    await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
+      throw new BadRequestException(
+        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.message
+      );
     });
 
-    const currentDocument = {...body, _id: documentId};
-    const _ = createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
+    const currentDocument = await patchDocument(
+      schema,
+      {...patchedDocument, _id: documentId},
+      patch,
+      {req: req},
+      {
+        collection: bucketId => this.bds.children(bucketId),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+      },
+      {returnOriginal: false}
+    );
+
+    if (!currentDocument) {
+      return;
+    }
+
+    await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
 
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
@@ -401,47 +390,44 @@ export class BucketDataController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
-    @Headers() headers: object,
-    @StrategyType() strategyType: string,
+    @Req() req,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
-    if (this.reviewDispatcher && strategyType == "APIKEY") {
-      const allowed = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId.toHexString(), type: "delete"},
-        headers,
-        documentId.toHexString()
-      );
-      if (!allowed) {
-        throw new ForbiddenException("Forbidden action.");
-      }
-    }
+    const schema = await this.bs.findOne({_id: bucketId});
 
-    let deletedDocument: BucketDocument;
+    const deletedDocument = await deleteDocument(
+      schema,
+      documentId,
+      {req: req},
+      {
+        collection: bucketId => this.bds.children(bucketId),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+      }
+    );
+
+    if (!deletedDocument) {
+      return;
+    }
 
     if (this.changeEmitter) {
-      deletedDocument = await this.bds.findOne(bucketId, {_id: documentId});
+      this.changeEmitter.emitChange(
+        {
+          bucket: bucketId.toHexString(),
+          type: "delete"
+        },
+        documentId.toHexString(),
+        deletedDocument,
+        undefined
+      );
     }
-    const {deletedCount} = await this.bds.deleteOne(bucketId, {_id: documentId});
 
-    if (deletedCount > 0) {
-      if (this.changeEmitter) {
-        this.changeEmitter.emitChange(
-          {
-            bucket: bucketId.toHexString(),
-            type: "delete"
-          },
-          documentId.toHexString(),
-          deletedDocument,
-          undefined
-        );
-      }
-      if (this.history) {
-        await this.history.deleteMany({
-          document_id: documentId
-        });
-      }
-      await clearRelations(this.bs, bucketId, documentId);
+    if (this.history) {
+      await this.history.deleteMany({
+        document_id: documentId
+      });
     }
+
+    await clearRelations(this.bs, bucketId, documentId);
   }
 }

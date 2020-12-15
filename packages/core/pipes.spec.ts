@@ -1,5 +1,5 @@
 import {HttpException} from "@nestjs/common";
-import {ARRAY, BOOLEAN, DATE, DEFAULT, JSONP, JSONPR, NUMBER} from "./pipes";
+import {ARRAY, BOOLEAN, DATE, DEFAULT, JSONP, JSONPR, NUMBER, OR, BooleanCheck} from "./pipes";
 
 describe("core pipes", () => {
   describe("NUMBER pipe", () => {
@@ -117,6 +117,39 @@ describe("core pipes", () => {
     it("should convert non-array value to array and coerce", () => {
       const data = "1";
       expect(ARRAY(Number).transform(data, undefined)).toEqual([1]);
+    });
+  });
+
+  describe("OR pipe", () => {
+    describe("boolean or string array", () => {
+      it("should convert to the boolean", () => {
+        let data = "true";
+        expect(OR(BooleanCheck, BOOLEAN, ARRAY(String)).transform(data, undefined)).toEqual(true);
+
+        data = "false";
+        expect(OR(BooleanCheck, BOOLEAN, ARRAY(String)).transform(data, undefined)).toEqual(false);
+      });
+
+      it("should convert to the string array", () => {
+        let data: any = "test";
+        expect(OR(BooleanCheck, BOOLEAN, ARRAY(String)).transform(data, undefined)).toEqual([
+          "test"
+        ]);
+
+        data = ["test", "test2"];
+        expect(OR(BooleanCheck, BOOLEAN, ARRAY(String)).transform(data, undefined)).toEqual([
+          "test",
+          "test2"
+        ]);
+      });
+
+      it("should work with default booleans", () => {
+        let data = true;
+        expect(OR(BooleanCheck, BOOLEAN, ARRAY(String)).transform(data, undefined)).toEqual(true);
+
+        data = false;
+        expect(OR(BooleanCheck, BOOLEAN, ARRAY(String)).transform(data, undefined)).toEqual(false);
+      });
     });
   });
 });

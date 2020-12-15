@@ -5,11 +5,11 @@ import {WebhookModule} from "@spica-server/function/webhook";
 import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
-import {FunctionService} from "./function.service";
 import {FUNCTION_OPTIONS} from "./options";
 import {FunctionOptions} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 import {LogModule} from "./log";
+import {FunctionService} from "./function.service";
 
 @Module({})
 export class FunctionModule {

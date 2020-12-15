@@ -1,8 +1,9 @@
-import {Optional} from "@nestjs/common";
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
-import {ReviewDispatcher} from "@spica-server/bucket/hooks";
+import * as expression from "@spica-server/bucket/expression";
+import {aggregate} from "@spica-server/bucket/expression";
+import {BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
+import {FindOptions, RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
 import {fromEvent, Observable} from "rxjs";
 import {takeUntil, tap} from "rxjs/operators";
@@ -16,7 +17,7 @@ export class RealtimeGateway implements OnGatewayConnection {
   constructor(
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
-    @Optional() private reviewDispatcher: ReviewDispatcher
+    private bucketService: BucketService
   ) {}
 
   async handleConnection(client: WebSocket, req) {
@@ -30,29 +31,26 @@ export class RealtimeGateway implements OnGatewayConnection {
       await this.guardService.checkAction({
         request: req,
         response: client,
-        actions: "bucket:data:stream"
+        actions: "bucket:data:stream",
+        options: {resourceFilter: true}
       });
     } catch (e) {
       client.send(JSON.stringify({code: e.status || 500, message: e.message}));
       return client.close(1003);
     }
 
-    const bucketId = req.params.id;
-    const options: any = {};
+    const schemaId = req.params.id;
 
-    if (this.reviewDispatcher && req.strategyType == "APIKEY") {
-      const filter = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId, type: "STREAM"},
-        req.headers
-      );
-      if (typeof filter == "object" && Object.keys(filter).length > 0) {
-        options.filter = options.filter || {};
-        options.filter = {...options.filter, ...filter};
-      }
-    }
+    const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+
+    const match = expression.aggregate(schema.acl.read, {auth: req.user});
+
+    const options: FindOptions<{}> = {};
 
     if (req.query.has("filter")) {
-      options.filter = JSON.parse(req.query.get("filter"));
+      options.filter = {$and: [match, aggregate(req.query.get("filter"), {})]};
+    } else {
+      options.filter = match;
     }
 
     if (req.query.has("sort")) {
@@ -67,10 +65,10 @@ export class RealtimeGateway implements OnGatewayConnection {
       options.skip = Number(req.query.get("skip"));
     }
 
-    const cursorName = `${bucketId}_${JSON.stringify(options)}`;
+    const cursorName = `${schemaId}_${JSON.stringify(options)}`;
     let stream = this.streams.get(cursorName);
     if (!stream) {
-      stream = this.realtime.find(getBucketDataCollection(bucketId), options).pipe(
+      stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
         tap({
           complete: () => this.streams.delete(cursorName)
         })
@@ -81,8 +79,4 @@ export class RealtimeGateway implements OnGatewayConnection {
       client.send(JSON.stringify(data));
     });
   }
-}
-
-export function getBucketDataCollection(bucketId: string | ObjectId): string {
-  return `bucket_${bucketId}`;
 }

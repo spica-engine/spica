@@ -3,6 +3,9 @@ import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {CropperComponent} from "angular-cropperjs";
 import {Storage} from "../../interfaces/storage";
 import {StorageService} from "../../storage.service";
+import {Observable, of, BehaviorSubject} from "rxjs";
+import {SavingState} from "@spica-client/material";
+import {tap, take} from "rxjs/operators";
 
 @Component({
   selector: "storage-image-editor",
@@ -28,6 +31,8 @@ export class ImageEditorComponent implements OnInit {
 
   private _cropperRes = {width: 0, height: 0};
 
+  $save: BehaviorSubject<SavingState> = new BehaviorSubject(SavingState.Pristine);
+
   constructor(
     private storageService: StorageService,
     private dialogRef: MatDialogRef<ImageEditorComponent>,
@@ -46,9 +51,11 @@ export class ImageEditorComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.storageService.getOne(this.data._id).subscribe(storage => {
-      this.storage = storage;
-    });
+    this.storageService
+      .getOne(this.data._id)
+      .pipe(tap(() => this.$save.next(SavingState.Pristine)))
+      .toPromise()
+      .then(storage => (this.storage = storage));
   }
 
   cropperReady() {
@@ -77,14 +84,17 @@ export class ImageEditorComponent implements OnInit {
   }
 
   doneCropping() {
+    this.$save.next(SavingState.Saving);
     this.scaleImage().toBlob(blob => {
       const file = new File([blob], this.storage.name, {type: blob.type});
       this.storageService
         .updateOne(this.storage, file)
         .toPromise()
         .then(() => {
-          this.dialogRef.close();
-        });
+          this.dialogRef.close(this.storage._id);
+          this.$save.next(SavingState.Saved);
+        })
+        .catch(() => this.$save.next(SavingState.Failed));
     });
   }
 

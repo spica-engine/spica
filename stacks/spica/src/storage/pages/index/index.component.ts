@@ -3,8 +3,8 @@ import {HttpEventType} from "@angular/common/http";
 import {Component, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
-import {merge, Observable, of, Subject} from "rxjs";
-import {map, switchMap} from "rxjs/operators";
+import {merge, Observable, BehaviorSubject, Subject, of} from "rxjs";
+import {map, switchMap, tap, last} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {Storage} from "../../interfaces/storage";
@@ -20,9 +20,13 @@ export class IndexComponent implements OnInit {
 
   storages$: Observable<Storage[]>;
   progress: number;
-  refresh: Subject<void> = new Subject<void>();
+  refresh: Subject<string> = new Subject();
   sorter;
   cols: number = 4;
+
+  loading$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+
+  lastUpdates: Map<string, number> = new Map();
 
   isEmpty = true;
 
@@ -52,12 +56,29 @@ export class IndexComponent implements OnInit {
 
   ngOnInit(): void {
     this.storages$ = merge(this.paginator.page, of(null), this.refresh).pipe(
+      tap(() => this.loading$.next(true)),
       switchMap(() =>
-        this.storage.getAll(
-          this.paginator.pageSize || 12,
-          this.paginator.pageSize * this.paginator.pageIndex,
-          this.sorter
-        )
+        this.storage
+          .getAll(
+            this.paginator.pageSize || 12,
+            this.paginator.pageSize * this.paginator.pageIndex,
+            this.sorter
+          )
+          .pipe(
+            map(storages => {
+              for (const storage of storages.data) {
+                let lastUpdate = this.lastUpdates.get(storage._id);
+
+                if (!lastUpdate) {
+                  lastUpdate = new Date().getTime();
+                  this.lastUpdates.set(storage._id, lastUpdate);
+                }
+
+                storage.url += "?timestamp=" + lastUpdate;
+              }
+              return storages;
+            })
+          )
       ),
       map(storages => {
         this.paginator.length = 0;
@@ -66,7 +87,8 @@ export class IndexComponent implements OnInit {
         }
         this.isEmpty = !storages.meta.total;
         return storages.data;
-      })
+      }),
+      tap(() => this.loading$.next(false))
     );
   }
 
@@ -84,6 +106,11 @@ export class IndexComponent implements OnInit {
         () => this.uploadDone()
       );
     }
+  }
+
+  clearLastUpdates() {
+    this.lastUpdates.clear();
+    this.refresh.next();
   }
 
   uploadDone() {
@@ -126,6 +153,9 @@ export class IndexComponent implements OnInit {
       })
       .afterClosed()
       .toPromise()
-      .then(() => this.refresh.next());
+      .then(updatedId => {
+        this.lastUpdates.delete(updatedId);
+        this.refresh.next();
+      });
   }
 }

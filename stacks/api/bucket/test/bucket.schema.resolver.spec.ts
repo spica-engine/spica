@@ -245,7 +245,7 @@ describe("Bucket Schema Resolver", () => {
       expect(validator.registerUriResolver).toHaveBeenCalledTimes(1);
       expect(validator.registerUriResolver).toEqual(jasmine.any(Function));
 
-      expect(validator.registerKeyword).toHaveBeenCalledTimes(1);
+      expect(validator.registerKeyword).toHaveBeenCalledTimes(2);
       expect(validator.registerKeyword.calls.first().args[0]).toEqual(
         "default",
         "should work when custom default keyword registered "

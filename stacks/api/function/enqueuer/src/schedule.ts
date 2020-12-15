@@ -1,5 +1,5 @@
 import {EventQueue} from "@spica-server/function/queue";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 import * as cron from "cron";
 import {Description, Enqueuer} from "./enqueuer";
 
@@ -20,14 +20,15 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
 
   constructor(private queue: EventQueue) {}
 
-  subscribe(target: Event.Target, options: ScheduleOptions): void {
+  subscribe(target: event.Target, options: ScheduleOptions): void {
     const job = new cron.CronJob({
       cronTime: options.frequency,
       onTick: () => {
-        const event = new Event.Event();
-        event.target = target;
-        event.type = Event.Type.SCHEDULE;
-        this.queue.enqueue(event);
+        const ev = new event.Event({
+          target,
+          type: event.Type.SCHEDULE
+        });
+        this.queue.enqueue(ev);
       },
       start: true,
       timeZone: options.timezone
@@ -36,7 +37,7 @@ export class ScheduleEnqueuer implements Enqueuer<ScheduleOptions> {
     this.jobs.add(job);
   }
 
-  unsubscribe(target: Event.Target): void {
+  unsubscribe(target: event.Target): void {
     for (const job of this.jobs) {
       if (
         (!target.handler && job["target"].cwd == target.cwd) ||
