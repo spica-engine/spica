@@ -28,7 +28,7 @@ export class DashboardViewComponent {
       switchMap(params =>
         this.ds.getDashboard(params.id).pipe(
           tap(dashboard => {
-            if (!dashboard.components) {
+            if (!dashboard || !dashboard.components) {
               return;
             }
 
