@@ -154,7 +154,7 @@ export class BucketDataController {
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
-    @Param("documentId") documentId: string,
+    @Param("documentId", OBJECT_ID) documentId: ObjectId,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
     @Query("relation", DEFAULT(false), OR(BooleanCheck, BOOLEAN, ARRAY(String)))
     relation?: boolean | string[]
@@ -171,7 +171,7 @@ export class BucketDataController {
         relationPaths,
         language: acceptedLanguage,
         limit: 1,
-        filter: {_id: documentId},
+        documentId: documentId,
         req,
         projectMap: []
       },

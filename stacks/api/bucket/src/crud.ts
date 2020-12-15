@@ -19,6 +19,7 @@ interface CrudOptions<Paginate> {
 
 interface CrudParams {
   resourceFilter?: object;
+  documentId?: ObjectId;
   filter?: object | string;
   language?: string;
   relationPaths: string[][];
@@ -67,6 +68,11 @@ export async function findDocuments<T>(
   const collection = factories.collection(schema._id);
 
   const pipeline: object[] = [];
+
+  // for reducing findone response time
+  if (params.documentId) {
+    pipeline.push({$match: {_id: params.documentId}});
+  }
 
   // resourcefilter
   if (params.resourceFilter) {
