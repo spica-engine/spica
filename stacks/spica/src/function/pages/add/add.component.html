@@ -428,7 +428,7 @@
                 type="number"
                 placeholder="Deadline"
                 #nameModel="ngModel"
-                [min]="batching ? '1' : '0'"
+                [min]="batching ? 1 : 0 "
                 [(ngModel)]="batchingDeadline"
                 name="deadline"
                 [required]="batching"
