@@ -137,7 +137,7 @@
 
     <button mat-button [matTooltip]="(guide ? 'Hide' : 'Show') + ' Guide'" (click)="guide = !guide">
       <mat-icon>contact_support</mat-icon>
-      Guide
+      For Developers
     </button>
   </div>
 </mat-toolbar>
@@ -261,205 +261,32 @@
     </mat-card-content>
   </mat-card>
 
-  <mat-card class="mat-elevation-z25 guide" [class.hide]="!guide">
-    <mat-accordion>
-      <mat-expansion-panel>
+  <mat-card class="guide" [class.hide]="!guide">
+    <mat-accordion multi>
+      <mat-expansion-panel *ngFor="let guide of guideObjects | keyvalue">
         <mat-expansion-panel-header>
           <mat-panel-description>
-            Get All Data With Limit
+            {{guide.value.title}}
           </mat-panel-description>
         </mat-expansion-panel-header>
 
         <p class="guide-link">
-          {{ guideUrls?.getAllWithLimit }}
+          {{guide.value.description}} <br><br>
+          <span *ngIf="guide.value.url != ''">{{ rootUrl + "/api" + guide.value.url }}</span>
         </p>
-        <button
+        <button *ngIf="guide.value.url != ''"
           mat-raised-button
           color="warn"
-          (click)="guideRequest(guideUrls?.getAllWithLimit, 'getAllWithLimit')"
+          (click)="guideRequest(guide.value.url, guide.key)"
         >
-          {{ guideResponse?.getAllWithLimit ? "Hide Response" : "Send Request" }}
+          {{ guideResponse[guide.key] ? "Hide Response" : "Send Request" }}
         </button>
         <pre
-          *ngIf="guideResponse?.getAllWithLimit"
+          *ngIf="guideResponse[guide.key]"
           class="guide-response"
           [innerHtml]="
-            guideResponse?.getAllWithLimit
-              ? (guideResponse.getAllWithLimit | json)
-              : 'Data does not exist'
-          "
-        ></pre>
-      </mat-expansion-panel>
-    </mat-accordion>
-    <mat-accordion>
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-description>
-            Get All Data With Sort
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-        <p class="guide-link">
-          {{ guideUrls?.getAllWithSort }}
-        </p>
-        <button
-          mat-raised-button
-          color="warn"
-          (click)="guideRequest(guideUrls?.getAllWithSort, 'getAllWithSort')"
-        >
-          {{ guideResponse?.getAllWithSort ? "Hide Response" : "Send Request" }}
-        </button>
-        <pre
-          *ngIf="guideResponse?.getAllWithSort"
-          class="guide-response"
-          [innerHtml]="
-            guideResponse?.getAllWithSort
-              ? (guideResponse.getAllWithSort | json)
-              : 'Data does not exist'
-          "
-        ></pre>
-      </mat-expansion-panel>
-    </mat-accordion>
-    <mat-accordion>
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-description>
-            Get Data With Filter
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <p class="guide-link">
-          {{ guideUrls?.getWithFilter }}
-        </p>
-        <button
-          mat-raised-button
-          color="warn"
-          (click)="guideRequest(guideUrls?.getWithFilter, 'getWithFilter')"
-        >
-          {{ guideResponse?.getWithFilter ? "Hide Response" : "Send Request" }}
-        </button>
-        <pre
-          *ngIf="guideResponse?.getWithFilter"
-          class="guide-response"
-          [innerHtml]="
-            guideResponse?.getWithFilter.length > 0
-              ? (guideResponse?.getWithFilter | json)
-              : 'Data does not exist'
-          "
-        ></pre>
-      </mat-expansion-panel>
-    </mat-accordion>
-    <mat-accordion>
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-description>
-            Get Data With Like
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <p class="guide-link">
-          {{ guideUrls?.getWithLike }}
-        </p>
-        <button
-          mat-raised-button
-          color="warn"
-          (click)="guideRequest(guideUrls?.getWithLike, 'getWithLike')"
-        >
-          {{ guideResponse?.getWithLike ? "Hide Response" : "Send Request" }}
-        </button>
-        <pre
-          *ngIf="guideResponse?.getWithLike"
-          class="guide-response"
-          [innerHtml]="
-            guideResponse?.getWithLike.length > 0
-              ? (guideResponse?.getWithLike | json)
-              : 'Data does not exist'
-          "
-        ></pre>
-      </mat-expansion-panel>
-    </mat-accordion>
-    <mat-accordion>
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-description>
-            Get Data With Double Filter
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <p class="guide-link">
-          {{ guideUrls?.getWithDoubleFilter }}
-        </p>
-        <button
-          mat-raised-button
-          color="warn"
-          (click)="guideRequest(guideUrls?.getWithDoubleFilter, 'getWithDoubleFilter')"
-        >
-          {{ guideResponse?.getWithDoubleFilter ? "Hide Response" : "Send Request" }}
-        </button>
-        <pre
-          *ngIf="guideResponse?.getWithDoubleFilter"
-          class="guide-response"
-          [innerHtml]="
-            guideResponse?.getWithDoubleFilter.length > 0
-              ? (guideResponse?.getWithDoubleFilter | json)
-              : 'Data does not exist'
-          "
-        ></pre>
-      </mat-expansion-panel>
-    </mat-accordion>
-    <mat-accordion>
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-description>
-            Get Data Only Scheduled
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <p class="guide-link">
-          {{ guideUrls?.getOnlyScheduled }}
-        </p>
-        <button
-          mat-raised-button
-          color="warn"
-          (click)="guideRequest(guideUrls?.getOnlyScheduled, 'getOnlyScheduled')"
-        >
-          {{ guideResponse?.getOnlyScheduled ? "Hide Response" : "Send Request" }}
-        </button>
-        <pre
-          *ngIf="guideResponse?.getOnlyScheduled"
-          class="guide-response"
-          [innerHtml]="
-            guideResponse?.getOnlyScheduled.length > 0
-              ? (guideResponse?.getOnlyScheduled | json)
-              : 'Data does not exist'
-          "
-        ></pre>
-      </mat-expansion-panel>
-    </mat-accordion>
-    <mat-accordion>
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-description>
-            Get Data With Language
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-
-        <p class="guide-link">
-          {{ guideUrls?.getDataWithLang }}
-          <br />headers: "Accept-Language": "tr-TR"
-        </p>
-        <button
-          (click)="guideRequest(guideUrls?.getDataWithLang, 'getDataWithLang')"
-          mat-raised-button
-          color="warn"
-        >
-          {{ guideResponse?.getDataWithLang ? "Hide Response" : "Send Request" }}
-        </button>
-        <pre
-          *ngIf="guideResponse?.getDataWithLang"
-          class="guide-response"
-          [innerHtml]="
-            guideResponse?.getDataWithLang.length > 0
-              ? (guideResponse?.getDataWithLang | json)
+            guideResponse[guide.key]
+              ? (guideResponse[guide.key] | json)
               : 'Data does not exist'
           "
         ></pre>

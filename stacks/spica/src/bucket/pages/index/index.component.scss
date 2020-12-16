@@ -1,21 +1,8 @@
 ::ng-deep .filter-menu {
   max-width: unset !important;
-  width: 380px;
-  .mat-menu-content {
-    width: 100%;
-    padding: 30px 0 20px !important;
-    mat-form-field {
-      width: 80%;
-      margin: 0 10%;
-
-      .mat-form-field-infix {
-        width: 300px;
-      }
-    }
-    .filter-buttons {
-      display: flex;
-      justify-content: center;
-    }
+  width: 600px;
+  .mat-menu-content{
+    padding: 10px 18px;
   }
 }
 
@@ -92,6 +79,8 @@
         margin-right: unset;
         width: 29%;
         padding: unset;
+        background: transparent;
+        box-shadow: unset;
         &.hide {
           width: 0;
           mat-list {
