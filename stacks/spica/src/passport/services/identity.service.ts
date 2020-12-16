@@ -13,7 +13,7 @@ export class IdentityService {
 
   find(limit: number = 10, skip: number): Observable<IndexResult<Identity>> {
     return this.http.get<IndexResult<Identity>>("api:/passport/identity", {
-      params: {limit: String(limit), skip: String(skip)}
+      params: {limit: String(limit), skip: String(skip), paginate: "true"}
     });
   }
 

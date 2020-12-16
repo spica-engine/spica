@@ -14,7 +14,7 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {DEFAULT, NUMBER} from "@spica-server/core";
+import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -46,38 +46,55 @@ export class IdentityController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
-  find(
+  async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
+    @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
+    @Query("filter", DEFAULT({}), JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
-    const dataPipeline: object[] = [];
+    const pipeline: object[] = [];
 
-    dataPipeline.push({$skip: skip});
+    pipeline.push(resourceFilter);
 
-    if (limit) {
-      dataPipeline.push({$limit: limit});
+    pipeline.push({$project: {password: 0}});
+
+    if (Object.keys(filter).length) {
+      pipeline.push({$match: filter});
     }
 
-    dataPipeline.push({$project: {password: 0}});
+    const seekingPipeline: object[] = [];
 
-    const aggregate = [
-      resourceFilter,
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: dataPipeline
-        }
-      },
-      {
-        $project: {
-          meta: {$arrayElemAt: ["$meta", 0]},
-          data: "$data"
-        }
-      }
-    ];
+    if (skip) {
+      seekingPipeline.push({$skip: skip});
+    }
 
-    return this.identity.aggregate(aggregate).next();
+    if (limit) {
+      seekingPipeline.push({$limit: limit});
+    }
+
+    if (paginate) {
+      pipeline.push(
+        {
+          $facet: {
+            meta: [{$count: "total"}],
+            data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
+          }
+        },
+        {
+          $project: {
+            meta: {$arrayElemAt: ["$meta", 0]},
+            data: "$data"
+          }
+        }
+      );
+
+      const result = await this.identity.aggregate(pipeline).next();
+
+      return result["data"].length ? result : {meta: {total: 0}, data: []};
+    }
+
+    return this.identity.aggregate([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard())
