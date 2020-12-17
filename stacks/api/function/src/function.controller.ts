@@ -245,11 +245,9 @@ export class FunctionController {
    */
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
-    @Res() res,
     @Query("progress", BOOLEAN) progress?: boolean
   ) {
     if (!name) {
@@ -259,35 +257,7 @@ export class FunctionController {
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
-
-    let operators: OperatorFunction<unknown, unknown>[] = [
-      catchError(err => {
-        res.status(400).send({message: err.toString()});
-        return err;
-      })
-    ];
-
-    if (progress) {
-      operators = [];
-      operators.push(
-        map(progress => {
-          return {
-            progress,
-            state: "installing"
-          };
-        }),
-        catchError(error =>
-          of({
-            state: "failed",
-            message: error
-          })
-        ),
-        tap(response => res.write(`${JSON.stringify(response)}${os.EOL}`))
-      );
-    }
-    operators.push(last(), finalize(() => res.end()));
-
-    return (this.engine.addPackage(fn, name) as any).pipe(...operators);
+    return this.engine.addPackage(fn, name);
   }
 
   /**
