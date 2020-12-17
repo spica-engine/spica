@@ -1,9 +1,9 @@
-import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
-import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
 import {Compilation, Language} from "@spica-server/function/compiler";
 import {Javascript} from "@spica-server/function/compiler/javascript";
 import {Typescript} from "@spica-server/function/compiler/typescript";
-import {Node} from "@spica-server/function/runtime/node";
+import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
+import {Database, event, Firehose, Http} from "@spica-server/function/queue/proto";
+import {discovery, spawn as _spawn} from "@spica-server/function/runtime";
 import {FunctionTestBed} from "@spica-server/function/runtime/testing";
 import * as os from "os";
 import {PassThrough, Writable} from "stream";
@@ -14,7 +14,6 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 describe("Entrypoint", () => {
   let queue: EventQueue;
 
-  let runtime: Node;
   let language: Language;
   let enqueueSpy: jasmine.Spy;
   let popSpy: jasmine.Spy;
@@ -32,20 +31,20 @@ describe("Entrypoint", () => {
     return language.compile(compilation);
   }
 
-  function spawn(stdout?: Writable, idOverride?: string): Promise<number> {
+  async function spawn(stdout?: Writable, idOverride?: string): Promise<number> {
+    const worker = await _spawn({
+      id: idOverride != undefined ? idOverride : String(++id),
+      environment: {
+        __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
+        __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
+        __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
+      },
+      runtime: {
+        name: "node",
+        version: "12.19.0"
+      }
+    });
     return new Promise((resolve, reject) => {
-      const worker = runtime.spawn({
-        id: idOverride != undefined ? idOverride : String(++id),
-        environment: {
-          __INTERNAL__SPICA__MONGOURL__: process.env.DATABASE_URI,
-          __INTERNAL__SPICA__MONGODBNAME__: process.env.DATABASE_NAME,
-          __INTERNAL__SPICA__MONGOREPL__: process.env.REPLICA_SET
-        },
-        runtime: {
-          name: 'node',
-          version: '12.0.0.',
-        }
-      });
       worker.attach(stdout || process.stdout, stdout || process.stderr);
 
       worker.once("error", e => {
@@ -85,8 +84,9 @@ describe("Entrypoint", () => {
 
     queue = new EventQueue(popSpy, enqueueSpy, () => {}, () => {});
     await queue.listen();
-    runtime = new Node();
     language = new Javascript();
+
+    discovery.root = "./stacks/api/function/runtimes";
   });
 
   afterEach(() => {

@@ -26,4 +26,9 @@ export namespace discovery {
     }
     return (_descriptions = descriptions);
   }
+
+  export async function get(name: string): Promise<Description> {
+    const runtimes = await discover();
+    return runtimes.get(name);
+  }
 }

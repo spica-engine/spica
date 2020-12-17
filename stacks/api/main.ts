@@ -161,6 +161,16 @@ const args = yargs
       description: "Root path to discover runtimes",
       default: "/opt/runtimes"
     },
+    "function-runtime-default-name": {
+      string: true,
+      description: "Name of the default runtime",
+      default: "node"
+    },
+    "function-runtime-default-version": {
+      string: true,
+      description: "Version of the default runtime",
+      default: "12.19.0"
+    },
     "experimental-function-devkit-database-cache": {
       boolean: true,
       description: "When true, @spica-devkit/database will be cached and run significantly fast.",
@@ -340,7 +350,13 @@ const modules = [
     apiUrl: args["function-api-url"],
     timeout: args["function-timeout"],
     experimentalDevkitDatabaseCache: args["experimental-function-devkit-database-cache"],
-    runtimeRoot: args["function-runtime-root"],
+    runtime: {
+      discoveryRoot: args["function-runtime-root"],
+      default: {
+        name: args["function-runtime-default-name"],
+        version: args["function-runtime-default-version"]
+      }
+    },
     corsOptions: {
       allowedOrigins: args["cors-allowed-origins"],
       allowedMethods: args["cors-allowed-methods"],

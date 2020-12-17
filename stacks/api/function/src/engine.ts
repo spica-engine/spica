@@ -1,20 +1,22 @@
-import {Inject, Injectable, Optional, OnModuleDestroy} from "@nestjs/common";
+import {Inject, Injectable, OnModuleDestroy, Optional} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
-import {Scheduler} from "@spica-server/function/scheduler";
-import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
+import {Package, pkgmanager} from "@spica-server/function/runtime";
+import {Scheduler} from "@spica-server/function/scheduler";
 import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
 import * as rimraf from "rimraf";
 import {Observable, Subject} from "rxjs";
 import * as util from "util";
+import {Language} from "../compiler";
+import {Javascript} from "../compiler/javascript";
+import {Typescript} from "../compiler/typescript";
+import {ChangeKind, createTargetChanges, TargetChange} from "./change";
 import {FunctionService} from "./function.service";
-import {ChangeKind, TargetChange} from "./change";
 import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
-import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
-import {createTargetChanges} from "./change";
+import {Schema, SCHEMA, SCHEMA1, SchemaWithName} from "./schema/schema";
 
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
@@ -28,6 +30,8 @@ export class FunctionEngine implements OnModuleDestroy {
   readonly runSchemas = new Map<string, JSONSchema7>();
 
   private dispose = new Subject();
+
+  readonly languages = new Map<string, Language>();
 
   constructor(
     private fs: FunctionService,
@@ -45,6 +49,9 @@ export class FunctionEngine implements OnModuleDestroy {
       this.schemas.set(schema1.name, schema1.schema);
     }
 
+    this.languages.set("typescript", new Typescript());
+    this.languages.set("javascript", new Javascript());
+
     this.fs.find().then(fns => {
       const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
@@ -54,8 +61,11 @@ export class FunctionEngine implements OnModuleDestroy {
     });
   }
 
-  onModuleDestroy() {
+  async onModuleDestroy() {
     this.dispose.next();
+    for (const language of this.languages.values()) {
+      await language.kill();
+    }
   }
 
   categorizeChanges(changes: TargetChange[]) {
@@ -75,23 +85,27 @@ export class FunctionEngine implements OnModuleDestroy {
     }
   }
 
-  private getDefaultPackageManager(): PackageManager {
-    return this.scheduler.pkgmanagers.get("node");
+  private getOptionsForPkgManager(fn: Function): pkgmanager.Options {
+    const functionRoot = path.join(this.options.root, fn._id.toString());
+    return {
+      for: functionRoot,
+      runtime: {
+        name: this.options.runtime.default.name,
+        version: this.options.runtime.default.version
+      }
+    };
   }
 
   getPackages(fn: Function): Promise<Package[]> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().ls(functionRoot);
+    return pkgmanager.ls(this.getOptionsForPkgManager(fn));
   }
 
-  addPackage(fn: Function, qualifiedNames: string | string[]): Observable<number> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().install(functionRoot, qualifiedNames);
+  addPackage(fn: Function, qualifiedNames: string | string[]): Promise<void> {
+    return pkgmanager.install(this.getOptionsForPkgManager(fn), qualifiedNames);
   }
 
   removePackage(fn: Function, name: string): Promise<void> {
-    const functionRoot = path.join(this.options.root, fn._id.toString());
-    return this.getDefaultPackageManager().uninstall(functionRoot, name);
+    return pkgmanager.uninstall(this.getOptionsForPkgManager(fn), name);
   }
 
   async createFunction(fn: Function) {
@@ -120,7 +134,7 @@ export class FunctionEngine implements OnModuleDestroy {
 
   compile(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.languages.get(fn.language);
     return language.compile({
       cwd: functionRoot,
       entrypoint: `index.${language.description.extension}`
@@ -129,7 +143,7 @@ export class FunctionEngine implements OnModuleDestroy {
 
   update(fn: Function, index: string): Promise<void> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.languages.get(fn.language);
     return fs.promises.writeFile(
       path.join(functionRoot, `index.${language.description.extension}`),
       index
@@ -138,7 +152,7 @@ export class FunctionEngine implements OnModuleDestroy {
 
   read(fn: Function): Promise<string> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
-    const language = this.scheduler.languages.get(fn.language);
+    const language = this.languages.get(fn.language);
     return fs.promises
       .readFile(path.join(functionRoot, `index.${language.description.extension}`))
       .then(b => b.toString());
@@ -169,6 +183,7 @@ export class FunctionEngine implements OnModuleDestroy {
         cwd: path.join(this.options.root, change.target.id),
         handler: change.target.handler,
         context: new event.SchedulingContext({
+          timeout: change.target.context.timeout,
           env: Object.keys(change.target.context.env).reduce((envs, key) => {
             envs.push(
               new event.SchedulingContext.Env({

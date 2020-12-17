@@ -27,6 +27,9 @@ ts_library(
 jasmine_node_test(
     name = "test",
     srcs = [":test_lib"],
+    data = [
+        "//stacks/api/function/runtimes/node:files",
+    ],
 )
 
 ts_library(

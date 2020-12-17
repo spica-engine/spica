@@ -5,14 +5,15 @@ load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 load("@build_bazel_rules_nodejs//:index.bzl", "pkg_npm")
 load("@io_bazel_rules_docker//container:container.bzl", "container_layer")
 
-
 filegroup(
     name = "files",
     srcs = [
-        "runtime.json",
         "node.sh",
+        "npm.sh",
+        "prepare.sh",
+        "runtime.json",
         ":bootstrap",
-    ]
+    ],
 )
 
 container_layer(
@@ -20,8 +21,8 @@ container_layer(
     data_path = "/stacks/api/function/runtime/node",
     directory = "/opt/runtimes/node",
     files = [
-        ":files"
-    ]
+        ":files",
+    ],
 )
 
 rollup_bundle(

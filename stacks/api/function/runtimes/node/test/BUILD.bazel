@@ -3,12 +3,12 @@ package(default_visibility = ["//visibility:public"])
 load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
-
 ts_library(
     name = "integration_test_lib",
     testonly = True,
     srcs = [
-        "integration.spec.ts",
+        "entrypoint.spec.ts",
+        "npm.spec.ts",
     ],
     deps = [
         "//stacks/api/function/compiler",
@@ -17,7 +17,6 @@ ts_library(
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/runtime",
-        "//stacks/api/function/runtime/node",
         "//stacks/api/function/runtime/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",
@@ -27,4 +26,7 @@ ts_library(
 jasmine_node_test(
     name = "integration_test",
     srcs = [":integration_test_lib"],
+    data = [
+        "//stacks/api/function/runtimes/node:files",
+    ],
 )

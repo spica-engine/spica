@@ -12,12 +12,7 @@ ts_library(
     deps = [
         "//packages/core",
         "//packages/database",
-        "//stacks/api/function/compiler",
-        "//stacks/api/function/compiler/javascript",
-        "//stacks/api/function/compiler/typescript",
         "//stacks/api/function/enqueuer",
-        "//stacks/api/function/pkgmanager",
-        "//stacks/api/function/pkgmanager/node",
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/runtime",

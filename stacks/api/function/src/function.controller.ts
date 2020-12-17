@@ -27,14 +27,14 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import * as os from "os";
 import {from, of, OperatorFunction} from "rxjs";
 import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
+import {discovery} from "@spica-server/function/runtime";
 import {createFunctionActivity} from "./activity.resource";
+import {ChangeKind, changesFromTriggers, createTargetChanges} from "./change";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
-import {ChangeKind} from "./change";
 import {Function, Trigger} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
-import {changesFromTriggers, createTargetChanges} from "./change";
 
 /**
  * @name Function
@@ -67,10 +67,7 @@ export class FunctionController {
       });
     }
 
-    const runtimes = [];
-    for (const [_, runtime] of this.scheduler.runtimes) {
-      runtimes.push(runtime.description);
-    }
+    const runtimes = await discovery.discover();
 
     return {enqueuers, runtimes, timeout: this.options.timeout};
   }

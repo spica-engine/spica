@@ -63,6 +63,9 @@ ts_library(
 
 jasmine_node_test(
     name = "integration_test",
+    data = [
+        "//stacks/api/function/runtimes/node:files",
+    ],
     tags = [
         "e2e",
     ],

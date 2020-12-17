@@ -51,7 +51,7 @@ nodejs_binary(
     ],
     data = [
         ":api",
-        "//stacks/api/function/runtimes/node:files"
+        "//stacks/api/function/runtimes/node:files",
     ],
     entry_point = "//stacks/api:main.ts",
 )
@@ -60,7 +60,7 @@ nodejs_image(
     name = "image_base",
     base = "@debian_image//image",
     data = [
-        "//stacks/api"
+        "//stacks/api",
     ],
     entry_point = "//stacks/api:main.ts",
     visibility = ["//visibility:private"],
@@ -73,11 +73,11 @@ container_image(
         "DEFAULT_PASSWORD": "spica",
         "FUNCTION_GRPC_ADDRESS": "0.0.0.0:5688",
     },
+    layers = [
+        "//stacks/api/function/runtimes/node:layer",
+    ],
     legacy_run_behavior = False,
     stamp = True,
-    layers = [
-        "//stacks/api/function/runtimes/node:layer"
-    ]
 )
 
 container_push(

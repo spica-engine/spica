@@ -22,7 +22,14 @@ describe("FunctionController", () => {
     ]);
     controller = new FunctionController(functionService, functionEngine, undefined, {
       root: "",
-      timeout: 60
+      timeout: 60,
+      runtime: {
+        discoveryRoot: "./stacks/api/function/runtimes",
+        default: {
+          name: "node",
+          version: "12.19.0"
+        }
+      }
     });
   });
 

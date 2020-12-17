@@ -17,17 +17,11 @@ message SchedulingContext {
    }
 }
 
-message Runtime {
-   string name = 1;
-   string version = 2; 
-}
-
 message Target {
    string id = 1;
    string cwd = 2;
    string handler = 3;
    SchedulingContext context = 4;
-   Runtime runtime = 5;
 }
 
 enum Type {
@@ -51,6 +45,7 @@ message Pop {
 
 message Complete {
    string id = 1;
+   bool succedded = 2;
    message Result {}
 }
 

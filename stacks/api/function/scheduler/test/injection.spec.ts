@@ -46,6 +46,13 @@ describe("Scheduler Injection", () => {
             allowedHeaders: ["*"],
             allowedMethods: ["*"],
             allowedOrigins: ["*"]
+          },
+          runtime: {
+            discoveryRoot: "./stacks/api/function/runtimes",
+            default: {
+              name: "node",
+              version: "12.19.0"
+            }
           }
         }),
         SpySchedulerModule

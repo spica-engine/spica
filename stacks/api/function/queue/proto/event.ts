@@ -232,69 +232,6 @@ export namespace event {
       }
     }
   }
-  export class Runtime extends pb_1.Message {
-    constructor(
-      data?:
-        | any[]
-        | {
-            name?: string;
-            version?: string;
-          }
-    ) {
-      super();
-      pb_1.Message.initialize(this, Array.isArray(data) && data, 0, -1, [], null);
-      if (!Array.isArray(data) && typeof data == "object") {
-        this.name = data.name;
-        this.version = data.version;
-      }
-    }
-    get name(): string {
-      return pb_1.Message.getFieldWithDefault(this, 1, undefined) as string;
-    }
-    set name(value: string) {
-      pb_1.Message.setField(this, 1, value);
-    }
-    get version(): string {
-      return pb_1.Message.getFieldWithDefault(this, 2, undefined) as string;
-    }
-    set version(value: string) {
-      pb_1.Message.setField(this, 2, value);
-    }
-    toObject() {
-      return {
-        name: this.name,
-        version: this.version
-      };
-    }
-    serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
-      const writer = w || new pb_1.BinaryWriter();
-      if (typeof this.name === "string" && this.name.length) writer.writeString(1, this.name);
-      if (typeof this.version === "string" && this.version.length)
-        writer.writeString(2, this.version);
-      if (!w) return writer.getResultBuffer();
-    }
-    serializeBinary(): Uint8Array {
-      throw new Error("Method not implemented.");
-    }
-    static deserialize(bytes: Uint8Array | pb_1.BinaryReader): Runtime {
-      const reader = bytes instanceof Uint8Array ? new pb_1.BinaryReader(bytes) : bytes,
-        message = new Runtime();
-      while (reader.nextField()) {
-        if (reader.isEndGroup()) break;
-        switch (reader.getFieldNumber()) {
-          case 1:
-            message.name = reader.readString();
-            break;
-          case 2:
-            message.version = reader.readString();
-            break;
-          default:
-            reader.skipField();
-        }
-      }
-      return message;
-    }
-  }
   export class Target extends pb_1.Message {
     constructor(
       data?:
@@ -304,7 +241,6 @@ export namespace event {
             cwd?: string;
             handler?: string;
             context?: SchedulingContext;
-            runtime?: Runtime;
           }
     ) {
       super();
@@ -314,7 +250,6 @@ export namespace event {
         this.cwd = data.cwd;
         this.handler = data.handler;
         this.context = data.context;
-        this.runtime = data.runtime;
       }
     }
     get id(): string {
@@ -341,19 +276,12 @@ export namespace event {
     set context(value: SchedulingContext) {
       pb_1.Message.setWrapperField(this, 4, value);
     }
-    get runtime(): Runtime {
-      return pb_1.Message.getWrapperField(this, Runtime, 5) as Runtime;
-    }
-    set runtime(value: Runtime) {
-      pb_1.Message.setWrapperField(this, 5, value);
-    }
     toObject() {
       return {
         id: this.id,
         cwd: this.cwd,
         handler: this.handler,
-        context: this.context && this.context.toObject(),
-        runtime: this.runtime && this.runtime.toObject()
+        context: this.context && this.context.toObject()
       };
     }
     serialize(w?: pb_1.BinaryWriter): Uint8Array | undefined {
@@ -364,8 +292,6 @@ export namespace event {
         writer.writeString(3, this.handler);
       if (this.context !== undefined)
         writer.writeMessage(4, this.context, () => this.context.serialize(writer));
-      if (this.runtime !== undefined)
-        writer.writeMessage(5, this.runtime, () => this.runtime.serialize(writer));
       if (!w) return writer.getResultBuffer();
     }
     serializeBinary(): Uint8Array {
@@ -390,12 +316,6 @@ export namespace event {
             reader.readMessage(
               message.context,
               () => (message.context = SchedulingContext.deserialize(reader))
-            );
-            break;
-          case 5:
-            reader.readMessage(
-              message.runtime,
-              () => (message.runtime = Runtime.deserialize(reader))
             );
             break;
           default:
@@ -481,7 +401,6 @@ export namespace event {
       return message;
     }
   }
-
   export class Pop extends pb_1.Message {
     constructor(
       data?:
@@ -652,17 +571,6 @@ export namespace event {
   export class QueueClient extends grpc_1.makeGenericClientConstructor(Queue, "Queue", {}) {
     constructor(address: string, credentials: grpc_1.ChannelCredentials) {
       super(address, credentials);
-    }
-    pop(request: Pop, metadata?: grpc_1.Metadata): Promise<Event> {
-      return new Promise((resolve, reject) =>
-        super["pop"](request, metadata, (error: grpc_1.ServiceError, response: Event) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(response);
-          }
-        })
-      );
     }
   }
 }

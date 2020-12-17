@@ -32,7 +32,7 @@ export class FunctionModule {
           timeout: options.timeout,
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
           corsOptions: options.corsOptions,
-          runtimeRoot: options.runtimeRoot
+          runtime: options.runtime
         })
       ],
       controllers: [FunctionController],

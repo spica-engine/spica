@@ -9,9 +9,10 @@ import {FunctionService} from "../src/function.service";
 import {INestApplication} from "@nestjs/common";
 import {TargetChange, ChangeKind} from "../src/change";
 
-process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4378";
+process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4400";
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
 
-describe("Engine", () => {
+fdescribe("Engine", () => {
   let engine: FunctionEngine;
   let subscribeSpy: jasmine.Spy;
   let unsubscribeSpy: jasmine.Spy;
@@ -22,6 +23,11 @@ describe("Engine", () => {
 
   let module: TestingModule;
   let app: INestApplication;
+
+  let runtime = {
+    name: "node",
+    version: "12.19.0"
+  };
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
@@ -39,6 +45,10 @@ describe("Engine", () => {
             allowedMethods: ["*"],
             allowCredentials: true,
             allowedHeaders: ["*"]
+          },
+          runtime: {
+            discoveryRoot: "./stacks/api/function/runtimes",
+            default: runtime
           }
         }),
         DatabaseTestingModule.replicaSet()
@@ -58,7 +68,11 @@ describe("Engine", () => {
       scheduler,
       {
         root: "test_root",
-        timeout: 1
+        timeout: 1,
+        runtime: {
+          discoveryRoot: "./stacks/api/function/runtimes",
+          default: runtime
+        }
       },
       null,
       null

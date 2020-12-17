@@ -3,12 +3,9 @@
     "title": "NodeJS",
     "description": "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine.",
     "bin": "bash ./node.sh",
+    "pkgmanager": "bash ./npm.sh",
+    "prepare": "bash ./prepare.sh",
     "versions": [
-        "10.23.0", 
-        "11.15.0",
-        "12.19.0",
-        "13.14.0",
-        "14.15.0",
-        "15.0.1"
+        "12.19.0"
     ]
 }
