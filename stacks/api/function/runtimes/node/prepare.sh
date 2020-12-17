@@ -22,6 +22,4 @@ fi
 
 CWD=$(pwd)
 
-export PATH=$(env -i bash -l -c 'echo $PATH')
-
 export PATH="$CWD/versions/$__NAME__/bin:$PATH"
