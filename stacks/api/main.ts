@@ -385,8 +385,7 @@ if (args["cert-file"] && args["key-file"]) {
 }
 NestFactory.create(RootModule, {
   httpsOptions,
-  bodyParser: false,
-  logger: false
+  bodyParser: false
 }).then(app => {
   app.useWebSocketAdapter(new WsAdapter(app));
   app.use(
@@ -401,5 +400,3 @@ NestFactory.create(RootModule, {
   );
   app.listen(args.port);
 });
-
-console.log(process.cwd());

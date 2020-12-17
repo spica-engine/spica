@@ -43,7 +43,8 @@ export class FunctionModule {
           provide: FUNCTION_OPTIONS,
           useValue: {
             root: path.join(options.path, "functions"),
-            timeout: options.timeout
+            timeout: options.timeout,
+            runtime: options.runtime
           }
         },
         {
