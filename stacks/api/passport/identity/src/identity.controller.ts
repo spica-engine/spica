@@ -22,7 +22,7 @@ import {PolicyService} from "@spica-server/passport/policy";
 import {createIdentityActivity} from "./activity.resource";
 import {hash} from "./hash";
 import {IdentityService} from "./identity.service";
-import {Identity} from "./interface";
+import {Identity, PaginationResponse} from "./interface";
 import {attachIdentityAccess} from "./utility";
 
 @Controller("passport/identity")
@@ -49,6 +49,7 @@ export class IdentityController {
   async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
+    @Query("sort", DEFAULT({}), JSONP) sort: object,
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
     @Query("filter", DEFAULT({}), JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
@@ -59,11 +60,17 @@ export class IdentityController {
 
     pipeline.push({$project: {password: 0}});
 
+    pipeline.push({$set: {_id: {$toString: "$_id"}}});
+
     if (Object.keys(filter).length) {
       pipeline.push({$match: filter});
     }
 
     const seekingPipeline: object[] = [];
+
+    if (Object.keys(sort).length) {
+      pipeline.push({$sort: sort});
+    }
 
     if (skip) {
       seekingPipeline.push({$skip: skip});
@@ -77,24 +84,23 @@ export class IdentityController {
       pipeline.push(
         {
           $facet: {
-            meta: [{$count: "total"}],
-            data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
+            meta: [
+              {
+                $count: "total"
+              }
+            ],
+            data: seekingPipeline
           }
         },
-        {
-          $project: {
-            meta: {$arrayElemAt: ["$meta", 0]},
-            data: "$data"
-          }
-        }
+        {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
       );
 
-      const result = await this.identity.aggregate(pipeline).next();
+      const result = await this.identity.aggregate<PaginationResponse<Identity>>(pipeline).next();
 
-      return result["data"].length ? result : {meta: {total: 0}, data: []};
+      return result.data.length ? result : {meta: {total: 0}, data: []};
     }
 
-    return this.identity.aggregate([...pipeline, ...seekingPipeline]).toArray();
+    return this.identity.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard())
@@ -132,8 +138,9 @@ export class IdentityController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
-    identity: Identity
+    identity: Partial<Identity>
   ) {
+    delete identity._id;
     if (identity.password) {
       identity.password = await hash(identity.password);
     }

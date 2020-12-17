@@ -11,9 +11,20 @@ import {PredefinedDefault} from "../interfaces/predefined-default";
 export class IdentityService {
   constructor(private http: HttpClient) {}
 
-  find(limit: number = 10, skip: number): Observable<IndexResult<Identity>> {
-    return this.http.get<IndexResult<Identity>>("api:/passport/identity", {
-      params: {limit: String(limit), skip: String(skip), paginate: "true"}
+  find(
+    limit: number,
+    skip: number,
+    sort: object,
+    paginate = false
+  ): Observable<any> {
+    // TODO: define interfaces
+    return this.http.get<any>("api:/passport/identity", {
+      params: {
+        limit: String(limit),
+        skip: String(skip),
+        sort: JSON.stringify(sort),
+        paginate: String(paginate)
+      }
     });
   }
 
@@ -25,12 +36,12 @@ export class IdentityService {
     return this.http.post<Identity>(`api:/passport/identity`, identity);
   }
 
-  updateOne(identity: Identity): Observable<void> {
+  updateOne(identity: Identity): Observable<Identity> {
     const identityRequest = {
       ...identity,
       _id: undefined
     };
-    return this.http.put<void>(`api:/passport/identity/${identity._id}`, identityRequest);
+    return this.http.put<Identity>(`api:/passport/identity/${identity._id}`, identityRequest);
   }
 
   deleteOne(id: string): Observable<void> {

@@ -8,12 +8,12 @@ import {MatColumnDef} from "@angular/material/table";
   }
 })
 export class PersistHeaderWidthDirective implements OnChanges {
-  @Input("persist-header-width") bucket: string;
+  @Input("persist-header-width") uniqueName: string;
 
   @Output() _resize = new EventEmitter();
 
   private get _key(): string {
-    return `${this.bucket}-${this.columnDef.name}`;
+    return `${this.uniqueName}-${this.columnDef.name}`;
   }
 
   private get _persistedWidth(): number | undefined {

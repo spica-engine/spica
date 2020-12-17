@@ -1,9 +1,12 @@
 import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
-import {map, switchMap} from "rxjs/operators";
+import {map, switchMap, tap, take} from "rxjs/operators";
 import {Identity} from "../../interfaces/identity";
 import {IdentityService} from "../../services/identity.service";
+import {PreferencesService} from "@spica-client/core";
+import {DomSanitizer} from "@angular/platform-browser";
+import {Sort} from "@angular/material/sort";
 
 @Component({
   selector: "function-identity-index",
@@ -17,21 +20,83 @@ export class IdentityIndexComponent implements OnInit {
   identities$: Observable<Identity[]>;
   refresh$: Subject<void> = new Subject<void>();
 
-  displayedColumns = ["_id", "identifier", "actions"];
+  displayedProperties = [];
 
-  constructor(public identity: IdentityService) {}
+  properties: Array<{name: string; title: string}> = [];
+
+  selectedItems: Array<string> = [];
+
+  schema = {
+    properties: {
+      identifier: {
+        type: "string",
+        title: "Identifier"
+      },
+      policies: {
+        type: "array",
+        title: "policies",
+        items: {
+          type: "string"
+        }
+      }
+    }
+  };
+
+  attributeSchema;
+
+  sort: {[key: string]: 1 | -1} = {_id: 1};
+
+  filter = {};
+
+  constructor(
+    private sanitizer: DomSanitizer,
+    public identity: IdentityService,
+    public preference: PreferencesService
+  ) {}
 
   ngOnInit(): void {
+    this.preference
+      .get("passport")
+      .pipe(
+        tap(pref => {
+          if (pref && Object.keys(pref.identity.attributes.properties || {}).length) {
+            this.attributeSchema = {properties: pref.identity.attributes.properties};
+          }
+
+          this.properties = [
+            {name: "$$spicainternal_select", title: "Select"},
+            {name: "$$spicainternal_id", title: "_id"},
+            ...Object.entries(this.schema.properties).map(([name, value]) => ({
+              name,
+              title: value.title
+            })),
+            ...(this.attributeSchema
+              ? Object.entries(this.attributeSchema.properties).map(([name, value]) => ({
+                  name,
+                  title: value["title"]
+                }))
+              : []),
+            {name: "$$spicainternal_actions", title: "Actions"}
+          ];
+
+          this.displayedProperties = this.properties.map(prop => prop.name);
+        })
+      )
+      .pipe(take(1))
+      .subscribe();
+
     this.identities$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
         this.identity.find(
           this.paginator.pageSize || 10,
-          this.paginator.pageSize * this.paginator.pageIndex
+          this.paginator.pageSize * this.paginator.pageIndex,
+          this.sort,
+          true
         )
       ),
-      map(identities => {
-        this.paginator.length = identities.meta.total;
-        return identities.data;
+      map(response => {
+        this.paginator.length = response.meta.total;
+        return response.data;
       })
     );
   }
@@ -42,4 +107,83 @@ export class IdentityIndexComponent implements OnInit {
       .toPromise()
       .then(() => this.refresh$.next());
   }
+
+  onSortChange(sort: Sort) {
+    let property = sort.active.replace("$$spicainternal", "");
+    property = this.pushPrefixIfAttributeProperty(property);
+    if (sort.direction) {
+      this.sort = {
+        [property]: sort.direction === "asc" ? 1 : -1
+      };
+    } else {
+      this.sort = {_id: 1};
+    }
+
+    this.refresh$.next();
+  }
+
+  buildTemplate(value, property) {
+    if (value == undefined || value == null) {
+      return value;
+    }
+    switch (property.type) {
+      case "object":
+        return JSON.stringify(value);
+      case "date":
+        return new Date(value).toLocaleString();
+      case "color":
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<div style='width:20px; height:20px; background-color:${value}; border-radius:3px'></div>`
+        );
+      case "relation":
+        if (property["relationType"] == "onetomany") {
+          return value.map(val =>
+            val.hasOwnProperty(property.primary) ? val[property.primary] : val
+          );
+        } else {
+          return value.hasOwnProperty(property.primary) ? value[property.primary] : value;
+        }
+      case "storage":
+        return this.sanitizer.bypassSecurityTrustHtml(
+          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=${value} alt=${value}>`
+        );
+      default:
+        return value;
+    }
+  }
+
+  toggleProperty(name: string, selected: boolean) {
+    if (selected) {
+      this.displayedProperties.push(name);
+    } else {
+      this.displayedProperties.splice(this.displayedProperties.indexOf(name), 1);
+    }
+    this.displayedProperties = this.displayedProperties.sort(
+      (a, b) =>
+        this.properties.findIndex(p => p.name == a) - this.properties.findIndex(p => p.name == b)
+    );
+  }
+
+  toggleDisplayAll(display: boolean) {
+    if (display) {
+      this.displayedProperties = this.properties.map(prop => prop.name);
+    } else {
+      this.displayedProperties = ["identifier", "$$spicainternal_actions"];
+    }
+  }
+
+  pushPrefixIfAttributeProperty(property: string) {
+    if (this.attributeSchema) {
+      const attributeProps = Object.keys(this.attributeSchema.properties);
+      if (attributeProps.includes(property)) {
+        return `attributes.${property}`;
+      }
+    }
+    return property;
+  }
+
+  onFilterChange(event){
+    console.log(event);
+  }
+
 }
