@@ -17,7 +17,7 @@ mkdir -p "./versions"
 __BIN_DIR__="./versions/$__NAME__/bin"
 
 if [ ! -d $__BIN_DIR__ ]; then
-    curl -s "$__URL__" | tar -xf - -C "./versions"
+    curl -s "$__URL__" | tar -xzf - -C "./versions"
 fi
 
 CWD=$(pwd)
