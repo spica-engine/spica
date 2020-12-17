@@ -64,7 +64,7 @@ export enum ChunkKind {
 }
 
 export interface GetAllParams {
-  filter?: object;
+  filter?: string;
   sort?: {
     [key: string]: 1 | -1;
   };

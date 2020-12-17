@@ -71,17 +71,26 @@
 
         mat-list-item {
           height: auto !important;
+          mat-form-field {
+            mat-hint {
+              mat-icon {
+                font-size: 15px;
+                cursor: help;
+              }
+            }
+          }
           ::ng-deep .mat-list-item-content {
             display: block !important;
             padding-bottom: 25px !important;
             padding-top: 25px !important;
           }
 
-          &:first-of-type {
+          &.describe {
             ::ng-deep .mat-list-item-content {
               display: grid !important;
               gap: 15px;
               grid-template-columns: repeat(auto-fill, minmax(250px, max-content));
+              align-items: center;
             }
             mat-select {
               mat-select-trigger {
@@ -94,19 +103,17 @@
                 }
               }
             }
-            mat-form-field {
-              mat-hint {
-                mat-icon {
-                  font-size: 15px;
-                  cursor: help;
-                }
-              }
+          }
+          &.optional-settings {
+            div {
+              width: 100%;
+              margin-bottom: 15px;
             }
-            span {
-              margin-top: 8px;
-              vertical-align: middle;
-              display: inline-flex;
-              flex-flow: column;
+            .setting {
+              display: grid !important;
+              gap: 15px;
+              grid-template-columns: repeat(auto-fill, minmax(250px, max-content));
+              align-items: center;
             }
           }
 
