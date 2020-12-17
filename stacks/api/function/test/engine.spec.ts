@@ -12,7 +12,7 @@ import {TargetChange, ChangeKind} from "../src/change";
 process.env.FUNCTION_GRPC_ADDRESS = "0.0.0.0:4400";
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
 
-fdescribe("Engine", () => {
+describe("Engine", () => {
   let engine: FunctionEngine;
   let subscribeSpy: jasmine.Spy;
   let unsubscribeSpy: jasmine.Spy;

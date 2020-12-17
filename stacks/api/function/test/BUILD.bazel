@@ -30,6 +30,9 @@ jasmine_node_test(
     data = [
         "//stacks/api/function/runtimes/node:files",
     ],
+    tags = [
+        "flaky",
+    ],
 )
 
 ts_library(
