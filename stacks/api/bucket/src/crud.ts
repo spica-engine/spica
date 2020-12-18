@@ -189,7 +189,7 @@ export async function findDocuments<T>(
   const ruleResetStage = resetNonOverlappingPathsInRelationMap({
     left: [...relationPropertyMap, ...filterPropertyMap],
     right: rulePropertyMap,
-    map: [...ruleRelationMap, ...relationMap, ...relationMap]
+    map: [...ruleRelationMap, ...filterRelationMap, ...relationMap]
   });
 
   if (ruleResetStage) {
