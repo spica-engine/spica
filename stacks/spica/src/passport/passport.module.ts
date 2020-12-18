@@ -47,6 +47,7 @@ import {AuthorizationInterceptor} from "./services/authorization.interceptor";
 import {PassportRouteFilter} from "./services/route.filter";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {MatSortModule} from "@angular/material/sort";
+import {FilterComponent} from "./components/filter/filter.component";
 
 @NgModule({
   declarations: [
@@ -56,6 +57,7 @@ import {MatSortModule} from "@angular/material/sort";
     PolicyAddComponent,
     PolicyIndexComponent,
     IdentitySettingsComponent,
+    FilterComponent,
     IdentityBadgeComponent,
     TabsComponent,
     StrategiesComponent,

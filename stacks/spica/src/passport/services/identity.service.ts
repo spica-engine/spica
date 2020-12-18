@@ -15,6 +15,7 @@ export class IdentityService {
     limit: number,
     skip: number,
     sort: object,
+    filter: object,
     paginate = false
   ): Observable<any> {
     // TODO: define interfaces
@@ -23,6 +24,7 @@ export class IdentityService {
         limit: String(limit),
         skip: String(skip),
         sort: JSON.stringify(sort),
+        filter: JSON.stringify(filter),
         paginate: String(paginate)
       }
     });

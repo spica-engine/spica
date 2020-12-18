@@ -2,7 +2,7 @@ import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap, tap, take} from "rxjs/operators";
-import {Identity} from "../../interfaces/identity";
+import {Identity, IdentitySchema, FilterSchema} from "../../interfaces/identity";
 import {IdentityService} from "../../services/identity.service";
 import {PreferencesService} from "@spica-client/core";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -26,7 +26,7 @@ export class IdentityIndexComponent implements OnInit {
 
   selectedItems: Array<string> = [];
 
-  schema = {
+  schema: IdentitySchema = {
     properties: {
       identifier: {
         type: "string",
@@ -42,11 +42,13 @@ export class IdentityIndexComponent implements OnInit {
     }
   };
 
-  attributeSchema;
+  attributeSchema: IdentitySchema = {properties: {}};
+
+  filterSchema: FilterSchema = {properties: {}};
 
   sort: {[key: string]: 1 | -1} = {_id: 1};
 
-  filter = {};
+  filter: {[key: string]: any} = {};
 
   constructor(
     private sanitizer: DomSanitizer,
@@ -59,8 +61,13 @@ export class IdentityIndexComponent implements OnInit {
       .get("passport")
       .pipe(
         tap(pref => {
+          this.filterSchema = {properties: {...this.schema.properties}};
           if (pref && Object.keys(pref.identity.attributes.properties || {}).length) {
             this.attributeSchema = {properties: pref.identity.attributes.properties};
+            this.filterSchema.properties = {
+              ...this.schema.properties,
+              ...this.attributeSchema.properties
+            };
           }
 
           this.properties = [
@@ -91,6 +98,7 @@ export class IdentityIndexComponent implements OnInit {
           this.paginator.pageSize || 10,
           this.paginator.pageSize * this.paginator.pageIndex,
           this.sort,
+          this.filter,
           true
         )
       ),
@@ -182,8 +190,16 @@ export class IdentityIndexComponent implements OnInit {
     return property;
   }
 
-  onFilterChange(event){
-    console.log(event);
-  }
+  onFilterChange(filter: {[key: string]: string}) {
+    if (!Object.keys(filter).length) {
+      this.filter = {};
+    }
 
+    for (const [property, value] of Object.entries(filter)) {
+      const mappedProperty = this.pushPrefixIfAttributeProperty(property);
+      this.filter[mappedProperty] = value;
+    }
+
+    this.refresh$.next();
+  }
 }
