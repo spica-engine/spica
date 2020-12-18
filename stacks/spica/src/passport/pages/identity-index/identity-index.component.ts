@@ -20,6 +20,8 @@ export class IdentityIndexComponent implements OnInit {
   identities$: Observable<Identity[]>;
   refresh$: Subject<void> = new Subject<void>();
 
+  dataIds = [];
+
   displayedProperties = [];
 
   properties: Array<{name: string; title: string}> = [];
@@ -86,7 +88,13 @@ export class IdentityIndexComponent implements OnInit {
             {name: "$$spicainternal_actions", title: "Actions"}
           ];
 
-          this.displayedProperties = this.properties.map(prop => prop.name);
+          const cachedDisplayedProperties = JSON.parse(
+            localStorage.getItem("Identities-displayedProperties")
+          );
+
+          this.displayedProperties = cachedDisplayedProperties
+            ? cachedDisplayedProperties
+            : this.properties.map(prop => prop.name);
         })
       )
       .pipe(take(1))
@@ -105,6 +113,13 @@ export class IdentityIndexComponent implements OnInit {
       map(response => {
         this.paginator.length = response.meta.total;
         return response.data;
+      }),
+      tap(identities => {
+        const systemUserIndex = identities.findIndex(identity => identity.identifier == "spica");
+        identities[systemUserIndex].system = true;
+        this.dataIds = identities.map(identity => identity._id);
+        this.dataIds.splice(systemUserIndex, 1);
+        this.selectedItems = [];
       })
     );
   }
@@ -170,6 +185,11 @@ export class IdentityIndexComponent implements OnInit {
       (a, b) =>
         this.properties.findIndex(p => p.name == a) - this.properties.findIndex(p => p.name == b)
     );
+
+    localStorage.setItem(
+      "Identities-displayedProperties",
+      JSON.stringify(this.displayedProperties)
+    );
   }
 
   toggleDisplayAll(display: boolean) {
@@ -178,6 +198,11 @@ export class IdentityIndexComponent implements OnInit {
     } else {
       this.displayedProperties = ["identifier", "$$spicainternal_actions"];
     }
+
+    localStorage.setItem(
+      "Identities-displayedProperties",
+      JSON.stringify(this.displayedProperties)
+    );
   }
 
   pushPrefixIfAttributeProperty(property: string) {
@@ -200,6 +225,11 @@ export class IdentityIndexComponent implements OnInit {
       this.filter[mappedProperty] = value;
     }
 
+    this.refresh$.next();
+  }
+
+  async deleteSelectedItems() {
+    await Promise.all(this.selectedItems.map(id => this.identity.deleteOne(id).toPromise()));
     this.refresh$.next();
   }
 }

@@ -16,9 +16,22 @@ export class IdentityService {
     skip: number,
     sort: object,
     filter: object,
+    paginate?: false
+  ): Observable<Identity[]>;
+  find(
+    limit: number,
+    skip: number,
+    sort: object,
+    filter: object,
+    paginate?: true
+  ): Observable<IndexResult<Identity>>;
+  find(
+    limit: number,
+    skip: number,
+    sort: object,
+    filter: object,
     paginate = false
-  ): Observable<any> {
-    // TODO: define interfaces
+  ): Observable<unknown> {
     return this.http.get<any>("api:/passport/identity", {
       params: {
         limit: String(limit),

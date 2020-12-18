@@ -62,7 +62,7 @@ export class ActivityService {
             return this.apiKey.getAll().pipe(map(result => result.data.map(apikey => apikey._id)));
           case "identity":
             return this.identity
-              .find(0, 0, {_id: -1}, false)
+              .find(0, 0, {_id: -1}, {}, false)
               .pipe(map(identities => (identities as any[]).map(identity => identity._id)));
           case "policy":
             return this.policy.find().pipe(map(result => result.data.map(policy => policy._id)));

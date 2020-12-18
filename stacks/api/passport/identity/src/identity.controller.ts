@@ -110,10 +110,8 @@ export class IdentityController {
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:show"))
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const identity = await this.identity.findOne({_id: id});
-    delete identity.password;
-    return identity;
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.identity.findOne({_id: id}, {projection: {password: 0}});
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -124,12 +122,18 @@ export class IdentityController {
     identity: Identity
   ) {
     identity.password = await hash(identity.password);
-    return this.identity.insertOne(identity).catch(exception => {
-      if (exception.code === 11000) {
-        throw new BadRequestException("Identity already exists.");
-      }
-      throw new InternalServerErrorException();
-    });
+    return this.identity
+      .insertOne(identity)
+      .then(insertedIdentity => {
+        delete insertedIdentity.password;
+        return insertedIdentity;
+      })
+      .catch(exception => {
+        if (exception.code === 11000) {
+          throw new BadRequestException("Identity already exists.");
+        }
+        throw new InternalServerErrorException();
+      });
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -144,13 +148,22 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
-    return this.identity.findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false});
+    return this.identity.findOneAndUpdate(
+      {_id: id},
+      {$set: identity},
+      {returnOriginal: false, projection: {password: 0}}
+    );
   }
 
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    // prevent to deleting the last user
+    const users = await this.identity.find();
+    if (users.length == 1) {
+      return;
+    }
     return this.identity.deleteOne({_id: id}).then(() => {});
   }
 
@@ -166,7 +179,8 @@ export class IdentityController {
         $addToSet: {policies: policyId}
       },
       {
-        returnOriginal: false
+        returnOriginal: false,
+        projection: {password: 0}
       }
     );
   }
@@ -183,7 +197,8 @@ export class IdentityController {
         $pull: {policies: policyId}
       },
       {
-        returnOriginal: false
+        returnOriginal: false,
+        projection: {password: 0}
       }
     );
   }

@@ -18,6 +18,7 @@ export interface Identity {
   attributes?: {
     [key: string]: any;
   };
+  system?: boolean;
 }
 
 export interface IdentitySchema {
