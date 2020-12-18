@@ -152,23 +152,9 @@ export class IdentityIndexComponent implements OnInit {
     switch (property.type) {
       case "object":
         return JSON.stringify(value);
-      case "date":
-        return new Date(value).toLocaleString();
       case "color":
         return this.sanitizer.bypassSecurityTrustHtml(
           `<div style='width:20px; height:20px; background-color:${value}; border-radius:3px'></div>`
-        );
-      case "relation":
-        if (property["relationType"] == "onetomany") {
-          return value.map(val =>
-            val.hasOwnProperty(property.primary) ? val[property.primary] : val
-          );
-        } else {
-          return value.hasOwnProperty(property.primary) ? value[property.primary] : value;
-        }
-      case "storage":
-        return this.sanitizer.bypassSecurityTrustHtml(
-          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=${value} alt=${value}>`
         );
       default:
         return value;
@@ -221,8 +207,8 @@ export class IdentityIndexComponent implements OnInit {
     }
 
     for (const [property, value] of Object.entries(filter)) {
-      const mappedProperty = this.pushPrefixIfAttributeProperty(property);
-      this.filter[mappedProperty] = value;
+      const formattedProperty = this.pushPrefixIfAttributeProperty(property);
+      this.filter[formattedProperty] = value;
     }
 
     this.refresh$.next();

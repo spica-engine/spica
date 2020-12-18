@@ -12,26 +12,20 @@ export class IdentityService {
   constructor(private http: HttpClient) {}
 
   find(
-    limit: number,
-    skip: number,
-    sort: object,
-    filter: object,
+    limit?: number,
+    skip?: number,
+    sort?: object,
+    filter?: object,
     paginate?: false
   ): Observable<Identity[]>;
   find(
-    limit: number,
-    skip: number,
-    sort: object,
-    filter: object,
+    limit?: number,
+    skip?: number,
+    sort?: object,
+    filter?: object,
     paginate?: true
   ): Observable<IndexResult<Identity>>;
-  find(
-    limit: number,
-    skip: number,
-    sort: object,
-    filter: object,
-    paginate = false
-  ): Observable<unknown> {
+  find(limit = 0, skip = 0, sort = {_id: -1}, filter = {}, paginate = false): Observable<unknown> {
     return this.http.get<any>("api:/passport/identity", {
       params: {
         limit: String(limit),
