@@ -107,21 +107,21 @@ describe("PolicyIndexComponent", () => {
     let paginator: MatPaginator;
 
     beforeEach(() => {
-      rows.next(new Array(20).fill({_id: "1"}));
+      rows.next(new Array(120).fill({_id: "1"}));
       fixture.detectChanges();
       paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
     });
 
     it("should assign total count", () => {
-      expect(paginator.length).toBe(20);
+      expect(paginator.length).toBe(120);
     });
 
     it("should change page", () => {
       policyService.find.calls.reset();
       paginator.nextPage();
       expect(policyService.find).toHaveBeenCalledTimes(1);
-      expect(policyService.find.calls.mostRecent().args[0]).toBe(10);
-      expect(policyService.find.calls.mostRecent().args[1]).toBe(10);
+      expect(policyService.find.calls.mostRecent().args[0]).toBe(100);
+      expect(policyService.find.calls.mostRecent().args[1]).toBe(100);
     });
 
     it("should handle pageSize changes", () => {

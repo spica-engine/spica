@@ -11,7 +11,7 @@ import services from "./policy-services/services.json";
 export class PolicyService {
   constructor(private http: HttpClient) {}
 
-  find(limit?: number, skip?: number, filter?: object): Observable<IndexResult<Policy>> {
+  find(limit = 0, skip = 0, filter = {}): Observable<IndexResult<Policy>> {
     return this.http.get<IndexResult<Policy>>(`api:/passport/policy`, {
       params: {limit: String(limit), skip: String(skip), filter: JSON.stringify(filter)}
     });

@@ -20,13 +20,13 @@ export class IdentityIndexComponent implements OnInit {
   identities$: Observable<Identity[]>;
   refresh$: Subject<void> = new Subject<void>();
 
-  dataIds = [];
+  selectableItemIds = [];
 
   displayedProperties = [];
 
   properties: Array<{name: string; title: string}> = [];
 
-  selectedItems: Array<string> = [];
+  selectedItemIds: Array<string> = [];
 
   schema: IdentitySchema = {
     properties: {
@@ -36,7 +36,7 @@ export class IdentityIndexComponent implements OnInit {
       },
       policies: {
         type: "array",
-        title: "policies",
+        title: "Policies",
         items: {
           type: "string"
         }
@@ -58,13 +58,18 @@ export class IdentityIndexComponent implements OnInit {
     public preference: PreferencesService
   ) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.preference
       .get("passport")
       .pipe(
         tap(pref => {
           this.filterSchema = {properties: {...this.schema.properties}};
-          if (pref && Object.keys(pref.identity.attributes.properties || {}).length) {
+          if (
+            pref &&
+            pref.identity &&
+            pref.identity.attributes &&
+            Object.keys(pref.identity.attributes.properties || {}).length
+          ) {
             this.attributeSchema = {properties: pref.identity.attributes.properties};
             this.filterSchema.properties = {
               ...this.schema.properties,
@@ -116,10 +121,12 @@ export class IdentityIndexComponent implements OnInit {
       }),
       tap(identities => {
         const systemUserIndex = identities.findIndex(identity => identity.identifier == "spica");
-        identities[systemUserIndex].system = true;
-        this.dataIds = identities.map(identity => identity._id);
-        this.dataIds.splice(systemUserIndex, 1);
-        this.selectedItems = [];
+        if (systemUserIndex != -1) {
+          identities[systemUserIndex].system = true;
+        }
+        this.selectableItemIds = identities.map(identity => identity._id);
+        this.selectableItemIds.splice(systemUserIndex, 1);
+        this.selectedItemIds = [];
       })
     );
   }
@@ -215,7 +222,7 @@ export class IdentityIndexComponent implements OnInit {
   }
 
   async deleteSelectedItems() {
-    await Promise.all(this.selectedItems.map(id => this.identity.deleteOne(id).toPromise()));
+    await Promise.all(this.selectedItemIds.map(id => this.identity.deleteOne(id).toPromise()));
     this.refresh$.next();
   }
 }
