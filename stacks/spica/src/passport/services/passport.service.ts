@@ -9,7 +9,7 @@ import {Identity} from "../interfaces/identity";
 import {Statement} from "../interfaces/statement";
 import {Strategy} from "../interfaces/strategy";
 
-export type IdentifyParams = Omit<Omit<Identity, "policies">, "attributes">;
+export type IdentifyParams = {identifier: string; password: string};
 
 @Injectable({providedIn: "root"})
 export class PassportService {

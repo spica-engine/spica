@@ -11,7 +11,7 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {NUMBER} from "@spica-server/core";
+import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -26,11 +26,12 @@ export class PolicyController {
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:index"))
   find(
+    @Query("filter", DEFAULT({}), JSONP) filter: object,
     @ResourceFilter() resourceFilter?: object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number
   ) {
-    return this.policy.find(limit, skip);
+    return this.policy.find(filter, limit, skip);
   }
 
   @Get(":id")
