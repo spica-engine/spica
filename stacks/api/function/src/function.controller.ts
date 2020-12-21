@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  Header,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -24,9 +23,8 @@ import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import * as os from "os";
-import {from, of, OperatorFunction} from "rxjs";
-import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
+import {from} from "rxjs";
+import {take} from "rxjs/operators";
 import {discovery} from "@spica-server/function/runtime";
 import {createFunctionActivity} from "./activity.resource";
 import {ChangeKind, changesFromTriggers, createTargetChanges} from "./change";
@@ -246,9 +244,9 @@ export class FunctionController {
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   async addDependency(
+    @Res() res,
     @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
-    @Query("progress", BOOLEAN) progress?: boolean
+    @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
   ) {
     if (!name) {
       throw new BadRequestException("Dependency name is required.");
@@ -257,7 +255,10 @@ export class FunctionController {
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
-    return this.engine.addPackage(fn, name);
+    return this.engine
+      .addPackage(fn, name)
+      .then(() => res.end())
+      .catch(err => res.status(400).send({message: err.toString()}));
   }
 
   /**
