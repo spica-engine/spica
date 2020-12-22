@@ -19,6 +19,7 @@ import {IdentityIndexComponent} from "./identity-index.component";
 import {PreferencesService} from "@spica-client/core";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {FormsModule} from "@angular/forms";
+import {PolicyService} from "../../services/policy.service";
 
 @Component({
   template: `
@@ -34,6 +35,7 @@ describe("IdentityIndexComponent", () => {
   const rows = new Subject<Partial<Identity>[]>();
   let identityService: jasmine.SpyObj<Pick<IdentityService, "find">>;
   let preferenceService: jasmine.SpyObj<Pick<PreferencesService, "get">>;
+  let policyService: jasmine.SpyObj<Pick<PolicyService, "find">>;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -50,14 +52,9 @@ describe("IdentityIndexComponent", () => {
         MatCheckboxModule,
         FormsModule
       ],
-      declarations: [IdentityIndexComponent, ToolbarCmp, CanInteractDirectiveTest],
-      providers: [
-        {
-          provide: PreferencesService,
-          useValue: preferenceService
-        }
-      ]
+      declarations: [IdentityIndexComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
+
     identityService = {
       find: jasmine
         .createSpy("find")
@@ -70,14 +67,28 @@ describe("IdentityIndexComponent", () => {
           of({identity: {attributes: {properties: {age: {type: "number", title: "Age"}}}}})
         )
     };
+    policyService = {
+      find: jasmine.createSpy("find").and.returnValue(
+        of({
+          meta: {total: 2},
+          data: [
+            {_id: "PassportFullAccess", name: "Passport Full Access"},
+            {_id: "BucketFullAccess", name: "Bucket Full Access"}
+          ]
+        })
+      )
+    };
+
     TestBed.overrideProvider(IdentityService, {useValue: identityService});
     TestBed.overrideProvider(PreferencesService, {useValue: preferenceService});
+    TestBed.overrideProvider(PolicyService, {useValue: policyService});
+
     fixture = TestBed.createComponent(IdentityIndexComponent);
     fixture.detectChanges();
   });
 
   describe("rows", () => {
-    beforeEach(async () => {
+    beforeEach(() => {
       rows.next([
         {
           _id: "1",
@@ -106,7 +117,7 @@ describe("IdentityIndexComponent", () => {
 
       expect(dataCells[0]).toEqual(" 1 ");
       expect(dataCells[1]).toEqual("spica");
-      expect(dataCells[2]).toEqual("PassportFullAccess,BucketFullAccess");
+      expect(dataCells[2]).toEqual("Passport Full Access,Bucket Full Access");
       expect(dataCells[3]).toEqual("20");
     });
 
@@ -124,8 +135,15 @@ describe("IdentityIndexComponent", () => {
   describe("pagination", () => {
     let paginator: MatPaginator;
 
-    beforeEach(() => {
-      rows.next(new Array(20).fill({_id: "1"}));
+    beforeEach(async () => {
+      rows.next(
+        new Array(20).fill({
+          _id: "1",
+          identifier: "spica",
+          policies: ["PassportFullAccess", "BucketFullAccess"],
+          attributes: {age: 20}
+        })
+      );
       fixture.detectChanges();
       paginator = fixture.debugElement.query(By.directive(MatPaginator)).injector.get(MatPaginator);
     });
