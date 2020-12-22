@@ -46,7 +46,7 @@ export class PassportController {
     if (!state) {
       identity = await this.identity.identify(identifier, password);
       if (!identity) {
-        throw new NotFoundException("Identifier or password was incorrect.");
+        throw new UnauthorizedException("Identifier or password was incorrect.");
       }
     } else {
       if (!this.assertObservers.has(state)) {

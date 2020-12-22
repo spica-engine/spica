@@ -171,7 +171,7 @@ export class BucketDataController {
         relationPaths,
         language: acceptedLanguage,
         limit: 1,
-        filter: {_id: documentId},
+        documentId: documentId,
         req,
         projectMap: []
       },

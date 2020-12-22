@@ -12,7 +12,7 @@ let wsUrl;
 export function initialize(options: {apikey: string; publicUrl?: string}) {
   apikey = `APIKEY ${options.apikey}`;
 
-  let _publicUrl = options.publicUrl || process.env.__INTERNAL__SPICA__PUBLIC_URL__;
+  const _publicUrl = options.publicUrl || process.env.__INTERNAL__SPICA__PUBLIC_URL__;
   if (!_publicUrl) {
     throw new Error(
       "The <__INTERNAL__SPICA__PUBLIC_URL__> variable and public url was not given. "
@@ -29,36 +29,44 @@ function checkInitialized() {
   }
 }
 
+const completeResponse = (response: any) => {
+  const warning = response.headers.get("warning");
+  if (warning) {
+    console.warn(warning);
+  }
+  return response.json();
+};
+
 export function get(id: string): Promise<Bucket> {
   checkInitialized();
 
-  let request = {
+  const request = {
     method: "get",
     headers: {
       Authorization: apikey
     }
   };
 
-  return fetch(url + "/" + id, request).then(res => res.json());
+  return fetch(url + "/" + id, request).then(completeResponse);
 }
 
 export function getAll(): Promise<Bucket[]> {
   checkInitialized();
 
-  let request = {
+  const request = {
     method: "get",
     headers: {
       Authorization: apikey
     }
   };
 
-  return fetch(url, request).then(res => res.json());
+  return fetch(url, request).then(completeResponse);
 }
 
 export function insert(bucket: Bucket): Promise<Bucket> {
   checkInitialized();
 
-  let request = {
+  const request = {
     method: "post",
     body: JSON.stringify(bucket),
     headers: {
@@ -66,13 +74,13 @@ export function insert(bucket: Bucket): Promise<Bucket> {
       "Content-Type": "application/json"
     }
   };
-  return fetch(url, request).then(res => res.json());
+  return fetch(url, request).then(completeResponse);
 }
 
 export function update(id: string, bucket: Bucket): Promise<Bucket> {
   checkInitialized();
 
-  let request = {
+  const request = {
     method: "put",
     body: JSON.stringify(bucket),
     headers: {
@@ -80,13 +88,13 @@ export function update(id: string, bucket: Bucket): Promise<Bucket> {
       "Content-Type": "application/json"
     }
   };
-  return fetch(url + "/" + id, request).then(res => res.json());
+  return fetch(url + "/" + id, request).then(completeResponse);
 }
 
 export function remove(id: string): Promise<any> {
   checkInitialized();
 
-  let request = {
+  const request = {
     method: "delete",
     headers: {
       Authorization: apikey
@@ -103,7 +111,7 @@ export namespace data {
   ): Promise<BucketDocument> {
     checkInitialized();
 
-    let fullUrl = new URL(`${url}/${bucketId}/data/${documentId}`);
+    const fullUrl = new URL(`${url}/${bucketId}/data/${documentId}`);
 
     let headers;
 
@@ -114,7 +122,7 @@ export namespace data {
       );
     }
 
-    let request = {
+    const request = {
       method: "get",
       headers: {
         ...headers,
@@ -122,7 +130,7 @@ export namespace data {
       }
     };
 
-    return fetch(fullUrl, request).then(res => res.json());
+    return fetch(fullUrl, request).then(completeResponse);
   }
 
   export function getAll(
@@ -131,7 +139,7 @@ export namespace data {
   ): Promise<BucketDocument[] | IndexResult<BucketDocument>> {
     checkInitialized();
 
-    let fullUrl = new URL(`${url}/${bucketId}/data`);
+    const fullUrl = new URL(`${url}/${bucketId}/data`);
 
     let headers;
 
@@ -142,7 +150,7 @@ export namespace data {
       );
     }
 
-    let request = {
+    const request = {
       method: "get",
       headers: {
         ...headers,
@@ -150,13 +158,13 @@ export namespace data {
       }
     };
 
-    return fetch(fullUrl, request).then(res => res.json());
+    return fetch(fullUrl, request).then(completeResponse);
   }
 
   export function insert(bucketId: string, document: BucketDocument): Promise<BucketDocument> {
     checkInitialized();
 
-    let request = {
+    const request = {
       method: "post",
       body: JSON.stringify(document),
       headers: {
@@ -164,7 +172,7 @@ export namespace data {
         "Content-Type": "application/json"
       }
     };
-    return fetch(`${url}/${bucketId}/data`, request).then(res => res.json());
+    return fetch(`${url}/${bucketId}/data`, request).then(completeResponse);
   }
 
   export function update(
@@ -174,7 +182,7 @@ export namespace data {
   ): Promise<BucketDocument> {
     checkInitialized();
 
-    let request = {
+    const request = {
       method: "put",
       body: JSON.stringify(document),
       headers: {
@@ -182,13 +190,13 @@ export namespace data {
         "Content-Type": "application/json"
       }
     };
-    return fetch(`${url}/${bucketId}/data/${documentId}`, request).then(res => res.json());
+    return fetch(`${url}/${bucketId}/data/${documentId}`, request).then(completeResponse);
   }
 
   export function remove(bucketId: string, documentId: string): Promise<any> {
     checkInitialized();
 
-    let request = {
+    const request = {
       method: "delete",
       headers: {
         Authorization: apikey
@@ -201,13 +209,9 @@ export namespace data {
     export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
       checkInitialized();
 
-      let filter = {
-        _id: documentId
-      };
+      const filter = `_id=="${documentId}"`;
 
-      let url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}&filter=${JSON.stringify(
-        filter
-      )}`;
+      const url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}&filter=${filter}`;
 
       return getWsObs<BucketDocument[]>(url).pipe(map(([documents]) => documents));
     }
@@ -220,7 +224,7 @@ export namespace data {
 
       if (params) {
         if (params.filter) {
-          url += `&filter=${JSON.stringify(params.filter)}`;
+          url += `&filter=${params.filter}`;
         }
 
         if (params.sort) {

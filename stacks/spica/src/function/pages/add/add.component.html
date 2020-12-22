@@ -20,7 +20,7 @@
         <mat-list>
           <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
           <mat-divider></mat-divider>
-          <mat-list-item>
+          <mat-list-item class="describe">
             <mat-form-field>
               <mat-label>Name</mat-label>
               <input
@@ -119,34 +119,6 @@
                 Timeout value must be positive.
               </mat-error>
             </span>
-            <mat-checkbox [(ngModel)]="batching" name="batching">Batching</mat-checkbox>
-
-            <mat-form-field>
-              <mat-label>Deadline (s)</mat-label>
-              <input
-                matInput
-                type="number"
-                placeholder="Deadline"
-                #nameModel="ngModel"
-                min="1"
-                [(ngModel)]="batchingDeadline"
-                name="deadline"
-                [required]="batching"
-              />
-            </mat-form-field>
-            <mat-form-field>
-              <mat-label>Maximum batch amount</mat-label>
-              <input
-                matInput
-                type="number"
-                placeholder="Amount"
-                #nameModel="ngModel"
-                min="2"
-                [(ngModel)]="maxBatchCount"
-                name="limit"
-                [required]="batching"
-              />
-            </mat-form-field>
           </mat-list-item>
 
           <h4 mat-subheader>
@@ -256,13 +228,13 @@
                   >
                     <mat-icon>delete</mat-icon>
                   </button>
-                  <span>
-                    <mat-label>
-                      {{ trigger.active ? "Active" : "Deactive" }}
-                    </mat-label>
-                    <mat-slide-toggle name="status" [(ngModel)]="trigger.active">
-                    </mat-slide-toggle>
-                  </span>
+                  <mat-slide-toggle
+                    name="status"
+                    [(ngModel)]="trigger.active"
+                    labelPosition="before"
+                  >
+                    {{ trigger.active ? "Active" : "Deactive" }}
+                  </mat-slide-toggle>
                 </div>
               </ng-container>
             </div>
@@ -443,6 +415,50 @@
           <button type="button" mat-button class="new-trigger" (click)="addVariable()">
             <mat-icon>add</mat-icon>Add New Environment Variable
           </button>
+
+          <h4 mat-subheader><mat-icon>settings</mat-icon> Optional Settings</h4>
+          <mat-divider></mat-divider>
+          <mat-list-item class="optional-settings">
+            <div>
+              You can enable batching to run multiple process in the same worker. This action will
+              share memory in each process. To enable batching, you have to set 'Deadline' (seconds
+              to wait after each process) and 'Maximum batch amount' (total process count for
+              batching). We recommend 'Deadline' to be less than 10 seconds and 'Maximum batch
+              amount' to be less than 100 generally.
+            </div>
+            <div class="setting">
+              <mat-slide-toggle [(ngModel)]="batching" name="batching" labelPosition="before"
+                >Batching</mat-slide-toggle
+              >
+
+              <mat-form-field [style.visibility]="batching ? 'visible' : 'hidden'">
+                <mat-label>Deadline (s)</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  placeholder="Deadline"
+                  #nameModel="ngModel"
+                  [min]="batching ? 1 : 0"
+                  [(ngModel)]="batchingDeadline"
+                  name="deadline"
+                  [required]="batching"
+                />
+              </mat-form-field>
+              <mat-form-field [style.visibility]="batching ? 'visible' : 'hidden'">
+                <mat-label>Maximum batch amount</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  placeholder="Amount"
+                  #nameModel="ngModel"
+                  [min]="batching ? 2 : 0"
+                  [(ngModel)]="maxBatchCount"
+                  name="limit"
+                  [required]="batching"
+                />
+              </mat-form-field>
+            </div>
+          </mat-list-item>
         </mat-list>
       </form>
     </mat-card-content>

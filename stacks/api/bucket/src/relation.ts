@@ -161,6 +161,7 @@ export function resetNonOverlappingPathsInRelationMap(
           map: relation.children
         });
         if (subPaths) {
+          hasKeys = true;
           paths = {...paths, ...subPaths};
         }
       }

@@ -19,7 +19,7 @@ import {BuildLinkPipe} from "@spica-client/common/build_link.pipe";
 import {ACTIVITY_FACTORY} from "@spica-client/core";
 import {of} from "rxjs";
 import {ActivityService} from "../../services/activity.service";
-import {IndexComponent} from "./index.component";
+import {IndexComponent} from "../index/index.component";
 
 describe("IndexComponent", () => {
   let component: IndexComponent;

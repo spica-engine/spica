@@ -19,6 +19,7 @@ interface CrudOptions<Paginate> {
 
 interface CrudParams {
   resourceFilter?: object;
+  documentId?: ObjectId;
   filter?: object | string;
   language?: string;
   relationPaths: string[][];
@@ -68,6 +69,11 @@ export async function findDocuments<T>(
 
   const pipeline: object[] = [];
 
+  // for reducing findone response time
+  if (params.documentId) {
+    pipeline.push({$match: {_id: params.documentId}});
+  }
+
   // resourcefilter
   if (params.resourceFilter) {
     pipeline.push(params.resourceFilter);
@@ -86,6 +92,15 @@ export async function findDocuments<T>(
 
     params.req.res.header("Content-language", locale.best || locale.fallback);
   }
+
+  // matching for rules and filters
+  pipeline.push({
+    $set: {
+      _id: {
+        $toString: "$_id"
+      }
+    }
+  });
 
   // rules
   const rulePropertyMap = expression
@@ -145,7 +160,7 @@ export async function findDocuments<T>(
   // sort,skip and limit
   const seekingPipeline = [];
 
-  if (params.sort) {
+  if (Object.keys(params.sort || {}).length) {
     seekingPipeline.push({$sort: params.sort});
   }
 
@@ -174,7 +189,7 @@ export async function findDocuments<T>(
   const ruleResetStage = resetNonOverlappingPathsInRelationMap({
     left: [...relationPropertyMap, ...filterPropertyMap],
     right: rulePropertyMap,
-    map: [...ruleRelationMap, ...relationMap, ...relationMap]
+    map: [...ruleRelationMap, ...filterRelationMap, ...relationMap]
   });
 
   if (ruleResetStage) {

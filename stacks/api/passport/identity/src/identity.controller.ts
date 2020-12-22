@@ -14,7 +14,7 @@ import {
   UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
-import {DEFAULT, NUMBER} from "@spica-server/core";
+import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -22,7 +22,7 @@ import {PolicyService} from "@spica-server/passport/policy";
 import {createIdentityActivity} from "./activity.resource";
 import {hash} from "./hash";
 import {IdentityService} from "./identity.service";
-import {Identity} from "./interface";
+import {Identity, PaginationResponse} from "./interface";
 import {attachIdentityAccess} from "./utility";
 
 @Controller("passport/identity")
@@ -46,38 +46,61 @@ export class IdentityController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:index"))
-  find(
+  async find(
     @Query("limit", DEFAULT(0), NUMBER) limit: number,
     @Query("skip", DEFAULT(0), NUMBER) skip: number,
+    @Query("sort", DEFAULT({}), JSONP) sort: object,
+    @Query("paginate", DEFAULT(false), BOOLEAN) paginate: boolean,
+    @Query("filter", DEFAULT({}), JSONP) filter: object,
     @ResourceFilter() resourceFilter: object
   ) {
-    const dataPipeline: object[] = [];
+    const pipeline: object[] = [];
 
-    dataPipeline.push({$skip: skip});
+    pipeline.push(resourceFilter);
 
-    if (limit) {
-      dataPipeline.push({$limit: limit});
+    pipeline.push({$project: {password: 0}});
+
+    pipeline.push({$set: {_id: {$toString: "$_id"}}});
+
+    if (Object.keys(filter).length) {
+      pipeline.push({$match: filter});
     }
 
-    dataPipeline.push({$project: {password: 0}});
+    const seekingPipeline: object[] = [];
 
-    const aggregate = [
-      resourceFilter,
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: dataPipeline
-        }
-      },
-      {
-        $project: {
-          meta: {$arrayElemAt: ["$meta", 0]},
-          data: "$data"
-        }
-      }
-    ];
+    if (Object.keys(sort).length) {
+      pipeline.push({$sort: sort});
+    }
 
-    return this.identity.aggregate(aggregate).next();
+    if (skip) {
+      seekingPipeline.push({$skip: skip});
+    }
+
+    if (limit) {
+      seekingPipeline.push({$limit: limit});
+    }
+
+    if (paginate) {
+      pipeline.push(
+        {
+          $facet: {
+            meta: [
+              {
+                $count: "total"
+              }
+            ],
+            data: seekingPipeline
+          }
+        },
+        {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
+      );
+
+      const result = await this.identity.aggregate<PaginationResponse<Identity>>(pipeline).next();
+
+      return result.data.length ? result : {meta: {total: 0}, data: []};
+    }
+
+    return this.identity.aggregate<Identity>([...pipeline, ...seekingPipeline]).toArray();
   }
   @Get("predefs")
   @UseGuards(AuthGuard())
@@ -87,10 +110,8 @@ export class IdentityController {
 
   @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:show"))
-  async findOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const identity = await this.identity.findOne({_id: id});
-    delete identity.password;
-    return identity;
+  findOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.identity.findOne({_id: id}, {projection: {password: 0}});
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -101,12 +122,18 @@ export class IdentityController {
     identity: Identity
   ) {
     identity.password = await hash(identity.password);
-    return this.identity.insertOne(identity).catch(exception => {
-      if (exception.code === 11000) {
-        throw new BadRequestException("Identity already exists.");
-      }
-      throw new InternalServerErrorException();
-    });
+    return this.identity
+      .insertOne(identity)
+      .then(insertedIdentity => {
+        delete insertedIdentity.password;
+        return insertedIdentity;
+      })
+      .catch(exception => {
+        if (exception.code === 11000) {
+          throw new BadRequestException("Identity already exists.");
+        }
+        throw new InternalServerErrorException();
+      });
   }
 
   @UseInterceptors(activity(createIdentityActivity))
@@ -115,30 +142,35 @@ export class IdentityController {
   async updateOne(
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
-    identity: Identity
+    identity: Partial<Identity>
   ) {
+    delete identity._id;
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
-    return this.identity.findOneAndUpdate({_id: id}, {$set: identity}, {returnOriginal: false});
+    return this.identity.findOneAndUpdate(
+      {_id: id},
+      {$set: identity},
+      {returnOriginal: false, projection: {password: 0}}
+    );
   }
 
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    // prevent to deleting the last user
+    const users = await this.identity.find();
+    if (users.length == 1) {
+      return;
+    }
     return this.identity.deleteOne({_id: id}).then(() => {});
   }
 
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
-  async addPolicy(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId
-  ) {
-    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
-
+  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.identity.findOneAndUpdate(
       {
         _id: id
@@ -147,7 +179,8 @@ export class IdentityController {
         $addToSet: {policies: policyId}
       },
       {
-        returnOriginal: false
+        returnOriginal: false,
+        projection: {password: 0}
       }
     );
   }
@@ -155,12 +188,7 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
-  async removePolicy(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId
-  ) {
-    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
-
+  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.identity.findOneAndUpdate(
       {
         _id: id
@@ -169,7 +197,8 @@ export class IdentityController {
         $pull: {policies: policyId}
       },
       {
-        returnOriginal: false
+        returnOriginal: false,
+        projection: {password: 0}
       }
     );
   }

@@ -39,12 +39,25 @@ export class PolicyService {
       });
   }
 
-  find(limit: number, skip: number = 0) {
+  find(filter: object, limit: number, skip: number = 0) {
+    const policies = this.policies.filter(policy => {
+      let isMatched = true;
+
+      for (const [key, value] of Object.entries(filter)) {
+        if (policy[key] != value) {
+          isMatched = false;
+          break;
+        }
+      }
+
+      return isMatched;
+    });
+
     return {
       meta: {
-        total: this.policies.length
+        total: policies.length
       },
-      data: this.policies.slice(skip || 0, (skip || 0) + (limit || this.policies.length))
+      data: policies.slice(skip || 0, (skip || 0) + (limit || policies.length))
     };
   }
 
