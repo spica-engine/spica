@@ -106,7 +106,13 @@
     </form>
   </mat-card-content>
   <mat-card-actions>
-    <button class="save-button" mat-button (click)="save()">
+    <button
+      class="save-button"
+      [canInteract]="dashboard._id ? 'dashboard:update' : 'dashboard:create'"
+      [resource]="dashboard._id ? dashboard._id : undefined"
+      mat-button
+      (click)="save()"
+    >
       <mat-icon>save</mat-icon>
       Save
     </button>

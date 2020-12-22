@@ -16,7 +16,7 @@ import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ChartsModule} from "ng2-charts";
-import {PassportService} from "../passport";
+import {PassportService, PassportModule} from "../passport";
 import {DashboardRoutingModule} from "./dashboard-routing.module";
 import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.component";
 import {DashboardComponent} from "./pages/dashboard/dashboard.component";
@@ -65,7 +65,8 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular
     MatClipboardModule,
     OwlDateTimeModule,
     OwlNativeDateTimeModule,
-    MatAwareDialogModule
+    MatAwareDialogModule,
+    PassportModule.forChild()
   ],
   declarations: [
     DashboardComponent,

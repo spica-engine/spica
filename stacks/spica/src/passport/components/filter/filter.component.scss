@@ -1,0 +1,27 @@
+:host {
+  ::ng-deep .input-placer-input {
+    display: block;
+    &.boolean,
+    &.storage {
+      padding: 0 10%;
+    }
+    > mat-form-field,
+    section,
+    section ~ mat-hint {
+      width: 80% !important;
+      margin: 0 10%;
+    }
+  }
+  mat-form-field,
+  section {
+    width: 80% !important;
+    margin: 0 10%;
+  }
+  .filter-buttons {
+    display: flex;
+    justify-content: center;
+    button {
+      margin: 5px;
+    }
+  }
+}

@@ -11,30 +11,35 @@ const routes: Routes = [
   {pathMatch: "full", path: "", redirectTo: "dashboard"},
   {
     path: "dashboard",
-    canActivate: [IdentityGuard, PolicyGuard],
+    canActivate: [IdentityGuard],
     component: DashboardComponent
   },
   {
     path: "dashboard/:id",
-    component: DashboardViewComponent,
-    canActivate: [PolicyGuard]
+    canActivate: [IdentityGuard],
+    component: DashboardViewComponent
   },
   {
     path: "dashboards",
-    canActivate: [IdentityGuard, PolicyGuard],
+    canActivate: [IdentityGuard],
     children: [
-      {path: "", component: IndexComponent},
       {
-        path: ":id",
-        component: AddComponent
-        //canActivate: [PolicyGuard]
-        //data: {service: "dashboard", action: "update"}
+        path: "",
+        canActivate: [PolicyGuard],
+        component: IndexComponent,
+        data: {service: "dashboard", action: "index"}
       },
       {
         path: "add",
-        component: AddComponent
-        //canActivate: [PolicyGuard]
-        //data: {service: "dashboard", action: "create"}
+        canActivate: [PolicyGuard],
+        component: AddComponent,
+        data: {service: "dashboard", action: "create"}
+      },
+      {
+        path: ":id",
+        canActivate: [PolicyGuard],
+        component: AddComponent,
+        data: {service: "dashboard", action: "show"}
       }
     ]
   }

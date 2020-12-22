@@ -4,7 +4,6 @@ import {BucketService} from "@spica-client/bucket/services/bucket.service";
 import {InputPlacerWithMetaPlacer} from "@spica-client/common";
 import {InputResolver} from "@spica-client/common/input/input.resolver";
 import {PredefinedDefault} from "@spica-client/passport/interfaces/predefined-default";
-import {Property} from "@spica-client/passport/pages/identity-settings/identity-settings.component";
 import {map} from "rxjs/internal/operators/map";
 import {take} from "rxjs/operators";
 

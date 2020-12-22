@@ -3,7 +3,7 @@
     <mat-icon>pie_chart</mat-icon>
     <span>Dashboards</span>
   </h4>
-  <button mat-button routerLink="add">
+  <button mat-button canInteract="dashboard:create" routerLink="add">
     <mat-icon>add</mat-icon>
     Add New
   </button>
@@ -24,11 +24,18 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell *matCellDef="let dashboard">
-          <button mat-icon-button [routerLink]="dashboard._id">
+          <button
+            mat-icon-button
+            canInteract="dashboard:show"
+            [resource]="dashboard._id"
+            [routerLink]="dashboard._id"
+          >
             <mat-icon>edit</mat-icon>
           </button>
           <button
             mat-icon-button
+            canInteract="dashboard:delete"
+            [resource]="dashboard._id"
             [matAwareDialog]="{
               title: 'Confirmation',
               templateOrDescription: dialogTemplate,
