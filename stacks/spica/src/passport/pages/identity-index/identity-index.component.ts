@@ -119,7 +119,7 @@ export class IdentityIndexComponent implements OnInit {
             true
           )
           .pipe(
-            // map identity policy ids to policy names
+            // convert identity policy ids to policy names
             map(response => {
               return {
                 meta: response.meta,
