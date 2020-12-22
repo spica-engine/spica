@@ -50,18 +50,13 @@
           </mat-form-field>
         </mat-list-item>
         <h4>Components</h4>
-        <mat-list-item class="component" *ngFor="let component of dashboard.components; index as i">
-          <div class="container">
+        <mat-list-item *ngFor="let component of dashboard.components; index as i">
+          <div class="details">
             <mat-form-field>
               <mat-label>
                 Name
               </mat-label>
-              <input
-                matInput
-                [name]="i + '.name'"
-                [(ngModel)]="component.name"
-                required
-              />
+              <input matInput [name]="i + '.name'" [(ngModel)]="component.name" required />
             </mat-form-field>
             <mat-form-field>
               <mat-label>
@@ -76,6 +71,10 @@
                 pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?|^((http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
                 required
               />
+              <mat-hint>
+                Whenever custom dashboard content displayed, Spica will send a GET request to this
+                URL to fetch dataset.
+              </mat-hint>
               <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
             </mat-form-field>
             <mat-form-field>
@@ -113,12 +112,16 @@
               </mat-select>
             </mat-form-field>
           </div>
-          <div class="delete-button-container">
+          <div class="actions">
+            <button mat-icon-button class="example-code" (click)="showExample(component.type)">
+              <mat-icon>contact_support</mat-icon>
+            </button>
             <button mat-icon-button color="warn" (click)="dashboard.components.splice(i, 1)">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
         </mat-list-item>
+
         <button type="button" mat-button class="new-component" (click)="addComponent()">
           <mat-icon>add</mat-icon>Add New Component
         </button>

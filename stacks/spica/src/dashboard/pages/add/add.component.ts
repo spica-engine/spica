@@ -5,6 +5,8 @@ import {DashboardService} from "@spica-client/dashboard/services/dashboard.servi
 import {filter, map, switchMap, take, tap, takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {ICONS} from "@spica-client/material";
+import {MatDialog} from "@angular/material/dialog";
+import {ExampleComponent} from "@spica-client/common/example";
 
 @Component({
   selector: "dashboard-add",
@@ -15,7 +17,8 @@ export class AddComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
-    private dashboardService: DashboardService
+    private dashboardService: DashboardService,
+    private dialog: MatDialog
   ) {}
 
   dashboard: Dashboard = getEmptyDashboard();
@@ -43,6 +46,16 @@ export class AddComponent implements OnInit, OnDestroy {
         takeUntil(this.onDestroy$)
       )
       .subscribe();
+  }
+
+  showExample(type: string) {
+    const example = this.dashboardService.getExample(type);
+    this.dialog.open(ExampleComponent, {
+      width: "50%",
+      data: {
+        code: example
+      }
+    });
   }
 
   ngOnDestroy() {

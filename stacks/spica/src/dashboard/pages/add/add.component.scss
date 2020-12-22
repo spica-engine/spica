@@ -49,9 +49,10 @@
           ::ng-deep .mat-list-item-content {
             display: flex;
             justify-content: space-around;
+            align-items: baseline;
           }
 
-          div.container {
+          div.details {
             display: flex;
             flex: 9;
 
@@ -72,7 +73,7 @@
             }
           }
 
-          div.delete-button-container {
+          div.actions {
             flex: 1;
             display: flex;
             justify-content: center;

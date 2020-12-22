@@ -5,10 +5,21 @@ import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {Dashboard} from "../interfaces";
 import * as fromDashboard from "../state/dashboard.reducer";
+import {example} from "./example-code";
 
 @Injectable()
 export class DashboardService {
   constructor(private http: HttpClient, private store: Store<fromDashboard.State>) {}
+
+  getExample(type: string) {
+    if (!type) {
+      return `Select type to display example code.`;
+    } else if (example[type]) {
+      return example[type];
+    }
+
+    return `Example code for this type does not exist.`;
+  }
 
   findAll(): Observable<Dashboard[]> {
     return this.store.select(fromDashboard.selectAll);
