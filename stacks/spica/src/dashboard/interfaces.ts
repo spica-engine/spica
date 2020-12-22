@@ -14,7 +14,7 @@ export interface Component {
 export const getEmptyDashboard = (): Dashboard => {
   return {
     name: undefined,
-    icon: undefined,
+    icon: "leaderboard",
     components: []
   };
 };

@@ -6,6 +6,8 @@ import {DashboardComponent} from "./pages/dashboard/dashboard.component";
 import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.component";
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
+import {DashboardIndexGuard} from "./dashboard.guard";
 
 const routes: Routes = [
   {pathMatch: "full", path: "", redirectTo: "dashboard"},
@@ -23,9 +25,10 @@ const routes: Routes = [
     path: "dashboards",
     canActivate: [IdentityGuard],
     children: [
+      {path: "welcome", component: WelcomeComponent},
       {
         path: "",
-        canActivate: [PolicyGuard],
+        canActivate: [DashboardIndexGuard],
         component: IndexComponent,
         data: {service: "dashboard", action: "index"}
       },
@@ -55,10 +58,10 @@ const route: Route[] = [
   },
   {
     id: "list_all_dahsboards",
-    category: RouteCategory.Primary,
+    category: RouteCategory.Primary_Sub,
     icon: "format_list_numbered",
     path: "/dashboards",
-    display: "List Custom Dashboards"
+    display: "Custom Dashboards"
   }
 ];
 

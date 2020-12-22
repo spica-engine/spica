@@ -46,7 +46,7 @@
             <mat-label>
               Name
             </mat-label>
-            <input matInput placeholder="Name" name="name" [(ngModel)]="dashboard.name" required />
+            <input matInput name="name" [(ngModel)]="dashboard.name" required />
           </mat-form-field>
         </mat-list-item>
         <h4>Components</h4>
@@ -58,7 +58,6 @@
               </mat-label>
               <input
                 matInput
-                placeholder="Name"
                 [name]="i + '.name'"
                 [(ngModel)]="component.name"
                 required
@@ -70,22 +69,43 @@
               </mat-label>
               <input
                 matInput
-                placeholder="Url"
+                type="url"
                 [name]="i + '.url'"
                 [(ngModel)]="component.url"
+                #urlModel="ngModel"
+                pattern="^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?|^((http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
                 required
               />
+              <mat-error *ngIf="urlModel.errors?.pattern">Enter a valid url.</mat-error>
             </mat-form-field>
             <mat-form-field>
               <mat-label>
                 Type
               </mat-label>
-              <mat-select [name]="i + '.type'" [(ngModel)]="component.type">
+              <mat-select [name]="i + '.type'" [(ngModel)]="component.type" required>
+                <mat-option class="mat-accent" value="line">
+                  Line
+                </mat-option>
                 <mat-option class="mat-accent" value="bar">
                   Bar
                 </mat-option>
-                <mat-option class="mat-accent" value="line">
-                  Line
+                <mat-option class="mat-accent" value="radar">
+                  Radar
+                </mat-option>
+                <mat-option class="mat-accent" value="pie">
+                  Pie
+                </mat-option>
+                <mat-option class="mat-accent" value="polarArea">
+                  Polar Area
+                </mat-option>
+                <mat-option class="mat-accent" value="doughnut">
+                  Doughnut
+                </mat-option>
+                <mat-option class="mat-accent" value="bubble">
+                  Bubble
+                </mat-option>
+                <mat-option class="mat-accent" value="scatter">
+                  Scatter
                 </mat-option>
                 <mat-option class="mat-accent" value="table">
                   Table
@@ -111,6 +131,7 @@
       [canInteract]="dashboard._id ? 'dashboard:update' : 'dashboard:create'"
       [resource]="dashboard._id ? dashboard._id : undefined"
       mat-button
+      [disabled]="form.invalid || dashboard.components.length < 1"
       (click)="save()"
     >
       <mat-icon>save</mat-icon>

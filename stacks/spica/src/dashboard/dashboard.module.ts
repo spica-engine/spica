@@ -36,6 +36,7 @@ import {CommonModule as SpicaCommon} from "@spica-client/common";
 import {DefaultComponent} from "./components/default/default.component";
 import {TableComponent} from "./components/table/table.component";
 import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
+import { WelcomeComponent } from './pages/welcome/welcome.component';
 
 @NgModule({
   imports: [
@@ -75,7 +76,8 @@ import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular
     AddComponent,
     IndexComponent,
     DefaultComponent,
-    TableComponent
+    TableComponent,
+    WelcomeComponent
   ],
   providers: [
     DashboardService,
