@@ -4,9 +4,9 @@ import {Dashboard} from "../interfaces";
 
 export enum DashboardActionTypes {
   RETRIEVE = "DASHBOARD_RETRIEVE",
-  INSERT = "DASHBOARD_INSERT",
+  ADD = "DASHBOARD_ADD",
   UPDATE = "DASHBOARD_UPDATE",
-  DELETE = "DASHBOARD_DELETE"
+  REMOVE = "DASHBOARD_REMOVE"
 }
 
 export class Retrieve implements Action {
@@ -14,7 +14,22 @@ export class Retrieve implements Action {
   constructor(public dashboards: Dashboard[]) {}
 }
 
-export type DashboardAction = Retrieve;
+export class Remove implements Action {
+  readonly type = DashboardActionTypes.REMOVE;
+  constructor(public id: string) {}
+}
+
+export class Update implements Action {
+  readonly type = DashboardActionTypes.UPDATE;
+  constructor(public id: string, public changes: Partial<Dashboard>) {}
+}
+
+export class Add implements Action {
+  readonly type = DashboardActionTypes.ADD;
+  constructor(public dashboard: Dashboard) {}
+}
+
+export type DashboardAction = Retrieve | Remove | Add | Update;
 
 export interface State extends EntityState<Dashboard> {
   loaded: boolean;
@@ -27,6 +42,12 @@ export function reducer(state: State = initialState, action: DashboardAction): S
   switch (action.type) {
     case DashboardActionTypes.RETRIEVE:
       return adapter.addAll(action.dashboards, {...state, loaded: true});
+    case DashboardActionTypes.REMOVE:
+      return adapter.removeOne(action.id, state);
+    case DashboardActionTypes.ADD:
+      return adapter.addOne(action.dashboard, state);
+    case DashboardActionTypes.UPDATE:
+      return adapter.updateOne({id: action.id, changes: action.changes}, state);
     default:
       return state;
   }

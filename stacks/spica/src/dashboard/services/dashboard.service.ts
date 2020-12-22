@@ -24,16 +24,27 @@ export class DashboardService {
   }
 
   update(dashboard: Dashboard) {
-    return this.http.put(`api:/dashboard/${dashboard._id}`, dashboard);
-    //.pipe(tap(updatedDashboard => this.store.));
+    return this.http
+      .put<Dashboard>(`api:/dashboard/${dashboard._id}`, dashboard)
+      .pipe(
+        tap(updatedDashboard =>
+          this.store.dispatch(new fromDashboard.Update(dashboard._id, updatedDashboard))
+        )
+      );
   }
 
   insert(dashboard: Dashboard) {
-    return this.http.post("api:/dashboard", dashboard);
+    return this.http
+      .post<Dashboard>("api:/dashboard", dashboard)
+      .pipe(
+        tap(insertedDashboard => this.store.dispatch(new fromDashboard.Add(insertedDashboard)))
+      );
   }
 
   delete(id: string) {
-    return this.http.delete(`api:/dashboard/${id}`);
+    return this.http
+      .delete(`api:/dashboard/${id}`)
+      .pipe(tap(() => this.store.dispatch(new fromDashboard.Remove(id))));
   }
 
   retrieve() {
