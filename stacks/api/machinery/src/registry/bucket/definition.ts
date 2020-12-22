@@ -42,13 +42,13 @@ const bucketSchema: JSONSchema7 = {
     },
     schema: {
       type: "object",
-       // Bucket relation
-       if: {
+      // Bucket relation
+      if: {
         properties: {
           type: {
             const: "relation"
           }
-        },
+        }
       },
       then: {
         required: ["bucket", "relationType"],

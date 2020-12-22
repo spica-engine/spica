@@ -1,9 +1,9 @@
 import {
   Action,
-  Command,
-  CreateCommandParameters,
+  ActionParameters,
   CaporalValidator,
-  ActionParameters
+  Command,
+  CreateCommandParameters
 } from "@caporal/core";
 import * as docker from "dockerode";
 import * as getport from "get-port";
@@ -232,7 +232,7 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
 
       const initiateReplication = async (reconfig = false) => {
         spinner.text = "Initiating replication between database containers.";
-        const result = await (await firstContainer.exec({
+        const exec = await firstContainer.exec({
           Cmd: [
             "mongo",
             "admin",
@@ -243,11 +243,10 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
           ],
           AttachStderr: true,
           AttachStdout: true
-        }))
-          .start({})
-          .catch(e => e);
-
-        return (await streamToBuffer(result.output)).toString();
+        });
+        const result = await exec.start({});
+        const buffer = await streamToBuffer(result);
+        return buffer.toString();
       };
 
       let output = await initiateReplication();
@@ -287,7 +286,7 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
           AttachStderr: true,
           AttachStdout: true
         });
-        const {output}: any = await exec.start({});
+        const output = await exec.start({});
         const response = await streamToBuffer(output);
         const responseText = response.toString("utf-8");
         if (
@@ -414,7 +413,7 @@ async function create({args: cmdArgs, options, ddash}: ActionParameters) {
         AttachStderr: true,
         AttachStdout: true
       });
-      const {output}: any = await exec.start({});
+      const output = await exec.start({});
       await streamToBuffer(output);
       await proxy.restart();
     }

@@ -47,7 +47,6 @@ async function v1_trigger_to_internal(object: any) {
     triggerRaw.options = object.spec.systemOptions;
   }
 
-
   return triggerRaw;
 }
 
@@ -195,7 +194,6 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
         const fn = await functionStore.get(object.spec.func);
         if (fn) {
           const trigger = await v1_trigger_to_internal(object);
-          console.log(trigger);
           await fs.updateOne(
             {_id: new ObjectId(fn.metadata.uid)},
             {$set: {[`triggers.${object.spec.name}`]: trigger}}
@@ -266,7 +264,7 @@ export function registerInformers(fs: FunctionService, fe: FunctionEngine) {
 
           await applyDependencyChanges([], obj.spec.dependency, fe, fn);
         } catch (e) {
-          if ( fn ) {
+          if (fn) {
             await fs.deleteOne({_id: fn._id});
           }
 

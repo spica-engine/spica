@@ -64,6 +64,10 @@ const TriggerV1: JSONSchema7 = {
         },
         path: {
           type: "string"
+        },
+        preflight: {
+          type: "boolean",
+          default: true
         }
       }
     },

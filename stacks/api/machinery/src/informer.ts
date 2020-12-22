@@ -36,7 +36,7 @@ export function inform<T>(options: InformAdd<T> | InformUpdate<T> | InformDelete
       } else if (options.type == "delete" && func.delete) {
         await func.delete(options.obj);
       }
-    } catch(err) {
+    } catch (err) {
       if (retry - 1 >= MAX_RETRY) {
         return console.debug(
           `bail: informer has reached the exponetial back-off limit ${MAX_RETRY} for event ${options.type} on ${options.groupResource.group} ${options.groupResource.resource}`

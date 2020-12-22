@@ -5,13 +5,21 @@ export namespace v1 {
   export const Schema: JSONSchema7 = {
     $schema: "http://json-schema.org/draft-07/schema#",
     type: "object",
-    required: ["name"],
+    required: ["name", "policies"],
     properties: {
       name: {
         type: "string"
       },
       description: {
         type: "string"
+      },
+      policies: {
+        type: "array",
+        items: {
+          type: "string",
+          uniqueItems: true,
+          minItems: 1
+        }
       }
     },
     additionalProperties: false
