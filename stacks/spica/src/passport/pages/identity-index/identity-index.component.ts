@@ -7,6 +7,7 @@ import {IdentityService} from "../../services/identity.service";
 import {PreferencesService} from "@spica-client/core";
 import {DomSanitizer} from "@angular/platform-browser";
 import {Sort} from "@angular/material/sort";
+import {PolicyService} from "@spica-client/passport/services/policy.service";
 
 @Component({
   selector: "function-identity-index",
@@ -55,7 +56,8 @@ export class IdentityIndexComponent implements OnInit {
   constructor(
     private sanitizer: DomSanitizer,
     public identity: IdentityService,
-    public preference: PreferencesService
+    public preference: PreferencesService,
+    public policyService: PolicyService
   ) {}
 
   ngOnInit() {
@@ -106,14 +108,33 @@ export class IdentityIndexComponent implements OnInit {
       .subscribe();
 
     this.identities$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
-      switchMap(() =>
-        this.identity.find(
-          this.paginator.pageSize || 10,
-          this.paginator.pageSize * this.paginator.pageIndex,
-          this.sort,
-          this.filter,
-          true
-        )
+      switchMap(() => this.policyService.find()),
+      switchMap(policies =>
+        this.identity
+          .find(
+            this.paginator.pageSize || 10,
+            this.paginator.pageSize * this.paginator.pageIndex,
+            this.sort,
+            this.filter,
+            true
+          )
+          .pipe(
+            // convert identity policy ids to policy names
+            map(response => {
+              return {
+                meta: response.meta,
+                data: response.data.map(identity => {
+                  for (const [index, id] of identity.policies.entries()) {
+                    const policy = policies.data.find(policy => policy._id == id);
+                    if (policy) {
+                      identity.policies[index] = policy.name;
+                    }
+                  }
+                  return identity;
+                })
+              };
+            })
+          )
       ),
       map(response => {
         this.paginator.length = response.meta.total;
