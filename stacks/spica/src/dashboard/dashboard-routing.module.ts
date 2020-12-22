@@ -4,6 +4,8 @@ import {Route, RouteCategory, RouteModule} from "@spica-client/core";
 import {IdentityGuard, PolicyGuard} from "../passport";
 import {DashboardComponent} from "./pages/dashboard/dashboard.component";
 import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.component";
+import {AddComponent} from "./pages/add/add.component";
+import {IndexComponent} from "./pages/index/index.component";
 
 const routes: Routes = [
   {pathMatch: "full", path: "", redirectTo: "dashboard"},
@@ -12,12 +14,29 @@ const routes: Routes = [
     canActivate: [IdentityGuard, PolicyGuard],
     component: DashboardComponent
   },
-
   {
     path: "dashboard/:id",
     component: DashboardViewComponent,
-    canActivate: [PolicyGuard],
-    data: {service: "dashboard", action: "show"}
+    canActivate: [PolicyGuard]
+  },
+  {
+    path: "dashboards",
+    canActivate: [IdentityGuard, PolicyGuard],
+    children: [
+      {path: "", component: IndexComponent},
+      {
+        path: ":id",
+        component: AddComponent
+        //canActivate: [PolicyGuard]
+        //data: {service: "dashboard", action: "update"}
+      },
+      {
+        path: "add",
+        component: AddComponent
+        //canActivate: [PolicyGuard]
+        //data: {service: "dashboard", action: "create"}
+      }
+    ]
   }
 ];
 
@@ -28,6 +47,13 @@ const route: Route[] = [
     icon: "dashboard",
     path: "/dashboard",
     display: "Dashboard"
+  },
+  {
+    id: "list_all_dahsboards",
+    category: RouteCategory.Primary,
+    icon: "format_list_numbered",
+    path: "/dashboards",
+    display: "List Custom Dashboards"
   }
 ];
 

@@ -3,7 +3,10 @@ import {Action, createFeatureSelector, createSelector} from "@ngrx/store";
 import {Dashboard} from "../interfaces";
 
 export enum DashboardActionTypes {
-  RETRIEVE = "DASHBOARD_RETRIEVE"
+  RETRIEVE = "DASHBOARD_RETRIEVE",
+  INSERT = "DASHBOARD_INSERT",
+  UPDATE = "DASHBOARD_UPDATE",
+  DELETE = "DASHBOARD_DELETE"
 }
 
 export class Retrieve implements Action {

@@ -1,0 +1,28 @@
+mat-table {
+  box-shadow: none !important;
+  min-width: 100%;
+  width: max-content;
+  mat-cell,
+  mat-header-cell {
+    margin: 0 15px;
+  }
+}
+
+h3 {
+  text-align: center;
+}
+
+div.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  div.filters {
+    mat-form-field {
+      margin-right: 5px;
+    }
+  }
+}
+
+span.nonexist-type  {
+  margin: auto;
+}
