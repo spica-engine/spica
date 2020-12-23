@@ -160,7 +160,7 @@ export async function findDocuments<T>(
   // sort,skip and limit
   const seekingPipeline = [];
 
-  if (params.sort) {
+  if (Object.keys(params.sort || {}).length) {
     seekingPipeline.push({$sort: params.sort});
   }
 
@@ -189,7 +189,7 @@ export async function findDocuments<T>(
   const ruleResetStage = resetNonOverlappingPathsInRelationMap({
     left: [...relationPropertyMap, ...filterPropertyMap],
     right: rulePropertyMap,
-    map: [...ruleRelationMap, ...relationMap, ...relationMap]
+    map: [...ruleRelationMap, ...filterRelationMap, ...relationMap]
   });
 
   if (ruleResetStage) {

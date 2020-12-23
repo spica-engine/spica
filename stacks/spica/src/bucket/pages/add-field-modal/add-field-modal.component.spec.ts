@@ -13,12 +13,11 @@ import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {PropertyKvPipe} from "@spica-client/common/pipes";
 import {InputModule} from "@spica-client/common";
 import {MatSaveModule} from "@spica-client/material";
 import {MatButtonModule} from "@angular/material/button";
 
-import {ActivatedRoute, Router} from "@angular/router";
 import {BucketService} from "src/bucket/services/bucket.service";
 import {AddFieldModalComponent} from "./add-field-modal.component";
 
