@@ -28,7 +28,7 @@ import {
   Trigger
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
-import {CodeComponent} from "./code/code.component";
+import {ExampleComponent} from "@spica-client/common/example";
 
 @Component({
   selector: "functions-add",
@@ -151,8 +151,8 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   showExample(trigger: Trigger) {
-    let code = this.functionService.getExample(trigger);
-    this.dialog.open(CodeComponent, {
+    const code = this.functionService.getExample(trigger);
+    this.dialog.open(ExampleComponent, {
       width: "80%",
       data: {
         code: code
