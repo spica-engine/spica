@@ -7,6 +7,9 @@ div.header {
   align-items: center;
   justify-content: space-between;
   div.filters {
+    > h4 {
+      margin: 0px 0px 5px 0px;
+    }
     mat-form-field {
       margin-right: 5px;
     }

@@ -82,32 +82,8 @@
                 Type
               </mat-label>
               <mat-select [name]="i + '.type'" [(ngModel)]="component.type" required>
-                <mat-option class="mat-accent" value="line">
-                  Line
-                </mat-option>
-                <mat-option class="mat-accent" value="bar">
-                  Bar
-                </mat-option>
-                <mat-option class="mat-accent" value="radar">
-                  Radar
-                </mat-option>
-                <mat-option class="mat-accent" value="pie">
-                  Pie
-                </mat-option>
-                <mat-option class="mat-accent" value="polarArea">
-                  Polar Area
-                </mat-option>
-                <mat-option class="mat-accent" value="doughnut">
-                  Doughnut
-                </mat-option>
-                <mat-option class="mat-accent" value="bubble">
-                  Bubble
-                </mat-option>
-                <mat-option class="mat-accent" value="scatter">
-                  Scatter
-                </mat-option>
-                <mat-option class="mat-accent" value="table">
-                  Table
+                <mat-option class="mat-accent" *ngFor="let type of types" [value]="type">
+                  {{ type | titlecase }}
                 </mat-option>
               </mat-select>
             </mat-form-field>

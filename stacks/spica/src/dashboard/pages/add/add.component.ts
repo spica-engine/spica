@@ -24,6 +24,8 @@ export class AddComponent implements OnInit, OnDestroy {
   dashboard: Dashboard = getEmptyDashboard();
   onDestroy$: Subject<any> = new Subject();
 
+  types = ["line", "pie", "doughnut", "polarArea", "scatter", "bubble", "radar", "bar", "table"];
+
   readonly icons: Array<string> = ICONS;
   readonly iconPageSize = 21;
 

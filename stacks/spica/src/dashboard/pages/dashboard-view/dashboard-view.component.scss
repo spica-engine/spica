@@ -34,9 +34,11 @@ div {
         flex-grow: 1;
         min-height: 250px;
         min-width: 250px;
-
-        span.nonexist-type  {
-          margin: auto;
+        div.nonexist-type {
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
       }
     }

@@ -22,12 +22,12 @@
           (onUpdate)="onUpdate($event, i)"
         >
         </dashboard-table>
-        <span
+        <div
           class="nonexist-type"
           *ngIf="defaultTypes.indexOf(component.type) == -1 && component.type != 'table'"
         >
-          This component type does not exist.
-        </span>
+          <span>This component type does not exist.</span>
+        </div>
       </mat-card>
     </div>
   </div>

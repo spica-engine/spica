@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, Output, EventEmitter} from "@angular/core";
+import {Component, Input, Output, EventEmitter} from "@angular/core";
 import {Observable} from "rxjs";
 
 @Component({
@@ -6,7 +6,7 @@ import {Observable} from "rxjs";
   templateUrl: "./default.component.html",
   styleUrls: ["./default.component.scss"]
 })
-export class DefaultComponent implements OnInit {
+export class DefaultComponent {
   @Input() componentData$: Observable<any>;
   @Input() type: string;
 
@@ -15,8 +15,6 @@ export class DefaultComponent implements OnInit {
   @Output() onUpdate: EventEmitter<object> = new EventEmitter();
 
   constructor() {}
-
-  ngOnInit() {}
 
   refresh() {
     this.onUpdate.next(this.filter);
