@@ -34,18 +34,11 @@ div {
         flex-grow: 1;
         min-height: 250px;
         min-width: 250px;
-
-        h3 {
-          text-align: center;
-        }
-
-        div.refresh {
-          position: absolute;
-          right: 20px;
-        }
-
-        span.nonexist-type  {
-          margin: auto;
+        div.nonexist-type {
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
       }
     }

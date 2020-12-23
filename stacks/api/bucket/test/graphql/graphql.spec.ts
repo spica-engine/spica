@@ -1757,8 +1757,8 @@ describe("GraphQLController", () => {
             },
             relation_field: {
               type: "relation",
-              bucketId: "unknown_bucket_id",
-              relationType: "manytomany"
+              bucketId: "000000000000000000000000",
+              relationType: "onetomany"
             },
             "123asd?qwe*": {
               type: "color"
@@ -1793,11 +1793,7 @@ describe("GraphQLController", () => {
       expect(JSON.parse(response.headers.warning)).toEqual([
         {
           target: `${bucketName}.relation_field`,
-          reason: "Relation type 'manytomany' is invalid."
-        },
-        {
-          target: `${bucketName}.relation_field`,
-          reason: "Related bucket 'unknown_bucket_id' does not exist."
+          reason: "Related bucket '000000000000000000000000' does not exist."
         },
         {
           target: `${bucketName}.123asd?qwe*`,

@@ -18,10 +18,7 @@ function v1_apikey_to_internal(obj: any) {
 }
 
 export function registerInformers(apiKeyService: ApiKeyService) {
-  const apikeyStore = store({
-    group: "passport",
-    resource: "apikeys"
-  });
+  let apikeyStore;
 
   register(
     {
@@ -35,6 +32,13 @@ export function registerInformers(apiKeyService: ApiKeyService) {
         const raw = v1_apikey_to_internal(obj);
         const k = await apiKeyService.insertOne(raw);
 
+        if (!apikeyStore) {
+          apikeyStore = store({
+            group: "passport",
+            resource: "apikeys"
+          });
+        }
+
         await apikeyStore.patch(obj.metadata.name, {
           spec: {key},
           metadata: {uid: String(k._id)},
@@ -44,6 +48,14 @@ export function registerInformers(apiKeyService: ApiKeyService) {
       update: async (oldObj, newObj) => {
         const raw = v1_apikey_to_internal(newObj);
         delete raw.key;
+
+        if (!apikeyStore) {
+          apikeyStore = store({
+            group: "passport",
+            resource: "apikeys"
+          });
+        }
+
         await apikeyStore.patch(newObj.metadata.name, {
           spec: {key: oldObj.spec.key}
         });
