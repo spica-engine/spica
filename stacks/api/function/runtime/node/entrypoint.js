@@ -162,13 +162,13 @@ async function _process(ev, queue) {
       // NO OP
       break;
     case event.Type.BUCKET:
-      const ChangeQueue = new Bucket.ChangeQueue();
-      const Change = await ChangeQueue.pop(
+      const changeQueue = new Bucket.ChangeQueue();
+      const bucketChange = await changeQueue.pop(
         new BucketHooks.Pop({
           id: ev.id
         })
       );
-      callArguments[0] = new Bucket.Change(Change);
+      callArguments[0] = new Bucket.Change(bucketChange);
       break;
     default:
       exitAbnormally(`Invalid event type received. (${ev.type})`);

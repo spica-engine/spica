@@ -124,7 +124,7 @@ describe("FunctionController", () => {
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
-    expect(result.message).toBe("Multiple handlers on same bucket are not supported.");
+    expect(result.message).toBe("Multiple handlers on same bucket trigger are not supported.");
   });
 
   it("should not fail if the updated function has bucket triggers with same configuration in database", async () => {

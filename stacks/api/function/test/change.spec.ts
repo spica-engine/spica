@@ -102,7 +102,7 @@ describe("Change", () => {
     //trigger configuration will be updated. It should be a part of updated handlers
     let updatedTrigger = {
       updated: {
-        type: "bucket",
+        type: "http",
         active: true,
         options: {}
       }
@@ -152,6 +152,7 @@ describe("Change", () => {
       }
     };
 
+    currentFn.triggers.updated.options["preflight"] = true;
     currentFn.triggers.deactivated.active = false;
 
     //for making more readable
