@@ -5,7 +5,7 @@ import * as duration from "pretty-ms";
 async function list() {
   const machine = new docker();
 
-  const foundNetworks: docker.NetworkInfo[] = await machine.listNetworks({
+  const foundNetworks: docker.NetworkInspectInfo[] = await machine.listNetworks({
     filters: JSON.stringify({label: {namespace: true}})
   });
 

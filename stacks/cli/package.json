@@ -24,6 +24,6 @@
     "cli-color": "^2.0.0"
   },
   "devDependencies": {
-    "@types/dockerode": "^2.5.34"
+    "@types/dockerode": "^3.2.1"
   }
 }
