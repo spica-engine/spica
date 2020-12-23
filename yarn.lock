@@ -7322,10 +7322,10 @@ google-p12-pem@^3.0.0:
   dependencies:
     node-forge "^0.9.0"
 
-google-protobuf@^3.10.0:
-  version "3.10.0"
-  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.10.0.tgz#f36171128090615049f9b0e42252b1a10a4bc534"
-  integrity sha512-d0cMO8TJ6xtB/WrVHCv5U81L2ulX+aCD58IljyAN6mHwdHHJ2jbcauX5glvivi3s3hx7EYEo7eUA9WftzamMnw==
+google-protobuf@^3.14.0:
+  version "3.14.0"
+  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.14.0.tgz#20373d22046e63831a5110e11a84f713cc43651e"
+  integrity sha512-bwa8dBuMpOxg7COyqkW6muQuvNnWgVN8TX/epDRGW5m0jcrmq2QJyCyiV8ZE2/6LaIIqJtiv9bYokFhfpy/o6w==
 
 got@^11.3.0:
   version "11.3.0"
@@ -11804,6 +11804,11 @@ protobufjs@6.8.8:
     "@types/long" "^4.0.0"
     "@types/node" "^10.1.0"
     long "^4.0.0"
+
+protoc-gen-ts@^0.3.4:
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/protoc-gen-ts/-/protoc-gen-ts-0.3.4.tgz#231de77a9ce1b748e666d5db85a1ca933d02ca71"
+  integrity sha512-j2oawQXhg+xAK/FbMVHYDyyvjCpX3VdgWXIDQm/3UzzNPXGzpwCMU9r4jexr0fWccuahFPnaqQGOhY0FuOwV2g==
 
 protoduck@^5.0.1:
   version "5.0.1"

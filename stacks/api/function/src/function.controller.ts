@@ -121,7 +121,7 @@ export class FunctionController {
       for (const handler in fn.triggers) {
         if (fn.triggers.hasOwnProperty(handler)) {
           const trigger = fn.triggers[handler];
-          if (trigger.type == "bucket" && trigger.options["phase"] == "BEFORE") {
+          if (trigger.type == "bucket") {
             acc.push(trigger);
           }
         }
@@ -154,9 +154,7 @@ export class FunctionController {
     fn._id = id;
     const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
     if (hasDuplicatedHandlers) {
-      throw new BadRequestException(
-        "Multiple handlers on same bucket and event type in before phase are not supported."
-      );
+      throw new BadRequestException("Multiple handlers on same bucket trigger are not supported.");
     }
     delete fn._id;
     // Language is immutable
@@ -180,9 +178,7 @@ export class FunctionController {
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
     const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
     if (hasDuplicatedHandlers) {
-      throw new BadRequestException(
-        "Multiple handlers on same bucket and event type in before phase are not supported."
-      );
+      throw new BadRequestException("Multiple handlers on same bucket trigger are not supported.");
     }
     fn = await this.fs.insertOne(fn);
 

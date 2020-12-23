@@ -38,7 +38,6 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
-              phase: "BEFORE",
               type: "GET"
             }
           },
@@ -46,7 +45,6 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
-              phase: "BEFORE",
               type: "GET"
             }
           }
@@ -57,9 +55,7 @@ describe("FunctionController", () => {
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
-    expect(result.message).toBe(
-      "Multiple handlers on same bucket and event type in before phase are not supported."
-    );
+    expect(result.message).toBe("Multiple handlers on same bucket trigger are not supported.");
   });
 
   it("should fail if the inserted function has bucket triggers with same configuration in database", async () => {
@@ -69,7 +65,6 @@ describe("FunctionController", () => {
           type: "bucket",
           options: {
             bucket: "test",
-            phase: "BEFORE",
             type: "GET"
           }
         }
@@ -85,7 +80,6 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
-              phase: "BEFORE",
               type: "GET"
             }
           }
@@ -96,9 +90,7 @@ describe("FunctionController", () => {
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
-    expect(result.message).toBe(
-      "Multiple handlers on same bucket and event type in before phase are not supported."
-    );
+    expect(result.message).toBe("Multiple handlers on same bucket trigger are not supported.");
   });
 
   it("should fail if the updated function has bucket triggers with same configuration", async () => {
@@ -115,7 +107,6 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
-              phase: "BEFORE",
               type: "GET"
             }
           },
@@ -123,7 +114,6 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
-              phase: "BEFORE",
               type: "GET"
             }
           }
@@ -134,9 +124,7 @@ describe("FunctionController", () => {
       })
       .catch(e => e);
     expect(result instanceof BadRequestException).toBe(true);
-    expect(result.message).toBe(
-      "Multiple handlers on same bucket and event type in before phase are not supported."
-    );
+    expect(result.message).toBe("Multiple handlers on same bucket are not supported.");
   });
 
   it("should not fail if the updated function has bucket triggers with same configuration in database", async () => {
@@ -146,7 +134,6 @@ describe("FunctionController", () => {
           type: "bucket",
           options: {
             bucket: "test",
-            phase: "BEFORE",
             type: "GET"
           }
         }
@@ -163,7 +150,6 @@ describe("FunctionController", () => {
             type: "bucket",
             options: {
               bucket: "test",
-              phase: "BEFORE",
               type: "GET"
             }
           }

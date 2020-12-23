@@ -104,9 +104,7 @@ describe("Change", () => {
       updated: {
         type: "bucket",
         active: true,
-        options: {
-          phase: "AFTER"
-        }
+        options: {}
       }
     };
 
@@ -154,7 +152,6 @@ describe("Change", () => {
       }
     };
 
-    currentFn.triggers.updated.options.phase = "BEFORE";
     currentFn.triggers.deactivated.active = false;
 
     //for making more readable

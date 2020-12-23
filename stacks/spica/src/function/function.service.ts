@@ -30,10 +30,10 @@ export class FunctionService {
 
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {
-      if (!trigger.options.phase || !trigger.options.type) {
-        return "Select the phase and operation type to display example code.";
+      if (!trigger.options.type) {
+        return "Select the operation type to display example code.";
       }
-      return examples.bucket[trigger.options.phase][trigger.options.type];
+      return examples.bucket[trigger.options.type];
     } else if (trigger.type == "database") {
       if (!trigger.options.type) {
         return "Select an operation type to display example code.";
