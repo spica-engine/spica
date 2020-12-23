@@ -15,7 +15,7 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
-import {BuildLinkPipe} from "@spica-client/common/build_link.pipe";
+import {BuildLinkPipe} from "@spica-client/common/pipes";
 import {ACTIVITY_FACTORY} from "@spica-client/core";
 import {of} from "rxjs";
 import {ActivityService} from "../../services/activity.service";
