@@ -162,35 +162,13 @@ async function _process(ev, queue) {
       // NO OP
       break;
     case event.Type.BUCKET:
-      const reviewAndChangeQueue = new Bucket.ReviewAndChangeQueue();
-      const reviewOrChange = await reviewAndChangeQueue.pop(
+      const changeQueue = new Bucket.ChangeQueue();
+      const bucketChange = await changeQueue.pop(
         new BucketHooks.Pop({
           id: ev.id
         })
       );
-
-      if (reviewOrChange.review) {
-        callArguments[0] = new Bucket.Review(reviewOrChange.review);
-        callback = async result => {
-          result = await result;
-          if (result == undefined || result == null) {
-            console.error(
-              `Function (${
-                ev.target.handler
-              }) did not return any review response. Expected a review response but got ${typeof result}`
-            );
-          }
-          await reviewAndChangeQueue.result(
-            new BucketHooks.Review.Result({
-              id: ev.id,
-              result: JSON.stringify(result),
-              type: reviewOrChange.review.type
-            })
-          );
-        };
-      } else {
-        callArguments[0] = new Bucket.Change(reviewOrChange.change);
-      }
+      callArguments[0] = new Bucket.Change(bucketChange);
       break;
     default:
       exitAbnormally(`Invalid event type received. (${ev.type})`);
