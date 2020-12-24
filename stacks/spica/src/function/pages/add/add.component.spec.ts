@@ -191,7 +191,7 @@ describe("Function Add", () => {
           options: {}
         };
         let code = getExample(trigger as any);
-        expect(code).toEqual("Select the phase and operation type to display example code.");
+        expect(code).toEqual("Select the operation type to display example code.");
       });
 
       describe("before", () => {
@@ -199,21 +199,20 @@ describe("Function Add", () => {
           let trigger = {
             type: "bucket",
             options: {
-              phase: "BEFORE",
               type: "INSERT"
             }
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual(examples.bucket.BEFORE.INSERT);
+          expect(code).toEqual(examples.bucket.INSERT);
         });
 
         it("should return information about missing inputs", () => {
           let trigger = {
             type: "bucket",
-            options: {phase: "BEFORE"}
+            options: {}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("Select the phase and operation type to display example code.");
+          expect(code).toEqual("Select the operation type to display example code.");
         });
       });
       describe("after", () => {
@@ -221,21 +220,20 @@ describe("Function Add", () => {
           let trigger = {
             type: "bucket",
             options: {
-              phase: "AFTER",
               type: "ALL"
             }
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual(examples.bucket.AFTER.ALL);
+          expect(code).toEqual(examples.bucket.ALL);
         });
 
         it("should return information about missing inputs", () => {
           let trigger = {
             type: "bucket",
-            options: {phase: "AFTER"}
+            options: {}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("Select the phase and operation type to display example code.");
+          expect(code).toEqual("Select the operation type to display example code.");
         });
       });
     });
