@@ -41,7 +41,7 @@ import {FunctionInitializer} from "./function.initializer";
 import {FunctionService} from "./function.service";
 import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
-import {CodeComponent} from "./pages/add/code/code.component";
+import {ExampleComponent} from "@spica-client/common/example";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
@@ -57,7 +57,7 @@ import {WebhookModule} from "./webhook.module";
     WelcomeComponent,
     LanguageDirective,
     EnqueuerPipe,
-    CodeComponent
+    ExampleComponent
   ],
   imports: [
     CommonModule,
