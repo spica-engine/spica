@@ -115,30 +115,6 @@ export class FunctionController {
     await this.engine.deleteFunction(fn);
   }
 
-  private async hasDuplicatedBucketHandlers(fn: Function): Promise<boolean> {
-    const functions = (await this.fs.find({_id: {$ne: fn._id}})).concat(fn);
-    const triggers = functions.reduce((acc, fn) => {
-      for (const handler in fn.triggers) {
-        if (fn.triggers.hasOwnProperty(handler)) {
-          const trigger = fn.triggers[handler];
-          if (trigger.type == "bucket") {
-            acc.push(trigger);
-          }
-        }
-      }
-      return acc;
-    }, new Array<Trigger>());
-
-    return triggers.some((trigger, index, triggers) => {
-      const foundIndex = triggers.findIndex(
-        t =>
-          t.options["bucket"] == trigger.options["bucket"] &&
-          t.options["type"] == trigger.options["type"]
-      );
-      return foundIndex != index;
-    });
-  }
-
   /**
    * @description Replaces a function object and returns the latest committed version of function object.<br>
    * Keep in mind that `language` is immutable and ignored silently if present
@@ -152,10 +128,6 @@ export class FunctionController {
     @Body(Schema.validate(generate)) fn: Function
   ) {
     fn._id = id;
-    const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
-    if (hasDuplicatedHandlers) {
-      throw new BadRequestException("Multiple handlers on same bucket trigger are not supported.");
-    }
     delete fn._id;
     // Language is immutable
     delete fn.language;
@@ -176,10 +148,6 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
-    if (hasDuplicatedHandlers) {
-      throw new BadRequestException("Multiple handlers on same bucket trigger are not supported.");
-    }
     fn = await this.fs.insertOne(fn);
 
     const changes = createTargetChanges(fn, ChangeKind.Added);
