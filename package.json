@@ -77,7 +77,6 @@
     "passport-saml": "^1.0.0",
     "path-to-regexp": "^3.0.0",
     "pegjs": "^0.10.0",
-    "protoc-gen-ts": "^0.3.4",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.8",

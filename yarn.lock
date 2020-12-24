@@ -11805,11 +11805,6 @@ protobufjs@6.8.8:
     "@types/node" "^10.1.0"
     long "^4.0.0"
 
-protoc-gen-ts@^0.3.4:
-  version "0.3.4"
-  resolved "https://registry.yarnpkg.com/protoc-gen-ts/-/protoc-gen-ts-0.3.4.tgz#231de77a9ce1b748e666d5db85a1ca933d02ca71"
-  integrity sha512-j2oawQXhg+xAK/FbMVHYDyyvjCpX3VdgWXIDQm/3UzzNPXGzpwCMU9r4jexr0fWccuahFPnaqQGOhY0FuOwV2g==
-
 protoduck@^5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/protoduck/-/protoduck-5.0.1.tgz#03c3659ca18007b69a50fd82a7ebcc516261151f"

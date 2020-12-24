@@ -26,4 +26,44 @@ describe("ChangeEnqueuer", () => {
       handler: "default"
     });
   });
+
+  it("should add target to the changeTargets and call the 'on' method of emitter", () => {
+    changeEnqeuer.subscribe(noopTarget, {
+      bucket: "test_collection",
+      type: "INSERT"
+    });
+
+    expect(changeEnqeuer["changeTargets"].get(noopTarget).options).toEqual({
+      bucket: "test_collection",
+      type: "INSERT"
+    });
+
+    expect(changeEmitter.on).toHaveBeenCalledTimes(1);
+
+    expect(changeEmitter.on.calls.first().args[0]).toEqual("test_collection_insert");
+  });
+
+  it("should remove the target from changeTargets and call the 'of' method of emitter", () => {
+    changeEnqeuer.subscribe(noopTarget, {
+      bucket: "test_collection",
+      type: "INSERT"
+    });
+
+    changeEnqeuer.subscribe(noopTarget2, {
+      bucket: "test_collection",
+      type: "GET"
+    });
+
+    changeEnqeuer.unsubscribe(noopTarget);
+
+    expect(changeEnqeuer["changeTargets"].get(noopTarget)).toEqual(undefined);
+    expect(changeEnqeuer["changeTargets"].get(noopTarget2).options).toEqual({
+      bucket: "test_collection",
+      type: "GET"
+    });
+
+    expect(changeEmitter.off).toHaveBeenCalledTimes(1);
+
+    expect(changeEmitter.off.calls.first().args[0]).toEqual("test_collection_insert");
+  });
 });
