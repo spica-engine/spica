@@ -198,9 +198,8 @@
                   <b>{{ trigger.options["name"] }}</b> event triggered.</span
                 >
                 <span *ngSwitchCase="'bucket'">
-                  Function <b>{{ trigger.handler }}</b> will be executed <b></b
-                  >{{ trigger.options["phase"] }} every <b>{{ trigger.options["type"] }}</b> request
-                  to
+                  Function <b>{{ trigger.handler }}</b> will be executed <b></b>after every
+                  <b>{{ trigger.options["type"] }}</b> request to
                   <b>{{
                     enqueuer.options.properties.bucket.viewEnum[
                       enqueuer.options.properties.bucket.enum.indexOf(trigger.options["bucket"])

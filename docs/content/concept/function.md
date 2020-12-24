@@ -270,7 +270,6 @@ Bucket trigger invokes your function **after** the selected operation for a spec
 All required fields for a bucket trigger are listed below;
 
 - **Bucket:** Bucket ID of the desired bucket
-- **Phase:** Spesifies, on which phase the function triggers
 - **Event Type:** Type of the event that happens in the collection.
 #### Bucket Events
 
