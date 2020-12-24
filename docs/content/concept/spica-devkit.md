@@ -12,7 +12,7 @@ In order to use these modules in a **function**, they need to be added as **depe
 | `@spica-devkit/bucket`    | This module has a public API for making both Bucket and Bucket Data operations like **update**, **delete**, **insert**, **get** |
 | `@spica-devkit/dashboard` | This module has a public API for making Dashboard operations |
 
-### Database
+## Database
 
 The database module is an in-memory module that has a public API for basic database operations like `FIND`, `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
 
@@ -123,7 +123,7 @@ export default async function() {
 }
 ```
 
-### Bucket
+## Bucket
 
 > Bucket module imported from `@spica-devkit/bucket`.
 

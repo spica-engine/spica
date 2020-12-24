@@ -6,7 +6,7 @@ Within a function, you can do almost everything you want to do.
 
 ## Table of contents
 
-### Use cases
+## Use cases
 
 On-demand nature of functions makes it a perfect candidate for event-driven execution.
 

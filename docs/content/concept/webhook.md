@@ -31,7 +31,7 @@ Example webhook body:
 
 ![Webhook Create](assets/images/docs/function/webhooks.png)
 
-### Webhook Logs
+## Webhook Logs
 
 You can see all webhook acitivites in `Webhook Logs` section. You can filter the logs by webhook ID, date or result (success/fail). In a standart build of Spica, there is no time limitation on webhook logs. So you can store all webhook logs forever.
 
