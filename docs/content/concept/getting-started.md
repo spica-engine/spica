@@ -1,5 +1,7 @@
 # Getting Started
 
+## Table of contents
+
 ## Introduction
 
 These documents will take you from zero to hero and helps you to discover advanced features of the Spica Development Engine.
