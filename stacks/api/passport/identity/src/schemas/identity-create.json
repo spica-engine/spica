@@ -10,7 +10,7 @@
 	"properties": {
 		"identifier": {
 			"type": "string",
-			"title": "Identitifer of the identity"
+			"title": "Identifier of the identity"
 		},
 		"password": {
 			"type": "string",

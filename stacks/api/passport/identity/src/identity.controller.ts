@@ -122,6 +122,7 @@ export class IdentityController {
     identity: Identity
   ) {
     identity.password = await hash(identity.password);
+    identity.policies = [];
     return this.identity
       .insertOne(identity)
       .then(insertedIdentity => {
@@ -148,6 +149,7 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
+    delete identity.policies;
     return this.identity.findOneAndUpdate(
       {_id: id},
       {$set: identity},
