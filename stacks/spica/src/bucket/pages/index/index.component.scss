@@ -147,7 +147,7 @@
           }
         }
 
-        td.mat-cell {
+        td.mat-cell:not(.action) {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
