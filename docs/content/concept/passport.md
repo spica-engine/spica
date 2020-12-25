@@ -15,13 +15,6 @@ The smallest rule setting in the passport module is the statement. Each statemen
 
 `Resource`: This is the only optional setting for statements. For some of services, you can define specific resources. So the statement will be applied for that particular resource.
 
-## Policies
-
-Policies are a multi-purpose designed rule management structure. To create a rule in the passport module, you can create a policy and assign it to identities. Also to have role-based account management system, you can use policies. A policy can include multiple statements. 
-
-> NOTE: To create role-based account management, you should assign multiple statements to policies. For example; “Content Editor” policy should have all bucket statements and storage statements.
-
-
 ## Identities
 An identity means an account in the Spica domain. Each identity has own policies and meta data. It contains **identifier** and **password** informations for authorization. You can attach a policy to identity and detach it any time. You can see all attachable policies under identity policies tab. 
 
@@ -49,7 +42,7 @@ To create an API Key, navigate to **System** -> **API Keys** in the left-hand me
 
 Once the saving completed, you can use the **API Key** value on your API calls on header section.
 
-> For more informations about how to use API Key, please refer the API Documentations.
+> For more information about how to use API Key, please refer the API Documentations.
 
 ## Strategies
 Our passport module supports SSO strategies as well. You will find SSO settings screen in “Strategies” page. Once you setup your SSO strategy, login button will be visible in login page. You can use both normal login and SSO login at the same time.
@@ -61,7 +54,10 @@ You can define your identities data model fully flexible. Spice requires email, 
 
 ## Policies
 
-Policies are basically a set of rules which can be attached to your **Identities** and **API Keys** to encapsulate and control their capabilities.
+
+Policies are a multi-purpose designed rule management structure. To create a rule in the passport module, you can create a policy and assign it to to your **Identities** and **API Keys** to encapsulate and control their capabilities. Also to have role-based account management system, you can use policies. A policy can include multiple statements. 
+
+> NOTE: To create role-based account management, you should assign multiple statements to policies. For example; “Content Editor” policy should have all bucket statements and storage statements.
 
 ### Using the Policies
 
@@ -69,19 +65,19 @@ Spica cames with various different built-in Policies to meet your needs on encap
 
 To attach Policies, enter either **Identity Edit Page** or **API Key Edit Page**. At the bottom, you will see `Owned Policies` section.
 
-To attach the policy, click the `link` buttom. To detach click on `unlink` button.
+To attach the policy, click the `link` button. To detach click on `unlink` button.
 
 ![Example Policies](assets/images/docs/passport/policies.png)
 
 ### Creating a Custom Policy
 
-It is possible to create your own Custom Policy by clicking on the `+` button on Policies page to create from scratch or clone a Policy and start to work where it left off by clicking the `copy` button on Policies page next to each policy.
+It is possible to create your own Custom Policy by clicking on the `+` button on the Policies page to create from scratch or clone a Policy and start to work where it left off by clicking the `copy` button on the Policies page next to each policy.
 
 Here you can enter your Policy's `Name` and `Description`.
 
-Click on `Add Statement` button to add new statement. You'll see a new statement added to list in that page. You'll see a new form to fill. Let's dig in.
+Click on `Add Statement` button to add a new statement. You'll see a new statement added to the list in that page. You'll see a new form to fill. Let's dig in.
 
-`Effect`: If you want to restrict a certain sets of rules, set the Effect as `Deny`, otherwise select `Allow`.
+`Effect`: If you want to restrict certain sets of rules, set the Effect as `Deny`, otherwise select `Allow`.
 
 `Service`: Select the scope of the Statement.
 
