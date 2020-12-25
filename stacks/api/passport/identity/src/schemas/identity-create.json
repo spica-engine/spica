@@ -10,11 +10,13 @@
 	"properties": {
 		"identifier": {
 			"type": "string",
-			"title": "Identitifer of the identity"
+			"title": "Identitifer of the identity",
+			"minLength": 3
 		},
 		"password": {
 			"type": "string",
-			"title": "Password of the identity"
+			"title": "Password of the identity",
+			"minLength": 3
 		}
 	}
 }
