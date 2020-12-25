@@ -2,7 +2,7 @@ import {Db, getConnectionUri, getDatabaseName, start} from "@spica-server/databa
 import * as color from "cli-color/lib/supports-color";
 import {run} from "../../src/main";
 
-describe("Add phase to bucket trigger", () => {
+describe("Add acl to buckets", () => {
   let db: Db;
   let args: string[];
 
