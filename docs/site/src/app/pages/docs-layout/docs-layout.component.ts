@@ -32,13 +32,13 @@ export class DocsLayoutComponent implements OnInit {
 
     docs.documentChanged.subscribe(data => {
       this.headingsInContent = [];
-      for (let [i, heading] of data.entries()) {
+      for (const [i, heading] of data.entries()) {
         this.headingsInContent[i] = {
           title: heading,
           fragment: heading.toLowerCase().replace(/ /g, "-")
         };
       }
-      let url = this.route.url;
+      const url = this.route.url;
       this.activeDocument = url.split("/")[url.split("/").length - 1];
     });
   }
