@@ -4,7 +4,9 @@ Functions are an event-driven execution context for your spica. Simply, you can 
 
 Within a function, you can do almost everything you want to do.
 
-### Use cases
+## Table of contents
+
+## Use cases
 
 On-demand nature of functions makes it a perfect candidate for event-driven execution.
 
@@ -51,346 +53,6 @@ export default function(request, response) {
 
 See [triggers](#triggers) section for parameter types.
 
-## Modules
-
-Spica provides modules to your function in runtime. Modules work like a module in node_modules but not placed in node_modules directory.
-
-In order to use these modules in a **function**, they need to be added as **dependency** on **Function Edit page**.
-
-| Module                   | Description                                                                                                                     |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `@spica-devkit/database` | This module has a public API for making database operations like **update**, **delete**, **create**, **get**                    |
-| `@spica-devkit/bucket`   | This module has a public API for making both Bucket and Bucket Data operations like **update**, **delete**, **insert**, **get** |
-
-### Database
-
-The database module is an in-memory module that has public API for basic database operations like `FIND`, `INSERT`, `UPDATE`, `REPLACE`, `DELETE`, `DROP`.
-
-> Database module imported from `@spica-devkit/database`.
-
-#### Connecting to the database
-
-You can get the database instance with the `database()` function exported from `@spica-devkit/database` module.
-
-```typescript
-import {database, Database} from "@spica-devkit/database";
-
-const db: Database = await database();
-// Type of db variable is  Database which exported from `@spica-devkit/database`
-```
-
-#### Getting the reference to a Collection
-
-To make changes in a collection you need to get it reference first. You can get reference for a specific collection with `Database.collection()` function exported by your database instance. For more information check [mongoDB API](https://mongodb.github.io/node-mongodb-native/3.2/api/Collection.html)
-
-```typescript
-import {database, Database, Collection} from "@spica-devkit/database";
-
-const db: Database = await database();
-const collection: Collection = db.collection("persistent_collection");
-```
-
-#### Operations
-
-Here is some fundamental examples;
-
-##### Insert
-
-```typescript
-import {database, Database, Collection} from "@spica-devkit/database";
-
-export default async function() {
-  const db: Database = await database();
-  const books: Collection = db.collection("books");
-
-  // insertOne will return Promise<void>
-  await books.insertOne({
-    name: "The Fall Of Leaves",
-    translator: "W. D. Halsey",
-    available_in: ["English", "Turkish"]
-    author: "Resat Nuri Guntekin",
-    year: 1930
-  });
-}
-```
-
-##### Find
-
-```typescript
-import {database, Database, Collection} from "@spica-devkit/database";
-
-export default async function() {
-  const db: Database = await database();
-  const books: Collection = db.collection("books");
-
-  // Get all books
-  const allBooks = await books.find().toArray();
-  console.dir(allBooks);
-  // Above code will print [{ name: "The Fall Of Leaves", ... }]
-
-  const writtenAfter19StCentury = await books.find({year: {$gte: 2000}}).toArray();
-  console.dir(writtenAfter19StCentury);
-  // Result will be empty array.
-}
-```
-
-> NOTE: `find` method accepts [Query and Projection Operators](https://docs.mongodb.com/manual/reference/operator/query/)
-
-##### Find One
-
-```typescript
-import {database, Database, Collection} from "@spica-devkit/database";
-
-export default async function() {
-  const db: Database = await database();
-  const books: Collection = db.collection("books");
-
-  // Find the book named The Fall Of Leaves
-  const book = await books.findOne({name: "The Fall Of Leaves"});
-  console.dir(book);
-  // Result will be { name: "The Fall Of Leaves", ... }
-}
-```
-
-##### Update
-
-```typescript
-import {database, Database, Collection} from "@spica-devkit/database";
-
-export default async function() {
-  const db: Database = await database();
-  const books: Collection = db.collection("books");
-
-  // Find the book named The Fall Of Leaves
-  const book = await books.findOne({name: "The Fall Of Leaves"});
-
-  // If the book found then update it's published year
-  if (book) {
-    book.year = 2000;
-    // Update whole document with $set
-    await books.update({name: book.name}, {$set: book});
-  }
-}
-```
-
-### Bucket
-
-> Bucket module imported from `@spica-devkit/bucket`.
-
-##### Initializing Bucket Module
-
-To initialize a bucket, simply use `initialize` function exported from `@spica-devkit/bucket` module. Specify the APIKEY and optional API url.
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-Bucket.initialize({apikey: "{APIKEY which as the needed policy}", publicUrl: ""});
-```
-
-##### Operations
-
-###### Get
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.get("{BUCKET ID}");
-}
-```
-
-###### Get All
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.getAll();
-}
-```
-
-###### Insert
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-
-  let bucket = {
-    title: "Example Bucket",
-    description: "User Bucket Description",
-    primary: "name",
-    properties: {
-      name: {
-        type: "string",
-        title: "name",
-        options: {position: "left", visible: true}
-      },
-      surname: {
-        type: "string",
-        title: "surname",
-        options: {position: "right"}
-      }
-    }
-  };
-
-  return Bucket.insert(newBucket);
-}
-```
-
-###### Update
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-
-  let bucket = {
-    title: "Example Bucket",
-    description: "User Bucket Description",
-    primary: "name",
-    properties: {
-      name: {
-        type: "string",
-        title: "name",
-        options: {position: "left", visible: true}
-      },
-      surname: {
-        type: "string",
-        title: "surname",
-        options: {position: "right"}
-      }
-    }
-  };
-
-  return Bucket.update("5f10302b4d858d1824e57e6d", {
-    ...bucket,
-    title: "UPDATED BUCKET TITLE"
-  });
-}
-```
-
-###### Delete
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.remove("5f10302b4d858d1824e57e6d");
-}
-```
-
-###### Bucket Data Get
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.data.get("{BUCKET ID}", "{BUCKET DATA ID}");
-}
-```
-
-Note: Additionally, `Bucket.data.get()` function accepts a third optional `options` parameter. The following is the structure of the `options` parameter:
-
-```json
-{
-  headers: {
-    {HTTP HEADER KEY}: "{VALUE}"
-  },
-  queryParams: {
-    {SPICA QUERY PARAMS}: "{VALUE}",
-    filter: "{Access Control Rules}"
-  }
-}
-```
-
-For more informations about `Access Control Rules`, please visit [this page](https://spicaengine.com/docs/guide/bucket#rules).
-
-
-###### Bucket Data Get with Parameters
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.data.getAll("{BUCKET ID}", {
-    headers: {"accept-language": "TR"},
-    queryParams: {paginate: true, skip: 1}
-  });
-}
-```
-
-Note: `Bucket.data.getAll()` function accepts a third optional `options` parameter. The following is the structure of the `options` parameter:
-
-```json
-{
-  headers: {
-    {HTTP HEADER KEY}: "{VALUE}"
-  },
-  queryParams: {
-    {SPICA QUERY PARAMS}: "{VALUE}",
-    filter: "{Access Control Rules}"
-  }
-}
-```
-
-For more informations about Access Control Rules, please visit [this page](https://spicaengine.com/docs/guide/bucket#rules).
-
-###### Bucket Data Insert
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-
-  let document = {
-    name: "123",
-    surname: "321"
-  };
-
-  return Bucket.data.insert("{BUCKET ID}", document);
-}
-```
-
-###### Bucket Data Update
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-
-  let document = {
-    name: "123",
-    surname: "321"
-  };
-
-  return Bucket.data.update("{BUCKET ID}", "{BUCKET DATA ID}", {
-    ...document,
-    name: "updated_name"
-  });
-}
-```
-
-###### Bucket Data Remove
-
-```typescript
-import * as Bucket from "@spica-devkit/bucket";
-
-export default function(req, res) {
-  Bucket.initialize({apikey: "{APIKEY}"});
-  return Bucket.data.remove("{BUCKET ID}", "{BUCKET DATA ID}");
-}
-```
-
 ## Triggers
 
 ### Http
@@ -406,7 +68,7 @@ Path and Method, the method must be one of the specified HTTP methods above also
 
 #### Method
 
-Http trigger needs an HTTP method to be able to triage requests properly. For more info check out [Http Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
+HTTP trigger needs an HTTP method to be able to triage requests properly. For more info check out [Http Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
 
 Currently, these methods are valid for use;
 
@@ -485,7 +147,7 @@ export default function(request, response) {
 }
 ```
 
-If you send a `POST` request to this function with following `JSON` payload; You will get the exact payload to response back because we used `request.body` as a response payload.
+If you send a `POST` request to this function with the following `JSON` payload; You will get the exact payload to response back because we used `request.body` as a response payload.
 
 ```json
 {
@@ -497,7 +159,7 @@ If you send a `POST` request to this function with following `JSON` payload; You
 }
 ```
 
-You need to parse payload to be able to use it in a function.
+You need to parse the payload to be able to use it in a function.
 
 "Function" parses the following payload types by default:
 
@@ -559,7 +221,7 @@ Content of `changes` variable with the `INSERT` event and `full document` option
 
 ### Schedule
 
-Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked at next tick.
+Schedule trigger invokes your function in a specific time and specific timezone. Fundamentally, schedule trigger is a [CRON](https://en.wikipedia.org/wiki/Cron) based trigger that invokes your function in a specific interval based on your CRON expression. Also, when your function invoked, the first parameter of your function will contain a function which basically stops the scheduler in case you don't want your function to be invoked at the next tick.
 
 To create a scheduled function you need a CRON time expression and Time-zone because scheduler schedules your function regardless of the Time-zone of the host machine.
 
@@ -609,17 +271,16 @@ All required fields for a bucket trigger are listed below;
 
 - **Bucket:** Bucket ID of the desired bucket
 - **Event Type:** Type of the event that happens in the collection.
+#### Bucket Events
 
-#### Bucket After Events
-
-Bucket after events triggers after any of the following Bucket event happens:
+Bucket events triggers after any of the following Bucket events happen:
 
 - `ALL`: Triggers after any of the below operations happens on Bucket Data,
-- `INSERT`: Triggers after a new data inserted to the spesific Bucket,
+- `INSERT`: Triggers after a new data inserted to the specific Bucket,
 - `UPDATE`: Triggers after a bucket data updated,
 - `DELETE`: Triggers after a bucket data deleted.
 
-The functiont takes the `change` object as a parameter.
+The function takes the `change` object as a parameter.
 
 Example change object:
 

@@ -84,30 +84,10 @@ const TriggerV1: JSONSchema7 = {
     },
     bucketOptions: {
       type: "object",
-      required: ["phase"],
       additionalProperties: false,
-      if: {properties: {phase: {const: "BEFORE"}}},
-      then: {
-        properties: {
-          type: {
-            enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
-          }
-        }
-      },
-      else: {
-        properties: {
-          type: {
-            enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
-          }
-        }
-      },
       properties: {
-        phase: {
-          type: "string",
-          enum: ["BEFORE", "AFTER"]
-        },
         type: {
-          type: "string"
+          enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
         },
         bucket: {
           type: "object",

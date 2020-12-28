@@ -26,8 +26,7 @@ async function v1_trigger_to_internal(object: any) {
     const bucket = await bucketStore.get(bkt.resourceFieldRef.schemaName);
 
     triggerRaw.options = {
-      type: object.spec.bucketOptions.type,
-      phase: object.spec.bucketOptions.phase.toUpperCase()
+      type: object.spec.bucketOptions.type
     };
 
     // TODO: think about a better way to handle this

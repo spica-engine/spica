@@ -13,11 +13,11 @@ today! As a contributor, here are the guidelines we would like you to follow:
 - [Commit Message Guidelines](#commit)
 - [Signing the CLA](#cla)
 
-## <a name="coc"></a> Code of Conduct
+## Code of Conduct
 
 Help us keep Spica open and inclusive. Please read and follow our [Code of Conduct][coc].
 
-## <a name="question"></a> Got a Question or Problem?
+## Got a Question or Problem?
 
 Do not open issues for general support questions as we want to keep GitHub issues for bug reports and feature requests. You've got much better chances of getting your question answered on [Stack Overflow](https://stackoverflow.com/questions/tagged/spica) where the questions should be tagged with tag `spica`.
 
@@ -31,13 +31,13 @@ To save your and our time, we will systematically close all issues that are requ
 
 If you would like to chat about the question in real-time, you can reach out via [our slack channel][slack].
 
-## <a name="issue"></a> Found a Bug?
+## Found a Bug?
 
 If you find a bug in the source code, you can help us by
 [submitting an issue](#submit-issue) to our [GitHub Repository][github]. Even better, you can
 [submit a Pull Request](#submit-pr) with a fix.
 
-## <a name="feature"></a> Missing a Feature?
+## Missing a Feature?
 
 You can _request_ a new feature by [submitting an issue](#submit-issue) to our GitHub
 Repository. If you would like to _implement_ a new feature, please submit an issue with
@@ -49,9 +49,9 @@ Please consider what kind of change it is:
   and help you to craft the change so that it is successfully accepted into the project.
 - **Small Features** can be crafted and directly [submitted as a Pull Request](#submit-pr).
 
-## <a name="submit"></a> Submission Guidelines
+## Submission Guidelines
 
-### <a name="submit-issue"></a> Submitting an Issue
+### Submitting an Issue
 
 Before you submit an issue, please search the issue tracker, maybe an issue for your problem already exists and the discussion might inform you of workarounds readily available.
 
@@ -65,7 +65,7 @@ Unfortunately, we are not able to investigate / fix bugs without a minimal repro
 
 You can file new issues by selecting from our [new issue templates](https://github.com/spica-engine/spica/issues/new/choose) and filling out the issue template.
 
-### <a name="submit-pr"></a> Submitting a Pull Request (PR)
+### Submitting a Pull Request (PR)
 
 Before you submit your Pull Request (PR) consider the following guidelines:
 
@@ -144,14 +144,14 @@ from the main (upstream) repository:
   git pull --ff upstream master
   ```
 
-## <a name="rules"></a> Coding Rules
+## Coding Rules
 
 To ensure consistency throughout the source code, keep these rules in mind as you are working:
 
 - All features or bug fixes **must be tested** by one or more specs (unit-tests).
 - All public API methods **must be documented**. (Details TBC).
 
-## <a name="commit"></a> Commit Message Guidelines
+## Commit Message Guidelines
 
 We have very precise rules over how our git commit messages can be formatted. This leads to **more
 readable messages** that are easy to follow when looking through the **project history**. But also,
@@ -254,7 +254,7 @@ reference GitHub issues that this commit **Closes**.
 
 A detailed explanation can be found in this [document][commit-message-format].
 
-## <a name="cla"></a> Signing the CLA
+## Signing the CLA
 
 Please read our Contributor License Agreement (CLA) before sending pull requests. For any code
 changes to be accepted, the CLA must be read and accepted.
