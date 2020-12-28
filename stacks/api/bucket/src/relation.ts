@@ -22,7 +22,7 @@ export function findRelations(
 
 export function getRelationPaths(target: Bucket | string[]) {
   if (Array.isArray(target)) {
-    return target.map(pattern => pattern.split("."));
+    return target.map(pattern => pattern.split(".").concat(["_id"]));
   }
 
   const relationPaths = [];
@@ -30,7 +30,7 @@ export function getRelationPaths(target: Bucket | string[]) {
     if (target.properties[propertyKey].type != "relation") {
       continue;
     }
-    relationPaths.push([propertyKey]);
+    relationPaths.push([propertyKey, "_id"]);
   }
   return relationPaths;
 }
@@ -90,7 +90,9 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
         continue;
       }
 
-      const matchingPaths = paths.filter(segments => segments[depth] == propertyKey);
+      const matchingPaths = paths.filter(
+        segments => segments[depth] == propertyKey && segments.length > depth + 1
+      );
 
       if (!matchingPaths.length) {
         continue;

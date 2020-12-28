@@ -113,14 +113,24 @@ export async function findDocuments<T>(
     resolve: factories.schema
   });
 
-  const usedRelationPaths: string[] = [];
-  ruleRelationMap = compareAndUpdateRelations(ruleRelationMap, usedRelationPaths);
-
   const ruleRelationStage = getRelationPipeline(ruleRelationMap, locale);
   pipeline.push(...ruleRelationStage);
 
   const ruleExpression = expression.aggregate(schema.acl.read, {auth: params.req.user});
   pipeline.push({$match: ruleExpression});
+
+  const ruleResetStage = resetNonOverlappingPathsInRelationMap({
+    left: [],
+    right: rulePropertyMap,
+    map: ruleRelationMap
+  });
+
+  if (ruleResetStage) {
+    // Reset those relations which have been requested by acl rules.
+    pipeline.push(ruleResetStage);
+  }
+
+  const usedRelationPaths: string[] = [];
 
   let filterPropertyMap: string[][] = [];
   let filterRelationMap: object[] = [];
@@ -186,17 +196,6 @@ export async function findDocuments<T>(
     seekingPipeline.push(...relationStage);
   }
 
-  const ruleResetStage = resetNonOverlappingPathsInRelationMap({
-    left: [...relationPropertyMap, ...filterPropertyMap],
-    right: rulePropertyMap,
-    map: [...ruleRelationMap, ...filterRelationMap, ...relationMap]
-  });
-
-  if (ruleResetStage) {
-    // Reset those relations which have been requested by acl rules.
-    seekingPipeline.push(ruleResetStage);
-  }
-
   // for graphql responses
   if (params.projectMap.length) {
     seekingPipeline.push(getProjectAggregation(params.projectMap));
@@ -217,6 +216,8 @@ export async function findDocuments<T>(
 
     return result.data.length ? result : {meta: {total: 0}, data: []};
   }
+
+  console.dir([...pipeline, ...seekingPipeline], {depth: Infinity});
 
   return collection.aggregate<T>([...pipeline, ...seekingPipeline]).toArray();
 }
