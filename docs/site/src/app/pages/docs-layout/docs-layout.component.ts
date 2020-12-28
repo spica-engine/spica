@@ -1,8 +1,8 @@
 import {BreakpointObserver, Breakpoints} from "@angular/cdk/layout";
-import {Component, ElementRef, OnInit, ViewChild} from "@angular/core";
-import {NavigationEnd, Router} from "@angular/router";
-import {Observable} from "rxjs";
-import {filter, map, startWith, tap} from "rxjs/operators";
+import {Component, OnInit, OnDestroy} from "@angular/core";
+import {Router} from "@angular/router";
+import {Observable, Subject} from "rxjs";
+import {map, startWith, takeUntil} from "rxjs/operators";
 import {DocService} from "../../services/doc.service";
 
 @Component({
@@ -10,7 +10,7 @@ import {DocService} from "../../services/doc.service";
   templateUrl: "./docs-layout.component.html",
   styleUrls: ["./docs-layout.component.scss"]
 })
-export class DocsLayoutComponent implements OnInit {
+export class DocsLayoutComponent implements OnInit, OnDestroy {
   $apiDocs: Observable<any>;
   $contentDocs: Observable<any>;
   headingsInContent: {title: string; fragment: string}[];
@@ -22,6 +22,8 @@ export class DocsLayoutComponent implements OnInit {
       startWith(true)
     );
 
+  private onDestroy: Subject<void> = new Subject<void>();
+
   constructor(
     docs: DocService,
     private breakpointObserver: BreakpointObserver,
@@ -30,7 +32,7 @@ export class DocsLayoutComponent implements OnInit {
     this.$apiDocs = docs.getApiDocs();
     this.$contentDocs = docs.getContentDocs();
 
-    docs.documentChanged.subscribe(data => {
+    docs.documentChanged.pipe(takeUntil(this.onDestroy)).subscribe(data => {
       this.headingsInContent = [];
       for (const [i, heading] of data.entries()) {
         this.headingsInContent[i] = {
@@ -44,4 +46,8 @@ export class DocsLayoutComponent implements OnInit {
   }
 
   ngOnInit() {}
+
+  ngOnDestroy() {
+    this.onDestroy.next();
+  }
 }
