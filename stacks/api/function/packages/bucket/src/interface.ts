@@ -13,6 +13,18 @@ export interface Bucket {
   order?: number;
 }
 
+interface InitializeOptions {
+  publicUrl?: string;
+}
+
+export interface ApikeyInitialization extends InitializeOptions {
+  apikey: string;
+}
+
+export interface IdentityInitialization extends InitializeOptions {
+  identity: string;
+}
+
 interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
   options: {
