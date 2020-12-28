@@ -149,6 +149,7 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
+    // To not allow to send policies to this endpoint
     delete identity.policies;
     return this.identity.findOneAndUpdate(
       {_id: id},
