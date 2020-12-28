@@ -91,7 +91,10 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
       }
 
       const matchingPaths = paths.filter(
-        segments => segments[depth] == propertyKey && segments.length > depth + 1
+        segments =>
+          segments[depth] == propertyKey &&
+          // if child field of this document requested
+          segments.length > depth + 1
       );
 
       if (!matchingPaths.length) {

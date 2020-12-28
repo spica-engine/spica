@@ -217,8 +217,6 @@ export async function findDocuments<T>(
     return result.data.length ? result : {meta: {total: 0}, data: []};
   }
 
-  console.dir([...pipeline, ...seekingPipeline], {depth: Infinity});
-
   return collection.aggregate<T>([...pipeline, ...seekingPipeline]).toArray();
 }
 
