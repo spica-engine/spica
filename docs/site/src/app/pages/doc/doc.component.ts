@@ -28,9 +28,9 @@ export class DocComponent implements OnInit {
           ? this.doc.getApiDoc(params.apiName, params.docName)
           : this.doc.getContentDoc(params.contentName, params.docName || "index").pipe(
               tap(params => {
-                let headings = [];
-                let headingMatches = params.match(/<h2[^>]*>(.*?)<\/h2>/gi) || [];
-                for (let heading of headingMatches)
+                const headings = [];
+                const headingMatches = params.match(/<h2[^>]*>(.*?)<\/h2>/gi) || [];
+                for (const heading of headingMatches)
                   headings.push(heading.replace(/<\/?h2[^>]*>/g, ""));
                 this.doc.documentChanged.next(headings);
               })
