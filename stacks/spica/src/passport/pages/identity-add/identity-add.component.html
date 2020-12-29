@@ -16,8 +16,14 @@
           placeholder="Identifier"
           [(ngModel)]="identity.identifier"
           #identifierModel="ngModel"
+          minlength="3"
           required
         />
+        <mat-error *ngIf="identifierModel?.errors?.minlength"
+          >Identifier must be greater than
+          {{ identifierModel?.errors?.minlength?.requiredLength }}
+          characters</mat-error
+        >
         <mat-error *ngIf="identifierModel?.errors?.required">This field is required.</mat-error>
       </mat-form-field>
       <button
@@ -34,8 +40,14 @@
           placeholder="Password"
           [(ngModel)]="identity.password"
           #passwordModel="ngModel"
+          minlength="3"
           required
         />
+        <mat-error *ngIf="passwordModel?.errors?.minlength"
+          >Password must be greater than
+          {{ passwordModel?.errors?.minlength?.requiredLength }}
+          characters</mat-error
+        >
         <mat-error *ngIf="passwordModel?.errors?.required">This field is required.</mat-error>
       </mat-form-field>
 

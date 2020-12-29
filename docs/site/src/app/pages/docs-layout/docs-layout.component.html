@@ -25,14 +25,18 @@
       <h6 mat-subheader [routerLink]="[contentDoc.name]" routerLinkActive="active">
         {{ contentDoc.name }}
       </h6>
-      <a
-        mat-list-item
-        *ngFor="let subDoc of contentDoc.docs"
-        [routerLink]="[contentDoc.name, subDoc.path]"
-        routerLinkActive="active"
-      >
-        {{ subDoc.name }}
-      </a>
+      <div *ngFor="let subDoc of contentDoc.docs">
+        <a mat-list-item [routerLink]="[contentDoc.name, subDoc.path]" routerLinkActive="active">
+          {{ subDoc.name }}
+        </a>
+        <div class="indent" *ngIf="subDoc.path == activeDocument">
+          <div *ngFor="let headings of headingsInContent">
+            <a [routerLink]="[]" [fragment]="headings.fragment" (click)="$event.preventDefault()">{{
+              headings.title
+            }}</a>
+          </div>
+        </div>
+      </div>
       <a
         mat-list-item
         *ngFor="let subDoc of contentDoc.children"
