@@ -11,7 +11,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatToolbarModule} from "@angular/material/toolbar";
-import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
+import {PropertyKvPipe} from "@spica-client/common/pipes";
 import {FormsModule, NgModel} from "@angular/forms";
 import {InputModule} from "@spica-client/common";
 import {MatFormFieldModule} from "@angular/material/form-field";

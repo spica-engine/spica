@@ -10,4 +10,5 @@ export interface Dashboard {
 export interface Component {
   name: string;
   url: string;
+  type: string;
 }

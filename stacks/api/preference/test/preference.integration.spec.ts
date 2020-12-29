@@ -117,6 +117,7 @@ describe("Preference Integration", () => {
     expect(body).toEqual({
       _id: identityId,
       identifier: "test_user",
+      policies: [],
       attributes: {}
     });
   });

@@ -1,7 +1,7 @@
 import {Component, OnInit, Input} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
-import {Observable, forkJoin, BehaviorSubject, combineLatest} from "rxjs";
-import {switchMap, tap, map, filter, take, flatMap} from "rxjs/operators";
+import {Observable, forkJoin, BehaviorSubject, combineLatest, zip} from "rxjs";
+import {switchMap, tap, map, flatMap} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
 import {FunctionService} from "../../function.service";
 
@@ -81,12 +81,16 @@ export class LogViewComponent implements OnInit {
   }
 
   clearLogs() {
-    this.queryParams
+    zip(
+      this.queryParams.pipe(map(filter => filter.function)),
+      this.fs.getFunctions().pipe(map(fns => fns.map(fn => fn._id)))
+    )
       .pipe(
-        filter(filter => filter.function.length > 0),
         tap(() => (this.isPending = true)),
-        flatMap(filter => forkJoin(filter.function.map(fn => this.fs.clearLogs(fn)))),
-        take(1),
+        flatMap(([filterIds, allIds]) => {
+          const deletedFunctionIds: string[] = filterIds && filterIds.length ? filterIds : allIds;
+          return forkJoin(deletedFunctionIds.map(id => this.fs.clearLogs(id)));
+        }),
         tap(() => (this.isPending = false))
       )
       .toPromise();

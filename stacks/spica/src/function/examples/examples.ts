@@ -44,61 +44,27 @@ const examples = {
 \tconsole.log("System has became ready at " , now);
 }`,
   bucket: {
-    BEFORE: {
-      INSERT: `export default function(request) { 
-\tconsole.log("User with " + request.headers.authorization + " will insert a new entry to bucket that has id " + request.bucket );
-\tconst can_insert = true;
-\treturn can_insert;
-}`,
-      UPDATE: `export default function(request) {
-\tconsole.log("User with " + request.headers.authorization + " will update the document that has id " + request.document + " of bucket that has id " + request.bucket );
-\tconst can_update = true;
-\treturn can_update;
-}`,
-      DELETE: `export default function(request) {
-\tconsole.log("User with " + request.headers.authorization + " will delete the document that has id " + request.document + " of bucket that has id " + request.bucket );
-\tconst can_delete = true;
-\treturn can_delete;
-}`,
-      GET: `export default function(request) {
-\tconsole.log("User with " + request.headers.authorization + " will display the document that has id " + request.document + " of bucket that has id " + request.bucket );
-\tconst hidden_field = "password";
-\treturn [{ $unset: hidden_field }];
-}`,
-      INDEX: `export default function(request) {
-\tconsole.log("User with " + request.headers.authorization + " will display all documents of bucket that has id " + request.bucket );
-\tconst criteria = { age: 20 };
-\treturn [{ $match: criteria }];
-}`,
-      STREAM: `export default function(request) {
-\tconsole.log("User with " + request.headers.authorization + " will display all documents of bucket that has id " + request.bucket + " via websocket" );
-\tconst filter = { status: "active" };
-\treturn filter;
-}`
-    },
-    AFTER: {
-      ALL: `export default function(change) {
+    ALL: `export default function(change) {
 \tconsole.log(change.kind + " action has been performed on document with id " + change.documentKey + " of bucket with id " + change.bucket);
 \tconsole.log("Previous document: ",change.previous);
 \tif (change.current) {
 \t\tconsole.log("Current document: ",change.current)
 \t}
 }`,
-      INSERT: `export default function(change) {
+    INSERT: `export default function(change) {
 \tconsole.log(change.kind + " action has been performed on document with id " + change.documentKey + " of bucket with id " + change.bucket);
 \tconsole.log("Previous document: ",change.previous);
 \tconsole.log("Current document: ",change.current)
 }`,
-      UPDATE: `export default function(change) {
+    UPDATE: `export default function(change) {
 \tconsole.log(change.kind + " action has been performed on document with id " + change.documentKey + " of bucket with id " + change.bucket);
 \tconsole.log("Previous document: ",change.previous);
 \tconsole.log("Current document: ",change.current)
 }`,
-      DELETE: `export default function(change) {
+    DELETE: `export default function(change) {
 \tconsole.log(change.kind + " action has been performed on document with id " + change.documentKey + " of bucket with id " + change.bucket);
 \tconsole.log("Previous document: ",change.previous)
 }`
-    }
   }
 };
 

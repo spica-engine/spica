@@ -1,9 +1,9 @@
 import {NgModule} from "@angular/core";
-import {PropertyKvPipe} from "./property_keyvalue.pipe";
-import {BuildLinkPipe} from "./build_link.pipe";
+import {BuildLinkPipe, PropertyKvPipe} from "./pipes";
+import {PersistHeaderWidthDirective} from "./directives";
 
 @NgModule({
-  declarations: [PropertyKvPipe, BuildLinkPipe],
-  exports: [PropertyKvPipe, BuildLinkPipe]
+  declarations: [PropertyKvPipe, BuildLinkPipe, PersistHeaderWidthDirective],
+  exports: [PropertyKvPipe, BuildLinkPipe, PersistHeaderWidthDirective]
 })
 export class CommonModule {}

@@ -1,0 +1,20 @@
+<mat-form-field (click)="$event.stopPropagation()">
+  <mat-select placeholder="Attribute to Filter" [(ngModel)]="property">
+    <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
+      {{ propertyKv.value.title || propertyKv.key }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+<span
+  [inputPlacer]="properties[property]"
+  [(ngModel)]="value"
+  (click)="$event.stopPropagation()"
+></span>
+<div class="filter-buttons">
+  <button mat-raised-button (click)="apply()">
+    Apply
+  </button>
+  <button mat-raised-button color="warn" (click)="clear()">
+    Clear
+  </button>
+</div>
