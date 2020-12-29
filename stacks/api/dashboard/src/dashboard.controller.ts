@@ -7,13 +7,15 @@ import {
   Put,
   Delete,
   HttpCode,
-  HttpStatus
+  HttpStatus,
+  Post
 } from "@nestjs/common";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {DashboardService} from "./dashboard.service";
 import {Dashboard} from "./dashboard";
 import {Schema} from "@spica-server/core/schema";
 import {ResourceFilter} from "@spica-server/passport/guard";
+import {OBJECT_ID, ObjectId} from "@spica-server/database";
 
 @Controller("dashboard")
 export class DashboardController {
@@ -21,29 +23,36 @@ export class DashboardController {
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("dashboard:index"))
-  findAll(@ResourceFilter() filter: object) {
-    return this.dashboardService.findAll();
+  findAll(@ResourceFilter() resourceFilter: object) {
+    return this.dashboardService.aggregate([resourceFilter]).toArray();
   }
 
-  @Get(":key")
+  @Get(":id")
   @UseGuards(AuthGuard(), ActionGuard("dashboard:show"))
-  find(@Param("key") key: string) {
-    return this.dashboardService.find(key);
+  findById(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.dashboardService.findOne({_id: id});
   }
 
-  @Put()
+  @Post()
+  @UseGuards(AuthGuard(), ActionGuard("dashboard:create"))
+  insert(@Body(Schema.validate("http://spica.internal/dashboard")) dashboard: Dashboard) {
+    return this.dashboardService.insertOne(dashboard);
+  }
+
+  @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("dashboard:update"))
-  register(
+  update(
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/dashboard"))
     dashboard: Dashboard
   ) {
-    return this.dashboardService.register(dashboard);
+    return this.dashboardService.findOneAndReplace({_id: id}, dashboard, {returnOriginal: false});
   }
 
-  @Delete(":key")
+  @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("dashboard:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
-  unregister(@Param("key") key: string) {
-    return this.dashboardService.unregister(key);
+  delete(@Param("id", OBJECT_ID) id: ObjectId) {
+    return this.dashboardService.deleteOne({_id: id});
   }
 }

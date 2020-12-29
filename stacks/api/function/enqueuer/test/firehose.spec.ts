@@ -3,12 +3,12 @@ import {Test} from "@nestjs/testing";
 import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
 import {FirehoseEnqueuer} from "@spica-server/function/enqueuer";
 import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
-import {Event, Firehose} from "@spica-server/function/queue/proto";
+import {event, Firehose} from "@spica-server/function/queue/proto";
 
 describe("FirehoseEnqueuer", () => {
   let eventQueue: jasmine.SpyObj<EventQueue>;
   let firehoseQueue: jasmine.SpyObj<FirehoseQueue>;
-  let noopTarget: Event.Target;
+  let noopTarget: event.Target;
   let firehoseEnqueuer: FirehoseEnqueuer;
   let app: INestApplication;
   let wsc: Websocket;
@@ -17,7 +17,7 @@ describe("FirehoseEnqueuer", () => {
     eventQueue = jasmine.createSpyObj("eventQueue", ["enqueue"]);
     firehoseQueue = jasmine.createSpyObj("firehoseQueue", ["enqueue"]);
 
-    noopTarget = new Event.Target();
+    noopTarget = new event.Target();
     noopTarget.cwd = "/tmp/fn1";
     noopTarget.handler = "default";
 

@@ -13,6 +13,18 @@ export interface Bucket {
   order?: number;
 }
 
+interface InitializeOptions {
+  publicUrl?: string;
+}
+
+export interface ApikeyInitialization extends InitializeOptions {
+  apikey: string;
+}
+
+export interface IdentityInitialization extends InitializeOptions {
+  identity: string;
+}
+
 interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
   options: {
@@ -33,4 +45,41 @@ export interface IndexResult<T> {
     total: number;
   };
   data: T[];
+}
+
+export interface Sequence {
+  kind: SequenceKind;
+  item: string;
+  at: number;
+  with?: string;
+}
+export enum SequenceKind {
+  Delete = 0,
+  Substitute = 1,
+  Insert = 2
+}
+
+export interface StreamChunk<T = any> {
+  kind: ChunkKind;
+  document?: T;
+  sequence?: Sequence[];
+}
+export enum ChunkKind {
+  Initial = 0,
+  EndOfInitial = 1,
+  Insert = 2,
+  Delete = 3,
+  Expunge = 4,
+  Update = 5,
+  Replace = 6,
+  Order = 7
+}
+
+export interface GetAllParams {
+  filter?: string;
+  sort?: {
+    [key: string]: 1 | -1;
+  };
+  limit?: number;
+  skip?: number;
 }

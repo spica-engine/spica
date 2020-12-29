@@ -11,15 +11,15 @@ export class DashboardInitializer {
     private routeService: RouteService,
     private passport: PassportService
   ) {
-    ds.getDashboards().subscribe(dashboards => {
+    ds.findAll().subscribe(dashboards => {
       this.routeService.dispatch(new CherryPickAndRemove(e => e.id.startsWith("dashboard/")));
       dashboards.forEach(dashboard => {
         this.routeService.dispatch(
           new Upsert({
             category: RouteCategory.Primary,
-            id: `dashboard/${dashboard.key}`,
+            id: `dashboard/${dashboard._id}`,
             icon: dashboard.icon,
-            path: `/dashboard/${dashboard.key}`,
+            path: `/dashboard/${dashboard._id}`,
             display: dashboard.name
           })
         );

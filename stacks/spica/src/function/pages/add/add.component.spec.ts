@@ -1,38 +1,38 @@
+import {ScrollingModule} from "@angular/cdk/scrolling";
 import {HttpClientTestingModule} from "@angular/common/http/testing";
 import {Directive, Input} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
+import {MatNativeDateModule, MatOptionModule} from "@angular/material/core";
+import {MatDatepickerModule} from "@angular/material/datepicker";
+import {MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
+import {MatInputModule} from "@angular/material/input";
 import {MatListModule} from "@angular/material/list";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 import {MatSliderModule} from "@angular/material/slider";
 import {MatToolbarModule} from "@angular/material/toolbar";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
+import {Store} from "@ngrx/store";
+import {EditorModule} from "@spica-client/common/code-editor";
+import {InputModule} from "@spica-client/common/input";
 import {LayoutModule} from "@spica-client/core/layout";
 import {MatSaveModule} from "@spica/client/packages/material";
 import {of} from "rxjs";
-import {InputModule} from "@spica-client/common/input";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
-import {EditorComponent} from "../../components/editor/editor.component";
+import {examples} from "../../examples/examples";
 import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
-import {Store} from "@ngrx/store";
-import {examples} from "../../examples/examples";
-import {MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {LogViewComponent} from "../log-view/log-view.component";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {MatOptionModule, MatNativeDateModule} from "@angular/material/core";
-import {MatInputModule} from "@angular/material/input";
-import {ScrollingModule} from "@angular/cdk/scrolling";
-import {MatDatepickerModule} from "@angular/material/datepicker";
 
 @Directive({
   selector: "code-editor[language]",
@@ -65,8 +65,7 @@ describe("Function Add", () => {
         MatSliderModule,
         LayoutModule,
         InputModule,
-
-        //for log view component
+        EditorModule,
         NoopAnimationsModule,
         MatOptionModule,
         MatInputModule,
@@ -102,7 +101,6 @@ describe("Function Add", () => {
       ],
       declarations: [
         AddComponent,
-        EditorComponent,
         LogViewComponent,
         EnqueuerPipe,
         MockLanguageDirective,
@@ -123,7 +121,7 @@ describe("Function Add", () => {
     };
 
     fixture.componentInstance.checkHandlers();
-    expect(fixture.componentInstance.isHandlerDuplicated).toBe(true);
+    expect(fixture.componentInstance.isHandlerDuplicated).toEqual(true);
   });
 
   it("should set isHandlerDuplicated false", () => {
@@ -193,7 +191,7 @@ describe("Function Add", () => {
           options: {}
         };
         let code = getExample(trigger as any);
-        expect(code).toEqual("Select the phase and operation type to display example code.");
+        expect(code).toEqual("Select the operation type to display example code.");
       });
 
       describe("before", () => {
@@ -201,21 +199,20 @@ describe("Function Add", () => {
           let trigger = {
             type: "bucket",
             options: {
-              phase: "BEFORE",
               type: "INSERT"
             }
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual(examples.bucket.BEFORE.INSERT);
+          expect(code).toEqual(examples.bucket.INSERT);
         });
 
         it("should return information about missing inputs", () => {
           let trigger = {
             type: "bucket",
-            options: {phase: "BEFORE"}
+            options: {}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("Select the phase and operation type to display example code.");
+          expect(code).toEqual("Select the operation type to display example code.");
         });
       });
       describe("after", () => {
@@ -223,21 +220,20 @@ describe("Function Add", () => {
           let trigger = {
             type: "bucket",
             options: {
-              phase: "AFTER",
               type: "ALL"
             }
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual(examples.bucket.AFTER.ALL);
+          expect(code).toEqual(examples.bucket.ALL);
         });
 
         it("should return information about missing inputs", () => {
           let trigger = {
             type: "bucket",
-            options: {phase: "AFTER"}
+            options: {}
           };
           let code = getExample(trigger as any);
-          expect(code).toEqual("Select the phase and operation type to display example code.");
+          expect(code).toEqual("Select the operation type to display example code.");
         });
       });
     });
@@ -264,16 +260,4 @@ describe("Function Add", () => {
       });
     });
   });
-
-  //  it("enter should not add trigger", () => {
-  //    console.log(fixture.debugElement);
-  //    const form = fixture.debugElement.query(By.directive(NgForm)).nativeElement;
-  //    console.log(form);
-  //    const kEventDown = new KeyboardEvent("keydown", {key: "enter"});
-  //    form.dispatchEvent(kEventDown);
-  //
-  //    fixture.detectChanges();
-  //
-  //    expect(fixture.componentInstance.function.triggers.length).toEqual(0);
-  //  });
 });

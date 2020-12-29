@@ -1,4 +1,4 @@
-import {IndexComponent} from "@spica-client/activity/pages/index/index.component";
+import {IndexComponent} from "../index/index.component";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
 import {MatOptionModule} from "@angular/material/core";
@@ -17,7 +17,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {ActivityService} from "../../services/activity.service";
 import {ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
 import {of} from "rxjs";
-import {BuildLinkPipe} from "@spica-client/common/build_link.pipe";
+import {BuildLinkPipe} from "@spica-client/common/pipes";
 import {ACTIVITY_FACTORY} from "@spica-client/core";
 import {RouterTestingModule} from "@angular/router/testing";
 

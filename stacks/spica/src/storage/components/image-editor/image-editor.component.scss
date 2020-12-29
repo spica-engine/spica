@@ -8,10 +8,22 @@
 
   ::ng-deep .cropper {
     max-width: 100vw;
-    max-height: 80vh;
+    max-height: calc(80vh - 80px);
+  }
+
+  mat-card {
+    max-height: 100%;
   }
 
   img {
     max-width: 100%; /* This rule is very important, please do not ignore this! */
+  }
+
+  mat-card-content {
+    margin-bottom: 0px !important;
+  }
+
+  mat-progress-spinner.save-spinner {
+    margin: auto;
   }
 }

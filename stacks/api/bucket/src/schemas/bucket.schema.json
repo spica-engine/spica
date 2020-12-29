@@ -11,6 +11,21 @@
       "type": "boolean",
       "default": false
     },
+    "acl": {
+      "type": "object",
+      "default": {
+        "write": "true==true",
+        "read": "true==true"
+      },
+      "properties": {
+        "write": {
+          "type": "string"
+        },
+        "read": {
+          "type": "string"
+        }
+      }
+    },
     "title": {
       "type": "string",
       "title": "Title of the bucket",

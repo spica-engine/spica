@@ -1,10 +1,9 @@
 import {Injectable} from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket/services";
-import {BucketPreferences, Bucket} from "@spica-server/bucket/services/bucket";
+import {Bucket, BucketPreferences, BucketService, compile} from "@spica-server/bucket/services";
 import {Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
-import {map} from "rxjs/operators";
 import {combineLatest, Observable} from "rxjs";
+import {map} from "rxjs/operators";
 
 @Injectable()
 export class BucketSchemaResolver {
@@ -21,7 +20,7 @@ export class BucketSchemaResolver {
         bucketWatcher = this.bucketService.watch(uri, true);
         this.bucketWatchers.set(uri, bucketWatcher);
       }
-      return combineLatest(this.preferenceWatcher, bucketWatcher).pipe(
+      return combineLatest([this.preferenceWatcher, bucketWatcher]).pipe(
         map(([prefs, schema]) => {
           let jsonSchema = compile(JSON.parse(JSON.stringify(schema)), prefs);
           jsonSchema.$id = uri;

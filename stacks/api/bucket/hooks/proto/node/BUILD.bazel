@@ -8,7 +8,6 @@ ts_library(
         "change.ts",
         "index.ts",
         "queue.ts",
-        "review.ts",
     ],
     module_name = "@spica-server/bucket/hooks/proto/node",
     deps = [

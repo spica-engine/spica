@@ -7,8 +7,8 @@ import {emptyIdentity, Identity} from "../../interfaces/identity";
 import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
-import {PassportPreference} from "../identity-settings/identity-settings.component";
 import {PassportService} from "@spica-client/passport/services/passport.service";
+import {PassportPreference} from "@spica-client/passport/interfaces/preferences";
 
 @Component({
   selector: "passport-identity-add",

@@ -1,12 +1,14 @@
-import {INestApplication} from "@nestjs/common";
+import {ForbiddenException, INestApplication, UnauthorizedException} from "@nestjs/common";
 import {Test} from "@nestjs/testing";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
-import {getBucketDataCollection} from "@spica-server/bucket/realtime/src/realtime.gateway";
-import {CoreTestingModule, Websocket} from "@spica-server/core/testing";
+import {BucketModule} from "@spica-server/bucket/src";
+import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {ChunkKind} from "@spica-server/database/realtime";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
@@ -18,57 +20,133 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
   return `${url.pathname}${url.search}`;
 }
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
 describe("Realtime", () => {
   let wsc: Websocket;
   let app: INestApplication;
-  let db: DatabaseService;
-  let rows: object[];
+  let req: Request;
 
-  let id: string;
-  let collection: string;
+  let bucket: any;
+  let rows: any[];
 
-  beforeAll(async () => {
+  async function insertRow(doc) {
+    const {body} = await req.post(`/bucket/${bucket._id}/data`, doc);
+    return body;
+  }
+
+  beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
         RealtimeModule,
+        PreferenceTestingModule,
+        BucketModule.forRoot({
+          history: false,
+          hooks: false,
+          realtime: false
+        }),
         PassportTestingModule.initialize()
       ]
     }).compile();
-    db = module.get(DatabaseService);
     wsc = module.get(Websocket);
+    req = module.get(Request);
     app = module.createNestApplication();
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
-  });
 
-  afterAll(() => app.close());
-
-  beforeEach(async () => {
-    id = "test";
-    collection = getBucketDataCollection(id);
-    rows = await db
-      .collection(collection)
-      .insertMany([
-        {
-          title: "first row",
-          description: "first rows description"
-        },
-        {
-          title: "second row",
-          description: "second rows description"
+    const {body: bkt} = await req.post("/bucket", {
+      title: "Realtime",
+      description: "Realtime",
+      properties: {
+        title: {
+          type: "string"
         }
-      ])
-      .then(r => r.ops.map(({_id, ...rest}) => ({_id: _id.toString(), ...rest})));
+      }
+    });
+    bucket = bkt;
+    rows = [
+      await insertRow({
+        title: "first"
+      }),
+      await insertRow({
+        title: "second"
+      })
+    ];
   });
 
-  afterEach(async () => {
-    await db.collection(collection).drop();
+  afterEach(() => app.close());
+
+  describe("authorization", () => {
+    let authGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAuthorization>;
+    let actionGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAction>;
+
+    beforeEach(async () => {
+      const guardService = app.get(GuardService);
+      authGuardCheck = spyOn(guardService, "checkAuthorization");
+      actionGuardCheck = spyOn(guardService, "checkAction");
+      const {body: bkt} = await req.post("/bucket", {
+        title: "Realtime",
+        description: "Realtime",
+        properties: {
+          title: {
+            type: "string"
+          }
+        }
+      });
+      bucket = bkt;
+    });
+
+    it("should authorize and do the initial sync", async done => {
+      const ws = wsc.get(`/bucket/${bucket._id}/data`, {
+        headers: {
+          Authorization: "APIKEY test"
+        }
+      });
+
+      ws.onmessage = e => {
+        expect(e.data).toEqual(`{"kind":1}`);
+        done();
+      };
+      await ws.connect;
+    });
+
+    it("should show error messages", done => {
+      authGuardCheck.and.callFake(() => {
+        throw new UnauthorizedException();
+      });
+      const ws = wsc.get(`/bucket/${bucket._id}/data`, {
+        headers: {
+          Authorization: "APIKEY test"
+        }
+      });
+      ws.onclose = done;
+      ws.onmessage = e => {
+        expect(e.data).toEqual(`{"code":401,"message":"Unauthorized"}`);
+      };
+    });
+
+    it("should the action error message", done => {
+      actionGuardCheck.and.callFake(() => {
+        throw new ForbiddenException("You do not have sufficient permissions to do this action.");
+      });
+      const ws = wsc.get(`/bucket/${bucket._id}/data`, {
+        headers: {
+          Authorization: "APIKEY test"
+        }
+      });
+      ws.onclose = done;
+      ws.onmessage = e => {
+        expect(e.data).toEqual(
+          `{"code":403,"message":"You do not have sufficient permissions to do this action."}`
+        );
+      };
+    });
   });
 
   it("should do the initial sync", async () => {
-    const ws = wsc.get("/bucket/test/data");
+    const ws = wsc.get(`/bucket/${bucket._id}/data`);
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -81,7 +159,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with filter", async () => {
-    const ws = wsc.get(url("/bucket/test/data", {filter: {title: "second row"}}));
+    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `title == "second"`}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -92,8 +170,20 @@ describe("Realtime", () => {
     ]);
   });
 
+  it("should do the initial sync with _id filter", async () => {
+    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `_id == "${rows[0]["_id"]}"`}));
+    const message = jasmine.createSpy();
+    ws.onmessage = e => message(JSON.parse(e.data as string));
+    await ws.connect;
+    await ws.close();
+    expect(message.calls.allArgs().map(c => c[0])).toEqual([
+      {kind: ChunkKind.Initial, document: rows[0]},
+      {kind: ChunkKind.EndOfInitial}
+    ]);
+  });
+
   it("should do the initial sync with limit", async () => {
-    const ws = wsc.get(url("/bucket/test/data", {limit: 1}));
+    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {limit: 1}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -105,7 +195,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with skip", async () => {
-    const ws = wsc.get(url("/bucket/test/data", {skip: 1}));
+    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -117,20 +207,15 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with skip and limit", async () => {
-    const newRows = await db
-      .collection(collection)
-      .insertMany([
-        {
-          title: "third row",
-          description: "third rows description"
-        },
-        {
-          title: "fourth row",
-          description: "fourth rows description"
-        }
-      ])
-      .then(r => r.ops.map(({_id, ...rest}) => ({_id: _id.toString(), ...rest})));
-    const ws = wsc.get(url("/bucket/test/data", {skip: 1, limit: 2}));
+    const newRows = [
+      await insertRow({
+        title: "third"
+      }),
+      await insertRow({
+        title: "fourth"
+      })
+    ];
+    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1, limit: 2}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -143,7 +228,7 @@ describe("Realtime", () => {
   });
 
   it("should do the initial sync with sort", async () => {
-    const ws = wsc.get(url("/bucket/test/data", {sort: {_id: -1}}));
+    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {sort: {_id: -1}}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;

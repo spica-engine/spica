@@ -1,3 +1,2 @@
-export {ReviewAndChangeQueue} from "./queue";
-export {Review} from "./review";
+export {ChangeQueue} from "./queue";
 export {Change} from "./change";

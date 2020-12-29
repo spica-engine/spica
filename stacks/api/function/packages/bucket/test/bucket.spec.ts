@@ -1,19 +1,32 @@
 import * as Bucket from "@spica-devkit/bucket";
+import * as Operators from "../src/operators";
 import * as Fetch from "node-fetch";
+import {of} from "rxjs";
+
+jasmine.getEnv().allowRespy(true);
 
 describe("@spica-devkit/bucket", () => {
   let fetchSpy: jasmine.SpyObj<any>;
+  let wsSpy: jasmine.SpyObj<any>;
+  let consoleSpy: jasmine.SpyObj<any>;
 
   beforeEach(() => {
+    consoleSpy = spyOn(console, "warn").and.returnValue();
+
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Bucket.initialize({apikey: "TEST_APIKEY"});
     fetchSpy = spyOn(Fetch, "default").and.returnValue(
       new Promise(resolve =>
         resolve({
+          headers: {
+            get: () => {}
+          },
           json: () => {}
         } as any)
       )
     );
+
+    wsSpy = spyOn(Operators, "getWsObs").and.returnValue(of());
   });
 
   describe("errors", () => {
@@ -26,7 +39,7 @@ describe("@spica-devkit/bucket", () => {
   });
 
   describe("bucket", () => {
-    let bucket: Bucket.Bucket = {
+    const bucket: Bucket.Bucket = {
       title: "User Bucket",
       description: "User Bucket Description",
       primary: "name",
@@ -120,10 +133,32 @@ describe("@spica-devkit/bucket", () => {
         }
       });
     });
+
+    it("should show warning", async () => {
+      fetchSpy = spyOn(Fetch, "default").and.returnValue(
+        new Promise(resolve =>
+          resolve({
+            headers: {
+              get: (key: string) => {
+                if (key == "warning") {
+                  return "deprecation warning";
+                }
+              }
+            },
+            json: () => {}
+          } as any)
+        )
+      );
+
+      await Bucket.getAll();
+
+      expect(consoleSpy).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalledWith("deprecation warning");
+    });
   });
 
   describe("bucket-data", () => {
-    let document: Bucket.BucketDocument = {
+    const document: Bucket.BucketDocument = {
       name: "name",
       surname: "surname"
     };
@@ -177,7 +212,7 @@ describe("@spica-devkit/bucket", () => {
         queryParams: {relation: true}
       });
 
-      let url = new URL("http://test/bucket/bucket_id/data/document_id");
+      const url = new URL("http://test/bucket/bucket_id/data/document_id");
 
       url.searchParams.append("relation", "true");
 
@@ -209,7 +244,7 @@ describe("@spica-devkit/bucket", () => {
         queryParams: {limit: 1, skip: 2}
       });
 
-      let url = new URL("http://test/bucket/bucket_id/data");
+      const url = new URL("http://test/bucket/bucket_id/data");
 
       url.searchParams.append("limit", "1");
       url.searchParams.append("skip", "2");
@@ -221,6 +256,72 @@ describe("@spica-devkit/bucket", () => {
           "accept-language": "TR",
           Authorization: "APIKEY TEST_APIKEY"
         }
+      });
+    });
+  });
+
+  describe("bucket-data realtime", () => {
+    describe("getAll", () => {
+      it("should get all bucket-data", () => {
+        Bucket.data.realtime.getAll("bucket_id");
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          "ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY",
+          undefined
+        );
+      });
+
+      it("should get all with filter", () => {
+        Bucket.data.realtime.getAll("bucket_id", {
+          filter: "name=='test'"
+        });
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          `ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter=name=='test'`,
+          undefined
+        );
+      });
+
+      it("should get all with sort", () => {
+        Bucket.data.realtime.getAll("bucket_id", {
+          sort: {
+            age: 1
+          }
+        });
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&sort={"age":1}',
+          {
+            age: 1
+          }
+        );
+      });
+
+      it("should get all with limit and skip", () => {
+        Bucket.data.realtime.getAll("bucket_id", {
+          limit: 1,
+          skip: 1
+        });
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          "ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&limit=1&skip=1",
+          undefined
+        );
+      });
+    });
+
+    describe("get", () => {
+      it("should get specific bucket-data", () => {
+        Bucket.data.realtime.get("bucket_id", "document_id");
+
+        expect(wsSpy).toHaveBeenCalledTimes(1);
+        expect(wsSpy).toHaveBeenCalledWith(
+          'ws://test/bucket/bucket_id/data?Authorization=APIKEY TEST_APIKEY&filter=_id=="document_id"'
+        );
       });
     });
   });

@@ -20,7 +20,7 @@
         <mat-list>
           <h4 mat-subheader><mat-icon>short_text</mat-icon> Describe</h4>
           <mat-divider></mat-divider>
-          <mat-list-item>
+          <mat-list-item class="describe">
             <mat-form-field>
               <mat-label>Name</mat-label>
               <input
@@ -115,9 +115,9 @@
               >
               </mat-slider>
               <mat-error *ngIf="timeoutModel?.errors?.required">Timeout is required.</mat-error>
-              <mat-error *ngIf="timeoutModel?.errors?.min"
-                >Timeout value must be positive.</mat-error
-              >
+              <mat-error *ngIf="timeoutModel?.errors?.min">
+                Timeout value must be positive.
+              </mat-error>
             </span>
           </mat-list-item>
 
@@ -155,13 +155,7 @@
           </mat-list-item>
 
           <h4 mat-subheader>
-            <mat-icon>swap_horiz</mat-icon> Triggers<button
-              type="button"
-              mat-icon-button
-              (click)="addTrigger()"
-            >
-              <mat-icon>add</mat-icon>
-            </button>
+            <mat-icon>swap_horiz</mat-icon> Triggers
             <mat-error *ngIf="isHandlerDuplicated">
               Duplicated handler detected. Each handlers must be unique.
             </mat-error>
@@ -170,102 +164,147 @@
             </mat-error>
           </h4>
           <mat-divider></mat-divider>
-          <mat-list-item
-            class="triggers"
-            *ngFor="let trigger of function.triggers; let i = index"
-            [ngModelGroup]="i"
-          >
-            <mat-form-field>
-              <mat-label>Handler</mat-label>
-              <input
-                matInput
-                required
-                minlength="1"
-                placeholder="Handler"
-                [(ngModel)]="trigger.handler"
-                name="handler"
-                #handlerModel="ngModel"
-                (ngModelChange)="checkHandlers()"
-              />
-              <mat-error *ngIf="handlerModel.errors?.required">
-                This field is required.
-              </mat-error>
-            </mat-form-field>
-
-            <ng-container *ngIf="information | async; let information">
-              <mat-form-field>
-                <mat-label>Type</mat-label>
-                <mat-select
-                  #typeModel="ngModel"
-                  name="type"
-                  [(ngModel)]="trigger.type"
-                  (ngModelChange)="trigger.options = {}"
-                  required
-                >
-                  <mat-select-trigger
-                    *ngIf="information.enqueuers | enqueuer: trigger.type; let enqueuer"
-                  >
-                    <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
-                    <mat-label>{{ enqueuer.description.title }}</mat-label>
-                  </mat-select-trigger>
-                  <mat-option
-                    *ngFor="let enqueuer of information.enqueuers"
-                    [value]="enqueuer.description.name"
-                  >
-                    <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
-                    <mat-label>
-                      <span>{{ enqueuer.description.title }}</span> —
-                      <small class="mat-small">{{ enqueuer.description.description }}</small>
-                    </mat-label>
-                  </mat-option>
-                </mat-select>
-                <mat-error *ngIf="typeModel.errors?.required"
-                  >You must select an enqueuer.</mat-error
-                >
-              </mat-form-field>
-
+          <ng-container *ngFor="let trigger of function.triggers; let i = index" [ngModelGroup]="i">
+            <div
+              class="trigger-explanation"
+              *ngIf="information | async; let information"
+              [class.error]="!trigger.handler || isHandlerDuplicated.handler == trigger.handler"
+            >
               <ng-container
-                ngModelGroup="triggerOptions"
-                *ngIf="
-                  (information.enqueuers | enqueuer: trigger.type)?.options
-                    | conditionalSchema: trigger.options;
-                  let options
-                "
+                [ngSwitch]="trigger.type"
+                *ngIf="information.enqueuers | enqueuer: trigger.type; let enqueuer"
               >
-                <span
-                  *ngFor="let propertyKv of options.properties | keyvalue"
-                  [inputPlacer]="propertyKv.value"
-                  [(ngModel)]="trigger.options[propertyKv.key]"
-                  [name]="propertyKv.key"
-                  [required]="options.required?.indexOf(propertyKv.key) > -1"
+                <span *ngSwitchCase="'http'"
+                  >Function <b>{{ trigger.handler }}</b> will be executed in every
+                  <b>{{ trigger.options["method"] }}</b> request to
+                  <b>{{ trigger.options["path"] }}</b> endpoint. Preflight requests are
+                  <b>{{ trigger.options["preflight"] ? "accepted" : "unaccepted" }}</b></span
                 >
-                </span>
-                <span>
-                  <mat-label>
+                <span *ngSwitchCase="'firehose'"
+                  >Function <b>{{ trigger.handler }}</b> will be executed in every
+                  <b>{{ trigger.options["event"] }}</b> event triggered via websocket.</span
+                >
+                <span *ngSwitchCase="'database'"
+                  >Function <b>{{ trigger.handler }}</b> will be executed in every
+                  <b>{{ trigger.options["type"] }}</b> operation to the
+                  <b>{{ trigger.options["collection"] }}</b> collection.</span
+                >
+                <span *ngSwitchCase="'schedule'"
+                  >Function <b>{{ trigger.handler }}</b> will be executed in every
+                  <b>{{ trigger.options["frequency"] }}</b> cron expression.</span
+                >
+                <span *ngSwitchCase="'system'"
+                  >Function <b>{{ trigger.handler }}</b> will be executed in every
+                  <b>{{ trigger.options["name"] }}</b> event triggered.</span
+                >
+                <span *ngSwitchCase="'bucket'">
+                  Function <b>{{ trigger.handler }}</b> will be executed <b></b>after every
+                  <b>{{ trigger.options["type"] }}</b> request to
+                  <b>{{
+                    enqueuer.options.properties.bucket.viewEnum[
+                      enqueuer.options.properties.bucket.enum.indexOf(trigger.options["bucket"])
+                    ]
+                  }}</b>
+                  bucket.</span
+                >
+                <div>
+                  <button
+                    mat-icon-button
+                    matToolTip="Show the example code"
+                    (click)="showExample(trigger)"
+                  >
+                    <mat-icon>contact_support</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="triggersEditMode[i] = !triggersEditMode[i]">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    color="warn"
+                    [disabled]="function.triggers.length == 1"
+                    (click)="deleteTrigger(i)"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <mat-slide-toggle
+                    name="status"
+                    [(ngModel)]="trigger.active"
+                    labelPosition="before"
+                  >
                     {{ trigger.active ? "Active" : "Deactive" }}
-                  </mat-label>
-                  <mat-slide-toggle name="status" [(ngModel)]="trigger.active"> </mat-slide-toggle>
-                </span>
+                  </mat-slide-toggle>
+                </div>
               </ng-container>
-            </ng-container>
-
-            <button
-              mat-icon-button
-              type="button"
-              color="warn"
-              [disabled]="function.triggers.length == 1"
-              (click)="deleteTrigger(i)"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              matToolTip="Show the example code"
-              (click)="showExample(trigger)"
-            >
-              <mat-icon>contact_support</mat-icon>
-            </button>
-          </mat-list-item>
+            </div>
+            <mat-list-item class="triggers" [class.hidden]="!triggersEditMode[i]">
+              <ng-container *ngIf="information | async; let information">
+                <mat-form-field>
+                  <mat-label>Handler</mat-label>
+                  <input
+                    matInput
+                    required
+                    minlength="1"
+                    placeholder="Handler"
+                    [(ngModel)]="trigger.handler"
+                    name="handler"
+                    #handlerModel="ngModel"
+                    (ngModelChange)="checkHandlers()"
+                  />
+                  <mat-error *ngIf="handlerModel.errors?.required">
+                    This field is required.
+                  </mat-error>
+                </mat-form-field>
+                <mat-form-field>
+                  <mat-label>Type</mat-label>
+                  <mat-select
+                    #typeModel="ngModel"
+                    name="type"
+                    [(ngModel)]="trigger.type"
+                    (ngModelChange)="trigger.options = {}"
+                    required
+                  >
+                    <mat-select-trigger
+                      *ngIf="information.enqueuers | enqueuer: trigger.type; let enqueuer"
+                    >
+                      <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                      <mat-label>{{ enqueuer.description.title }}</mat-label>
+                    </mat-select-trigger>
+                    <mat-option
+                      *ngFor="let enqueuer of information.enqueuers"
+                      [value]="enqueuer.description.name"
+                    >
+                      <mat-icon>{{ enqueuer.description.icon }}</mat-icon>
+                      <mat-label>
+                        <span>{{ enqueuer.description.title }}</span> —
+                        <small class="mat-small">{{ enqueuer.description.description }}</small>
+                      </mat-label>
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="typeModel.errors?.required"
+                    >You must select an enqueuer.</mat-error
+                  >
+                </mat-form-field>
+                <ng-container
+                  ngModelGroup="triggerOptions"
+                  *ngIf="
+                    (information.enqueuers | enqueuer: trigger.type)?.options
+                      | conditionalSchema: trigger.options;
+                    let options
+                  "
+                >
+                  <span
+                    *ngFor="let propertyKv of options.properties | keyvalue"
+                    [inputPlacer]="propertyKv.value"
+                    [(ngModel)]="trigger.options[propertyKv.key]"
+                    [name]="propertyKv.key"
+                    [required]="options.required?.indexOf(propertyKv.key) > -1"
+                  >
+                  </span>
+                </ng-container>
+              </ng-container>
+            </mat-list-item>
+          </ng-container>
           <button type="button" mat-button class="new-trigger" (click)="addTrigger()">
             <mat-icon>add</mat-icon>Add New Trigger
           </button>
@@ -342,18 +381,12 @@
                 (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
                 [disabled]="dependencyModel.invalid || dependencyInstallPending"
               >
-                <mat-icon>add</mat-icon> Add
+                <mat-icon>add</mat-icon> Add New Dependency
               </button>
             </mat-list-item>
           </ng-container>
 
-          <h4 mat-subheader>
-            <mat-icon>dehaze</mat-icon> Environment Variables
-            <span></span>
-            <button type="button" mat-icon-button (click)="addVariable()" matTooltip="Add Variable">
-              <mat-icon>add</mat-icon>
-            </button>
-          </h4>
+          <h4 mat-subheader><mat-icon>dehaze</mat-icon> Environment Variables</h4>
           <mat-divider></mat-divider>
           <mat-list-item
             *ngFor="let env of function.env; let index = index"
@@ -374,9 +407,56 @@
                 rows="1"
               ></textarea>
             </mat-form-field>
-            <button type="button" mat-icon-button color="warn" (click)="removeVariable(index)">
-              <mat-icon>delete</mat-icon>
+            <button type="button" mat-button color="warn" (click)="removeVariable(index)">
+              <mat-icon>delete</mat-icon> Delete
             </button>
+          </mat-list-item>
+          <button type="button" mat-button class="new-trigger" (click)="addVariable()">
+            <mat-icon>add</mat-icon>Add New Environment Variable
+          </button>
+
+          <h4 mat-subheader><mat-icon>settings</mat-icon> Optional Settings</h4>
+          <mat-divider></mat-divider>
+          <mat-list-item class="optional-settings">
+            <div>
+              You can enable batching to run multiple process in the same worker. This action will
+              share memory in each process. To enable batching, you have to set 'Deadline' (seconds
+              to wait after each process) and 'Maximum batch amount' (total process count for
+              batching). We recommend 'Deadline' to be less than 10 seconds and 'Maximum batch
+              amount' to be less than 100 generally.
+            </div>
+            <div class="setting">
+              <mat-slide-toggle [(ngModel)]="batching" name="batching" labelPosition="before"
+                >Batching</mat-slide-toggle
+              >
+
+              <mat-form-field [style.visibility]="batching ? 'visible' : 'hidden'">
+                <mat-label>Deadline (s)</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  placeholder="Deadline"
+                  #nameModel="ngModel"
+                  [min]="batching ? 1 : 0"
+                  [(ngModel)]="batchingDeadline"
+                  name="deadline"
+                  [required]="batching"
+                />
+              </mat-form-field>
+              <mat-form-field [style.visibility]="batching ? 'visible' : 'hidden'">
+                <mat-label>Maximum batch amount</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  placeholder="Amount"
+                  #nameModel="ngModel"
+                  [min]="batching ? 2 : 0"
+                  [(ngModel)]="maxBatchCount"
+                  name="limit"
+                  [required]="batching"
+                />
+              </mat-form-field>
+            </div>
           </mat-list-item>
         </mat-list>
       </form>
