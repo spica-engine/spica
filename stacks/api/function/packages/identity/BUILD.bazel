@@ -14,6 +14,7 @@ ts_library(
     deps = [
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
+        "//stacks/api/function/packages/common"
     ],
 )
 

@@ -1,54 +1,52 @@
 import {Identity} from "./interface";
 import fetch from "node-fetch";
 
-let apikey;
+import {
+  initialize as _initialize,
+  checkInitialized,
+  ApikeyInitialization,
+  IdentityInitialization
+} from "@spica-devkit/internal_common";
+
+let authorization;
 let url;
+let loginUrl;
 
-export function initialize(options: {apikey: string; publicUrl?: string}) {
-  apikey = `APIKEY ${options.apikey}`;
-
-  let _publicUrl = options.publicUrl || process.env.__INTERNAL__SPICA__PUBLIC_URL__;
-  if (!_publicUrl) {
-    throw new Error(
-      "The <__INTERNAL__SPICA__PUBLIC_URL__> variable and public url was not given. "
-    );
-  }
-
-  url = `${_publicUrl}/passport/identity`;
-}
-
-function checkInitialized() {
-  if (!apikey) {
-    throw new Error("You should call initialize method with apikey before this action.");
-  }
+export function initialize(options: ApikeyInitialization | IdentityInitialization) {
+  const {authorization:_authorization, publicUrl} = _initialize(options);
+  authorization = _authorization;
+  url = publicUrl + "/passport/identity";
+  loginUrl = publicUrl + "/passport/identify";
 }
 
 export function get(id: string): Promise<Identity> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
+  const request = {
     method: "get",
     headers: {
-      Authorization: apikey
+      Authorization: authorization
     }
   };
 
   return fetch(url + "/" + id, request).then(res => res.json());
 }
 
-export function getAll(queryParams: object = {}): Promise<Identity> {
-  checkInitialized();
+export function login() {}
 
-  let fullUrl = new URL(url);
+export function getAll(queryParams: object = {}): Promise<Identity> {
+  checkInitialized(authorization);
+
+  const fullUrl = new URL(url);
 
   for (const [key, value] of Object.entries(queryParams)) {
-    fullUrl.searchParams.append(key, JSON.stringify(value));
+    fullUrl.searchParams.append(key, encodeURIComponent(value));
   }
 
-  let request = {
+  const request = {
     method: "get",
     headers: {
-      Authorization: apikey
+      Authorization: authorization
     }
   };
 
@@ -56,13 +54,13 @@ export function getAll(queryParams: object = {}): Promise<Identity> {
 }
 
 export function insert(identity: Identity): Promise<Identity> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
+  const request = {
     method: "post",
     body: JSON.stringify(identity),
     headers: {
-      Authorization: apikey,
+      Authorization: authorization,
       "Content-Type": "application/json"
     }
   };
@@ -71,13 +69,13 @@ export function insert(identity: Identity): Promise<Identity> {
 }
 
 export function update(id: string, identity: Identity): Promise<Identity> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
+  const request = {
     method: "put",
     body: JSON.stringify(identity),
     headers: {
-      Authorization: apikey,
+      Authorization: authorization,
       "Content-Type": "application/json"
     }
   };
@@ -85,12 +83,12 @@ export function update(id: string, identity: Identity): Promise<Identity> {
 }
 
 export function remove(id: string): Promise<any> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
+  const request = {
     method: "delete",
     headers: {
-      Authorization: apikey
+      Authorization: authorization
     }
   };
   return fetch(url + "/" + id, request);

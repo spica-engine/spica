@@ -13,11 +13,10 @@ ts_library(
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "@npm//@types/json-schema",
-        "@npm//@types/node-fetch",
         "@npm//@types/ws",
-        "@npm//node-fetch",
         "@npm//rxjs",
         "@npm//ws",
+        "//stacks/api/function/packages/common"
     ],
 )
 
