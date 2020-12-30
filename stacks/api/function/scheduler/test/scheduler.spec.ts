@@ -26,6 +26,13 @@ describe("Scheduler", () => {
       allowedHeaders: ["*"],
       allowedMethods: ["*"],
       allowedOrigins: ["*"]
+    },
+    runtime: {
+      discoveryRoot: "./stacks/api/function/runtimes",
+      default: {
+        name: "node",
+        version: "12.19.0"
+      }
     }
   };
 
@@ -54,7 +61,7 @@ describe("Scheduler", () => {
     await app.init();
 
     compilation.cwd = FunctionTestBed.initialize(
-      `export default function() {}`,
+      `export default function() {}`,
       compilation.entrypoint
     );
     await scheduler.languages.get("javascript").compile(compilation);
@@ -174,7 +181,7 @@ describe("Scheduler", () => {
   });
 
   it("should not write to stderr when the function quits within the timeout frame", () => {
-    const event = new event.Event({
+    const ev = new event.Event({
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
@@ -187,7 +194,7 @@ describe("Scheduler", () => {
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
     // @ts-expect-error
-    scheduler.yield(event, id);
+    scheduler.yield(ev, id);
     const write = spyOn(stream, "write");
     expect(write).not.toHaveBeenCalled();
     worker.emit("exit"); /* simulate exit */

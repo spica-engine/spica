@@ -31,7 +31,8 @@ export class FunctionModule {
           apiUrl: options.apiUrl,
           timeout: options.timeout,
           experimentalDevkitDatabaseCache: options.experimentalDevkitDatabaseCache,
-          corsOptions: options.corsOptions
+          corsOptions: options.corsOptions,
+          runtime: options.runtime
         })
       ],
       controllers: [FunctionController],
@@ -42,7 +43,8 @@ export class FunctionModule {
           provide: FUNCTION_OPTIONS,
           useValue: {
             root: path.join(options.path, "functions"),
-            timeout: options.timeout
+            timeout: options.timeout,
+            runtime: options.runtime
           }
         },
         {

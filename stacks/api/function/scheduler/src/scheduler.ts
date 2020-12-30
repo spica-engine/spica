@@ -1,9 +1,6 @@
 import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
 import {DatabaseService} from "@spica-server/database";
-import {Language} from "@spica-server/function/compiler";
-import {Javascript} from "@spica-server/function/compiler/javascript";
-import {Typescript} from "@spica-server/function/compiler/typescript";
 import {
   DatabaseEnqueuer,
   Enqueuer,
@@ -12,13 +9,10 @@ import {
   ScheduleEnqueuer,
   SystemEnqueuer
 } from "@spica-server/function/enqueuer";
-import {PackageManager} from "@spica-server/function/pkgmanager";
-import {Npm} from "@spica-server/function/pkgmanager/node";
 import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
 import {event} from "@spica-server/function/queue/proto";
-import {Runtime, Worker} from "@spica-server/function/runtime";
+import {discovery, spawn, Worker} from "@spica-server/function/runtime";
 import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
-import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
 import {Batch, createBatch, updateBatch} from "./batch";
 import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
@@ -31,10 +25,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   private databaseQueue: DatabaseQueue;
   private firehoseQueue: FirehoseQueue;
 
-  readonly runtimes = new Map<string, Runtime>();
-  readonly pkgmanagers = new Map<string, PackageManager>();
   readonly enqueuers = new Set<Enqueuer<unknown>>();
-  readonly languages = new Map<string, Language>();
 
   private output: StandartStream;
 
@@ -44,12 +35,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     @Inject(SCHEDULING_OPTIONS) private options: SchedulingOptions,
     @Optional() @Inject(ENQUEUER) private enqueuerFactory: EnqueuerFactory<unknown, unknown>
   ) {
-    this.output = new DatabaseOutput(database);
+    discovery.root = options.runtime.discoveryRoot;
 
-    this.languages.set("typescript", new Typescript());
-    this.languages.set("javascript", new Javascript());
-    this.runtimes.set("node", new Node());
-    this.pkgmanagers.set("node", new Npm());
+    this.output = new DatabaseOutput(database);
 
     this.queue = new EventQueue(
       (id, schedule) => this.gotWorker(id, schedule),
@@ -97,7 +85,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     await this.queue.listen();
 
     for (let i = 0; i < this.options.poolSize; i++) {
-      this.spawn();
+      await this.spawn();
     }
   }
 
@@ -105,9 +93,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     for (const [id, worker] of this.pool.entries()) {
       await worker.kill();
       this.pool.delete(id);
-    }
-    for (const language of this.languages.values()) {
-      await language.kill();
     }
     return this.queue.kill();
   }
@@ -273,14 +258,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.spawn();
   }
 
-  private spawn() {
+  private async spawn() {
     if (this.pool.size >= this.options.poolMaxSize) {
       return;
     }
     const id: string = uniqid();
-    const worker = this.runtimes.get("node").spawn({
+    const worker = await spawn({
       id,
-      env: {
+      environment: {
         __INTERNAL__SPICA__MONGOURL__: this.options.databaseUri,
         __INTERNAL__SPICA__MONGODBNAME__: this.options.databaseName,
         __INTERNAL__SPICA__MONGOREPL__: this.options.databaseReplicaSet,
@@ -288,6 +273,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         __EXPERIMENTAL_DEVKIT_DATABASE_CACHE: this.options.experimentalDevkitDatabaseCache
           ? "true"
           : ""
+      },
+      runtime: {
+        name: this.options.runtime.default.name,
+        version: this.options.runtime.default.version
       }
     });
     worker.once("exit", () => this.lostWorker(id));

@@ -67,7 +67,14 @@ xdescribe("Hooks Integration", () => {
             allowedMethods: ["*"],
             allowedOrigins: ["*"]
           },
-          logExpireAfterSeconds: 60
+          logExpireAfterSeconds: 60,
+          runtime: {
+            default: {
+              name: "node",
+              version: "12.19.0"
+            },
+            discoveryRoot: "./stacks/api/function/runtimes"
+          }
         })
       ]
     }).compile();

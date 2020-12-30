@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  Header,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -24,17 +23,16 @@ import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import * as os from "os";
-import {from, of, OperatorFunction} from "rxjs";
-import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
+import {from} from "rxjs";
+import {take} from "rxjs/operators";
+import {discovery} from "@spica-server/function/runtime";
 import {createFunctionActivity} from "./activity.resource";
+import {ChangeKind, changesFromTriggers, createTargetChanges} from "./change";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
-import {ChangeKind} from "./change";
 import {Function, Trigger} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
-import {changesFromTriggers, createTargetChanges} from "./change";
 
 /**
  * @name Function
@@ -67,10 +65,7 @@ export class FunctionController {
       });
     }
 
-    const runtimes = [];
-    for (const [_, runtime] of this.scheduler.runtimes) {
-      runtimes.push(runtime.description);
-    }
+    const runtimes = await discovery.discover();
 
     return {enqueuers, runtimes, timeout: this.options.timeout};
   }
@@ -212,12 +207,10 @@ export class FunctionController {
    */
   @Post(":id/dependencies")
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
-  @Header("X-Content-Type-Options", "nosniff")
   async addDependency(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Body("name", DEFAULT([]), ARRAY(String)) name: string[],
     @Res() res,
-    @Query("progress", BOOLEAN) progress?: boolean
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body("name", DEFAULT([]), ARRAY(String)) name: string[]
   ) {
     if (!name) {
       throw new BadRequestException("Dependency name is required.");
@@ -226,35 +219,10 @@ export class FunctionController {
     if (!fn) {
       throw new NotFoundException("Could not find the function.");
     }
-
-    let operators: OperatorFunction<unknown, unknown>[] = [
-      catchError(err => {
-        res.status(400).send({message: err.toString()});
-        return err;
-      })
-    ];
-
-    if (progress) {
-      operators = [];
-      operators.push(
-        map(progress => {
-          return {
-            progress,
-            state: "installing"
-          };
-        }),
-        catchError(error =>
-          of({
-            state: "failed",
-            message: error
-          })
-        ),
-        tap(response => res.write(`${JSON.stringify(response)}${os.EOL}`))
-      );
-    }
-    operators.push(last(), finalize(() => res.end()));
-
-    return (this.engine.addPackage(fn, name) as any).pipe(...operators);
+    return this.engine
+      .addPackage(fn, name)
+      .then(() => res.end())
+      .catch(err => res.status(400).send({message: err.toString()}));
   }
 
   /**

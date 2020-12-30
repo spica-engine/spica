@@ -4,33 +4,11 @@ load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "node_test_lib",
-    testonly = True,
-    srcs = [
-        "node.spec.ts",
-    ],
-    deps = [
-        "//stacks/api/function/runtime",
-        "//stacks/api/function/runtime/node",
-        "//stacks/api/function/runtime/testing",
-        "@npm//@types/jasmine",
-        "@npm//@types/node",
-    ],
-)
-
-jasmine_node_test(
-    name = "node_test",
-    srcs = [":node_test_lib"],
-    tags = [
-        "flaky",
-    ],
-)
-
-ts_library(
-    name = "entrypoint_test_lib",
+    name = "integration_test_lib",
     testonly = True,
     srcs = [
         "entrypoint.spec.ts",
+        "npm.spec.ts",
     ],
     deps = [
         "//stacks/api/function/compiler",
@@ -39,7 +17,6 @@ ts_library(
         "//stacks/api/function/queue",
         "//stacks/api/function/queue/proto",
         "//stacks/api/function/runtime",
-        "//stacks/api/function/runtime/node",
         "//stacks/api/function/runtime/testing",
         "@npm//@types/jasmine",
         "@npm//@types/node",
@@ -47,6 +24,9 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "entrypoint_test",
-    srcs = [":entrypoint_test_lib"],
+    name = "integration_test",
+    srcs = [":integration_test_lib"],
+    data = [
+        "//stacks/api/function/runtimes/node:files",
+    ],
 )

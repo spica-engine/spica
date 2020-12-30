@@ -1,0 +1,11 @@
+{
+    "name": "node",
+    "title": "NodeJS",
+    "description": "Node.js® is a JavaScript runtime built on Chrome's V8 JavaScript engine.",
+    "bin": "bash ./node.sh",
+    "pkgmanager": "bash ./npm.sh",
+    "prepare": "bash ./prepare.sh",
+    "versions": [
+        "12.19.0"
+    ]
+}

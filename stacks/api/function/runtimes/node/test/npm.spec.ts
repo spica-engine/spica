@@ -1,24 +1,30 @@
-import {Npm} from "@spica-server/function/pkgmanager/node";
+import {discovery, pkgmanager} from "@spica-server/function/runtime";
 import * as fs from "fs";
 import * as path from "path";
-import {distinctUntilChanged} from "rxjs/operators";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe("npm", () => {
-  let npm: Npm;
   let cwd: string;
+  let options: pkgmanager.Options;
 
   beforeEach(() => {
-    npm = new Npm();
     cwd = path.join(process.env.TEST_TMPDIR, fs.mkdtempSync("__test__"));
     fs.mkdirSync(cwd, {recursive: true});
     fs.writeFileSync(path.join(cwd, "package.json"), JSON.stringify({name: "__testing__"}));
+    options = {
+      for: cwd,
+      runtime: {
+        name: "node",
+        version: "12.19.0"
+      }
+    };
+    discovery.root = "./stacks/api/function/runtimes";
   });
 
   it("should install 'debug' package", async () => {
-    await npm.install(cwd, "debug@4.1.1").toPromise();
-    const packages = await npm.ls(cwd);
+    await pkgmanager.install(options, "debug@4.1.1");
+    const packages = await pkgmanager.ls(options);
     expect(packages).toEqual([
       {
         name: "debug",
@@ -28,54 +34,31 @@ describe("npm", () => {
   });
 
   it("should install and uninstall 'rxjs' package", async () => {
-    await npm.install(cwd, "rxjs@6.0.0").toPromise();
-    let packages = await npm.ls(cwd);
+    await pkgmanager.install(options, "rxjs@6.0.0");
+    let packages = await pkgmanager.ls(options);
     expect(packages).toEqual([
       {
         name: "rxjs",
         version: "^6.0.0"
       }
     ]);
-    await npm.uninstall(cwd, "rxjs");
-    packages = await npm.ls(cwd);
+    await pkgmanager.uninstall(options, "rxjs");
+    packages = await pkgmanager.ls(options);
     expect(packages).toEqual([]);
   });
 
   it("it should not fail when uninstalling a package which is not present in", async () => {
     const _catch = jasmine.createSpy();
-    await npm.uninstall(cwd, "rxjs").catch(_catch);
+    await pkgmanager.uninstall(options, "rxjs").catch(_catch);
     expect(_catch).not.toHaveBeenCalled();
   });
 
   it("it should  fail when installing a package which does not exist", async () => {
     const _catch = jasmine.createSpy().and.callFake(() => {});
-    await npm
-      .install(cwd, "rxjs@couldnotexist")
-      .toPromise()
-      .catch(_catch);
+    await pkgmanager.install(options, "rxjs@couldnotexist").catch(_catch);
     expect(_catch).toHaveBeenCalled();
     const errorMessage = _catch.calls.argsFor(0)[0];
     expect(errorMessage).toContain("npm ERR! code ETARGET");
     expect(errorMessage).toContain("No matching version found for rxjs@couldnotexist");
-    expect(errorMessage).toContain("npm install has failed. code: 1");
-  });
-
-  it("should report progress", done => {
-    const progress = [];
-    npm
-      .install(cwd, "debug")
-      .pipe(distinctUntilChanged())
-      .subscribe({
-        next: p => progress.push(p),
-        complete: () => {
-          // prettier-ignore
-          expect(progress).toEqual([
-            6, 11, 17,  22, 28, 33, 39,
-            44, 50, 56,  61, 67, 72, 78,
-            83, 89, 94, 100
-          ]);
-          done();
-        }
-      });
   });
 });

@@ -45,6 +45,7 @@ message Pop {
 
 message Complete {
    string id = 1;
+   bool succedded = 2;
    message Result {}
 }
 
