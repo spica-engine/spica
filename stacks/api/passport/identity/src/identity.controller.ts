@@ -11,7 +11,9 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  HttpStatus,
+  HttpCode
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
@@ -161,13 +163,14 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     // prevent to deleting the last user
     const users = await this.identity.find();
     if (users.length == 1) {
       return;
     }
-    return this.identity.deleteOne({_id: id}).then(() => {});
+    return this.identity.deleteOne({_id: id});
   }
 
   @UseInterceptors(activity(createIdentityActivity))

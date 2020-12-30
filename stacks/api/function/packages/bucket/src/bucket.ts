@@ -1,4 +1,4 @@
-import {Bucket, BucketDocument, IndexResult} from "./interface";
+import {Bucket, BucketDocument} from "./interface";
 // update this import target
 import {
   initialize as _initialize,
@@ -6,8 +6,9 @@ import {
   ApikeyInitialization,
   IdentityInitialization,
   http,
-  buildUrl
-} from "../../common/index";
+  buildUrl,
+  IndexResult
+} from "@spica-devkit/internal_common";;
 import {getWsObs} from "./index";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
@@ -32,7 +33,6 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   defaultHeaders = {
     Authorization: authorization
   };
-
   writeHeaders = {...defaultHeaders, "Content-Type": "application/json"};
 }
 
@@ -97,7 +97,7 @@ export namespace data {
     const fullUrl = buildUrl(`${url}/${bucketId}/data`, options.queryParams);
 
     return http.get<BucketDocument[] | IndexResult<BucketDocument>>(fullUrl, {
-      headers: {...defaultHeaders, ...headers}
+      headers: {...headers, ...defaultHeaders}
     });
   }
 
@@ -133,9 +133,9 @@ export namespace data {
     export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
       checkInitialized(authorization);
 
-      const fullUrl = buildUrl(`${wsUrl}/bucket/${bucketId}/data`, {
+      const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         filter: `_id=="${documentId}"`,
-        Authorization: authorization
+        ...defaultHeaders
       });
 
       return getWsObs<BucketDocument[]>(fullUrl.toString()).pipe(map(([documents]) => documents));
@@ -149,52 +149,12 @@ export namespace data {
 
       const sort = queryParams["sort"];
 
-      const fullUrl = buildUrl(`${wsUrl}/bucket/${bucketId}/data`, {
+      const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         ...queryParams,
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(url, sort);
-    }
-  }
-
-  export namespace realtime {
-    export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
-      checkInitialized();
-
-      const filter = `_id=="${documentId}"`;
-
-      const url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${authorization}&filter=${filter}`;
-
-      return getWsObs<BucketDocument[]>(url).pipe(map(([documents]) => documents));
-    }
-    export function getAll(bucketId: string, params?: GetAllParams): Observable<BucketDocument[]> {
-      checkInitialized();
-
-      let url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${authorization}`;
-
-      let sort;
-
-      if (params) {
-        if (params.filter) {
-          url += `&filter=${params.filter}`;
-        }
-
-        if (params.sort) {
-          url += `&sort=${JSON.stringify(params.sort)}`;
-          sort = params.sort;
-        }
-
-        if (params.limit) {
-          url += `&limit=${params.limit}`;
-        }
-
-        if (params.skip) {
-          url += `&skip=${params.skip}`;
-        }
-      }
-
-      return getWsObs<BucketDocument[]>(url, sort);
+      return getWsObs<BucketDocument[]>(fullUrl.toString(), sort);
     }
   }
 }

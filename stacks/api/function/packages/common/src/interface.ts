@@ -14,3 +14,10 @@ export interface InitializationResult {
   authorization: string;
   publicUrl: string;
 }
+
+export interface IndexResult<T> {
+  meta: {
+    total: number;
+  };
+  data: T[];
+}

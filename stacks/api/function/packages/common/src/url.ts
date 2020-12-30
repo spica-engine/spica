@@ -1,13 +1,12 @@
 export function buildUrl(baseUrl: string, queryParams: object = {}): URL {
   const url = new URL(baseUrl);
-  for (const [key, value] of Object.entries(queryParams)) {
-    let encodedValue = encodeURIComponent(value);
 
+  for (let [key, value] of Object.entries(queryParams)) {
     if (typeof value == "object") {
-      encodedValue = JSON.stringify(value);
+      value = JSON.stringify(value);
     }
 
-    url.searchParams.set(key, encodedValue);
+    url.searchParams.set(key, value);
   }
 
   return url;
