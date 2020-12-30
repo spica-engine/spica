@@ -3,54 +3,62 @@
     class="headline"
     fxLayout="row"
     fxLayoutAlign="space-between flex-start"
+    fxLayoutAlign.lt-lg="center center"
     ngClass.gt-md="desktop"
   >
-    <div fxFlex="100">
+    <div
+      fxFlex="45"
+      fxLayout="column"
+      fxLayoutAlign="flex-start"
+      class="button-group"
+      intersect
+      #intersect13="intersect"
+      [@flyOneByOne]="intersect13.isIntersecting"
+    >
       <h1>
-        The first open source <br />
+        An open source <br />
         backend development engine!
       </h1>
-      <div
-        fxLayout="row"
-        fxLayoutAlign="center center"
-        fxLayout.lt-sm="column"
-        class="button-group"
-      >
-        <!-- <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
+      <p>
+        It is the fastest way to create a flexible backend for your next web or mobile application.
+        Decrease lift-off time with Managed Spica Services.
+      </p>
+      <!-- <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
           <mat-icon svgIcon="instagram"></mat-icon>
         </a> -->
-        <div>
-          <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
-            <mat-icon svgIcon="twitter"></mat-icon>
-          </a>
-          <a
-            mat-icon-button
-            href="https://www.facebook.com/Spica-Development-Engine-292036878363505/"
-            target="_blank"
-          >
-            <mat-icon svgIcon="facebook"></mat-icon>
-          </a>
-          <a mat-icon-button href="https://github.com/spica-engine/spica">
-            <mat-icon svgIcon="github"></mat-icon>
-          </a>
-        </div>
-        <div fxLayoutAlign="center center">
-          <a mat-flat-button href="https://dashboard.spicaengine.com/register">Get Started</a>
-          <a mat-flat-button href="/calendar">Book a free call</a>
-        </div>
+      <div>
+        <a mat-icon-button href="https://twitter.com/SpicaEngine" target="_blank">
+          <mat-icon svgIcon="twitter"></mat-icon>
+        </a>
+        <a
+          mat-icon-button
+          href="https://www.facebook.com/Spica-Development-Engine-292036878363505/"
+          target="_blank"
+        >
+          <mat-icon svgIcon="facebook"></mat-icon>
+        </a>
+        <a mat-icon-button href="https://github.com/spica-engine/spica">
+          <mat-icon svgIcon="github"></mat-icon>
+        </a>
       </div>
-      <div fxLayout="row" fxLayoutAlign="center" class="modules">
-        <div (click)="slideIndex = 0" [class.active]="slideIndex == 0">Data Management</div>
+      <div>
+        <a mat-flat-button href="https://dashboard.spicaengine.com/register">Get Started</a>
+        <a mat-flat-button href="/calendar">Book a free call</a>
+      </div>
+    </div>
+    <div fxFlex="55" fxLayout="column" class="modules" fxHide.lt-lg>
+      <div fxLayout="row" class="titles" fxLayoutAlign="space-between center">
+        <div (click)="slideIndex = 0" [class.active]="slideIndex == 0">REST API & GraphQL</div>
         <div (click)="slideIndex = 1" [class.active]="slideIndex == 1">
-          Data Model Customization
+          Data Modeling
         </div>
         <div (click)="slideIndex = 2" [class.active]="slideIndex == 2">
-          Flexibility & Extendibility
+          Cloud Functions
         </div>
         <div (click)="slideIndex = 3" [class.active]="slideIndex == 3">Access Management</div>
       </div>
-      <div class="images">
-        <div [style.transform]="'translateX(' + -1 * slideIndex * 25 + '%)'">
+      <div class="images" intersect #intersect7="intersect" [@flyOne]="intersect7.isIntersecting">
+        <div>
           <img
             (click)="slideIndex = 0"
             [class.active]="slideIndex == 0"
@@ -74,7 +82,6 @@
         </div>
       </div>
     </div>
-    <div fxLayout="column" fxLayoutAlign="center center" fxShow.lt-lg="false"></div>
   </section>
   <div class="wave" inlineSVG="/assets/images/wave-white.svg"></div>
 </app-header>
@@ -113,10 +120,10 @@
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
     <img src="assets/artboard/composer.svg" alt="Composer" />
-    <h2>Frontend Composer</h2>
+    <h2>Developer Focused</h2>
     <p>
-      Why should you need another branch for frontend if you know what you want to show? With the
-      component-based interface composer, you can make UIs without coding.
+      Auto-generated APIs will decrease your lift-off times for your projects. Everything in Spica
+      designed for developers to create a custom and flexible backend.
     </p>
   </div>
   <div fxFlex="33" fxFlex.lt-md="100">
@@ -148,7 +155,15 @@
     src="assets/artboard/discover.svg"
     alt="Discover"
   />
-  <ul fxFlex.lt-md="100%" fxFlex="50%" fxLayout="column" fxLayoutAlign="space-between">
+  <ul
+    fxFlex.lt-md="100%"
+    fxFlex="50%"
+    fxLayout="column"
+    fxLayoutAlign="space-between"
+    intersect
+    #intersect8="intersect"
+    [@flyOneByOne]="intersect8.isIntersecting"
+  >
     <li>
       <h3>Start-ups who want to exceed the limits of low-code tools</h3>
       <p>
@@ -207,19 +222,19 @@
     flexLayout.gt-sm="row"
     fxLayoutGap.gt-sm="20%"
   >
-    <span>
+    <span intersect #intersect9="intersect" [@flyOneByOne]="intersect9.isIntersecting">
       <h1>For Developers</h1>
       <p>
         Our bucket module saves much time for you. You can customize your data models and we handle
-        REST API. Also you will have full control because of IAM.
+        REST/GraphQL APIs. Also you will have full control on your business domain accounts.
       </p>
       <p>
         Spica provides subscriptions(webhooks) and function management module. Apply your own logic
         and define your key functions.
       </p>
       <p>
-        Once you need user interface for your project, you can develop your own UI components and
-        import into frontend composer or use ready one.
+        You can plug-in third party assets with one click. With prebuilt assets, you don't need to
+        spend time on 3rd party integrations.
       </p>
     </span>
     <img
@@ -248,7 +263,7 @@
       alt="For agencies"
       src="assets/artboard/for-agencies.svg"
     />
-    <span>
+    <span intersect #intersect10="intersect" [@flyOneByOne]="intersect10.isIntersecting">
       <h1>For Agencies</h1>
       <p>
         You don’t need to have full stack team from now. Set the rules once, deploy for every
@@ -271,7 +286,7 @@
     flexLayout.gt-sm="row"
     fxLayoutGap.gt-sm="20%"
   >
-    <span>
+    <span intersect #intersect11="intersect" [@flyOneByOne]="intersect11.isIntersecting">
       <h1>For Marketers</h1>
       <p>
         You don’t need to know coding. From scratch to end, there are many assets you can use. All
@@ -279,7 +294,7 @@
       </p>
       <p>
         You can create a project in 15 minutes and close in a minute. You can connect every tool you
-        need into frontend composer.
+        need into your Spica environment. With automations, start your campaigns immediately.
       </p>
       <p>
         We know, having personalized support is one of the best things for you. Contact with us
@@ -311,7 +326,7 @@
     alt="Astro boy"
     src="assets/artboard/tool-and-astro-boy.svg"
   />
-  <ul>
+  <ul intersect #intersect12="intersect" [@flyOneByOne]="intersect12.isIntersecting">
     <li>
       <h3>Define your data models</h3>
       <p>Create your data models, rules and customize the panel for the managers</p>
