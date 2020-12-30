@@ -2,14 +2,14 @@ import {ForbiddenException} from "@nestjs/common";
 import {BaseCollection, ObjectId} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
 import {Bucket, BucketDocument, BucketPreferences} from "@spica-server/bucket/services";
-import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
 import {
   createRelationMap,
   getRelationPipeline,
-  resetNonOverlappingPathsInRelationMap,
-  compareAndUpdateRelations
+  RelationMap,
+  resetNonOverlappingPathsInRelationMap
 } from "./relation";
-import {getUpdateQueryForPatch, deepCopy} from "./patch";
+import {getUpdateQueryForPatch} from "./patch";
+import {iPipelineBuilder, PipelineBuilder} from "./pipeline.builder";
 
 interface CrudOptions<Paginate> {
   schedule?: boolean;
@@ -30,7 +30,7 @@ interface CrudParams {
   projectMap: string[][];
 }
 
-interface CrudFactories<T> {
+export interface CrudFactories<T> {
   collection: (id: string | ObjectId) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket>;
@@ -66,169 +66,66 @@ export async function findDocuments<T>(
   factories: CrudFactories<T>
 ): Promise<unknown> {
   const collection = factories.collection(schema._id);
+  const pipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
+  const seekingPipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
+  let requestedLocale;
+  let rulePropertyMap;
+  let ruleRelationMap: RelationMap[];
 
-  const pipeline: object[] = [];
-
-  // for reducing findone response time
-  if (params.documentId) {
-    pipeline.push({$match: {_id: params.documentId}});
-  }
-
-  // resourcefilter
-  if (params.resourceFilter) {
-    pipeline.push(params.resourceFilter);
-  }
-
-  // scheduled contents
-  pipeline.push({$match: {_schedule: {$exists: !!options.schedule}}});
-
-  //localization
-  let locale;
-  if (options.localize && hasTranslatedProperties(schema)) {
-    locale = findLocale(params.language, await factories.preference());
-    pipeline.push({
-      $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+  let filteredPipeline = await pipelineBuilder
+    .findOneIfRequested(params.documentId)
+    .filterResources(params.resourceFilter)
+    .filterScheduledData(!!options.schedule)
+    .localize(options.localize, params.language, locale => {
+      requestedLocale = locale;
+      params.req.res.header("Content-language", locale.best || locale.fallback);
     });
-
-    params.req.res.header("Content-language", locale.best || locale.fallback);
-  }
-
-  // matching for rules and filters
-  pipeline.push({
-    $set: {
-      _id: {
-        $toString: "$_id"
-      }
+  let rulesAppliedPipeline = await filteredPipeline.rules(
+    params.req.user,
+    (propertyMap, relationMap) => {
+      rulePropertyMap = propertyMap;
+      ruleRelationMap = relationMap;
     }
-  });
-
-  // rules
-  const rulePropertyMap = expression
-    .extractPropertyMap(schema.acl.read)
-    .map(path => path.split("."));
-
-  let ruleRelationMap = await createRelationMap({
-    paths: rulePropertyMap,
-    properties: schema.properties,
-    resolve: factories.schema
-  });
-
-  const usedRelationPaths: string[] = [];
-  ruleRelationMap = compareAndUpdateRelations(ruleRelationMap, usedRelationPaths);
-
-  const ruleRelationStage = getRelationPipeline(ruleRelationMap, locale);
-  pipeline.push(...ruleRelationStage);
-
-  const ruleExpression = expression.aggregate(schema.acl.read, {auth: params.req.user});
-  pipeline.push({$match: ruleExpression});
-
-  let filterPropertyMap: string[][] = [];
-  let filterRelationMap: object[] = [];
-  // filter
-  if (params.filter) {
-    let filterExpression: object;
-
-    if (typeof params.filter == "object" && Object.keys(params.filter).length) {
-      filterPropertyMap = extractFilterPropertyMap(params.filter);
-
-      filterExpression = params.filter;
-    } else if (typeof params.filter == "string") {
-      filterPropertyMap = expression.extractPropertyMap(params.filter).map(path => path.split("."));
-
-      filterExpression = expression.aggregate(params.filter, {});
-    }
-
-    filterRelationMap = await createRelationMap({
-      paths: filterPropertyMap,
-      properties: schema.properties,
-      resolve: factories.schema
-    });
-
-    const updatedFilterRelationMap = compareAndUpdateRelations(
-      deepCopy(filterRelationMap),
-      usedRelationPaths
-    );
-
-    const filterRelationStage = getRelationPipeline(updatedFilterRelationMap, locale);
-    pipeline.push(...filterRelationStage);
-
-    if (filterExpression) {
-      pipeline.push({$match: filterExpression});
-    }
-  }
-
-  // sort,skip and limit
-  const seekingPipeline = [];
-
-  if (Object.keys(params.sort || {}).length) {
-    seekingPipeline.push({$sort: params.sort});
-  }
-
-  if (params.skip) {
-    seekingPipeline.push({$skip: params.skip});
-  }
-
-  if (params.limit) {
-    seekingPipeline.push({$limit: params.limit});
-  }
-
-  let relationPropertyMap = params.relationPaths || [];
-  let relationMap = [];
-  if (relationPropertyMap.length) {
-    relationMap = await createRelationMap({
-      paths: params.relationPaths,
-      properties: schema.properties,
-      resolve: factories.schema
-    });
-    const updatedRelationMap = compareAndUpdateRelations(deepCopy(relationMap), usedRelationPaths);
-
-    const relationStage = getRelationPipeline(updatedRelationMap, locale);
-    seekingPipeline.push(...relationStage);
-  }
+  );
 
   const ruleResetStage = resetNonOverlappingPathsInRelationMap({
-    left: [...relationPropertyMap, ...filterPropertyMap],
+    left: [],
     right: rulePropertyMap,
-    map: [...ruleRelationMap, ...filterRelationMap, ...relationMap]
+    map: ruleRelationMap
   });
+  // Reset those relations which have been requested by acl rules.
+  let filtersAppliedPipeline = await rulesAppliedPipeline
+    .attachToPipeline(ruleResetStage, ruleResetStage)
+    .filterByUserRequest(params.filter);
 
-  if (ruleResetStage) {
-    // Reset those relations which have been requested by acl rules.
-    seekingPipeline.push(ruleResetStage);
-  }
+  const seekingPipeline: iPipelineBuilder = seekingPipelineBuilder
+    .sort(params.sort)
+    .skip(params.skip)
+    .limit(params.limit);
+
+  let relationPropertyMap = params.relationPaths || [];
+  let relationPathResolvedPipeline = await filtersAppliedPipeline.resolveRelationPath(
+    relationPropertyMap,
+    relationStage => {
+      seekingPipeline.attachToPipeline(true, ...relationStage);
+    }
+  );
 
   // for graphql responses
-  if (params.projectMap.length) {
-    seekingPipeline.push(getProjectAggregation(params.projectMap));
-  }
-
+  seekingPipeline.attachToPipeline(
+    params.projectMap.length,
+    getProjectAggregation(params.projectMap)
+  );
+  const seeking = seekingPipeline.result();
+  const pipeline = (await relationPathResolvedPipeline.paginate(
+    options.paginate,
+    seeking
+  )).result();
   if (options.paginate) {
-    pipeline.push(
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
-        }
-      },
-      {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
-    );
-
     const result = await collection.aggregate<CrudPagination<T>>(pipeline).next();
-
     return result.data.length ? result : {meta: {total: 0}, data: []};
   }
-
-  return collection.aggregate<T>([...pipeline, ...seekingPipeline]).toArray();
-}
-
-// it will work on only basic filters => {"user.name" : "John"}
-function extractFilterPropertyMap(filter: any) {
-  const map: string[][] = [];
-  for (const fields of Object.keys(filter)) {
-    const field = fields.split(".");
-    map.push(field);
-  }
-  return map;
+  return collection.aggregate<T>([...pipeline, ...seeking]).toArray();
 }
 
 export async function insertDocument(
