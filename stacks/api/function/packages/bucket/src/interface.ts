@@ -62,12 +62,3 @@ export enum ChunkKind {
   Replace = 6,
   Order = 7
 }
-
-export interface GetAllParams {
-  filter?: string;
-  sort?: {
-    [key: string]: 1 | -1;
-  };
-  limit?: number;
-  skip?: number;
-}

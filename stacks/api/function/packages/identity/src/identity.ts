@@ -5,15 +5,16 @@ import {
   initialize as _initialize,
   checkInitialized,
   ApikeyInitialization,
-  IdentityInitialization
-} from "@spica-devkit/internal_common";
+  IdentityInitialization,
+  buildUrl
+} from "../../common/index";
 
 let authorization;
 let url;
 let loginUrl;
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
-  const {authorization:_authorization, publicUrl} = _initialize(options);
+  const {authorization: _authorization, publicUrl} = _initialize(options);
   authorization = _authorization;
   url = publicUrl + "/passport/identity";
   loginUrl = publicUrl + "/passport/identify";
