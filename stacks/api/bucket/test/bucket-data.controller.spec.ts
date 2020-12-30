@@ -965,6 +965,85 @@ describe("BucketDataController", () => {
             }
           ]);
         });
+
+        it("should not resolve relation and apply the filter correctly", async () => {
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            filter: JSON.stringify({user: anotherUser._id})
+          });
+
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: anotherUser._id,
+              achievement: achievement._id
+            }
+          ]);
+        });
+
+        describe("Multiple relational request", () => {
+          afterEach(async () => {
+            await req.put(`/bucket/${statisticsBucket._id}`, {
+              ...statisticsBucket,
+              acl: {
+                write: "true==true",
+                read: "true==true"
+              }
+            });
+          });
+
+          it("should run with rule and filter", async () => {
+            await req.put(`/bucket/${statisticsBucket._id}`, {
+              ...statisticsBucket,
+              acl: {
+                write: "true==true",
+                read: `user._id=='${user._id}'`
+              }
+            });
+
+            const filter = JSON.stringify({user: user._id});
+
+            const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+              filter
+            });
+
+            // resolve relation before apply rule, then apply rule
+            // reset resolved relations that comes from rules
+            // apply filter
+
+            expect(documents).toEqual([
+              {
+                _id: "__skip__",
+                user: user._id,
+                achievement: achievement._id
+              }
+            ]);
+          });
+
+          it("should run when filter is a child of requested relation", async () => {
+            const filter = JSON.stringify({"user.name": "wealthy user"});
+            const relation = ["user.wallet", "achievement"];
+
+            const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+              filter,
+              relation
+            });
+
+            expect(documents).toEqual([
+              {
+                _id: "__skip__",
+                user: {
+                  _id: "__skip__",
+                  name: "wealthy user",
+                  wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+                },
+                achievement: {
+                  _id: "__skip__",
+                  name: "do something until something else happens"
+                }
+              }
+            ]);
+          });
+        });
       });
 
       describe("find", () => {

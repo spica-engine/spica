@@ -157,4 +157,44 @@ export namespace data {
       return getWsObs<BucketDocument[]>(url, sort);
     }
   }
+
+  export namespace realtime {
+    export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
+      checkInitialized();
+
+      const filter = `_id=="${documentId}"`;
+
+      const url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${authorization}&filter=${filter}`;
+
+      return getWsObs<BucketDocument[]>(url).pipe(map(([documents]) => documents));
+    }
+    export function getAll(bucketId: string, params?: GetAllParams): Observable<BucketDocument[]> {
+      checkInitialized();
+
+      let url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${authorization}`;
+
+      let sort;
+
+      if (params) {
+        if (params.filter) {
+          url += `&filter=${params.filter}`;
+        }
+
+        if (params.sort) {
+          url += `&sort=${JSON.stringify(params.sort)}`;
+          sort = params.sort;
+        }
+
+        if (params.limit) {
+          url += `&limit=${params.limit}`;
+        }
+
+        if (params.skip) {
+          url += `&skip=${params.skip}`;
+        }
+      }
+
+      return getWsObs<BucketDocument[]>(url, sort);
+    }
+  }
 }
