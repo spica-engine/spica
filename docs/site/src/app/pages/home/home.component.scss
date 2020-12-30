@@ -27,110 +27,105 @@
 
 :host {
   app-header {
-    margin-bottom: 250px;
     .headline {
-      align-items: center !important;
-      max-width: 80%;
-      margin-left: 10%;
-      text-align: center;
-      > div {
+      max-width: 1280px;
+      margin: 100px auto -200px;
+      &.desktop {
         &:first-of-type {
-          h1 {
-            margin-top: 200px;
-            font-size: 4.5rem;
-            font-weight: 100;
-          }
-          p {
-            font-weight: 200;
-            font-size: 1.2rem;
-            line-height: 2rem;
-          }
+          text-align: left;
           .button-group {
-            div:last-of-type {
-              a {
-                color: white;
-                font-size: 1.1rem;
-                margin: 8px;
-                padding-top: 4px;
-                padding-bottom: 4px;
-                background-color: #15bde8;
-                border-radius: 15px;
-              }
+            padding-right: 100px;
+          }
+        }
+      }
+      &:first-of-type {
+        text-align: center;
+        h1 {
+          font-size: 2.5rem;
+          font-weight: 100;
+        }
+        p {
+          font-weight: 200;
+          font-size: 1.2rem;
+          line-height: 2rem;
+        }
+        .button-group {
+          div:last-of-type {
+            a {
+              color: white;
+              font-size: 1.1rem;
+              margin: 8px;
+              padding-top: 4px;
+              padding-bottom: 4px;
+              background-color: #15bde8;
+              border-radius: 5px;
             }
           }
         }
-        &:last-child {
-          z-index: 1;
-          transform: translateY(120px);
-          margin-right: 40px;
-          img.logo {
-            height: 400px;
-            animation-name: spica;
-            animation-duration: 1.3s;
-            animation-iteration-count: infinite;
-            animation-timing-function: ease-in-out;
-          }
-          img.shadow {
-            margin-top: 5px;
-            width: 260px;
-            animation-name: shadow;
-            animation-duration: 1.3s;
-            animation-iteration-count: infinite;
-            animation-timing-function: ease-in-out;
-          }
+      }
+      &:last-child {
+        z-index: 1;
+        transform: translateY(120px);
+        margin-right: 40px;
+        img.logo {
+          height: 400px;
+          animation-name: spica;
+          animation-duration: 1.3s;
+          animation-iteration-count: infinite;
+          animation-timing-function: ease-in-out;
+        }
+        img.shadow {
+          margin-top: 5px;
+          width: 260px;
+          animation-name: shadow;
+          animation-duration: 1.3s;
+          animation-iteration-count: infinite;
+          animation-timing-function: ease-in-out;
         }
       }
     }
 
     .modules {
-      div {
-        position: relative;
-        width: 300px;
-        margin-top: 140px;
-        font-size: 1.25rem;
-        cursor: pointer;
-        &.active {
-          color: #15bde8;
-          &:after {
-            background: #15bde8;
+      .titles {
+        display: flex;
+        gap: 10px;
+        div {
+          text-align: center;
+          position: relative;
+          width: 300px;
+          font-size: 0.9rem;
+          cursor: pointer;
+          padding: 5px;
+          transition: all 0.2 ease-out;
+          border-radius: 3px;
+          &.active {
+            box-shadow: 0px 0px 3px #15bde8;
           }
-        }
-        &:after {
-          content: "";
-          position: absolute;
-          left: calc(50% - 12px);
-          top: 40px;
-          width: 14px;
-          height: 14px;
-          background: #fff;
-          border-radius: 15px;
         }
       }
     }
     .images {
-      margin: 80px auto 0px;
-      width: 80%;
+      margin: 20px auto 0px;
+      width: 100%;
       position: relative;
       text-align: left;
       div {
         position: relative;
         top: 0px;
-        width: 400%;
-        transition: all 0.4s cubic-bezier(0.02, 0.48, 0.37, 0.99);
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: -35%;
+        width: 100%;
         img {
+          position: absolute;
+          top: 0px;
+          left: 0px;
           cursor: pointer;
           height: intrinsic;
-          width: 25%;
-          border-radius: 15px;
+          width: 100%;
+          border-radius: 5px;
           margin: 0px;
           box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.8);
-          transition: all 0.4s cubic-bezier(0.02, 0.48, 0.37, 0.99);
-          transform: scale(0.75);
+          opacity: 0;
           &.active {
-            transform: unset;
+            opacity: 1;
           }
         }
       }
@@ -223,8 +218,11 @@
   section.audience {
     color: #1c1c50;
     padding: 5% 0;
+    max-width: 1280px;
+    margin: auto;
+    width: 100%;
     div {
-      max-width: 90%;
+      width: 100%;
       span {
         h1 {
           font-size: 3rem;
@@ -248,7 +246,8 @@
       }
     }
     ul {
-      padding-left: 0;
+      max-width: 800px;
+      padding-left: 0px;
       list-style-type: none;
       li {
         margin-top: 35px;
