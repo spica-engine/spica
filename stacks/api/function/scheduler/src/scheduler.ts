@@ -246,7 +246,8 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       `an event has been completed ${id} with status ${succedded ? "success" : "fail"}`
     );
     this.processsingQueue.delete(id);
-    clearTimeout(this.timeouts.get(id));
+    // async processes keep workers alive even it exceeds timeout
+    //clearTimeout(this.timeouts.get(id));
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
