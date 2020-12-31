@@ -30,8 +30,8 @@ import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
-import {ChangeKind} from "./change";
-import {Function, Trigger} from "./interface";
+import {ChangeKind, hasEnvChange} from "./change";
+import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
 import {changesFromTriggers, createTargetChanges} from "./change";
@@ -134,7 +134,18 @@ export class FunctionController {
     const previousFn = await this.fs.findOneAndUpdate({_id: id}, {$set: fn});
 
     fn._id = id;
-    const changes = changesFromTriggers(previousFn, fn);
+
+    let changes;
+
+    if (hasEnvChange(previousFn, fn)) {
+      // mark all triggers updated
+      changes = createTargetChanges(fn, ChangeKind.Updated);
+    } else {
+      changes = changesFromTriggers(previousFn, fn);
+    }
+
+    console.dir(changes, {depth: Infinity});
+
     this.engine.categorizeChanges(changes);
 
     return fn;
