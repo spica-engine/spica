@@ -62,6 +62,7 @@ export class IterableSet<T> implements Iterable<T> {
 }
 
 function isPlatformBrowser() {
+  //@ts-ignore
   return typeof window !== "undefined";
 }
 
