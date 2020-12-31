@@ -386,7 +386,7 @@ async function getWriteRuleAggregation(schema: Bucket, resolve: any, document: B
   return [
     {$limit: 1},
     {
-      $replaceWith: document
+      $replaceWith: {$literal: document}
     },
     ...relationStage
   ];
