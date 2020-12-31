@@ -144,8 +144,6 @@ export class FunctionController {
       changes = changesFromTriggers(previousFn, fn);
     }
 
-    console.dir(changes, {depth: Infinity});
-
     this.engine.categorizeChanges(changes);
 
     return fn;
