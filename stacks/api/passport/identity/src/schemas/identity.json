@@ -7,7 +7,8 @@
 	"properties": {
 		"identifier": {
 			"type": "string",
-			"title": "Identitifer of the identity"
+			"title": "Identitifer of the identity",
+			"minLength": 3
 		}
 	},
 	"additionalProperties": true
