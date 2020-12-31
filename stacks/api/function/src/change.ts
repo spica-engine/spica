@@ -53,6 +53,10 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
   return targetChanges;
 }
 
+export function hasEnvChange(previousFn: Function, currentFn: Function) {
+  return diff(previousFn.env, currentFn.env).length;
+}
+
 export function createTargetChanges(fn: Function, changeKind: ChangeKind): TargetChange[] {
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
