@@ -176,6 +176,7 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.identity.findOneAndUpdate(
       {
@@ -194,6 +195,7 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.identity.findOneAndUpdate(
       {

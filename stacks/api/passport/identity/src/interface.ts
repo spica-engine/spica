@@ -7,6 +7,12 @@ export interface Identity {
   policies: string[];
 }
 
+export interface LoginCredentials {
+  identifier: string;
+  password: string;
+  state?: string;
+}
+
 export interface Service {
   $resource: string;
   $format?: string;

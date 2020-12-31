@@ -34,6 +34,19 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   writeHeaders = {...defaultHeaders, "Content-Type": "application/json"};
 }
 
+export function login(identifier: string, password: string): Promise<string> {
+  checkInitialized(authorization);
+
+  return http
+    .post(loginUrl, {
+      body: JSON.stringify({identifier, password}),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .then(response => response.token);
+}
+
 export function get(id: string): Promise<Identity> {
   checkInitialized(authorization);
 
@@ -56,7 +69,10 @@ export async function insert(identity: Identity): Promise<Identity> {
     headers: writeHeaders
   });
 
-  return policy.attach(insertedIdentity._id, identity.policies);
+  return policy.attach(insertedIdentity._id, identity.policies).then(policies => {
+    insertedIdentity.policies = policies;
+    return insertedIdentity;
+  });
 }
 
 export function update(id: string, identity: Identity): Promise<Identity> {
@@ -76,22 +92,43 @@ export function remove(id: string): Promise<any> {
 
 // policy attach detach
 export namespace policy {
-  export function attach(identityId: string, policyIds: string[] = []): Promise<Identity> {
+  export function attach(identityId: string, policyIds: string[] = []): Promise<string[]> {
     checkInitialized(authorization);
 
     const promises: Promise<Identity>[] = [];
+    const attachedPolicies = new Set<string>();
 
     for (const policyId of policyIds) {
       const promise = http
-        .put<Identity>(`${url}/${identityId}/policy/${policyId}`, {headers: defaultHeaders})
+        .put<any>(`${url}/${identityId}/policy/${policyId}`, {headers: defaultHeaders})
+        .then(() => attachedPolicies.add(policyId))
         .catch(e => {
-          console.log(`Failed to attach policy with id ${policyId}: `, e);
+          console.error(`Failed to attach policy with id ${policyId}: `, e);
           return e;
         });
       promises.push(promise);
     }
 
-    // return the identity which has the most policy length 
-    return Promise.all(promises).then(identities => identities[identities.length - 1]);
+    return Promise.all(promises).then(() => Array.from(attachedPolicies));
+  }
+
+  export function detach(identityId: string, policyIds: string[] = []): Promise<string[]> {
+    checkInitialized(authorization);
+
+    const promises: Promise<Identity>[] = [];
+    const detachedPolicies = new Set<string>();
+
+    for (const policyId of policyIds) {
+      const promise = http
+        .del(`${url}/${identityId}/policy/${policyId}`, {headers: defaultHeaders})
+        .then(() => detachedPolicies.add(policyId))
+        .catch(e => {
+          console.error(`Failed to detach policy with id ${policyId}: `, e);
+          return e;
+        });
+      promises.push(promise);
+    }
+
+    return Promise.all(promises).then(() => Array.from(detachedPolicies));
   }
 }
