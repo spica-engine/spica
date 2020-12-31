@@ -24,10 +24,6 @@ export class Validator {
     errors: true,
     compile: (schema, parentSchema, it) => {
       return function validateFn(data, dataPath, parentData) {
-        if (!data) {
-          return true;
-        }
-
         const format = it.formats[schema];
         if (it.opts.format === "false") {
           return true;
