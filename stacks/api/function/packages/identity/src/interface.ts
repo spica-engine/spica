@@ -1,7 +1,7 @@
 export interface Identity {
-  _id?:string;
+  _id?: string;
   identifier: string;
   password: string;
-  policies?:string[];
-  attributes?:object
+  policies?: string[];
+  attributes?: object;
 }

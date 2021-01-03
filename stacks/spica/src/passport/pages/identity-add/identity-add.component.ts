@@ -84,7 +84,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       .then(() => {
         const detachedPolicyIndex = this.identity.policies.findIndex(policy => policy == policyId);
         if (detachedPolicyIndex != -1) {
-          this.identity.policies.splice(detachedPolicyIndex,1);
+          this.identity.policies.splice(detachedPolicyIndex, 1);
         }
       });
   }

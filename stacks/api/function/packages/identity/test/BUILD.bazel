@@ -9,7 +9,7 @@ ts_library(
         include = ["*.spec.ts"],
     ),
     deps = [
-        "//stacks/api/function/packages/bucket",
+        "//stacks/api/function/packages/identity",
         "@npm//@types/jasmine",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",

@@ -1,5 +1,4 @@
 import {Bucket, BucketDocument} from "./interface";
-// update this import target
 import {
   initialize as _initialize,
   checkInitialized,
@@ -8,7 +7,7 @@ import {
   http,
   buildUrl,
   IndexResult
-} from "@spica-devkit/internal_common";;
+} from "@spica-devkit/internal_common";
 import {getWsObs} from "./index";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
@@ -93,7 +92,7 @@ export namespace data {
   ): Promise<BucketDocument[] | IndexResult<BucketDocument>> {
     checkInitialized(authorization);
 
-    const headers = options.headers ? options.headers : {};
+    const headers = options.headers;
     const fullUrl = buildUrl(`${url}/${bucketId}/data`, options.queryParams);
 
     return http.get<BucketDocument[] | IndexResult<BucketDocument>>(fullUrl, {
