@@ -12,9 +12,9 @@ ts_library(
     module_name = "@spica-devkit/identity",
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
+        "//stacks/api/function/packages/internal_common",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
-        "//stacks/api/function/packages/common"
     ],
 )
 

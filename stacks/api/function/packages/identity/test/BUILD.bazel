@@ -10,12 +10,12 @@ ts_library(
     ),
     deps = [
         "//stacks/api/function/packages/identity",
+        "//stacks/api/function/packages/internal_common",
         "@npm//@types/jasmine",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
         "@npm//rxjs",
         "@npm//ws",
-        "//stacks/api/function/packages/common"
     ],
 )
 

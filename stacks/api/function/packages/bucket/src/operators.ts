@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
-import {isPlatformBrowser} from "../../common/index";
+import {isPlatformBrowser} from "@spica-devkit/internal_common";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();

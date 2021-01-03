@@ -1,14 +1,11 @@
-import {Identity} from "./interface";
+import {Identity, IdentityInitialization, ApikeyInitialization, IndexResult} from "./interface";
 
 import {
   initialize as _initialize,
   checkInitialized,
-  ApikeyInitialization,
-  IdentityInitialization,
   buildUrl,
-  http,
-  IndexResult
-} from "../../common/index";
+  http
+} from "@spica-devkit/internal_common";
 
 let authorization;
 

@@ -12,11 +12,11 @@ ts_library(
     module_name = "@spica-devkit/bucket",
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
+        "//stacks/api/function/packages/internal_common",
         "@npm//@types/json-schema",
         "@npm//@types/ws",
         "@npm//rxjs",
         "@npm//ws",
-        "//stacks/api/function/packages/common"
     ],
 )
 

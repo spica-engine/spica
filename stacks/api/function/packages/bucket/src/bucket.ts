@@ -1,12 +1,15 @@
-import {Bucket, BucketDocument} from "./interface";
+import {
+  Bucket,
+  BucketDocument,
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult
+} from "./interface";
 import {
   initialize as _initialize,
   checkInitialized,
-  ApikeyInitialization,
-  IdentityInitialization,
   http,
-  buildUrl,
-  IndexResult
+  buildUrl
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./index";
 import {Observable} from "rxjs";
