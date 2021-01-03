@@ -19,14 +19,26 @@
     </mat-slide-toggle>
 
     <mat-form-field>
-      <input matInput type="number" placeholder="Minimum items" [(ngModel)]="schema.minItems" />
+      <input
+        matInput
+        type="number"
+        placeholder="Minimum items"
+        [ngModel]="schema.minItems"
+        (ngModelChange)="onChange($event, 'minItems')"
+      />
       <button mat-icon-button matSuffix matTooltip="Minimum required item count.">
         <mat-icon>info</mat-icon>
       </button>
     </mat-form-field>
 
     <mat-form-field>
-      <input matInput type="number" placeholder="Maximum items" [(ngModel)]="schema.maxItems" />
+      <input
+        matInput
+        type="number"
+        placeholder="Maximum items"
+        [ngModel]="schema.maxItems"
+        (ngModelChange)="onChange($event, 'maxItems')"
+      />
       <button mat-icon-button matSuffix matTooltip="Maximum item count that this array can have.">
         <mat-icon>info</mat-icon>
       </button>
