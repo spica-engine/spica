@@ -23,7 +23,7 @@ describe("Policy Add Component", () => {
     beforeEach(() => {
       TestBed.configureTestingModule({
         imports: [
-          RouterModule.forRoot([]),
+          RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
           MatIconModule,
           MatToolbarModule,
           MatFormFieldModule,
@@ -251,7 +251,7 @@ describe("Policy Add Component", () => {
       beforeEach(() => {
         TestBed.configureTestingModule({
           imports: [
-            RouterModule.forRoot([]),
+            RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
             MatIconModule,
             MatToolbarModule,
             MatFormFieldModule,
@@ -369,7 +369,7 @@ describe("Policy Add Component", () => {
       beforeEach(async () => {
         TestBed.configureTestingModule({
           imports: [
-            RouterModule.forRoot([]),
+            RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
             MatIconModule,
             MatToolbarModule,
             MatFormFieldModule,

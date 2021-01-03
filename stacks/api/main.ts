@@ -4,23 +4,19 @@ import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {
-  CREATED_AT,
-  DATE_TIME,
-  OBJECTID_STRING,
-  OBJECT_ID,
-  UPDATED_AT
-} from "@spica-server/core/schema/defaults";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
+import {ApiMachineryModule} from "@spica-server/machinery";
 import {StorageModule} from "@spica-server/storage";
 import * as fs from "fs";
-import * as path from "path";
 import * as https from "https";
+import * as path from "path";
 import * as yargs from "yargs";
 
 const args = yargs
@@ -141,15 +137,15 @@ const args = yargs
       description: "Number of worker processes to fork at start up.",
       default: 10
     },
-    "function-api-url": {
-      string: true,
-      description:
-        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
-    },
     "function-pool-maximum-size": {
       number: true,
       description: "Maximum number of worker processes to fork.",
       default: 15
+    },
+    "function-api-url": {
+      string: true,
+      description:
+        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
     },
     "function-timeout": {
       number: true,
@@ -289,10 +285,14 @@ Example: http(s)://doomed-d45f1.spica.io/api`
 const modules = [
   DashboardModule,
   PreferenceModule,
+  ApiMachineryModule.forRoot(),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
-    poolSize: args["database-pool-size"]
+    poolSize: args["database-pool-size"],
+    appname: "spica",
+    useNewUrlParser: true,
+    ["useUnifiedTopology" as any]: true
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
@@ -361,20 +361,29 @@ if (args["cert-file"] && args["key-file"]) {
     cert: fs.readFileSync(args["key-file"])
   };
 }
+
 NestFactory.create(RootModule, {
   httpsOptions,
-  bodyParser: false
-}).then(app => {
-  app.useWebSocketAdapter(new WsAdapter(app));
-  app.use(
-    Middlewares.Preflight({
-      allowedOrigins: args["cors-allowed-origins"],
-      allowedMethods: args["cors-allowed-methods"],
-      allowedHeaders: args["cors-allowed-headers"],
-      allowCredentials: args["cors-allow-credentials"]
-    }),
-    Middlewares.JsonBodyParser(args["payload-size-limit"]),
-    Middlewares.MergePatchJsonParser(args["payload-size-limit"])
-  );
-  app.listen(args.port);
-});
+  bodyParser: false,
+  logger: false
+})
+  .then(app => {
+    app.useWebSocketAdapter(new WsAdapter(app));
+    app.use(
+      Middlewares.Preflight({
+        allowedOrigins: args["cors-allowed-origins"],
+        allowedMethods: args["cors-allowed-methods"],
+        allowedHeaders: args["cors-allowed-headers"],
+        allowCredentials: args["cors-allow-credentials"]
+      }),
+      Middlewares.JsonBodyParser({
+        limit: args["payload-size-limit"],
+        ignoreUrls: [/$\/storage/]
+      }),
+      Middlewares.MergePatchJsonParser(args["payload-size-limit"])
+    );
+    return app.listen(args.port);
+  })
+  .then(() => {
+    console.log(`: APIs are ready on port ${args.port}`);
+  });

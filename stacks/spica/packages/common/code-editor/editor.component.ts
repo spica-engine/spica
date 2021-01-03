@@ -98,6 +98,9 @@ export class EditorComponent
   }
 
   async ngOnInit() {
+    if (window["jasmine"]) {
+      return;
+    }
     this.monaco = await import("monaco-editor-core");
     this.editorRef = this.monaco.editor.create(this.elementRef.nativeElement, this._options);
 

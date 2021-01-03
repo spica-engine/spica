@@ -21,19 +21,19 @@ $ spica <command> [<args>] [--help] [options]
 Run a Spica instance on your local machine:
 
 ```shell
-$ spica serve <instance name>
+$ spica project start <instance name>
 ```
 
 Stop and remove a spica instance:
 
 ```shell
-$ spica rm <instance name>
+$ spica project remove <instance name>
 ```
 
 Shows a list of spica instances running on this machine:
 
 ```shell
-$ spica ls
+$ spica project ls
 ```
 
 ### Dependency Install

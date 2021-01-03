@@ -26,7 +26,7 @@ describe("MiddleWare", () => {
       end: jasmine.createSpy()
     };
 
-    let next: jasmine.Spy<InferableFunction> = jasmine.createSpy();
+    let next: jasmine.Spy = jasmine.createSpy();
 
     let options: CorsOptions = {
       allowCredentials: undefined,

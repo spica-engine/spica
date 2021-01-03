@@ -258,44 +258,6 @@ describe("Identity Add Component", () => {
       ).toBeNull("if there isn't any owned policy");
     }));
 
-    it("should update identity", fakeAsync(() => {
-      const updateSpy = spyOn(identityService, "updateOne").and.returnValue(of(null));
-
-      fixture.componentInstance.changePasswordState = true;
-      fixture.detectChanges();
-
-      fixture.debugElement
-        .query(By.directive(NgForm))
-        .injector.get(NgForm)
-        .resetForm({
-          identifier: "new identifier",
-          prop1_inner: "attribute1",
-          prop2_inner: "new attribute"
-        });
-
-      tick();
-      fixture.detectChanges();
-
-      fixture.debugElement.query(By.css("mat-card mat-card-actions button")).nativeElement.click();
-
-      tick();
-
-      expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith({
-        _id: "1",
-        identifier: "new identifier",
-        password: fixture.componentInstance.identity.password,
-        policies: ["bucket"],
-        attributes: {
-          prop1: "attribute1",
-          prop2: "new attribute"
-        }
-      });
-
-      expect(router.navigate).toHaveBeenCalledTimes(1);
-      expect(router.navigate).toHaveBeenCalledWith(["passport/identity"]);
-    }));
-
     it("should create new identity", fakeAsync(() => {
       const identity = (fixture.componentInstance.identity = {
         identifier: "new identifier",

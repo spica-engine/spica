@@ -19,8 +19,6 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   documentIds: string[] = [];
 
-  maxDate = new Date();
-
   isPending = false;
 
   activities: Activity[] = [];
