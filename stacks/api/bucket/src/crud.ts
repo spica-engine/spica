@@ -1,4 +1,8 @@
-import {ForbiddenException} from "@nestjs/common";
+import {
+  ForbiddenException,
+  BadRequestException,
+  InternalServerErrorException
+} from "@nestjs/common";
 import {BaseCollection, ObjectId} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
 import {Bucket, BucketDocument, BucketPreferences} from "@spica-server/bucket/services";
@@ -9,11 +13,6 @@ import {
   resetNonOverlappingPathsInRelationMap,
   compareAndUpdateRelations
 } from "./relation";
-import {
-  ForbiddenException,
-  BadRequestException,
-  InternalServerErrorException
-} from "@nestjs/common";
 import {getUpdateQueryForPatch, deepCopy} from "./patch";
 
 interface CrudOptions<Paginate> {
@@ -242,7 +241,7 @@ export async function insertDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   }
 ) {
@@ -265,16 +264,7 @@ export async function insertDocument(
     throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 
-  return collection.insertOne(document).catch(error => {
-    if (error.code === 11000) {
-      throw new BadRequestException(
-        `Value '${Object.values(error.keyValue)[0]}' for '${
-          Object.keys(error.keyValue)[0]
-        }' field has already exist.`
-      );
-    }
-    throw new InternalServerErrorException();
-  });
+  return collection.insertOne(document).catch(handleWriteErrors);
 }
 
 export async function replaceDocument(
@@ -284,7 +274,7 @@ export async function replaceDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
@@ -313,16 +303,7 @@ export async function replaceDocument(
     .findOneAndReplace({_id: documentId}, document, {
       returnOriginal: options.returnOriginal
     })
-    .catch(error => {
-      if (error.code === 11000) {
-        throw new BadRequestException(
-          `Value '${Object.values(error.keyValue)[0]}' for '${
-            Object.keys(error.keyValue)[0]
-          }' field has already exist.`
-        );
-      }
-      throw new InternalServerErrorException();
-    });
+    .catch(handleWriteErrors);
 }
 
 export async function patchDocument(
@@ -333,7 +314,7 @@ export async function patchDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
@@ -361,16 +342,7 @@ export async function patchDocument(
     .findOneAndUpdate({_id: document._id}, updateQuery, {
       returnOriginal: options.returnOriginal
     })
-    .catch(error => {
-      if (error.code === 11000) {
-        throw new BadRequestException(
-          `Value '${Object.values(error.keyValue)[0]}' for '${
-            Object.keys(error.keyValue)[0]
-          }' field has already exist.`
-        );
-      }
-      throw new InternalServerErrorException();
-    });
+    .catch(handleWriteErrors);
 }
 
 export async function deleteDocument(
@@ -434,4 +406,14 @@ function getProjectAggregation(fieldMap: string[][]) {
     result[fields.join(".")] = 1;
   }
   return {$project: result};
+}
+
+function handleWriteErrors(error: any) {
+  if (error.code === 11000) {
+    throw new BadRequestException(
+      `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
+    );
+  }
+
+  throw new InternalServerErrorException();
 }

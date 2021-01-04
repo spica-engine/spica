@@ -4,6 +4,7 @@ import {BaseCollection, Collection, DatabaseService, ObjectId} from "@spica-serv
 import {PreferenceService} from "@spica-server/preference/services";
 import {BehaviorSubject, Observable} from "rxjs";
 import {Bucket, BucketPreferences} from "./bucket";
+import {getBucketDataCollection} from "@spica-server/bucket/services";
 
 @Injectable()
 export class BucketService extends BaseCollection<Bucket>("buckets") {
@@ -24,8 +25,10 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   async insertOne(bucket: Bucket) {
-    const insertedBucket = await this.buckets.insertOne(bucket).then(t => t.ops[0]);
-    const bucketCollection = await this.db.createCollection(`bucket_${insertedBucket._id}`);
+    const insertedBucket = await super.insertOne(bucket);
+    const bucketCollection = await this.db.createCollection(
+      getBucketDataCollection(insertedBucket._id)
+    );
 
     const indexDefinitions = this.createUniqueIndexDefs(bucket);
     for (const definition of indexDefinitions) {
@@ -37,7 +40,7 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
     return new Observable(observer => {
       if (propagateOnStart) {
-        this.buckets.findOne({_id: new ObjectId(bucketId)}).then(bucket => observer.next(bucket));
+        super.findOne({_id: new ObjectId(bucketId)}).then(bucket => observer.next(bucket));
       }
       const stream = this.buckets.watch(
         [

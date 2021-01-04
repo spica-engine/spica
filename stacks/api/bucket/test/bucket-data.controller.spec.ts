@@ -1550,7 +1550,7 @@ describe("BucketDataController", () => {
 
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect(response.body.message).toEqual(
-        "Value 'Fish And Companions' for 'title' field has already exist."
+        "Value of the property .title should unique across all documents."
       );
     });
 
@@ -1566,7 +1566,7 @@ describe("BucketDataController", () => {
 
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect(response.body.message).toEqual(
-        "Value 'Mice And Enemies' for 'title' field has already exist."
+        "Value of the property .title should unique across all documents."
       );
     });
   });
