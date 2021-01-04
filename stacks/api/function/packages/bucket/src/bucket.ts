@@ -14,7 +14,6 @@ import {
 import {getWsObs} from "./index";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
-import {URL} from "url";
 
 let authorization;
 
