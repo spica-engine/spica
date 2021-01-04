@@ -1,6 +1,7 @@
 <mat-sidenav-container>
   <mat-sidenav
     #drawer
+    [disableClose]="(isHandset$ | async) ? 'false' : 'true'"
     class="sidenav"
     fixedInViewport="true"
     [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"

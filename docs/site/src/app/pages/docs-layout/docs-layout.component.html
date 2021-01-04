@@ -11,6 +11,7 @@
 <mat-sidenav-container [class.handset]="isHandset$ | async" autosize>
   <mat-sidenav
     #drawer
+    [disableClose]="(isHandset$ | async) ? 'false' : 'true'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
     [opened]="!(isHandset$ | async)"
     ngClass.gt-md="desktop"
