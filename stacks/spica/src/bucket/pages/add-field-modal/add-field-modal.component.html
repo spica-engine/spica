@@ -119,6 +119,11 @@
             Read-only
           </mat-checkbox>
         </div>
+        <div>
+          <mat-checkbox [disabled]="parentSchema._id" [(ngModel)]="propertyKv.options.unique">
+            Unique
+          </mat-checkbox>
+        </div>
       </div>
 
       <div *ngIf="fieldConfig.type != 'boolean'">
