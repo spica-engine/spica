@@ -7,24 +7,22 @@ load("@npm//@bazel/rollup:index.bzl", "rollup_bundle")
 SRCS = glob(["src/*.ts"]) + ["index.ts"]
 
 ts_library(
-    name = "bucket",
+    name = "identity",
     srcs = SRCS,
-    module_name = "@spica-devkit/bucket",
+    module_name = "@spica-devkit/identity",
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "//stacks/api/function/packages/internal_common",
-        "@npm//@types/json-schema",
-        "@npm//@types/ws",
-        "@npm//rxjs",
-        "@npm//ws",
+        "@npm//@types/node-fetch",
+        "@npm//node-fetch",
     ],
 )
 
 ROLLUP_DEPS = [
-    ":bucket",
+    ":identity",
+    "@npm//rollup-plugin-commonjs",
+    "@npm//rollup-plugin-node-resolve",
     "@npm//@rollup/plugin-json",
-    "@npm//@rollup/plugin-commonjs",
-    "@npm//@rollup/plugin-node-resolve",
 ]
 
 rollup_bundle(
@@ -56,7 +54,7 @@ genrule(
     srcs = [
         ":esm",
         ":cjs",
-        ":bucket",
+        ":identity",
     ],
     outs = [
         "dist/index.js",
@@ -68,7 +66,7 @@ genrule(
         for f in SRCS
     ],
     cmd = "cp -r $(locations :cjs)/* $(RULEDIR)/dist && cp -r $(locations :esm)/* $(RULEDIR)/dist && " + "&&".join([
-        "cp -r $(GENDIR)/stacks/api/function/packages/bucket/%s.d.ts $(RULEDIR)/dist/%s.d.ts" % (
+        "cp -r $(GENDIR)/stacks/api/function/packages/identity/%s.d.ts $(RULEDIR)/dist/%s.d.ts" % (
             f[:-3],
             f[:-3],
         )
