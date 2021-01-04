@@ -205,6 +205,7 @@ Must be one of the following:
 - **refactor**: A code change that neither fixes a bug nor adds a feature
 - **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - **test**: Adding missing tests or correcting existing tests
+- **deprecate**: Deprecation of some module, feature, package etc
 
 ### Scope
 
@@ -221,6 +222,7 @@ The following is the list of supported scopes:
 - **preference**
 - **storage**
 - **composer**
+- **site**
 
 There are currently a few exceptions to the "use package name" rule:
 

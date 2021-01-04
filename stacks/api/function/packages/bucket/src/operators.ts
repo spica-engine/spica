@@ -4,6 +4,7 @@ import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
 import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
+import {isPlatformBrowser} from "@spica-devkit/internal_common";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();
@@ -59,11 +60,6 @@ export class IterableSet<T> implements Iterable<T> {
       }
     } as Iterator<T>;
   }
-}
-
-function isPlatformBrowser() {
-  //@ts-ignore
-  return typeof window !== "undefined";
 }
 
 export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {

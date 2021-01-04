@@ -72,8 +72,8 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.policyService
       .attachPolicy(policyId, this.identity._id)
       .toPromise()
-      .then(identity => {
-        this.identity = identity;
+      .then(() => {
+        this.identity.policies.push(policyId);
       });
   }
 
@@ -81,8 +81,11 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.policyService
       .detachPolicy(policyId, this.identity._id)
       .toPromise()
-      .then(identity => {
-        this.identity = identity;
+      .then(() => {
+        const detachedPolicyIndex = this.identity.policies.findIndex(policy => policy == policyId);
+        if (detachedPolicyIndex != -1) {
+          this.identity.policies.splice(detachedPolicyIndex, 1);
+        }
       });
   }
 

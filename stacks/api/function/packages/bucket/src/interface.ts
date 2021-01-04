@@ -13,18 +13,6 @@ export interface Bucket {
   order?: number;
 }
 
-interface InitializeOptions {
-  publicUrl?: string;
-}
-
-export interface ApikeyInitialization extends InitializeOptions {
-  apikey: string;
-}
-
-export interface IdentityInitialization extends InitializeOptions {
-  identity: string;
-}
-
 interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
   options: {
@@ -38,13 +26,6 @@ interface PropertyOptions {
 export interface BucketDocument {
   _id?: string;
   [key: string]: any | undefined;
-}
-
-export interface IndexResult<T> {
-  meta: {
-    total: number;
-  };
-  data: T[];
 }
 
 export interface Sequence {
@@ -75,11 +56,26 @@ export enum ChunkKind {
   Order = 7
 }
 
-export interface GetAllParams {
-  filter?: string;
-  sort?: {
-    [key: string]: 1 | -1;
+interface InitializeOptions {
+  publicUrl?: string;
+}
+
+export interface ApikeyInitialization extends InitializeOptions {
+  apikey: string;
+}
+
+export interface IdentityInitialization extends InitializeOptions {
+  identity: string;
+}
+
+export interface InitializationResult {
+  authorization: string;
+  publicUrl: string;
+}
+
+export interface IndexResult<T> {
+  meta: {
+    total: number;
   };
-  limit?: number;
-  skip?: number;
+  data: T[];
 }

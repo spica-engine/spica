@@ -13,9 +13,10 @@ import {
   Post,
   Query,
   UnauthorizedException,
-  UseInterceptors
+  UseInterceptors,
+  Req
 } from "@nestjs/common";
-import {Identity, IdentityService} from "@spica-server/passport/identity";
+import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
@@ -39,8 +40,14 @@ export class PassportController {
   async identify(
     @Query("identifier") identifier: string,
     @Query("password") password: string,
-    @Query("state") state: string
+    @Query("state") state: string,
+    @Req() req: any
   ) {
+    req.res.append(
+      "Warning",
+      `299 "Identify with 'GET' method has been deprecated. Use 'POST' instead."`
+    );
+
     let identity: Identity;
 
     if (!state) {
@@ -70,6 +77,56 @@ export class PassportController {
         )
         .toPromise();
       this.assertObservers.delete(state);
+
+      if (!user || (user && !user.upn)) {
+        throw new InternalServerErrorException("Authentication has failed.");
+      }
+
+      identity = await this.identity.findOne({identifier: user.upn});
+
+      if (!identity) {
+        identity = await this.identity.insertOne({
+          identifier: user.upn,
+          password: undefined,
+          policies: []
+        });
+      }
+    }
+
+    return this.identity.sign(identity);
+  }
+
+  @Post("identify")
+  async identifyWithPost(@Body() credentials: LoginCredentials) {
+    let identity: Identity;
+
+    if (!credentials.state) {
+      identity = await this.identity.identify(credentials.identifier, credentials.password);
+      if (!identity) {
+        throw new UnauthorizedException("Identifier or password was incorrect.");
+      }
+    } else {
+      if (!this.assertObservers.has(credentials.state)) {
+        throw new BadRequestException("Authentication has failed due to invalid state.");
+      }
+
+      const observer = this.assertObservers.get(credentials.state);
+
+      const {user} = await observer
+        .pipe(
+          timeout(60000),
+          take(1),
+          catchError(error => {
+            this.assertObservers.delete(credentials.state);
+            return throwError(
+              error && error.name == "TimeoutError"
+                ? new GatewayTimeoutException("Operation did not complete within one minute.")
+                : new UnauthorizedException(String(error))
+            );
+          })
+        )
+        .toPromise();
+      this.assertObservers.delete(credentials.state);
 
       if (!user || (user && !user.upn)) {
         throw new InternalServerErrorException("Authentication has failed.");
