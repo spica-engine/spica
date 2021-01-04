@@ -16,7 +16,8 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  InternalServerErrorException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";

@@ -6,7 +6,7 @@ import {Log, WEBHOOK_OPTIONS, WebhookOptions} from "./interface";
 export class WebhookLogService extends BaseCollection<Log>("webhook_logs") {
   constructor(db: DatabaseService, @Inject(WEBHOOK_OPTIONS) options: WebhookOptions) {
     super(db);
-    this.createCollection(this._collection).then(() =>
+    this.createCollection(this._collection, {ignoreAlreadyExist: true}).then(() =>
       this.upsertTTLIndex(options.expireAfterSeconds)
     );
   }
