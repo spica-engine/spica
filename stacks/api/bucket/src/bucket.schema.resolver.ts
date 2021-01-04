@@ -1,10 +1,9 @@
 import {Injectable} from "@nestjs/common";
-import {BucketService, compile} from "@spica-server/bucket/services";
-import {BucketPreferences, Bucket} from "@spica-server/bucket/services/bucket";
-import {Validator} from "@spica-server/core/schema";
+import {Bucket, BucketPreferences, BucketService, compile} from "@spica-server/bucket/services";
+import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
-import {map} from "rxjs/operators";
 import {combineLatest, Observable} from "rxjs";
+import {map} from "rxjs/operators";
 
 @Injectable()
 export class BucketSchemaResolver {
@@ -21,17 +20,15 @@ export class BucketSchemaResolver {
         bucketWatcher = this.bucketService.watch(uri, true);
         this.bucketWatchers.set(uri, bucketWatcher);
       }
-      return combineLatest(this.preferenceWatcher, bucketWatcher).pipe(
+      return combineLatest([this.preferenceWatcher, bucketWatcher]).pipe(
         map(([prefs, schema]) => {
-          let jsonSchema = compile(JSON.parse(JSON.stringify(schema)), prefs);
+          let jsonSchema = compile(schema, prefs);
           jsonSchema.$id = uri;
-          jsonSchema.$schema = "http://spica.internal/bucket/schema";
-          jsonSchema.additionalProperties = false;
           jsonSchema.properties._schedule = {
             type: "string",
             format: "date-time"
           };
-          return jsonSchema || {type: true};
+          return jsonSchema;
         })
       );
     }
@@ -41,38 +38,35 @@ export class BucketSchemaResolver {
 export function provideBucketSchemaResolver(validator: Validator, bs: BucketService) {
   const resolver = new BucketSchemaResolver(bs);
   validator.registerUriResolver(uri => resolver.resolve(uri));
-  let keywords = getCustomKeywords(validator);
-  keywords.forEach(keyword => validator.registerKeyword(keyword.name, keyword.def));
-  //format should run after default;
-  validator.registerKeyword("format", validator["formatKeywordDefinition"]);
   return resolver;
 }
 
-export function getCustomKeywords(validator: Validator) {
-  let keywords = [
-    {
-      name: "default",
-      def: {
-        modifying: true,
-        compile: (schema, parentSchema, it) => {
-          return (data, dataPath, parentData) => {
-            const defaultValueHandler = validator["_defaults"].get(schema);
-            const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
+export const bucketSpecificDefault: CodeKeywordDefinition = {
+  keyword: "default",
+  before: "format",
+  code(cxt: KeywordCxt, ruleType?: string) {
+    const {gen, data, schema, parentSchema, it} = cxt;
+    const {opts, parentData, parentDataProperty} = it;
+    const defaults = opts["defaults"];
 
-            if (defaultValueHandler) {
-              parentData[propertyName] = defaultValueHandler.create(
-                data == defaultValueHandler.keyword || parentSchema["readOnly"] ? undefined : data
-              );
-            } else if (!defaultValueHandler && parentSchema["readOnly"]) {
-              parentData[propertyName] = schema;
-            }
-
-            return true;
-          };
-        }
-      }
+    // TODO: make this work in a seperate keyword
+    if (parentSchema && parentSchema.readOnly) {
+      const defaultValue = gen.scopeValue("obj", {
+        ref: parentSchema.default
+      });
+      gen.block(_`${data} = ${parentData}[${parentDataProperty}] = ${defaultValue}`);
     }
-  ];
 
-  return keywords;
-}
+    if (defaults.has(schema)) {
+      // TODO: investigate why rule type is empty
+      //if (defaulter.type != ruleType) return;
+      const defsRef = gen.scopeValue("obj", {
+        ref: opts["defaults"]
+      });
+      const defRef = gen.const("defRef", _`${defsRef}.get(${schema})`);
+      gen.block(
+        _`${data} = ${parentData}[${parentDataProperty}] = ${defRef}.create(${data} == ${schema} ? undefined : ${data})`
+      );
+    }
+  }
+};

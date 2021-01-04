@@ -1,19 +1,14 @@
-import {Test, TestingModule} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {
-  DATE_TIME,
-  OBJECTID_STRING,
-  CREATED_AT,
-  UPDATED_AT,
-  OBJECT_ID
-} from "@spica-server/core/schema/defaults";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {BucketModule} from "@spica-server/bucket";
 import {INestApplication} from "@nestjs/common";
+import {Test, TestingModule} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
+import {BucketModule} from "@spica-server/bucket";
+import {SchemaModule} from "@spica-server/core/schema";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 export function getBucketName(id: string | ObjectId) {
   return `Bucket_${id}`;
@@ -1762,8 +1757,8 @@ describe("GraphQLController", () => {
             },
             relation_field: {
               type: "relation",
-              bucketId: "unknown_bucket_id",
-              relationType: "manytomany"
+              bucketId: "000000000000000000000000",
+              relationType: "onetomany"
             },
             "123asd?qwe*": {
               type: "color"
@@ -1795,14 +1790,10 @@ describe("GraphQLController", () => {
 
       const response = await req.get("/graphql", params);
 
-      expect(JSON.parse(response.headers.warnings)).toEqual([
+      expect(JSON.parse(response.headers.warning)).toEqual([
         {
           target: `${bucketName}.relation_field`,
-          reason: "Relation type 'manytomany' is invalid."
-        },
-        {
-          target: `${bucketName}.relation_field`,
-          reason: "Related bucket 'unknown_bucket_id' does not exist."
+          reason: "Related bucket '000000000000000000000000' does not exist."
         },
         {
           target: `${bucketName}.123asd?qwe*`,

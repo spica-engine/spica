@@ -7,6 +7,10 @@ export default {
   statement: [
     ...DashboardReadOnlyAccess.statement,
     {
+      action: "dashboard:create",
+      module: "dashboard"
+    },
+    {
       action: "dashboard:update",
       resource: {
         include: "*"

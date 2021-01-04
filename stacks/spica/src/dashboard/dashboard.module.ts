@@ -16,10 +16,8 @@ import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {LAYOUT_INITIALIZER, RouteService} from "@spica-client/core";
 import {ChartsModule} from "ng2-charts";
-import {PassportService} from "../passport";
+import {PassportService, PassportModule} from "../passport";
 import {DashboardRoutingModule} from "./dashboard-routing.module";
-import {DashboardChartComponent} from "./pages/dashboard-chart/dashboard-chart.component";
-import {DashboardTableComponent} from "./pages/dashboard-table/dashboard-table.component";
 import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.component";
 import {DashboardComponent} from "./pages/dashboard/dashboard.component";
 import {DashboardInitializer} from "./services/dashboard.initializer";
@@ -30,13 +28,23 @@ import {MatStepperModule} from "@angular/material/stepper";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatTableModule} from "@angular/material/table";
-import {MatClipboardModule} from "@spica-client/material";
+import {MatClipboardModule, MatAwareDialogModule} from "@spica-client/material";
+import {AddComponent} from "./pages/add/add.component";
+import {IndexComponent} from "./pages/index/index.component";
+import {MatMenuModule} from "@angular/material/menu";
+import {CommonModule as SpicaCommon} from "@spica-client/common";
+import {DefaultComponent} from "./components/default/default.component";
+import {TableComponent} from "./components/table/table.component";
+import {OwlDateTimeModule, OwlNativeDateTimeModule} from "@danielmoncada/angular-datetime-picker";
+import {WelcomeComponent} from "./pages/welcome/welcome.component";
 
 @NgModule({
   imports: [
+    SpicaCommon,
     CommonModule,
     MatCardModule,
     MatListModule,
+    MatMenuModule,
     DashboardRoutingModule,
     MatToolbarModule,
     MatIconModule,
@@ -55,14 +63,21 @@ import {MatClipboardModule} from "@spica-client/material";
     MatSelectModule,
     MatTabsModule,
     MatTableModule,
-    MatClipboardModule
+    MatClipboardModule,
+    OwlDateTimeModule,
+    OwlNativeDateTimeModule,
+    MatAwareDialogModule,
+    PassportModule.forChild()
   ],
   declarations: [
     DashboardComponent,
     DashboardViewComponent,
-    DashboardTableComponent,
-    DashboardChartComponent,
-    TutorialComponent
+    TutorialComponent,
+    AddComponent,
+    IndexComponent,
+    DefaultComponent,
+    TableComponent,
+    WelcomeComponent
   ],
   providers: [
     DashboardService,

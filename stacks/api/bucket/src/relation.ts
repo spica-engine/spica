@@ -1,7 +1,5 @@
-import {HistoryService} from "@spica-server/bucket/history";
-import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
+import {Bucket, BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {getBucketDataCollection} from "./bucket-data.service";
 import {buildI18nAggregation, Locale} from "./locale";
 import {deepCopy} from "./patch";
 
@@ -9,7 +7,7 @@ export function findRelations(
   schema: any,
   bucketId: string,
   path: string = "",
-  targets: Map<string, "onetoone" | "onetomany">
+  targets: Map<string, RelationType>
 ) {
   path = path ? `${path}.` : ``;
   for (const field of Object.keys(schema)) {
@@ -24,7 +22,7 @@ export function findRelations(
 
 export function getRelationPaths(target: Bucket | string[]) {
   if (Array.isArray(target)) {
-    return target.map(pattern => pattern.split("."));
+    return target.map(pattern => pattern.split(".").concat(["_id"]));
   }
 
   const relationPaths = [];
@@ -32,7 +30,7 @@ export function getRelationPaths(target: Bucket | string[]) {
     if (target.properties[propertyKey].type != "relation") {
       continue;
     }
-    relationPaths.push([propertyKey]);
+    relationPaths.push([propertyKey, "_id"]);
   }
   return relationPaths;
 }
@@ -41,12 +39,19 @@ export function getRelationPipeline(map: RelationMap[], locale: Locale): object[
   const pipeline = [];
 
   for (const relation of map) {
-    const stage = buildRelationAggregation(relation.path, relation.target, relation.type, locale);
+    let subPipeline;
 
     if (relation.children) {
-      const subPipeline = getRelationPipeline(relation.children, locale);
-      stage[0]["$lookup"].pipeline.push(...subPipeline);
+      subPipeline = getRelationPipeline(relation.children, locale);
     }
+
+    const stage = buildRelationAggregation(
+      relation.path,
+      relation.target,
+      relation.type,
+      locale,
+      subPipeline
+    );
 
     pipeline.push(...stage);
   }
@@ -54,8 +59,13 @@ export function getRelationPipeline(map: RelationMap[], locale: Locale): object[
   return pipeline;
 }
 
+export const enum RelationType {
+  One = "onetoone",
+  Many = "onetomany"
+}
+
 interface RelationMap {
-  type: "onetoone" | "onetomany";
+  type: RelationType;
   target: string;
   path: string;
   children?: RelationMap[];
@@ -80,7 +90,12 @@ export async function createRelationMap(options: RelationMapOptions): Promise<Re
         continue;
       }
 
-      const matchingPaths = paths.filter(segments => segments[depth] == propertyKey);
+      const matchingPaths = paths.filter(
+        segments =>
+          segments[depth] == propertyKey &&
+          // if child field of this document requested
+          segments.length > depth + 1
+      );
 
       if (!matchingPaths.length) {
         continue;
@@ -151,6 +166,7 @@ export function resetNonOverlappingPathsInRelationMap(
           map: relation.children
         });
         if (subPaths) {
+          hasKeys = true;
           paths = {...paths, ...subPaths};
         }
       }
@@ -200,63 +216,22 @@ function createRelationPaths(relationMap: RelationMap): string[] {
   return paths;
 }
 
-export function findUpdatedFields(
-  previousSchema: any,
-  currentSchema: any,
-  updatedFields: string[],
-  path: string
-) {
-  for (const field of Object.keys(previousSchema)) {
-    if (
-      !currentSchema.hasOwnProperty(field) ||
-      currentSchema[field].type != previousSchema[field].type ||
-      hasRelationChanges(previousSchema[field], currentSchema[field])
-    ) {
-      updatedFields.push(path ? `${path}.${field}` : field);
-      //we dont need to check child keys of this key anymore
-      continue;
-    }
-    if (isObject(previousSchema[field]) && isObject(currentSchema[field])) {
-      findUpdatedFields(
-        previousSchema[field].properties,
-        currentSchema[field].properties,
-        updatedFields,
-        path ? `${path}.${field}` : field
-      );
-    } else if (isArray(previousSchema[field]) && isArray(currentSchema[field])) {
-      addArrayPattern(
-        previousSchema[field].items,
-        currentSchema[field].items,
-        updatedFields,
-        path ? `${path}.${field}` : field
-      );
-    }
-  }
-  return updatedFields;
-}
-
-export function addArrayPattern(
-  previousSchema: any,
-  currentSchema: any,
-  updatedFields: string[],
-  path: string
-) {
-  path = `${path}.$[]`;
-  if (isArray(previousSchema) && isArray(currentSchema)) {
-    addArrayPattern(previousSchema.items, currentSchema.items, updatedFields, path);
-  } else if (isObject(previousSchema) && isObject(currentSchema)) {
-    findUpdatedFields(previousSchema.properties, currentSchema.properties, updatedFields, path);
+function assertRelationType(type: RelationType) {
+  if (type != RelationType.One && type != RelationType.Many) {
+    throw new Error(`unknown relation type ${type}`);
   }
 }
 
 export function getUpdateParams(
   target: string,
-  type: "onetoone" | "onetomany",
+  type: RelationType,
   documentId: string
 ): {filter: object; update: object} {
-  if (type == "onetoone") {
+  assertRelationType(type);
+
+  if (type == RelationType.One) {
     return {filter: {[target]: documentId}, update: {$unset: {[target]: ""}}};
-  } else if (type == "onetomany") {
+  } else if (type == RelationType.Many) {
     return {
       filter: {[target]: {$in: [documentId]}},
       update: {$pull: {[target]: documentId}}
@@ -291,81 +266,64 @@ export function hasRelationChanges(previousSchema: any, currentSchema: any) {
   return false;
 }
 
-export function filterReviver(k: string, v: string) {
-  const availableConstructors = {
-    Date: v => new Date(v),
-    ObjectId: v => new ObjectId(v)
-  };
-  const ctr = /^([a-zA-Z]+)\((.*?)\)$/;
-  if (typeof v == "string" && ctr.test(v)) {
-    const [, desiredCtr, arg] = v.match(ctr);
-    if (availableConstructors[desiredCtr]) {
-      return availableConstructors[desiredCtr](arg);
-    } else {
-      throw new Error(`Could not find the constructor ${desiredCtr} in {"${k}":"${v}"}`);
-    }
-  }
-  return v;
-}
-
 export function buildRelationAggregation(
   property: string,
   bucketId: string,
-  type: "onetomany" | "onetoone",
-  locale: Locale
+  type: RelationType,
+  locale: Locale,
+  additionalPipeline?: object[]
 ): object[] {
-  if (type == "onetomany") {
-    return [
-      {
-        $lookup: {
-          from: getBucketDataCollection(bucketId),
-          let: {
-            documentIds: {
-              $ifNull: [
-                {
-                  $map: {
-                    input: `$${property}`,
-                    in: {$toObjectId: "$$this"}
-                  }
-                },
-                []
-              ]
-            }
-          },
-          as: property,
-          pipeline: [
-            {$match: {$expr: {$in: ["$_id", "$$documentIds"]}}},
-            locale
-              ? {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)}
-              : undefined,
-            {$set: {_id: {$toString: "$_id"}}}
-          ].filter(Boolean)
-        }
+  assertRelationType(type);
+  const pipeline = [];
+
+  let _let;
+
+  if (type == RelationType.One) {
+    _let = {
+      documentId: {
+        $toObjectId: `$${property}`
       }
-    ];
-  } else {
-    return [
-      {
-        $lookup: {
-          from: getBucketDataCollection(bucketId),
-          let: {
-            documentId: {
-              $toObjectId: `$${property}`
+    };
+    pipeline.push({$match: {$expr: {$eq: ["$_id", "$$documentId"]}}});
+  } else if (type == RelationType.Many) {
+    _let = {
+      documentIds: {
+        $ifNull: [
+          {
+            $map: {
+              input: `$${property}`,
+              in: {$toObjectId: "$$this"}
             }
           },
-          pipeline: [
-            {$match: {$expr: {$eq: ["$_id", "$$documentId"]}}},
-            locale
-              ? {$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)}
-              : undefined,
-            {$set: {_id: {$toString: "$_id"}}}
-          ].filter(Boolean),
-          as: property
-        }
-      },
-      {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}
-    ];
+          []
+        ]
+      }
+    };
+    pipeline.push({$match: {$expr: {$in: ["$_id", "$$documentIds"]}}});
   }
+
+  if (additionalPipeline) {
+    pipeline.push(...additionalPipeline);
+  }
+
+  if (locale) {
+    pipeline.push({$replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)});
+  }
+
+  pipeline.push({$set: {_id: {$toString: "$_id"}}});
+
+  const lookup = {
+    $lookup: {
+      from: getBucketDataCollection(bucketId),
+      as: property,
+      let: _let,
+      pipeline
+    }
+  };
+
+  return type == RelationType.One
+    ? [lookup, {$unwind: {path: `$${property}`, preserveNullAndEmptyArrays: true}}]
+    : [lookup];
 }
 
 export async function clearRelations(
@@ -374,11 +332,15 @@ export async function clearRelations(
   documentId: ObjectId
 ) {
   let buckets = await bucketService.find({_id: {$ne: bucketId}});
-  if (buckets.length < 1) return;
+  if (buckets.length < 1) {
+    return;
+  }
 
   for (const bucket of buckets) {
     let targets = findRelations(bucket.properties, bucketId.toHexString(), "", new Map());
-    if (targets.size < 1) continue;
+    if (targets.size < 1) {
+      continue;
+    }
 
     for (const [target, type] of targets.entries()) {
       const updateParams = getUpdateParams(target, type, documentId.toHexString());
@@ -387,18 +349,4 @@ export async function clearRelations(
         .updateMany(updateParams.filter, updateParams.update);
     }
   }
-}
-
-export function createHistory(
-  bs: BucketService,
-  history: HistoryService,
-  bucketId: ObjectId,
-  previousDocument: BucketDocument,
-  currentDocument: BucketDocument
-) {
-  return bs.findOne({_id: bucketId}).then(bucket => {
-    if (bucket && bucket.history) {
-      return history.createHistory(bucketId, previousDocument, currentDocument);
-    }
-  });
 }

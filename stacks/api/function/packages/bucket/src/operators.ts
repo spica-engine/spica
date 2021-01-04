@@ -2,7 +2,7 @@ import {Sequence, SequenceKind, ChunkKind} from "./interface";
 //@ts-ignore
 import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
-import {webSocket} from "rxjs/webSocket";
+import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
 
 export class IterableSet<T> implements Iterable<T> {
@@ -61,12 +61,24 @@ export class IterableSet<T> implements Iterable<T> {
   }
 }
 
+function isPlatformBrowser() {
+  //@ts-ignore
+  return typeof window !== "undefined";
+}
+
 export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
   const data = new IterableSet<T>();
-  return webSocket<any>({
-    url: url,
-    WebSocketCtor: WebSocket
-  }).pipe(
+
+  let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
+
+  if (!isPlatformBrowser()) {
+    urlConfigOrSource = {
+      url: url,
+      WebSocketCtor: WebSocket
+    };
+  }
+
+  return webSocket<any>(urlConfigOrSource).pipe(
     tap(chunk => {
       switch (chunk.kind) {
         case ChunkKind.Initial:

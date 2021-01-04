@@ -21,14 +21,17 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {OwlDateTimeModule} from "@danielmoncada/angular-datetime-picker";
-import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
+import {
+  CommonModule as SpicaCommon,
+  InputModule,
+  PersistHeaderWidthDirective
+} from "@spica-client/common";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
 import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
 import {FilterComponent} from "../../components/filter/filter.component";
-import {PersistHeaderWidthDirective} from "../../directives/persist-header-width/persist-header-width.directive";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";

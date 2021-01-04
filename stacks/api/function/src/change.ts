@@ -53,10 +53,14 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
   return targetChanges;
 }
 
+export function hasEnvChange(previousFn: Function, currentFn: Function) {
+  return diff(previousFn.env, currentFn.env).length;
+}
+
 export function createTargetChanges(fn: Function, changeKind: ChangeKind): TargetChange[] {
   const changes: TargetChange[] = [];
   for (const [handler, trigger] of Object.entries(fn.triggers)) {
-    changes.push({
+    const change: TargetChange = {
       kind: changeKind,
       options: trigger.options,
       type: trigger.type,
@@ -68,7 +72,13 @@ export function createTargetChanges(fn: Function, changeKind: ChangeKind): Targe
           timeout: fn.timeout
         }
       }
-    });
+    };
+
+    if (trigger.batch) {
+      change.target.context.batch = trigger.batch;
+    }
+
+    changes.push(change);
   }
   return changes;
 }
@@ -82,6 +92,10 @@ export enum ChangeKind {
 export interface Context {
   timeout: number;
   env: Environment;
+  batch?: {
+    limit: number;
+    deadline: number;
+  };
 }
 
 export interface TargetChange {

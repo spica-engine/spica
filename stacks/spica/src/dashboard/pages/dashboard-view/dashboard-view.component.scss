@@ -16,10 +16,10 @@ div {
       }
     }
   }
-  div {
+  div.content {
     margin-top: -160px;
     display: block;
-    div.widgets {
+    div.components {
       display: flex;
       flex-direction: row;
       flex-grow: 1;
@@ -34,6 +34,12 @@ div {
         flex-grow: 1;
         min-height: 250px;
         min-width: 250px;
+        div.nonexist-type {
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
       }
     }
   }

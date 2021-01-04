@@ -1,4 +1,4 @@
-import {async, ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {ComponentFixture, fakeAsync, TestBed, tick, waitForAsync} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
@@ -13,29 +13,31 @@ describe("Common#string-schema", () => {
   let component: StringSchemaComponent;
   let fixture: ComponentFixture<StringSchemaComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatFormFieldModule,
-        MatInputModule,
-        MatSlideToggleModule,
-        FormsModule,
-        MatIconModule,
-        InputModule,
-        BrowserAnimationsModule
-      ],
-      providers: [
-        {
-          provide: INPUT_SCHEMA,
-          useValue: {
-            type: "string"
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        imports: [
+          MatFormFieldModule,
+          MatInputModule,
+          MatSlideToggleModule,
+          FormsModule,
+          MatIconModule,
+          InputModule,
+          BrowserAnimationsModule
+        ],
+        providers: [
+          {
+            provide: INPUT_SCHEMA,
+            useValue: {
+              type: "string"
+            }
           }
-        }
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(StringSchemaComponent);
-    component = fixture.componentInstance;
-  }));
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(StringSchemaComponent);
+      component = fixture.componentInstance;
+    })
+  );
 
   it("should be working inputs", fakeAsync(() => {
     component.schema.default = "test";

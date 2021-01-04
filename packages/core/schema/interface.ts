@@ -1,4 +1,10 @@
-import {FormatDefinition, KeywordDefinition} from "ajv";
+import {
+  CodeKeywordDefinition,
+  FormatDefinition,
+  KeywordDefinition,
+  FuncKeywordDefinition,
+  MacroKeywordDefinition
+} from "ajv";
 import {Observable} from "rxjs";
 
 export const GLOBAL_SCHEMA_MODULE_OPTIONS = "GLOBAL_SCHEMA_MODULE_OPTIONS";
@@ -8,17 +14,21 @@ export const SCHEMA_MODULE_OPTIONS = "SCHEMA_MODULE_OPTIONS";
 export type UriResolver = (uri: string) => Observable<object> | Promise<object> | null | undefined;
 
 export interface Default {
-  keyword: string;
+  match: string;
   type: string;
   create(data: unknown): unknown;
 }
 
-export type Format = FormatDefinition & {
+export type Format = FormatDefinition<any> & {
   name: string;
   coerce?: (val: any) => any;
 };
 
-export type Keyword = KeywordDefinition & {name: string};
+export type Keyword =
+  | KeywordDefinition
+  | CodeKeywordDefinition
+  | FuncKeywordDefinition
+  | MacroKeywordDefinition;
 
 export interface ModuleOptions {
   schemas?: Object[];

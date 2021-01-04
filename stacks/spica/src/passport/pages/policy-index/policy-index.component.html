@@ -8,10 +8,28 @@
       A Policy is a collection of statements. A statement is an access level for an action.
     </h6>
   </span>
-  <button mat-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
-    <mat-icon>add</mat-icon>
-    Add New
-  </button>
+  <span>
+    <button
+      mat-button
+      (click)="filterPolicies()"
+      [color]="currentPolicyState != 'all' ? 'accent' : ''"
+    >
+      <mat-icon>filter_alt</mat-icon>
+      Show
+      {{
+        currentPolicyState == "all"
+          ? "custom"
+          : currentPolicyState == "custom"
+          ? "predefined"
+          : "all"
+      }}
+      policies
+    </button>
+    <button mat-button canInteract="passport:policy:create" routerLink="/passport/policy/add">
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
+  </span>
 </ng-template>
 
 <mat-card class="mat-elevation-z25">
@@ -84,7 +102,7 @@
   </mat-card-content>
 
   <mat-card-footer>
-    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+    <mat-paginator [pageSize]="100" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
   </mat-card-footer>
 </mat-card>
 

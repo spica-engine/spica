@@ -35,7 +35,7 @@ build --define=BUCKET_HISTORY=true
 build --define=ACTIVITY_STREAM=true
 build --define=EXPERIMENTAL_BUCKET_REALTIME=true
 build --define=FUNCTION_GRPC_ADDRESS=0.0.0.0:5688
-
+build --define=FUNCTION_POOL_SIZE=1
 
 build:release --stamp --workspace_status_command="./scripts/current_version.sh"
 

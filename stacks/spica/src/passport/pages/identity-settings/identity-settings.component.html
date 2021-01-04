@@ -110,7 +110,7 @@
           <span
             class="input-placer-area"
             [inputSchemaPlacer]="propertyKv.value.type"
-            [forbiddenTypes]="['relation']"
+            [forbiddenTypes]="forbiddenTypes"
             [(ngModel)]="preferences.identity.attributes.properties[propertyKv.key]"
           >
           </span>
@@ -124,8 +124,8 @@
               <mat-select [(ngModel)]="propertyKv.value.default">
                 <mat-option>None</mat-option>
                 <ng-container *ngFor="let predef of predefinedDefaults[propertyKv.value.type]">
-                  <mat-option [value]="predef.keyword">
-                    {{ predef.keyword }}
+                  <mat-option [value]="predef.match">
+                    {{ predef.match }}
                   </mat-option>
                 </ng-container>
               </mat-select>

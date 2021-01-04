@@ -46,7 +46,7 @@ export class PassportController {
     if (!state) {
       identity = await this.identity.identify(identifier, password);
       if (!identity) {
-        throw new NotFoundException("Identifier or password was incorrect.");
+        throw new UnauthorizedException("Identifier or password was incorrect.");
       }
     } else {
       if (!this.assertObservers.has(state)) {
@@ -92,7 +92,7 @@ export class PassportController {
   @Get("strategies")
   async strategies() {
     const strategies = await this.strategy.find();
-    return strategies.map(({_id, name, icon, type, title}) => ({_id, name, icon, type, title}));
+    return strategies.map(({name, icon, type, title}) => ({name, icon, type, title}));
   }
 
   @Get("strategy/:name/url")

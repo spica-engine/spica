@@ -24,7 +24,7 @@ export class IntersectDirective implements OnDestroy, AfterViewInit {
   private observe() {
     return new Observable<IntersectionObserverEntry[]>(observer => {
       const iobserver = new IntersectionObserver(entry => observer.next(entry), {
-        threshold: this.single ? 0.8 : 0.1
+        threshold: this.single ? 0.8 : 0.6
       });
       iobserver.observe(this.element.nativeElement);
       return () => iobserver.disconnect();

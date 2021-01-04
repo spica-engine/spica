@@ -47,7 +47,7 @@ steps:
     commands:
       - yarn bazel:format -mode=check
       - yarn code:format-check
-  
+
   - label: ":plaidml: + :bazel: Builds Docs"
     key: generate_docs
     if: build.branch != "master"
@@ -71,21 +71,7 @@ steps:
     <<: *api_test_docker_plugin
     commands:
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
-
-  - label: ":docker: + :bazel: Test APIs (Flaky)"
-    key: test_api_flaky
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    <<: *api_test_docker_plugin
-    commands:
-      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky --flaky_test_attempts=5
-
-  - label: ":docker: + :bazel: Test APIs (E2E)"
-    key: test_api_e2e
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    <<: *api_test_docker_plugin
-    commands:
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky,-e2e --flaky_test_attempts=5
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5
 
   - label: ":k8s: + :docker: Deploy"
@@ -109,10 +95,8 @@ steps:
     # See: https://buildkite.com/docs/pipelines/conditionals
     if: build.branch =~ /^\d\.\d\.x$$/
     depends_on:
-      - test_api_flaky
-      - test_api_e2e
       - test_api
-      # - test_spica
+      - test_spica
     <<: *release_docker_plugin
     commands:
       - gcloud auth activate-service-account --key-file=/root/service-account.json
