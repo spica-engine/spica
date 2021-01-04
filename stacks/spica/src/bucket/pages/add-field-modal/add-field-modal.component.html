@@ -75,8 +75,8 @@
           <mat-select [(ngModel)]="propertyKv.default">
             <mat-option>None</mat-option>
             <ng-container *ngFor="let predef of predefinedDefaults[fieldConfig.type]">
-              <mat-option [value]="predef.keyword">
-                {{ predef.keyword }}
+              <mat-option [value]="predef.match">
+                {{ predef.match }}
               </mat-option>
             </ng-container>
           </mat-select>

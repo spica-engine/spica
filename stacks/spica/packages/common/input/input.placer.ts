@@ -111,7 +111,7 @@ export class InputPlacerComponent
               $required: this.required,
               // Later we can make root properties to use
               // different names rather than real property name
-              $name: `${this.name}_inner`
+              $name: `${this.name}$$`
             }
           }
         ],

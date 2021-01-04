@@ -342,7 +342,14 @@ export class BucketDataController {
 
     await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
       throw new BadRequestException(
-        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.errors
+          ? error.errors
+              .map(e => {
+                const dataPath = e.dataPath.replace(/\//g, ".");
+                return `${dataPath} ${e.message}`;
+              })
+              .join("\n")
+          : [],
         error.message
       );
     });

@@ -1,6 +1,6 @@
-import commonjs from "rollup-plugin-commonjs";
-import nodeResolve from "rollup-plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
+import nodeResolve from "@rollup/plugin-node-resolve";
 import {terser} from "rollup-plugin-terser";
 
 module.exports = {
@@ -8,10 +8,10 @@ module.exports = {
     nodeResolve({
       preferBuiltins: true
     }),
-    commonjs({
-      ignore: ["v8-compile-cache", "mongodb"]
-    }),
     json(),
+    commonjs({
+      ignore: ["mongodb"]
+    }),
     terser()
   ],
   external: ["path"]

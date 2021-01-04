@@ -20,6 +20,7 @@ node_repositories()
 yarn_install(
     name = "npm",
     package_json = "//:package.json",
+    symlink_node_modules = True,
     yarn_lock = "//:yarn.lock",
 )
 

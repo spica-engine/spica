@@ -6,7 +6,6 @@ export interface Function {
   description?: string;
   env: Environment;
   triggers: Triggers;
-  memoryLimit?: number;
   timeout: number;
   language: string;
 }

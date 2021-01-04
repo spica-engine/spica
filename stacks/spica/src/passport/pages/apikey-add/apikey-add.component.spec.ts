@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {async, ComponentFixture, TestBed} from "@angular/core/testing";
+import {ComponentFixture, TestBed, waitForAsync} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -27,71 +27,78 @@ describe("ApiKeyAddComponent", () => {
   let component: ApiKeyAddComponent;
   let fixture: ComponentFixture<ApiKeyAddComponent>;
 
-  beforeEach(async(async () => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatIconModule,
-        MatToolbarModule,
-        MatTooltipModule,
-        MatListModule,
-        MatCardModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatSlideToggleModule,
-        FormsModule,
-        RouterTestingModule,
-        NoopAnimationsModule,
-        HttpClientTestingModule
-      ],
-      providers: [
-        {
-          provide: ApiKeyService,
-          useValue: new MockApiKeyService()
-        },
-        {
-          provide: PassportService,
-          useValue: {
-            checkAllowed: () => {
-              return of(true);
+  beforeEach(
+    waitForAsync(async () => {
+      TestBed.configureTestingModule({
+        imports: [
+          MatIconModule,
+          MatToolbarModule,
+          MatTooltipModule,
+          MatListModule,
+          MatCardModule,
+          MatFormFieldModule,
+          MatInputModule,
+          MatButtonModule,
+          MatSlideToggleModule,
+          FormsModule,
+          RouterTestingModule,
+          NoopAnimationsModule,
+          HttpClientTestingModule
+        ],
+        providers: [
+          {
+            provide: ApiKeyService,
+            useValue: new MockApiKeyService()
+          },
+          {
+            provide: PassportService,
+            useValue: {
+              checkAllowed: () => {
+                return of(true);
+              }
+            }
+          },
+          {
+            provide: PolicyService,
+            useValue: {
+              find: () => {
+                return of({
+                  meta: 2,
+                  data: [
+                    {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
+                    {
+                      _id: "AnotherPolicy",
+                      name: "another policy",
+                      description: "test",
+                      statement: []
+                    }
+                  ]
+                });
+              }
+            }
+          },
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              params: of({})
+            }
+          },
+          {
+            provide: RouterTestingModule,
+            useValue: {
+              navigate: () => {}
             }
           }
-        },
-        {
-          provide: PolicyService,
-          useValue: {
-            find: () => {
-              return of({
-                meta: 2,
-                data: [
-                  {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
-                  {_id: "AnotherPolicy", name: "another policy", description: "test", statement: []}
-                ]
-              });
-            }
-          }
-        },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            params: of({})
-          }
-        },
-        {
-          provide: RouterTestingModule,
-          useValue: {
-            navigate: () => {}
-          }
-        }
-      ],
-      declarations: [ApiKeyAddComponent, CanInteractDirectiveTest]
-    }).compileComponents();
+        ],
+        declarations: [ApiKeyAddComponent, CanInteractDirectiveTest]
+      }).compileComponents();
 
-    fixture = TestBed.createComponent(ApiKeyAddComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    await fixture.whenStable();
-  }));
+      fixture = TestBed.createComponent(ApiKeyAddComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      await fixture.whenStable();
+    })
+  );
 
   it("should set apiKey as emptyApiKey when this page navigated from add button", () => {
     expect(component.apiKey).toEqual({
