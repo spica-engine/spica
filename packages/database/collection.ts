@@ -34,7 +34,19 @@ export class _MixinCollection<T> {
     return this._coll.aggregate(pipeline, options);
   }
 
-  createCollection(name: string, options?: CollectionCreateOptions): Promise<Collection<any>> {
+  createCollection(
+    name: string,
+    options?: CollectionCreateOptions & {ignoreAlreadyExist?: boolean}
+  ): Promise<Collection<any>> {
+    if (options && options.ignoreAlreadyExist) {
+      delete options.ignoreAlreadyExist;
+      return this.db.createCollection(name, options).catch(error => {
+        if (error.codeName == "NamespaceExists") {
+          return this._coll;
+        }
+        throw new Error(error);
+      });
+    }
     return this.db.createCollection(name, options);
   }
 
@@ -109,7 +121,7 @@ export class _MixinCollection<T> {
       .listIndexes()
       .toArray()
       .then(indexes => {
-        let ttlIndex = indexes.find(index => index.name == "created_at_1");
+        const ttlIndex = indexes.find(index => index.name == "created_at_1");
         if (!ttlIndex) {
           return this._coll.createIndex({created_at: 1}, {expireAfterSeconds: expireAfterSeconds});
         } else if (ttlIndex && ttlIndex.expireAfterSeconds != expireAfterSeconds) {

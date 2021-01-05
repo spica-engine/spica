@@ -28,8 +28,8 @@ export class ActivityController {
     @Query("end", DATE) end: Date,
     @Query("skip", NUMBER) skip: number,
     @Query("limit", NUMBER) limit: number
-  ): Promise<Activity[]> {
-    let aggregation: object[] = [
+  ) {
+    const aggregation: object[] = [
       {
         $lookup: {
           from: "identity",
@@ -69,13 +69,19 @@ export class ActivityController {
       filter = {...filter, resource};
     }
 
-    if (filter) aggregation.push({$match: filter});
+    if (filter) {
+      aggregation.push({$match: filter});
+    }
 
-    if (skip) aggregation.push({$skip: skip});
+    if (skip) {
+      aggregation.push({$skip: skip});
+    }
 
-    if (limit) aggregation.push({$limit: limit});
+    if (limit) {
+      aggregation.push({$limit: limit});
+    }
 
-    return this.activityService.aggregate<Activity>(aggregation).toArray();
+    return this.activityService.aggregate(aggregation).toArray();
   }
 
   @Delete(":id")

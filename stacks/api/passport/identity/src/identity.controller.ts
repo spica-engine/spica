@@ -11,7 +11,9 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  HttpStatus,
+  HttpCode
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
@@ -122,6 +124,7 @@ export class IdentityController {
     identity: Identity
   ) {
     identity.password = await hash(identity.password);
+    identity.policies = [];
     return this.identity
       .insertOne(identity)
       .then(insertedIdentity => {
@@ -148,6 +151,8 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
+    // To not allow to send policies to this endpoint
+    delete identity.policies;
     return this.identity.findOneAndUpdate(
       {_id: id},
       {$set: identity},
@@ -158,18 +163,20 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     // prevent to deleting the last user
     const users = await this.identity.find();
     if (users.length == 1) {
       return;
     }
-    return this.identity.deleteOne({_id: id}).then(() => {});
+    return this.identity.deleteOne({_id: id});
   }
 
   @UseInterceptors(activity(createIdentityActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:add"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.identity.findOneAndUpdate(
       {
@@ -188,6 +195,7 @@ export class IdentityController {
   @UseInterceptors(activity(createIdentityActivity))
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:policy:remove"))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.identity.findOneAndUpdate(
       {

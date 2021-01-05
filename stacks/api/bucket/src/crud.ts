@@ -1,4 +1,8 @@
-import {ForbiddenException} from "@nestjs/common";
+import {
+  ForbiddenException,
+  BadRequestException,
+  InternalServerErrorException
+} from "@nestjs/common";
 import {BaseCollection, ObjectId} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
 import {Bucket, BucketDocument, BucketPreferences} from "@spica-server/bucket/services";
@@ -135,7 +139,7 @@ export async function insertDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   }
 ) {
@@ -158,7 +162,7 @@ export async function insertDocument(
     throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 
-  return collection.insertOne(document);
+  return collection.insertOne(document).catch(handleWriteErrors);
 }
 
 export async function replaceDocument(
@@ -168,7 +172,7 @@ export async function replaceDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
@@ -193,9 +197,11 @@ export async function replaceDocument(
   const documentId = document._id;
   delete document._id;
 
-  return collection.findOneAndReplace({_id: documentId}, document, {
-    returnOriginal: options.returnOriginal
-  });
+  return collection
+    .findOneAndReplace({_id: documentId}, document, {
+      returnOriginal: options.returnOriginal
+    })
+    .catch(handleWriteErrors);
 }
 
 export async function patchDocument(
@@ -206,7 +212,7 @@ export async function patchDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
@@ -230,9 +236,11 @@ export async function patchDocument(
 
   const updateQuery = getUpdateQueryForPatch(patch);
 
-  return collection.findOneAndUpdate({_id: document._id}, updateQuery, {
-    returnOriginal: options.returnOriginal
-  });
+  return collection
+    .findOneAndUpdate({_id: document._id}, updateQuery, {
+      returnOriginal: options.returnOriginal
+    })
+    .catch(handleWriteErrors);
 }
 
 export async function deleteDocument(
@@ -284,7 +292,7 @@ async function getWriteRuleAggregation(schema: Bucket, resolve: any, document: B
   return [
     {$limit: 1},
     {
-      $replaceWith: document
+      $replaceWith: {$literal: document}
     },
     ...relationStage
   ];
@@ -296,4 +304,14 @@ function getProjectAggregation(fieldMap: string[][]) {
     result[fields.join(".")] = 1;
   }
   return {$project: result};
+}
+
+function handleWriteErrors(error: any) {
+  if (error.code === 11000) {
+    throw new BadRequestException(
+      `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
+    );
+  }
+
+  throw new InternalServerErrorException();
 }

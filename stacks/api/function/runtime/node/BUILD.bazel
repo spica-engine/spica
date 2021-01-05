@@ -49,9 +49,9 @@ rollup_bundle(
         "//stacks/api/function/queue/node",
         "//stacks/api/function/queue/proto",
         "@npm//@grpc/grpc-js",
+        "@npm//@rollup/plugin-commonjs",
         "@npm//@rollup/plugin-json",
-        "@npm//rollup-plugin-commonjs",
-        "@npm//rollup-plugin-node-resolve",
+        "@npm//@rollup/plugin-node-resolve",
         "@npm//rollup-plugin-terser",
     ],
 )

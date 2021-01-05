@@ -43,7 +43,7 @@ export function getUser(user: any): string {
   return user ? user._id : undefined;
 }
 
-export function createActivity(
+export async function createActivity(
   context: ExecutionContext,
   res: any,
   predict: Predict,
@@ -60,5 +60,5 @@ export function createActivity(
     return {...activity, created_at: new Date()};
   });
 
-  return service.insertMany(activities);
+  await service.insertMany(activities);
 }

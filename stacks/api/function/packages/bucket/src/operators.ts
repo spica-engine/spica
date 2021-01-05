@@ -2,8 +2,9 @@ import {Sequence, SequenceKind, ChunkKind} from "./interface";
 //@ts-ignore
 import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
-import {webSocket} from "rxjs/webSocket";
+import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
 import {timer, of, Observable} from "rxjs";
+import {isPlatformBrowser} from "@spica-devkit/internal_common";
 
 export class IterableSet<T> implements Iterable<T> {
   ids = new Array<string>();
@@ -63,10 +64,18 @@ export class IterableSet<T> implements Iterable<T> {
 
 export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
   const data = new IterableSet<T>();
-  return webSocket<any>({
-    url: url,
-    WebSocketCtor: WebSocket
-  }).pipe(
+
+  let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
+
+  if (!isPlatformBrowser()) {
+    urlConfigOrSource = {
+      url: url,
+      WebSocketCtor: WebSocket
+    };
+  }
+
+  return webSocket<any>(urlConfigOrSource).pipe(
+    retryWhen(errors => errors.pipe(filter(error => error.code == 1006))),
     tap(chunk => {
       switch (chunk.kind) {
         case ChunkKind.Initial:
@@ -82,6 +91,9 @@ export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
         case ChunkKind.Order:
           data.order(chunk.sequence);
           break;
+        case ChunkKind.Error:
+          delete chunk.kind;
+          throw new Error(JSON.stringify(chunk));
       }
     }),
     delayWhen(chunk => {
@@ -91,7 +103,6 @@ export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
       return of(null);
     }),
     debounceTime(1),
-    map(() => Array.from(data)),
-    retryWhen(errors => errors.pipe(filter(error => error.code == 1006)))
+    map(() => Array.from(data))
   );
 }

@@ -29,17 +29,17 @@
 :host {
   background-image: url("../../../assets/images/background.svg");
   background-size: cover;
-  min-height: 850px;
   display: flex;
   flex-flow: column;
-  justify-content: space-between;
   nav {
+    margin: 0 auto;
+    max-width: 1280px;
+    width: 100%;
     li:focus,
     img:focus {
       outline: 0;
     }
     div:first-of-type {
-      margin-bottom: 20px;
       ul:first-of-type li:first-of-type a {
         color: white;
         font-size: 1rem;
@@ -57,7 +57,6 @@
       }
     }
 
-    margin: 0 10%;
     span {
       .beta {
         position: absolute;
@@ -87,11 +86,11 @@
     ul {
       list-style-type: none;
       padding-left: 0;
+      margin: 15px 5px 5px;
       li {
-        height: 24px;
         cursor: pointer;
         &:not(:first-child) {
-          margin-left: 35px;
+          margin-left: 15px;
         }
         & > * {
           vertical-align: middle;
@@ -117,6 +116,13 @@
       }
       &[aria-expanded~="true"] {
         color: #58bce4;
+      }
+      &.navigation-links {
+        li {
+          &:not(:first-child) {
+            margin-left: 35px;
+          }
+        }
       }
     }
   }

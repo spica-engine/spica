@@ -28,13 +28,6 @@ export interface BucketDocument {
   [key: string]: any | undefined;
 }
 
-export interface IndexResult<T> {
-  meta: {
-    total: number;
-  };
-  data: T[];
-}
-
 export interface Sequence {
   kind: SequenceKind;
   item: string;
@@ -53,6 +46,7 @@ export interface StreamChunk<T = any> {
   sequence?: Sequence[];
 }
 export enum ChunkKind {
+  Error = -1,
   Initial = 0,
   EndOfInitial = 1,
   Insert = 2,
@@ -63,11 +57,26 @@ export enum ChunkKind {
   Order = 7
 }
 
-export interface GetAllParams {
-  filter?: string;
-  sort?: {
-    [key: string]: 1 | -1;
+interface InitializeOptions {
+  publicUrl?: string;
+}
+
+export interface ApikeyInitialization extends InitializeOptions {
+  apikey: string;
+}
+
+export interface IdentityInitialization extends InitializeOptions {
+  identity: string;
+}
+
+export interface InitializationResult {
+  authorization: string;
+  publicUrl: string;
+}
+
+export interface IndexResult<T> {
+  meta: {
+    total: number;
   };
-  limit?: number;
-  skip?: number;
+  data: T[];
 }

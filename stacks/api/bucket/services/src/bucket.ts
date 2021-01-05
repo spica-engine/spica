@@ -9,6 +9,7 @@ export interface Bucket {
   description?: string;
   primary: string;
   history?: boolean;
+  readOnly?: boolean;
   properties?: {
     [key: string]: JSONSchema7 & PropertyOptions;
   };
@@ -27,6 +28,7 @@ interface PropertyOptions {
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";
+    unique?: boolean;
   };
 }
 

@@ -11,7 +11,7 @@ export class DashboardInitializer {
     private routeService: RouteService,
     private passport: PassportService
   ) {
-    ds.getDashboards().subscribe(dashboards => {
+    ds.findAll().subscribe(dashboards => {
       this.routeService.dispatch(new CherryPickAndRemove(e => e.id.startsWith("dashboard/")));
       dashboards.forEach(dashboard => {
         this.routeService.dispatch(

@@ -5,27 +5,28 @@ import {ValidationError, Validator} from "./validator";
 abstract class MixinValidator {
   abstract uriSchemaOrResolver: string | object | Function;
   constructor(public validator: Validator, @Inject(REQUEST) public req) {}
-  transform(value: any) {
-    let schema: object;
-    if (typeof this.uriSchemaOrResolver == "function") {
-      const res = this.uriSchemaOrResolver(this.req);
-      schema = typeof res == "object" ? res : {$ref: res};
-    } else if (typeof this.uriSchemaOrResolver == "string") {
-      schema = {$ref: this.uriSchemaOrResolver};
-    } else {
-      schema = this.uriSchemaOrResolver;
-    }
 
+  transform(value: any) {
+    let schema: object | string = this.uriSchemaOrResolver;
+    if (typeof this.uriSchemaOrResolver == "function") {
+      schema = this.uriSchemaOrResolver(this.req);
+      if (!schema) {
+        throw new TypeError(`resolve function has returned undefined`);
+      }
+    }
     return this.validator
       .validate(schema, value)
-      .then(() => {
-        this.validator.removeSchema("");
-        return value;
-      })
-      .catch((error: ValidationError) => {
-        this.validator.removeSchema("");
+      .then(() => value)
+      .catch(error => {
         throw new BadRequestException(
-          (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+          error.errors
+            ? error.errors
+                .map(e => {
+                  const dataPath = e.dataPath.replace(/\//g, ".");
+                  return `${dataPath} ${e.message}`;
+                })
+                .join("\n")
+            : [],
           error.message
         );
       });

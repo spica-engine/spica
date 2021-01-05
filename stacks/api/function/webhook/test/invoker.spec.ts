@@ -206,7 +206,7 @@ describe("Webhook Invoker", () => {
 
     expect(insertLog).toHaveBeenCalledTimes(1);
 
-    let expectedArg = insertLog.calls.argsFor(0)[0];
+    let expectedArg: any = insertLog.calls.argsFor(0)[0];
     expect(expectedArg.created_at).toEqual(jasmine.any(Date));
 
     delete expectedArg.created_at;
@@ -257,7 +257,7 @@ describe("Webhook Invoker", () => {
 
     expect(insertLog).toHaveBeenCalledTimes(1);
 
-    let expectedArg = insertLog.calls.argsFor(0)[0];
+    let expectedArg: any = insertLog.calls.argsFor(0)[0];
     expect(expectedArg.created_at).toEqual(jasmine.any(Date));
 
     delete expectedArg.created_at;

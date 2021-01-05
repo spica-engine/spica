@@ -1,4 +1,4 @@
-import {async, ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {ComponentFixture, fakeAsync, TestBed, tick, waitForAsync} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
@@ -15,30 +15,32 @@ describe("Common#number-schema", () => {
   let component: NumberSchemaComponent;
   let fixture: ComponentFixture<NumberSchemaComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatTooltipModule,
-        MatIconModule,
-        MatInputModule,
-        MatFormFieldModule,
-        FormsModule,
-        MatSlideToggleModule,
-        InputModule,
-        BrowserAnimationsModule
-      ],
-      providers: [
-        {
-          provide: INPUT_SCHEMA,
-          useValue: {
-            type: "string"
+  beforeEach(
+    waitForAsync(() => {
+      TestBed.configureTestingModule({
+        imports: [
+          MatTooltipModule,
+          MatIconModule,
+          MatInputModule,
+          MatFormFieldModule,
+          FormsModule,
+          MatSlideToggleModule,
+          InputModule,
+          BrowserAnimationsModule
+        ],
+        providers: [
+          {
+            provide: INPUT_SCHEMA,
+            useValue: {
+              type: "string"
+            }
           }
-        }
-      ]
-    }).compileComponents();
-    fixture = TestBed.createComponent(NumberSchemaComponent);
-    component = fixture.componentInstance;
-  }));
+        ]
+      }).compileComponents();
+      fixture = TestBed.createComponent(NumberSchemaComponent);
+      component = fixture.componentInstance;
+    })
+  );
 
   it("Should visible items", fakeAsync(() => {
     tick(1);

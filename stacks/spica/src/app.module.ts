@@ -20,7 +20,10 @@ import {StorageModule} from "./storage/storage.module";
     BrowserModule,
     HammerModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot([], {paramsInheritanceStrategy: "always"}),
+    RouterModule.forRoot([], {
+      paramsInheritanceStrategy: "always",
+      relativeLinkResolution: "legacy"
+    }),
     HttpClientModule,
     BaseUrlInterceptorModule.forRoot({api: environment.api}),
     RouteModule.forRoot(),

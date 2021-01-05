@@ -35,7 +35,7 @@ describe("hook module", () => {
       expect(schema).toEqual({
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
-        required: ["bucket", "phase", "type"],
+        required: ["bucket", "type"],
         properties: {
           bucket: {
             title: "Bucket",
@@ -44,36 +44,10 @@ describe("hook module", () => {
             // @ts-expect-error
             viewEnum: []
           },
-          phase: {
-            title: "Phase",
-            type: "string",
-            enum: ["BEFORE", "AFTER"]
-          },
           type: {
-            type: "string"
-          }
-        },
-        if: {
-          properties: {
-            phase: {const: "BEFORE"}
-          }
-        },
-        then: {
-          properties: {
-            type: {
-              title: "Operation type",
-              type: "string",
-              enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
-            }
-          }
-        },
-        else: {
-          properties: {
-            type: {
-              title: "Operation type",
-              type: "string",
-              enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
-            }
+            title: "Operation type",
+            type: "string",
+            enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
           }
         },
         additionalProperties: false

@@ -75,8 +75,8 @@
           <mat-select [(ngModel)]="propertyKv.default">
             <mat-option>None</mat-option>
             <ng-container *ngFor="let predef of predefinedDefaults[fieldConfig.type]">
-              <mat-option [value]="predef.keyword">
-                {{ predef.keyword }}
+              <mat-option [value]="predef.match">
+                {{ predef.match }}
               </mat-option>
             </ng-container>
           </mat-select>
@@ -117,6 +117,22 @@
         <div>
           <mat-checkbox [(ngModel)]="propertyKv.readOnly">
             Read-only
+          </mat-checkbox>
+        </div>
+        <div
+          *ngIf="
+            propertyKv.type == 'string' ||
+            propertyKv.type == 'number' ||
+            propertyKv.type == 'textarea'
+          "
+        >
+          <mat-checkbox
+            [disabled]="parentSchema._id"
+            matTooltip="You can not change this property after creation."
+            [matTooltipDisabled]="!parentSchema._id"
+            [(ngModel)]="propertyKv.options.unique"
+          >
+            Unique
           </mat-checkbox>
         </div>
       </div>

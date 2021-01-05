@@ -1,8 +1,9 @@
 import {BucketDocument} from "@spica-server/bucket/services";
 import JsonMergePatch = require("json-merge-patch");
 
-export function applyPatch({_id: _, ...previousDocument}: BucketDocument, patchQuery: object) {
-  return JsonMergePatch.apply(deepCopy(previousDocument), patchQuery);
+export function applyPatch(previousDocument: BucketDocument, patchQuery: object) {
+  const document = deepCopy(previousDocument);
+  return JsonMergePatch.apply(document, patchQuery);
 }
 
 export function getUpdateQueryForPatch(query: Partial<BucketDocument>) {

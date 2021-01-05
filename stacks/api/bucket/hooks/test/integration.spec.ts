@@ -131,7 +131,6 @@ xdescribe("Hooks Integration", () => {
           get: {
             options: {
               bucket: bucket._id,
-              phase: "BEFORE",
               type: "GET"
             },
             type: "bucket",
@@ -140,7 +139,6 @@ xdescribe("Hooks Integration", () => {
           index: {
             options: {
               bucket: bucket._id,
-              phase: "BEFORE",
               type: "INDEX"
             },
             type: "bucket",
@@ -149,7 +147,6 @@ xdescribe("Hooks Integration", () => {
           update: {
             options: {
               bucket: bucket._id,
-              phase: "BEFORE",
               type: "UPDATE"
             },
             type: "bucket",
@@ -158,7 +155,6 @@ xdescribe("Hooks Integration", () => {
           insert: {
             options: {
               bucket: bucket._id,
-              phase: "BEFORE",
               type: "INSERT"
             },
             type: "bucket",
@@ -167,7 +163,6 @@ xdescribe("Hooks Integration", () => {
           del: {
             options: {
               bucket: bucket._id,
-              phase: "BEFORE",
               type: "DELETE"
             },
             type: "bucket",
@@ -176,7 +171,6 @@ xdescribe("Hooks Integration", () => {
           stream: {
             options: {
               bucket: bucket._id,
-              phase: "BEFORE",
               type: "STREAM"
             },
             type: "bucket",

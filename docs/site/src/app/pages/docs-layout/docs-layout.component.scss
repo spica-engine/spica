@@ -15,7 +15,7 @@
   }
 
   mat-sidenav-container {
-    max-width: 1024px;
+    max-width: 1280px;
     margin: auto;
     background-color: #fff;
     min-height: 95vh;
@@ -33,6 +33,7 @@
     mat-sidenav {
       background: none;
       border-right: none;
+      width: 300px;
 
       &.desktop {
         padding-top: 25px;
@@ -55,6 +56,13 @@
         a.active {
           background: #1c1c5008;
           border-left: 2px solid #1c1c50;
+        }
+        .indent {
+          margin-left: 30px;
+          font-size: 0.9rem;
+          div {
+            line-height: 1.5rem;
+          }
         }
       }
     }

@@ -43,9 +43,10 @@ export class StorageService {
           ...storageObject,
           content: {data: new BSON.Binary(content), type: file.type}
         };
+
         const data = BSON.serialize(schema, {
           minInternalBufferSize: BSON.calculateObjectSize(schema)
-        });
+        } as any);
         const request = new HttpRequest("PUT", `api:/storage/${storageObject._id}`, data.buffer, {
           reportProgress: true,
           headers: new HttpHeaders({"Content-Type": "application/bson"})
@@ -70,7 +71,7 @@ export class StorageService {
           }))
         };
         const size = BSON.calculateObjectSize(contents);
-        const buffer = BSON.serialize(contents, {minInternalBufferSize: size});
+        const buffer = BSON.serialize(contents, {minInternalBufferSize: size} as any);
         const request = new HttpRequest("POST", "api:/storage", buffer.buffer, {
           reportProgress: true,
           headers: new HttpHeaders({"Content-Type": "application/bson"})
