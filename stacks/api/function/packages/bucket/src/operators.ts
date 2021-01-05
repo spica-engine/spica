@@ -75,6 +75,7 @@ export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
   }
 
   return webSocket<any>(urlConfigOrSource).pipe(
+    retryWhen(errors => errors.pipe(filter(error => error.code == 1006))),
     tap(chunk => {
       switch (chunk.kind) {
         case ChunkKind.Initial:
@@ -90,6 +91,9 @@ export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
         case ChunkKind.Order:
           data.order(chunk.sequence);
           break;
+        case ChunkKind.Error:
+          delete chunk.kind;
+          throw new Error(JSON.stringify(chunk));
       }
     }),
     delayWhen(chunk => {
@@ -99,7 +103,6 @@ export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
       return of(null);
     }),
     debounceTime(1),
-    map(() => Array.from(data)),
-    retryWhen(errors => errors.pipe(filter(error => error.code == 1006)))
+    map(() => Array.from(data))
   );
 }
