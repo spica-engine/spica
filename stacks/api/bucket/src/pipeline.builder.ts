@@ -83,7 +83,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
   filterScheduledData(isScheduled: boolean): this {
-    this.attachToPipeline(isScheduled, {$match: {_schedule: {$exists: isScheduled}}});
+    this.attachToPipeline(true, {$match: {_schedule: {$exists: isScheduled}}});
     return this;
   }
   async localize(isLocalizationRequested: boolean, language: string, callBack): Promise<this> {

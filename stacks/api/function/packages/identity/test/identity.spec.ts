@@ -10,6 +10,7 @@ describe("@spica-devkit/identity", () => {
   let deleteSpy: jasmine.SpyObj<any>;
 
   beforeEach(() => {
+    //@ts-ignore
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Identity.initialize({apikey: "TEST_APIKEY"});
 
@@ -23,6 +24,7 @@ describe("@spica-devkit/identity", () => {
 
   describe("errors", () => {
     it("should throw error when public url parameter and internal public url are missing", async () => {
+      //@ts-ignore
       delete process.env.__INTERNAL__SPICA__PUBLIC_URL__;
       expect(() => Identity.initialize({apikey: "TEST_APIKEY"})).toThrowError(
         "Public url must be provided."
