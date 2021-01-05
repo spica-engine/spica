@@ -7,6 +7,7 @@ export interface StreamChunk<T = any> {
 }
 
 export enum ChunkKind {
+  Error = -1,
   Initial = 0,
   EndOfInitial = 1,
   Insert = 2,
