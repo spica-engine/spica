@@ -1,9 +1,9 @@
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional } from "@nestjs/common";
-import { HttpAdapterHost } from "@nestjs/core";
-import { DatabaseService } from "@spica-server/database";
-import { Language } from "@spica-server/function/compiler";
-import { Javascript } from "@spica-server/function/compiler/javascript";
-import { Typescript } from "@spica-server/function/compiler/typescript";
+import {Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional} from "@nestjs/common";
+import {HttpAdapterHost} from "@nestjs/core";
+import {DatabaseService} from "@spica-server/database";
+import {Language} from "@spica-server/function/compiler";
+import {Javascript} from "@spica-server/function/compiler/javascript";
+import {Typescript} from "@spica-server/function/compiler/typescript";
 import {
   DatabaseEnqueuer,
   Enqueuer,
@@ -12,17 +12,17 @@ import {
   ScheduleEnqueuer,
   SystemEnqueuer
 } from "@spica-server/function/enqueuer";
-import { PackageManager } from "@spica-server/function/pkgmanager";
-import { Npm } from "@spica-server/function/pkgmanager/node";
-import { DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue } from "@spica-server/function/queue";
-import { event } from "@spica-server/function/queue/proto";
-import { Runtime, Worker } from "@spica-server/function/runtime";
-import { DatabaseOutput, StandartStream } from "@spica-server/function/runtime/io";
-import { Node } from "@spica-server/function/runtime/node";
+import {PackageManager} from "@spica-server/function/pkgmanager";
+import {Npm} from "@spica-server/function/pkgmanager/node";
+import {DatabaseQueue, EventQueue, FirehoseQueue, HttpQueue} from "@spica-server/function/queue";
+import {event} from "@spica-server/function/queue/proto";
+import {Runtime, Worker} from "@spica-server/function/runtime";
+import {DatabaseOutput, StandartStream} from "@spica-server/function/runtime/io";
+import {Node} from "@spica-server/function/runtime/node";
 import * as uniqid from "uniqid";
-import { Batch, createBatch, updateBatch } from "./batch";
-import { ENQUEUER, EnqueuerFactory } from "./enqueuer";
-import { SchedulingOptions, SCHEDULING_OPTIONS } from "./options";
+import {Batch, createBatch, updateBatch} from "./batch";
+import {ENQUEUER, EnqueuerFactory} from "./enqueuer";
+import {SchedulingOptions, SCHEDULING_OPTIONS} from "./options";
 
 @Injectable()
 export class Scheduler implements OnModuleInit, OnModuleDestroy {
@@ -130,7 +130,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         batch.remaining_enqueues[target.handler] != 0 &&
         (!batch.last_enqueued_at[target.handler] ||
           Date.now() - batch.last_enqueued_at[target.handler] <
-          target.context.batch.deadline * 1000)
+            target.context.batch.deadline * 1000)
       ) {
         return batch;
       }
@@ -158,12 +158,12 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     }
     const schedule = this.workers.get(workerId);
     this.workers.delete(workerId);
-    return { schedule, workerId };
+    return {schedule, workerId};
   }
 
   process() {
     for (const event of this.eventQueue.values()) {
-      const { target } = event;
+      const {target} = event;
 
       let schedule: (event: event.Event) => void;
       let workerId: string;
