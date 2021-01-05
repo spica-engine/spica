@@ -119,8 +119,19 @@
             Read-only
           </mat-checkbox>
         </div>
-        <div>
-          <mat-checkbox [disabled]="parentSchema._id" [(ngModel)]="propertyKv.options.unique">
+        <div
+          *ngIf="
+            propertyKv.type == 'string' ||
+            propertyKv.type == 'number' ||
+            propertyKv.type == 'textarea'
+          "
+        >
+          <mat-checkbox
+            [disabled]="parentSchema._id"
+            matTooltip="You can not change this property after creation."
+            [matTooltipDisabled]="!parentSchema._id"
+            [(ngModel)]="propertyKv.options.unique"
+          >
             Unique
           </mat-checkbox>
         </div>
