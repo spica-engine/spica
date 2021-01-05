@@ -4,7 +4,8 @@
     "module": "ES2020",
     "lib": [
       "ES2015",
-      "ES2018"
+      "ES2018",
+      "dom"
     ],
     "moduleResolution": "node"
   }
