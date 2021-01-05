@@ -213,9 +213,10 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.timeouts.set(
         event.id,
         setTimeout(() => {
-          stderr.write(
-            `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
-          );
+          if (stderr.writable)
+            stderr.write(
+              `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
+            );
 
           worker.kill();
         }, timeoutInSeconds * 1000)
