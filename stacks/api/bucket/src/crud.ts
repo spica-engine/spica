@@ -72,19 +72,19 @@ export async function findDocuments<T>(
   const collection = factories.collection(schema._id);
   const pipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
   const seekingPipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
-  let requestedLocale;
+
   let rulePropertyMap;
   let ruleRelationMap: RelationMap[];
 
-  let filteredPipeline = await pipelineBuilder
+  const basePipeline = await pipelineBuilder
     .findOneIfRequested(params.documentId)
     .filterResources(params.resourceFilter)
     .filterScheduledData(!!options.schedule)
     .localize(options.localize, params.language, locale => {
-      requestedLocale = locale;
       params.req.res.header("Content-language", locale.best || locale.fallback);
     });
-  let rulesAppliedPipeline = await filteredPipeline.rules(
+
+  const rulesAppliedPipeline = await basePipeline.rules(
     params.req.user,
     (propertyMap, relationMap) => {
       rulePropertyMap = propertyMap;
@@ -98,8 +98,8 @@ export async function findDocuments<T>(
     map: ruleRelationMap
   });
   // Reset those relations which have been requested by acl rules.
-  let filtersAppliedPipeline = await rulesAppliedPipeline
-    .attachToPipeline(ruleResetStage, ruleResetStage)
+  const filtersAppliedPipeline = await rulesAppliedPipeline
+    .attachToPipeline(!!ruleResetStage, ruleResetStage)
     .filterByUserRequest(params.filter);
 
   const seekingPipeline: iPipelineBuilder = seekingPipelineBuilder
@@ -107,8 +107,9 @@ export async function findDocuments<T>(
     .skip(params.skip)
     .limit(params.limit);
 
-  let relationPropertyMap = params.relationPaths || [];
-  let relationPathResolvedPipeline = await filtersAppliedPipeline.resolveRelationPath(
+  const relationPropertyMap = params.relationPaths || [];
+
+  const relationPathResolvedPipeline = await filtersAppliedPipeline.resolveRelationPath(
     relationPropertyMap,
     relationStage => {
       seekingPipeline.attachToPipeline(true, ...relationStage);
@@ -120,11 +121,11 @@ export async function findDocuments<T>(
     params.projectMap.length,
     getProjectAggregation(params.projectMap)
   );
+
   const seeking = seekingPipeline.result();
-  const pipeline = (await relationPathResolvedPipeline.paginate(
-    options.paginate,
-    seeking
-  )).result();
+
+  const pipeline = relationPathResolvedPipeline.paginate(options.paginate, seeking).result();
+
   if (options.paginate) {
     const result = await collection.aggregate<CrudPagination<T>>(pipeline).next();
     return result.data.length ? result : {meta: {total: 0}, data: []};

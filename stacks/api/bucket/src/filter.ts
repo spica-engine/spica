@@ -24,3 +24,12 @@ export function isJSONExpression(value: any) {
     return false;
   }
 }
+
+export function extractFilterPropertyMap(filter: object) {
+  const map: string[][] = [];
+  for (const fields of Object.keys(filter)) {
+    const field = fields.split(".");
+    map.push(field);
+  }
+  return map;
+}

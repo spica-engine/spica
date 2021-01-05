@@ -2,7 +2,7 @@ import * as expression from "@spica-server/bucket/expression";
 import {ObjectId} from "@spica-server/database";
 import {Bucket} from "../services/src/bucket";
 import {CrudFactories} from "./crud";
-import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
+import {buildI18nAggregation, findLocale, hasTranslatedProperties, Locale} from "./locale";
 import {deepCopy} from "./patch";
 import {
   compareAndUpdateRelations,
@@ -10,66 +10,53 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
+import {extractFilterPropertyMap} from "./filter";
 
 export interface iPipelineBuilder {
-  locale;
-  attachToPipeline(condition, ...attachedObject: object[]);
+  attachToPipeline(condition: any, ...attachedObject: object[]): this;
   findOneIfRequested(entryId: ObjectId): this;
   filterResources(resourceFilter: object): this;
   filterScheduledData(isScheduled: boolean): this;
-  localize(isLocalizationRequested: boolean, language: string, callback?): Promise<this>;
-  rules(userId: string, callback?: (arg0: string[][], arg1: RelationMap[]) => any): Promise<this>;
+  localize(
+    isLocalizationRequested: boolean,
+    language: string,
+    callback?: (locale: Locale) => void
+  ): Promise<this>;
+  rules(userId: string, callback?: (arg0: string[][], arg1: RelationMap[]) => void): Promise<this>;
   filterByUserRequest(filterByUserRequest: string | object): Promise<this>;
   resolveRelationPath(
     relationPaths: string[][],
-    callback?: (arg0: object[], arg1: RelationMap[]) => any
+    callback?: (relationStage: object[]) => void
   ): Promise<this>;
-  sort(sort: Object);
-  limit(limit: number);
-  skip(skip: number);
-  paginate(paginate: boolean, seekingPipeline: any[]): Promise<this>;
-  result(): any[];
+  sort(sort: Object): this;
+  limit(limit: number): this;
+  skip(skip: number): this;
+  paginate(paginate: boolean, seekingPipeline: object[]): this;
+  result(): object[];
 }
 
 export class PipelineBuilder implements iPipelineBuilder {
-  private pipeline: Object[] = [];
+  private pipeline: object[] = [];
   private schema: Bucket;
   private factories: CrudFactories<any>;
-  private _locale;
   private usedRelationPaths: string[] = [];
-
-  public get locale() {
-    return this._locale;
-  }
-  public set locale(value) {
-    this._locale = value;
-  }
+  private locale: Locale;
 
   constructor(schema: Bucket, factories: CrudFactories<any>) {
     this.schema = schema;
     this.factories = factories;
   }
 
-  private extractFilterPropertyMap(filter: any) {
-    const map: string[][] = [];
-    for (const fields of Object.keys(filter)) {
-      const field = fields.split(".");
-      map.push(field);
-    }
-    return map;
-  }
-
-  private async createRelationMap(propertyMap): Promise<RelationMap[]> {
-    let relationMap = await createRelationMap({
+  private buildRelationMap(propertyMap: string[][]): Promise<RelationMap[]> {
+    return createRelationMap({
       paths: propertyMap,
       properties: this.schema.properties,
       resolve: this.factories.schema
     });
-    return relationMap;
   }
 
-  attachToPipeline(condition, ...attachedObject: object[]) {
-    if (condition) {
+  attachToPipeline(condition: unknown, ...attachedObject: object[]) {
+    if (!!condition) {
       this.pipeline.push(...attachedObject);
     }
     return this;
@@ -86,7 +73,11 @@ export class PipelineBuilder implements iPipelineBuilder {
     this.attachToPipeline(true, {$match: {_schedule: {$exists: isScheduled}}});
     return this;
   }
-  async localize(isLocalizationRequested: boolean, language: string, callBack): Promise<this> {
+  async localize(
+    isLocalizationRequested: boolean,
+    language: string,
+    callBack: (value: Locale) => void
+  ): Promise<this> {
     if (isLocalizationRequested && hasTranslatedProperties(this.schema)) {
       this.locale = findLocale(language, await this.factories.preference());
       this.pipeline.push({
@@ -96,14 +87,17 @@ export class PipelineBuilder implements iPipelineBuilder {
     }
     return this;
   }
-  async rules(userId: string, callback): Promise<this> {
+  async rules(
+    userId: string,
+    callback?: (arg0: string[][], arg1: RelationMap[]) => void
+  ): Promise<this> {
     this.attachToPipeline(true, {$set: {_id: {$toString: "$_id"}}});
 
     const rulePropertyMap = expression
       .extractPropertyMap(this.schema.acl.read)
       .map(path => path.split("."));
 
-    let ruleRelationMap = await this.createRelationMap(rulePropertyMap);
+    const ruleRelationMap = await this.buildRelationMap(rulePropertyMap);
     const ruleRelationStage = getRelationPipeline(ruleRelationMap, this.locale);
     const ruleExpression = expression.aggregate(this.schema.acl.read, {auth: userId});
 
@@ -113,6 +107,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     callback(rulePropertyMap, ruleRelationMap);
     return this;
   }
+
   async filterByUserRequest(filterByUserRequest: string | object): Promise<this> {
     let filterPropertyMap: string[][] = [];
     let filterRelationMap: object[] = [];
@@ -121,7 +116,7 @@ export class PipelineBuilder implements iPipelineBuilder {
       let filterExpression: object;
 
       if (typeof filterByUserRequest == "object" && Object.keys(filterByUserRequest).length) {
-        filterPropertyMap = this.extractFilterPropertyMap(filterByUserRequest);
+        filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
 
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
@@ -131,7 +126,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         filterExpression = expression.aggregate(filterByUserRequest, {});
       }
 
-      filterRelationMap = await this.createRelationMap(filterPropertyMap);
+      filterRelationMap = await this.buildRelationMap(filterPropertyMap);
       const updatedFilterRelationMap = compareAndUpdateRelations(
         deepCopy(filterRelationMap),
         this.usedRelationPaths
@@ -143,11 +138,15 @@ export class PipelineBuilder implements iPipelineBuilder {
     }
     return this;
   }
-  async resolveRelationPath(relationPaths: string[][], callback): Promise<this> {
-    let relationPropertyMap = relationPaths || [];
+
+  async resolveRelationPath(
+    relationPaths: string[][],
+    callback?: (relationStage: object[]) => void
+  ): Promise<this> {
+    const relationPropertyMap = relationPaths || [];
     let relationMap = [];
     if (relationPropertyMap.length) {
-      relationMap = await this.createRelationMap(relationPaths);
+      relationMap = await this.buildRelationMap(relationPaths);
       const updatedRelationMap = compareAndUpdateRelations(
         deepCopy(relationMap),
         this.usedRelationPaths
@@ -158,20 +157,20 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
 
-  sort(sort: Object) {
-    this.attachToPipeline(Object.keys(sort || {}).length, {$sort: sort});
+  sort(sort: object = {}): this {
+    this.attachToPipeline(Object.keys(sort).length, {$sort: sort});
     return this;
   }
-  limit(limit: number) {
+  limit(limit: number): this {
     this.attachToPipeline(limit, {$limit: limit});
     return this;
   }
-  skip(skip: number) {
+  skip(skip: number): this {
     this.attachToPipeline(skip, {$skip: skip});
     return this;
   }
 
-  async paginate(paginate: boolean, seekingPipeline: any[]): Promise<this> {
+  paginate(paginate: boolean, seekingPipeline: object[]): this {
     if (paginate) {
       this.pipeline.push(
         {
@@ -186,7 +185,7 @@ export class PipelineBuilder implements iPipelineBuilder {
     return this;
   }
 
-  result(): any[] {
+  result(): object[] {
     return this.pipeline;
   }
 }
