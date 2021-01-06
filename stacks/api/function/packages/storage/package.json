@@ -1,0 +1,21 @@
+{
+  "name": "@spica-devkit/storage",
+  "license": "AGPLv3",
+  "version": "0.0.0-PLACEHOLDER",
+  "description": "Storage package for Spica.",
+  "author": "spica",
+  "keywords": [
+    "spica",
+    "devkit"
+  ],
+  "main": "dist/index",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "node-fetch": "^2.6.0",
+    "@types/node": "^14.14.20",
+    "node": "^14.14.20"
+  }
+}

@@ -69,7 +69,7 @@ export class StorageService {
     object: StorageObject
   ): Promise<StorageObject> {
     if (object.content.data) {
-      await this.service.write(object._id.toString(), object.content.data);
+      await this.service.write(object._id.toString(), object.content.data, object.content.type);
     }
     delete object.content.data;
     delete object._id;
