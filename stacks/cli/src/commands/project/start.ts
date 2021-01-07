@@ -15,6 +15,13 @@ import {projectName} from "../../validator";
 function streamToBuffer(stream: Stream): Promise<Buffer> {
   return new Promise(resolve => {
     const response = [];
+    if (process.platform.includes("win")) {
+      stream.once("resume", () => {
+        setTimeout(() => {
+          resolve(Buffer.concat(response));
+        }, 2000);
+      });
+    }
     stream.on("data", chunk => response.push(chunk));
     stream.on("end", () => resolve(Buffer.concat(response)));
   });
