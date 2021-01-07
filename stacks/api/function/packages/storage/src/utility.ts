@@ -1,16 +1,15 @@
 import {isValidBase64, INVALIDBASE64, Base64WithMeta, instanceOfBase64WithMeta} from "./interface";
 
-export function toBase64(file: File): Promise<string> {
+export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
       const data = reader.result.toString().split(",")[1];
       if (!isValidBase64(data)) {
-        reject(INVALIDBASE64);
-        return;
+        return reject(INVALIDBASE64);
       }
-      resolve(data);
+      return resolve(data);
     };
     reader.onerror = error => reject(error);
   });
@@ -32,7 +31,7 @@ export async function prepareBody(object: File | Base64WithMeta) {
     size = object.data.length;
     type = object.contentType;
   } else {
-    data = await toBase64(object);
+    data = await fileToBase64(object);
     name = object.name;
     size = object.size;
     type = object.type;

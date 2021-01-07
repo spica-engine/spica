@@ -68,7 +68,7 @@ function logWarning(response: Response) {
   }
 }
 
-enum Parser {
+export enum Parser {
   Json,
   Blob
 }
