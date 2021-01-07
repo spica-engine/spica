@@ -13,7 +13,7 @@ ts_library(
     tsconfig = "//stacks/api/function/packages:tsconfig",
     deps = [
         "//stacks/api/function/packages/internal_common",
-        "@npm//@types/node"
+        "@npm//@types/node",
     ],
 )
 

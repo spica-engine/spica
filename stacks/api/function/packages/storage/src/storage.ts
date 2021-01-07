@@ -1,6 +1,18 @@
-import {initialize as _initialize, http} from "../../internal_common/index";
-import {StorageObject} from "./interface";
-import {toBase64} from "./utility";
+import {
+  initialize as _initialize,
+  http,
+  checkInitialized,
+  buildUrl,
+  Parser
+} from "@spica-devkit/internal_common";
+import {
+  StorageObject,
+  Base64WithMeta,
+  IndexResult,
+  ApikeyInitialization,
+  IdentityInitialization
+} from "./interface";
+import {prepareBody} from "./utility";
 
 let authorization;
 
@@ -10,7 +22,7 @@ let defaultHeaders;
 
 let writeHeaders;
 
-export function initialize(options: any) {
+export function initialize(options: ApikeyInitialization | IdentityInitialization) {
   const {authorization: _authorization, publicUrl} = _initialize(options);
 
   authorization = _authorization;
@@ -22,36 +34,69 @@ export function initialize(options: any) {
   writeHeaders = {...defaultHeaders, "Content-Type": "application/json"};
 }
 
-export async function insert(file: File | string, metaInfo?: {name: string; mimeType: string}) {
-  let data;
-  let name;
-  let size;
-  let type;
+// we may decide to remove it.
+export async function insert(object: File | Base64WithMeta) {
+  checkInitialized(authorization);
 
-  if (typeof file == "string") {
-    data = file;
-    name = metaInfo.name;
-    size = file.length;
-    type = metaInfo.mimeType;
-  } else {
-    data = await toBase64(file);
-    name = file.name;
-    size = file.size;
-    type = file.type;
-  }
+  const body = await prepareBody(object);
 
-  const body: StorageObject[] = [
-    {
-      name: name,
-      content: {
-        type: type,
-        data: data,
-        size: size
-      }
-    }
-  ];
-  return http.post<StorageObject>(url, {body: JSON.stringify(body), headers: writeHeaders});
+  return http.post<StorageObject>(url, {body: JSON.stringify([body]), headers: writeHeaders});
 }
 
-// /Users/tuna/Desktop/Teknodev/parvin
-// /Users/tuna/Desktop/functions
+export async function insertMany(
+  objects: File[] | FileList | Base64WithMeta[]
+): Promise<StorageObject[]> {
+  checkInitialized(authorization);
+
+  // FileList to File array
+  if (!Array.isArray(objects)) {
+    objects = Array.from(objects);
+  }
+
+  const promises = [];
+
+  for (const object of objects) {
+    promises.push(prepareBody(object));
+  }
+
+  const body = await Promise.all(promises);
+
+  return http.post<StorageObject[]>(url, {body: JSON.stringify(body), headers: writeHeaders});
+}
+
+export function get(id: string) {
+  checkInitialized(authorization);
+
+  return http.get<StorageObject>(`${url}/${id}`, {headers: defaultHeaders});
+}
+
+export function download(id: string) {
+  checkInitialized(authorization);
+
+  return http.get<Blob>(`${url}/${id}/view`, {headers: defaultHeaders}, Parser.Blob);
+}
+
+export function getAll(queryParams: {limit?: number; skip?: number; sort?: object} = {}) {
+  checkInitialized(authorization);
+
+  const fullUrl = buildUrl(url, queryParams);
+
+  return http.get<IndexResult<StorageObject>>(fullUrl, {headers: defaultHeaders});
+}
+
+export async function update(id: string, object: File | Base64WithMeta) {
+  checkInitialized(authorization);
+
+  const body = await prepareBody(object);
+
+  return http.put<StorageObject>(`${url}/${id}`, {
+    body: JSON.stringify(body),
+    headers: writeHeaders
+  });
+}
+
+export function remove(id: string) {
+  checkInitialized(authorization);
+
+  return http.del(`${url}/${id}`, {headers: defaultHeaders});
+}

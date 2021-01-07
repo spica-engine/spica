@@ -17,13 +17,19 @@ export class StorageService {
     skip: number = 0,
     sort?: any
   ): Promise<StorageResponse> {
-    let dataPipeline: object[] = [];
+    const dataPipeline: object[] = [];
 
-    dataPipeline.push({$skip: skip});
+    if (sort) {
+      dataPipeline.push({$sort: sort});
+    }
 
-    if (limit) dataPipeline.push({$limit: limit});
+    if (skip) {
+      dataPipeline.push({$skip: skip});
+    }
 
-    if (sort) dataPipeline.push({$sort: sort});
+    if (limit) {
+      dataPipeline.push({$limit: limit});
+    }
 
     const aggregation = [
       ...policyAgg,
@@ -42,11 +48,11 @@ export class StorageService {
     ];
 
     return this._collection
-      .aggregate(aggregation)
+      .aggregate<StorageResponse>(aggregation)
       .next()
-      .then(async (result: any) => {
+      .then(async result => {
         for (const object of result.data) {
-          object.url = await this.service.url(object._id);
+          object.url = await this.service.url(object._id.toString());
         }
         return result;
       });

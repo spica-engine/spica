@@ -13,7 +13,8 @@ import {
   Query,
   Res,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  HttpCode
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
@@ -92,8 +93,8 @@ export class StorageController {
   @Get(":id")
   async findOne(
     @Res() res,
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Query("metadata", BOOLEAN) metadata?: boolean
+    @Param("id", OBJECT_ID) id: ObjectId
+    //@Query("metadata", BOOLEAN) metadata?: boolean
   ) {
     const object = await this.storage.get(id);
 
@@ -103,18 +104,18 @@ export class StorageController {
 
     object.url = await this.storage.getUrl(id.toHexString());
 
-    if (!metadata) {
-      res.statusCode = 301;
-      res.set({
-        Location: object.url
-      });
+    // if (!metadata) {
+    //   res.statusCode = 301;
+    //   res.set({
+    //     Location: object.url
+    //   });
 
-      return res.send({
-        error: "Deprecated",
-        message: "Fetching objects via this is deprecated.",
-        url: object.url
-      });
-    }
+    //   return res.send({
+    //     error: "Deprecated",
+    //     message: "Fetching objects via this is deprecated.",
+    //     url: object.url
+    //   });
+    // }
 
     delete object.content.data;
     res.send(object);
@@ -211,6 +212,7 @@ export class StorageController {
    */
   @UseInterceptors(activity(createStorageActivity))
   @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.storage.deleteOne(id);

@@ -15,7 +15,6 @@
   "sideEffects": false,
   "dependencies": {
     "node-fetch": "^2.6.0",
-    "@types/node": "^14.14.20",
-    "node": "^14.14.20"
+    "@types/node": "^14.14.20"
   }
 }

@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch, {Response} from "node-fetch";
 
 interface RequestInit {
   body?: BodyInit;
@@ -6,9 +6,9 @@ interface RequestInit {
 }
 
 export namespace http {
-  export function get<T>(url: string | URL, requestInfo: RequestInit = {}) {
+  export function get<T>(url: string | URL, requestInfo: RequestInit = {}, parser?: Parser) {
     const method = "get";
-    return send(url, method, requestInfo).then(response => finalizeResponse<T>(response));
+    return send(url, method, requestInfo).then(response => finalizeResponse<T>(response, parser));
   }
 
   export function put<T>(url: string | URL, requestInfo: RequestInit = {}) {
@@ -41,7 +41,7 @@ function send(url: string | URL, method: string, requestInfo: RequestInit) {
   return fetch(url, request);
 }
 
-function finalizeResponse<T>(response: any) {
+function finalizeResponse<T>(response: Response, parser: Parser = Parser.Json): Promise<T> {
   logWarning(response);
 
   // parsing response that has 204 status is not possible
@@ -49,17 +49,26 @@ function finalizeResponse<T>(response: any) {
     return Promise.resolve(undefined);
   }
 
-  return response.json().then(body => {
-    if (!response.ok) {
-      throw new Error(JSON.stringify(body));
-    }
-    return body as T;
-  });
+  if (parser == Parser.Json) {
+    return response.json().then(body => {
+      if (!response.ok) {
+        throw new Error(JSON.stringify(body));
+      }
+      return body as T;
+    });
+  } else if (parser == Parser.Blob) {
+    return response.blob() as Promise<any>;
+  }
 }
 
-function logWarning(response: any) {
+function logWarning(response: Response) {
   const warning = response.headers.get("warning");
   if (warning) {
     console.warn(warning);
   }
+}
+
+enum Parser {
+  Json,
+  Blob
 }
