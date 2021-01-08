@@ -23,7 +23,7 @@ export async function prepareBody(object: File | Base64WithMeta) {
 
   if (instanceOfBase64WithMeta(object)) {
     if (!isValidBase64(object.data)) {
-      throw new Error(INVALIDBASE64);
+      return Promise.reject(INVALIDBASE64);
     }
 
     data = object.data;

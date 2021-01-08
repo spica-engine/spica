@@ -50,14 +50,17 @@ describe("Utilities", () => {
         }
       });
     });
-    // complete after decide bson or json
-    xit("should throw error if data has invalid base64 format", async () => {
+    
+    it("should throw error if data has invalid base64 format", async () => {
       const object = {
         data: "spica",
         name: "my_file.txt",
         contentType: "text/plain"
       };
-      expect(()=>{prepareBody(object)}).toThrow(
+
+      const error = await prepareBody(object).catch(e => e);
+
+      expect(error).toEqual(
         "Invalid encoded content. Please ensure that content encoded with base64"
       );
     });
