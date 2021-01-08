@@ -1,5 +1,7 @@
 import * as Storage from "@spica-devkit/storage";
 import {http, Parser} from "@spica-devkit/internal_common";
+import * as BSON from "bson";
+import {jsonToArrayBuffer} from "../src/utility";
 
 jasmine.getEnv().allowRespy(true);
 
@@ -20,28 +22,31 @@ describe("@spica-devkit/Storage", () => {
   });
 
   describe("Storage", () => {
-    const storageObject: Storage.Base64WithMeta = {
+    const storageObject: Storage.BufferWithMeta = {
       contentType: "text/plain",
       name: "my_text.txt",
-      data: "c3BpY2E=" // spica
+      data: "spica"
     };
 
     it("should insert storage object", async () => {
       await Storage.insert(storageObject);
 
       const body = {
-        name: "my_text.txt",
-        content: {
-          type: "text/plain",
-          data: "c3BpY2E=",
-          size: 8
-        }
+        content: [
+          {
+            name: "my_text.txt",
+            content: {
+              type: "text/plain",
+              data: new BSON.Binary("spica")
+            }
+          }
+        ]
       };
 
       expect(postSpy).toHaveBeenCalledTimes(1);
       expect(postSpy).toHaveBeenCalledWith("http://test/storage", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/json"},
-        body: JSON.stringify([body])
+        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/bson"},
+        body: jsonToArrayBuffer(body)
       });
     });
 
@@ -49,18 +54,21 @@ describe("@spica-devkit/Storage", () => {
       await Storage.insertMany([storageObject]);
 
       const body = {
-        name: "my_text.txt",
-        content: {
-          type: "text/plain",
-          data: "c3BpY2E=",
-          size: 8
-        }
+        content: [
+          {
+            name: "my_text.txt",
+            content: {
+              type: "text/plain",
+              data: new BSON.Binary("spica")
+            }
+          }
+        ]
       };
 
       expect(postSpy).toHaveBeenCalledTimes(1);
       expect(postSpy).toHaveBeenCalledWith("http://test/storage", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/json"},
-        body: JSON.stringify([body])
+        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/bson"},
+        body: jsonToArrayBuffer(body)
       });
     });
 
@@ -71,15 +79,14 @@ describe("@spica-devkit/Storage", () => {
         name: "my_text.txt",
         content: {
           type: "text/plain",
-          data: "c3BpY2E=",
-          size: 8
+          data: new BSON.Binary("spica")
         }
       };
 
       expect(putSpy).toHaveBeenCalledTimes(1);
       expect(putSpy).toHaveBeenCalledWith("http://test/storage/storage_object_id", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/json"},
-        body: JSON.stringify(body)
+        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/bson"},
+        body: jsonToArrayBuffer(body)
       });
     });
 

@@ -32,10 +32,8 @@ export interface StorageObject {
   };
 }
 
-type Base64 = string;
-
-export interface Base64WithMeta {
-  data: Base64;
+export interface BufferWithMeta {
+  data: string | Buffer | Uint8Array | number[];
   name: string;
   contentType: string;
 }

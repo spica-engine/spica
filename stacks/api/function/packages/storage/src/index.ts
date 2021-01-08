@@ -1,2 +1,2 @@
 export * from "./storage";
-export * from "./interface"
+export * from "./interface";

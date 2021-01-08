@@ -1,61 +1,74 @@
-import {Base64WithMeta} from "./interface";
+import {BufferWithMeta} from "./interface";
+import * as BSON from "bson";
 
-export function fileToBase64(file: File): Promise<string> {
+export function fileToBuffer(file: File): Promise<any> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const data = reader.result.toString().split(",")[1];
-      if (!isValidBase64(data)) {
-        return reject(INVALIDBASE64);
-      }
-      return resolve(data);
-    };
+    reader.readAsArrayBuffer(file);
+    reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
   });
 }
 
-export async function prepareBody(object: File | Base64WithMeta) {
-  let data: string;
-  let name: string;
-  let size: number;
-  let type: string;
+export async function preparePostBody(objects: FileList | (BufferWithMeta | File)[]) {
+  let files: (File | BufferWithMeta)[];
+  const contents = [];
 
-  if (instanceOfBase64WithMeta(object)) {
-    if (!isValidBase64(object.data)) {
-      return Promise.reject(INVALIDBASE64);
-    }
-
-    data = object.data;
-    name = object.name;
-    size = object.data.length;
-    type = object.contentType;
+  // FileList to File array
+  if (!Array.isArray(objects)) {
+    files = Array.from(objects);
   } else {
-    data = await fileToBase64(object);
-    name = object.name;
-    size = object.size;
-    type = object.type;
+    files = objects;
+  }
+
+  for (const file of files) {
+    const content = await getContent(file);
+    contents.push(content);
   }
 
   const body = {
-    name,
-    content: {
-      type,
-      data,
-      size
-    }
+    content: contents
   };
 
-  return body;
+  return jsonToArrayBuffer(body);
 }
 
-export function instanceOfBase64WithMeta(value: any): value is Base64WithMeta {
+export async function preparePutBody(object: File | BufferWithMeta) {
+  const body = await getContent(object);
+
+  return jsonToArrayBuffer(body);
+}
+
+async function getContent(file: File | BufferWithMeta) {
+  let data: string | Buffer | Uint8Array | number[];
+  let name: string;
+  let type: string;
+
+  if (instanceOfBufferWithMeta(file)) {
+    data = file.data;
+    name = file.name;
+    type = file.contentType;
+  } else {
+    data = await fileToBuffer(file);
+    name = file.name;
+    type = file.type;
+  }
+
+  return {
+    name,
+    content: {
+      data: new BSON.Binary(data),
+      type
+    }
+  };
+}
+
+export function jsonToArrayBuffer(body: object) {
+  const size = BSON.calculateObjectSize(body);
+  const buffer = BSON.serialize(body, {minInternalBufferSize: size} as any);
+  return buffer.buffer;
+}
+
+function instanceOfBufferWithMeta(value: any): value is BufferWithMeta {
   return "data" in value && "name" in value && "contentType" in value;
 }
-
-export function isValidBase64(value: string) {
-  return /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$/.test(value);
-}
-
-export const INVALIDBASE64 =
-  "Invalid encoded content. Please ensure that content encoded with base64";

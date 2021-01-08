@@ -7,12 +7,12 @@ import {
 } from "@spica-devkit/internal_common";
 import {
   StorageObject,
-  Base64WithMeta,
+  BufferWithMeta,
   IndexResult,
   ApikeyInitialization,
   IdentityInitialization
 } from "./interface";
-import {prepareBody} from "./utility";
+import {preparePostBody, preparePutBody} from "./utility";
 
 let authorization;
 
@@ -31,37 +31,25 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   defaultHeaders = {
     Authorization: authorization
   };
-  writeHeaders = {...defaultHeaders, "Content-Type": "application/json"};
+  writeHeaders = {...defaultHeaders, "Content-Type": "application/bson"};
 }
 
 // we may decide to remove it.
-export async function insert(object: File | Base64WithMeta) {
+export async function insert(object: File | BufferWithMeta) {
   checkInitialized(authorization);
+  const body = await preparePostBody([object]);
 
-  const body = await prepareBody(object);
-
-  return http.post<StorageObject>(url, {body: JSON.stringify([body]), headers: writeHeaders});
+  return http.post<StorageObject>(url, {body, headers: writeHeaders});
 }
 
 export async function insertMany(
-  objects: File[] | FileList | Base64WithMeta[]
+  objects: FileList | (File | BufferWithMeta)[]
 ): Promise<StorageObject[]> {
   checkInitialized(authorization);
 
-  // FileList to File array
-  if (!Array.isArray(objects)) {
-    objects = Array.from(objects);
-  }
+  const body = await preparePostBody(objects);
 
-  const promises = [];
-
-  for (const object of objects) {
-    promises.push(prepareBody(object));
-  }
-
-  const body = await Promise.all(promises);
-
-  return http.post<StorageObject[]>(url, {body: JSON.stringify(body), headers: writeHeaders});
+  return http.post<StorageObject[]>(url, {body, headers: writeHeaders});
 }
 
 export function get(id: string) {
@@ -84,13 +72,13 @@ export function getAll(queryParams: {limit?: number; skip?: number; sort?: objec
   return http.get<IndexResult<StorageObject>>(fullUrl, {headers: defaultHeaders});
 }
 
-export async function update(id: string, object: File | Base64WithMeta) {
+export async function update(id: string, object: File | BufferWithMeta) {
   checkInitialized(authorization);
 
-  const body = await prepareBody(object);
+  const body = await preparePutBody(object);
 
   return http.put<StorageObject>(`${url}/${id}`, {
-    body: JSON.stringify(body),
+    body,
     headers: writeHeaders
   });
 }
