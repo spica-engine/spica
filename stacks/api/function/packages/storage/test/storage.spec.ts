@@ -20,9 +20,9 @@ describe("@spica-devkit/Storage", () => {
   });
 
   describe("Storage", () => {
-    const storageObject = {
-      contentType: "image/jpeg",
-      name: "my_image.jpeg",
+    const storageObject: Storage.Base64WithMeta = {
+      contentType: "text/plain",
+      name: "my_text.txt",
       data: "c3BpY2E=" // spica
     };
 
@@ -30,11 +30,11 @@ describe("@spica-devkit/Storage", () => {
       await Storage.insert(storageObject);
 
       const body = {
-        name: "my_image.jpeg",
+        name: "my_text.txt",
         content: {
-          type: "image/jpeg",
+          type: "text/plain",
           data: "c3BpY2E=",
-          size: "c3BpY2E=".length
+          size: 8
         }
       };
 
@@ -49,11 +49,11 @@ describe("@spica-devkit/Storage", () => {
       await Storage.insertMany([storageObject]);
 
       const body = {
-        name: "my_image.jpeg",
+        name: "my_text.txt",
         content: {
-          type: "image/jpeg",
+          type: "text/plain",
           data: "c3BpY2E=",
-          size: "c3BpY2E=".length
+          size: 8
         }
       };
 
@@ -68,11 +68,11 @@ describe("@spica-devkit/Storage", () => {
       await Storage.update("storage_object_id", storageObject);
 
       const body = {
-        name: "my_image.jpeg",
+        name: "my_text.txt",
         content: {
-          type: "image/jpeg",
+          type: "text/plain",
           data: "c3BpY2E=",
-          size: "c3BpY2E=".length
+          size: 8
         }
       };
 

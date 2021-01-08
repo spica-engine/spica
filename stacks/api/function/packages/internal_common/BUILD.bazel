@@ -14,5 +14,6 @@ ts_library(
     deps = [
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
-    ],
+        "@npm//@types/node",
+    ]
 )

@@ -39,14 +39,3 @@ export interface Base64WithMeta {
   name: string;
   contentType: string;
 }
-
-export function instanceOfBase64WithMeta(value: any): value is Base64WithMeta {
-  return "data" in value && "name" in value && "contentType" in value;
-}
-
-export function isValidBase64(value: string) {
-  return /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$/.test(value);
-}
-
-export const INVALIDBASE64 =
-  "Invalid encoded content. Please ensure that content encoded with base64";

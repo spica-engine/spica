@@ -12,8 +12,6 @@ ts_library(
         "//stacks/api/function/packages/storage",
         "//stacks/api/function/packages/internal_common",
         "@npm//@types/jasmine",
-        "@npm//@types/node-fetch",
-        "@npm//node-fetch",
     ],
 )
 
