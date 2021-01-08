@@ -86,9 +86,7 @@ export class StorageController {
 
   /**
    * Returns metadata of the object size, content-type and url.
-   * > Deprecated: `metadata` query parameter is deprecated and will be removed soon. this endpoint used to return both objects content and its metadata controlled by the `metadata` query parameter.
    * @param id Identifier of the object
-   * @param metadata When true, it will respond with the metadata instead of object itself.
    */
   @Get(":id")
   async findOne(
@@ -103,19 +101,6 @@ export class StorageController {
     }
 
     object.url = await this.storage.getUrl(id.toHexString());
-
-    // if (!metadata) {
-    //   res.statusCode = 301;
-    //   res.set({
-    //     Location: object.url
-    //   });
-
-    //   return res.send({
-    //     error: "Deprecated",
-    //     message: "Fetching objects via this is deprecated.",
-    //     url: object.url
-    //   });
-    // }
 
     delete object.content.data;
     res.send(object);
