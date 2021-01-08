@@ -23,9 +23,7 @@ export class StorageService {
       dataPipeline.push({$sort: sort});
     }
 
-    if (skip) {
-      dataPipeline.push({$skip: skip});
-    }
+    dataPipeline.push({$skip: skip});
 
     if (limit) {
       dataPipeline.push({$limit: limit});
