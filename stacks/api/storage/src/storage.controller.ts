@@ -92,7 +92,6 @@ export class StorageController {
   async findOne(
     @Res() res,
     @Param("id", OBJECT_ID) id: ObjectId
-    //@Query("metadata", BOOLEAN) metadata?: boolean
   ) {
     const object = await this.storage.get(id);
 
