@@ -89,10 +89,7 @@ export class StorageController {
    * @param id Identifier of the object
    */
   @Get(":id")
-  async findOne(
-    @Res() res,
-    @Param("id", OBJECT_ID) id: ObjectId
-  ) {
+  async findOne(@Res() res, @Param("id", OBJECT_ID) id: ObjectId) {
     const object = await this.storage.get(id);
 
     if (!object) {
