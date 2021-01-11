@@ -64,7 +64,7 @@ export const enum RelationType {
   Many = "onetomany"
 }
 
-interface RelationMap {
+export interface RelationMap {
   type: RelationType;
   target: string;
   path: string;
