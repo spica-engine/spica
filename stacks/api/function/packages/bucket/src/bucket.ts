@@ -15,8 +15,6 @@ import {getWsObs} from "./operators";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 
-// /Users/Tuna/Desktop/functions
-
 let authorization;
 
 let url;
