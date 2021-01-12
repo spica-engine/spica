@@ -28,8 +28,8 @@ export class StorageService {
     return this.http.get<IndexResult<Storage>>("api:/storage", {params});
   }
 
-  getOne(id, metadata = "true"): Observable<Storage> {
-    return this.http.get<Storage>(`api:/storage/${id}`, {params: {metadata}});
+  getOne(id: string): Observable<Storage> {
+    return this.http.get<Storage>(`api:/storage/${id}`);
   }
 
   delete(id: string): Observable<void> {

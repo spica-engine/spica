@@ -12,6 +12,7 @@ ts_library(
     ),
     module_name = "@spica-devkit/internal_common",
     deps = [
+        "@npm//@types/node",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
     ],

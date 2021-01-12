@@ -27,7 +27,6 @@ export function checkInitialized(authorization: string) {
 }
 
 function getPublicUrl() {
-  //@ts-ignore
   return isPlatformBrowser() ? undefined : process.env.__INTERNAL__SPICA__PUBLIC_URL__;
 }
 

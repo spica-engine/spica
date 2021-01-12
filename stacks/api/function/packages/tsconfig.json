@@ -7,6 +7,12 @@
       "ES2018",
       "dom"
     ],
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "@spica-devkit/*": [
+        "*"
+      ]
+    }
   }
 }
