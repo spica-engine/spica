@@ -1,2 +1,2 @@
-export * from "./bucket";
+export * from "./storage";
 export * from "./interface";

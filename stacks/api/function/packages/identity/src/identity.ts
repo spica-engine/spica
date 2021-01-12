@@ -35,7 +35,7 @@ export function login(identifier: string, password: string): Promise<string> {
   checkInitialized(authorization);
 
   return http
-    .post(loginUrl, {
+    .post<{token: string}>(loginUrl, {
       body: JSON.stringify({identifier, password}),
       headers: {
         "Content-Type": "application/json"
