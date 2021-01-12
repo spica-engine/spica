@@ -4,14 +4,14 @@ import {
   ApikeyInitialization,
   IdentityInitialization,
   IndexResult
-} from "./interface";
+} from "@spica-devkit/bucket";
 import {
   initialize as _initialize,
   checkInitialized,
   http,
   buildUrl
 } from "@spica-devkit/internal_common";
-import {getWsObs} from "./index";
+import {getWsObs} from "./operators";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 

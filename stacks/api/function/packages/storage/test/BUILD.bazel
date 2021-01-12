@@ -9,9 +9,10 @@ ts_library(
         include = ["*.spec.ts"],
     ),
     deps = [
-        "//stacks/api/function/packages/identity",
         "//stacks/api/function/packages/internal_common",
+        "//stacks/api/function/packages/storage",
         "@npm//@types/jasmine",
+        "@npm//bson",
     ],
 )
 

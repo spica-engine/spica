@@ -1,8 +1,8 @@
 {
-  "name": "@spica-devkit/bucket",
+  "name": "@spica-devkit/storage",
   "license": "AGPLv3",
   "version": "0.0.0-PLACEHOLDER",
-  "description": "Bucket package for Spica.",
+  "description": "Storage package for Spica.",
   "author": "spica",
   "keywords": [
     "spica",
@@ -14,9 +14,7 @@
   "typings": "dist/index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "node-fetch": "^2.6.1",
-    "@types/json-schema": "^7.0.3",
-    "rxjs": "^6.6.3",
-    "ws": "^7.4.0"
+    "node-fetch": "^2.6.0",
+    "bson": "^4.2.2"
   }
 }
