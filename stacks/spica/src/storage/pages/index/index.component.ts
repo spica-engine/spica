@@ -74,7 +74,10 @@ export class IndexComponent implements OnInit {
                   this.lastUpdates.set(storage._id, lastUpdate);
                 }
 
-                storage.url += "?timestamp=" + lastUpdate;
+                const updatedUrl = new URL(storage.url);
+                updatedUrl.searchParams.append("timestamp", lastUpdate.toString());
+
+                storage.url = updatedUrl.toString();
               }
               return storages;
             })
