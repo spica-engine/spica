@@ -25,11 +25,6 @@ function v1_dashboard_to_internal(object: DashboardObject) {
 }
 
 export function registerInformers(dashboardService: DashboardService) {
-  const dashboardStore = store<DashboardObject>({
-    group: "dashboard",
-    resource: "dashboards"
-  });
-
   register(
     {
       group: "dashboard",
@@ -40,6 +35,11 @@ export function registerInformers(dashboardService: DashboardService) {
       add: async (object: DashboardObject) => {
         const document = v1_dashboard_to_internal(object);
         const dashboard = await dashboardService.insertOne(document);
+
+        const dashboardStore = store<DashboardObject>({
+          group: "dashboard",
+          resource: "dashboards"
+        });
 
         await dashboardStore.patch(object.metadata.name, {
           metadata: {uid: String(dashboard._id)},
