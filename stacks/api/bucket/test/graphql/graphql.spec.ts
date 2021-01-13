@@ -1760,7 +1760,7 @@ describe("GraphQLController", () => {
               bucketId: "000000000000000000000000",
               relationType: "onetomany"
             },
-            "123asd?qwe*": {
+            "3dmodels": {
               type: "color"
             },
             invalid_enums: {
@@ -1768,7 +1768,7 @@ describe("GraphQLController", () => {
               enum: ["?invalid*", "valid"]
             }
           },
-          required: ["relation_field", "123asd?qwe*", "invalid_enums"]
+          required: ["relation_field", "3dmodels", "invalid_enums"]
         })
         .then(r => r.body);
       bucketName = getBucketName(bucket._id);
@@ -1796,14 +1796,14 @@ describe("GraphQLController", () => {
           reason: "Related bucket '000000000000000000000000' does not exist."
         },
         {
-          target: `${bucketName}.123asd?qwe*`,
+          target: `${bucketName}.3dmodels`,
           reason:
-            "Name specification must start with an alphabetic character and can not include any non-letter character."
+            "Name specification must start with an alphabetic character and can not include any non-word character."
         },
         {
           target: `${bucketName}.invalid_enums`,
           reason:
-            "Enum values must start with an alphabetic character and can not include any non-letter character."
+            "Enum values must start with an alphabetic character and can not include any non-word character."
         }
       ]);
 
