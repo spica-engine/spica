@@ -132,7 +132,8 @@ function createActionGuard(
 
       if (options) {
         hasResourceFilter = options.resourceFilter;
-      } else { // hasResourceFilter is true for just index endpoints
+      } else {
+        // hasResourceFilter is true for just index endpoints
         const resourceFilterMetadata =
           Reflect.getMetadata("resourceFilter", context.getClass()) || {};
         hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
@@ -247,7 +248,8 @@ function createActionGuard(
                   // Since the exclude is optional we have check if it is present
                   if (hasExcludedResources) {
                     for (const resource of excluded) {
-                      if (hasResourceFilter && getLastSegment(resource) == "*") { // If all subresources excluded in index endpoint
+                      if (hasResourceFilter && getLastSegment(resource) == "*") {
+                        // If all subresources excluded in index endpoint
                         pattern.push(`!${resource[index]}`);
                       } else if (
                         !hasResourceFilter &&
@@ -255,7 +257,8 @@ function createActionGuard(
                         getLastSegment(resource) != "*" // If one subresource excluded in non-index endpoint
                       ) {
                         pattern.push(`!${resource[index]}`);
-                      } else if (!hasResourceFilter && getLastSegment(resource) == "*") { // If all subresources excluded in non-index endpoint
+                      } else if (!hasResourceFilter && getLastSegment(resource) == "*") {
+                        // If all subresources excluded in non-index endpoint
                         pattern.push(`!${resource[0]}`);
                       }
                     }
