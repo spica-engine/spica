@@ -4,15 +4,14 @@ load("@npm//@bazel/typescript:index.bzl", "ts_library")
 load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
-    name = "apikey_test_lib",
+    name = "controller_test_lib",
     testonly = True,
-    srcs = glob([
-        "*.spec.ts",
-    ]),
+    srcs = [
+        "apikey.controller.spec.ts",
+    ],
     deps = [
         "//packages/core/testing",
         "//packages/database/testing",
-        "//stacks/api/activity/services",
         "//stacks/api/passport/apikey",
         "//stacks/api/passport/testing",
         "//stacks/api/preference/testing",
@@ -23,8 +22,29 @@ ts_library(
 )
 
 jasmine_node_test(
-    name = "apikey_test",
+    name = "controller_test",
     deps = [
-        ":apikey_test_lib",
+        ":controller_test_lib",
+    ],
+)
+
+ts_library(
+    name = "unit_test_lib",
+    testonly = True,
+    srcs = [
+        "activity.resource.spec.ts",
+        "utility.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/activity/services",
+        "//stacks/api/passport/apikey",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "unit_test",
+    deps = [
+        ":unit_test_lib",
     ],
 )
