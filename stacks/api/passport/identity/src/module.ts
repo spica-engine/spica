@@ -7,7 +7,8 @@ import {IdentityOptions, IDENTITY_OPTIONS} from "./options";
 import {IdentityController} from "./identity.controller";
 import {IdentityService} from "./identity.service";
 import {IdentityStrategy} from "./identity.strategy";
-import {provideSettingsFinalizer} from "./utility";
+import {provideSettingsFinalizer, providePolicyFinalizer} from "./utility";
+import {IDENTITY_POLICY_FINALIZER} from "@spica-server/passport/policy";
 
 @Global()
 @Module({})
@@ -29,7 +30,12 @@ export class IdentityModule {
     return {
       module: IdentityModule,
       controllers: [IdentityController],
-      exports: [IdentityService, IdentityStrategy, IDENTITY_SETTINGS_FINALIZER],
+      exports: [
+        IdentityService,
+        IdentityStrategy,
+        IDENTITY_SETTINGS_FINALIZER,
+        IDENTITY_POLICY_FINALIZER
+      ],
       imports: [
         JwtModule.register({
           secret: options.secretOrKey,
@@ -58,6 +64,11 @@ export class IdentityModule {
         {
           provide: IDENTITY_SETTINGS_FINALIZER,
           useFactory: provideSettingsFinalizer,
+          inject: [IdentityService]
+        },
+        {
+          provide: IDENTITY_POLICY_FINALIZER,
+          useFactory: providePolicyFinalizer,
           inject: [IdentityService]
         }
       ]

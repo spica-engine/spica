@@ -8,7 +8,9 @@ import {
   Put,
   Query,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Optional,
+  Inject
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
@@ -16,12 +18,21 @@ import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {createPolicyActivity} from "./activity.resource";
-import {Policy} from "./interface";
+import {
+  Policy,
+  APIKEY_POLICY_FINALIZER,
+  changeFactory,
+  IDENTITY_POLICY_FINALIZER
+} from "./interface";
 import {PolicyService} from "./policy.service";
 
 @Controller("passport/policy")
 export class PolicyController {
-  constructor(private policy: PolicyService) {}
+  constructor(
+    private policy: PolicyService,
+    @Optional() @Inject(APIKEY_POLICY_FINALIZER) private apikeyFinalizer: changeFactory,
+    @Optional() @Inject(IDENTITY_POLICY_FINALIZER) private identityFinalizer: changeFactory
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:index"))
@@ -60,7 +71,15 @@ export class PolicyController {
   @UseInterceptors(activity(createPolicyActivity))
   @Delete(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:delete"))
-  deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+  async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
+    if (this.apikeyFinalizer) {
+      await this.apikeyFinalizer(id.toHexString());
+    }
+
+    if (this.identityFinalizer) {
+      await this.identityFinalizer(id.toHexString());
+    }
+
     return this.policy.deleteOne(id);
   }
 }
