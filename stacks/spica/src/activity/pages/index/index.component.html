@@ -38,7 +38,7 @@
     <mat-label>Select module</mat-label>
     <mat-select
       [ngModel]="filters.resource.$all[filters.resource.$all.length - 1]"
-      (selectionChange)="selectionChange($event)"
+      (selectionChange)="onModuleSelectionChange($event)"
     >
       <mat-optgroup label="Bucket">
         <mat-option
