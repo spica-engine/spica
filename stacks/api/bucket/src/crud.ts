@@ -235,6 +235,8 @@ export async function patchDocument(
     throw new ForbiddenException("ACL rules has rejected this operation.");
   }
 
+  delete patch._id;
+
   const updateQuery = getUpdateQueryForPatch(patch);
 
   return collection
