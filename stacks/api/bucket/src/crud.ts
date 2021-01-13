@@ -253,13 +253,13 @@ export async function deleteDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<BucketDocument>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   }
 ) {
   const collection = factories.collection(schema._id);
 
-  const document = collection.findOne({_id: new ObjectId(documentId)});
+  const document = await collection.findOne({_id: new ObjectId(documentId)});
 
   const ruleAggregation = await getWriteRuleAggregation(schema, factories.schema, document);
 
