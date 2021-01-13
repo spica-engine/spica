@@ -49,3 +49,9 @@ export function provideSettingsFinalizer(identityService: IdentityService) {
     return identityService.updateMany({}, {$unset: unsetFields});
   };
 }
+
+export function providePolicyFinalizer(identityService: IdentityService) {
+  return (policyId: string) => {
+    return identityService.updateMany({policies: {$in: [policyId]}}, {$pull: {policies: policyId}});
+  };
+}
