@@ -31,7 +31,7 @@ describe("DashboardController", () => {
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DashboardModule,
+        DashboardModule.forRoot(),
         DatabaseTestingModule.standalone()
       ]
     }).compile();
