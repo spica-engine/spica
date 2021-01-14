@@ -24,5 +24,7 @@ export function extractPropertyMap(expression: string) {
 
 func.register("has", builtin.has);
 
+// array comparision
 func.register("some", builtin.some);
 func.register("every", builtin.every);
+func.register("equal", builtin.equal);

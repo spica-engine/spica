@@ -39,46 +39,17 @@ export const some: func.Func = context => {
 
   return ctx => {
     if (context.target == "aggregation") {
-      let propertyName: string;
-      const includedItems: unknown[] = [];
-
-      for (const [index, argument] of context.arguments.entries()) {
-        const item = convert(argument)(ctx);
-
-        if (index == 0) {
-          // @TODO: remove this replace part when find a way to send '$in' operator inside of "$expr"
-          // it will cause an error if field does not exist on document
-          propertyName = item.replace("$", "");
-        } else {
-          includedItems.push(item);
-        }
-      }
+      // @TODO: remove this replace("$","") when find a way to send '$in' operator inside of "$expr"
+      // we know first item is property name
+      const propertyName: string = convert(context.arguments[0])(ctx).replace("$", "");
+      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, convert);
 
       return {[propertyName]: {$in: includedItems}};
     } else {
-      let documentValue: unknown[];
-      const includedItems: unknown[] = [];
+      const documentValue: unknown[] = compile(context.arguments[0])(ctx);
+      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, compile);
 
-      for (const [index, argument] of context.arguments.entries()) {
-        const item = compile(argument)(ctx);
-
-        if (index == 0) {
-          documentValue = item;
-        } else {
-          includedItems.push(item);
-        }
-      }
-
-      let isContain = false;
-
-      for (const value of documentValue) {
-        if (includedItems.includes(value)) {
-          isContain = true;
-          break;
-        }
-      }
-
-      return isContain;
+      return includedItems.some(included => documentValue.includes(included));
     }
   };
 };
@@ -96,46 +67,55 @@ export const every: func.Func = context => {
 
   return ctx => {
     if (context.target == "aggregation") {
-      let propertyName: string;
-      const includedItems: unknown[] = [];
-
-      for (const [index, argument] of context.arguments.entries()) {
-        const item = convert(argument)(ctx);
-
-        if (index == 0) {
-          // @TODO: remove this replace part when find a way to send '$in' operator inside of "$expr"
-          // it will cause an error if field does not exist on document => "$in requires an array as a second argument, found: missing"
-          propertyName = item.replace("$", "");
-        } else {
-          includedItems.push(item);
-        }
-      }
+      const propertyName: string = convert(context.arguments[0])(ctx).replace("$", "");
+      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, convert);
 
       return {[propertyName]: {$all: includedItems}};
     } else {
-      let documentValue: unknown[];
-      const includedItems: unknown[] = [];
+      const documentValue: unknown[] = compile(context.arguments[0])(ctx);
+      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, compile);
 
-      for (const [index, argument] of context.arguments.entries()) {
-        const item = compile(argument)(ctx);
-
-        if (index == 0) {
-          documentValue = item;
-        } else {
-          includedItems.push(item);
-        }
-      }
-
-      let isContain = true;
-
-      for (const included of includedItems) {
-        if (!documentValue.includes(included)) {
-          isContain = false;
-          break;
-        }
-      }
-
-      return isContain;
+      return includedItems.every(included => documentValue.includes(included));
     }
   };
 };
+
+export const equal: func.Func = context => {
+  const [node] = context.arguments;
+
+  if (node.type != "select" && node.kind != "identifier") {
+    throw new TypeError(`'equal' only accepts property access chain or identifier.`);
+  }
+
+  if (context.arguments.length < 2) {
+    throw new TypeError(`'equal' accepts two arguments.`);
+  }
+
+  return ctx => {
+    if (context.target == "aggregation") {
+      const propertyName: string = convert(context.arguments[0])(ctx);
+      const items: unknown[] = argumentToValue(context.arguments.splice(1), ctx, convert);
+
+      return {$expr: {$eq: [propertyName, items]}};
+    } else {
+      const documentValue: unknown[] = compile(context.arguments[0])(ctx);
+      const items: unknown[] = argumentToValue(context.arguments.splice(1), ctx, compile);
+
+      return (
+        items.every(item => documentValue.includes(item)) && documentValue.length == items.length
+      );
+    }
+  };
+};
+
+function argumentToValue(args: object[], ctx: object, builder: Function) {
+  const items = [];
+
+  for (const argument of args) {
+    const item = builder(argument)(ctx);
+
+    items.push(item);
+  }
+
+  return items;
+}
