@@ -23,3 +23,6 @@ export function extractPropertyMap(expression: string) {
 }
 
 func.register("has", builtin.has);
+
+func.register("some", builtin.some);
+func.register("every", builtin.every);
