@@ -39,15 +39,17 @@ export const some: func.Func = context => {
 
   return ctx => {
     if (context.target == "aggregation") {
-      // @TODO: remove this replace("$","") when find a way to send '$in' operator inside of "$expr"
-      // we know first item is property name
-      const propertyName: string = convert(context.arguments[0])(ctx).replace("$", "");
-      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, convert);
+      const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
-      return {[propertyName]: {$in: includedItems}};
+      const propertyName: string = parsedArguments[0];
+      const includedItems: unknown[] = parsedArguments.splice(1);
+
+      return createInQuery(includedItems, propertyName, "$or");
     } else {
-      const documentValue: unknown[] = compile(context.arguments[0])(ctx);
-      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, compile);
+      const parsedArguments = parseArguments(context.arguments, ctx, compile);
+
+      const documentValue: unknown[] = parsedArguments[0];
+      const includedItems: unknown[] = parsedArguments.splice(1);
 
       return includedItems.some(included => documentValue.includes(included));
     }
@@ -67,13 +69,17 @@ export const every: func.Func = context => {
 
   return ctx => {
     if (context.target == "aggregation") {
-      const propertyName: string = convert(context.arguments[0])(ctx).replace("$", "");
-      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, convert);
+      const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
-      return {[propertyName]: {$all: includedItems}};
+      const propertyName: string = parsedArguments[0];
+      const includedItems: unknown[] = parsedArguments.splice(1);
+
+      return createInQuery(includedItems, propertyName, "$and");
     } else {
-      const documentValue: unknown[] = compile(context.arguments[0])(ctx);
-      const includedItems: unknown[] = argumentToValue(context.arguments.splice(1), ctx, compile);
+      const parsedArguments = parseArguments(context.arguments, ctx, compile);
+
+      const documentValue: unknown[] = parsedArguments[0];
+      const includedItems: unknown[] = parsedArguments.splice(1);
 
       return includedItems.every(included => documentValue.includes(included));
     }
@@ -88,27 +94,101 @@ export const equal: func.Func = context => {
   }
 
   if (context.arguments.length < 2) {
-    throw new TypeError(`'equal' accepts two arguments.`);
+    throw new TypeError(`'equal' accepts minimum two arguments.`);
   }
 
   return ctx => {
     if (context.target == "aggregation") {
-      const propertyName: string = convert(context.arguments[0])(ctx);
-      const items: unknown[] = argumentToValue(context.arguments.splice(1), ctx, convert);
+      const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
-      return {$expr: {$eq: [propertyName, items]}};
+      const propertyName: string = parsedArguments[0];
+      const items: unknown[] = parsedArguments.splice(1);
+
+      const match = {
+        $expr: {
+          $and: [
+            {
+              $eq: [
+                {
+                  $size: {
+                    $ifNull: [propertyName, []]
+                  }
+                },
+                items.length
+              ]
+            },
+            {
+              $eq: [
+                {
+                  $setDifference: [propertyName, items]
+                },
+                []
+              ]
+            }
+          ]
+        }
+      };
+
+      return match;
     } else {
-      const documentValue: unknown[] = compile(context.arguments[0])(ctx);
-      const items: unknown[] = argumentToValue(context.arguments.splice(1), ctx, compile);
+      const parsedArguments = parseArguments(context.arguments, ctx, compile);
+
+      const documentValue: unknown[] = parsedArguments[0];
+      const items: unknown[] = parsedArguments.splice(1);
 
       return (
-        items.every(item => documentValue.includes(item)) && documentValue.length == items.length
+        documentValue.length == items.length && items.every(item => documentValue.includes(item))
       );
     }
   };
 };
 
-function argumentToValue(args: object[], ctx: object, builder: Function) {
+export const regex: func.Func = context => {
+  const [node] = context.arguments;
+
+  if (node.type != "select" && node.kind != "identifier") {
+    throw new TypeError(`'regex' only accepts property access chain or identifier.`);
+  }
+
+  if (!(context.arguments.length == 2 || context.arguments.length == 3)) {
+    throw new TypeError(`'regex' accepts two or three arguments.`);
+  }
+
+  return ctx => {
+    if (context.target == "aggregation") {
+      const parsedArguments = parseArguments(context.arguments, ctx, convert);
+
+      const propertyName: string = parsedArguments[0];
+      const regex: string = parsedArguments[1];
+      const options: string = parsedArguments[2] || "";
+
+      return {
+        $expr: {
+          $eq: [
+            {
+              $regexMatch: {
+                input: propertyName,
+                regex: regex,
+                options: options
+              }
+            },
+            true
+          ]
+        }
+      };
+    } else {
+      const parsedArguments = parseArguments(context.arguments, ctx, compile);
+
+      const documentValue: string = parsedArguments[0];
+      const regex: string = parsedArguments[1];
+      const options: string = parsedArguments[2] || "";
+
+      return RegExp(regex, options).test(documentValue);
+    }
+  };
+};
+
+function parseArguments(args: object[], ctx: object, builder: Function) {
   const items = [];
 
   for (const argument of args) {
@@ -118,4 +198,32 @@ function argumentToValue(args: object[], ctx: object, builder: Function) {
   }
 
   return items;
+}
+
+function createInQuery(items: unknown[], propertyName: string, operator: "$and" | "$or") {
+  const query = {
+    [operator]: []
+  };
+
+  for (const item of items) {
+    const expression = {
+      $expr: {
+        $eq: [
+          {
+            $in: [
+              item,
+              {
+                $ifNull: [propertyName, []]
+              }
+            ]
+          },
+          true
+        ]
+      }
+    };
+
+    query[operator].push(expression);
+  }
+
+  return query;
 }
