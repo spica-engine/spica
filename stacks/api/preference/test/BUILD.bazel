@@ -24,6 +24,7 @@ ts_library(
 
 jasmine_node_test(
     name = "service_test",
+    tags = ["flaky"],
     deps = [
         ":services_specs",
     ],
