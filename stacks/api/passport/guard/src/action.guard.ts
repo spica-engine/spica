@@ -133,6 +133,7 @@ function createActionGuard(
       if (options) {
         hasResourceFilter = options.resourceFilter;
       } else {
+        // hasResourceFilter is true for just index endpoints
         const resourceFilterMetadata =
           Reflect.getMetadata("resourceFilter", context.getClass()) || {};
         hasResourceFilter = resourceFilterMetadata.key == context.getHandler().name;
@@ -192,7 +193,6 @@ function createActionGuard(
                   );
                 }
               }
-
               if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
                 // Parse resources in such format bucketid/dataid thus we could match them individually
                 const resources = wrapArray(statement.resource).map(resource =>
@@ -214,7 +214,9 @@ function createActionGuard(
                   // and resource in the statement is ["5f30fffd4a51a68d6fec4d3b", "5f31002e4a51a68d6fec4d3f"]
                   // we only check definition.resource[0] against resource[0] in the statement and the rest will be passed as mongodb aggregation
                   // to filter out in database layer.
-                  resourceAndModule.resource.every((part, index) => part == resource[index])
+                  resourceAndModule.resource.every(
+                    (part, index) => part == resource[index] || resource[index] == "*"
+                  )
                 );
 
                 if (match && hasResourceFilter) {
@@ -247,12 +249,17 @@ function createActionGuard(
                   if (hasExcludedResources) {
                     for (const resource of excluded) {
                       if (hasResourceFilter && getLastSegment(resource) == "*") {
+                        // If all subresources excluded in index endpoint
                         pattern.push(`!${resource[index]}`);
                       } else if (
                         !hasResourceFilter &&
-                        index == resourceAndModule.resource.length - 1
+                        index == resourceAndModule.resource.length - 1 &&
+                        getLastSegment(resource) != "*" // If one subresource excluded in non-index endpoint
                       ) {
                         pattern.push(`!${resource[index]}`);
+                      } else if (!hasResourceFilter && getLastSegment(resource) == "*") {
+                        // If all subresources excluded in non-index endpoint
+                        pattern.push(`!${resource[0]}`);
                       }
                     }
                   }
