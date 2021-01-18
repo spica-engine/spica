@@ -134,7 +134,9 @@ export class PassportService {
                 // and resource in the statement is ["5f30fffd4a51a68d6fec4d3b", "5f31002e4a51a68d6fec4d3f"]
                 // we only check definition.resource[0] against resource[0] in the statement and the rest will be passed as mongodb aggregation
                 // to filter out in database layer.
-                resourceAndModule.resource.every((part, index) => part == resource[index])
+                resourceAndModule.resource.every(
+                  (part, index) => part == resource[index] || resource[index] == "*"
+                )
               );
             } else if (typeof statement.resource == "object") {
               const resource = statement.resource;
@@ -159,12 +161,17 @@ export class PassportService {
                 if (hasExcludedResources) {
                   for (const resource of excluded) {
                     if (hasResourceFilter && getLastSegment(resource) == "*") {
+                      // If all subresources excluded in index endpoint
                       pattern.push(`!${resource[index]}`);
                     } else if (
                       !hasResourceFilter &&
-                      index == resourceAndModule.resource.length - 1
+                      index == resourceAndModule.resource.length - 1 &&
+                      getLastSegment(resource) != "*" // If one subresource excluded in non-index endpoint
                     ) {
                       pattern.push(`!${resource[index]}`);
+                    } else if (!hasResourceFilter && getLastSegment(resource) == "*") {
+                      // If all subresources excluded in non-index endpoint
+                      pattern.push(`!${resource[0]}`);
                     }
                   }
                 }
