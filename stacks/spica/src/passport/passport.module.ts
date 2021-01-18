@@ -48,6 +48,7 @@ import {PassportRouteFilter} from "./services/route.filter";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {MatSortModule} from "@angular/material/sort";
 import {FilterComponent} from "./components/filter/filter.component";
+import {PolicyResourceAddComponent} from "./components/policy-resource-add/policy-resource-add.component";
 
 @NgModule({
   declarations: [
@@ -65,7 +66,8 @@ import {FilterComponent} from "./components/filter/filter.component";
     CanInteractDirective,
     ApiKeyIndexComponent,
     ApiKeyAddComponent,
-    StrategyDialogComponent
+    StrategyDialogComponent,
+    PolicyResourceAddComponent
   ],
   imports: [
     CommonModule,

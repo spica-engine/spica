@@ -1,0 +1,127 @@
+<h3>Edit Action</h3>
+<mat-divider></mat-divider>
+<ng-container *ngIf="acceptsResource(data.action)">
+  <div class="excluded-resources">
+    <div class="includeds">
+      <mat-label>Included Resources</mat-label>
+      <ng-container *ngIf="getAction(data.action).resource.exclude?.length">
+        <div class="included-resource">
+          <mat-form-field>
+            <input
+              matInput
+              [name]="statementIndex + 'includedResource'"
+              #includedResource="ngModel"
+              [(ngModel)]="getAction(data.action).resource.include"
+              required
+            />
+            <mat-hint
+              >Expected resource format: "<b>{{
+                services[data.statement.module][data.action].join("/")
+              }}</b
+              >"</mat-hint
+            >
+          </mat-form-field>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="!getAction(data.action).resource.exclude">
+        <div
+          class="included-resource"
+          *ngFor="let included of getAction(data.action).resource; index as includedResourceIndex"
+        >
+          <mat-form-field>
+            <input
+              matInput
+              [name]="statementIndex + 'includedResource'"
+              #includedResource="ngModel"
+              [(ngModel)]="getAction(data.action).resource[includedResourceIndex]"
+              required
+            />
+          </mat-form-field>
+          <button
+            mat-button
+            color="warn"
+            (click)="removeIncluded(includedResourceIndex, getAction(data.action))"
+          >
+            <mat-icon>
+              delete
+            </mat-icon>
+            Delete Resource
+          </button>
+        </div>
+        <div class="include-resource-input">
+          <mat-form-field>
+            <input
+              matInput
+              #includeResource="ngModel"
+              ngModel
+              [name]="statementIndex + 'includeResource'"
+              placeholder="Enter including resource"
+              (keyup.enter)="
+                addInclude(includeResource.value, getAction(data.action)); includeResource.reset()
+              "
+            />
+            <mat-hint>
+              Expected resource format: "<b>{{
+                services[data.statement.module][data.action].join("/")
+              }}</b
+              >"
+            </mat-hint>
+          </mat-form-field>
+        </div>
+      </ng-container>
+    </div>
+    <div class="excludeds">
+      <mat-label>Excluded Resources</mat-label>
+      <div
+        class="excluded-resource"
+        *ngFor="
+          let excluded of getAction(data.action).resource.exclude;
+          index as excludedResourceIndex
+        "
+      >
+        <mat-form-field>
+          <input
+            matInput
+            disabled
+            [value]="getAction(data.action).resource.exclude[excludedResourceIndex]"
+          />
+        </mat-form-field>
+        <button
+          mat-button
+          color="warn"
+          (click)="removeExcluded(excludedResourceIndex, getAction(data.action))"
+        >
+          <mat-icon>
+            delete
+          </mat-icon>
+          Delete Resource
+        </button>
+      </div>
+      <div class="exclude-resource-input">
+        <mat-form-field>
+          <input
+            matInput
+            #excludeResource="ngModel"
+            ngModel
+            [name]="statementIndex + 'excludeResource'"
+            placeholder="Enter excluding resource"
+            (keyup.enter)="
+              addExclude(excludeResource.value, getAction(data.action)); excludeResource.reset()
+            "
+          />
+          <mat-hint>
+            Expected resource format: "<b>{{
+              services[data.statement.module][data.action].join("/")
+            }}</b
+            >"
+          </mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+</ng-container>
+<mat-divider></mat-divider>
+<div class="action-buttons">
+  <button mat-button (click)="copyResources()">Copy Resources To All Actions</button>
+  <button mat-button (click)="dialogRef.close()">Save</button>
+</div>
