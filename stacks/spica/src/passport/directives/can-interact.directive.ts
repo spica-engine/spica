@@ -1,40 +1,21 @@
 import {
   Directive,
-  HostBinding,
   Input,
   OnInit,
   SimpleChanges,
   ElementRef,
   Renderer2,
-  HostListener,
-  Output,
-  EventEmitter
+  HostListener
 } from "@angular/core";
 import {PassportService} from "../services/passport.service";
 
 @Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
-
-@Directive({selector: "[canInteract]"})
 export class CanInteractDirective implements OnInit {
-  @HostBinding("disabled") isDisabled: boolean | undefined;
   @Input("canInteract") action: string;
   @Input() resource: string;
 
-  @Output() click: EventEmitter<unknown> = new EventEmitter();
-
-  tooltipTitle: string = "";
-  placement: string = "bottom";
   delay: number = 200;
   tooltip: HTMLElement;
-  offset = 10;
-
-  allowed = true;
-
-  isInitialized = false;
 
   constructor(
     private passport: PassportService,
@@ -43,7 +24,7 @@ export class CanInteractDirective implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.setVisible(this.action, this.resource);
+    this.setEnableState(this.action, this.resource);
   }
 
   ngOnDestroy() {
@@ -56,42 +37,41 @@ export class CanInteractDirective implements OnInit {
         .map(key => changes[key].firstChange)
         .some(firstChange => firstChange == false)
     ) {
-      this.setVisible(
+      this.setEnableState(
         changes.action ? changes.action.currentValue : this.action,
         changes.resource ? changes.resource.currentValue : this.resource
       );
     }
   }
 
-  setVisible(action: string, resource: string) {
+  setEnableState(action: string, resource: string) {
     this.passport
       .checkAllowed(action, resource)
       .toPromise()
       .then(allowed => {
-        this.allowed = allowed;
-        this.tooltipTitle = `${this.action} is missing.`;
-
-        if (!this.allowed) {
+        if (!allowed) {
           this.renderer.addClass(this.elementRef.nativeElement, "ng-disabled-button");
+
+          // we have to clear all click listeners of this element which added from another directive
+          const updatedNode = this.elementRef.nativeElement.cloneNode(true);
+
+          const tooltipText = `'${action}' is required for this action.`;
+
+          updatedNode.addEventListener("mouseenter", this.mouseEnter(tooltipText));
+          updatedNode.addEventListener("mouseleave", this.mouseLeave);
+
+          this.elementRef.nativeElement.replaceWith(updatedNode);
         }
       });
   }
 
-  mouseEnter = (hostPos: DOMRect) => {
-    return () => {
-      // clear tooltips which may added before
-      if (this.tooltip) {
-        this.renderer.removeClass(this.tooltip, "ng-tooltip-show");
-        this.renderer.removeChild(document.body, this.tooltip);
-        this.tooltip = null;
-      }
+  mouseEnter = (text: string) => {
+    return (event: MouseEvent) => {
+      this.create(text);
 
-      this.create();
+      const elementPosition = (event.target as HTMLElement).getBoundingClientRect();
+      this.setPosition(elementPosition);
 
-      // SET POSITION
-      this.setPosition(hostPos);
-
-      // START
       this.renderer.addClass(this.tooltip, "ng-tooltip-show");
     };
   };
@@ -99,83 +79,50 @@ export class CanInteractDirective implements OnInit {
   mouseLeave = () => {
     if (this.tooltip) {
       this.renderer.removeClass(this.tooltip, "ng-tooltip-show");
-
       setTimeout(() => {
+        // somehow, we need this if block
         if (this.tooltip) {
           this.renderer.removeChild(document.body, this.tooltip);
+          this.tooltip = null;
         }
-        this.tooltip = null;
       }, this.delay);
     }
   };
 
-  @HostListener("mouseenter") onMouseEnter() {
-    if (!this.allowed) {
-      this.renderer.addClass(this.elementRef.nativeElement, "ng-disabled-button");
-
-      // we have to clear all click listeners of this element.
-      const elementWithoutListeners = this.elementRef.nativeElement.cloneNode(true);
-
-      // calculate hostposition before add event listener;
-      const hostPos = this.elementRef.nativeElement.getBoundingClientRect();
-
-      elementWithoutListeners.addEventListener("mouseenter", this.mouseEnter(hostPos));
-      elementWithoutListeners.addEventListener("mouseleave", this.mouseLeave);
-
-      this.elementRef.nativeElement.replaceWith(elementWithoutListeners);
-    }
-  }
-
-  create() {
+  create = (text: string) => {
     this.tooltip = this.renderer.createElement("span");
 
-    this.renderer.appendChild(
-      this.tooltip,
-      this.renderer.createText(this.tooltipTitle) // textNode
-    );
+    this.renderer.appendChild(this.tooltip, this.renderer.createText(text));
 
-    this.renderer.appendChild(document.body, this.tooltip);
-    // this.renderer.appendChild(this.elementRef.nativeElement, this.tooltip);
-
+    // TODO: merge this classes
     this.renderer.addClass(this.tooltip, "ng-tooltip");
     this.renderer.addClass(this.tooltip, "ng-tooltip-bottom");
 
-    // delay 설정
     this.renderer.setStyle(this.tooltip, "-webkit-transition", `opacity ${this.delay}ms`);
     this.renderer.setStyle(this.tooltip, "-moz-transition", `opacity ${this.delay}ms`);
     this.renderer.setStyle(this.tooltip, "-o-transition", `opacity ${this.delay}ms`);
     this.renderer.setStyle(this.tooltip, "transition", `opacity ${this.delay}ms`);
-  }
 
-  setPosition(hostPos: DOMRect) {
-    const tooltipPos = this.tooltip.getBoundingClientRect();
+    this.renderer.appendChild(document.body, this.tooltip);
+  };
 
-    const scrollPos =
-      window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  setPosition = (elementPosition: DOMRect) => {
+    const tooltipPosition = this.tooltip.getBoundingClientRect();
+
+    const border = document.body.getBoundingClientRect();
 
     let top: number, left: number;
 
-    if (this.placement === "top") {
-      top = hostPos.top - tooltipPos.height - this.offset;
-      left = hostPos.left + (hostPos.width - tooltipPos.width) / 2;
-    }
+    // tooltip bottom must be less than border bottom
+    top = Math.min(elementPosition.bottom, border.bottom - tooltipPosition.height);
 
-    if (this.placement === "bottom") {
-      top = hostPos.bottom + this.offset;
-      left = hostPos.left + (hostPos.width - tooltipPos.width) / 2;
-    }
+    // tooltip left must be positive
+    left = Math.max(elementPosition.left + (elementPosition.width - tooltipPosition.width) / 2, 0);
 
-    if (this.placement === "left") {
-      top = hostPos.top + (hostPos.height - tooltipPos.height) / 2;
-      left = hostPos.left - tooltipPos.width - this.offset;
-    }
+    // tooltip right must be less than border right
+    left = left - Math.max(left + tooltipPosition.width - border.right, 0);
 
-    if (this.placement === "right") {
-      top = hostPos.top + (hostPos.height - tooltipPos.height) / 2;
-      left = hostPos.right + this.offset;
-    }
-
-    this.renderer.setStyle(this.tooltip, "top", `${top + scrollPos}px`);
+    this.renderer.setStyle(this.tooltip, "top", `${top}px`);
     this.renderer.setStyle(this.tooltip, "left", `${left}px`);
-  }
+  };
 }
