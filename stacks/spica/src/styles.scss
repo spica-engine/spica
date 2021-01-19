@@ -113,3 +113,47 @@ $custom-typography: mat-typography-config(
 );
 
 @include mat-core($custom-typography);
+
+.ng-tooltip {
+  position: absolute;
+  max-width: 250px;
+  font-size: 14px;
+  text-align: center;
+  color: #f8f8f2;
+  padding: 6px 16px;
+  background: #282a36;
+  border-radius: 4px;
+  z-index: 1000;
+  opacity: 0;
+}
+
+.ng-tooltip:after {
+  content: "";
+  position: absolute;
+  border-style: solid;
+}
+
+.ng-tooltip-bottom:after {
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-color: transparent;
+}
+
+.ng-tooltip-show {
+  opacity: 1;
+}
+
+.ng-disabled-button {
+  opacity: 0.3 !important;
+
+  // remove hover effect
+  span.mat-button-focus-overlay {
+    background: unset !important;
+  }
+}
+
+.ng-disabled-button:hover {
+  cursor: not-allowed;
+}
