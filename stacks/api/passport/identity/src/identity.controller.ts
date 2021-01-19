@@ -147,12 +147,9 @@ export class IdentityController {
     @Body(Schema.validate("http://spica.internal/passport/update-identity-with-attributes"))
     identity: Partial<Identity>
   ) {
-    delete identity._id;
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
-    // To not allow to send policies to this endpoint
-    delete identity.policies;
     return this.identity.findOneAndUpdate(
       {_id: id},
       {$set: identity},
@@ -165,7 +162,7 @@ export class IdentityController {
   @UseGuards(AuthGuard(), ActionGuard("passport:identity:delete"))
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    // prevent to deleting the last user
+    // prevent to delete the last user
     const users = await this.identity.find();
     if (users.length == 1) {
       return;
