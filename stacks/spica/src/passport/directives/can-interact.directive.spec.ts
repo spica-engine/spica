@@ -1,32 +1,37 @@
-import {Component, ViewChild} from "@angular/core";
+import {Component, ViewChild, DebugElement} from "@angular/core";
 import {TestBed, ComponentFixture} from "@angular/core/testing";
 import {CanInteractDirective} from "./can-interact.directive";
 import {PassportService} from "../services/passport.service";
 import {of} from "rxjs";
+import {By} from "@angular/platform-browser";
 
 @Component({
   template: `
-    <button [canInteract]="condition" [resource]="id">Click here.</button>
+    <button [canInteract]="action" (click)="onclick()" [resource]="id">Click here.</button>
   `
 })
 class TestComponent {
   @ViewChild(CanInteractDirective, {static: true}) directive: CanInteractDirective;
-  condition = false;
+  action = "passport:identity:create";
   id = undefined;
+
+  onclick = jasmine.createSpy();
 }
 
 class TestPassportService {
-  checkAllowed = (value: boolean) => {
-    return of(value);
+  checkAllowed = (value: string) => {
+    // custom logic
+    if (value.startsWith("bucket")) {
+      return of(true);
+    }
+
+    return of(false);
   };
 }
 
-describe("CanInteract", () => {
+fdescribe("CanInteract", () => {
   let component: TestComponent;
   let fixture: ComponentFixture<TestComponent>;
-  let button: HTMLElement;
-  let setVisibleSpy: jasmine.Spy;
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [TestComponent, CanInteractDirective],
@@ -36,48 +41,51 @@ describe("CanInteract", () => {
     fixture = TestBed.createComponent(TestComponent);
     component = fixture.componentInstance;
 
-    setVisibleSpy = spyOn(component.directive, "setVisible").and.callThrough();
-
     fixture.detectChanges();
+  });
 
-    //wait until setting initial value from passport service
+  fit("should set button disable and show tooltip when hovered", async () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    button = fixture.debugElement.nativeElement.querySelector("button");
+    component.onclick.calls.reset();
+
+    // write the right selector.
+    const button = undefined;
+
+    console.log(button);
+
+    button.dispatchEvent(new Event("mouseenter"));
+    fixture.detectChanges();
+
+    const tooltip = document.querySelector(".ng-tooltip");
+
+    expect(Array.from(tooltip.classList)).toContain("ng-tooltip-show");
+
+    expect(tooltip.textContent).toEqual("passport:identity:create is required for this action.");
+
+    (button as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(component.onclick).toHaveBeenCalledTimes(0);
   });
 
-  it("shouldn't show button if condition is false", () => {
-    expect(setVisibleSpy).toHaveBeenCalledTimes(1);
-    expect(setVisibleSpy).toHaveBeenCalledWith(false, undefined);
-    expect(button.style.visibility).toEqual("hidden");
-  });
+  it("should not change button's any property", async () => {
+    component.onclick.calls.reset();
+    component.action = "bucket:create";
 
-  it("should change visible property of button when condition changed", async () => {
-    setVisibleSpy.calls.reset();
-
-    component.condition = true;
-    component.id = "test_id";
     fixture.detectChanges();
 
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(setVisibleSpy).toHaveBeenCalledTimes(1);
-    expect(setVisibleSpy).toHaveBeenCalledWith(true, "test_id");
-    expect(button.style.visibility).toEqual("visible");
-  });
+    const button: HTMLElement = fixture.debugElement.nativeElement.querySelector("button");
 
-  it("should not change visiblity if condition's previous and current values are equal", async () => {
-    setVisibleSpy.calls.reset();
+    expect(Array.from(button.classList)).not.toContain("ng-disabled-button");
 
-    component.condition = false;
+    (button as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(setVisibleSpy).toHaveBeenCalledTimes(0);
-    expect(button.style.visibility).toEqual("hidden");
+    expect(component.onclick).toHaveBeenCalledTimes(1);
   });
 });

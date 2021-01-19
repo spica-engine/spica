@@ -117,23 +117,17 @@ $custom-typography: mat-typography-config(
 .ng-tooltip {
   position: absolute;
   max-width: 250px;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
   color: #f8f8f2;
-  padding: 6px 16px;
-  background: #282a36;
+  padding: 6px;
+  background: rgba(97, 97, 97, 0.9);
   border-radius: 4px;
   z-index: 1000;
   opacity: 0;
 }
 
 .ng-tooltip:after {
-  content: "";
-  position: absolute;
-  border-style: solid;
-}
-
-.ng-tooltip-bottom:after {
   bottom: 100%;
   left: 50%;
   margin-left: -5px;
