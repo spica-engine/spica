@@ -1,9 +1,8 @@
-import {Component, ViewChild, DebugElement} from "@angular/core";
+import {Component, ViewChild} from "@angular/core";
 import {TestBed, ComponentFixture} from "@angular/core/testing";
 import {CanInteractDirective} from "./can-interact.directive";
 import {PassportService} from "../services/passport.service";
 import {of} from "rxjs";
-import {By} from "@angular/platform-browser";
 
 @Component({
   template: `
