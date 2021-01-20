@@ -6,6 +6,8 @@ import {Services} from "../../interfaces/service";
 import {Statement} from "../../interfaces/statement";
 import {PolicyService} from "../../services/policy.service";
 import {merge} from "rxjs";
+import {MatDialog} from "@angular/material/dialog";
+import {PolicyResourceAddComponent} from "@spica-client/passport/components/policy-resource-add/policy-resource-add.component";
 
 @Component({
   selector: "passport-policy-add",
@@ -13,12 +15,14 @@ import {merge} from "rxjs";
   styleUrls: ["./policy-add.component.scss"]
 })
 export class PolicyAddComponent implements OnInit {
-  policy: Policy = emptyPolicy();
+  policy = {name: undefined, description: undefined, statements: []};
+  originalPolicy: Policy = emptyPolicy();
   services: Services;
 
   constructor(
     private activatedRoute: ActivatedRoute,
     private policyService: PolicyService,
+    private dialog: MatDialog,
     private router: Router
   ) {}
 
@@ -38,90 +42,149 @@ export class PolicyAddComponent implements OnInit {
     )
       .pipe(
         take(1),
-        tap(policy => (this.policy = policy))
+        tap(policy => {
+          this.originalPolicy = policy;
+          this.policy.name = this.originalPolicy.name;
+          this.policy.description = this.originalPolicy.description;
+          this.originalPolicy.statement.forEach((statement: Statement) => {
+            const existingStatement = this.policy.statements.findIndex(
+              manuplatedStatement => statement.module == manuplatedStatement.module
+            );
+            if (existingStatement >= 0) {
+              this.policy.statements[existingStatement].actions.push({
+                action: statement.action,
+                resource: statement.resource
+              });
+            } else {
+              this.policy.statements.push({
+                module: statement.module,
+                actions: [
+                  {
+                    action: statement.action,
+                    resource: statement.resource
+                  }
+                ]
+              });
+            }
+          });
+        })
       )
       .subscribe();
   }
 
-  onResourceSelection(statement: Statement, selection: "include" | "exclude") {
-    if (selection == "include") {
-      statement.resource = [];
-    } else if (selection == "exclude") {
-      statement.resource = {
-        //put * for each params, and build resource like '*/*'
-        include: this.services[statement.module][statement.action].map(_ => "*").join("/"),
-        exclude: []
-      };
-    }
+  isServiceUsed(module: string) {
+    return this.policy.statements.some(statement => module == statement.module);
   }
 
-  addInclude(resource: string, statement: Statement) {
-    (statement.resource as string[]).push(resource);
+  getAction(module: string, action: string) {
+    const statementIndex = this.policy.statements.findIndex(
+      statement => statement.module == module
+    );
+    const actionIndex = this.policy.statements[statementIndex]["actions"].findIndex(
+      actionInStatement => actionInStatement.action == action
+    );
+    return actionIndex >= 0
+      ? this.policy.statements[statementIndex]["actions"][actionIndex]
+      : false;
   }
 
-  addExclude(resource: string, statement: Statement) {
-    (statement.resource as {include: string; exclude: string[]}).exclude.push(resource);
-  }
-
-  removeIncluded(resourceIndex: number, statement: Statement) {
-    (statement.resource as string[]).splice(resourceIndex, 1);
-  }
-
-  removeExcluded(resourceIndex: number, statement: Statement) {
-    (statement.resource as {include: string; exclude: string[]}).exclude.splice(resourceIndex, 1);
-  }
-
-  getResourceSelection(statement: Statement) {
-    if (statement.resource instanceof Array) {
+  getResourceSelection(action) {
+    if (action && action.resource instanceof Array) {
       return "include";
-    } else if (statement.resource instanceof Object) {
+    } else if (action && action.resource instanceof Object) {
       return "exclude";
     } else {
       return undefined;
     }
   }
 
-  onActionChange(statement: Statement) {
-    if (this.acceptsResource(statement)) {
-      statement.resource = [];
+  toggleAction(module: string, action: string) {
+    const statementIndex = this.policy.statements.findIndex(
+      statement => statement.module == module
+    );
+    let actionIndex = this.policy.statements[statementIndex]["actions"].findIndex(
+      actionInStatement => actionInStatement.action == action
+    );
+    if (actionIndex < 0) {
+      this.policy.statements[statementIndex]["actions"].push({
+        action: action,
+        resource: [this.services[module][action].map(action => (action = "*")).join("/")]
+      });
     } else {
-      delete statement.resource;
+      this.policy.statements[statementIndex]["actions"].splice(actionIndex, 1);
     }
   }
 
-  acceptsResource(statement: Statement) {
+  isActionActive(module: string, action: string) {
+    return this.getAction(module, action) ? true : false;
+  }
+
+  editResources(statement, action: string) {
+    if (this.isActionActive(statement.module, action)) {
+      this.dialog.open(PolicyResourceAddComponent, {
+        width: "880px",
+        maxWidth: "90%",
+        maxHeight: "800px",
+        data: {
+          services: this.services,
+          statement,
+          action
+        }
+      });
+    } else {
+      this.toggleAction(statement.module, action);
+    }
+  }
+
+  acceptsResource(statement, action: string) {
     return (
       this.services[statement.module] &&
-      this.services[statement.module][statement.action] &&
-      this.services[statement.module][statement.action].length > 0
+      this.services[statement.module][action] &&
+      this.services[statement.module][action].length > 0
     );
   }
 
   noResourceInserted() {
-    return this.policy.statement
-      .map(
-        statement => this.acceptsResource(statement) && (statement.resource as string[]).length == 0
-      )
-      .some(invalid => invalid);
+    let isResourceMissing = false;
+    for (const statement of this.policy.statements) {
+      for (const action of statement.actions) {
+        if (this.acceptsResource(statement, action.action) && action.resource.length == 0) {
+          isResourceMissing = true;
+          break;
+        }
+      }
+    }
+    return isResourceMissing;
   }
 
   savePolicy() {
-    (this.policy._id
-      ? this.policyService.updatePolicy(this.policy)
-      : this.policyService.createPolicy(this.policy)
-    )
+    const policy: Policy = {...this.originalPolicy, statement: []};
+    this.policy["statements"].forEach(statement => {
+      statement.actions.forEach(action =>
+        policy["statement"].push({
+          module: statement.module,
+          action: action.action,
+          resource: action.resource
+        })
+      );
+    });
+    (policy._id ? this.policyService.updatePolicy(policy) : this.policyService.createPolicy(policy))
       .toPromise()
       .then(() => this.router.navigate(["passport/policy"]));
   }
 
   addStatement() {
-    this.policy.statement.push({
-      action: undefined,
+    this.policy.statements.push({
+      actions: [],
       module: undefined
     });
   }
 
   removeStatement(index: number) {
-    this.policy.statement.splice(index, 1);
+    this.policy.statements.splice(index, 1);
+  }
+
+  onModuleChange(statement) {
+    statement.actions = [];
   }
 }
