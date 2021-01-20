@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {ActivityFilter, Activity} from "../interface";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpParams} from "@angular/common/http";
 import {BucketService, BucketDataService} from "@spica-client/bucket";
 import {ApiKeyService} from "@spica-client/passport/services/apikey.service";
 import {IdentityService, PolicyService, PassportService} from "@spica-client/passport";
@@ -28,22 +28,37 @@ export class ActivityService {
   }
 
   get(filter: ActivityFilter) {
-    let params: any = {};
+    const params: any = {};
 
-    if (filter.identifier) params.identifier = filter.identifier;
+    if (filter.identifier) {
+      params.identifier = filter.identifier;
+    }
 
-    if (filter.action.length > 0) params.action = filter.action;
+    if (filter.action.length) {
+      params.action = filter.action;
+    }
 
-    if (filter.date.begin)
+    if (filter.date.begin) {
       params.begin = this.resetTimezoneOffset(new Date(filter.date.begin)).toISOString();
+    }
 
-    if (filter.date.end)
+    if (filter.date.end) {
       params.end = this.resetTimezoneOffset(new Date(filter.date.end)).toISOString();
+    }
 
-    if (filter.resource.$all.length > 0 && filter.resource.$in.length > 0)
-      params.resource = JSON.stringify(filter.resource);
+    if (filter.resource.$all.length) {
+      const resource = JSON.parse(JSON.stringify(filter.resource));
 
-    if (filter.limit) params.limit = filter.limit;
+      if (!filter.resource.$in.length) {
+        delete resource.$in;
+      }
+
+      params.resource = JSON.stringify(resource);
+    }
+
+    if (filter.limit) {
+      params.limit = filter.limit;
+    }
 
     params.skip = filter.skip;
 
