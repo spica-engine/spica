@@ -76,7 +76,10 @@
               >
                 <div class="title">
                   {{ action.key.replace(statement.module + ":", "").replace(":", " ") | titlecase }}
-                  <span *ngIf="acceptsResource(statement,action.key)" (click)="editResources(statement, action.key); $event.stopPropagation()">
+                  <span
+                    *ngIf="acceptsResource(statement, action.key)"
+                    (click)="editResources(statement, action.key); $event.stopPropagation()"
+                  >
                     <mat-icon>edit</mat-icon>
                   </span>
                 </div>
