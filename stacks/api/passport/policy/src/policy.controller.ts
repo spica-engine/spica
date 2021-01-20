@@ -10,7 +10,8 @@ import {
   UseGuards,
   UseInterceptors,
   Optional,
-  Inject
+  Inject,
+  BadRequestException
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {NUMBER, DEFAULT, JSONP} from "@spica-server/core";
@@ -25,6 +26,7 @@ import {
   IDENTITY_POLICY_FINALIZER
 } from "./interface";
 import {PolicyService} from "./policy.service";
+import {getDuplicatedActionMaps, createDuplicatedActionsErrorMessage} from "./utility";
 
 @Controller("passport/policy")
 export class PolicyController {
@@ -55,6 +57,13 @@ export class PolicyController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:policy:create"))
   insertOne(@Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy) {
+    const duplicatedActionMaps = getDuplicatedActionMaps(body);
+
+    if (duplicatedActionMaps.length) {
+      const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
+      throw new BadRequestException(message);
+    }
+
     return this.policy.insertOne(body);
   }
 
@@ -65,6 +74,12 @@ export class PolicyController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/passport/policy")) body: Policy
   ) {
+    const duplicatedActionMaps = getDuplicatedActionMaps(body);
+
+    if (duplicatedActionMaps.length) {
+      const message = createDuplicatedActionsErrorMessage(duplicatedActionMaps);
+      throw new BadRequestException(message);
+    }
     return this.policy.replaceOne({_id: id}, body);
   }
 
