@@ -12,6 +12,8 @@ export class CanInteractDirective implements OnInit {
   @Input("canInteract") action: string;
   @Input() resource: string;
 
+  @Input() disabled: boolean;
+
   delay: number = 200;
   tooltip: HTMLElement;
 
@@ -28,7 +30,7 @@ export class CanInteractDirective implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.setEnableState(this.action, this.resource);
+    this.setEnableState(this.action, this.resource, this.disabled);
   }
 
   ngOnDestroy() {
@@ -44,19 +46,19 @@ export class CanInteractDirective implements OnInit {
     ) {
       this.setEnableState(
         changes.action ? changes.action.currentValue : this.action,
-        changes.resource ? changes.resource.currentValue : this.resource
+        changes.resource ? changes.resource.currentValue : this.resource,
+        changes.disabled ? changes.disabled.currentValue : this.disabled
       );
     }
   }
 
-  setEnableState(action: string, resource: string) {
+  setEnableState(action: string, resource: string, disabled: boolean) {
     this.passport
       .checkAllowed(action, resource)
       .toPromise()
       .then(allowed => {
-        // @TODO: if some forms set this element state disabled, then switch to the enable, tooltip does not show up
-
-        if (!allowed) {
+        // some form actions may make this element disabled
+        if (!allowed && !disabled) {
           const message = `${action} is required for this action.`;
 
           this.upsertElement(message);
