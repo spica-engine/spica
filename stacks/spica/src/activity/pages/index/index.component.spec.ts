@@ -157,7 +157,7 @@ describe("IndexComponent", () => {
     const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
       of(["doc_1", "doc_2"])
     );
-    component.selectionChange({
+    component.onModuleSelectionChange({
       source: {selected: {group: {label: "test_group"}}},
       value: "test_module"
     } as any);
@@ -178,7 +178,7 @@ describe("IndexComponent", () => {
     const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
       of(["doc_1", "doc_2"])
     );
-    component.selectionChange({
+    component.onModuleSelectionChange({
       source: {selected: {group: undefined}},
       value: "test_module"
     } as any);
