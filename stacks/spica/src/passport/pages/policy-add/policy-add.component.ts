@@ -119,7 +119,7 @@ export class PolicyAddComponent implements OnInit {
     return this.getAction(module, action) ? true : false;
   }
 
-  editResources(statement: Statement, action: string) {
+  editResources(statement, action: string) {
     if (this.isActionActive(statement.module, action)) {
       this.dialog.open(PolicyResourceAddComponent, {
         width: "880px",
@@ -136,7 +136,7 @@ export class PolicyAddComponent implements OnInit {
     }
   }
 
-  acceptsResource(statement: Statement, action: string) {
+  acceptsResource(statement, action: string) {
     return (
       this.services[statement.module] &&
       this.services[statement.module][action] &&
