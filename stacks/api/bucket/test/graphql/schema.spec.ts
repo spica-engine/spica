@@ -48,7 +48,7 @@ describe("Schema", () => {
           {
             target: "Bucket_id.123invalid,name?*.",
             reason:
-              "Name specification must start with an alphabetic character and can not include any non-letter character."
+              "Name specification must start with an alphabetic character and can not include any non-word character."
           }
         ]);
       });
@@ -77,7 +77,7 @@ describe("Schema", () => {
           {
             target: "Bucket_id.shapes",
             reason:
-              "Enum values must start with an alphabetic character and can not include any non-letter character."
+              "Enum values must start with an alphabetic character and can not include any non-word character."
           }
         ]);
       });

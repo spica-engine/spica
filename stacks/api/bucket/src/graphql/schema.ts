@@ -41,7 +41,7 @@ function validateProperties(
       errors.push({
         target: baseName + "." + key,
         reason:
-          "Name specification must start with an alphabetic character and can not include any non-letter character."
+          "Name specification must start with an alphabetic character and can not include any non-word character."
       });
 
       delete bucket.properties[key];
@@ -71,7 +71,7 @@ function validateDefinition(
   if (definition.enum && !validateEnum(definition.enum)) {
     const reason = !definition.enum.length
       ? "Enum values must contain at least one item."
-      : "Enum values must start with an alphabetic character and can not include any non-letter character.";
+      : "Enum values must start with an alphabetic character and can not include any non-word character.";
     errors.push({
       target: name,
       reason: reason
