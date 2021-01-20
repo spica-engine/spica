@@ -16,6 +16,10 @@ export class CanInteractDirective implements OnInit {
   tooltip: HTMLElement;
 
   disabledNode: Node;
+  initialDisplayState: string;
+
+  currentMouseEnterListener: (event: MouseEvent) => void;
+  currentTooltipMessage: string;
 
   constructor(
     private passport: PassportService,
@@ -28,10 +32,8 @@ export class CanInteractDirective implements OnInit {
   }
 
   ngOnDestroy() {
-    if (this.disabledNode) {
-      this.revertNodeBack();
-    }
-    this.mouseLeave();
+    this.revertActualElement();
+    this.mouseLeave()();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -52,40 +54,61 @@ export class CanInteractDirective implements OnInit {
       .checkAllowed(action, resource)
       .toPromise()
       .then(allowed => {
-        console.log(allowed,this.disabledNode)
-        if (!allowed && !this.disabledNode) {
-          this.renderer.addClass(this.elementRef.nativeElement, "ng-disabled-button");
-          // we have to clear all click listeners of this element which added from another directive
-          this.disabledNode = this.elementRef.nativeElement.cloneNode(true);
+        // @TODO: if some forms set this element state disabled, then switch to the enable, tooltip does not show up
 
-          const tooltipText = `${action} is required for this action.`;
+        if (!allowed) {
+          const message = `${action} is required for this action.`;
 
-          this.disabledNode.addEventListener("mouseenter", this.mouseEnter(tooltipText));
-
-          this.disabledNode.addEventListener("mouseleave", this.mouseLeave());
-
-          // if ngOnChanges sends a new action which will cause the change of the allowed value, we must revert old node back
-          // but reverting the old node is not possible if we call 'replaceWith' method
-          this.elementRef.nativeElement.parentNode.appendChild(this.disabledNode);
-          this.elementRef.nativeElement.style.display = "none";
-        } else if (allowed && this.disabledNode) {
-          this.revertNodeBack();
+          this.upsertElement(message);
+        } else {
+          this.revertActualElement();
         }
       });
   }
 
-  revertNodeBack() {
-    this.renderer.removeClass(this.elementRef.nativeElement, "ng-disabled-button");
+  upsertElement(tooltipMessage: string) {
+    if (this.disabledNode && this.currentTooltipMessage != tooltipMessage) {
+      this.disabledNode.removeEventListener("mouseenter", this.currentMouseEnterListener);
 
-    this.elementRef.nativeElement.parentNode.removeChild(this.disabledNode);
-    this.elementRef.nativeElement.style.display = "unset";
+      this.currentTooltipMessage = tooltipMessage;
+      this.currentMouseEnterListener = this.mouseEnter(this.currentTooltipMessage);
 
-    this.disabledNode = null;
+      this.disabledNode.addEventListener("mouseenter", this.currentMouseEnterListener);
+    } else if (!this.disabledNode) {
+      this.initialDisplayState = this.elementRef.nativeElement.style.display;
+
+      this.renderer.addClass(this.elementRef.nativeElement, "ng-disabled-button");
+      // we have to clear all click listeners of this element which added from another directive
+      this.disabledNode = this.elementRef.nativeElement.cloneNode(true);
+
+      this.currentTooltipMessage = tooltipMessage;
+      this.currentMouseEnterListener = this.mouseEnter(this.currentTooltipMessage);
+
+      this.disabledNode.addEventListener("mouseenter", this.currentMouseEnterListener);
+
+      this.disabledNode.addEventListener("mouseleave", this.mouseLeave());
+
+      // we can not revert actual element if we use nativeElement.replaceWith method
+      this.elementRef.nativeElement.parentNode.appendChild(this.disabledNode);
+      this.elementRef.nativeElement.style.display = "none";
+
+      this.renderer.removeClass(this.elementRef.nativeElement, "ng-disabled-button");
+    }
   }
 
-  mouseEnter(text: string) {
+  revertActualElement() {
+    if (this.disabledNode) {
+      this.elementRef.nativeElement.parentNode.removeChild(this.disabledNode);
+
+      this.elementRef.nativeElement.style.display = this.initialDisplayState;
+
+      this.disabledNode = null;
+    }
+  }
+
+  mouseEnter(tooltipMessage: string) {
     return (event: MouseEvent) => {
-      this.createTooltip(text);
+      this.createTooltip(tooltipMessage);
 
       const elementPosition = (event.target as HTMLElement).getBoundingClientRect();
       this.setTooltipPosition(elementPosition);

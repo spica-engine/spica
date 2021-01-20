@@ -7,7 +7,9 @@ import {By} from "@angular/platform-browser";
 
 @Component({
   template: `
-    <button [canInteract]="action" (click)="onclick()" [resource]="id">Click here.</button>
+    <button [canInteract]="action" (click)="onclick()" [resource]="id">
+      Click here.
+    </button>
   `
 })
 class TestComponent {
@@ -19,9 +21,9 @@ class TestComponent {
 }
 
 class TestPassportService {
-  checkAllowed = (value: string) => {
+  checkAllowed = (action: string) => {
     // custom logic
-    if (value.startsWith("bucket")) {
+    if (action == "bucket:create") {
       return of(true);
     }
 
@@ -29,7 +31,7 @@ class TestPassportService {
   };
 }
 
-fdescribe("CanInteract", () => {
+describe("CanInteract", () => {
   let component: TestComponent;
   let fixture: ComponentFixture<TestComponent>;
   beforeEach(async () => {
@@ -42,50 +44,85 @@ fdescribe("CanInteract", () => {
     component = fixture.componentInstance;
 
     fixture.detectChanges();
+    await fixture.whenStable();
   });
 
-  fit("should set button disable and show tooltip when hovered", async () => {
-    await fixture.whenStable();
-    fixture.detectChanges();
-
+  afterEach(() => {
     component.onclick.calls.reset();
+  });
 
-    // write the right selector.
-    const button = undefined;
+  it("should set button disable and show tooltip when hovered", async () => {
+    const actualButtons = document.body.querySelector("button");
 
-    console.log(button);
+    expect(actualButtons.style.display).toEqual("none");
 
-    button.dispatchEvent(new Event("mouseenter"));
+    const disabledButtons = document.body.querySelectorAll("button.ng-disabled-button");
+
+    expect(disabledButtons.length).toEqual(1);
+
+    disabledButtons[0].dispatchEvent(new Event("mouseenter"));
     fixture.detectChanges();
 
-    const tooltip = document.querySelector(".ng-tooltip");
+    const tooltips = document.querySelectorAll(".ng-tooltip-show");
 
-    expect(Array.from(tooltip.classList)).toContain("ng-tooltip-show");
+    expect(tooltips.length).toEqual(1);
+    expect(tooltips[0].textContent).toEqual(
+      "passport:identity:create is required for this action."
+    );
 
-    expect(tooltip.textContent).toEqual("passport:identity:create is required for this action.");
-
-    (button as HTMLButtonElement).click();
+    (disabledButtons[0] as HTMLButtonElement).click();
     fixture.detectChanges();
 
     expect(component.onclick).toHaveBeenCalledTimes(0);
+
+    // for removing tooltip from UI
+    disabledButtons[0].dispatchEvent(new Event("mouseleave"));
+    fixture.detectChanges();
   });
 
-  it("should not change button's any property", async () => {
-    component.onclick.calls.reset();
+  it("should revert actual button", async () => {
     component.action = "bucket:create";
 
     fixture.detectChanges();
-
     await fixture.whenStable();
-    fixture.detectChanges();
 
-    const button: HTMLElement = fixture.debugElement.nativeElement.querySelector("button");
+    const actualButton: HTMLElement = fixture.debugElement.nativeElement.querySelector("button");
 
-    expect(Array.from(button.classList)).not.toContain("ng-disabled-button");
-
-    (button as HTMLButtonElement).click();
+    (actualButton as HTMLButtonElement).click();
     fixture.detectChanges();
 
     expect(component.onclick).toHaveBeenCalledTimes(1);
+
+    const disabledButton = fixture.debugElement.nativeElement.querySelector(
+      "button.ng-disabled-button"
+    );
+
+    expect(disabledButton).toBeNull();
+  });
+
+  it("should not add one more disabled button if already exist, but update tooltip message", async () => {
+    component.action = "passport:identity:update";
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const disabledButtons = document.body.querySelectorAll("button.ng-disabled-button");
+
+    expect(disabledButtons.length).toEqual(1);
+
+    disabledButtons[0].dispatchEvent(new Event("mouseenter"));
+    fixture.detectChanges();
+
+    const tooltips = document.querySelectorAll(".ng-tooltip-show");
+
+    expect(tooltips.length).toEqual(1);
+
+    expect(tooltips[0].textContent).toEqual(
+      "passport:identity:update is required for this action."
+    );
+
+    // for removing tooltip from UI
+    disabledButtons[0].dispatchEvent(new Event("mouseleave"));
+    fixture.detectChanges();
   });
 });
