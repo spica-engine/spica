@@ -6,7 +6,6 @@ import {Services} from "../../interfaces/service";
 import {Statement} from "../../interfaces/statement";
 import {PolicyService} from "../../services/policy.service";
 import {merge} from "rxjs";
-import {state} from "@angular/animations";
 import {MatDialog} from "@angular/material/dialog";
 import {PolicyResourceAddComponent} from "@spica-client/passport/components/policy-resource-add/policy-resource-add.component";
 
@@ -47,8 +46,8 @@ export class PolicyAddComponent implements OnInit {
           this.originalPolicy = policy;
           this.policy.name = this.originalPolicy.name;
           this.policy.description = this.originalPolicy.description;
-          this.originalPolicy.statement.map((statement: Statement) => {
-            let existingStatement = this.policy.statements.findIndex(
+          this.originalPolicy.statement.forEach((statement: Statement) => {
+            const existingStatement = this.policy.statements.findIndex(
               manuplatedStatement => statement.module == manuplatedStatement.module
             );
             if (existingStatement >= 0) {
@@ -73,13 +72,15 @@ export class PolicyAddComponent implements OnInit {
       .subscribe();
   }
 
-  isServiceUsed(module) {
+  isServiceUsed(module: string) {
     return this.policy.statements.some(statement => module == statement.module);
   }
 
-  getAction(module, action) {
-    let statementIndex = this.policy.statements.findIndex(statement => statement.module == module);
-    let actionIndex = this.policy.statements[statementIndex]["actions"].findIndex(
+  getAction(module: string, action: string) {
+    const statementIndex = this.policy.statements.findIndex(
+      statement => statement.module == module
+    );
+    const actionIndex = this.policy.statements[statementIndex]["actions"].findIndex(
       actionInStatement => actionInStatement.action == action
     );
     return actionIndex >= 0
@@ -97,8 +98,10 @@ export class PolicyAddComponent implements OnInit {
     }
   }
 
-  toggleAction(module, action) {
-    let statementIndex = this.policy.statements.findIndex(statement => statement.module == module);
+  toggleAction(module: string, action: string) {
+    const statementIndex = this.policy.statements.findIndex(
+      statement => statement.module == module
+    );
     let actionIndex = this.policy.statements[statementIndex]["actions"].findIndex(
       actionInStatement => actionInStatement.action == action
     );
@@ -112,11 +115,11 @@ export class PolicyAddComponent implements OnInit {
     }
   }
 
-  isActionActive(module, action) {
+  isActionActive(module: string, action: string) {
     return this.getAction(module, action) ? true : false;
   }
 
-  editResources(statement, action) {
+  editResources(statement: Statement, action: string) {
     if (this.isActionActive(statement.module, action)) {
       this.dialog.open(PolicyResourceAddComponent, {
         width: "880px",
@@ -133,7 +136,7 @@ export class PolicyAddComponent implements OnInit {
     }
   }
 
-  acceptsResource(statement: Statement, action) {
+  acceptsResource(statement: Statement, action: string) {
     return (
       this.services[statement.module] &&
       this.services[statement.module][action] &&
@@ -143,19 +146,21 @@ export class PolicyAddComponent implements OnInit {
 
   noResourceInserted() {
     let isResourceMissing = false;
-    this.policy.statements.map(statement => {
-      statement.actions.map(action => {
-        if (this.acceptsResource(statement, action.action) && action.resource.length == 0)
+    for (const statement of this.policy.statements) {
+      for (const action of statement.actions) {
+        if (this.acceptsResource(statement, action.action) && action.resource.length == 0) {
           isResourceMissing = true;
-      });
-    });
+          break;
+        }
+      }
+    }
     return isResourceMissing;
   }
 
   savePolicy() {
-    let policy: Policy = {...this.originalPolicy, statement: []};
-    this.policy["statements"].map(statement => {
-      statement.actions.map(action =>
+    const policy: Policy = {...this.originalPolicy, statement: []};
+    this.policy["statements"].forEach(statement => {
+      statement.actions.forEach(action =>
         policy["statement"].push({
           module: statement.module,
           action: action.action,
