@@ -30,7 +30,7 @@ export class LocationComponent implements ControlValueAccessor, OnDestroy, OnIni
   @ViewChild(LeafletDirective, {static: true}) map: LeafletDirective;
 
   value = {
-    type: this.schema['locationType'] || "Point",
+    type: this.schema["locationType"] || "Point",
     coordinates: [null, null]
   };
 

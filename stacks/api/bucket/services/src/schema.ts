@@ -79,15 +79,10 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
             case "Point":
               schema.properties.coordinates = point;
               break;
-            case "LineString":
-              schema.properties.coordinates = {
-                type: "array",
-                items: point,
-                minItems: 2
-              };
-              break;
             default:
-              throw new BadRequestException(`Unknown location type '${schema["locationType"]}' on bucket schema.`);
+              throw new BadRequestException(
+                `Unknown location type '${schema["locationType"]}' on bucket schema.`
+              );
           }
 
           break;

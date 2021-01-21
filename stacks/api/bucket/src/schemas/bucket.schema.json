@@ -75,7 +75,7 @@
             "properties": {
               "locationType": {
                 "type": "string",
-                "enum": ["Point", "LineString"],
+                "enum": ["Point"],
                 "default": "Point"
               }
             }
