@@ -120,41 +120,44 @@ describe("Update location for bucket schema and bucket-data", () => {
       })
       .toArray();
 
-    expect(buckets).toEqual([
-      {
-        title: "New Bucket",
-        properties: {
-          market: {
-            type: "location",
-            locationType: "Point"
-          },
-          description: {
-            type: "string"
-          },
-          shop: {
-            type: "location",
-            locationType: "Point"
+    expect(buckets).toEqual(
+      [
+        {
+          title: "New Bucket",
+          properties: {
+            market: {
+              type: "location",
+              locationType: "Point"
+            },
+            description: {
+              type: "string"
+            },
+            shop: {
+              type: "location",
+              locationType: "Point"
+            }
+          }
+        },
+        {
+          title: "New Bucket2",
+          properties: {
+            home: {
+              type: "location",
+              locationType: "Point"
+            }
+          }
+        },
+        {
+          title: "New Bucket3",
+          properties: {
+            title: {
+              type: "string"
+            }
           }
         }
-      },
-      {
-        title: "New Bucket2",
-        properties: {
-          home: {
-            type: "location",
-            locationType: "Point"
-          }
-        }
-      },
-      {
-        title: "New Bucket3",
-        properties: {
-          title: {
-            type: "string"
-          }
-        }
-      }
-    ]);
+      ],
+      "should work if locationType inserted to location fields"
+    );
 
     const bucket1Docs = await db
       .collection(`bucket_${bucket1Id}`)
@@ -167,26 +170,78 @@ describe("Update location for bucket schema and bucket-data", () => {
         })
       );
 
-    expect(bucket1Docs).toEqual([
-      {
-        market: {
-          type: "Point",
-          // longitude first
-          coordinates: [51, 50]
+    expect(bucket1Docs).toEqual(
+      [
+        {
+          market: {
+            type: "Point",
+            // longitude first
+            coordinates: [50, 51]
+          },
+          description: "some desc",
+          shop: {
+            type: "Point",
+            coordinates: [100, 101]
+          }
         },
-        description: "some desc",
-        shop: {
-          type: "Point",
-          coordinates: [101, 100]
+        {
+          market: {
+            type: "Point",
+            coordinates: [120, 121]
+          },
+          description: "some desc"
         }
-      },
-      {
-        market: {
-          type: "Point",
-          coordinates: [121, 120]
+      ],
+      "should work if locations converted successfully."
+    );
+
+    const bucket2Docs = await db
+      .collection(`bucket_${bucket2Id}`)
+      .find<any>()
+      .toArray()
+      .then(docs =>
+        docs.map(doc => {
+          delete doc._id;
+          return doc;
+        })
+      );
+
+    expect(bucket2Docs).toEqual(
+      [
+        {
+          home: {
+            type: "Point",
+            coordinates: [null, null]
+          }
         },
-        description: "some desc"
-      }
-    ]);
+        {
+          home: {
+            type: "Point",
+            coordinates: [131, 130]
+          }
+        }
+      ],
+      "should work if latitude longitude does not exist or have wrong order"
+    );
+
+    const bucket3Docs = await db
+      .collection(`bucket_${bucket3Id}`)
+      .find<any>()
+      .toArray()
+      .then(docs =>
+        docs.map(doc => {
+          delete doc._id;
+          return doc;
+        })
+      );
+
+    expect(bucket3Docs).toEqual(
+      [
+        {
+          title: "test"
+        }
+      ],
+      "should work if migration does not affect to non-location fields"
+    );
   });
 });
