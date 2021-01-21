@@ -30,8 +30,8 @@ export class LocationComponent implements ControlValueAccessor, OnDestroy, OnIni
   @ViewChild(LeafletDirective, {static: true}) map: LeafletDirective;
 
   value = {
-    longitude: undefined,
-    latitude: undefined
+    type: this.schema['locationType'] || "Point",
+    coordinates: [null, null]
   };
 
   _disabled: boolean = false;
@@ -86,14 +86,14 @@ export class LocationComponent implements ControlValueAccessor, OnDestroy, OnIni
 
   applyCoords(latLng?: {lat: number; lng: number}, mapOnly: boolean = false) {
     if (latLng && !this._disabled) {
-      this.value.latitude = latLng.lat;
-      this.value.longitude = latLng.lng;
+      this.value.coordinates[1] = latLng.lat;
+      this.value.coordinates[0] = latLng.lng;
     }
     if (!mapOnly) {
-      this._marker.setLatLng([this.value.latitude, this.value.longitude]);
+      this._marker.setLatLng([this.value.coordinates[1], this.value.coordinates[0]]);
     }
     setTimeout(() => {
-      this._center = [this.value.latitude, this.value.longitude];
+      this._center = [this.value.coordinates[1], this.value.coordinates[0]];
       this.cd.markForCheck();
     }, 500);
   }

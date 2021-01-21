@@ -1,5 +1,6 @@
-import {JSONSchema7} from "json-schema";
+import {JSONSchema7, JSONSchema7Definition} from "json-schema";
 import {Bucket, BucketPreferences} from "./bucket";
+import {BadRequestException} from "@nestjs/common";
 
 export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSchema7 {
   function map(schema: JSONSchema7): JSONSchema7 {
@@ -43,22 +44,52 @@ export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSch
           schema.format = "date-time";
           break;
         case "location":
-          schema.type = "object";
-          schema.required = ["longitude", "latitude"];
-          schema.properties = {
-            longitude: {
-              title: "Longitude",
-              type: "number",
-              minimum: -180,
-              maximum: 180
-            },
-            latitude: {
-              title: "Latitude",
-              type: "number",
-              minimum: -90,
-              maximum: 90
-            }
+          const point: JSONSchema7Definition = {
+            type: "array",
+            items: [
+              {
+                title: "Longitude",
+                type: "number",
+                minimum: -180,
+                maximum: 180
+              },
+              {
+                title: "Latitude",
+                type: "number",
+                minimum: -90,
+                maximum: 90
+              }
+            ],
+            minItems: 2,
+            additionalItems: false
           };
+
+          schema.type = "object";
+          schema.required = ["coordinates"];
+          schema.properties = {
+            type: {
+              type: "string",
+              const: schema["locationType"],
+              default: schema["locationType"]
+            },
+            coordinates: {}
+          };
+
+          switch (schema["locationType"]) {
+            case "Point":
+              schema.properties.coordinates = point;
+              break;
+            case "LineString":
+              schema.properties.coordinates = {
+                type: "array",
+                items: point,
+                minItems: 2
+              };
+              break;
+            default:
+              throw new BadRequestException(`Unknown location type '${schema["locationType"]}' on bucket schema.`);
+          }
+
           break;
         default:
       }
