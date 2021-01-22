@@ -13,6 +13,7 @@ import {DashboardModule} from "./dashboard/dashboard.module";
 import {FunctionModule} from "./function/function.module";
 import {PassportModule} from "./passport";
 import {StorageModule} from "./storage/storage.module";
+import {ErrorStateMatcher, ShowOnDirtyErrorStateMatcher} from "@angular/material/core";
 
 @NgModule({
   imports: [
@@ -39,6 +40,7 @@ import {StorageModule} from "./storage/storage.module";
     StorageModule.forRoot(),
     FunctionModule.forRoot({url: environment.api})
   ],
+  providers: [{provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher}],
   declarations: [AppComponent],
   bootstrap: [AppComponent]
 })

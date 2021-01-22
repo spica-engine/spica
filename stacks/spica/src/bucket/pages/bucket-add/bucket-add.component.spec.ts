@@ -29,7 +29,7 @@ import {Bucket} from "src/bucket/interfaces/bucket";
 import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
 import {BucketService} from "src/bucket/services/bucket.service";
 import {PropertyKvPipe} from "@spica-client/common/pipes";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {BucketAddComponent} from "./bucket-add.component";
 import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 import {BucketIndexComponent} from "../bucket-index/bucket-index.component";

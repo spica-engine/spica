@@ -10,7 +10,7 @@ import {By} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {ApiKey} from "../../interfaces/apikey";
 import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
 import {ApiKeyIndexComponent} from "./apikey-index.component";
