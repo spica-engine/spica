@@ -9,7 +9,7 @@
           <mat-form-field>
             <input
               matInput
-              [name]="statementIndex + 'includedResource'"
+              [name]="resource"
               #includedResource="ngModel"
               [(ngModel)]="getAction(data.action).resource.include"
               required
@@ -31,7 +31,8 @@
           <mat-form-field>
             <input
               matInput
-              [name]="statementIndex + 'includedResource'"
+              disabled
+              [name]="includedResourceIndex + '.includedResource'"
               #includedResource="ngModel"
               [(ngModel)]="getAction(data.action).resource[includedResourceIndex]"
               required
@@ -54,7 +55,7 @@
               matInput
               #includeResource="ngModel"
               ngModel
-              [name]="statementIndex + 'includeResource'"
+              name="includedResource"
               placeholder="Enter including resource"
               (keyup.enter)="
                 addInclude(includeResource.value, getAction(data.action)); includeResource.reset()

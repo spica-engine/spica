@@ -2,7 +2,7 @@
   <span>
     <h4>
       <mat-icon>layers</mat-icon>
-      <span>{{ policy._id ? policy.name : "Add Policy" }}</span>
+      <span>{{ originalPolicy._id ? originalPolicy.name : "Add Policy" }}</span>
     </h4>
   </span>
 </ng-template>
@@ -15,7 +15,7 @@
           matInput
           placeholder="Policy Name"
           name="policyName"
-          [(ngModel)]="policy.name"
+          [(ngModel)]="originalPolicy.name"
           #nameModel="ngModel"
           required
         />
@@ -29,7 +29,7 @@
           matInput
           placeholder="Description"
           name="policyDescription"
-          [(ngModel)]="policy.description"
+          [(ngModel)]="originalPolicy.description"
           #descriptionModel="ngModel"
           required
         ></textarea>
@@ -94,7 +94,7 @@
                     "
                   >
                     <div class="resource">
-                      <b>Include:</b>
+                      <b>Include:&nbsp;</b>
                       <span *ngFor="let include of getAction(statement.module, action.key).resource"
                         >{{ include }}
                       </span>
@@ -106,11 +106,11 @@
                     "
                   >
                     <div class="resource">
-                      <b>Include:</b>
+                      <b>Include:&nbsp;</b>
                       <span>{{ getAction(statement.module, action.key).resource.include }}</span>
                     </div>
                     <div class="resource">
-                      <b>Exclude:</b>
+                      <b>Exclude:&nbsp;</b>
                       <span
                         *ngFor="
                           let exclude of getAction(statement.module, action.key).resource.exclude

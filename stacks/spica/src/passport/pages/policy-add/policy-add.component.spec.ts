@@ -71,8 +71,6 @@ describe("Policy Add Component", () => {
 
     it("should set policy as empty", () => {
       expect(fixture.componentInstance.policy).toEqual({
-        name: undefined,
-        description: undefined,
         statements: []
       });
     });
@@ -110,8 +108,6 @@ describe("Policy Add Component", () => {
     it("should add new statement", () => {
       fixture.componentInstance.addStatement();
       expect(fixture.componentInstance.policy).toEqual({
-        name: undefined,
-        description: undefined,
         statements: [{actions: [], module: undefined}]
       });
     });
@@ -120,8 +116,6 @@ describe("Policy Add Component", () => {
       fixture.componentInstance.policy.statements = [{actions: [], module: undefined}];
       fixture.componentInstance.removeStatement(0);
       expect(fixture.componentInstance.policy).toEqual({
-        name: undefined,
-        description: undefined,
         statements: []
       });
     });
@@ -308,8 +302,6 @@ describe("Policy Add Component", () => {
 
       it("should set policy from policy services", () => {
         expect(fixture.componentInstance.policy).toEqual({
-          name: "policy_name",
-          description: "policy_description",
           statements: []
         });
       });

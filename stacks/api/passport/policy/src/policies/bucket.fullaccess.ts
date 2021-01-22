@@ -12,37 +12,27 @@ export default {
     },
     {
       action: "bucket:update",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "bucket"
     },
     {
       action: "bucket:delete",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "bucket"
     },
     {
       action: "bucket:data:create",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "bucket:data"
     },
     {
       action: "bucket:data:update",
-      resource: {
-        include: "*/*"
-      },
+      resource: ["*/*"],
       module: "bucket:data"
     },
     {
       action: "bucket:data:delete",
-      resource: {
-        include: "*/*"
-      },
+      resource: ["*/*"],
       module: "bucket:data"
     },
     {
