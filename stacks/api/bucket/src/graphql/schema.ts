@@ -2,6 +2,8 @@ import {Bucket} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {GraphQLResolveInfo} from "graphql";
 
+const locationTypes = ["Point"];
+
 enum Prefix {
   Type = "type",
   Input = "input"
@@ -54,7 +56,7 @@ function validateProperties(
         }
       }
 
-      //name and definition changed, skip the definition validation
+      // name and definition changed, skip the definition validation
       continue;
     }
 
@@ -114,6 +116,13 @@ function validateDefinition(
       break;
 
     case "location":
+      if (!isLocationTypeValid(definition.locationType)) {
+        errors.push({
+          target: name,
+          reason: `Unknown location type '${definition.locationType}'.`
+        });
+        writeDefaultDefinition(definition);
+      }
       break;
 
     case "relation":
@@ -353,6 +362,9 @@ function createPropertyValue(
 
     case "location":
       result = prefix == Prefix.Type ? "Location" : "LocationInput";
+
+      result = value.locationType + result;
+
       break;
 
     case "relation":
@@ -378,6 +390,10 @@ function relatedBucketExists(bucketId: string, bucketIds: string[]) {
 
 function relationTypeValid(relationType: string) {
   return relationType == "onetoone" || relationType == "onetomany";
+}
+
+function isLocationTypeValid(locationType: string) {
+  return locationTypes.includes(locationType);
 }
 
 export function getBucketName(id: string | ObjectId): string {
@@ -571,28 +587,6 @@ function isParsableObject(object: any): boolean {
     !ObjectId.isValid(object) &&
     !!Object.keys(object).length
   );
-}
-
-function relationalFieldRequested(properties: object, requestedFields: string[][]): boolean {
-  const relatedFields = [];
-  Object.keys(properties).forEach(key => {
-    if (properties[key].type == "relation") {
-      relatedFields.push(key);
-    }
-  });
-
-  return requestedFields.some(fields => relatedFields.includes(fields[0]));
-}
-
-function translatableFieldRequested(properties: object, requestedFields: string[][]): boolean {
-  const translatableFields = [];
-  for (const [key, value] of Object.entries(properties)) {
-    if (value.options && value.options.translate) {
-      translatableFields.push(key);
-    }
-  }
-
-  return requestedFields.some(fields => translatableFields.includes(fields[0]));
 }
 
 export function requestedFieldsFromExpression(expression: object, requestedFields: string[][]) {
