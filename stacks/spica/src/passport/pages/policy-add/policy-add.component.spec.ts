@@ -11,7 +11,7 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute, RouterModule} from "@angular/router";
 import {of} from "rxjs";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {PolicyService} from "../../services/policy.service";
 import {PolicyAddComponent} from "./policy-add.component";
 import {MatDialogModule} from "@angular/material/dialog";

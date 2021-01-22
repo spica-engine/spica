@@ -17,7 +17,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {IndexResult} from "@spica-client/core";
 import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {of} from "rxjs";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {ApiKey} from "../../interfaces/apikey";
 import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
 import {PolicyService} from "../../services/policy.service";

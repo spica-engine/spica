@@ -12,7 +12,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {Subject} from "rxjs";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {Strategy} from "../../interfaces/strategy";
 import {StrategyService} from "../../services/strategy.service";
 import {StrategiesComponent} from "./strategies.component";

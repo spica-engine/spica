@@ -29,7 +29,7 @@ import {BucketHistoryService} from "../../services/bucket-history.service";
 import {BucketService} from "../../services/bucket.service";
 import {RequiredTranslate} from "../../validators";
 import {AddComponent} from "./add.component";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 
 describe("AddComponent", () => {
   let fixture: ComponentFixture<AddComponent>;

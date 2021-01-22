@@ -167,6 +167,7 @@
         name="property-name"
         placeholder="Enter a property name"
         #pnm="ngModel"
+        (ngModelChange)="updatePropertyExistsState(pnm, $event)"
         (keyup.enter)="
           pnm.valid &&
             !parentSchema.properties[pnm?.value?.toLowerCase()] &&
@@ -183,6 +184,9 @@
       </mat-error>
       <mat-error *ngIf="pnm?.errors?.pattern">
         Property name can not include any non-word character.
+      </mat-error>
+      <mat-error *ngIf="pnm?.errors?.propertyExists">
+        Property name already exists.
       </mat-error>
     </mat-form-field>
     <button

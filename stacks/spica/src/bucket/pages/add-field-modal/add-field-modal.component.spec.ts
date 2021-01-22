@@ -24,16 +24,9 @@ import {AddFieldModalComponent} from "./add-field-modal.component";
 import {of} from "rxjs";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {By} from "@angular/platform-browser";
-import {Directive, HostBinding, Input} from "@angular/core";
 import {MatDialogModule, MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {FormsModule} from "@angular/forms";
-
-@Directive({selector: "[canInteract]"})
-export class CanInteractDirectiveTest {
-  @HostBinding("style.visibility") _visible = "visible";
-  @Input("canInteract") action: string;
-  @Input("resource") resource: string;
-}
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 
 describe("Add Field Component", () => {
   let fixture: ComponentFixture<AddFieldModalComponent>;
