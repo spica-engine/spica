@@ -12,7 +12,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {MatAwareDialogModule} from "@spica-client/material";
 import {Subject, of} from "rxjs";
 import {map} from "rxjs/operators";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {Identity} from "../../interfaces/identity";
 import {IdentityService} from "../../services/identity.service";
 import {IdentityIndexComponent} from "./identity-index.component";

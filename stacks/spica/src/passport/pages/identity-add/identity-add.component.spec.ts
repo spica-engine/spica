@@ -15,7 +15,7 @@ import {PassportService} from "@spica/client/src/passport/services/passport.serv
 import {of, throwError} from "rxjs";
 import {InputModule} from "../../../../packages/common/input/input.module";
 import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
 import {IdentityAddComponent} from "./identity-add.component";

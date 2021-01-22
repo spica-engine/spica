@@ -14,7 +14,7 @@ import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
 import {MatButtonModule} from "@angular/material/button";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 
 describe("Webhook Index", () => {
   let fixture: ComponentFixture<WebhookIndexComponent>;

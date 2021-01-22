@@ -18,7 +18,7 @@ import {of} from "rxjs";
 import {take} from "rxjs/operators";
 import {FunctionService} from "../../function.service";
 import {LogViewComponent} from "./log-view.component";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 
 describe("LogViewComponent", () => {
   let fixture: ComponentFixture<LogViewComponent>;

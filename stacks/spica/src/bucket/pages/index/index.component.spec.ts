@@ -30,7 +30,7 @@ import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {FilterComponent} from "../../components/filter/filter.component";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";

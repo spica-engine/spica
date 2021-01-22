@@ -6,6 +6,7 @@ import {InputPlacerWithMetaPlacer} from "@spica-client/common";
 import {InputResolver} from "@spica-client/common/input/input.resolver";
 import {map} from "rxjs/internal/operators/map";
 import {take} from "rxjs/operators";
+import {NgModel} from "@angular/forms";
 
 @Component({
   selector: "app-add-field-modal",
@@ -99,5 +100,15 @@ export class AddFieldModalComponent implements OnInit {
     required
       ? this.parentSchema.required.push(key)
       : this.parentSchema.required.splice(this.parentSchema.required.indexOf(key), 1);
+  }
+
+  updatePropertyExistsState(model: NgModel, newProperty: string) {
+    const properties = Object.keys(this.parentSchema.properties);
+
+    if (properties.includes(newProperty)) {
+      model.control.setErrors({
+        propertyExists: true
+      });
+    }
   }
 }
