@@ -17,5 +17,6 @@ docs(
         "webhook.md",
         "l10n.md",
         "cli.md",
+        "spica-devkit.md",
     ],
 )
