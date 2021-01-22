@@ -40,26 +40,49 @@
     },
     "schema": {
       "type": "object",
-      "if": {
-        "properties": {
-          "type": {
-            "const": "relation"
-          }
-        }
-      },
-      "then": {
-        "required": ["bucketId", "relationType"],
-        "properties": {
-          "bucketId": {
-            "type": "string",
-            "format": "objectid-string"
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "relation"
+              }
+            }
           },
-          "relationType": {
-            "type": "string",
-            "enum": ["onetoone", "onetomany"]
+          "then": {
+            "required": ["bucketId", "relationType"],
+            "properties": {
+              "bucketId": {
+                "type": "string",
+                "format": "objectid-string"
+              },
+              "relationType": {
+                "type": "string",
+                "enum": ["onetoone", "onetomany"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "location"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "locationType": {
+                "type": "string",
+                "enum": ["Point"],
+                "default": "Point"
+              }
+            }
           }
         }
-      },
+      ],
+
       "properties": {
         "title": {
           "type": "string"

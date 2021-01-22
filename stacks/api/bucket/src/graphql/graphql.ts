@@ -68,14 +68,18 @@ export class GraphqlController implements OnModuleInit {
       total: Int
     }
 
-    type Location{
-      latitude: Float
-      longitude: Float
+    enum Point{
+      Point
     }
 
-    input LocationInput{
-      latitude: Float
-      longitude: Float
+    type PointLocation{
+      type: Point
+      coordinates: [ Float ]
+    }
+    
+    input PointLocationInput{
+      type: Point 
+      coordinates: [ Float ]
     }
   `;
 
