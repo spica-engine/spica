@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, NotFoundException} from "@nestjs/common";
 import {Bucket, BucketPreferences, BucketService, compile} from "@spica-server/bucket/services";
 import {CodeKeywordDefinition, KeywordCxt, Validator, _} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
@@ -22,6 +22,11 @@ export class BucketSchemaResolver {
       }
       return combineLatest([this.preferenceWatcher, bucketWatcher]).pipe(
         map(([prefs, schema]) => {
+          // controller will handle the throwing error message when bucket does not exist
+          if (!schema) {
+            return {};
+          }
+
           let jsonSchema = compile(schema, prefs);
           jsonSchema.$id = uri;
           jsonSchema.properties._schedule = {

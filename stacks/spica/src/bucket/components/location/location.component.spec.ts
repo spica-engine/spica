@@ -54,8 +54,8 @@ describe("LocationComponent", () => {
 
     it("should show coordinates when clicked control camera button", fakeAsync(() => {
       fixture.componentInstance.value = {
-        latitude: 35,
-        longitude: 45
+        type: "Point",
+        coordinates: [45, 35]
       };
       const cameraButton = fixture.debugElement.query(By.css("button:first-of-type"));
       cameraButton.nativeElement.click();
@@ -103,8 +103,8 @@ describe("LocationComponent", () => {
       tick(501);
 
       expect(fixture.componentInstance.value).toEqual({
-        latitude: 33,
-        longitude: 55
+        type: "Point",
+        coordinates: [55, 33]
       });
 
       expect(fixture.componentInstance._marker.getLatLng()).toEqual(new LatLng(33, 55));
@@ -132,8 +132,8 @@ describe("LocationComponent", () => {
 
       expect(coordinateSpy).toHaveBeenCalledTimes(1);
       expect(fixture.componentInstance.value).toEqual({
-        latitude: 32,
-        longitude: 33
+        type: "Point",
+        coordinates: [33, 32]
       });
       expect(fixture.componentInstance._center[0]).toBe(32);
       expect(fixture.componentInstance._center[1]).toBe(33);

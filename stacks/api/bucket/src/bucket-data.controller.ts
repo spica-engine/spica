@@ -16,8 +16,7 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors,
-  InternalServerErrorException
+  UseInterceptors
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
@@ -162,6 +161,10 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const relationPaths: string[][] = getRelationPaths(
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
@@ -223,6 +226,10 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const document = await insertDocument(
       schema,
       rawDocument,
@@ -276,6 +283,10 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) document: BucketDocument
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
+
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
 
     const previousDocument = await replaceDocument(
       schema,
@@ -334,6 +345,10 @@ export class BucketDataController {
     @Body() patch: Partial<BucketDocument>
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
+
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
 
     const bkt = this.bds.children(bucketId);
 
@@ -403,6 +418,10 @@ export class BucketDataController {
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
+
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
 
     const deletedDocument = await deleteDocument(
       schema,

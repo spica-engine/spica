@@ -140,6 +140,34 @@ describe("Schema", () => {
           }
         ]);
       });
+
+      it("should convert type of the field to String, create warning for unknown location type", () => {
+        bucket.properties = {
+          target: {
+            type: "location",
+            locationType: "Ring"
+          }
+        };
+
+        const {warnings, buckets} = validateBuckets([bucket]);
+
+        expect(buckets).toEqual([
+          {
+            _id: "id",
+            properties: {
+              target: {
+                type: "string"
+              }
+            }
+          }
+        ] as any);
+        expect(warnings).toEqual([
+          {
+            target: "Bucket_id.target",
+            reason: "Unknown location type 'Ring'."
+          }
+        ]);
+      });
     });
   });
   describe("CreateSchema", () => {
@@ -156,14 +184,18 @@ describe("Schema", () => {
       total: Int
     }
 
-    type Location{
-      latitude: Float
-      longitude: Float
+    enum Point{
+      Point
     }
 
-    input LocationInput{
-      latitude: Float
-      longitude: Float
+    type PointLocation{
+      type: Point
+      coordinates: [ Float ]
+    }
+    
+    input PointLocationInput{
+      type: Point 
+      coordinates: [ Float ]
     }
     `;
 
@@ -343,7 +375,8 @@ describe("Schema", () => {
     it("should create schema for other types", () => {
       bucket.properties = {
         location: {
-          type: "location"
+          type: "location",
+          locationType: "Point"
         },
         date: {
           type: "date"
@@ -379,7 +412,7 @@ describe("Schema", () => {
 
         type Bucket_id{
           _id: ObjectID
-          location : Location
+          location : PointLocation
           date: Date
           boolean: Boolean
           color: String
@@ -389,7 +422,7 @@ describe("Schema", () => {
         }
 
         input Bucket_idInput{
-          location : LocationInput
+          location : PointLocationInput
           date: Date
           boolean: Boolean
           color: String
