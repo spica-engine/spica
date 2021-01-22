@@ -1,4 +1,4 @@
-import {Component, OnInit} from "@angular/core";
+import {Component, OnInit, TemplateRef, ViewChild} from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {switchMap, tap, take, filter, map} from "rxjs/operators";
 import {emptyPolicy, Policy} from "../../interfaces/policy";
@@ -15,7 +15,8 @@ import {PolicyResourceAddComponent} from "@spica-client/passport/components/poli
   styleUrls: ["./policy-add.component.scss"]
 })
 export class PolicyAddComponent implements OnInit {
-  policy = {name: undefined, description: undefined, statements: []};
+  @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
+  policy = {statements: []};
   originalPolicy: Policy = emptyPolicy();
   services: Services;
 
@@ -44,8 +45,6 @@ export class PolicyAddComponent implements OnInit {
         take(1),
         tap(policy => {
           this.originalPolicy = policy;
-          this.policy.name = this.originalPolicy.name;
-          this.policy.description = this.originalPolicy.description;
           this.originalPolicy.statement.forEach((statement: Statement) => {
             const existingStatement = this.policy.statements.findIndex(
               manuplatedStatement => statement.module == manuplatedStatement.module

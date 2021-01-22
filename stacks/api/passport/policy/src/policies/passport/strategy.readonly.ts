@@ -5,16 +5,12 @@ export default {
   statement: [
     {
       action: "passport:strategy:index",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "passport:strategy"
     },
     {
       action: "passport:strategy:show",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "passport:strategy"
     }
   ]

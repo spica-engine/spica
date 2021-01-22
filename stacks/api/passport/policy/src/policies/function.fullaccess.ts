@@ -5,16 +5,12 @@ export default {
   statement: [
     {
       action: "function:index",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "function"
     },
     {
       action: "function:show",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "function"
     },
     {
@@ -23,16 +19,12 @@ export default {
     },
     {
       action: "function:update",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "function"
     },
     {
       action: "function:delete",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "function"
     },
     {

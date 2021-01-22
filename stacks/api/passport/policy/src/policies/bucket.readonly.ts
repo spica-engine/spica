@@ -5,37 +5,27 @@ export default {
   statement: [
     {
       action: "bucket:index",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "bucket"
     },
     {
       action: "bucket:show",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "bucket"
     },
     {
       action: "bucket:data:stream",
-      resource: {
-        include: "*/*"
-      },
+      resource: ["*/*"],
       module: "bucket:data"
     },
     {
       action: "bucket:data:index",
-      resource: {
-        include: "*/*"
-      },
+      resource: ["*/*"],
       module: "bucket:data"
     },
     {
       action: "bucket:data:show",
-      resource: {
-        include: "*/*"
-      },
+      resource: ["*/*"],
       module: "bucket:data"
     },
     {

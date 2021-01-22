@@ -5,16 +5,12 @@ export default {
   statement: [
     {
       action: "storage:index",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "storage"
     },
     {
       action: "storage:show",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "storage"
     }
   ]

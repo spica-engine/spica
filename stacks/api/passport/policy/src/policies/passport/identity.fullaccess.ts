@@ -12,30 +12,22 @@ export default {
     },
     {
       action: "passport:identity:update",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "passport:identity"
     },
     {
       action: "passport:identity:delete",
-      resource: {
-        include: "*"
-      },
+      resource: ["*"],
       module: "passport:identity"
     },
     {
       action: "passport:identity:policy:add",
-      resource: {
-        include: "*/*"
-      },
+      resource: ["*/*"],
       module: "passport:identity:policy"
     },
     {
       action: "passport:identity:policy:remove",
-      resource: {
-        include: "*/*"
-      },
+      resource: ["*/*"],
       module: "passport:identity:policy"
     },
     {
