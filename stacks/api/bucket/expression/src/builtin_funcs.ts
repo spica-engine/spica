@@ -2,12 +2,23 @@ import * as func from "./func";
 import {convert} from "./convert";
 import {compile} from "./compile";
 
+interface ArgumentValidation {
+  kind: string;
+  type?: string;
+  mustBe: string;
+}
+
 export const has: func.Func = context => {
   const fnName = "has";
+
   validateArgumentsLength(fnName, context.arguments, 1);
-  validateArgumentsNode(fnName, context.arguments, [
-    {kind: "operator", type: "select", expected: "property acces chain"}
-  ]);
+
+  const argValidation: ArgumentValidation = {
+    kind: "operator",
+    type: "select",
+    mustBe: "property acces chain"
+  };
+  validateArgumentsOrder(fnName, context.arguments, [argValidation]);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -31,13 +42,19 @@ export const has: func.Func = context => {
 export const some: func.Func = context => {
   const fnName = "some";
   validateArgumentsLength(fnName, context.arguments, undefined, 2);
-  validateArgumentsNode(fnName, context.arguments, [
-    {kind: "operator", type: "select", expected: "property acces chain"},
-    ...(new Array(context.arguments.length - 1).fill({
+
+  const argValidations: ArgumentValidation[] = [
+    {kind: "operator", type: "select", mustBe: "property acces chain"}
+  ];
+
+  argValidations.push(
+    ...new Array(context.arguments.length - 1).fill({
       kind: "literal",
-      expected: "literal"
-    }) as any)
-  ]);
+      mustBe: "literal"
+    })
+  );
+
+  validateArgumentsOrder(fnName, context.arguments, argValidations);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -60,11 +77,20 @@ export const some: func.Func = context => {
 
 export const every: func.Func = context => {
   const fnName = "every";
-  validateArgumentsLength("every", context.arguments, undefined, 2);
-  validateArgumentsNode(fnName, context.arguments, [
-    {kind: "operator", type: "select", expected: "property acces chain"},
-    new Array(context.arguments.length - 1).fill({kind: "literal", expected: "literal"}) as any
-  ]);
+  validateArgumentsLength(fnName, context.arguments, undefined, 2);
+
+  const argValidations: ArgumentValidation[] = [
+    {kind: "operator", type: "select", mustBe: "property acces chain"}
+  ];
+
+  argValidations.push(
+    ...new Array(context.arguments.length - 1).fill({
+      kind: "literal",
+      mustBe: "literal"
+    })
+  );
+
+  validateArgumentsOrder(fnName, context.arguments, argValidations);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -88,10 +114,19 @@ export const every: func.Func = context => {
 export const equal: func.Func = context => {
   const fnName = "equal";
   validateArgumentsLength(fnName, context.arguments, undefined, 2);
-  validateArgumentsNode(fnName, context.arguments, [
-    {kind: "operator", type: "select", expected: "property acces chain"},
-    new Array(context.arguments.length - 1).fill({kind: "literal", expected: "literal"}) as any
-  ]);
+
+  const argValidations: ArgumentValidation[] = [
+    {kind: "operator", type: "select", mustBe: "property acces chain"}
+  ];
+
+  argValidations.push(
+    ...new Array(context.arguments.length - 1).fill({
+      kind: "literal",
+      mustBe: "literal"
+    })
+  );
+
+  validateArgumentsOrder(fnName, context.arguments, argValidations);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -142,10 +177,19 @@ export const equal: func.Func = context => {
 export const regex: func.Func = context => {
   const fnName = "regex";
   validateArgumentsLength(fnName, context.arguments, undefined, 2, 3);
-  validateArgumentsNode(fnName, context.arguments, [
-    {kind: "operator", type: "select", expected: "property acces chain"},
-    new Array(context.arguments.length - 1).fill({kind: "literal", expected: "literal"}) as any
-  ]);
+
+  const argValidations: ArgumentValidation[] = [
+    {kind: "operator", type: "select", mustBe: "property acces chain"}
+  ];
+
+  argValidations.push(
+    ...new Array(context.arguments.length - 1).fill({
+      kind: "literal",
+      mustBe: "literal"
+    })
+  );
+
+  validateArgumentsOrder(fnName, context.arguments, argValidations);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -252,20 +296,14 @@ function validateArgumentsLength(
   }
 }
 
-function validateArgumentsNode(
-  fnName: string,
-  args: any[],
-  argumentsInfo: {kind: string; type?: string; expected: string}[]
-) {
+function validateArgumentsOrder(fnName: string, args: any[], argumentsInfo: ArgumentValidation[]) {
   const messages: string[] = [];
   for (const [index, node] of args.entries()) {
     if (
       argumentsInfo[index].kind != node.kind ||
       (argumentsInfo[index].type && argumentsInfo[index].type != node.type)
     ) {
-      messages.push(
-        `Function '${fnName}' arg[${index}] must be a ${argumentsInfo[index].expected}.`
-      );
+      messages.push(`Function '${fnName}' arg[${index}] must be a ${argumentsInfo[index].mustBe}.`);
     }
   }
 
