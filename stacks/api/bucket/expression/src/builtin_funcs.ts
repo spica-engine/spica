@@ -3,39 +3,41 @@ import {convert} from "./convert";
 import {compile} from "./compile";
 
 export const has: func.Func = context => {
-  const [node] = context.arguments;
-
-  if (node.type != "select" && node.kind != "identifier") {
-    throw new TypeError(`'has' only accepts property access chain or identifier.`);
-  }
-
-  if (context.arguments.length > 1) {
-    throw new TypeError(`'has' only accepts only one argument.`);
-  }
+  const fnName = "has";
+  validateArgumentsLength(fnName, context.arguments, 1);
+  validateArgumentsNode(fnName, context.arguments, [
+    {kind: "operator", type: "select", expected: "property acces chain"}
+  ]);
 
   return ctx => {
-    const propertyName: string = convert(context.arguments[0])(ctx);
     if (context.target == "aggregation") {
+      const parsedArguments = parseArguments(context.arguments, ctx, convert);
+
+      const propertyName: string = parsedArguments[0];
       // we can not use $exists since it is a query operator which we can't use as an logical operator
       // so we use a clever trick to see if "type number" of the field is greater than "null's" type number
       // https://docs.mongodb.com/manual/reference/bson-types/#bson-types-comparison-order
       return {$expr: {$gt: [propertyName, null]}};
     } else {
-      return ctx && propertyName in ctx;
+      const parsedArguments = parseArguments(context.arguments, ctx, compile);
+
+      const documentValue = parsedArguments[0];
+
+      return typeof documentValue != "undefined";
     }
   };
 };
 
 export const some: func.Func = context => {
-  const [node] = context.arguments;
-
-  if (node.type != "select" && node.kind != "identifier") {
-    throw new TypeError(`'some' only accepts property access chain or identifier.`);
-  }
-
-  if (context.arguments.length < 2) {
-    throw new TypeError(`'some' accepts minimun two arguments.`);
-  }
+  const fnName = "some";
+  validateArgumentsLength(fnName, context.arguments, undefined, 2);
+  validateArgumentsNode(fnName, context.arguments, [
+    {kind: "operator", type: "select", expected: "property acces chain"},
+    ...(new Array(context.arguments.length - 1).fill({
+      kind: "literal",
+      expected: "literal"
+    }) as any)
+  ]);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -57,15 +59,12 @@ export const some: func.Func = context => {
 };
 
 export const every: func.Func = context => {
-  const [node] = context.arguments;
-
-  if (node.type != "select" && node.kind != "identifier") {
-    throw new TypeError(`'every' only accepts property access chain or identifier.`);
-  }
-
-  if (context.arguments.length < 2) {
-    throw new TypeError(`'every' accepts minimun two arguments.`);
-  }
+  const fnName = "every";
+  validateArgumentsLength("every", context.arguments, undefined, 2);
+  validateArgumentsNode(fnName, context.arguments, [
+    {kind: "operator", type: "select", expected: "property acces chain"},
+    new Array(context.arguments.length - 1).fill({kind: "literal", expected: "literal"}) as any
+  ]);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -87,15 +86,12 @@ export const every: func.Func = context => {
 };
 
 export const equal: func.Func = context => {
-  const [node] = context.arguments;
-
-  if (node.type != "select" && node.kind != "identifier") {
-    throw new TypeError(`'equal' only accepts property access chain or identifier.`);
-  }
-
-  if (context.arguments.length < 2) {
-    throw new TypeError(`'equal' accepts minimum two arguments.`);
-  }
+  const fnName = "equal";
+  validateArgumentsLength(fnName, context.arguments, undefined, 2);
+  validateArgumentsNode(fnName, context.arguments, [
+    {kind: "operator", type: "select", expected: "property acces chain"},
+    new Array(context.arguments.length - 1).fill({kind: "literal", expected: "literal"}) as any
+  ]);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -144,15 +140,12 @@ export const equal: func.Func = context => {
 };
 
 export const regex: func.Func = context => {
-  const [node] = context.arguments;
-
-  if (node.type != "select" && node.kind != "identifier") {
-    throw new TypeError(`'regex' only accepts property access chain or identifier.`);
-  }
-
-  if (!(context.arguments.length == 2 || context.arguments.length == 3)) {
-    throw new TypeError(`'regex' accepts two or three arguments.`);
-  }
+  const fnName = "regex";
+  validateArgumentsLength(fnName, context.arguments, undefined, 2, 3);
+  validateArgumentsNode(fnName, context.arguments, [
+    {kind: "operator", type: "select", expected: "property acces chain"},
+    new Array(context.arguments.length - 1).fill({kind: "literal", expected: "literal"}) as any
+  ]);
 
   return ctx => {
     if (context.target == "aggregation") {
@@ -193,7 +186,6 @@ function parseArguments(args: object[], ctx: object, builder: Function) {
 
   for (const argument of args) {
     const item = builder(argument)(ctx);
-
     items.push(item);
   }
 
@@ -226,4 +218,58 @@ function createInQuery(items: unknown[], propertyName: string, operator: "$and" 
   }
 
   return query;
+}
+
+function validateArgumentsLength(
+  fnName: string,
+  args: any[],
+  exactLength: number = 0,
+  minLength: number = 0,
+  maxLength: number = 0
+) {
+  const messages: string[] = [];
+
+  if (exactLength && args.length != exactLength) {
+    messages.push(
+      `Function '${fnName}' accepts exactly ${exactLength} argument(s) but found ${args.length}.`
+    );
+  }
+
+  if (minLength && args.length < minLength) {
+    messages.push(
+      `Function '${fnName}' accepts minimum ${minLength} argument(s) but found ${args.length}.`
+    );
+  }
+
+  if (maxLength && args.length > maxLength) {
+    messages.push(
+      `Function '${fnName}' accepts maximum ${maxLength} argument(s) but found ${args.length}.`
+    );
+  }
+
+  if (messages.length) {
+    throw new TypeError(messages.join("\n"));
+  }
+}
+
+function validateArgumentsNode(
+  fnName: string,
+  args: any[],
+  argumentsInfo: {kind: string; type?: string; expected: string}[]
+) {
+  const messages: string[] = [];
+  for (const [index, node] of args.entries()) {
+    if (
+      argumentsInfo[index].kind != node.kind ||
+      (argumentsInfo[index].type && argumentsInfo[index].type != node.type)
+    ) {
+      messages.push(
+        `Function '${fnName}' arg[${index}] must be a ${argumentsInfo[index].expected}.`
+      );
+    }
+  }
+
+  if (messages.length) {
+    throw new TypeError(messages.join("\n"));
+  }
 }
