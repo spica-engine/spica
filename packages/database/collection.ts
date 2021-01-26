@@ -145,8 +145,30 @@ export type BaseCollection<T> = _MixinCollection<T>;
 
 export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
   return class extends _MixinCollection<T> {
-    constructor(db: DatabaseService) {
+    constructor(db: DatabaseService, maxDocumentCount?: number) {
       super(db, collection);
+
+      if (maxDocumentCount) {
+        this.insertOne = async (doc: T) => {
+          const existingDocumentCount = await this._coll.estimatedDocumentCount();
+
+          if (existingDocumentCount + 1 > maxDocumentCount) {
+            throw new Error("Maximum document count exceeded.");
+          }
+
+          return this._coll.insertOne(doc).then(t => t.ops[0]);
+        };
+
+        this.insertMany = async (docs: Array<T>) => {
+          const existingDocumentCount = await this._coll.estimatedDocumentCount();
+
+          if (existingDocumentCount + docs.length > maxDocumentCount) {
+            throw new Error("Maximum document count exceeded.");
+          }
+
+          return this._coll.insertMany(docs).then(t => Object.values(t.insertedIds));
+        };
+      }
     }
   };
 }

@@ -1,14 +1,20 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, Inject} from "@nestjs/common";
 import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Identity} from "./interface";
 import {Validator, Default} from "@spica-server/core/schema";
 import {hash, compare} from "./hash";
 import {JwtService} from "@nestjs/jwt";
+import {IDENTITY_OPTIONS, IdentityOptions} from "./options";
 
 @Injectable()
 export class IdentityService extends BaseCollection<Identity>("identity") {
-  constructor(database: DatabaseService, private validator: Validator, private jwt: JwtService) {
-    super(database);
+  constructor(
+    database: DatabaseService,
+    private validator: Validator,
+    private jwt: JwtService,
+    @Inject(IDENTITY_OPTIONS) options: IdentityOptions
+  ) {
+    super(database, options.maxIdentityCount);
     this._coll.createIndex({identifier: 1}, {unique: true});
   }
 

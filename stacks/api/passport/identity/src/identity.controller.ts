@@ -132,10 +132,9 @@ export class IdentityController {
         return insertedIdentity;
       })
       .catch(exception => {
-        if (exception.code === 11000) {
-          throw new BadRequestException("Identity already exists.");
-        }
-        throw new InternalServerErrorException();
+        throw new BadRequestException(
+          exception.code === 11000 ? "Identity already exists." : exception.message
+        );
       });
   }
 

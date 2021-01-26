@@ -48,7 +48,8 @@ export class PassportModule {
           audience: options.audience,
           defaultIdentityIdentifier: options.defaultIdentityIdentifier,
           defaultIdentityPassword: options.defaultIdentityPassword,
-          defaultIdentityPolicies: options.defaultIdentityPolicies
+          defaultIdentityPolicies: options.defaultIdentityPolicies,
+          maxIdentityCount: options.maxIdentityCount
         }),
         PolicyModule.forRoot(),
         ApiKeyModule.forRoot()
