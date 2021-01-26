@@ -320,3 +320,10 @@ function handleWriteErrors(error: any) {
 
   throw new DatabaseException(error.message);
 }
+
+export function authIdToString(req: any) {
+  if (req.user && req.user._id) {
+    req.user._id = req.user._id.toString();
+  }
+  return req;
+}
