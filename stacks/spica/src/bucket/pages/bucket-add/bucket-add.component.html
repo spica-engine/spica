@@ -249,6 +249,7 @@
                   [(ngModel)]="bucket.acl.read"
                   [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
                   language="cel"
+                  [properties]="bucket.properties"
                 >
                 </code-editor>
               </div>
@@ -263,6 +264,7 @@
                   [(ngModel)]="bucket.acl.write"
                   [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
                   language="cel"
+                  [properties]="bucket.properties"
                 >
                 </code-editor>
               </div>
