@@ -104,7 +104,10 @@ export class BucketController {
     try {
       expression.extractPropertyMap(schema.acl.read);
       expression.aggregate(schema.acl.read, {
-        auth: {},
+        auth: {
+          identifier: "",
+          policies: []
+        },
         document: {}
       });
     } catch (error) {
@@ -113,7 +116,10 @@ export class BucketController {
 
     try {
       expression.run(schema.acl.write, {
-        auth: {},
+        auth: {
+          identifier: "",
+          policies: []
+        },
         document: {}
       });
     } catch (error) {
