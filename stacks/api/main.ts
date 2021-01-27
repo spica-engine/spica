@@ -127,6 +127,10 @@ const args = yargs
         "WebhookFullAccess",
         "PreferenceFullAccess"
       ]
+    },
+    "passport-identity-limit": {
+      number: true,
+      description: "Maximum number of identity that can be inserted."
     }
   })
   .demandOption("passport-secret")
@@ -318,6 +322,7 @@ const modules = [
     expiresIn: args["passport-identity-token-expires-in"],
 
     defaultStrategy: args["passport-default-strategy"],
+    identityCountLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],

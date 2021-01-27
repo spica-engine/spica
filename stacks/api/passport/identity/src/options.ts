@@ -8,4 +8,5 @@ export interface IdentityOptions {
   defaultIdentityIdentifier?: string;
   defaultIdentityPassword?: string;
   defaultIdentityPolicies?: string[];
+  identityCountLimit?: number;
 }
