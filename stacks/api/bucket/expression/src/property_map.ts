@@ -7,6 +7,9 @@ function visit(node) {
     case "identifier":
       return visitIdentifier(node);
     case "call":
+      if (node.arguments[0].kind != "operator") {
+        return;
+      }
       return visitNode(node.arguments[0]);
     case "unary":
       return visitUnary(node);
