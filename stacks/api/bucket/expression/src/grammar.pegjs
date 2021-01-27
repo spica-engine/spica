@@ -90,7 +90,7 @@ Atomic
   / IDENT
 
 
-ExprList = left:Expr right:("," expr:Expr {return expr})* {
+ExprList = WHITESPACE left:Expr WHITESPACE right:("," WHITESPACE expr:Expr WHITESPACE {return expr})* {
 	const expressions = [left];
 	if (right) {
 		expressions.push(...right);
