@@ -14,7 +14,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     private jwt: JwtService,
     @Inject(IDENTITY_OPTIONS) options: IdentityOptions
   ) {
-    super(database, options.maxIdentityCount);
+    super(database, options.identityCountLimit);
     this._coll.createIndex({identifier: 1}, {unique: true});
   }
 

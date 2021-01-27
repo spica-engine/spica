@@ -49,7 +49,7 @@ export class PassportModule {
           defaultIdentityIdentifier: options.defaultIdentityIdentifier,
           defaultIdentityPassword: options.defaultIdentityPassword,
           defaultIdentityPolicies: options.defaultIdentityPolicies,
-          maxIdentityCount: options.maxIdentityCount
+          identityCountLimit: options.identityCountLimit
         }),
         PolicyModule.forRoot(),
         ApiKeyModule.forRoot()

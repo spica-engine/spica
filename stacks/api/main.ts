@@ -322,7 +322,7 @@ const modules = [
     expiresIn: args["passport-identity-token-expires-in"],
 
     defaultStrategy: args["passport-default-strategy"],
-    maxIdentityCount: args["passport-identity-limit"],
+    identityCountLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
