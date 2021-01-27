@@ -111,7 +111,7 @@ export class BucketController {
         document: {}
       });
     } catch (error) {
-      throw new BadRequestException("Error occured while parsing read rule\n" + error.message);
+      throw new BadRequestException("Error occurred while parsing read rule\n" + error.message);
     }
 
     try {
@@ -123,7 +123,7 @@ export class BucketController {
         document: {}
       });
     } catch (error) {
-      throw new BadRequestException("Error occured while parsing write rule\n" + error.message);
+      throw new BadRequestException("Error occurred while parsing write rule\n" + error.message);
     }
   }
 
