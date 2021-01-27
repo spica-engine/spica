@@ -33,7 +33,8 @@ import {
   findDocuments,
   insertDocument,
   patchDocument,
-  replaceDocument
+  replaceDocument,
+  authIdToString
 } from "./crud";
 import {filterReviver, isJSONExpression} from "./filter";
 import {createHistory} from "./history";
@@ -71,7 +72,7 @@ export class BucketDataController {
    * Example: Descending `{"name": -1}` OR Ascending `{"name": 1}`
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @ResourceFilter() resourceFilter: object,
@@ -149,7 +150,7 @@ export class BucketDataController {
    * @param localize When true, documents that have translations is localized to `accept-language`.
    */
   @Get(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
