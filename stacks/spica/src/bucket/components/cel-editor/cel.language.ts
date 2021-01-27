@@ -2,6 +2,10 @@ import {Directive, OnDestroy, Input} from "@angular/core";
 
 declare var monaco: typeof import("monaco-editor-core");
 
+// this global state will prevent to registering same registerCompletionItemProvider twice from same page
+// if we remove this, completions will be displayed twice.
+let hasRegistered = false;
+
 @Directive({
   selector: "code-editor[language='cel']",
   host: {
@@ -12,16 +16,20 @@ export class CelLanguageDirective implements OnDestroy {
   private disposables: Array<any> = [];
   @Input("properties") bucketProperties: object;
 
-  async onInit(event) {
-    // prevent to register language twice from same page and different components.
-    // it will cause to display all suggestions twice
-    if (event._id == 2) {
+  async onInit() {
+    if (hasRegistered) {
       return;
     }
-    const {configuration, language} = await import("./cel.syntax");
-    monaco.languages.register({id: "cel"});
-    monaco.languages.setLanguageConfiguration("cel", configuration);
-    monaco.languages.setMonarchTokensProvider("cel", language);
+
+    hasRegistered = true;
+
+    if (!monaco.languages.getLanguages().some(language => language.id == "cel")) {
+      monaco.languages.register({id: "cel"});
+
+      const {configuration, language} = await import("./cel.syntax");
+      monaco.languages.setLanguageConfiguration("cel", configuration);
+      monaco.languages.setMonarchTokensProvider("cel", language);
+    }
 
     this.disposables.push(
       monaco.languages.registerCompletionItemProvider("cel", {
@@ -137,5 +145,7 @@ export class CelLanguageDirective implements OnDestroy {
 
   ngOnDestroy(): void {
     this.disposables.forEach(d => d.dispose());
+    // we need to re-register completion item provider after it has been disposed.
+    hasRegistered = false;
   }
 }
