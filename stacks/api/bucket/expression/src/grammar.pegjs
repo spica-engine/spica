@@ -182,10 +182,10 @@ ESCAPE = "\\" eskey:$[bfnrt"'\\] {
 NEWLINE        = [\r\n] / [\r] / [\n]
 BOOL_LIT       = "true" / "false"
 NULL_LIT       = "null"
-RESERVED       = BOOL_LIT / NULL_LIT / "in"
+RESERVED       =  ( BOOL_LIT / NULL_LIT / "in"
                  / "as" / "break" / "const" / "continue" / "else"
                  / "for" / "function" / "if" / "import" / "let"
                  / "loop" / "package" / "namespace" / "return"
-                 / "var" / "void" / "while"
+                 / "var" / "void" / "while" ) ![_a-zA-Z0-9]
 WHITESPACE     = [\t\n\f\r ]*
 COMMENT        = '//'
