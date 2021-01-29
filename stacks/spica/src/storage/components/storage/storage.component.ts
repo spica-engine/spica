@@ -80,12 +80,25 @@ export class StorageComponent implements ControlValueAccessor {
   }
 
   pickFromStorage(obj: Storage) {
+    if (!obj) {
+      return;
+    }
+
     this.blob = obj;
     this.value = obj.url;
-    this.onChangeFn(this.value);
+
+    const pureUrl = this.storage.clearTimeStamp(obj.url);
+
+    this.onChangeFn(pureUrl);
   }
 
   writeValue(value: string): void {
+    if (value) {
+      // put here better logic
+      const now = new Date().getTime().toString();
+      value = this.storage.putTimeStamp(value, now);
+    }
+
     this.blob = undefined;
     this.value = value;
   }

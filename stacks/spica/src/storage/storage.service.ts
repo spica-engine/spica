@@ -4,7 +4,8 @@ import {IndexResult, fileToBuffer} from "@spica-client/core";
 import * as BSON from "bson";
 import {Buffer} from "buffer";
 import {from, Observable} from "rxjs";
-import {flatMap} from "rxjs/operators";
+import {flatMap, map} from "rxjs/operators";
+import {StorageCacheTracker} from "./storage.cache";
 
 import {Storage} from "./interfaces/storage";
 
@@ -12,7 +13,10 @@ window["Buffer"] = Buffer;
 
 @Injectable({providedIn: "root"})
 export class StorageService {
-  constructor(private http: HttpClient) {}
+  private cacheTracker: StorageCacheTracker;
+  constructor(private http: HttpClient) {
+    this.cacheTracker = new StorageCacheTracker();
+  }
 
   getAll(limit?: number, skip?: number, sort?): Observable<IndexResult<Storage>> {
     let params = new HttpParams();
@@ -25,18 +29,30 @@ export class StorageService {
     if (sort) {
       params = params.append("sort", JSON.stringify(sort));
     }
-    return this.http.get<IndexResult<Storage>>("api:/storage", {params});
+
+    return this.http.get<IndexResult<Storage>>("api:/storage", {params}).pipe(
+      map(objects => {
+        for (let object of objects.data) {
+          object = this.prepareToDisplay(object);
+        }
+        return objects;
+      })
+    );
   }
 
   getOne(id: string): Observable<Storage> {
-    return this.http.get<Storage>(`api:/storage/${id}`);
+    return this.http
+      .get<Storage>(`api:/storage/${id}`)
+      .pipe(map(object => this.prepareToDisplay(object)));
   }
 
   delete(id: string): Observable<void> {
+    this.cacheTracker.unregister(id);
     return this.http.delete<void>(`api:/storage/${id}`);
   }
 
   updateOne(storageObject: Storage, file: File): Observable<HttpEvent<Storage>> {
+    storageObject = this.prepareToUpdate(storageObject);
     return from(fileToBuffer(file)).pipe(
       flatMap(content => {
         const schema = {
@@ -79,5 +95,40 @@ export class StorageService {
         return this.http.request<Storage>(request);
       })
     );
+  }
+
+  private prepareToDisplay(object: Storage) {
+    const lastUpdate = this.cacheTracker.getLastUpdate(object._id);
+
+    object.url = this.putTimeStamp(object.url, lastUpdate);
+
+    return object;
+  }
+
+  private prepareToUpdate(object: Storage) {
+    // UI will be affected from this url timestamp changes if we remove this.
+    object = this.deepCopy(object);
+
+    this.cacheTracker.unregister(object._id);
+
+    object.url = this.clearTimeStamp(object.url);
+
+    return object;
+  }
+
+  putTimeStamp(url: string, value: string) {
+    const updatedUrl = new URL(url);
+    updatedUrl.searchParams.append("timestamp", value);
+    return updatedUrl.toString();
+  }
+
+  clearTimeStamp(url: string) {
+    const updatedUrl = new URL(url);
+    updatedUrl.searchParams.delete("timestamp");
+    return updatedUrl.toString();
+  }
+
+  private deepCopy(value: unknown) {
+    return JSON.parse(JSON.stringify(value));
   }
 }
