@@ -100,7 +100,7 @@ export class StorageService {
   private prepareToDisplay(object: Storage) {
     const lastUpdate = this.lastUpdates.register(object._id);
 
-    object.url = this.putTimeStamp(object.url, lastUpdate);
+    object.url = this.putTimestamp(object.url, lastUpdate);
 
     return object;
   }
@@ -111,18 +111,18 @@ export class StorageService {
 
     this.lastUpdates.unregister(object._id);
 
-    object.url = this.clearTimeStamp(object.url);
+    object.url = this.clearTimestamp(object.url);
 
     return object;
   }
 
-  putTimeStamp(url: string, value: string) {
+  putTimestamp(url: string, value: string) {
     const updatedUrl = new URL(url);
     updatedUrl.searchParams.append("timestamp", value);
     return updatedUrl.toString();
   }
 
-  clearTimeStamp(url: string) {
+  clearTimestamp(url: string) {
     const updatedUrl = new URL(url);
     updatedUrl.searchParams.delete("timestamp");
     return updatedUrl.toString();

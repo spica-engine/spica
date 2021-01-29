@@ -87,7 +87,7 @@ export class StorageComponent implements ControlValueAccessor {
     this.blob = obj;
     this.value = obj.url;
 
-    const pureUrl = this.storage.clearTimeStamp(obj.url);
+    const pureUrl = this.storage.clearTimestamp(obj.url);
 
     this.onChangeFn(pureUrl);
   }
@@ -95,7 +95,7 @@ export class StorageComponent implements ControlValueAccessor {
   writeValue(value: string): void {
     if (value) {
       const now = new Date().getTime().toString();
-      value = this.storage.putTimeStamp(value, now);
+      value = this.storage.putTimestamp(value, now);
     }
 
     this.blob = undefined;
