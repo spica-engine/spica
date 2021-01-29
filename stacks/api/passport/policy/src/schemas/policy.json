@@ -20,42 +20,53 @@
         "type": "object",
         "required": ["action", "module"],
         "properties": {
-          "resource": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": true,
-                "items": {
-                  "type": "string"
-                }
-              },
-              {
-                "type": "object",
-                "required": ["include"],
-                "properties": {
-                  "include": {
-                    "type": "string"
-                  },
-                  "exclude": {
-                    "type": "array",
-                    "uniqueItems": true,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            ]
-          },
           "action": {
             "type": "string"
           },
           "module": {
             "type": "string"
+          },
+          "resource": {
+            "required": ["include", "exclude"],
+            "type": "object",
+            "properties": {
+              "include": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "exclude": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              }
+            },
+            "if": {
+              "properties": {
+                "exclude": {
+                  "minItems": 1
+                }
+              },
+              "required": ["exclude"]
+            },
+            "then": {
+              "required": ["include"],
+              "properties": {
+                "include": {
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "pattern": "\\*$"
+                  }
+                }
+              }
+            }
           }
         }
       }

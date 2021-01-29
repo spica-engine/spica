@@ -5,7 +5,7 @@ export default {
   statement: [
     {
       action: "preference:show",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "preference"
     }
   ]

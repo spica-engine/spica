@@ -12,7 +12,7 @@ export default {
     },
     {
       action: "passport:policy:update",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "passport:policy"
     },
     {

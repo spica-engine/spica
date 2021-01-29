@@ -5,12 +5,12 @@ export default {
   statement: [
     {
       action: "passport:identity:index",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "passport:identity"
     },
     {
       action: "passport:identity:show",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "passport:identity"
     },
     {

@@ -8,7 +8,7 @@ export default {
     ...StrategyReadOnlyAccess.statement,
     {
       action: "passport:strategy:update",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "passport:strategy"
     },
     {
@@ -17,7 +17,7 @@ export default {
     },
     {
       action: "passport:strategy:delete",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "passport:strategy"
     }
   ]
