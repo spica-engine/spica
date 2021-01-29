@@ -93,8 +93,8 @@ describe("StorageComponent", () => {
       const url = new URL(fixture.componentInstance.value);
       expect(url.searchParams.has("timestamp")).toBe(true);
 
-      url.searchParams.delete("timestamp")
-      expect(url.toString()).toEqual("http://example/test.png")
+      url.searchParams.delete("timestamp");
+      expect(url.toString()).toEqual("http://example/test.png");
 
       expect(fixture.componentInstance.blob).toBeUndefined();
     });

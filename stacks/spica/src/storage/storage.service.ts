@@ -5,7 +5,7 @@ import * as BSON from "bson";
 import {Buffer} from "buffer";
 import {from, Observable} from "rxjs";
 import {flatMap, map} from "rxjs/operators";
-import {StorageCacheTracker} from "./storage.cache";
+import {LastUpdateCache} from "./cache";
 
 import {Storage} from "./interfaces/storage";
 
@@ -13,9 +13,9 @@ window["Buffer"] = Buffer;
 
 @Injectable({providedIn: "root"})
 export class StorageService {
-  private cacheTracker: StorageCacheTracker;
+  private lastUpdates: LastUpdateCache;
   constructor(private http: HttpClient) {
-    this.cacheTracker = new StorageCacheTracker();
+    this.lastUpdates = new LastUpdateCache();
   }
 
   getAll(limit?: number, skip?: number, sort?): Observable<IndexResult<Storage>> {
@@ -47,7 +47,7 @@ export class StorageService {
   }
 
   delete(id: string): Observable<void> {
-    this.cacheTracker.unregister(id);
+    this.lastUpdates.unregister(id);
     return this.http.delete<void>(`api:/storage/${id}`);
   }
 
@@ -98,7 +98,7 @@ export class StorageService {
   }
 
   private prepareToDisplay(object: Storage) {
-    const lastUpdate = this.cacheTracker.getLastUpdate(object._id);
+    const lastUpdate = this.lastUpdates.register(object._id);
 
     object.url = this.putTimeStamp(object.url, lastUpdate);
 
@@ -109,7 +109,7 @@ export class StorageService {
     // UI will be affected from this url timestamp changes if we remove this.
     object = this.deepCopy(object);
 
-    this.cacheTracker.unregister(object._id);
+    this.lastUpdates.unregister(object._id);
 
     object.url = this.clearTimeStamp(object.url);
 
