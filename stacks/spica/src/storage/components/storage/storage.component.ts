@@ -94,7 +94,6 @@ export class StorageComponent implements ControlValueAccessor {
 
   writeValue(value: string): void {
     if (value) {
-      // put here better logic
       const now = new Date().getTime().toString();
       value = this.storage.putTimeStamp(value, now);
     }

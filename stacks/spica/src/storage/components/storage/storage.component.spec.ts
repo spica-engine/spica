@@ -89,7 +89,13 @@ describe("StorageComponent", () => {
     it("should write value and reset blob", () => {
       fixture.componentInstance.blob = null;
       fixture.componentInstance.writeValue("http://example/test.png");
-      expect(fixture.componentInstance.value).toBe("http://example/test.png");
+
+      const url = new URL(fixture.componentInstance.value);
+      expect(url.searchParams.has("timestamp")).toBe(true);
+
+      url.searchParams.delete("timestamp")
+      expect(url.toString()).toEqual("http://example/test.png")
+
       expect(fixture.componentInstance.blob).toBeUndefined();
     });
 
