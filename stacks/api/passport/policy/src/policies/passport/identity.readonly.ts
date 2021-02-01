@@ -16,7 +16,10 @@ export default {
     {
       action: "preference:show",
       module: "preference",
-      resource: ["passport"]
+      resource: {
+        include: ["passport"],
+        exclude: []
+      }
     }
   ]
 };

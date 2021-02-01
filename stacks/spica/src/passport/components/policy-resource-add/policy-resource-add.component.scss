@@ -1,7 +1,7 @@
 :host {
   display: flex;
   flex-direction: column;
-  div.excluded-resources {
+  div.seperated-content {
     display: flex;
     align-items: baseline;
     div.includeds,
@@ -17,9 +17,7 @@
     }
 
     div.included-resource,
-    div.excluded-resource,
-    div.include-resource-input,
-    div.exclude-resource-input {
+    div.excluded-resource {
       align-items: baseline;
       display: flex;
       > mat-form-field {
@@ -37,5 +35,12 @@
   .action-buttons {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .add-resource-button {
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+    width: 90%;
+    padding: 20px;
+    margin-top: 10px;
   }
 }

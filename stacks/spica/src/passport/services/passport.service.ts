@@ -119,65 +119,71 @@ export class PassportService {
           if (actionMatch && moduleMatch) {
             let match: boolean;
 
-            if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
-              // Parse resources in such format bucketid/dataid thus we could match them individually
-              const resources = wrapArray(statement.resource).map(resource => resource.split("/"));
+            if (typeof statement.resource == "object") {
+              //INCLUDE THESE
+              if (!statement.resource.exclude.length) {
+                // Parse resources in such format bucketid/dataid thus we could match them individually
+                const resources = wrapArray(statement.resource.include).map(resource =>
+                  resource.split("/")
+                );
 
-              match = resources.some(resource =>
-                // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
-                // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
-                // and the first element is the id of the bucket while the second item is the identifier of the document
-                // hence all resources has to match in order to assume that the user has the access to an arbitrary resource
-                //
-                // IMPORTANT: when the resource definition is shorter than the resource present in the statement we only check parts
-                // that are present in the resource definition. for example,  when the resource definiton is [ '5f30fffd4a51a68d6fec4d3b']
-                // and resource in the statement is ["5f30fffd4a51a68d6fec4d3b", "5f31002e4a51a68d6fec4d3f"]
-                // we only check definition.resource[0] against resource[0] in the statement and the rest will be passed as mongodb aggregation
-                // to filter out in database layer.
-                resourceAndModule.resource.every(
-                  (part, index) => part == resource[index] || resource[index] == "*"
-                )
-              );
-            } else if (typeof statement.resource == "object") {
-              const resource = statement.resource;
-              // We need parse resources that has slash in it to match them individually.
-              const includeResource = resource.include.split("/");
+                match = resources.some(resource =>
+                  // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
+                  // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
+                  // and the first element is the id of the bucket while the second item is the identifier of the document
+                  // hence all resources has to match in order to assume that the user has the access to an arbitrary resource
+                  //
+                  // IMPORTANT: when the resource definition is shorter than the resource present in the statement we only check parts
+                  // that are present in the resource definition. for example,  when the resource definiton is [ '5f30fffd4a51a68d6fec4d3b']
+                  // and resource in the statement is ["5f30fffd4a51a68d6fec4d3b", "5f31002e4a51a68d6fec4d3f"]
+                  // we only check definition.resource[0] against resource[0] in the statement and the rest will be passed as mongodb aggregation
+                  // to filter out in database layer.
+                  resourceAndModule.resource.every(
+                    (part, index) => part == resource[index] || resource[index] == "*"
+                  )
+                );
+              } else {
+                // INCLUDE THIS EXCLUDE THESE
+                const resource = statement.resource;
+                // We need parse resources that has slash in it to match them individually.
+                const includeResource = resource.include[0].split("/");
 
-              const hasExcludedResources = resource.exclude && resource.exclude.length;
+                const hasExcludedResources = resource.exclude && resource.exclude.length;
 
-              const excluded: string[][] = [];
+                const excluded: string[][] = [];
 
-              if (hasExcludedResources) {
-                for (const excludeResource of resource.exclude) {
-                  const excludedResource = excludeResource.split("/");
-                  excluded.push(excludedResource);
-                }
-              }
-
-              match = resourceAndModule.resource.every((part, index) => {
-                const pattern = [includeResource[index]];
-
-                // Since the exclude is optional we have check if it is present
                 if (hasExcludedResources) {
-                  for (const resource of excluded) {
-                    if (hasResourceFilter && getLastSegment(resource) == "*") {
-                      // If all subresources excluded in index endpoint
-                      pattern.push(`!${resource[index]}`);
-                    } else if (
-                      !hasResourceFilter &&
-                      index == resourceAndModule.resource.length - 1 &&
-                      getLastSegment(resource) != "*" // If one subresource excluded in non-index endpoint
-                    ) {
-                      pattern.push(`!${resource[index]}`);
-                    } else if (!hasResourceFilter && getLastSegment(resource) == "*") {
-                      // If all subresources excluded in non-index endpoint
-                      pattern.push(`!${resource[0]}`);
-                    }
+                  for (const excludeResource of resource.exclude) {
+                    const excludedResource = excludeResource.split("/");
+                    excluded.push(excludedResource);
                   }
                 }
 
-                return matcher.isMatch(part, pattern);
-              });
+                match = resourceAndModule.resource.every((part, index) => {
+                  const pattern = [includeResource[index]];
+
+                  // Since the exclude is optional we have check if it is present
+                  if (hasExcludedResources) {
+                    for (const resource of excluded) {
+                      if (hasResourceFilter && getLastSegment(resource) == "*") {
+                        // If all subresources excluded in index endpoint
+                        pattern.push(`!${resource[index]}`);
+                      } else if (
+                        !hasResourceFilter &&
+                        index == resourceAndModule.resource.length - 1 &&
+                        getLastSegment(resource) != "*" // If one subresource excluded in non-index endpoint
+                      ) {
+                        pattern.push(`!${resource[index]}`);
+                      } else if (!hasResourceFilter && getLastSegment(resource) == "*") {
+                        // If all subresources excluded in non-index endpoint
+                        pattern.push(`!${resource[0]}`);
+                      }
+                    }
+                  }
+
+                  return matcher.isMatch(part, pattern);
+                });
+              }
             } else if (typeof statement.resource == "undefined") {
               // If matches the definition then it is safe to mark this statement
               //  as the action and the module matches

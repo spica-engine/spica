@@ -1,6 +1,8 @@
 import {Component, Inject, OnInit} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {Services} from "@spica-client/passport/interfaces/service";
+import {NgModel} from "@angular/forms";
+import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interfaces/statement";
 
 @Component({
   selector: "policy-resource-add",
@@ -8,98 +10,96 @@ import {Services} from "@spica-client/passport/interfaces/service";
   styleUrls: ["./policy-resource-add.component.scss"]
 })
 export class PolicyResourceAddComponent implements OnInit {
-  services: Services;
+  resourceParts: string[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<PolicyResourceAddComponent>,
-    @Inject(MAT_DIALOG_DATA) public data
+    @Inject(MAT_DIALOG_DATA)
+    public data: {services: Services; statement: DisplayedStatement; currentAction: DisplayedAction}
   ) {}
 
   ngOnInit(): void {
-    this.services = this.data.services;
+    this.resourceParts = this.data.services[this.data.statement.module][
+      this.data.currentAction.name
+    ];
   }
 
-  getAction(action: string) {
-    const actionIndex = this.data.statement["actions"].findIndex(
-      actionInStatement => actionInStatement.action == action
-    );
-    return actionIndex >= 0 ? this.data.statement["actions"][actionIndex] : false;
+  isValidResource(resource: string, partsLength: number) {
+    return new RegExp(this.resourcePattern(partsLength)).test(resource);
   }
 
-  getResourceSelection(action) {
-    if (action && action.resource instanceof Array) {
-      return "include";
-    } else if (action && action.resource instanceof Object) {
-      return "exclude";
-    } else {
-      return undefined;
-    }
+  resourcePattern(partsLength?: number) {
+    const array = partsLength ? new Array(partsLength) : this.resourceParts;
+    console.log(array.map(() => "[a-zA-Z0-9\\*]+").join("\\/"));
+    return array.map(() => "[a-zA-Z0-9\\*]+").join("\\/");
   }
 
-  acceptsResource(action) {
-    return (
-      this.services[this.data.statement.module] &&
-      this.services[this.data.statement.module][action] &&
-      this.services[this.data.statement.module][action].length > 0
-    );
+  // if exclude has length, include must end with *
+  // resourcePatternEndWithAsteriks() {
+  //   let untilLastSegment = this.resourceParts
+  //     .slice(0, this.resourceParts.length - 1)
+  //     .map(() => "[a-zA-Z0-9\\*]")
+  //     .join("\\/");
+  //   return untilLastSegment + "[\\*]$";
+  // }
+
+  addInclude() {
+    this.data.currentAction.resource.exclude = [];
+    this.data.currentAction.resource.include.push("");
   }
 
-  addInclude(resource: string, action) {
-    if (resource == "") {
-      resource = this.trimResource("*/*", action.action);
-    }
-    (action.resource as string[]).push(resource);
-  }
+  addExclude() {
+    let included = this.data.currentAction.resource.include[0];
 
-  addExclude(resource: string, action) {
-    if (!action.resource.exclude) {
-      action.resource = {include: "*/*", exclude: []};
+    if (!included) {
+      included = this.resourceParts.map(() => "*").join("/");
     }
 
-    if (resource == "") {
-      resource = this.trimResource("*/*", action.action);
-    }
-
-    (action.resource as {include: string; exclude: string[]}).exclude.push(resource);
+    this.data.currentAction.resource.include = [included];
+    this.data.currentAction.resource.exclude.push("");
   }
 
-  removeIncluded(resourceIndex: number, action) {
-    (action.resource as string[]).splice(resourceIndex, 1);
+  removeIncluded(resourceIndex: number) {
+    this.data.currentAction.resource.include.splice(resourceIndex, 1);
   }
 
-  removeExcluded(resourceIndex: number, action) {
-    (action.resource as {include: string; exclude: string[]}).exclude.splice(resourceIndex, 1);
-    if (!action.resource.exclude.length) {
-      delete action.resource.exclude;
-      action.resource = ["*/*"];
-    }
+  removeExcluded(resourceIndex: number) {
+    this.data.currentAction.resource.exclude.splice(resourceIndex, 1);
   }
 
   copyResources() {
-    this.data.statement["actions"].map(action => {
-      const currentAction = this.getAction(this.data.action);
-      action.resource = JSON.parse(JSON.stringify(currentAction.resource));
-      if (action.action != this.data.action) {
-        if (this.getResourceSelection(currentAction) == "include") {
-          action.resource.forEach((resource, resourceIndex) => {
-            action.resource[resourceIndex] = this.trimResource(resource, action.action);
-          });
-        } else if (this.getResourceSelection(currentAction) == "exclude") {
-          action.resource.include = this.trimResource(action.resource.include, action.action);
-          action.resource.exclude.forEach((resource, resourceIndex) => {
-            action.resource.exclude[resourceIndex] = this.trimResource(resource, action.action);
-          });
-        }
+    for (const action of this.data.statement.actions) {
+      if (action.name == this.data.currentAction.name) {
+        continue;
       }
-    });
+
+      const resourceParts = this.data.services[this.data.statement.module][action.name];
+
+      const includesValid = this.data.currentAction.resource.include.every(resource =>
+        this.isValidResource(resource, resourceParts.length)
+      );
+
+      const excludesValid = this.data.currentAction.resource.exclude.every(resource =>
+        this.isValidResource(resource, resourceParts.length)
+      );
+
+      if (!includesValid || !excludesValid) {
+        continue;
+      }
+
+      action.resource = this.deepCopy(this.data.currentAction.resource);
+    }
   }
 
-  private trimResource(resource: string, action: string) {
-    const resourceArray = resource.split("/");
-    resourceArray.forEach((_, resourceIndex) => {
-      if (this.services[this.data.statement.module][action].length <= resourceIndex)
-        resourceArray[resourceIndex] = "";
-    });
-    return resourceArray.filter(resource => resource != "").join("/");
+  deepCopy(value: unknown) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  trackByFn(index: number) {
+    return index;
+  }
+
+  trackByFn2(index: number) {
+    return index;
   }
 }
