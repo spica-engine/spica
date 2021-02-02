@@ -33,7 +33,10 @@ export default {
     {
       action: "preference:update",
       module: "preference",
-      resource: ["passport"]
+      resource: {
+        include: ["passport"],
+        exclude: []
+      }
     }
   ]
 };

@@ -50,12 +50,8 @@ export class PolicyAddComponent implements OnInit {
             const existingIndex = this.displayedStatements.findIndex(
               displayedSt => originalSt.module == displayedSt.module
             );
-            if (existingIndex >= 0) {
-              this.displayedStatements[existingIndex].actions.push({
-                name: originalSt.action,
-                resource: originalSt.resource
-              });
-            } else {
+
+            if (existingIndex == -1) {
               this.displayedStatements.push({
                 module: originalSt.module,
                 actions: [
@@ -64,6 +60,11 @@ export class PolicyAddComponent implements OnInit {
                     resource: originalSt.resource
                   }
                 ]
+              });
+            } else {
+              this.displayedStatements[existingIndex].actions.push({
+                name: originalSt.action,
+                resource: originalSt.resource
               });
             }
           });
@@ -117,6 +118,7 @@ export class PolicyAddComponent implements OnInit {
       const currentAction = statement.actions.find(
         actionInStatement => actionInStatement.name == action
       );
+
       this.dialog.open(PolicyResourceAddComponent, {
         width: "880px",
         maxWidth: "90%",
@@ -136,7 +138,7 @@ export class PolicyAddComponent implements OnInit {
     return (
       this.services[statement.module] &&
       this.services[statement.module][action] &&
-      this.services[statement.module][action].length > 0
+      this.services[statement.module][action].length
     );
   }
 
@@ -144,7 +146,7 @@ export class PolicyAddComponent implements OnInit {
     let isResourceMissing = false;
     for (const statement of this.displayedStatements) {
       for (const action of statement.actions) {
-        if (this.acceptsResource(statement, action.name) && action.resource.include.length == 0) {
+        if (this.acceptsResource(statement, action.name) && !action.resource.include.length) {
           isResourceMissing = true;
           break;
         }

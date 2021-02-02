@@ -18,7 +18,7 @@ export default {
     {
       action: "passport:policy:delete",
       resource: {
-        include: "*",
+        include: ["*"],
         exclude: []
       },
       module: "passport:policy"

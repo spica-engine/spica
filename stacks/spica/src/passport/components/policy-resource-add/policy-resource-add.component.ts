@@ -24,24 +24,40 @@ export class PolicyResourceAddComponent implements OnInit {
     ];
   }
 
-  isValidResource(resource: string, partsLength: number) {
-    return new RegExp(this.resourcePattern(partsLength)).test(resource);
+  onIncludeTyping(model: NgModel) {
+    let pattern = "";
+
+    let reason = "";
+
+    if (!this.data.currentAction.resource.exclude.length) {
+      pattern = this.buildPattern("default");
+      reason = "expectedFormat";
+    } else {
+      pattern = this.buildPattern("endswith");
+      reason = "endsWith";
+    }
+
+    if (!new RegExp(pattern).test(model.value)) {
+      model.control.setErrors({[reason]: true});
+    }
   }
 
-  resourcePattern(partsLength?: number) {
-    const array = partsLength ? new Array(partsLength) : this.resourceParts;
-    console.log(array.map(() => "[a-zA-Z0-9\\*]+").join("\\/"));
-    return array.map(() => "[a-zA-Z0-9\\*]+").join("\\/");
-  }
+  buildPattern(type: "default" | "endswith") {
+    const resourcePart = "[a-zA-Z0-9\\*]+";
 
-  // if exclude has length, include must end with *
-  // resourcePatternEndWithAsteriks() {
-  //   let untilLastSegment = this.resourceParts
-  //     .slice(0, this.resourceParts.length - 1)
-  //     .map(() => "[a-zA-Z0-9\\*]")
-  //     .join("\\/");
-  //   return untilLastSegment + "[\\*]$";
-  // }
+    const lastSegment = "\\*$";
+
+    const seperator = "\\/";
+
+    switch (type) {
+      case "default":
+        return this.resourceParts.map(() => resourcePart).join(seperator);
+      case "endswith":
+        return this.resourceParts
+          .map((_, index) => (index == this.resourceParts.length - 1 ? lastSegment : resourcePart))
+          .join(seperator);
+    }
+  }
 
   addInclude() {
     this.data.currentAction.resource.exclude = [];
@@ -49,11 +65,7 @@ export class PolicyResourceAddComponent implements OnInit {
   }
 
   addExclude() {
-    let included = this.data.currentAction.resource.include[0];
-
-    if (!included) {
-      included = this.resourceParts.map(() => "*").join("/");
-    }
+    const included = this.resourceParts.map(() => "*").join("/");
 
     this.data.currentAction.resource.include = [included];
     this.data.currentAction.resource.exclude.push("");
@@ -69,21 +81,12 @@ export class PolicyResourceAddComponent implements OnInit {
 
   copyResources() {
     for (const action of this.data.statement.actions) {
-      if (action.name == this.data.currentAction.name) {
-        continue;
-      }
+      const targetResourceParts = this.data.services[this.data.statement.module][action.name];
 
-      const resourceParts = this.data.services[this.data.statement.module][action.name];
-
-      const includesValid = this.data.currentAction.resource.include.every(resource =>
-        this.isValidResource(resource, resourceParts.length)
-      );
-
-      const excludesValid = this.data.currentAction.resource.exclude.every(resource =>
-        this.isValidResource(resource, resourceParts.length)
-      );
-
-      if (!includesValid || !excludesValid) {
+      if (
+        action.name == this.data.currentAction.name ||
+        targetResourceParts.length != this.resourceParts.length
+      ) {
         continue;
       }
 
