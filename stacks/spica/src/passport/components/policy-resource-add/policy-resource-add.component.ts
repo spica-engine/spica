@@ -83,10 +83,7 @@ export class PolicyResourceAddComponent implements OnInit {
     for (const action of this.data.statement.actions) {
       const targetResourceParts = this.data.services[this.data.statement.module][action.name];
 
-      if (
-        action.name == this.data.currentAction.name ||
-        targetResourceParts.length != this.resourceParts.length
-      ) {
+      if (targetResourceParts.length != this.resourceParts.length) {
         continue;
       }
 

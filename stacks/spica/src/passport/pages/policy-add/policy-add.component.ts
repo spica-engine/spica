@@ -138,7 +138,7 @@ export class PolicyAddComponent implements OnInit {
     return (
       this.services[statement.module] &&
       this.services[statement.module][action] &&
-      this.services[statement.module][action].length
+      this.services[statement.module][action].length > 0
     );
   }
 

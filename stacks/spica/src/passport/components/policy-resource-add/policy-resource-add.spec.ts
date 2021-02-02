@@ -29,16 +29,48 @@ describe("Policy Resource Add Component", () => {
           provide: MAT_DIALOG_DATA,
           useValue: {
             services: {
-              bucket: {
-                "bucket:index": ["bucket_id"],
-                "bucket:show": ["bucket_id"],
-                "bucket:create": [],
-                "bucket:update": ["bucket_id"],
-                "bucket:delete": ["bucket_id"]
+              "bucket:data": {
+                "bucket:data:index": ["bucket_id", "document_id"],
+                "bucket:data:show": ["bucket_id", "document_id"],
+                "bucket:data:create": ["bucket_id"],
+                "bucket:data:update": ["bucket_id", "document_id"],
+                "bucket:data:delete": ["bucket_id", "document_id"],
+                "bucket:data:stream": ["bucket_id", "document_id"]
               }
             },
-            statement: {action: "", resource: [], module: ""},
-            action: ""
+            statement: {
+              actions: [
+                {
+                  name: "bucket:data:show",
+                  resource: {
+                    include: ["*/*"],
+                    exclude: []
+                  }
+                },
+                {
+                  name: "bucket:data:update",
+                  resource: {
+                    include: ["*/*"],
+                    exclude: []
+                  }
+                },
+                {
+                  name: "bucket:data:create",
+                  resource: {
+                    include: ["*"],
+                    exclude: []
+                  }
+                }
+              ],
+              module: "bucket:data"
+            },
+            currentAction: {
+              name: "bucket:data:update",
+              resource: {
+                include: ["*/*"],
+                exclude: []
+              }
+            }
           }
         }
       ],
@@ -50,55 +82,112 @@ describe("Policy Resource Add Component", () => {
     fixture.detectChanges();
   });
 
-  it("should set services", () => {
-    expect(fixture.componentInstance.services).toEqual({
-      bucket: {
-        "bucket:index": ["bucket_id"],
-        "bucket:show": ["bucket_id"],
-        "bucket:create": [],
-        "bucket:update": ["bucket_id"],
-        "bucket:delete": ["bucket_id"]
-      }
-    });
+  it("should set resource parts", () => {
+    expect(fixture.componentInstance.resourceParts).toEqual(["bucket_id", "document_id"]);
   });
 
-  it("should add resource to includes", () => {
-    const statement = {action: "show", module: "bucket", resource: []};
-    fixture.componentInstance.addInclude("bucket_id", statement);
+  it("should create default pattern and match with resource if it's valid", () => {
+    const pattern = fixture.componentInstance.buildPattern("default");
+    expect(pattern).toEqual("[a-zA-Z0-9\\*]+\\/[a-zA-Z0-9\\*]+");
 
-    expect(statement).toEqual({action: "show", module: "bucket", resource: ["bucket_id"]});
+    expect(new RegExp(pattern).test("bucketid/doc_id")).toEqual(true);
+    expect(new RegExp(pattern).test("*/*")).toEqual(true);
+
+    expect(new RegExp(pattern).test("doc_id")).toEqual(false);
   });
 
-  it("should add resource to excludes", () => {
-    const statement = {action: "show", module: "bucket", resource: {include: "*", exclude: []}};
-    fixture.componentInstance.addExclude("bucket_id", statement);
+  it("should create endsWith pattern for include resources and match with resource if it's valid", () => {
+    const pattern = fixture.componentInstance.buildPattern("endswith");
+    expect(pattern).toEqual("[a-zA-Z0-9\\*]+\\/\\*$");
 
-    expect(statement).toEqual({
-      action: "show",
-      module: "bucket",
-      resource: {include: "*", exclude: ["bucket_id"]}
-    });
+    expect(new RegExp(pattern).test("bucketid/*")).toEqual(true);
+
+    expect(new RegExp(pattern).test("bucketid/doc_id")).toEqual(false);
   });
 
-  it("should remove resource from includes", () => {
-    const statement = {action: "show", module: "bucket", resource: ["bucket1", "bucket2"]};
-    fixture.componentInstance.removeIncluded(0, statement);
-
-    expect(statement).toEqual({action: "show", module: "bucket", resource: ["bucket2"]});
-  });
-
-  it("should remove resource from excludeds", () => {
-    const statement = {
-      action: "show",
-      module: "bucket",
-      resource: {include: "*", exclude: ["bucket1", "bucket2"]}
+  it("should switch to the include resorce definition", () => {
+    fixture.componentInstance.data.currentAction.resource = {
+      include: ["bucket1/*"],
+      exclude: ["bucket/doc1", "bucket1/doc2"]
     };
-    fixture.componentInstance.removeExcluded(0, statement);
+    fixture.componentInstance.addInclude();
 
-    expect(statement).toEqual({
-      action: "show",
-      module: "bucket",
-      resource: {include: "*", exclude: ["bucket2"]}
+    expect(fixture.componentInstance.data.currentAction.resource).toEqual({
+      include: ["bucket1/*", ""],
+      exclude: []
     });
+  });
+
+  it("should switch to the exclude resource definition", () => {
+    fixture.componentInstance.data.currentAction.resource = {
+      include: ["bucket1/doc1", "bucket1/doc2"],
+      exclude: []
+    };
+    fixture.componentInstance.addExclude();
+
+    expect(fixture.componentInstance.data.currentAction.resource).toEqual({
+      include: ["*/*"],
+      exclude: [""]
+    });
+  });
+
+  it("should remove from includeds", () => {
+    fixture.componentInstance.data.currentAction.resource = {
+      include: ["bucket1/doc1", "bucket1/doc2"],
+      exclude: []
+    };
+    fixture.componentInstance.removeIncluded(1);
+
+    expect(fixture.componentInstance.data.currentAction.resource).toEqual({
+      include: ["bucket1/doc1"],
+      exclude: []
+    });
+  });
+
+  it("should remove from excludeds", () => {
+    fixture.componentInstance.data.currentAction.resource = {
+      include: ["*/*"],
+      exclude: ["bucket1/doc1", "bucket1/doc2"]
+    };
+    fixture.componentInstance.removeExcluded(1);
+
+    expect(fixture.componentInstance.data.currentAction.resource).toEqual({
+      include: ["*/*"],
+      exclude: ["bucket1/doc1"]
+    });
+  });
+
+  it("should copy resources to the other actions which accepts same resource format", () => {
+    fixture.componentInstance.data.currentAction.resource = {
+      include: ["*/*"],
+      exclude: ["bucket1/doc1", "bucket1/doc2"]
+    };
+
+    fixture.componentInstance.copyResources();
+
+    expect(fixture.componentInstance.data.statement.actions).toEqual([
+      {
+        name: "bucket:data:show",
+        resource: {
+          include: ["*/*"],
+          exclude: ["bucket1/doc1", "bucket1/doc2"]
+        }
+      },
+      {
+        name: "bucket:data:update",
+        resource: {
+          include: ["*/*"],
+          exclude: ["bucket1/doc1", "bucket1/doc2"]
+        }
+      },
+      // do not change this
+      {
+        name: "bucket:data:create",
+        resource: {
+          include: ["*"],
+          exclude: []
+        }
+      }
+    ]);
   });
 });

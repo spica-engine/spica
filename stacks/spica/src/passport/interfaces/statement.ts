@@ -16,7 +16,7 @@ export interface DisplayedStatement {
 
 export interface DisplayedAction {
   name: string;
-  resource: Resource;
+  resource?: Resource;
 }
 
 export const EMPTY_STATEMENT: Statement = {
