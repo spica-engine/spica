@@ -10,6 +10,7 @@ import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
 import {Action, Predict, Activity} from "./interface";
+import {ObjectId} from "@spica-server/database";
 
 export abstract class ActivityInterceptor implements NestInterceptor {
   constructor(private service: ActivityService, private predict: Predict) {}
@@ -39,7 +40,12 @@ export function getAction(action: string): Action {
   return Action[action];
 }
 
-export function getUser(user: any): string {
+export function getIdentifier(user: any) {
+  const userId = user ? user._id : undefined;
+  return ObjectId.isValid(userId) ? new ObjectId(userId) : undefined;
+}
+
+export function getUserId(user: any): string {
   return user ? user._id : undefined;
 }
 
@@ -50,7 +56,7 @@ export async function createActivity(
   service: ActivityService
 ) {
   const req = context.switchToHttp().getRequest();
-  const identifier = getUser(req.user);
+  const identifier = getIdentifier(req.user);
   if (!identifier) {
     console.log(`Identifier was not sent.`);
     return;

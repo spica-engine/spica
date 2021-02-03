@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
 import {Action, ActivityService} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Activity Acceptance", () => {
@@ -11,6 +11,10 @@ describe("Activity Acceptance", () => {
   let app: INestApplication;
   let service: ActivityService;
   let created_at: Date;
+
+  const user1 = new ObjectId();
+  const user2 = new ObjectId();
+
   beforeAll(async () => {
     created_at = new Date();
     const module = await Test.createTestingModule({
@@ -33,16 +37,7 @@ describe("Activity Acceptance", () => {
     await module
       .get(DatabaseService)
       .collection("identity")
-      .insertMany([
-        {_id: "test_user_id", identifier: "test_user"},
-        {_id: "test_user_id2", identifier: "test_user2"}
-      ]);
-
-    jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "object_id" && typeof actual == typeof expected) {
-        return true;
-      }
-    });
+      .insertMany([{_id: user1, identifier: "user1"}, {_id: user2, identifier: "user2"}]);
   });
 
   afterEach(async () => {
@@ -53,13 +48,13 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "test_user_id2",
+        identifier: user2,
         resource: ["test_module", "test_id"],
         created_at
       }
@@ -70,14 +65,14 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "test_user2",
+        identifier: "user1",
         resource: ["test_module", "test_id"],
         created_at: created_at.toISOString()
       },
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
+        identifier: "user2",
         resource: ["test_module", "test_id"],
         created_at: created_at.toISOString()
       }
@@ -88,24 +83,24 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "test_user_id2",
+        identifier: user2,
         resource: ["test_module", "test_id"],
         created_at
       }
     ]);
 
-    const {body: activities} = await request.get("/activity", {identifier: "test_user"});
+    const {body: activities} = await request.get("/activity", {identifier: user1});
     expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
+        identifier: "user1",
         resource: ["test_module", "test_id"],
         created_at: created_at.toISOString()
       }
@@ -116,13 +111,13 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "test_user_id2",
+        identifier: user2,
         resource: ["test_module", "test_id"],
         created_at
       }
@@ -133,7 +128,7 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "test_user2",
+        identifier: user2,
         resource: ["test_module", "test_id"],
         created_at: created_at.toISOString()
       }
@@ -144,19 +139,19 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "test_user_id2",
+        identifier: user2,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.PUT,
-        identifier: "test_user_id2",
+        identifier: user2,
         resource: ["test_module", "test_id"],
         created_at
       }
@@ -169,14 +164,14 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "test_user2",
+        identifier: "user2",
         resource: ["test_module", "test_id"],
         created_at: created_at.toISOString()
       },
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
+        identifier: "user1",
         resource: ["test_module", "test_id"],
         created_at: created_at.toISOString()
       }
@@ -187,25 +182,25 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id1"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module2", "test_id2"],
         created_at
       },
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id3"],
         created_at
       },
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id4"],
         created_at
       }
@@ -218,14 +213,14 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
+        identifier: "user1",
         resource: ["test_module", "test_id3"],
         created_at: created_at.toISOString()
       },
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
+        identifier: "user1",
         resource: ["test_module", "test_id1"],
         created_at: created_at.toISOString()
       }
@@ -236,19 +231,19 @@ describe("Activity Acceptance", () => {
     await service.insertMany([
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.PUT,
-        identifier: "test_user_id",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       }
@@ -262,7 +257,7 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "test_user",
+        identifier: "user1",
         resource: ["test_module", "test_id"],
         created_at: created_at.toISOString()
       }
@@ -273,13 +268,13 @@ describe("Activity Acceptance", () => {
     const insertedIds = await service.insertMany([
       {
         action: Action.PUT,
-        identifier: "spica",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "spica",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       }
@@ -295,7 +290,7 @@ describe("Activity Acceptance", () => {
       {
         _id: insertedIds[0],
         action: Action.PUT,
-        identifier: "spica",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       }
@@ -306,13 +301,13 @@ describe("Activity Acceptance", () => {
     const insertedIds = await service.insertMany([
       {
         action: Action.PUT,
-        identifier: "spica",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       },
       {
         action: Action.POST,
-        identifier: "spica",
+        identifier: user1,
         resource: ["test_module", "test_id"],
         created_at
       }

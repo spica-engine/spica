@@ -1,11 +1,17 @@
-import {Action, PreActivity, ModuleActivity} from "@spica-server/activity/services";
+import {
+  Action,
+  PreActivity,
+  ModuleActivity,
+  createActivity,
+  ActivityService
+} from "@spica-server/activity/services";
 
 export function createBucketActivity(
   preActivity: PreActivity,
   req: any,
   res: any
 ): ModuleActivity[] {
-  let activities: ModuleActivity[] = [];
+  const activities: ModuleActivity[] = [];
 
   switch (preActivity.action) {
     case Action.POST:
@@ -23,11 +29,11 @@ export function createBucketActivity(
 }
 
 export function createBucketDataActivity(
-  preActivity: {identifier: string; action: Action},
+  preActivity: PreActivity,
   req: any,
   res: any
 ): ModuleActivity[] {
-  let activities: ModuleActivity[] = [];
+  const activities: ModuleActivity[] = [];
 
   switch (preActivity.action) {
     case Action.POST:
@@ -81,4 +87,47 @@ export function createBucketDataActivity(
   }
 
   return activities;
+}
+
+export function insertActivity(
+  req: any,
+  method: Action,
+  bucketId: string,
+  documentId: string,
+  service: ActivityService
+) {
+  const request: any = {
+    params: {}
+  };
+
+  request.params.bucketId = bucketId;
+  request.params.documentId = documentId;
+  request.method = Action[method];
+
+  if (req.user) {
+    request.user = deepCopy(req.user);
+  }
+
+  if (req.body) {
+    request.body = deepCopy(req.body);
+  }
+
+  const response = {
+    _id: documentId
+  };
+
+  return createActivity(
+    {
+      switchToHttp: () => ({
+        getRequest: () => request
+      })
+    } as any,
+    response,
+    createBucketDataActivity,
+    service
+  );
+}
+
+function deepCopy(value: unknown) {
+  return JSON.parse(JSON.stringify(value));
 }

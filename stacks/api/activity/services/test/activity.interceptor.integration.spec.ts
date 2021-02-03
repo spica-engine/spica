@@ -4,17 +4,17 @@ import {
   activity,
   ActivityService,
   Predict,
-  Activity,
   ModuleActivity,
   ACTIVITY_OPTIONS
 } from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 
+const userId = new ObjectId();
 const TestPredict: Predict = (): ModuleActivity[] => {
   return [
     {
-      identifier: "test",
+      identifier: userId,
       action: 1,
       resource: ["test_module", "test_id"]
     }
@@ -35,7 +35,7 @@ export class TestController {
   @Post("withuser")
   insertWithUser(@Req() req) {
     req.user = {
-      _id: "test"
+      _id: userId
     };
     return "test";
   }
@@ -93,7 +93,7 @@ describe("Interceptor with a proper activity handler", () => {
     delete expectedArg.created_at;
 
     expect(expectedArg).toEqual({
-      identifier: "test",
+      identifier: userId,
       action: 1,
       resource: ["test_module", "test_id"]
     });

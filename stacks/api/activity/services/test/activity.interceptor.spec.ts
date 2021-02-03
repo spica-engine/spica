@@ -1,4 +1,10 @@
-import {getUser, getAction} from "@spica-server/activity/services";
+import {getUserId, getAction, getIdentifier} from "@spica-server/activity/services";
+
+jasmine.addCustomEqualityTester((actual, expected) => {
+  if (actual.toString() == expected.toString()) {
+    return true;
+  }
+});
 
 describe("Interceptor Unit Test", () => {
   it("should get action from method", () => {
@@ -10,7 +16,9 @@ describe("Interceptor Unit Test", () => {
   });
 
   it("should get identifier from user object", () => {
-    expect(getUser({_id: "user_id"})).toEqual("user_id");
-    expect(getUser(undefined)).toEqual(undefined);
+    expect(getIdentifier({_id: "601a6438fcc8731a14115db8"})).toEqual(
+      "601a6438fcc8731a14115db8" as any
+    );
+    expect(getUserId(undefined)).toEqual(undefined);
   });
 });

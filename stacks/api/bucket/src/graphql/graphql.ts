@@ -6,7 +6,7 @@ import {
   PipeTransform
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {Action, ActivityService, createActivity} from "@spica-server/activity/services";
+import {Action, ActivityService} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -24,7 +24,7 @@ import {
 } from "graphql";
 import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools";
 import {BucketDataService} from "../../services/src/bucket-data.service";
-import {createBucketDataActivity} from "../activity.resource";
+import {insertActivity} from "../activity.resource";
 import {
   deleteDocument,
   findDocuments,
@@ -35,7 +35,7 @@ import {
 import {createHistory} from "../history";
 import {findLocale} from "../locale";
 import {applyPatch, deepCopy} from "../patch";
-import {clearRelations} from "../relation";
+import {clearRelations, getDependents} from "../relation";
 import {
   createSchema,
   extractAggregationFromQuery,
@@ -346,7 +346,13 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.POST, bucket._id, insertedDocument._id);
+        const _ = insertActivity(
+          context,
+          Action.POST,
+          bucket._id.toString(),
+          insertedDocument._id,
+          this.activity
+        );
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
@@ -417,7 +423,13 @@ export class GraphqlController implements OnModuleInit {
       const currentDocument = {...input, _id: documentId};
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+        const _ = insertActivity(
+          context,
+          Action.PUT,
+          bucket._id.toString(),
+          documentId,
+          this.activity
+        );
       }
 
       if (this.history) {
@@ -514,7 +526,13 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+        const _ = insertActivity(
+          context,
+          Action.PUT,
+          bucket._id.toString(),
+          documentId,
+          this.activity
+        );
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
@@ -551,20 +569,23 @@ export class GraphqlController implements OnModuleInit {
     };
   }
 
-  delete(bucket: Bucket): Function {
+  delete(bucket: Bucket) {
     return async (
       root: any,
       {_id: documentId}: {[arg: string]: any},
       context: any,
-      info: GraphQLResolveInfo
+      info: GraphQLResolveInfo,
+      authentication = true
     ): Promise<string> => {
-      await this.authenticate(
-        context,
-        "/bucket/:bucketId/data/:documentId",
-        {bucketId: bucket._id, documentId: documentId},
-        ["bucket:data:delete"],
-        {resourceFilter: false}
-      );
+      if (authentication) {
+        await this.authenticate(
+          context,
+          "/bucket/:bucketId/data/:documentId",
+          {bucketId: bucket._id, documentId: documentId},
+          ["bucket:data:delete"],
+          {resourceFilter: false}
+        );
+      }
 
       const deletedDocument = await deleteDocument(
         bucket,
@@ -589,7 +610,13 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
+        const _ = insertActivity(
+          context,
+          Action.DELETE,
+          bucket._id.toString(),
+          documentId,
+          this.activity
+        );
       }
 
       if (this.hookChangeEmitter) {
@@ -604,34 +631,33 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
+      const dependents = getDependents(bucket, deletedDocument);
+      for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+        const schema = this.buckets.find(bucket => bucket._id.toString() == targetBucketId);
+
+        if (!schema) {
+          continue;
+        }
+
+        const deleteFn = this.delete(schema);
+
+        for (const targetDocId of targetDocIds) {
+          await deleteFn(root, {_id: targetDocId}, context, info, false);
+
+          if (this.activity) {
+            await insertActivity(
+              context,
+              Action.DELETE,
+              targetBucketId,
+              targetDocId,
+              this.activity
+            );
+          }
+        }
+      }
+
       return "";
     };
-  }
-
-  insertActivity(
-    request: any,
-    method: Action,
-    bucketId: string | ObjectId,
-    documentId: string | ObjectId
-  ) {
-    request.params.bucketId = bucketId;
-    request.params.documentId = documentId;
-    request.method = Action[method];
-
-    const response = {
-      _id: documentId
-    };
-
-    return createActivity(
-      {
-        switchToHttp: () => ({
-          getRequest: () => request
-        })
-      } as any,
-      response,
-      createBucketDataActivity,
-      this.activity
-    );
   }
 
   validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {
