@@ -239,30 +239,36 @@
           <mat-list-item>
             <div class="code-editors">
               <div>
-                <b>
-                  <mat-icon>contact_support</mat-icon>
-                  <span>Reading rules</span>
-                </b>
+                <a target="_blank" href="https://spicaengine.com/docs/concept/bucket#rules">
+                  <b>
+                    <mat-icon>contact_support</mat-icon>
+                    <span>Reading rules</span>
+                  </b>
+                </a>
                 <code-editor
                   *ngIf="configurationState == 'rules'"
                   placeholder="ACL"
                   [(ngModel)]="bucket.acl.read"
                   [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
                   language="cel"
+                  [properties]="bucket.properties"
                 >
                 </code-editor>
               </div>
               <div>
-                <b>
-                  <span>Writing Rules</span>
-                  <mat-icon>contact_support</mat-icon>
-                </b>
+                <a target="_blank" href="https://spicaengine.com/docs/concept/bucket#rules">
+                  <b>
+                    <span>Writing Rules</span>
+                    <mat-icon>contact_support</mat-icon>
+                  </b>
+                </a>
                 <code-editor
                   *ngIf="configurationState == 'rules'"
                   placeholder="ACL"
                   [(ngModel)]="bucket.acl.write"
                   [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
                   language="cel"
+                  [properties]="bucket.properties"
                 >
                 </code-editor>
               </div>
