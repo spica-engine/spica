@@ -30,6 +30,10 @@ export class GCloud implements Strategy {
     return this.bucket
       .file(id)
       .getMetadata()
-      .then(res => res[0].mediaLink);
+      .then(res => {
+        const url = new URL(res[0].mediaLink);
+        url.searchParams.delete("generation");
+        return url.toString();
+      });
   }
 }
