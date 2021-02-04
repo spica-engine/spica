@@ -418,7 +418,6 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
     @Req() req,
-    @Res() res,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
@@ -463,15 +462,19 @@ export class BucketDataController {
     await clearRelations(this.bs, bucketId, documentId);
 
     const dependents = getDependents(schema, deletedDocument);
-    for (const [targetBucketId, targetDocIds] of dependents.entries()) {
-      for (const targetDocId of targetDocIds) {
-        await this.deleteOne(req, res, new ObjectId(targetBucketId), new ObjectId(targetDocId));
 
-        if (this.activityService) {
-          const activities = createActivity(req, res, createBucketDataActivity);
-          if (activities.length) {
-            const _ = this.activityService.insert(activities);
+    if (dependents.size) {
+      for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+        for (const targetDocId of targetDocIds) {
+          if (this.activityService) {
+            const activities = createActivity(req, {body: []}, createBucketDataActivity);
+
+            if (activities.length) {
+              await this.activityService.insert(activities);
+            }
           }
+
+          await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
         }
       }
     }

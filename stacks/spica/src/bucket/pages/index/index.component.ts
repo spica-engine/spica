@@ -6,7 +6,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {merge, Observable} from "rxjs";
 import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
-import {BucketData} from "../../interfaces/bucket-entry";
+import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
@@ -25,6 +25,8 @@ import {DomSanitizer} from "@angular/platform-browser";
 })
 export class IndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+
+  dependents = [];
 
   bucketId: string;
   schema$: Observable<Bucket>;
@@ -191,6 +193,24 @@ export class IndexComponent implements OnInit {
         return response.data;
       })
     );
+  }
+
+  hasDependent(schema: Bucket, data: BucketEntry) {
+    this.dependents = [];
+
+    for (const [name, definition] of Object.entries(schema.properties)) {
+      if (definition.type == "relation" && definition["dependent"] && data[name]) {
+        const documents = Array.isArray(data[name]) ? data[name] : [data[name]];
+
+        for (const document of documents) {
+          const text = `${definition["bucketId"]}/${document._id}`;
+          const url = `../${text}`;
+          this.dependents.push({text, url});
+        }
+      }
+    }
+
+    return !!this.dependents.length;
   }
 
   toggleDisplayAll(display: boolean, schema: Bucket) {

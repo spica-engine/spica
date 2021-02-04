@@ -24,10 +24,10 @@ export abstract class ActivityInterceptor implements NestInterceptor {
       return next.handle();
     }
     return next.handle().pipe(
-      tap(res => {
+      tap(async res => {
         const activities = createActivity(context.switchToHttp().getRequest(), res, this.predict);
         if (activities.length) {
-          const _ = this.service.insert(activities);
+          await this.service.insert(activities);
         }
       })
     );

@@ -483,3 +483,24 @@
     Please type in <code>{{ answer }}</code> to confirm.
   </p>
 </ng-template>
+
+<ng-template #dialogWithDependents let-answer="answer">
+  <p>WARNING:</p>
+  <p>
+    This action will <b>permanently</b> delete this entry, break all relations and cause to deletion
+    of these documents:
+  </p>
+  <br />
+  <ng-container *ngFor="let dependent of dependents">
+    <a class="dependent-document" [routerLink]="dependent.url"
+      >{{ dependent.text }}
+      <mat-icon>
+        open_in_new
+      </mat-icon>
+    </a>
+  </ng-container>
+  <!-- <p>You can change this behaviour from bucket schema.</p> -->
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
