@@ -16,9 +16,11 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Inject,
+  Res
 } from "@nestjs/common";
-import {activity, Action, ActivityService} from "@spica-server/activity/services";
+import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {BucketDataService, BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -27,7 +29,7 @@ import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as expression from "../expression";
-import {createBucketDataActivity, insertActivity} from "./activity.resource";
+import {createBucketDataActivity} from "./activity.resource";
 import {
   deleteDocument,
   findDocuments,
@@ -53,7 +55,7 @@ export class BucketDataController {
     private validator: Validator,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
-    @Optional() private activityService: ActivityService
+    @Optional() @Inject() private activityService: ActivityService
   ) {}
 
   /**
@@ -416,6 +418,7 @@ export class BucketDataController {
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
   async deleteOne(
     @Req() req,
+    @Res() res,
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @Param("documentId", OBJECT_ID) documentId: ObjectId
   ) {
@@ -462,16 +465,13 @@ export class BucketDataController {
     const dependents = getDependents(schema, deletedDocument);
     for (const [targetBucketId, targetDocIds] of dependents.entries()) {
       for (const targetDocId of targetDocIds) {
-        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
+        await this.deleteOne(req, res, new ObjectId(targetBucketId), new ObjectId(targetDocId));
 
         if (this.activityService) {
-          await insertActivity(
-            req,
-            Action.DELETE,
-            targetBucketId,
-            targetDocId,
-            this.activityService
-          );
+          const activities = createActivity(req, res, createBucketDataActivity);
+          if (activities.length) {
+            const _ = this.activityService.insert(activities);
+          }
         }
       }
     }

@@ -6,7 +6,7 @@ import {
   PipeTransform
 } from "@nestjs/common";
 import {HttpAdapterHost} from "@nestjs/core";
-import {Action, ActivityService} from "@spica-server/activity/services";
+import {Action, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {Bucket, BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -24,7 +24,7 @@ import {
 } from "graphql";
 import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools";
 import {BucketDataService} from "../../services/src/bucket-data.service";
-import {insertActivity} from "../activity.resource";
+import {createBucketDataActivity} from "../activity.resource";
 import {
   deleteDocument,
   findDocuments,
@@ -346,12 +346,11 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = insertActivity(
+        const _ = this.insertActivity(
           context,
           Action.POST,
           bucket._id.toString(),
-          insertedDocument._id,
-          this.activity
+          insertedDocument._id
         );
       }
 
@@ -423,13 +422,7 @@ export class GraphqlController implements OnModuleInit {
       const currentDocument = {...input, _id: documentId};
 
       if (this.activity) {
-        const _ = insertActivity(
-          context,
-          Action.PUT,
-          bucket._id.toString(),
-          documentId,
-          this.activity
-        );
+        const _ = this.insertActivity(context, Action.PUT, bucket._id.toString(), documentId);
       }
 
       if (this.history) {
@@ -526,13 +519,7 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = insertActivity(
-          context,
-          Action.PUT,
-          bucket._id.toString(),
-          documentId,
-          this.activity
-        );
+        const _ = this.insertActivity(context, Action.PUT, bucket._id.toString(), documentId);
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
@@ -610,13 +597,7 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        // const _ = insertActivity(
-        //   context,
-        //   Action.DELETE,
-        //   bucket._id.toString(),
-        //   documentId,
-        //   this.activity
-        // );
+        const _ = this.insertActivity(context, Action.DELETE, bucket._id.toString(), documentId);
       }
 
       if (this.hookChangeEmitter) {
@@ -642,17 +623,11 @@ export class GraphqlController implements OnModuleInit {
         const deleteFn = this.delete(schema);
 
         for (const targetDocId of targetDocIds) {
-          // await deleteFn(root, {_id: targetDocId}, context, info, false);
+          await deleteFn(root, {_id: targetDocId}, context, info, false);
 
-          // if (this.activity) {
-          //   await insertActivity(
-          //     context,
-          //     Action.DELETE,
-          //     targetBucketId,
-          //     targetDocId,
-          //     this.activity
-          //   );
-          // }
+          if (this.activity) {
+            const _ = this.insertActivity(context, Action.DELETE, targetBucketId, targetDocId);
+          }
         }
       }
 
@@ -721,6 +696,34 @@ export class GraphqlController implements OnModuleInit {
     const preferences = await this.bs.getPreferences();
     return findLocale(language ? language : preferences.language.default, preferences);
   };
+
+  async insertActivity(req: any, method: Action, bucketId: string, documentId: string) {
+    const request: any = {
+      params: {}
+    };
+
+    request.params.bucketId = bucketId;
+    request.params.documentId = documentId;
+    request.method = Action[method];
+
+    if (req.user) {
+      request.user = deepCopy(req.user);
+    }
+
+    if (req.body) {
+      request.body = deepCopy(req.body);
+    }
+
+    const response = {
+      _id: documentId
+    };
+
+    const activities = createActivity(request, response, createBucketDataActivity);
+
+    if (activities.length) {
+      await this.activity.insert(activities);
+    }
+  }
 }
 
 function throwError(message: string, statusCode: number) {

@@ -9,7 +9,8 @@ import {
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {ActivityService} from "./activity.service";
-import {Action, Predict, ModuleActivity} from "./interface";
+import {Predict} from "./interface";
+import {createActivity} from "./activity";
 
 export abstract class ActivityInterceptor implements NestInterceptor {
   constructor(private service: ActivityService, private predict: Predict) {}
@@ -22,7 +23,14 @@ export abstract class ActivityInterceptor implements NestInterceptor {
         );
       return next.handle();
     }
-    return next.handle().pipe(tap(res => createActivity(context, res, this.predict, this.service)));
+    return next.handle().pipe(
+      tap(res => {
+        const activities = createActivity(context.switchToHttp().getRequest(), res, this.predict);
+        if (activities.length) {
+          const _ = this.service.insert(activities);
+        }
+      })
+    );
   }
 }
 
@@ -33,30 +41,4 @@ export function activity(predict: Predict): Type<any> {
     }
   }
   return mixin(MixinActivityInterceptor);
-}
-
-export function getAction(action: string): Action {
-  return Action[action];
-}
-
-export function getUser(user: any) {
-  return user ? user._id : undefined;
-}
-
-export async function createActivity(
-  context: ExecutionContext,
-  res: any,
-  predict: Predict,
-  service: ActivityService
-) {
-  const req = context.switchToHttp().getRequest();
-  const identifier = getUser(req.user);
-  if (!identifier) {
-    console.log(`Identifier was not sent.`);
-    return;
-  }
-  const action = getAction(req.method);
-  const activities: ModuleActivity[] = predict({identifier, action}, req, res);
-
-  await service.insert(activities);
 }

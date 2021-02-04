@@ -1450,7 +1450,7 @@ describe("GraphQLController", () => {
         await req.delete(`/bucket/${bucket._id}/data/${insertedId}`).catch(e => e);
       });
 
-      it("should insert new person", async () => {
+      fit("should insert new person", async () => {
         const insertBody = {
           query: `mutation {
               insert${bucketName}(input: { name: James, age: 66 } ){
