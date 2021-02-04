@@ -5,12 +5,12 @@ export default {
   statement: [
     {
       action: "passport:apikey:index",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "passport:apikey"
     },
     {
       action: "passport:apikey:show",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "passport:apikey"
     }
   ]

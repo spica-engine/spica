@@ -5,12 +5,12 @@ export default {
   statement: [
     {
       action: "function:index",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "function"
     },
     {
       action: "function:show",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "function"
     },
     {
@@ -19,12 +19,12 @@ export default {
     },
     {
       action: "function:update",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "function"
     },
     {
       action: "function:delete",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "function"
     },
     {

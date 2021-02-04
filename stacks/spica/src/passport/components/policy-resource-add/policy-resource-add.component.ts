@@ -1,6 +1,8 @@
 import {Component, Inject, OnInit} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
 import {Services} from "@spica-client/passport/interfaces/service";
+import {NgModel} from "@angular/forms";
+import {DisplayedStatement, DisplayedAction} from "@spica-client/passport/interfaces/statement";
 
 @Component({
   selector: "policy-resource-add",
@@ -8,98 +10,96 @@ import {Services} from "@spica-client/passport/interfaces/service";
   styleUrls: ["./policy-resource-add.component.scss"]
 })
 export class PolicyResourceAddComponent implements OnInit {
-  services: Services;
+  resourceParts: string[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<PolicyResourceAddComponent>,
-    @Inject(MAT_DIALOG_DATA) public data
+    @Inject(MAT_DIALOG_DATA)
+    public data: {services: Services; statement: DisplayedStatement; currentAction: DisplayedAction}
   ) {}
 
   ngOnInit(): void {
-    this.services = this.data.services;
+    this.resourceParts = this.data.services[this.data.statement.module][
+      this.data.currentAction.name
+    ];
   }
 
-  getAction(action: string) {
-    const actionIndex = this.data.statement["actions"].findIndex(
-      actionInStatement => actionInStatement.action == action
-    );
-    return actionIndex >= 0 ? this.data.statement["actions"][actionIndex] : false;
-  }
+  onIncludeTyping(model: NgModel) {
+    let pattern = "";
 
-  getResourceSelection(action) {
-    if (action && action.resource instanceof Array) {
-      return "include";
-    } else if (action && action.resource instanceof Object) {
-      return "exclude";
+    let reason = "";
+
+    if (!this.data.currentAction.resource.exclude.length) {
+      pattern = this.buildPattern("default");
+      reason = "expectedFormat";
     } else {
-      return undefined;
+      pattern = this.buildPattern("endswith");
+      reason = "endsWith";
+    }
+
+    if (!new RegExp(pattern).test(model.value)) {
+      model.control.setErrors({[reason]: true});
     }
   }
 
-  acceptsResource(action) {
-    return (
-      this.services[this.data.statement.module] &&
-      this.services[this.data.statement.module][action] &&
-      this.services[this.data.statement.module][action].length > 0
-    );
+  buildPattern(type: "default" | "endswith") {
+    const resourcePart = "[a-zA-Z0-9\\*]+";
+
+    const lastSegment = "\\*$";
+
+    const seperator = "\\/";
+
+    switch (type) {
+      case "default":
+        return this.resourceParts.map(() => resourcePart).join(seperator);
+      case "endswith":
+        return this.resourceParts
+          .map((_, index) => (index == this.resourceParts.length - 1 ? lastSegment : resourcePart))
+          .join(seperator);
+    }
   }
 
-  addInclude(resource: string, action) {
-    if (resource == "") {
-      resource = this.trimResource("*/*", action.action);
-    }
-    (action.resource as string[]).push(resource);
+  addInclude() {
+    this.data.currentAction.resource.exclude = [];
+    this.data.currentAction.resource.include.push("");
   }
 
-  addExclude(resource: string, action) {
-    if (!action.resource.exclude) {
-      action.resource = {include: "*/*", exclude: []};
-    }
+  addExclude() {
+    const included = this.resourceParts.map(() => "*").join("/");
 
-    if (resource == "") {
-      resource = this.trimResource("*/*", action.action);
-    }
-
-    (action.resource as {include: string; exclude: string[]}).exclude.push(resource);
+    this.data.currentAction.resource.include = [included];
+    this.data.currentAction.resource.exclude.push("");
   }
 
-  removeIncluded(resourceIndex: number, action) {
-    (action.resource as string[]).splice(resourceIndex, 1);
+  removeIncluded(resourceIndex: number) {
+    this.data.currentAction.resource.include.splice(resourceIndex, 1);
   }
 
-  removeExcluded(resourceIndex: number, action) {
-    (action.resource as {include: string; exclude: string[]}).exclude.splice(resourceIndex, 1);
-    if (!action.resource.exclude.length) {
-      delete action.resource.exclude;
-      action.resource = ["*/*"];
-    }
+  removeExcluded(resourceIndex: number) {
+    this.data.currentAction.resource.exclude.splice(resourceIndex, 1);
   }
 
   copyResources() {
-    this.data.statement["actions"].map(action => {
-      const currentAction = this.getAction(this.data.action);
-      action.resource = JSON.parse(JSON.stringify(currentAction.resource));
-      if (action.action != this.data.action) {
-        if (this.getResourceSelection(currentAction) == "include") {
-          action.resource.forEach((resource, resourceIndex) => {
-            action.resource[resourceIndex] = this.trimResource(resource, action.action);
-          });
-        } else if (this.getResourceSelection(currentAction) == "exclude") {
-          action.resource.include = this.trimResource(action.resource.include, action.action);
-          action.resource.exclude.forEach((resource, resourceIndex) => {
-            action.resource.exclude[resourceIndex] = this.trimResource(resource, action.action);
-          });
-        }
+    for (const action of this.data.statement.actions) {
+      const targetResourceParts = this.data.services[this.data.statement.module][action.name];
+
+      if (targetResourceParts.length != this.resourceParts.length) {
+        continue;
       }
-    });
+
+      action.resource = this.deepCopy(this.data.currentAction.resource);
+    }
   }
 
-  private trimResource(resource: string, action: string) {
-    const resourceArray = resource.split("/");
-    resourceArray.forEach((_, resourceIndex) => {
-      if (this.services[this.data.statement.module][action].length <= resourceIndex)
-        resourceArray[resourceIndex] = "";
-    });
-    return resourceArray.filter(resource => resource != "").join("/");
+  deepCopy(value: unknown) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  trackByFn(index: number) {
+    return index;
+  }
+
+  trackByFn2(index: number) {
+    return index;
   }
 }

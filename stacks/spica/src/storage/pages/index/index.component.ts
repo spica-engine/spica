@@ -58,30 +58,11 @@ export class IndexComponent implements OnInit {
     this.storages$ = merge(this.paginator.page, of(null), this.refresh).pipe(
       tap(() => this.loading$.next(true)),
       switchMap(() =>
-        this.storage
-          .getAll(
-            this.paginator.pageSize || 12,
-            this.paginator.pageSize * this.paginator.pageIndex,
-            this.sorter
-          )
-          .pipe(
-            map(storages => {
-              for (const storage of storages.data) {
-                let lastUpdate = this.lastUpdates.get(storage._id);
-
-                if (!lastUpdate) {
-                  lastUpdate = new Date().getTime();
-                  this.lastUpdates.set(storage._id, lastUpdate);
-                }
-
-                const updatedUrl = new URL(storage.url);
-                updatedUrl.searchParams.append("timestamp", lastUpdate.toString());
-
-                storage.url = updatedUrl.toString();
-              }
-              return storages;
-            })
-          )
+        this.storage.getAll(
+          this.paginator.pageSize || 12,
+          this.paginator.pageSize * this.paginator.pageIndex,
+          this.sorter
+        )
       ),
       map(storages => {
         this.paginator.length = 0;
@@ -156,9 +137,6 @@ export class IndexComponent implements OnInit {
       })
       .afterClosed()
       .toPromise()
-      .then(updatedId => {
-        this.lastUpdates.delete(updatedId);
-        this.refresh.next();
-      });
+      .then(() => this.refresh.next());
   }
 }

@@ -3,7 +3,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {switchMap, tap, take, filter, map} from "rxjs/operators";
 import {emptyPolicy, Policy} from "../../interfaces/policy";
 import {Services} from "../../interfaces/service";
-import {Statement} from "../../interfaces/statement";
+import {Statement, DisplayedStatement} from "../../interfaces/statement";
 import {PolicyService} from "../../services/policy.service";
 import {merge} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
@@ -16,7 +16,8 @@ import {PolicyResourceAddComponent} from "@spica-client/passport/components/poli
 })
 export class PolicyAddComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar: TemplateRef<any>;
-  policy = {statements: []};
+
+  displayedStatements: DisplayedStatement[] = [];
   originalPolicy: Policy = emptyPolicy();
   services: Services;
 
@@ -45,24 +46,25 @@ export class PolicyAddComponent implements OnInit {
         take(1),
         tap(policy => {
           this.originalPolicy = policy;
-          this.originalPolicy.statement.forEach((statement: Statement) => {
-            const existingStatement = this.policy.statements.findIndex(
-              manuplatedStatement => statement.module == manuplatedStatement.module
+          this.originalPolicy.statement.forEach((originalSt: Statement) => {
+            const existingIndex = this.displayedStatements.findIndex(
+              displayedSt => originalSt.module == displayedSt.module
             );
-            if (existingStatement >= 0) {
-              this.policy.statements[existingStatement].actions.push({
-                action: statement.action,
-                resource: statement.resource
-              });
-            } else {
-              this.policy.statements.push({
-                module: statement.module,
+
+            if (existingIndex == -1) {
+              this.displayedStatements.push({
+                module: originalSt.module,
                 actions: [
                   {
-                    action: statement.action,
-                    resource: statement.resource
+                    name: originalSt.action,
+                    resource: originalSt.resource
                   }
                 ]
+              });
+            } else {
+              this.displayedStatements[existingIndex].actions.push({
+                name: originalSt.action,
+                resource: originalSt.resource
               });
             }
           });
@@ -72,54 +74,51 @@ export class PolicyAddComponent implements OnInit {
   }
 
   isServiceUsed(module: string) {
-    return this.policy.statements.some(statement => module == statement.module);
+    return this.displayedStatements.some(statement => module == statement.module);
   }
 
-  getAction(module: string, action: string) {
-    const statementIndex = this.policy.statements.findIndex(
-      statement => statement.module == module
+  getResource(statement: DisplayedStatement, action: string) {
+    const actionIndex = statement.actions.findIndex(
+      actionInStatement => actionInStatement.name == action
     );
-    const actionIndex = this.policy.statements[statementIndex]["actions"].findIndex(
-      actionInStatement => actionInStatement.action == action
-    );
-    return actionIndex >= 0
-      ? this.policy.statements[statementIndex]["actions"][actionIndex]
-      : false;
-  }
 
-  getResourceSelection(action) {
-    if (action && action.resource instanceof Array) {
-      return "include";
-    } else if (action && action.resource instanceof Object) {
-      return "exclude";
-    } else {
-      return undefined;
+    if (actionIndex == -1) {
+      return false;
     }
+
+    return statement.actions[actionIndex].resource;
   }
 
-  toggleAction(module: string, action: string) {
-    const statementIndex = this.policy.statements.findIndex(
-      statement => statement.module == module
+  toggleAction(statement: DisplayedStatement, action: string) {
+    const actionIndex = statement.actions.findIndex(
+      actionInStatement => actionInStatement.name == action
     );
-    let actionIndex = this.policy.statements[statementIndex]["actions"].findIndex(
-      actionInStatement => actionInStatement.action == action
-    );
-    if (actionIndex < 0) {
-      this.policy.statements[statementIndex]["actions"].push({
-        action: action,
-        resource: [this.services[module][action].map(action => (action = "*")).join("/")]
+
+    if (actionIndex == -1) {
+      const includes = [this.services[statement.module][action].map(() => "*").join("/")];
+
+      statement.actions.push({
+        name: action,
+        resource: {
+          include: includes,
+          exclude: []
+        }
       });
     } else {
-      this.policy.statements[statementIndex]["actions"].splice(actionIndex, 1);
+      statement.actions.splice(actionIndex, 1);
     }
   }
 
-  isActionActive(module: string, action: string) {
-    return this.getAction(module, action) ? true : false;
+  isActionActive(statement: DisplayedStatement, action: string) {
+    return statement.actions.findIndex(actionInStatement => actionInStatement.name == action) != -1;
   }
 
-  editResources(statement, action: string) {
-    if (this.isActionActive(statement.module, action)) {
+  editResources(statement: DisplayedStatement, action: string) {
+    if (this.isActionActive(statement, action)) {
+      const currentAction = statement.actions.find(
+        actionInStatement => actionInStatement.name == action
+      );
+
       this.dialog.open(PolicyResourceAddComponent, {
         width: "880px",
         maxWidth: "90%",
@@ -127,15 +126,15 @@ export class PolicyAddComponent implements OnInit {
         data: {
           services: this.services,
           statement,
-          action
+          currentAction
         }
       });
     } else {
-      this.toggleAction(statement.module, action);
+      this.toggleAction(statement, action);
     }
   }
 
-  acceptsResource(statement, action: string) {
+  acceptsResource(statement: DisplayedStatement, action: string) {
     return (
       this.services[statement.module] &&
       this.services[statement.module][action] &&
@@ -145,9 +144,9 @@ export class PolicyAddComponent implements OnInit {
 
   noResourceInserted() {
     let isResourceMissing = false;
-    for (const statement of this.policy.statements) {
+    for (const statement of this.displayedStatements) {
       for (const action of statement.actions) {
-        if (this.acceptsResource(statement, action.action) && action.resource.length == 0) {
+        if (this.acceptsResource(statement, action.name) && !action.resource.include.length) {
           isResourceMissing = true;
           break;
         }
@@ -158,11 +157,11 @@ export class PolicyAddComponent implements OnInit {
 
   savePolicy() {
     const policy: Policy = {...this.originalPolicy, statement: []};
-    this.policy["statements"].forEach(statement => {
+    this.displayedStatements.forEach(statement => {
       statement.actions.forEach(action =>
-        policy["statement"].push({
+        policy.statement.push({
           module: statement.module,
-          action: action.action,
+          action: action.name,
           resource: action.resource
         })
       );
@@ -173,17 +172,17 @@ export class PolicyAddComponent implements OnInit {
   }
 
   addStatement() {
-    this.policy.statements.push({
+    this.displayedStatements.push({
       actions: [],
       module: undefined
     });
   }
 
   removeStatement(index: number) {
-    this.policy.statements.splice(index, 1);
+    this.displayedStatements.splice(index, 1);
   }
 
-  onModuleChange(statement) {
+  onModuleChange(statement: DisplayedStatement) {
     statement.actions = [];
   }
 }

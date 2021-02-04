@@ -8,7 +8,7 @@ export default {
     ...PreferenceReadOnly.statement,
     {
       action: "preference:update",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "preference"
     }
   ]
