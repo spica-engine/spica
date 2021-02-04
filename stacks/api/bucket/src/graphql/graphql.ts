@@ -610,13 +610,13 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = insertActivity(
-          context,
-          Action.DELETE,
-          bucket._id.toString(),
-          documentId,
-          this.activity
-        );
+        // const _ = insertActivity(
+        //   context,
+        //   Action.DELETE,
+        //   bucket._id.toString(),
+        //   documentId,
+        //   this.activity
+        // );
       }
 
       if (this.hookChangeEmitter) {
@@ -642,17 +642,17 @@ export class GraphqlController implements OnModuleInit {
         const deleteFn = this.delete(schema);
 
         for (const targetDocId of targetDocIds) {
-          await deleteFn(root, {_id: targetDocId}, context, info, false);
+          // await deleteFn(root, {_id: targetDocId}, context, info, false);
 
-          if (this.activity) {
-            await insertActivity(
-              context,
-              Action.DELETE,
-              targetBucketId,
-              targetDocId,
-              this.activity
-            );
-          }
+          // if (this.activity) {
+          //   await insertActivity(
+          //     context,
+          //     Action.DELETE,
+          //     targetBucketId,
+          //     targetDocId,
+          //     this.activity
+          //   );
+          // }
         }
       }
 
