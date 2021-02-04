@@ -41,7 +41,7 @@
       <mat-accordion>
         <mat-expansion-panel
           class="mat-elevation-z1"
-          *ngFor="let statement of policy.statements; let statementIndex = index"
+          *ngFor="let statement of displayedStatements; let statementIndex = index"
         >
           <mat-expansion-panel-header>
             <mat-panel-title
@@ -71,8 +71,8 @@
               <div
                 *ngFor="let action of services[statement.module] | keyvalue"
                 class="action-card"
-                (click)="toggleAction(statement.module, action.key)"
-                [class.active]="isActionActive(statement.module, action.key)"
+                (click)="toggleAction(statement, action.key)"
+                [class.active]="isActionActive(statement, action.key)"
               >
                 <div class="title">
                   {{ action.key.replace(statement.module + ":", "").replace(":", " ") | titlecase }}
@@ -83,41 +83,27 @@
                     <mat-icon>edit</mat-icon>
                   </span>
                 </div>
-                <div
-                  class="resources"
-                  *ngIf="acceptsResource(statement, action.key)"
-                  (click)="$event.stopPropagation()"
-                >
+                <div class="resources" (click)="$event.stopPropagation()">
                   <ng-container
                     *ngIf="
-                      getResourceSelection(getAction(statement.module, action.key)) == 'include'
+                      isActionActive(statement, action.key) &&
+                      acceptsResource(statement, action.key)
                     "
                   >
                     <div class="resource">
                       <b>Include:&nbsp;</b>
-                      <span *ngFor="let include of getAction(statement.module, action.key).resource"
+                      <span *ngFor="let include of getResource(statement, action.key).include"
                         >{{ include }}
                       </span>
                     </div>
-                  </ng-container>
-                  <ng-container
-                    *ngIf="
-                      getResourceSelection(getAction(statement.module, action.key)) == 'exclude'
-                    "
-                  >
-                    <div class="resource">
-                      <b>Include:&nbsp;</b>
-                      <span>{{ getAction(statement.module, action.key).resource.include }}</span>
-                    </div>
-                    <div class="resource">
-                      <b>Exclude:&nbsp;</b>
-                      <span
-                        *ngFor="
-                          let exclude of getAction(statement.module, action.key).resource.exclude
-                        "
-                        >{{ exclude }}
-                      </span>
-                    </div>
+                    <ng-container *ngIf="getResource(statement, action.key).exclude.length">
+                      <div class="resource">
+                        <b>Exclude:&nbsp;</b>
+                        <span *ngFor="let exclude of getResource(statement, action.key).exclude"
+                          >{{ exclude }}
+                        </span>
+                      </div>
+                    </ng-container>
                   </ng-container>
                 </div>
               </div>

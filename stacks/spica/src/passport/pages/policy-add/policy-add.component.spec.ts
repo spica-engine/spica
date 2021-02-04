@@ -57,7 +57,8 @@ describe("Policy Add Component", () => {
                     "bucket:delete": ["bucket_id"]
                   }
                 };
-              }
+              },
+              createPolicy: jasmine.createSpy("createPolicy").and.returnValue(of())
             }
           }
         ],
@@ -70,8 +71,10 @@ describe("Policy Add Component", () => {
     });
 
     it("should set policy as empty", () => {
-      expect(fixture.componentInstance.policy).toEqual({
-        statements: []
+      expect(fixture.componentInstance.originalPolicy).toEqual({
+        name: undefined,
+        description: undefined,
+        statement: []
       });
     });
 
@@ -87,37 +90,356 @@ describe("Policy Add Component", () => {
       });
     });
 
-    it("should get resource selection", () => {
-      expect(
-        fixture.componentInstance.getResourceSelection({
-          action: undefined,
-          module: undefined,
-          resource: []
-        })
-      ).toEqual("include");
+    it("should get resource", () => {
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:show",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
 
-      expect(
-        fixture.componentInstance.getResourceSelection({
-          action: undefined,
-          module: undefined,
-          resource: {include: "", exclude: []}
-        })
-      ).toEqual("exclude");
+      const resources = fixture.componentInstance.getResource(statement, "bucket:show");
+      expect(resources).toEqual({
+        include: ["*"],
+        exclude: []
+      });
+    });
+
+    it("should toggle action on", () => {
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      fixture.componentInstance.toggleAction(statement, "bucket:update");
+
+      expect(statement).toEqual({
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          },
+          {
+            name: "bucket:update",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      });
+    });
+
+    it("should toggle action off", () => {
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      fixture.componentInstance.toggleAction(statement, "bucket:delete");
+
+      expect(statement).toEqual({
+        module: "bucket",
+        actions: []
+      });
+    });
+
+    it("should return true if action is active", () => {
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      expect(fixture.componentInstance.isActionActive(statement, "bucket:delete")).toEqual(true);
+    });
+
+    it("should return false if action is passive", () => {
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      expect(fixture.componentInstance.isActionActive(statement, "bucket:create")).toEqual(false);
+    });
+
+    it("should open dialog", () => {
+      const openSpy = spyOn(fixture.componentInstance["dialog"], "open").and.returnValue(undefined);
+
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      fixture.componentInstance.editResources(statement, "bucket:delete");
+
+      expect(openSpy).toHaveBeenCalledTimes(1);
+      expect(openSpy.calls.first().args[1].data).toEqual(
+        {
+          services: fixture.componentInstance.services,
+          statement: statement,
+          currentAction: {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        },
+        "should run if dialog opened for correct action"
+      );
+    });
+
+    it("should not open dialog, but toggle action on", () => {
+      const openSpy = spyOn(fixture.componentInstance["dialog"], "open").and.returnValue(undefined);
+      const toggleSpy = spyOn(fixture.componentInstance, "toggleAction").and.returnValue(undefined);
+
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      fixture.componentInstance.editResources(statement, "bucket:show");
+
+      expect(openSpy).toHaveBeenCalledTimes(0);
+
+      expect(toggleSpy).toHaveBeenCalledTimes(1);
+      expect(toggleSpy).toHaveBeenCalledWith(statement, "bucket:show");
+    });
+
+    it("should return true if action accepts resource", () => {
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      expect(fixture.componentInstance.acceptsResource(statement, "bucket:index")).toEqual(true);
+    });
+
+    it("should return false if action does not accept resource", () => {
+      const statement = {
+        module: "bucket",
+        actions: [
+          {
+            name: "bucket:delete",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      expect(fixture.componentInstance.acceptsResource(statement, "bucket:create")).toEqual(false);
+    });
+
+    it("should return true if one of statements has missing resource", () => {
+      fixture.componentInstance.displayedStatements = [
+        {
+          module: "bucket",
+          actions: [
+            {
+              name: "bucket:delete",
+              resource: {
+                include: [],
+                exclude: []
+              }
+            }
+          ]
+        }
+      ];
+
+      expect(fixture.componentInstance.noResourceInserted()).toEqual(true);
+    });
+
+    it("should return true if none of statements has missing resource", () => {
+      fixture.componentInstance.displayedStatements = [
+        {
+          module: "bucket",
+          actions: [
+            {
+              name: "bucket:delete",
+              resource: {
+                include: ["*"],
+                exclude: []
+              }
+            }
+          ]
+        },
+        {
+          module: "bucket",
+          actions: [
+            {
+              name: "bucket:create",
+              resource: undefined
+            }
+          ]
+        }
+      ];
+
+      expect(fixture.componentInstance.noResourceInserted()).toEqual(false);
+    });
+
+    it("should prepare policies for insert action", () => {
+      fixture.componentInstance.displayedStatements = [
+        {
+          module: "bucket",
+          actions: [
+            {
+              name: "bucket:create",
+              resource: undefined
+            },
+            {
+              name: "bucket:delete",
+              resource: {
+                include: ["*"],
+                exclude: []
+              }
+            }
+          ]
+        },
+        {
+          module: "dashboard",
+          actions: [
+            {
+              name: "dashboard:create",
+              resource: undefined
+            }
+          ]
+        }
+      ];
+
+      fixture.componentInstance.originalPolicy = {
+        name: "test",
+        description: "test",
+        statement: [
+          {
+            action: "function:index",
+            module: "function",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          }
+        ]
+      };
+
+      fixture.componentInstance.savePolicy();
+
+      const createSpy = fixture.componentInstance["policyService"].createPolicy as jasmine.Spy;
+
+      expect(createSpy).toHaveBeenCalledTimes(1);
+      expect(createSpy.calls.first().args[0]).toEqual({
+        name: "test",
+        description: "test",
+        statement: [
+          {
+            action: "bucket:create",
+            module: "bucket",
+            resource: undefined
+          },
+          {
+            action: "bucket:delete",
+            module: "bucket",
+            resource: {
+              include: ["*"],
+              exclude: []
+            }
+          },
+          {
+            action: "dashboard:create",
+            module: "dashboard",
+            resource: undefined
+          }
+        ]
+      });
     });
 
     it("should add new statement", () => {
       fixture.componentInstance.addStatement();
-      expect(fixture.componentInstance.policy).toEqual({
-        statements: [{actions: [], module: undefined}]
-      });
+      expect(fixture.componentInstance.displayedStatements).toEqual([
+        {
+          actions: [],
+          module: undefined
+        }
+      ]);
     });
 
     it("should remove statement", () => {
-      fixture.componentInstance.policy.statements = [{actions: [], module: undefined}];
+      fixture.componentInstance.displayedStatements = [
+        {
+          actions: [],
+          module: undefined
+        }
+      ];
+
       fixture.componentInstance.removeStatement(0);
-      expect(fixture.componentInstance.policy).toEqual({
-        statements: []
-      });
+      expect(fixture.componentInstance.displayedStatements).toEqual([]);
     });
   });
 
@@ -152,27 +474,26 @@ describe("Policy Add Component", () => {
                     statement: [
                       {
                         action: "bucket:index",
-                        resource: {include: "*", exclude: []},
+                        resource: {include: ["*"], exclude: []},
                         module: "bucket"
                       },
                       {
                         action: "bucket:show",
-                        resource: {include: "*", exclude: []},
+                        resource: {include: ["*"], exclude: []},
                         module: "bucket"
                       },
                       {
                         action: "bucket:create",
-                        resource: [],
                         module: "bucket"
                       },
                       {
                         action: "bucket:update",
-                        resource: {include: "*", exclude: []},
+                        resource: {include: ["*"], exclude: []},
                         module: "bucket"
                       },
                       {
                         action: "bucket:delete",
-                        resource: {include: "*", exclude: []},
+                        resource: {include: ["*"], exclude: []},
                         module: "bucket"
                       }
                     ]
@@ -206,38 +527,68 @@ describe("Policy Add Component", () => {
         fixture.detectChanges();
       });
 
-      it("should set policy as bucket full access", () => {
-        expect(fixture.componentInstance.originalPolicy).toEqual({
-          name: "Bucket Full Access",
-          description: "Bucket Full Access",
-          statement: [
-            {
-              action: "bucket:index",
-              resource: {include: "*", exclude: []},
-              module: "bucket"
-            },
-            {
-              action: "bucket:show",
-              resource: {include: "*", exclude: []},
-              module: "bucket"
-            },
-            {
-              action: "bucket:create",
-              resource: [],
-              module: "bucket"
-            },
-            {
-              action: "bucket:update",
-              resource: {include: "*", exclude: []},
-              module: "bucket"
-            },
-            {
-              action: "bucket:delete",
-              resource: {include: "*", exclude: []},
-              module: "bucket"
-            }
-          ]
-        });
+      it("should create displayed statements from original policy", () => {
+        expect(fixture.componentInstance.originalPolicy).toEqual(
+          {
+            name: "Bucket Full Access",
+            description: "Bucket Full Access",
+            statement: [
+              {
+                action: "bucket:index",
+                resource: {include: ["*"], exclude: []},
+                module: "bucket"
+              },
+              {
+                action: "bucket:show",
+                resource: {include: ["*"], exclude: []},
+                module: "bucket"
+              },
+              {
+                action: "bucket:create",
+                module: "bucket"
+              },
+              {
+                action: "bucket:update",
+                resource: {include: ["*"], exclude: []},
+                module: "bucket"
+              },
+              {
+                action: "bucket:delete",
+                resource: {include: ["*"], exclude: []},
+                module: "bucket"
+              }
+            ]
+          },
+          "should work if original policy is still in original form"
+        );
+
+        expect(fixture.componentInstance.displayedStatements).toEqual([
+          {
+            module: "bucket",
+            actions: [
+              {
+                name: "bucket:index",
+                resource: {include: ["*"], exclude: []}
+              },
+              {
+                name: "bucket:show",
+                resource: {include: ["*"], exclude: []}
+              },
+              {
+                name: "bucket:create",
+                resource: undefined
+              },
+              {
+                name: "bucket:update",
+                resource: {include: ["*"], exclude: []}
+              },
+              {
+                name: "bucket:delete",
+                resource: {include: ["*"], exclude: []}
+              }
+            ]
+          }
+        ]);
       });
     });
 
@@ -301,9 +652,13 @@ describe("Policy Add Component", () => {
       });
 
       it("should set policy from policy services", () => {
-        expect(fixture.componentInstance.policy).toEqual({
-          statements: []
+        expect(fixture.componentInstance.originalPolicy).toEqual({
+          name: "policy_name",
+          description: "policy_description",
+          statement: []
         });
+
+        expect(fixture.componentInstance.displayedStatements).toEqual([]);
       });
     });
   });

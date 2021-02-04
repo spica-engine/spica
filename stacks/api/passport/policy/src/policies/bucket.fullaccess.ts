@@ -12,33 +12,36 @@ export default {
     },
     {
       action: "bucket:update",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "bucket"
     },
     {
       action: "bucket:delete",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "bucket"
     },
     {
       action: "bucket:data:create",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "bucket:data"
     },
     {
       action: "bucket:data:update",
-      resource: ["*/*"],
+      resource: {include: ["*/*"], exclude: []},
       module: "bucket:data"
     },
     {
       action: "bucket:data:delete",
-      resource: ["*/*"],
+      resource: {include: ["*/*"], exclude: []},
       module: "bucket:data"
     },
     {
       action: "preference:update",
       module: "preference",
-      resource: ["bucket"]
+      resource: {
+        include: ["bucket"],
+        exclude: []
+      }
     }
   ]
 };
