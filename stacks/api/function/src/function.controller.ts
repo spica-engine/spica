@@ -30,7 +30,7 @@ import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
-import {ChangeKind, hasEnvChange} from "./change";
+import {ChangeKind, hasContextChange} from "./change";
 import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
@@ -137,7 +137,7 @@ export class FunctionController {
 
     let changes;
 
-    if (hasEnvChange(previousFn, fn)) {
+    if (hasContextChange(previousFn, fn)) {
       // mark all triggers updated
       changes = createTargetChanges(fn, ChangeKind.Updated);
     } else {
