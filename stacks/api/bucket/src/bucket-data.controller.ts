@@ -463,19 +463,17 @@ export class BucketDataController {
 
     const dependents = getDependents(schema, deletedDocument);
 
-    if (dependents.size) {
-      for (const [targetBucketId, targetDocIds] of dependents.entries()) {
-        for (const targetDocId of targetDocIds) {
-          if (this.activityService) {
-            const activities = createActivity(req, {body: []}, createBucketDataActivity);
+    for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+      for (const targetDocId of targetDocIds) {
+        if (this.activityService) {
+          const activities = createActivity(req, {body: []}, createBucketDataActivity);
 
-            if (activities.length) {
-              await this.activityService.insert(activities);
-            }
+          if (activities.length) {
+            await this.activityService.insert(activities);
           }
-
-          await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
         }
+
+        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
       }
     }
   }

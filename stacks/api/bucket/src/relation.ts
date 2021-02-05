@@ -346,12 +346,12 @@ export async function clearRelations(
   const buckets = await bucketService.find({_id: {$ne: bucketId}});
 
   for (const bucket of buckets) {
-    const targets = findRelations(bucket.properties, bucketId.toHexString(), "", new Map());
+    const targets = findRelations(bucket.properties, bucketId.toString(), "", new Map());
 
     for (const [target, type] of targets.entries()) {
-      const updateParams = getUpdateParams(target, type, documentId.toHexString());
+      const updateParams = getUpdateParams(target, type, documentId.toString());
       await bucketService
-        .collection(`bucket_${bucket._id.toHexString()}`)
+        .collection(`bucket_${bucket._id.toString()}`)
         .updateMany(updateParams.filter, updateParams.update);
     }
   }
