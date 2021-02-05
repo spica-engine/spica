@@ -9,7 +9,7 @@ import {of} from "rxjs";
 import {BucketService} from "src/bucket/services/bucket.service";
 import {RelationSchemaComponent} from "./relation-schema.component";
 
-fdescribe("Relation Schema Component", () => {
+describe("Relation Schema Component", () => {
   describe("basic behavior", () => {
     let fixture: ComponentFixture<RelationSchemaComponent>;
 
