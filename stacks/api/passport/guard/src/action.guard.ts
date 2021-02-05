@@ -16,13 +16,10 @@ import {PolicyResolver, POLICY_RESOLVER} from "./action.resolver";
 
 export interface Statement {
   action: string;
-  resource:
-    | string
-    | string[]
-    | {
-        include: string;
-        exclude: string[];
-      };
+  resource: {
+    include: string[];
+    exclude: string[];
+  };
   module: string;
 }
 
@@ -193,99 +190,104 @@ function createActionGuard(
                   );
                 }
               }
-              if (typeof statement.resource == "string" || Array.isArray(statement.resource)) {
-                // Parse resources in such format bucketid/dataid thus we could match them individually
-                const resources = wrapArray(statement.resource).map(resource =>
-                  resource.split("/")
-                );
 
-                for (const resource of resources) {
-                  assertResourceAgainstDefinition(resource);
-                }
+              if (typeof statement.resource == "object") {
+                // INCLUDE THESE EXCLUDE NONE
+                if (!statement.resource.exclude.length) {
+                  // Parse resources in such format bucketid/dataid thus we could match them individually
+                  const resources = wrapArray(statement.resource.include).map(resource =>
+                    resource.split("/")
+                  );
 
-                match = resources.some(resource =>
-                  // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
-                  // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
-                  // and the first element is the id of the bucket while the second item is the identifier of the document
-                  // hence all resources has to match in order to assume that the user has the access to an arbitrary resource
-                  //
-                  // IMPORTANT: when the resource definition is shorter than the resource present in the statement we only check parts
-                  // that are present in the resource definition. for example,  when the resource definiton is [ '5f30fffd4a51a68d6fec4d3b']
-                  // and resource in the statement is ["5f30fffd4a51a68d6fec4d3b", "5f31002e4a51a68d6fec4d3f"]
-                  // we only check definition.resource[0] against resource[0] in the statement and the rest will be passed as mongodb aggregation
-                  // to filter out in database layer.
-                  resourceAndModule.resource.every(
-                    (part, index) => part == resource[index] || resource[index] == "*"
-                  )
-                );
-
-                if (match && hasResourceFilter) {
                   for (const resource of resources) {
-                    include.push(getLastSegment(resource));
+                    assertResourceAgainstDefinition(resource);
                   }
-                }
-              } else if (typeof statement.resource == "object") {
-                const resource = statement.resource;
-                // We need parse resources that has slash in it to match them individually.
-                const includeResource = resource.include.split("/");
-                assertResourceAgainstDefinition(includeResource);
 
-                const hasExcludedResources = resource.exclude && resource.exclude.length;
+                  match = resources.some(resource =>
+                    // Match all the positional resources when accessing to bucket data endpoints where the resource looks like below
+                    // [ '5f30fffd4a51a68d6fec4d3b', '5f31002e4a51a68d6fec4d3f' ]
+                    // and the first element is the id of the bucket while the second item is the identifier of the document
+                    // hence all resources has to match in order to assume that the user has the access to an arbitrary resource
+                    //
+                    // IMPORTANT: when the resource definition is shorter than the resource present in the statement we only check parts
+                    // that are present in the resource definition. for example,  when the resource definiton is [ '5f30fffd4a51a68d6fec4d3b']
+                    // and resource in the statement is ["5f30fffd4a51a68d6fec4d3b", "5f31002e4a51a68d6fec4d3f"]
+                    // we only check definition.resource[0] against resource[0] in the statement and the rest will be passed as mongodb aggregation
+                    // to filter out in database layer.
+                    resourceAndModule.resource.every(
+                      (part, index) => part == resource[index] || resource[index] == "*"
+                    )
+                  );
 
-                const excluded: string[][] = [];
-
-                if (hasExcludedResources) {
-                  for (const excludeResource of resource.exclude) {
-                    const excludedResource = excludeResource.split("/");
-                    assertResourceAgainstDefinition(excludedResource);
-                    excluded.push(excludedResource);
+                  if (match && hasResourceFilter) {
+                    for (const resource of resources) {
+                      include.push(getLastSegment(resource));
+                    }
                   }
-                }
+                } else {
+                  // INCLUDE THIS EXCLUDE THESE
+                  const resource = statement.resource;
+                  // We need parse resources that has slash in it to match them individually.
+                  const includeResource = resource.include[0].split("/");
+                  assertResourceAgainstDefinition(includeResource);
 
-                match = resourceAndModule.resource.every((part, index) => {
-                  const pattern = [includeResource[index]];
+                  const hasExcludedResources = resource.exclude && resource.exclude.length;
 
-                  // Since the exclude is optional we have check if it is present
+                  const excluded: string[][] = [];
+
                   if (hasExcludedResources) {
-                    for (const resource of excluded) {
-                      if (hasResourceFilter && getLastSegment(resource) == "*") {
-                        // If all subresources excluded in index endpoint
-                        pattern.push(`!${resource[index]}`);
-                      } else if (
-                        !hasResourceFilter &&
-                        index == resourceAndModule.resource.length - 1 &&
-                        getLastSegment(resource) != "*" // If one subresource excluded in non-index endpoint
-                      ) {
-                        pattern.push(`!${resource[index]}`);
-                      } else if (!hasResourceFilter && getLastSegment(resource) == "*") {
-                        // If all subresources excluded in non-index endpoint
-                        pattern.push(`!${resource[0]}`);
-                      }
+                    for (const excludeResource of resource.exclude) {
+                      const excludedResource = excludeResource.split("/");
+                      assertResourceAgainstDefinition(excludedResource);
+                      excluded.push(excludedResource);
                     }
                   }
 
-                  return matcher.isMatch(part, pattern);
-                });
+                  match = resourceAndModule.resource.every((part, index) => {
+                    const pattern = [includeResource[index]];
 
-                if (hasResourceFilter && match) {
-                  include.push(getLastSegment(includeResource));
-
-                  if (hasExcludedResources) {
-                    const excludedResources = [];
-                    for (const excludedResource of excluded) {
-                      const lastSegment = getLastSegment(excludedResource);
-                      // We don't need to put the wildcard segment into exclude array since
-                      // the request will be rejected before reaching to the controller
-                      // To clarify, lets say we have excluded all resources in the "base_resource"
-                      // "base_resource/*" while allowing all of the other resources */*
-                      // in this case the user has no to any resources under "base_resource" therefore
-                      // the user gets rejected before reaching to the controller.
-                      if (!isWildcard(lastSegment)) {
-                        excludedResources.push(lastSegment);
+                    // Since the exclude is optional we have check if it is present
+                    if (hasExcludedResources) {
+                      for (const resource of excluded) {
+                        if (hasResourceFilter && getLastSegment(resource) == "*") {
+                          // If all subresources excluded in index endpoint
+                          pattern.push(`!${resource[index]}`);
+                        } else if (
+                          !hasResourceFilter &&
+                          index == resourceAndModule.resource.length - 1 &&
+                          getLastSegment(resource) != "*" // If one subresource excluded in non-index endpoint
+                        ) {
+                          pattern.push(`!${resource[index]}`);
+                        } else if (!hasResourceFilter && getLastSegment(resource) == "*") {
+                          // If all subresources excluded in non-index endpoint
+                          pattern.push(`!${resource[0]}`);
+                        }
                       }
                     }
-                    if (excludedResources.length) {
-                      exclude.push(excludedResources);
+
+                    return matcher.isMatch(part, pattern);
+                  });
+
+                  if (hasResourceFilter && match) {
+                    include.push(getLastSegment(includeResource));
+
+                    if (hasExcludedResources) {
+                      const excludedResources = [];
+                      for (const excludedResource of excluded) {
+                        const lastSegment = getLastSegment(excludedResource);
+                        // We don't need to put the wildcard segment into exclude array since
+                        // the request will be rejected before reaching to the controller
+                        // To clarify, lets say we have excluded all resources in the "base_resource"
+                        // "base_resource/*" while allowing all of the other resources */*
+                        // in this case the user has no to any resources under "base_resource" therefore
+                        // the user gets rejected before reaching to the controller.
+                        if (!isWildcard(lastSegment)) {
+                          excludedResources.push(lastSegment);
+                        }
+                      }
+                      if (excludedResources.length) {
+                        exclude.push(excludedResources);
+                      }
                     }
                   }
                 }

@@ -52,15 +52,19 @@ export function createAuthGuard(type?: string): Type<CanActivate> {
 
       request.strategyType = strategyType.toUpperCase();
 
-      const user = await passportFn(strategyType, options, (err: Error, user: unknown) => {
-        if (err) {
-          throw new BadRequestException(err.message);
+      const user = await passportFn(
+        strategyType,
+        options,
+        (err: Error, user: unknown, info: any) => {
+          if (err) {
+            throw new BadRequestException(err.message);
+          }
+          if (!user) {
+            throw new UnauthorizedException(info ? info.message : undefined);
+          }
+          return user;
         }
-        if (!user) {
-          throw new UnauthorizedException();
-        }
-        return user;
-      });
+      );
 
       request[options.property] = user;
 

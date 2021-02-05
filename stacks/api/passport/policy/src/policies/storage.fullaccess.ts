@@ -12,12 +12,12 @@ export default {
     },
     {
       action: "storage:update",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "storage"
     },
     {
       action: "storage:delete",
-      resource: ["*"],
+      resource: {include: ["*"], exclude: []},
       module: "storage"
     }
   ]

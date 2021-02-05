@@ -9,7 +9,7 @@ import {of} from "rxjs";
 import {BucketService} from "src/bucket/services/bucket.service";
 import {RelationSchemaComponent} from "./relation-schema.component";
 
-describe("Relation Schema Component", () => {
+fdescribe("Relation Schema Component", () => {
   describe("basic behavior", () => {
     let fixture: ComponentFixture<RelationSchemaComponent>;
 
@@ -75,7 +75,7 @@ describe("Relation Schema Component", () => {
       expect(fixture.componentInstance.schema.bucketId).toBe("bucket2");
     });
 
-    it("should fill with intial value", fakeAsync(() => {
+    it("should fill with initial value", fakeAsync(() => {
       fixture.componentInstance.schema.bucketId = "bucket1";
       fixture.detectChanges();
       tick();

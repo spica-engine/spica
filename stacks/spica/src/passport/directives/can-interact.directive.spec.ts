@@ -50,7 +50,7 @@ describe("CanInteract", () => {
     component.onclick.calls.reset();
   });
 
-  it("should set button disable and show tooltip when hovered", async () => {
+  it("should set button disable and show tooltip when hovered", () => {
     const actualButtons = document.body.querySelector("button");
 
     expect(actualButtons.style.display).toEqual("none");
@@ -73,10 +73,6 @@ describe("CanInteract", () => {
     fixture.detectChanges();
 
     expect(component.onclick).toHaveBeenCalledTimes(0);
-
-    // for removing tooltip from UI
-    disabledButtons[0].dispatchEvent(new Event("mouseleave"));
-    fixture.detectChanges();
   });
 
   it("should revert actual button", async () => {
@@ -119,9 +115,5 @@ describe("CanInteract", () => {
     expect(tooltips[0].textContent).toEqual(
       "passport:identity:update is required for this action."
     );
-
-    // for removing tooltip from UI
-    disabledButtons[0].dispatchEvent(new Event("mouseleave"));
-    fixture.detectChanges();
   });
 });

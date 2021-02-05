@@ -151,7 +151,6 @@ describe("Storage/IndexComponent", () => {
       tick(500);
       fixture.detectChanges();
 
-      const lastUpdate = fixture.componentInstance.lastUpdates.get("1");
       expect(openSpy).toHaveBeenCalledTimes(1);
       expect(openSpy).toHaveBeenCalledWith(ImageEditorComponent, {
         maxWidth: "80%",
@@ -163,7 +162,7 @@ describe("Storage/IndexComponent", () => {
           content: {
             type: "image/png"
           },
-          url: `http://example/test.png?timestamp=${lastUpdate}`
+          url: `http://example/test.png`
         }
       });
     }));
@@ -226,7 +225,6 @@ describe("Storage/IndexComponent", () => {
     }));
 
     it("should open preview", () => {
-      const lastUpdate = fixture.componentInstance.lastUpdates.get("1");
       const openSpy = spyOn(fixture.componentInstance.dialog, "open").and.callThrough();
       fixture.debugElement
         .query(
@@ -246,21 +244,9 @@ describe("Storage/IndexComponent", () => {
           content: {
             type: "image/png"
           },
-          url: `http://example/test.png?timestamp=${lastUpdate}`
+          url: `http://example/test.png`
         }
       });
-    });
-
-    it("should clear last update time of objects and call refresh.next", () => {
-      const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
-
-      expect(fixture.componentInstance.lastUpdates.size).toEqual(3);
-
-      fixture.debugElement.query(By.css("mat-toolbar button:nth-child(2)")).nativeElement.click();
-      fixture.detectChanges();
-
-      expect(fixture.componentInstance.lastUpdates.size).toEqual(0);
-      expect(refreshSpy).toHaveBeenCalledTimes(1);
     });
 
     describe("sorts", () => {

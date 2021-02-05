@@ -8,6 +8,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
 import {MatAwareDialogComponent} from "./aware-dialog.component";
 import {MatAwareDialogDirective} from "./aware-dialog.directive";
+import {RouterModule} from "@angular/router";
 
 @NgModule({
   imports: [
@@ -17,7 +18,8 @@ import {MatAwareDialogDirective} from "./aware-dialog.directive";
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule
+    MatIconModule,
+    RouterModule
   ],
   declarations: [MatAwareDialogComponent, MatAwareDialogDirective],
   entryComponents: [MatAwareDialogComponent],

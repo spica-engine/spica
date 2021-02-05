@@ -28,6 +28,8 @@ export class IndexComponent implements OnInit {
 
   dependents = [];
 
+  selectedItemDependents = [];
+
   bucketId: string;
   schema$: Observable<Bucket>;
   data$: Observable<BucketData>;
@@ -45,7 +47,7 @@ export class IndexComponent implements OnInit {
 
   $preferences: Observable<BucketSettings>;
   language: string;
-  selectedItems: Array<string> = [];
+  selectedItems: Array<BucketEntry> = [];
   dataIds: Array<string> = [];
 
   guide: boolean = false;
@@ -195,22 +197,35 @@ export class IndexComponent implements OnInit {
     );
   }
 
-  hasDependent(schema: Bucket, data: BucketEntry) {
-    this.dependents = [];
+  getDependents(schema: Bucket, entries: BucketEntry[]) {
+    const dependents = new Set();
 
     for (const [name, definition] of Object.entries(schema.properties)) {
-      if (definition.type == "relation" && definition["dependent"] && data[name]) {
-        const documents = Array.isArray(data[name]) ? data[name] : [data[name]];
+      for (const entry of entries) {
+        if (definition.type == "relation" && definition["dependent"] && entry[name]) {
+          const documents = Array.isArray(entry[name]) ? entry[name] : [entry[name]];
 
-        for (const document of documents) {
-          const text = `${definition["bucketId"]}/${document._id}`;
-          const url = `../${text}`;
-          this.dependents.push({text, url});
+          for (const document of documents) {
+            const text = `${definition["bucketId"]}/${document._id}`;
+            dependents.add(text);
+          }
         }
       }
     }
 
-    return !!this.dependents.length;
+    return Array.from(dependents);
+  }
+
+  onItemSelected(isSelect: boolean, data: BucketEntry) {
+    if (isSelect) {
+      this.selectedItems.push(data);
+    } else {
+      this.selectedItems.splice(this.selectedItems.findIndex(entry => entry._id == data._id), 1);
+    }
+  }
+
+  hasSelected(id: string) {
+    return this.selectedItems.findIndex(item => item._id == id) != -1;
   }
 
   toggleDisplayAll(display: boolean, schema: Bucket) {
@@ -329,10 +344,11 @@ export class IndexComponent implements OnInit {
 
   deleteSelectedItems() {
     this.bds
-      .deleteMany(this.bucketId, this.selectedItems)
+      .deleteMany(this.bucketId, this.selectedItems.map(i => i._id))
       .toPromise()
       .then(() => this.refresh.emit());
   }
+
   guideRequest(url: string, key: string) {
     if (!this.guideResponse[key]) {
       this.bs
