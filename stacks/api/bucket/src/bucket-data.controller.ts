@@ -465,6 +465,8 @@ export class BucketDataController {
 
     for (const [targetBucketId, targetDocIds] of dependents.entries()) {
       for (const targetDocId of targetDocIds) {
+        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
+        
         if (this.activityService) {
           const activities = createActivity(req, {body: []}, createBucketDataActivity);
 
@@ -472,8 +474,6 @@ export class BucketDataController {
             await this.activityService.insert(activities);
           }
         }
-
-        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
       }
     }
   }
