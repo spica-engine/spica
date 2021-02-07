@@ -1,7 +1,7 @@
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
-import {BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
+import {BucketService, getBucketDataCollection, filterReviver} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {
   FindOptions,
@@ -57,7 +57,7 @@ export class RealtimeGateway implements OnGatewayConnection {
     let filter = req.query.get("filter");
 
     if (filter) {
-      let parsedFilter = parseFilter(JSON.parse, filter);
+      let parsedFilter = parseFilter((value: string) => JSON.parse(value, filterReviver), filter);
 
       if (!parsedFilter) {
         parsedFilter = parseFilter(aggregate, filter, {});
