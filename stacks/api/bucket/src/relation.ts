@@ -256,7 +256,7 @@ type RelationDefinition = {
   type: "relation";
   bucketId: string;
   relationType: RelationType;
-  dependent?: boolean;
+  dependent: boolean;
 };
 
 export function isDesiredRelation(schema: any, bucketId: string) {
