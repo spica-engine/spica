@@ -9,6 +9,15 @@ const functions = [
     text: "has(document$0)"
   },
   {
+    label: "unixTime",
+    detail: "(method) unixTime(fieldPath: unknown): number",
+    description: {
+      value: `Returns unix timestamp of **fieldPath**\n
+*@param* **fieldPath** - The path that represents the actual value on the document or auth. Actual value must be a Date`
+    },
+    text: "unixTime(document$0)"
+  },
+  {
     label: "some",
     detail: "(method) some(fieldPath: unknown, ...items: any[]): boolean",
     description: {

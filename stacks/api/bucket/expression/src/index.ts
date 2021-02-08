@@ -30,3 +30,5 @@ func.register("every", builtin.every);
 func.register("equal", builtin.equal);
 
 func.register("regex", builtin.regex);
+
+func.register("unixTime", builtin.unixTime);

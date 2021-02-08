@@ -39,6 +39,42 @@ export const has: func.Func = context => {
   };
 };
 
+export const unixTime: func.Func = context => {
+  const fnName = "unixTime";
+
+  validateArgumentsLength(fnName, context.arguments, 1);
+
+  const argValidation: ArgumentValidation = {
+    kind: "operator",
+    type: "select",
+    mustBe: "property acces chain"
+  };
+  validateArgumentsOrder(fnName, context.arguments, [argValidation]);
+
+  return ctx => {
+    if (context.target == "aggregation") {
+      const parsedArguments = parseArguments(context.arguments, ctx, convert);
+
+      const propertyName: string = parsedArguments[0];
+
+      return {
+        $divide: [
+          {
+            $toLong: propertyName
+          },
+          1000
+        ]
+      };
+    } else {
+      const parsedArguments = parseArguments(context.arguments, ctx, compile);
+
+      const documentValue = parsedArguments[0];
+
+      return new Date(documentValue).getTime() / 1000;
+    }
+  };
+};
+
 export const some: func.Func = context => {
   const fnName = "some";
   validateArgumentsLength(fnName, context.arguments, undefined, 2);
