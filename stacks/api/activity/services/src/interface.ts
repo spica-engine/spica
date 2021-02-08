@@ -1,7 +1,7 @@
 import {ObjectId} from "@spica-server/database";
 
 export interface PreActivity {
-  identifier: string;
+  identifier: string | ObjectId;
   action: Action;
 }
 
