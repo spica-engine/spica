@@ -16,9 +16,11 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Inject,
+  Res
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
 import {BucketDataService, BucketDocument, BucketService} from "@spica-server/bucket/services";
@@ -39,7 +41,7 @@ import {
 import {filterReviver, isJSONExpression} from "./filter";
 import {createHistory} from "./history";
 import {applyPatch} from "./patch";
-import {clearRelations, getRelationPaths} from "./relation";
+import {clearRelations, getRelationPaths, getDependents} from "./relation";
 
 /**
  * All APIs related to bucket documents.
@@ -52,7 +54,8 @@ export class BucketDataController {
     private bds: BucketDataService,
     private validator: Validator,
     @Optional() private changeEmitter: ChangeEmitter,
-    @Optional() private history: HistoryService
+    @Optional() private history: HistoryService,
+    @Optional() @Inject() private activityService: ActivityService
   ) {}
 
   /**
@@ -457,5 +460,21 @@ export class BucketDataController {
     }
 
     await clearRelations(this.bs, bucketId, documentId);
+
+    const dependents = getDependents(schema, deletedDocument);
+
+    for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+      for (const targetDocId of targetDocIds) {
+        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
+
+        if (this.activityService) {
+          const activities = createActivity(req, {body: []}, createBucketDataActivity);
+
+          if (activities.length) {
+            await this.activityService.insert(activities);
+          }
+        }
+      }
+    }
   }
 }

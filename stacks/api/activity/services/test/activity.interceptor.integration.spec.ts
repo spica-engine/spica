@@ -4,7 +4,6 @@ import {
   activity,
   ActivityService,
   Predict,
-  Activity,
   ModuleActivity,
   ACTIVITY_OPTIONS
 } from "@spica-server/activity/services";

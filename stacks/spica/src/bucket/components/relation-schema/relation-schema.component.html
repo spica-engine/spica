@@ -16,3 +16,10 @@
     <mat-option value="onetomany">One To Many</mat-option>
   </mat-select>
 </mat-form-field>
+<mat-checkbox
+  matTooltip="When checked, after a document deleted from this bucket, system will delete related document(s) automatically."
+  [(ngModel)]="schema.dependent"
+  ngDefaultControl
+>
+  Dependent
+</mat-checkbox>

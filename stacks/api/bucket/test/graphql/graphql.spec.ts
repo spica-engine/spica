@@ -770,7 +770,8 @@ describe("GraphQLController", () => {
               books: {
                 type: "relation",
                 relationType: "onetomany",
-                bucketId: booksBucket._id
+                bucketId: booksBucket._id,
+                dependent: true
               }
             }
           };
@@ -1331,6 +1332,52 @@ describe("GraphQLController", () => {
                   },
                   {
                     title: "Goddess Of Earth"
+                  }
+                ]
+              }
+            }
+          });
+        });
+
+        it("should remove books when publisher deleted", async () => {
+          const body = {
+            query: `mutation {
+              delete${publishersBucketName}(_id: "${publishers[0]._id}")
+            }`
+          };
+
+          const {body: deleteResponse} = await req.post("/graphql", body);
+
+          expect(deleteResponse).toEqual({
+            data: {[`delete${publishersBucketName}`]: ""}
+          });
+
+          const params = {
+            query: `{
+              Find${booksBucketName}{
+                meta{
+                  total
+                }
+                data{
+                  _id
+                  title
+                }
+              }
+            }`
+          };
+
+          const {body: booksResponse} = await req.get("/graphql", params);
+
+          expect(booksResponse).toEqual({
+            data: {
+              [`Find${booksBucketName}`]: {
+                meta: {
+                  total: 1
+                },
+                data: [
+                  {
+                    _id: books[2]._id,
+                    title: "Forsaking The Forest"
                   }
                 ]
               }
