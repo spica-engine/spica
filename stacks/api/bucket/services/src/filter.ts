@@ -17,12 +17,11 @@ export function filterReviver(k: string, v: string) {
   return v;
 }
 
-export function isJSONExpression(value: any) {
-  try {
-    return typeof value == "string" && JSON.parse(value);
-  } catch (e) {
-    return false;
+export function isJSONFilter(value: any) {
+  if (typeof value == "string" && value.trim().length) {
+    return value.trim()[0] == "{";
   }
+  return false;
 }
 
 export function extractFilterPropertyMap(filter: object) {
