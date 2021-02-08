@@ -791,7 +791,8 @@ describe("BucketController", () => {
           type: "relation",
           bucketId: settingsBucket._id,
           relationType: "onetoone",
-          options: {}
+          options: {},
+          dependent: false
         }
       });
 

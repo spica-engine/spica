@@ -471,7 +471,7 @@ describe("IndexComponent", () => {
         tick();
         fixture.detectChanges();
 
-        expect(fixture.componentInstance.selectedItems).toContain("1");
+        expect(fixture.componentInstance.selectedItems).toContain({_id: "1", test: "123"});
         expect(
           fixture.debugElement.nativeElement.querySelector(
             "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type mat-checkbox"
@@ -503,11 +503,11 @@ describe("IndexComponent", () => {
           ).classList
         ).toContain("mat-checkbox-checked");
         expect(selectAllCheckbox.classList).toContain("mat-checkbox-checked");
-        expect(fixture.componentInstance.selectedItems).toEqual(["1"]);
+        expect(fixture.componentInstance.selectedItems).toEqual([{_id: "1", test: "123"}]);
       }));
 
       it("should show delete action", () => {
-        fixture.componentInstance.selectedItems.push("1");
+        fixture.componentInstance.selectedItems.push({_id: "1", test: "123"});
         fixture.detectChanges();
         expect(
           fixture.debugElement.nativeElement.querySelector(

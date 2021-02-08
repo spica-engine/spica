@@ -10,7 +10,7 @@ import {
   getRelationPipeline,
   RelationMap
 } from "./relation";
-import {extractFilterPropertyMap} from "./filter";
+import {extractFilterPropertyMap} from "@spica-server/bucket/services";
 
 export interface iPipelineBuilder {
   attachToPipeline(condition: any, ...attachedObject: object[]): this;

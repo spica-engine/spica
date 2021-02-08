@@ -227,7 +227,7 @@ export async function patchDocument(
 
 export async function deleteDocument(
   schema: Bucket,
-  documentId: ObjectId,
+  documentId: string | ObjectId,
   params: {
     req: any;
   },
@@ -240,9 +240,13 @@ export async function deleteDocument(
 
   const document = await collection.findOne({_id: new ObjectId(documentId)});
 
+  if (!document) {
+    return;
+  }
+
   await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
 
-  const deletedCount = await collection.deleteOne({_id: documentId});
+  const deletedCount = await collection.deleteOne({_id: document._id});
 
   if (deletedCount == 1) {
     return document;

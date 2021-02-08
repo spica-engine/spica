@@ -1,4 +1,9 @@
-import {Bucket, BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
+import {
+  Bucket,
+  BucketService,
+  getBucketDataCollection,
+  BucketDocument
+} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {buildI18nAggregation, Locale} from "./locale";
 import {deepCopy} from "./patch";
@@ -243,9 +248,16 @@ export function isObject(schema: any) {
   return schema.type == "object";
 }
 
-export function isRelation(schema: any) {
+export function isRelation(schema: any): schema is RelationDefinition {
   return schema.type == "relation";
 }
+
+type RelationDefinition = {
+  type: "relation";
+  bucketId: string;
+  relationType: RelationType;
+  dependent: boolean;
+};
 
 export function isDesiredRelation(schema: any, bucketId: string) {
   return isRelation(schema) && schema.bucketId == bucketId;
@@ -331,22 +343,38 @@ export async function clearRelations(
   bucketId: ObjectId,
   documentId: ObjectId
 ) {
-  let buckets = await bucketService.find({_id: {$ne: bucketId}});
-  if (buckets.length < 1) {
-    return;
-  }
+  const buckets = await bucketService.find({_id: {$ne: bucketId}});
 
   for (const bucket of buckets) {
-    let targets = findRelations(bucket.properties, bucketId.toHexString(), "", new Map());
-    if (targets.size < 1) {
-      continue;
-    }
+    const targets = findRelations(bucket.properties, bucketId.toString(), "", new Map());
 
     for (const [target, type] of targets.entries()) {
-      const updateParams = getUpdateParams(target, type, documentId.toHexString());
+      const updateParams = getUpdateParams(target, type, documentId.toString());
       await bucketService
-        .collection(`bucket_${bucket._id.toHexString()}`)
+        .collection(`bucket_${bucket._id.toString()}`)
         .updateMany(updateParams.filter, updateParams.update);
     }
   }
+}
+
+export function getDependents(schema: Bucket, deletedDocument: BucketDocument) {
+  const dependents: Map<string, string[]> = new Map();
+
+  for (const [name, definition] of Object.entries(schema.properties)) {
+    if (isRelation(definition) && definition.dependent && deletedDocument[name]) {
+      const relatedBucketId = definition.bucketId;
+
+      const relatedDocumentIds: string[] =
+        definition.relationType == RelationType.One
+          ? [deletedDocument[name]]
+          : deletedDocument[name];
+
+      // user can define more than one field which have same relations
+      const existingIds = dependents.has(relatedBucketId) ? dependents.get(relatedBucketId) : [];
+      const targetDocumentIds = new Set(existingIds.concat(relatedDocumentIds));
+      dependents.set(relatedBucketId, Array.from(targetDocumentIds));
+    }
+  }
+
+  return dependents;
 }

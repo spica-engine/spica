@@ -99,7 +99,7 @@ describe("Activity Resource", () => {
         }
       ]);
     });
-    it("should return activity from single delete request", () => {
+    it("should return activity delete request", () => {
       const req = {
         params: {
           bucketId: "bucket_id",
@@ -116,31 +116,6 @@ describe("Activity Resource", () => {
           action: Action.DELETE,
           identifier: "test_user",
           resource: ["bucket", "bucket_id", "data", "bucket_data_id"]
-        }
-      ]);
-    });
-    it("should return activity from multiple delete request", () => {
-      const req = {
-        params: {
-          bucketId: "bucket_id"
-        },
-        body: ["bucket_data_id1", "bucket_data_id2"]
-      };
-      const activities = createBucketDataActivity(
-        {action: Action.DELETE, identifier: "test_user"},
-        req,
-        {}
-      );
-      expect(activities).toEqual([
-        {
-          action: Action.DELETE,
-          identifier: "test_user",
-          resource: ["bucket", "bucket_id", "data", "bucket_data_id1"]
-        },
-        {
-          action: Action.DELETE,
-          identifier: "test_user",
-          resource: ["bucket", "bucket_id", "data", "bucket_data_id2"]
         }
       ]);
     });

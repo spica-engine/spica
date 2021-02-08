@@ -59,6 +59,10 @@
               "relationType": {
                 "type": "string",
                 "enum": ["onetoone", "onetomany"]
+              },
+              "dependent": {
+                "type": "boolean",
+                "default": false
               }
             }
           }

@@ -3,7 +3,7 @@ import {Test} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
 import {Action, ActivityService} from "@spica-server/activity/services";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {DatabaseService, DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseService, DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 
 describe("Activity Acceptance", () => {
@@ -11,7 +11,13 @@ describe("Activity Acceptance", () => {
   let app: INestApplication;
   let service: ActivityService;
   let created_at: Date;
-  beforeAll(async () => {
+
+  let user1Id;
+  let user2Id;
+
+  let insertedActivityIds = [];
+
+  beforeEach(async () => {
     created_at = new Date();
     const module = await Test.createTestingModule({
       imports: [
@@ -33,135 +39,105 @@ describe("Activity Acceptance", () => {
     await module
       .get(DatabaseService)
       .collection("identity")
-      .insertMany([
-        {_id: "test_user_id", identifier: "test_user"},
-        {_id: "test_user_id2", identifier: "test_user2"}
-      ]);
+      .insertMany([{identifier: "user1"}, {identifier: "user2"}])
+      .then(res => {
+        user1Id = res.insertedIds[0];
+        user2Id = res.insertedIds[1];
+      });
 
     jasmine.addCustomEqualityTester((actual, expected) => {
-      if (expected == "object_id" && typeof actual == typeof expected) {
+      if (expected == "object_id" && typeof actual == typeof expected && ObjectId.isValid(actual)) {
         return true;
       }
     });
-  });
 
-  afterEach(async () => {
-    await service.deleteMany({});
-  });
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (
+        expected == "created_at" &&
+        typeof actual == typeof expected &&
+        typeof new Date(actual).getTime() == "number"
+      ) {
+        return true;
+      }
+    });
 
-  it("should return all activities", async () => {
-    await service.insertMany([
+    insertedActivityIds = await service.insert([
       {
         action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id"],
-        created_at
+        identifier: user1Id.toString(),
+        resource: ["test_module", "test_id1"]
       },
       {
         action: Action.POST,
-        identifier: "test_user_id2",
-        resource: ["test_module", "test_id"],
-        created_at
+        identifier: user2Id.toString(),
+        resource: ["test_module", "test_id2"]
+      },
+      {
+        action: Action.PUT,
+        identifier: user2Id.toString(),
+        resource: ["test_module", "test_id3"]
       }
     ]);
+  });
 
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it("should return all activities", async () => {
     const {body: activities} = await request.get("/activity", {});
     expect(activities).toEqual([
       {
         _id: "object_id",
+        action: Action.PUT,
+        identifier: "user2",
+        resource: ["test_module", "test_id3"],
+        created_at: "created_at"
+      },
+      {
+        _id: "object_id",
         action: Action.POST,
-        identifier: "test_user2",
-        resource: ["test_module", "test_id"],
-        created_at: created_at.toISOString()
+        identifier: "user2",
+        resource: ["test_module", "test_id2"],
+        created_at: "created_at"
       },
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
-        resource: ["test_module", "test_id"],
-        created_at: created_at.toISOString()
+        identifier: "user1",
+        resource: ["test_module", "test_id1"],
+        created_at: "created_at"
       }
     ]);
   });
 
   it("should filter activities by identifier", async () => {
-    await service.insertMany([
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.POST,
-        identifier: "test_user_id2",
-        resource: ["test_module", "test_id"],
-        created_at
-      }
-    ]);
-
-    const {body: activities} = await request.get("/activity", {identifier: "test_user"});
+    const {body: activities} = await request.get("/activity", {identifier: "user1"});
     expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
-        resource: ["test_module", "test_id"],
-        created_at: created_at.toISOString()
+        identifier: "user1",
+        resource: ["test_module", "test_id1"],
+        created_at: "created_at"
       }
     ]);
   });
 
   it("should filter activities by action", async () => {
-    await service.insertMany([
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.POST,
-        identifier: "test_user_id2",
-        resource: ["test_module", "test_id"],
-        created_at
-      }
-    ]);
-
     const {body: activities} = await request.get("/activity", {action: Action.POST});
     expect(activities).toEqual([
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "test_user2",
-        resource: ["test_module", "test_id"],
-        created_at: created_at.toISOString()
+        identifier: "user2",
+        resource: ["test_module", "test_id2"],
+        created_at: "created_at"
       }
     ]);
   });
 
   it("should filter activities by multiple actions", async () => {
-    await service.insertMany([
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.POST,
-        identifier: "test_user_id2",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.PUT,
-        identifier: "test_user_id2",
-        resource: ["test_module", "test_id"],
-        created_at
-      }
-    ]);
-
     const {body: activities} = await request.get("/activity", {
       action: [Action.POST, Action.DELETE]
     });
@@ -169,165 +145,90 @@ describe("Activity Acceptance", () => {
       {
         _id: "object_id",
         action: Action.POST,
-        identifier: "test_user2",
-        resource: ["test_module", "test_id"],
-        created_at: created_at.toISOString()
+        identifier: "user2",
+        resource: ["test_module", "test_id2"],
+        created_at: "created_at"
       },
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
-        resource: ["test_module", "test_id"],
-        created_at: created_at.toISOString()
+        identifier: "user1",
+        resource: ["test_module", "test_id1"],
+        created_at: "created_at"
       }
     ]);
   });
 
   it("should filter activities by resources", async () => {
-    await service.insertMany([
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id1"],
-        created_at
-      },
-      {
-        action: Action.POST,
-        identifier: "test_user_id",
-        resource: ["test_module2", "test_id2"],
-        created_at
-      },
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id3"],
-        created_at
-      },
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id4"],
-        created_at
-      }
-    ]);
-
     const {body: activities} = await request.get("/activity", {
       resource: JSON.stringify({$all: ["test_module"], $in: ["test_id1", "test_id3"]})
     });
     expect(activities).toEqual([
       {
         _id: "object_id",
-        action: Action.DELETE,
-        identifier: "test_user",
+        action: Action.PUT,
+        identifier: "user2",
         resource: ["test_module", "test_id3"],
-        created_at: created_at.toISOString()
+        created_at: "created_at"
       },
       {
         _id: "object_id",
         action: Action.DELETE,
-        identifier: "test_user",
+        identifier: "user1",
         resource: ["test_module", "test_id1"],
-        created_at: created_at.toISOString()
+        created_at: "created_at"
       }
     ]);
   });
 
   it("should skip and limit", async () => {
-    await service.insertMany([
-      {
-        action: Action.DELETE,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.POST,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.PUT,
-        identifier: "test_user_id",
-        resource: ["test_module", "test_id"],
-        created_at
-      }
-    ]);
-
     const {body: activities} = await request.get("/activity", {
-      skip: 1,
+      skip: 2,
       limit: 1
     });
     expect(activities).toEqual([
       {
         _id: "object_id",
-        action: Action.POST,
-        identifier: "test_user",
-        resource: ["test_module", "test_id"],
-        created_at: created_at.toISOString()
+        action: Action.DELETE,
+        identifier: "user1",
+        resource: ["test_module", "test_id1"],
+        created_at: "created_at"
       }
     ]);
   });
 
   it("should delete activity", async () => {
-    const insertedIds = await service.insertMany([
-      {
-        action: Action.PUT,
-        identifier: "spica",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.POST,
-        identifier: "spica",
-        resource: ["test_module", "test_id"],
-        created_at
-      }
-    ]);
-
-    const res = await request.delete(`/activity/${insertedIds[1]}`);
+    const res = await request.delete(`/activity/${insertedActivityIds[2]}`);
     expect(res.statusCode).toEqual(204);
     expect(res.body).toBeFalsy();
 
-    const activities = await service.find({});
+    const {body: activities} = await request.get("/activity");
 
     expect(activities).toEqual([
       {
-        _id: insertedIds[0],
-        action: Action.PUT,
-        identifier: "spica",
-        resource: ["test_module", "test_id"],
-        created_at
+        _id: "object_id",
+        action: Action.POST,
+        identifier: "user2",
+        resource: ["test_module", "test_id2"],
+        created_at: "created_at"
+      },
+      {
+        _id: "object_id",
+        action: Action.DELETE,
+        identifier: "user1",
+        resource: ["test_module", "test_id1"],
+        created_at: "created_at"
       }
     ]);
   });
 
   it("should delete multiple activities", async () => {
-    const insertedIds = await service.insertMany([
-      {
-        action: Action.PUT,
-        identifier: "spica",
-        resource: ["test_module", "test_id"],
-        created_at
-      },
-      {
-        action: Action.POST,
-        identifier: "spica",
-        resource: ["test_module", "test_id"],
-        created_at
-      }
-    ]);
-
-    const res = await request.delete("/activity", insertedIds);
+    const res = await request.delete("/activity", insertedActivityIds);
     expect(res.statusCode).toEqual(204);
     expect(res.body).toBeFalsy();
 
-    const activities = await service.find({});
+    const {body: activities} = await request.get("/activity");
 
     expect(activities).toEqual([]);
-  });
-
-  afterAll(async () => {
-    await app.close();
   });
 });
