@@ -38,7 +38,7 @@ import {
   replaceDocument,
   authIdToString
 } from "./crud";
-import {filterReviver, isJSONExpression} from "./filter";
+import {filterReviver, isJSONExpression} from "@spica-server/bucket/services";
 import {createHistory} from "./history";
 import {applyPatch} from "./patch";
 import {clearRelations, getRelationPaths, getDependents} from "./relation";
