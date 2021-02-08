@@ -53,8 +53,8 @@ export function changesFromTriggers(previousFn: Function, currentFn: Function) {
   return targetChanges;
 }
 
-export function hasEnvChange(previousFn: Function, currentFn: Function) {
-  return diff(previousFn.env, currentFn.env).length;
+export function hasContextChange(previousFn: Function, currentFn: Function) {
+  return diff(previousFn.env, currentFn.env).length || previousFn.timeout != currentFn.timeout;
 }
 
 export function createTargetChanges(fn: Function, changeKind: ChangeKind): TargetChange[] {
