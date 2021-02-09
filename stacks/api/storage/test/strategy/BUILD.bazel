@@ -12,6 +12,7 @@ ts_library(
     ],
     deps = [
         "//stacks/api/storage",
+        "@npm//@google-cloud/storage",
         "@npm//@types/jasmine",
         "@npm//@types/node",
     ],
