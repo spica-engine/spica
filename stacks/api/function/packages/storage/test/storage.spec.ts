@@ -118,13 +118,13 @@ describe("@spica-devkit/Storage", () => {
     });
 
     it("should download storage object", () => {
-      Storage.download("storage_object_id");
+      Storage.download("storage_object_id", {"if-none-match": "*"});
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith(
         "http://test/storage/storage_object_id/view",
         {
-          headers: {Authorization: "APIKEY TEST_APIKEY"}
+          headers: {"if-none-match": "*", Authorization: "APIKEY TEST_APIKEY"}
         },
         Parser.Blob
       );

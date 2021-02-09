@@ -34,7 +34,6 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   writeHeaders = {...defaultHeaders, "Content-Type": "application/bson"};
 }
 
-// we may decide to remove it.
 export async function insert(object: File | BufferWithMeta) {
   checkInitialized(authorization);
   const body = await preparePostBody([object]);
@@ -58,10 +57,14 @@ export function get(id: string) {
   return http.get<StorageObject>(`${url}/${id}`, {headers: defaultHeaders});
 }
 
-export function download(id: string) {
+export function download(id: string, headers: object = {}) {
   checkInitialized(authorization);
 
-  return http.get<Blob>(`${url}/${id}/view`, {headers: defaultHeaders}, Parser.Blob);
+  return http.get<Blob>(
+    `${url}/${id}/view`,
+    {headers: {...headers, ...defaultHeaders}},
+    Parser.Blob
+  );
 }
 
 export function getAll(queryParams: {limit?: number; skip?: number; sort?: object} = {}) {
