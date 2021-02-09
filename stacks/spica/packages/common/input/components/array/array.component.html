@@ -55,6 +55,7 @@
     </div>
     <div *ngIf="_activeIndex != undefined">
       <span
+        #currentInput="ngModel"
         [inputPlacer]="schema.items"
         [disabled]="_disabled"
         [name]="schema.$name + _activeIndex.toString()"
