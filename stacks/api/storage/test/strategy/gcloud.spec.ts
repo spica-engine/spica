@@ -9,8 +9,6 @@ import {
   BucketOptions
 } from "@google-cloud/storage";
 
-jasmine.getEnv().allowRespy(true);
-
 describe("GCloud", () => {
   let service: GCloud;
   let mediaLink;
@@ -98,7 +96,7 @@ describe("GCloud", () => {
     expect(url).toEqual("http://insteadof/");
   });
 
-  it("should get url event if it has no generation param", async () => {
+  it("should get url even if it has no generation param", async () => {
     mediaLink = "http://insteadof";
 
     const url = await service.url("test_file");
