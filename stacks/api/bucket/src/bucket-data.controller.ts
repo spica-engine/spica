@@ -23,8 +23,24 @@ import {
 import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketDataService, BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {ARRAY, BOOLEAN, BooleanCheck, DEFAULT, JSONP, JSONPR, NUMBER, OR} from "@spica-server/core";
+import {
+  BucketDataService,
+  BucketDocument,
+  BucketService,
+  isJSONFilter,
+  filterReviver
+} from "@spica-server/bucket/services";
+import {
+  ARRAY,
+  BOOLEAN,
+  BooleanCheck,
+  DEFAULT,
+  JSONP,
+  JSONPR,
+  NUMBER,
+  OR,
+  EXPRESSION
+} from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -38,7 +54,6 @@ import {
   replaceDocument,
   authIdToString
 } from "./crud";
-import {filterReviver, isJSONExpression} from "@spica-server/bucket/services";
 import {createHistory} from "./history";
 import {applyPatch} from "./patch";
 import {clearRelations, getRelationPaths, getDependents} from "./relation";
@@ -86,7 +101,8 @@ export class BucketDataController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("filter", OR(isJSONExpression, JSONPR(filterReviver))) filter?: string | object,
+    @Query("filter", OR(isJSONFilter, JSONPR(filterReviver), EXPRESSION(expression.aggregate)))
+    filter?: string | object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
@@ -100,21 +116,6 @@ export class BucketDataController {
     const relationPaths: string[][] = getRelationPaths(
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
-
-    if (filter) {
-      if (typeof filter == "object") {
-        req.res.append(
-          "Warning",
-          `100 "using MongoDB operators in filter has been deprecated and highly discouraged"`
-        );
-      } else {
-        try {
-          expression.aggregate(filter, {});
-        } catch (e) {
-          throw new BadRequestException(`filter has to be a valid expression.`, e.message);
-        }
-      }
-    }
 
     return findDocuments(
       schema,
