@@ -20,7 +20,7 @@ describe("Scheduler", () => {
     poolSize: 1,
     poolMaxSize: 2,
     apiUrl: undefined,
-    timeout: 20,
+    timeout: 60,
     corsOptions: {
       allowCredentials: true,
       allowedHeaders: ["*"],
@@ -29,12 +29,17 @@ describe("Scheduler", () => {
     }
   };
 
+  const now = new Date(2015, 1, 1, 1, 1, 31, 0);
+
   let clock: jasmine.Clock;
 
   const compilation = {
     cwd: undefined,
     entrypoint: "index.js"
   };
+
+  let workerId: string;
+  let worker: Worker;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -48,7 +53,7 @@ describe("Scheduler", () => {
     app = module.createNestApplication();
 
     clock = jasmine.clock();
-    clock.mockDate(new Date(2015, 1, 1, 1, 1, 31, 0));
+    clock.mockDate(now);
     clock.install();
 
     await app.init();
@@ -58,6 +63,13 @@ describe("Scheduler", () => {
       compilation.entrypoint
     );
     await scheduler.languages.get("javascript").compile(compilation);
+
+    const [id, _worker] = Array.from(scheduler["pool"].entries())[0] as [string, Worker];
+    workerId = id;
+    worker = _worker;
+
+    // initalize a worker
+    scheduler.gotWorker(workerId, () => {});
   });
 
   afterEach(() => {
@@ -72,46 +84,41 @@ describe("Scheduler", () => {
 
   it("should spawn max N process", () => {
     expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
-    const ev = new event.Event({
-      target: new event.Target({
-        cwd: compilation.cwd,
-        handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: 1000})
-      }),
-      type: -1
-    });
-    // @ts-expect-error
-    scheduler.schedule();
-    // @ts-expect-error
-    scheduler.schedule();
-    // @ts-expect-error
-    scheduler.schedule();
+
+    scheduler["spawn"]();
+
+    scheduler["spawn"]();
+
+    scheduler["spawn"]();
+
     expect(spawnSpy).toHaveBeenCalledTimes(2);
   });
 
-  it("should attach outputs when the worker scheduled", () => {
+  it("should attach outputs when the event enqueued", () => {
+    const attachSpy = spyOn(worker, "attach");
+
     const ev = new event.Event({
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: 1000})
+        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
       }),
       type: -1
     });
-    const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    const attachSpy = spyOn(worker, "attach");
-    // @ts-expect-error
-    scheduler.yield(ev, id);
+
+    scheduler.enqueue(ev);
+
     expect(attachSpy).toHaveBeenCalled();
   });
 
-  it("should spawn a new worker when a new message queued", () => {
-    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize);
-    scheduler["schedule"]();
-    expect(spawnSpy).toHaveBeenCalledTimes(schedulerOptions.poolSize + 1);
-  });
-
   it("should kill the worker when the execution times out", () => {
+    const kill = spyOn(worker, "kill");
+
+    const stream = new PassThrough();
+    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
+
+    const write = spyOn(stream, "write");
+
     const ev = new event.Event({
       target: new event.Target({
         cwd: compilation.cwd,
@@ -120,61 +127,77 @@ describe("Scheduler", () => {
       }),
       type: -1
     });
+    scheduler.enqueue(ev);
 
-    const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    // @ts-expect-error
-    scheduler.yield(event, id);
-    const kill = spyOn(worker, "kill");
     expect(kill).not.toHaveBeenCalled();
-    clock.tick(schedulerOptions.timeout * 1000);
-    expect(kill).toHaveBeenCalledTimes(1);
-  });
-
-  it("should pick the minimum timeout value when scheduling", () => {
-    const event = new event.Event({
-      target: new event.Target({
-        cwd: compilation.cwd,
-        handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout * 2})
-      }),
-      type: -1
-    });
-
-    const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    // @ts-expect-error
-    scheduler.yield(event, id);
-    const kill = spyOn(worker, "kill");
-    expect(kill).not.toHaveBeenCalled();
-    clock.tick(schedulerOptions.timeout * 1000);
-    expect(kill).toHaveBeenCalledTimes(1);
-  });
-
-  it("should write to stderr when the execution of a function times out", () => {
-    const event = new event.Event({
-      target: new event.Target({
-        cwd: compilation.cwd,
-        handler: "default",
-        context: new event.SchedulingContext({env: [], timeout: schedulerOptions.timeout})
-      }),
-      type: -1
-    });
-
-    const id = scheduler["pool"].keys().next().value;
-    const stream = new PassThrough();
-    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
-    // @ts-expect-error
-    scheduler.yield(event, id);
-
-    const write = spyOn(stream, "write");
     expect(write).not.toHaveBeenCalled();
+
     clock.tick(schedulerOptions.timeout * 1000);
+
+    expect(kill).toHaveBeenCalledTimes(1);
     expect(write).toHaveBeenCalledWith(
-      "Function (default) did not finish within 20 seconds. Aborting."
+      "Function (default) did not finish within 60 seconds. Aborting."
     );
   });
 
-  it("should not write to stderr when the function quits within the timeout frame", () => {
-    const event = new event.Event({
+  it("should pick the minimum timeout value when scheduling", () => {
+    const kill = spyOn(worker, "kill");
+
+    const stream = new PassThrough();
+    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
+
+    const write = spyOn(stream, "write");
+
+    const ev = new event.Event({
+      target: new event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({env: [], timeout: 10})
+      }),
+      type: -1
+    });
+    scheduler.enqueue(ev);
+
+    expect(kill).not.toHaveBeenCalled();
+    expect(write).not.toHaveBeenCalled();
+
+    clock.tick(10 * 1000);
+
+    expect(kill).toHaveBeenCalledTimes(1);
+    expect(write).toHaveBeenCalledWith(
+      "Function (default) did not finish within 10 seconds. Aborting."
+    );
+  });
+
+  it("should not write to stderr when the function quits within the timeout frame, clear pool and workers", () => {
+    const stream = new PassThrough();
+    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
+
+    const write = spyOn(stream, "write");
+
+    const ev = new event.Event({
+      target: new event.Target({
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({env: [], timeout: 10})
+      }),
+      type: -1
+    });
+    scheduler.enqueue(ev);
+
+    expect(write).not.toHaveBeenCalled();
+
+    worker.emit("exit");
+
+    expect(scheduler["pool"].size).toEqual(0);
+    expect(scheduler["workers"].size).toEqual(0);
+
+    expect(write).not.toHaveBeenCalled();
+  });
+
+  it("should cancel the event and delete it from processing queue", () => {
+    const ev = new event.Event({
+      id: "custom_event",
       target: new event.Target({
         cwd: compilation.cwd,
         handler: "default",
@@ -182,16 +205,83 @@ describe("Scheduler", () => {
       }),
       type: -1
     });
+    scheduler.enqueue(ev);
 
-    const [id, worker] = Array.from(scheduler["pool"]).pop() as [string, Worker];
-    const stream = new PassThrough();
-    spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
-    // @ts-expect-error
-    scheduler.yield(event, id);
-    const write = spyOn(stream, "write");
-    expect(write).not.toHaveBeenCalled();
-    worker.emit("exit"); /* simulate exit */
-    clock.tick(schedulerOptions.timeout * 1000);
-    expect(write).not.toHaveBeenCalled();
+    expect(scheduler["processingQueue"].get(ev.id)).toEqual(ev);
+
+    scheduler["cancel"](ev.id);
+
+    expect(scheduler["processingQueue"].has(ev.id)).toEqual(false);
+  });
+
+  it("should create batch for event", () => {
+    const ev = new event.Event({
+      target: new event.Target({
+        id: "my_target",
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({
+          env: [],
+          timeout: schedulerOptions.timeout,
+          batch: new event.SchedulingContext.Batch({
+            limit: 2,
+            deadline: 10
+          })
+        })
+      }),
+      type: -1
+    });
+
+    scheduler.enqueue(ev);
+
+    expect(scheduler.batching.get(workerId)).toEqual({
+      schedule: scheduler.workers.get(workerId),
+      workerId: workerId,
+      deadline: now.getTime() + 10 * 1000,
+      last_enqueued_at: {
+        default: now.getTime()
+      },
+      remaining_enqueues: {
+        default: 1
+      },
+      started_at: now.getTime(),
+      target: "my_target"
+    });
+  });
+
+  fit("should use batching, release finished batchs", () => {
+    const ev = new event.Event({
+      target: new event.Target({
+        id: "my_target",
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({
+          env: [],
+          timeout: schedulerOptions.timeout,
+          batch: new event.SchedulingContext.Batch({
+            limit: 2,
+            deadline: 10
+          })
+        })
+      }),
+      type: -1
+    });
+
+    scheduler.enqueue(ev);
+    scheduler.gotWorker(workerId, () => {});
+
+    expect(scheduler.batching.get(workerId).remaining_enqueues.default).toEqual(1);
+    expect(scheduler.workers.size).toEqual(0);
+    expect(scheduler.batching.size).toEqual(1);
+
+    const releaseSpy = spyOn(scheduler, "releaseFinishedBatches");
+
+    scheduler.enqueue(ev);
+    scheduler.gotWorker(workerId, () => {});
+    expect(scheduler.batching.get(workerId).remaining_enqueues.default).toEqual(0);
+    expect(scheduler.workers.size).toEqual(0);
+    expect(scheduler.batching.size).toEqual(1);
+
+    expect(releaseSpy).toHaveBeenCalledTimes(1);
   });
 });
