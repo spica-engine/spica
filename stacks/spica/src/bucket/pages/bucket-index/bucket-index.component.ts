@@ -1,6 +1,5 @@
-import {BreakpointObserver} from "@angular/cdk/layout";
-import {Component, Input, OnDestroy, ViewChild} from "@angular/core";
-import {Subject, merge, interval} from "rxjs";
+import {Component, Input, OnDestroy, ViewChild, OnInit} from "@angular/core";
+import {Subject} from "rxjs";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketService} from "../../services/bucket.service";
 import {ViewportRuler} from "@angular/cdk/overlay";
@@ -11,13 +10,15 @@ import {
   CdkDragMove,
   CdkDrag
 } from "@angular/cdk/drag-drop";
+import {take} from "rxjs/operators";
+import {ActivatedRoute, Router} from "@angular/router";
 
 @Component({
   selector: "bucket-index",
   templateUrl: "./bucket-index.component.html",
   styleUrls: ["./bucket-index.component.scss"]
 })
-export class BucketIndexComponent implements OnDestroy {
+export class BucketIndexComponent implements OnDestroy, OnInit {
   @ViewChild(CdkDropListGroup) listGroup: CdkDropListGroup<CdkDropList>;
   @ViewChild(CdkDropList) placeholder: CdkDropList;
   public target: CdkDropList;
@@ -30,11 +31,26 @@ export class BucketIndexComponent implements OnDestroy {
   private dispose = new Subject();
   @Input() sideCar = false;
 
-  constructor(private bs: BucketService, private viewportRuler: ViewportRuler) {
+  constructor(
+    private bs: BucketService,
+    private viewportRuler: ViewportRuler,
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) {
     this.target = null;
     this.source = null;
     this.bs.getBuckets().subscribe(data => (this.buckets = data));
   }
+
+  ngOnInit() {
+    this.activatedRoute.url.pipe(take(1)).subscribe(segments => {
+      if (!segments.length) {
+        const target = this.buckets.length ? this.buckets[0]._id : "add";
+        this.router.navigate([target], {relativeTo: this.activatedRoute});
+      }
+    });
+  }
+
   ngAfterViewInit() {
     let phElement = this.placeholder.element.nativeElement;
 
