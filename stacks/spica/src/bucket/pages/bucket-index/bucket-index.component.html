@@ -42,7 +42,11 @@
         cdkDrag
         (cdkDragMoved)="dragMoved($event)"
       >
-        <div class="bucket-title" [routerLink]="['../' + bucket._id]">
+        <div
+          class="bucket-title"
+          routerLinkActive="active-bucket"
+          [routerLink]="['../' + bucket._id]"
+        >
           <div>
             <mat-icon>{{ bucket.icon }}</mat-icon>
             <span>{{ bucket.title }}</span>
