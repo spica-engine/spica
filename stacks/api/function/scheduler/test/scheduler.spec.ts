@@ -17,7 +17,7 @@ describe("Scheduler", () => {
     databaseUri: undefined,
     databaseName: undefined,
     databaseReplicaSet: undefined,
-    poolSize: 1,
+    poolSize: 2,
     poolMaxSize: 2,
     apiUrl: undefined,
     timeout: 60,
@@ -38,8 +38,13 @@ describe("Scheduler", () => {
     entrypoint: "index.js"
   };
 
-  let workerId: string;
-  let worker: Worker;
+  let worker1Id: string;
+  let worker1: Worker;
+  let worker1Schedule: (event) => void;
+
+  let worker2Id: string;
+  let worker2: Worker;
+  let worker2Schedule: (event) => void;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -64,12 +69,30 @@ describe("Scheduler", () => {
     );
     await scheduler.languages.get("javascript").compile(compilation);
 
-    const [id, _worker] = Array.from(scheduler["pool"].entries())[0] as [string, Worker];
-    workerId = id;
-    worker = _worker;
+    const [[firstWorkerId, firstWorker], [secondWorkerId, secondWorker]] = Array.from(
+      scheduler["pool"].entries()
+    );
 
-    // initalize a worker
-    scheduler.gotWorker(workerId, () => {});
+    worker1Id = firstWorkerId;
+    worker1 = firstWorker;
+
+    worker2Id = secondWorkerId;
+    worker2 = secondWorker;
+
+    worker1Schedule = event => {
+      if (!event) {
+        worker1.emit("exit");
+      }
+    };
+
+    worker2Schedule = event => {
+      if (!event) {
+        worker2.emit("exit");
+      }
+    };
+
+    scheduler.gotWorker(worker1Id, worker1Schedule);
+    scheduler.gotWorker(worker2Id, worker2Schedule);
   });
 
   afterEach(() => {
@@ -95,7 +118,7 @@ describe("Scheduler", () => {
   });
 
   it("should attach outputs when the event enqueued", () => {
-    const attachSpy = spyOn(worker, "attach");
+    const attachSpy = spyOn(worker1, "attach");
 
     const ev = new event.Event({
       target: new event.Target({
@@ -112,7 +135,7 @@ describe("Scheduler", () => {
   });
 
   it("should kill the worker when the execution times out", () => {
-    const kill = spyOn(worker, "kill");
+    const kill = spyOn(worker1, "kill");
 
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
@@ -141,7 +164,7 @@ describe("Scheduler", () => {
   });
 
   it("should pick the minimum timeout value when scheduling", () => {
-    const kill = spyOn(worker, "kill");
+    const kill = spyOn(worker1, "kill");
 
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
@@ -169,7 +192,7 @@ describe("Scheduler", () => {
     );
   });
 
-  it("should not write to stderr when the function quits within the timeout frame, clear pool and workers", () => {
+  it("should not write to stderr when the function quits within the timeout frame, delete worker from pool and workers", () => {
     const stream = new PassThrough();
     spyOn(scheduler["output"], "create").and.returnValue([stream, stream]);
 
@@ -187,10 +210,10 @@ describe("Scheduler", () => {
 
     expect(write).not.toHaveBeenCalled();
 
-    worker.emit("exit");
+    worker1.emit("exit");
 
-    expect(scheduler["pool"].size).toEqual(0);
-    expect(scheduler["workers"].size).toEqual(0);
+    expect(scheduler["pool"].size).toEqual(1);
+    expect(scheduler["workers"].size).toEqual(1);
 
     expect(write).not.toHaveBeenCalled();
   });
@@ -234,9 +257,9 @@ describe("Scheduler", () => {
 
     scheduler.enqueue(ev);
 
-    expect(scheduler.batching.get(workerId)).toEqual({
-      schedule: scheduler.workers.get(workerId),
-      workerId: workerId,
+    expect(scheduler.batching.get(worker1Id)).toEqual({
+      schedule: scheduler.workers.get(worker1Id),
+      workerId: worker1Id,
       deadline: now.getTime() + 10 * 1000,
       last_enqueued_at: {
         default: now.getTime()
@@ -249,7 +272,7 @@ describe("Scheduler", () => {
     });
   });
 
-  fit("should use batching, release finished batchs", () => {
+  it("should use limit batching, release finished batches and move batch to the next worker", () => {
     const ev = new event.Event({
       target: new event.Target({
         id: "my_target",
@@ -268,20 +291,92 @@ describe("Scheduler", () => {
     });
 
     scheduler.enqueue(ev);
-    scheduler.gotWorker(workerId, () => {});
+    scheduler.gotWorker(worker1Id, worker1Schedule);
 
-    expect(scheduler.batching.get(workerId).remaining_enqueues.default).toEqual(1);
-    expect(scheduler.workers.size).toEqual(0);
+    const batch = scheduler.batching.get(worker1Id);
+
+    expect(batch.remaining_enqueues.default).toEqual(1);
+    expect(batch.deadline).toEqual(now.getTime() + 10 * 1000);
+
     expect(scheduler.batching.size).toEqual(1);
-
-    const releaseSpy = spyOn(scheduler, "releaseFinishedBatches");
+    expect(scheduler.workers.size).toEqual(1);
 
     scheduler.enqueue(ev);
-    scheduler.gotWorker(workerId, () => {});
-    expect(scheduler.batching.get(workerId).remaining_enqueues.default).toEqual(0);
-    expect(scheduler.workers.size).toEqual(0);
-    expect(scheduler.batching.size).toEqual(1);
 
-    expect(releaseSpy).toHaveBeenCalledTimes(1);
+    const scheduleSpy = jasmine.createSpy().and.callFake(event => worker1Schedule(event));
+
+    scheduler.gotWorker(worker1Id, scheduleSpy);
+
+    expect(scheduler.batching.size).toEqual(0);
+    expect(scheduler.workers.size).toEqual(1);
+
+    expect(batch.remaining_enqueues.default).toEqual(0);
+    expect(batch.deadline).toEqual(now.getTime() + 10 * 1000);
+    // it should be called with undefined if batch is expired
+    expect(scheduleSpy).toHaveBeenCalledWith(undefined);
+
+    scheduler.enqueue(ev);
+
+    const movedBatch = scheduler.batching.get(worker2Id);
+
+    expect(movedBatch.remaining_enqueues.default).toEqual(1);
+    expect(movedBatch.deadline).toEqual(now.getTime() + 10 * 1000);
+
+    expect(scheduler.batching.size).toEqual(1);
+    expect(scheduler.workers.size).toEqual(0);
+  });
+
+  it("should use deadline batching, release finished batches and move batch to the next worker", () => {
+    const ev = new event.Event({
+      target: new event.Target({
+        id: "my_target",
+        cwd: compilation.cwd,
+        handler: "default",
+        context: new event.SchedulingContext({
+          env: [],
+          timeout: schedulerOptions.timeout,
+          batch: new event.SchedulingContext.Batch({
+            limit: 5,
+            deadline: 10
+          })
+        })
+      }),
+      type: -1
+    });
+
+    scheduler.enqueue(ev);
+    scheduler.gotWorker(worker1Id, worker1Schedule);
+
+    const batch = scheduler.batching.get(worker1Id);
+
+    expect(batch.remaining_enqueues.default).toEqual(4);
+    expect(batch.deadline).toEqual(now.getTime() + 10 * 1000);
+    expect(scheduler.batching.size).toEqual(1);
+    expect(scheduler.workers.size).toEqual(1);
+
+    clock.tick(11 * 1000);
+
+    scheduler.enqueue(ev);
+
+    const finishedBatch = scheduler.batching.get(worker1Id);
+    expect(finishedBatch.remaining_enqueues.default).toEqual(4);
+    expect(finishedBatch.deadline).toEqual(Date.now() - 1 * 1000);
+
+    const movedBatch = scheduler.batching.get(worker2Id);
+    expect(movedBatch.remaining_enqueues.default).toEqual(4);
+    expect(movedBatch.deadline).toEqual(Date.now() + 10 * 1000);
+
+    // it acts different from limit batch
+    // it should be 2 until gotworker called and finished batches killed,
+    expect(scheduler.batching.size).toEqual(2);
+    // it should take a new worker
+    expect(scheduler.workers.size).toEqual(0);
+
+    const scheduleSpy = spyOn(scheduler.batching.get(worker1Id), "schedule").and.callThrough();
+    scheduler.gotWorker(worker2Id, worker2Schedule);
+
+    // it should be called with undefined if batch is expired
+    expect(scheduleSpy).toHaveBeenCalledWith(undefined);
+    expect(scheduler.batching.size).toEqual(1);
   });
 });

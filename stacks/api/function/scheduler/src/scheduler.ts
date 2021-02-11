@@ -96,8 +96,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
     await this.queue.listen();
 
-    console.log(this.options)
-
     for (let i = 0; i < this.options.poolSize; i++) {
       this.spawn();
     }
