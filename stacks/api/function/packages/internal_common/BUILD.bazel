@@ -15,5 +15,6 @@ ts_library(
         "@npm//@types/node",
         "@npm//@types/node-fetch",
         "@npm//node-fetch",
+        "@npm//axios",
     ],
 )

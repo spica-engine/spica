@@ -1,8 +1,86 @@
 import fetch, {Response} from "node-fetch";
+import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
 
 interface RequestInit {
   body?: BodyInit;
   headers?: HeadersInit;
+}
+
+export class HttpService {
+  private instance: AxiosInstance;
+
+  private readonly interceptors = {
+    request: {
+      onFulfilled: (request: AxiosRequestConfig) => {
+        if (!request.headers["Authorization"]) {
+          throw new Error(
+            "You should call initialize method with a valid apikey or identity token."
+          );
+        }
+        return request;
+      },
+      onRejected: (error: any) => {
+        return Promise.reject(error);
+      }
+    },
+    response: {
+      onFulfilled: (response: AxiosResponse) => {
+        const warning = response.headers["warning"];
+        if (warning) {
+          console.warn(warning);
+        }
+        return response.data;
+      },
+      onRejected: (error: any) => {
+        return Promise.reject(error.response ? error.response.data : error);
+      }
+    }
+  };
+
+  constructor(
+    config: AxiosRequestConfig,
+    writeDefaults?: {
+      headers: {[key: string]: string};
+    }
+  ) {
+    this.instance = axios.create(config);
+
+    this.instance.interceptors.request.use(
+      this.interceptors.request.onFulfilled,
+      this.interceptors.request.onRejected
+    );
+    this.instance.interceptors.response.use(
+      this.interceptors.response.onFulfilled,
+      this.interceptors.response.onRejected
+    );
+
+    if (writeDefaults && writeDefaults.headers && Object.keys(writeDefaults.headers).length) {
+      for (const [header, value] of Object.entries(writeDefaults.headers)) {
+        this.instance.defaults.headers.post[header] = value;
+        this.instance.defaults.headers.put[header] = value;
+      }
+    }
+  }
+
+  get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.instance.get(url, config);
+  }
+
+  post<T>(url: string, body: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.instance.post(url, body, config);
+  }
+
+  put<T>(url: string, body: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.instance.put(url, body, config);
+  }
+
+  patch<T>(url: string, body: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.instance.patch(url, body, config);
+  }
+
+  delete(url: string, config?: AxiosRequestConfig): Promise<any> {
+    return this.instance.delete(url, config);
+  }
 }
 
 export namespace http {

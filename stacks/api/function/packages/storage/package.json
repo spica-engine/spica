@@ -15,6 +15,7 @@
   "sideEffects": false,
   "dependencies": {
     "node-fetch": "^2.6.0",
-    "bson": "^4.2.2"
+    "bson": "^4.2.2",
+    "axios": "^0.21.1"
   }
 }

@@ -1,9 +1,8 @@
 import {
   initialize as _initialize,
-  http,
   checkInitialized,
-  buildUrl,
-  Parser
+  HttpService,
+  isPlatformBrowser
 } from "@spica-devkit/internal_common";
 import {
   StorageObject,
@@ -16,75 +15,99 @@ import {preparePostBody, preparePutBody} from "./utility";
 
 let authorization;
 
-let url;
-
-let defaultHeaders;
-
-let writeHeaders;
+let req: HttpService;
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
   const {authorization: _authorization, publicUrl} = _initialize(options);
 
   authorization = _authorization;
-  url = publicUrl + "/storage";
 
-  defaultHeaders = {
-    Authorization: authorization
-  };
-  writeHeaders = {...defaultHeaders, "Content-Type": "application/bson"};
+  req = new HttpService(
+    {
+      baseURL: publicUrl,
+      headers: {
+        Authorization: authorization
+      }
+    },
+    {
+      headers: {
+        "Content-Type": "application/bson"
+      }
+    }
+  );
 }
 
-// we may decide to remove it.
-export async function insert(object: File | BufferWithMeta) {
+// /Users/tuna/Desktop/functions
+
+export async function insert(
+  object: File | BufferWithMeta,
+  onUploadProgress?: (progress: ProgressEvent) => void
+) {
   checkInitialized(authorization);
   const body = await preparePostBody([object]);
 
-  return http.post<StorageObject>(url, {body, headers: writeHeaders});
+  return req.post<StorageObject>("/storage", body, {
+    onUploadProgress
+  });
 }
 
 export async function insertMany(
-  objects: FileList | (File | BufferWithMeta)[]
+  objects: FileList | (File | BufferWithMeta)[],
+  onUploadProgress?: (progress: ProgressEvent) => void
 ): Promise<StorageObject[]> {
   checkInitialized(authorization);
 
   const body = await preparePostBody(objects);
 
-  return http.post<StorageObject[]>(url, {body, headers: writeHeaders});
+  return req.post<StorageObject[]>("/storage", body, {
+    onUploadProgress
+  });
 }
 
 export function get(id: string) {
   checkInitialized(authorization);
 
-  return http.get<StorageObject>(`${url}/${id}`, {headers: defaultHeaders});
+  return req.get<StorageObject>(`/storage/${id}`);
 }
 
-export function download(id: string) {
+export function download(
+  id: string,
+  headers?: any,
+  onDownloadProgress?: (progress: ProgressEvent) => void
+) {
   checkInitialized(authorization);
 
-  return http.get<Blob>(`${url}/${id}/view`, {headers: defaultHeaders}, Parser.Blob);
+  return req.get<Blob | NodeJS.ReadableStream>(`/storage/${id}/view`, {
+    headers,
+    onDownloadProgress,
+    responseType: isPlatformBrowser() ? "blob" : "stream"
+  });
 }
 
-export function getAll(queryParams: {limit?: number; skip?: number; sort?: object} = {}) {
+export function getAll(queryParams?: {limit?: number; skip?: number; sort?: object}) {
   checkInitialized(authorization);
 
-  const fullUrl = buildUrl(url, queryParams);
-
-  return http.get<IndexResult<StorageObject>>(fullUrl, {headers: defaultHeaders});
+  return req.get<IndexResult<StorageObject>>(`/storage`, {
+    params: queryParams
+  });
 }
 
-export async function update(id: string, object: File | BufferWithMeta) {
+export async function update(
+  id: string,
+  object: File | BufferWithMeta,
+  onUploadProgress?: (progress: ProgressEvent) => void
+) {
   checkInitialized(authorization);
 
   const body = await preparePutBody(object);
 
-  return http.put<StorageObject>(`${url}/${id}`, {
-    body,
-    headers: writeHeaders
+  return req.put<StorageObject>(`/storage/${id}`, body, {
+    onUploadProgress
   });
 }
 
 export function remove(id: string) {
   checkInitialized(authorization);
 
-  return http.del(`${url}/${id}`, {headers: defaultHeaders});
+  return req.delete(`/storage/${id}`);
 }
