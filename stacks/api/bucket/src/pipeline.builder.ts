@@ -115,7 +115,11 @@ export class PipelineBuilder implements iPipelineBuilder {
     if (filterByUserRequest) {
       let filterExpression: object;
 
-      if (typeof filterByUserRequest == "object" && Object.keys(filterByUserRequest).length) {
+      if (
+        typeof filterByUserRequest == "object" &&
+        !Array.isArray(filterByUserRequest) &&
+        Object.keys(filterByUserRequest).length
+      ) {
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
 
         filterExpression = filterByUserRequest;

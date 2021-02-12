@@ -113,7 +113,8 @@ describe("BucketAddComponent", () => {
           useValue: {
             params: of({
               id: "id1"
-            })
+            }),
+            url: of(["id1"])
           }
         },
         {

@@ -12,10 +12,16 @@
     padding: 0px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.07);
     .bucket-title {
+      transition: margin 500ms;
       flex-direction: column;
       width: 200px;
       margin-bottom: 5px;
       display: flex;
+
+      &:focus {
+        outline: none;
+      }
+
       > div {
         display: flex;
         align-items: center;
@@ -33,6 +39,10 @@
         margin-top: 5px;
         font-size: 0.7rem;
       }
+    }
+    .active-bucket {
+      transition: margin 500ms;
+      margin-left: 10px;
     }
   }
 }
