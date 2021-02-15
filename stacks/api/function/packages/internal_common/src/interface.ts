@@ -1,3 +1,5 @@
+import {HttpService} from "./request";
+
 interface InitializeOptions {
   publicUrl?: string;
 }
@@ -13,6 +15,7 @@ export interface IdentityInitialization extends InitializeOptions {
 export interface InitializationResult {
   authorization: string;
   publicUrl: string;
+  service: HttpService;
 }
 
 export interface IndexResult<T> {

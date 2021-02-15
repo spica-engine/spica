@@ -1,12 +1,31 @@
-import fetch, {Response} from "node-fetch";
 import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
 
-interface RequestInit {
-  body?: BodyInit;
-  headers?: HeadersInit;
+export enum Parser {
+  Json,
+  Blob
 }
 
-export class HttpService {
+// @TODO: can we use more efficient pattern here
+export interface HttpService {
+  setBaseUrl(url: string): void;
+  setAuthorization(authorization: string): void;
+  setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}): void;
+
+  get<T>(url: string, options?: any): Promise<T>;
+  post<T>(url: string, body: any, options?: any): Promise<T>;
+  put<T>(url: string, body: any, options?: any): Promise<T>;
+  patch<T>(url: string, body: any, options?: any): Promise<T>;
+  delete(url: string, options?: any);
+}
+
+export function logWarning(response: any) {
+  const warning = response.headers["warning"];
+  if (warning) {
+    console.warn(warning);
+  }
+}
+
+export class Axios implements HttpService {
   private instance: AxiosInstance;
 
   private readonly interceptors = {
@@ -25,10 +44,7 @@ export class HttpService {
     },
     response: {
       onFulfilled: (response: AxiosResponse) => {
-        const warning = response.headers["warning"];
-        if (warning) {
-          console.warn(warning);
-        }
+        logWarning(response);
         return response.data;
       },
       onRejected: (error: any) => {
@@ -37,12 +53,7 @@ export class HttpService {
     }
   };
 
-  constructor(
-    config: AxiosRequestConfig,
-    writeDefaults?: {
-      headers: {[key: string]: string};
-    }
-  ) {
+  constructor(config: AxiosRequestConfig) {
     this.instance = axios.create(config);
 
     this.instance.interceptors.request.use(
@@ -53,13 +64,21 @@ export class HttpService {
       this.interceptors.response.onFulfilled,
       this.interceptors.response.onRejected
     );
+  }
 
-    if (writeDefaults && writeDefaults.headers && Object.keys(writeDefaults.headers).length) {
-      for (const [header, value] of Object.entries(writeDefaults.headers)) {
-        this.instance.defaults.headers.post[header] = value;
-        this.instance.defaults.headers.put[header] = value;
-      }
+  setBaseUrl(url: string) {
+    this.instance.defaults.baseURL = url;
+  }
+
+  setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}) {
+    for (const [header, value] of Object.entries(writeDefaults.headers)) {
+      this.instance.defaults.headers.post[header] = value;
+      this.instance.defaults.headers.put[header] = value;
     }
+  }
+
+  setAuthorization(authorization: string) {
+    this.instance.defaults.headers["Authorization"] = authorization;
   }
 
   get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
@@ -81,72 +100,4 @@ export class HttpService {
   delete(url: string, config?: AxiosRequestConfig): Promise<any> {
     return this.instance.delete(url, config);
   }
-}
-
-export namespace http {
-  export function get<T>(url: string | URL, requestInfo: RequestInit = {}, parser?: Parser) {
-    const method = "get";
-    return send(url, method, requestInfo).then(response => finalizeResponse<T>(response, parser));
-  }
-
-  export function put<T>(url: string | URL, requestInfo: RequestInit = {}) {
-    const method = "put";
-    return send(url, method, requestInfo).then(response => finalizeResponse<T>(response));
-  }
-
-  export function post<T>(url: string | URL, requestInfo: RequestInit = {}) {
-    const method = "post";
-    return send(url, method, requestInfo).then(response => finalizeResponse<T>(response));
-  }
-
-  export function patch<T>(url: string | URL, requestInfo: RequestInit = {}) {
-    const method = "patch";
-    return send(url, method, requestInfo).then(response => finalizeResponse<T>(response));
-  }
-
-  export function del(url: string | URL, requestInfo: RequestInit = {}) {
-    const method = "delete";
-    return send(url, method, requestInfo).then(response => finalizeResponse<any>(response));
-  }
-}
-
-function send(url: string | URL, method: string, requestInfo: RequestInit) {
-  const request: any = {
-    ...requestInfo,
-    method: method
-  };
-
-  return fetch(url, request);
-}
-
-function finalizeResponse<T>(response: Response, parser: Parser = Parser.Json): Promise<T> {
-  logWarning(response);
-
-  // parsing response that has 204 status is not possible
-  if (response.status == 204) {
-    return Promise.resolve(undefined);
-  }
-
-  if (parser == Parser.Json) {
-    return response.json().then(body => {
-      if (!response.ok) {
-        throw new Error(JSON.stringify(body));
-      }
-      return body as T;
-    });
-  } else if (parser == Parser.Blob) {
-    return response.blob() as Promise<any>;
-  }
-}
-
-function logWarning(response: Response) {
-  const warning = response.headers.get("warning");
-  if (warning) {
-    console.warn(warning);
-  }
-}
-
-export enum Parser {
-  Json,
-  Blob
 }

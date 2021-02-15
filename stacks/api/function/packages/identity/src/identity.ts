@@ -3,43 +3,36 @@ import {Identity, IdentityInitialization, ApikeyInitialization, IndexResult} fro
 import {
   initialize as _initialize,
   checkInitialized,
-  buildUrl,
-  http
+  HttpService
 } from "@spica-devkit/internal_common";
 
 let authorization;
 
-let url;
+let service: HttpService;
 
-let loginUrl;
-
-let defaultHeaders;
-
-let writeHeaders;
+const identitySegment = "passport/identity";
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
-  const {authorization: _authorization, publicUrl} = _initialize(options);
+  const {authorization: _authorization, publicUrl, service: _service} = _initialize(options);
 
   authorization = _authorization;
-  url = publicUrl + "/passport/identity";
-  loginUrl = publicUrl + "/passport/identify";
 
-  defaultHeaders = {
-    Authorization: authorization
-  };
+  service = _service;
 
-  writeHeaders = {...defaultHeaders, "Content-Type": "application/json"};
+  service.setWriteDefaults({
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
 }
 
 export function login(identifier: string, password: string): Promise<string> {
   checkInitialized(authorization);
 
-  return http
-    .post<{token: string}>(loginUrl, {
-      body: JSON.stringify({identifier, password}),
-      headers: {
-        "Content-Type": "application/json"
-      }
+  return service
+    .post<{token: string}>("/passport/identify", {
+      identifier,
+      password
     })
     .then(response => response.token);
 }
@@ -47,24 +40,21 @@ export function login(identifier: string, password: string): Promise<string> {
 export function get(id: string): Promise<Identity> {
   checkInitialized(authorization);
 
-  return http.get<Identity>(`${url}/${id}`, {headers: defaultHeaders});
+  return service.get<Identity>(`${identitySegment}/${id}`);
 }
 
 export function getAll(queryParams: object = {}): Promise<Identity[] | IndexResult<Identity>> {
   checkInitialized(authorization);
 
-  const fullUrl = buildUrl(url, queryParams);
-
-  return http.get<Identity[] | IndexResult<Identity>>(fullUrl, {headers: defaultHeaders});
+  return service.get<Identity[] | IndexResult<Identity>>(identitySegment, {
+    params: queryParams
+  });
 }
 
 export async function insert(identity: Identity): Promise<Identity> {
   checkInitialized(authorization);
 
-  const insertedIdentity = await http.post<Identity>(url, {
-    body: JSON.stringify(identity),
-    headers: writeHeaders
-  });
+  const insertedIdentity = await service.post<Identity>(identitySegment, identity);
 
   return policy.attach(insertedIdentity._id, identity.policies).then(policies => {
     insertedIdentity.policies = policies;
@@ -75,16 +65,13 @@ export async function insert(identity: Identity): Promise<Identity> {
 export function update(id: string, identity: Identity): Promise<Identity> {
   checkInitialized(authorization);
 
-  return http.put<Identity>(`${url}/${id}`, {
-    body: JSON.stringify(identity),
-    headers: writeHeaders
-  });
+  return service.put<Identity>(`${identitySegment}/${id}`, identity);
 }
 
 export function remove(id: string): Promise<any> {
   checkInitialized(authorization);
 
-  return http.del(`${url}/${id}`, {headers: defaultHeaders});
+  return service.delete(`${identitySegment}/${id}`);
 }
 
 // policy attach detach
@@ -96,8 +83,8 @@ export namespace policy {
     const attachedPolicies = new Set<string>();
 
     for (const policyId of policyIds) {
-      const promise = http
-        .put<any>(`${url}/${identityId}/policy/${policyId}`, {headers: defaultHeaders})
+      const promise = service
+        .put<any>(`${identitySegment}/${identityId}/policy/${policyId}`, {})
         .then(() => attachedPolicies.add(policyId))
         .catch(e => {
           console.error(`Failed to attach policy with id ${policyId}: `, e);
@@ -116,8 +103,8 @@ export namespace policy {
     const detachedPolicies = new Set<string>();
 
     for (const policyId of policyIds) {
-      const promise = http
-        .del(`${url}/${identityId}/policy/${policyId}`, {headers: defaultHeaders})
+      const promise = service
+        .delete(`${identitySegment}/${identityId}/policy/${policyId}`)
         .then(() => detachedPolicies.add(policyId))
         .catch(e => {
           console.error(`Failed to detach policy with id ${policyId}: `, e);

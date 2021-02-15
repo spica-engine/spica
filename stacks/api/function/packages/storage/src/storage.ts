@@ -1,8 +1,8 @@
 import {
   initialize as _initialize,
   checkInitialized,
-  HttpService,
-  isPlatformBrowser
+  isPlatformBrowser,
+  HttpService
 } from "@spica-devkit/internal_common";
 import {
   StorageObject,
@@ -15,26 +15,20 @@ import {preparePostBody, preparePutBody} from "./utility";
 
 let authorization;
 
-let req: HttpService;
+let service: HttpService;
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
-  const {authorization: _authorization, publicUrl} = _initialize(options);
+  const {authorization: _authorization, publicUrl, service: _service} = _initialize(options);
 
   authorization = _authorization;
 
-  req = new HttpService(
-    {
-      baseURL: publicUrl,
-      headers: {
-        Authorization: authorization
-      }
-    },
-    {
-      headers: {
-        "Content-Type": "application/bson"
-      }
+  service = _service;
+
+  service.setWriteDefaults({
+    headers: {
+      "Content-Type": "application/bson"
     }
-  );
+  });
 }
 
 // /Users/tuna/Desktop/functions
@@ -46,7 +40,7 @@ export async function insert(
   checkInitialized(authorization);
   const body = await preparePostBody([object]);
 
-  return req.post<StorageObject>("/storage", body, {
+  return service.post<StorageObject>("/storage", body, {
     onUploadProgress
   });
 }
@@ -59,7 +53,7 @@ export async function insertMany(
 
   const body = await preparePostBody(objects);
 
-  return req.post<StorageObject[]>("/storage", body, {
+  return service.post<StorageObject[]>("/storage", body, {
     onUploadProgress
   });
 }
@@ -67,7 +61,7 @@ export async function insertMany(
 export function get(id: string) {
   checkInitialized(authorization);
 
-  return req.get<StorageObject>(`/storage/${id}`);
+  return service.get<StorageObject>(`/storage/${id}`);
 }
 
 export function download(
@@ -77,7 +71,7 @@ export function download(
 ) {
   checkInitialized(authorization);
 
-  return req.get<Blob | NodeJS.ReadableStream>(`/storage/${id}/view`, {
+  return service.get<Blob | NodeJS.ReadableStream>(`/storage/${id}/view`, {
     headers,
     onDownloadProgress,
     responseType: isPlatformBrowser() ? "blob" : "stream"
@@ -87,7 +81,7 @@ export function download(
 export function getAll(queryParams?: {limit?: number; skip?: number; sort?: object}) {
   checkInitialized(authorization);
 
-  return req.get<IndexResult<StorageObject>>(`/storage`, {
+  return service.get<IndexResult<StorageObject>>(`/storage`, {
     params: queryParams
   });
 }
@@ -101,7 +95,7 @@ export async function update(
 
   const body = await preparePutBody(object);
 
-  return req.put<StorageObject>(`/storage/${id}`, body, {
+  return service.put<StorageObject>(`/storage/${id}`, body, {
     onUploadProgress
   });
 }
@@ -109,5 +103,5 @@ export async function update(
 export function remove(id: string) {
   checkInitialized(authorization);
 
-  return req.delete(`/storage/${id}`);
+  return service.delete(`/storage/${id}`);
 }
