@@ -19,8 +19,6 @@ let authorization;
 
 let wsUrl;
 
-let defaultHeaders;
-
 let service: HttpService;
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
@@ -123,7 +121,7 @@ export namespace data {
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         filter: `_id=="${documentId}"`,
-        ...defaultHeaders
+        Authorization: authorization
       });
 
       return getWsObs<BucketDocument[]>(fullUrl.toString()).pipe(map(([documents]) => documents));

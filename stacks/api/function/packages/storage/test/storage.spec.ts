@@ -1,24 +1,27 @@
 import * as Storage from "@spica-devkit/storage";
-import {http, Parser} from "@spica-devkit/internal_common";
+import {Axios} from "@spica-devkit/internal_common";
 import * as BSON from "bson";
 import {jsonToArrayBuffer} from "../src/utility";
 
 jasmine.getEnv().allowRespy(true);
 
 describe("@spica-devkit/Storage", () => {
-  let getSpy: jasmine.SpyObj<any>;
-  let postSpy: jasmine.SpyObj<any>;
-  let putSpy: jasmine.SpyObj<any>;
-  let deleteSpy: jasmine.SpyObj<any>;
+  let getSpy: jasmine.Spy<any>;
+  let postSpy: jasmine.Spy<any>;
+  let putSpy: jasmine.Spy<any>;
+  let deleteSpy: jasmine.Spy<any>;
+
+  const onUploadProgress = () => {};
+  const onDownloadProgress = () => {};
 
   beforeEach(() => {
+    getSpy = spyOn(Axios.prototype, "get").and.returnValue(Promise.resolve());
+    postSpy = spyOn(Axios.prototype, "post").and.returnValue(Promise.resolve());
+    putSpy = spyOn(Axios.prototype, "put").and.returnValue(Promise.resolve());
+    deleteSpy = spyOn(Axios.prototype, "delete").and.returnValue(Promise.resolve());
+
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Storage.initialize({apikey: "TEST_APIKEY"});
-
-    getSpy = spyOn(http, "get").and.returnValue(Promise.resolve());
-    postSpy = spyOn(http, "post").and.returnValue(Promise.resolve());
-    putSpy = spyOn(http, "put").and.returnValue(Promise.resolve());
-    deleteSpy = spyOn(http, "del").and.returnValue(Promise.resolve());
   });
 
   describe("Storage", () => {
@@ -29,7 +32,7 @@ describe("@spica-devkit/Storage", () => {
     };
 
     it("should insert storage object", async () => {
-      await Storage.insert(storageObject);
+      await Storage.insert(storageObject, onUploadProgress);
 
       const body = {
         content: [
@@ -44,14 +47,13 @@ describe("@spica-devkit/Storage", () => {
       };
 
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("http://test/storage", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/bson"},
-        body: jsonToArrayBuffer(body)
+      expect(postSpy).toHaveBeenCalledWith("storage", jsonToArrayBuffer(body), {
+        onUploadProgress: onUploadProgress
       });
     });
 
     it("should insert storage objects", async () => {
-      await Storage.insertMany([storageObject]);
+      await Storage.insertMany([storageObject], onUploadProgress);
 
       const body = {
         content: [
@@ -66,14 +68,13 @@ describe("@spica-devkit/Storage", () => {
       };
 
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("http://test/storage", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/bson"},
-        body: jsonToArrayBuffer(body)
+      expect(postSpy).toHaveBeenCalledWith("storage", jsonToArrayBuffer(body), {
+        onUploadProgress: onUploadProgress
       });
     });
 
     it("should update storage object", async () => {
-      await Storage.update("storage_object_id", storageObject);
+      await Storage.update("storage_object_id", storageObject, onUploadProgress);
 
       const body = {
         name: "my_text.txt",
@@ -84,9 +85,8 @@ describe("@spica-devkit/Storage", () => {
       };
 
       expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith("http://test/storage/storage_object_id", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/bson"},
-        body: jsonToArrayBuffer(body)
+      expect(putSpy).toHaveBeenCalledWith("storage/storage_object_id", jsonToArrayBuffer(body), {
+        onUploadProgress: onUploadProgress
       });
     });
 
@@ -94,40 +94,32 @@ describe("@spica-devkit/Storage", () => {
       Storage.remove("storage_object_id");
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("http://test/storage/storage_object_id", {
-        headers: {Authorization: "APIKEY TEST_APIKEY"}
-      });
+      expect(deleteSpy).toHaveBeenCalledWith("storage/storage_object_id");
     });
 
     it("should get storage objects", () => {
       Storage.getAll();
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith(new URL("http://test/storage"), {
-        headers: {Authorization: "APIKEY TEST_APIKEY"}
-      });
+      expect(getSpy).toHaveBeenCalledWith("storage", {params: undefined});
     });
 
     it("should get specific storage object", () => {
       Storage.get("storage_object_id");
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("http://test/storage/storage_object_id", {
-        headers: {Authorization: "APIKEY TEST_APIKEY"}
-      });
+      expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id");
     });
 
     it("should download storage object", () => {
-      Storage.download("storage_object_id");
+      Storage.download("storage_object_id", undefined, onDownloadProgress);
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith(
-        "http://test/storage/storage_object_id/view",
-        {
-          headers: {Authorization: "APIKEY TEST_APIKEY"}
-        },
-        Parser.Blob
-      );
+      expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id/view", {
+        headers: undefined,
+        onDownloadProgress: onDownloadProgress,
+        responseType: "stream"
+      });
     });
   });
 });

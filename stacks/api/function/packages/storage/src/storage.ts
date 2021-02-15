@@ -40,7 +40,7 @@ export async function insert(
   checkInitialized(authorization);
   const body = await preparePostBody([object]);
 
-  return service.post<StorageObject>("/storage", body, {
+  return service.post<StorageObject>("storage", body, {
     onUploadProgress
   });
 }
@@ -53,7 +53,7 @@ export async function insertMany(
 
   const body = await preparePostBody(objects);
 
-  return service.post<StorageObject[]>("/storage", body, {
+  return service.post<StorageObject[]>("storage", body, {
     onUploadProgress
   });
 }
@@ -61,7 +61,7 @@ export async function insertMany(
 export function get(id: string) {
   checkInitialized(authorization);
 
-  return service.get<StorageObject>(`/storage/${id}`);
+  return service.get<StorageObject>(`storage/${id}`);
 }
 
 export function download(
@@ -71,7 +71,7 @@ export function download(
 ) {
   checkInitialized(authorization);
 
-  return service.get<Blob | NodeJS.ReadableStream>(`/storage/${id}/view`, {
+  return service.get<Blob | NodeJS.ReadableStream>(`storage/${id}/view`, {
     headers,
     onDownloadProgress,
     responseType: isPlatformBrowser() ? "blob" : "stream"
@@ -81,7 +81,7 @@ export function download(
 export function getAll(queryParams?: {limit?: number; skip?: number; sort?: object}) {
   checkInitialized(authorization);
 
-  return service.get<IndexResult<StorageObject>>(`/storage`, {
+  return service.get<IndexResult<StorageObject>>(`storage`, {
     params: queryParams
   });
 }
@@ -95,7 +95,7 @@ export async function update(
 
   const body = await preparePutBody(object);
 
-  return service.put<StorageObject>(`/storage/${id}`, body, {
+  return service.put<StorageObject>(`storage/${id}`, body, {
     onUploadProgress
   });
 }
@@ -103,5 +103,5 @@ export async function update(
 export function remove(id: string) {
   checkInitialized(authorization);
 
-  return service.delete(`/storage/${id}`);
+  return service.delete(`storage/${id}`);
 }

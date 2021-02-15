@@ -6,7 +6,7 @@ let service: Axios;
 export function initialize(
   options: ApikeyInitialization | IdentityInitialization
 ): InitializationResult {
-  let authorization;
+  let authorization: string;
   if ("apikey" in options) {
     authorization = `APIKEY ${options.apikey}`;
   } else if ("identity" in options) {
