@@ -1,11 +1,5 @@
 import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
 
-export enum Parser {
-  Json,
-  Blob
-}
-
-// @TODO: can we use more efficient pattern here
 export interface HttpService {
   setBaseUrl(url: string): void;
   setAuthorization(authorization: string): void;
