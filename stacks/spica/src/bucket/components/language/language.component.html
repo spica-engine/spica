@@ -5,7 +5,7 @@
     mat-raised-button
     [color]="selected == language.code ? 'accent' : 'primary'"
     class="mat-elevation-z0"
-    (click)="selected = language.code; $event.stopPropagation()"
+    (click)="selected = language.code; $event.stopPropagation(); onLanguageChange()"
   >
     {{ language.name | slice: 0:2 | uppercase }}
   </button>
