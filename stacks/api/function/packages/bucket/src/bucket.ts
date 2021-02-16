@@ -109,6 +109,16 @@ export namespace data {
     return service.put<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, document);
   }
 
+  export function patch(
+    bucketId: string,
+    documentId: string,
+    document: Partial<BucketDocument>
+  ): Promise<any> {
+    checkInitialized(authorization);
+
+    return service.patch<any>(`bucket/${bucketId}/data/${documentId}`, document);
+  }
+
   export function remove(bucketId: string, documentId: string): Promise<any> {
     checkInitialized(authorization);
 
