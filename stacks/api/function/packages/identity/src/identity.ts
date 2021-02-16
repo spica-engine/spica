@@ -13,7 +13,7 @@ let service: HttpService;
 const identitySegment = "passport/identity";
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
-  const {authorization: _authorization, publicUrl, service: _service} = _initialize(options);
+  const {authorization: _authorization, service: _service} = _initialize(options);
 
   authorization = _authorization;
 

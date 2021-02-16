@@ -18,7 +18,7 @@ let authorization;
 let service: HttpService;
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
-  const {authorization: _authorization, publicUrl, service: _service} = _initialize(options);
+  const {authorization: _authorization, service: _service} = _initialize(options);
 
   authorization = _authorization;
 
@@ -30,8 +30,6 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
     }
   });
 }
-
-// /Users/tuna/Desktop/functions
 
 export async function insert(
   object: File | BufferWithMeta,

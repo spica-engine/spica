@@ -13,5 +13,5 @@ module.exports = {
     commonjs(),
     json()
   ],
-  external: ["mongodb", "axios", "node-fetch", "ws"]
+  external: ["mongodb", "axios", "ws"]
 };
