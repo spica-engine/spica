@@ -9,8 +9,11 @@ ts_library(
         "index.ts",
         "src/**/*.ts",
     ]),
+    data = glob(["src/schemas/*.json"]),
     module_name = "@spica-server/passport",
     deps = [
+        "//packages/core",
+        "//packages/core/schema",
         "//packages/database",
         "//stacks/api/passport/apikey",
         "//stacks/api/passport/guard",
