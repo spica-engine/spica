@@ -189,8 +189,7 @@ describe("TutorialComponent", () => {
           type: "number",
           description: `Description of test`,
           options: {
-            position: "bottom",
-            visible: true
+            position: "bottom"
           }
         }
       }

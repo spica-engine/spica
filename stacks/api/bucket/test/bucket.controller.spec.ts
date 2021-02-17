@@ -30,7 +30,7 @@ describe("BucketController", () => {
         type: "string",
         title: "title",
         description: "Title of the row",
-        options: {position: "left", visible: true}
+        options: {position: "left"}
       },
       description: {
         type: "textarea",
@@ -101,13 +101,13 @@ describe("BucketController", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           age: {
             type: "number",
             title: "Age",
             description: "Age of the row",
-            options: {position: "right", visible: true}
+            options: {position: "right"}
           }
         }
       });
@@ -139,13 +139,13 @@ describe("BucketController", () => {
             type: "string",
             title: "firstname",
             description: "Firstname",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           lastname: {
             type: "string",
             title: "lastname",
             description: "Lastname",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           }
         }
       };
@@ -234,7 +234,7 @@ describe("BucketController", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           description: {
             type: "textarea",
@@ -428,16 +428,6 @@ describe("BucketController", () => {
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
         expect([response.body.message, response.body.error]).toEqual([
           ".properties.title.options should be object",
-          "validation failed"
-        ]);
-      });
-
-      it("should show error about title visible type", async () => {
-        bucket.properties.title.options.visible = "asd";
-        const response = await req.post("/bucket", bucket);
-        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect([response.body.message, response.body.error]).toEqual([
-          ".properties.title.options.visible should be boolean",
           "validation failed"
         ]);
       });
