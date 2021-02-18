@@ -33,6 +33,8 @@ import {examples} from "../../examples/examples";
 import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {LogViewComponent} from "../log-view/log-view.component";
+import {MatDividerModule} from '@angular/material/divider';
+
 
 @Directive({
   selector: "code-editor[language]",
@@ -71,7 +73,8 @@ describe("Function Add", () => {
         MatInputModule,
         ScrollingModule,
         MatDatepickerModule,
-        MatNativeDateModule
+        MatNativeDateModule,
+        MatDividerModule
       ],
       providers: [
         {

@@ -8,6 +8,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {PolicyResourceAddComponent} from "./policy-resource-add.component";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {MatDividerModule} from "@angular/material/divider";
 
 describe("Policy Resource Add Component", () => {
   let dialogRef = jasmine.createSpyObj<MatDialogRef<any, any>>("DialogRef", ["close"]);
@@ -21,7 +22,8 @@ describe("Policy Resource Add Component", () => {
         FormsModule,
         MatInputModule,
         NoopAnimationsModule,
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        MatDividerModule
       ],
       providers: [
         {provide: MatDialogRef, useValue: dialogRef},
