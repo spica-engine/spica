@@ -15,6 +15,7 @@ import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-in
 import {PolicyService} from "../../services/policy.service";
 import {PolicyAddComponent} from "./policy-add.component";
 import {MatDialogModule} from "@angular/material/dialog";
+import {RouterTestingModule} from "@angular/router/testing";
 
 describe("Policy Add Component", () => {
   describe("Policy Add", () => {
@@ -23,7 +24,15 @@ describe("Policy Add Component", () => {
     beforeEach(() => {
       TestBed.configureTestingModule({
         imports: [
-          RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
+          RouterTestingModule.withRoutes(
+            [
+              {
+                path: "passport/policy",
+                component: PolicyAddComponent
+              }
+            ],
+            {relativeLinkResolution: "legacy"}
+          ),
           MatIconModule,
           MatToolbarModule,
           MatFormFieldModule,
