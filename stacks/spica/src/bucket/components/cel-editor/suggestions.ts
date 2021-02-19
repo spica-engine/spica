@@ -12,7 +12,7 @@ const functions = [
     label: "now",
     detail: "(method) now(): number",
     description: {
-      value: `Returns current timestamp of the request execution.\n`
+      value: `Returns unix timestamp of the request execution.\n`
     },
     text: "now()"
   },
