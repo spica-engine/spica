@@ -10,6 +10,8 @@ import {PassportController} from "./passport.controller";
 import {SamlService} from "./saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/strategy.service";
+import {SchemaModule} from "@spica-server/core/schema";
+const LoginSchema = require("./schemas/login.json");
 
 @Global()
 @Module({})
@@ -40,9 +42,13 @@ export class PassportModule {
       module: PassportModule,
       controllers: [PassportController, StrategyController],
       imports: [
+        SchemaModule.forChild({
+          schemas: [LoginSchema]
+        }),
         PassportCoreModule.initialize(options),
         IdentityModule.forRoot({
           expiresIn: options.expiresIn,
+          maxExpiresIn: options.maxExpiresIn,
           issuer: options.issuer,
           secretOrKey: options.secretOrKey,
           audience: options.audience,
