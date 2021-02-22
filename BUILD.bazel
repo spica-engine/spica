@@ -12,14 +12,6 @@ filegroup(
     ) + ["dist/spica/index.html"],
 )
 
-filegroup(
-    name = "site",
-    srcs = glob(
-        include = ["dist/spica-site/**/*"],
-        exclude = ["**/index.html"],
-    ) + ["dist/spica-site/index.html"],
-)
-
 k8s_deploy(
     name = "deploy",
     images = {
