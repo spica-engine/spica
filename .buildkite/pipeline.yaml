@@ -46,14 +46,6 @@ steps:
       - yarn bazel:format -mode=check
       - yarn code:format-check
 
-  - label: ":plaidml: + :bazel: Builds Docs"
-    key: generate_docs
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    <<: *api_test_docker_plugin
-    commands:
-      - yarn --silent docs
-
   - label: ":angular: + :chrome: Test Spica (Chrome)"
     key: test_spica
     if: build.branch != "master"
