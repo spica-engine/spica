@@ -147,9 +147,8 @@ Navigate to **Developer** -> **Bucket** (or [http://localhost:4500/spica/buckets
 - Enter "Users" to "name" field and fill the "Description" field however you want
 - Delete all "Properties" by clicking the "trash" icon on each property.
 - Add the following properties: - Add a "name" field and set its type to "String", - Add a "email" field and set its type to "String", - Add a "birthday" field and set its type to "Date"
-- Click the "cog" icon on "name" field and check the following options: - Primary field (which marks this field as primary) - Visible on list (which makes this field visible on list view) - Require (which marks this field a mandatory field to create an entry)
-- Click the "cog" icon on "email" field and check the following options: - Visible on list (which makes this field visible on list view) - Require (which marks this field a mandatory field to create an entry)
-- Click the "cog" icon on "birthday" field and check the following options: - Visible on list (which makes this field visible on list view)
+- Click the "cog" icon on "name" field and check the following options: - Primary field (which marks this field as primary) - Require (which marks this field a mandatory field to create an entry)
+- Click the "cog" icon on "email" field and check the following options: - Require (which marks this field a mandatory field to create an entry)
 - Move on to the "View" section of the form and arrange your entry form view by drag and drop
 - Click **Save** and wait for the page refresh.
 

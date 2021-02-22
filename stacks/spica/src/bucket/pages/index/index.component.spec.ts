@@ -144,7 +144,12 @@ describe("IndexComponent", () => {
         title: "My Bucket",
         description: "My bucket's description.",
         icon: "test",
-        properties: {}
+        primary: "test",
+        properties: {
+          test: {
+            type: "string"
+          }
+        }
       });
       fixture.detectChanges();
       expect(
@@ -167,8 +172,13 @@ describe("IndexComponent", () => {
 
     it("should show readonly badge", () => {
       bucket.next({
+        primary: "test",
         readOnly: true,
-        properties: {}
+        properties: {
+          test: {
+            type: "string"
+          }
+        }
       });
       fixture.detectChanges();
       expect(
@@ -181,8 +191,13 @@ describe("IndexComponent", () => {
 
     it("should remove add button when readonly", () => {
       bucket.next({
+        primary: "test",
         readOnly: true,
-        properties: {}
+        properties: {
+          test: {
+            type: "string"
+          }
+        }
       });
       fixture.detectChanges();
 
@@ -199,6 +214,7 @@ describe("IndexComponent", () => {
     beforeEach(() => {
       bucket.next({
         _id: "1",
+        primary: "test",
         properties: {
           test: {
             title: "test",
@@ -266,16 +282,14 @@ describe("IndexComponent", () => {
               title: "test",
               type: "string",
               options: {
-                position: "bottom",
-                visible: true
+                position: "bottom"
               }
             },
             test2: {
               title: "test2",
               type: "string",
               options: {
-                position: "bottom",
-                visible: true
+                position: "bottom"
               }
             }
           }
@@ -288,14 +302,14 @@ describe("IndexComponent", () => {
       it("should not render select when readonly", () => {
         bucket.next({
           _id: "1",
+          primary: "test",
           readOnly: true,
           properties: {
             test: {
               title: "test",
               type: "string",
               options: {
-                position: "bottom",
-                visible: true
+                position: "bottom"
               }
             }
           }
@@ -312,45 +326,6 @@ describe("IndexComponent", () => {
           )
         ).toEqual(["Display all", "_id", "test", "Scheduled", "Actions"]);
       });
-
-      it("should check visible columns by default", fakeAsync(() => {
-        bucket.next({
-          _id: "1",
-          readOnly: true,
-          properties: {
-            test: {
-              title: "test",
-              type: "string",
-              options: {
-                position: "bottom",
-                visible: true
-              }
-            },
-            test1: {
-              title: "test1",
-              type: "string",
-              options: {
-                position: "bottom"
-              }
-            }
-          }
-        });
-        fixture.detectChanges();
-
-        fixture.debugElement
-          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(3)"))
-          .nativeElement.click();
-        fixture.detectChanges();
-
-        tick(1);
-        fixture.detectChanges();
-
-        const columns = document.body.querySelectorAll<HTMLInputElement>(
-          ".mat-menu-content .mat-menu-item mat-checkbox"
-        );
-        expect(columns.item(2).classList).toContain("mat-checkbox-checked");
-        expect(columns.item(3).classList).not.toContain("mat-checkbox-checked");
-      }));
 
       it("should display later checked properties", fakeAsync(() => {
         fixture.componentInstance.displayedProperties = [];
@@ -425,8 +400,7 @@ describe("IndexComponent", () => {
             title: "test",
             type: "string",
             options: {
-              position: "bottom",
-              visible: true
+              position: "bottom"
             }
           }
         }
@@ -588,14 +562,14 @@ describe("IndexComponent", () => {
   describe("readonly", () => {
     beforeEach(() => {
       bucket.next({
+        primary: "test",
         readOnly: true,
         properties: {
           test: {
             title: "test",
             type: "string",
             options: {
-              position: "bottom",
-              visible: true
+              position: "bottom"
             }
           }
         }
@@ -626,13 +600,13 @@ describe("IndexComponent", () => {
     beforeEach(() => {
       bucket.next({
         _id: "1",
+        primary: "test",
         properties: {
           test: {
             title: "test",
             type: "string",
             options: {
-              position: "bottom",
-              visible: true
+              position: "bottom"
             }
           }
         }

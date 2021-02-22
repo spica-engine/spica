@@ -42,7 +42,7 @@ describe("@spica-devkit/bucket", () => {
         name: {
           type: "string",
           title: "name",
-          options: {position: "left", visible: true}
+          options: {position: "left"}
         },
         surname: {
           type: "string",
