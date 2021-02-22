@@ -45,7 +45,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   configurationState = "meta";
 
-  isThereVisible = true;
   visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
   buckets: Bucket[];
@@ -125,9 +124,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         return accumulator;
       },
       {left: [], right: [], bottom: []}
-    );
-    this.isThereVisible = Object.values(this.bucket.properties).some(
-      prop => prop.options && prop.options.visible
     );
   }
 

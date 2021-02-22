@@ -42,11 +42,7 @@
                       role="menuitemcheckbox"
                       disableRipple
                       (click)="$event.stopImmediatePropagation()"
-                    >
-                      <mat-checkbox [(ngModel)]="propertyKv.value.options.visible">
-                        Visible on list
-                      </mat-checkbox>
-                    </div>
+                    ></div>
                     <div
                       mat-menu-item
                       role="menuitemcheckbox"
@@ -98,11 +94,6 @@
           <div>
             <span class="space-between"></span>
 
-            <mat-icon
-              *ngIf="propertyKv.value.options?.visible"
-              matTooltip="This property will be visible on list by default."
-              >visibility</mat-icon
-            >
             <mat-icon *ngIf="propertyKv.value.readOnly" matTooltip="This property is read-only."
               >format_clear</mat-icon
             >

@@ -75,6 +75,27 @@ export const unixTime: func.Func = context => {
   };
 };
 
+export const now: func.Func = context => {
+  const fnName = "now";
+
+  validateArgumentsLength(fnName, context.arguments, 0);
+
+  return () => {
+    if (context.target == "aggregation") {
+      return {
+        $divide: [
+          {
+            $toLong: Date.now()
+          },
+          1000
+        ]
+      };
+    } else {
+      return Date.now() / 1000;
+    }
+  };
+};
+
 export const some: func.Func = context => {
   const fnName = "some";
   validateArgumentsLength(fnName, context.arguments, undefined, 2);
@@ -303,25 +324,25 @@ function createInQuery(items: unknown[], propertyName: string, operator: "$and" 
 function validateArgumentsLength(
   fnName: string,
   args: any[],
-  exactLength: number = 0,
-  minLength: number = 0,
-  maxLength: number = 0
+  exactLength?: number,
+  minLength?: number,
+  maxLength?: number
 ) {
   const messages: string[] = [];
 
-  if (exactLength && args.length != exactLength) {
+  if (exactLength != undefined && args.length != exactLength) {
     messages.push(
       `Function '${fnName}' accepts exactly ${exactLength} argument(s) but found ${args.length}.`
     );
   }
 
-  if (minLength && args.length < minLength) {
+  if (minLength != undefined && args.length < minLength) {
     messages.push(
       `Function '${fnName}' accepts minimum ${minLength} argument(s) but found ${args.length}.`
     );
   }
 
-  if (maxLength && args.length > maxLength) {
+  if (maxLength != undefined && args.length > maxLength) {
     messages.push(
       `Function '${fnName}' accepts maximum ${maxLength} argument(s) but found ${args.length}.`
     );
