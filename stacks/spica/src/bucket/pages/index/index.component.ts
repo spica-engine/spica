@@ -117,9 +117,7 @@ export class IndexComponent implements OnInit {
                 .some(schemaProps => schemaProps == dispProps)
             )
           : [
-              ...Object.entries(schema.properties)
-                .filter(([, value]) => value.options.visible)
-                .map(([key]) => key),
+              schema.primary || Object.keys(schema.properties)[0] || "$$spicainternal_id",
               "$$spicainternal_actions"
             ];
       }),
