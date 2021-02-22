@@ -33,7 +33,7 @@ describe("SettingsComponent", () => {
           }
         })
       ),
-      replaceOne: jasmine.createSpy("replaceOne")
+      replaceOne: jasmine.createSpy("replaceOne").and.returnValue(of(null))
     };
     TestBed.configureTestingModule({
       imports: [
@@ -45,7 +45,12 @@ describe("SettingsComponent", () => {
         MatIconModule,
         MatSelectModule,
         MatListModule,
-        RouterTestingModule,
+        RouterTestingModule.withRoutes([
+          {
+            path: "buckets",
+            component: SettingsComponent
+          }
+        ]),
         NoopAnimationsModule,
         FormsModule,
         MatAwareDialogModule
