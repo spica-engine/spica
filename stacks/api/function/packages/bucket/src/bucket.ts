@@ -8,8 +8,8 @@ import {
 import {
   initialize as _initialize,
   checkInitialized,
-  http,
-  buildUrl
+  buildUrl,
+  HttpService
 } from "@spica-devkit/internal_common";
 import {getWsObs} from "./operators";
 import {Observable} from "rxjs";
@@ -17,60 +17,54 @@ import {map} from "rxjs/operators";
 
 let authorization;
 
-let url;
 let wsUrl;
 
-let defaultHeaders;
-
-let writeHeaders;
+let service: HttpService;
 
 export function initialize(options: ApikeyInitialization | IdentityInitialization) {
-  const {authorization: _authorization, publicUrl} = _initialize(options);
+  const {authorization: _authorization, publicUrl, service: _service} = _initialize(options);
 
   authorization = _authorization;
-  url = publicUrl + "/bucket";
-  wsUrl = url.replace("http", "ws");
 
-  defaultHeaders = {
-    Authorization: authorization
-  };
-  writeHeaders = {...defaultHeaders, "Content-Type": "application/json"};
+  service = _service;
+
+  wsUrl = (publicUrl + "/bucket").replace("http", "ws");
+
+  service.setWriteDefaults({
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
 }
 
 export function get(id: string): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return http.get<Bucket>(`${url}/${id}`, {headers: defaultHeaders});
+  return service.get<Bucket>(`bucket/${id}`);
 }
 
 export function getAll(): Promise<Bucket[]> {
   checkInitialized(authorization);
 
-  return http.get<Bucket[]>(url, {headers: defaultHeaders});
+  return service.get<Bucket[]>("bucket");
 }
 
 export function insert(bucket: Bucket): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return http.post<Bucket>(url, {
-    body: JSON.stringify(bucket),
-    headers: writeHeaders
-  });
+  return service.post<Bucket>("bucket", bucket);
 }
 
 export function update(id: string, bucket: Bucket): Promise<Bucket> {
   checkInitialized(authorization);
 
-  return http.put<Bucket>(`${url}/${id}`, {
-    body: JSON.stringify(bucket),
-    headers: writeHeaders
-  });
+  return service.put<Bucket>(`bucket/${id}`, bucket);
 }
 
 export function remove(id: string): Promise<any> {
   checkInitialized(authorization);
 
-  return http.del(`${url}/${id}`, {headers: defaultHeaders});
+  return service.delete(`bucket/${id}`);
 }
 
 export namespace data {
@@ -81,11 +75,10 @@ export namespace data {
   ): Promise<BucketDocument> {
     checkInitialized(authorization);
 
-    const headers = options.headers;
-    const fullUrl = buildUrl(`${url}/${bucketId}/data/${documentId}`, options.queryParams);
-
-    // do not allow to overwrite default headers
-    return http.get<BucketDocument>(fullUrl, {headers: {...headers, ...defaultHeaders}});
+    return service.get<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, {
+      params: options.queryParams,
+      headers: options.headers
+    });
   }
 
   export function getAll(
@@ -94,21 +87,16 @@ export namespace data {
   ): Promise<BucketDocument[] | IndexResult<BucketDocument>> {
     checkInitialized(authorization);
 
-    const headers = options.headers;
-    const fullUrl = buildUrl(`${url}/${bucketId}/data`, options.queryParams);
-
-    return http.get<BucketDocument[] | IndexResult<BucketDocument>>(fullUrl, {
-      headers: {...headers, ...defaultHeaders}
+    return service.get<BucketDocument[] | IndexResult<BucketDocument>>(`bucket/${bucketId}/data`, {
+      params: options.queryParams,
+      headers: options.headers
     });
   }
 
   export function insert(bucketId: string, document: BucketDocument): Promise<BucketDocument> {
     checkInitialized(authorization);
 
-    return http.post<BucketDocument>(`${url}/${bucketId}/data`, {
-      body: JSON.stringify(document),
-      headers: writeHeaders
-    });
+    return service.post<BucketDocument>(`bucket/${bucketId}/data`, document);
   }
 
   export function update(
@@ -118,16 +106,23 @@ export namespace data {
   ): Promise<BucketDocument> {
     checkInitialized(authorization);
 
-    return http.put<BucketDocument>(`${url}/${bucketId}/data/${documentId}`, {
-      body: JSON.stringify(document),
-      headers: writeHeaders
-    });
+    return service.put<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, document);
+  }
+
+  export function patch(
+    bucketId: string,
+    documentId: string,
+    document: Partial<BucketDocument>
+  ): Promise<any> {
+    checkInitialized(authorization);
+
+    return service.patch<any>(`bucket/${bucketId}/data/${documentId}`, document);
   }
 
   export function remove(bucketId: string, documentId: string): Promise<any> {
     checkInitialized(authorization);
 
-    return http.del(`${url}/${bucketId}/data/${documentId}`, {headers: defaultHeaders});
+    return service.delete(`bucket/${bucketId}/data/${documentId}`);
   }
 
   export namespace realtime {
@@ -136,7 +131,7 @@ export namespace data {
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
         filter: `_id=="${documentId}"`,
-        ...defaultHeaders
+        Authorization: authorization
       });
 
       return getWsObs<BucketDocument[]>(fullUrl.toString()).pipe(map(([documents]) => documents));
