@@ -4,7 +4,7 @@ import {Component, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, BehaviorSubject, Subject, of} from "rxjs";
-import {map, switchMap, tap, last} from "rxjs/operators";
+import {map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {Storage} from "../../interfaces/storage";
@@ -22,13 +22,17 @@ export class IndexComponent implements OnInit {
   progress: number;
   refresh: Subject<string> = new Subject();
   sorter;
-  cols: number = 4;
+  cols: number = 5;
 
   loading$: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
   lastUpdates: Map<string, number> = new Map();
 
   isEmpty = true;
+
+  selectedStorageIds = [];
+
+  selectionActive = false;
 
   constructor(
     private storage: StorageService,
@@ -54,12 +58,16 @@ export class IndexComponent implements OnInit {
       });
   }
 
+  selectAll(storages: Storage[]) {
+    this.selectedStorageIds = storages.map(storage => storage._id);
+  }
+
   ngOnInit(): void {
     this.storages$ = merge(this.paginator.page, of(null), this.refresh).pipe(
       tap(() => this.loading$.next(true)),
       switchMap(() =>
         this.storage.getAll(
-          this.paginator.pageSize || 12,
+          this.paginator.pageSize || this.cols * 3,
           this.paginator.pageSize * this.paginator.pageIndex,
           this.sorter
         )
@@ -109,6 +117,11 @@ export class IndexComponent implements OnInit {
       .toPromise()
       .catch()
       .then(() => this.refresh.next());
+  }
+
+  deleteMany() {
+    const promises = this.selectedStorageIds.map(id => this.storage.delete(id).toPromise());
+    return Promise.all(promises).then(() => this.refresh.next());
   }
 
   sortStorage({...value}) {

@@ -31,4 +31,6 @@ func.register("equal", builtin.equal);
 
 func.register("regex", builtin.regex);
 
+// date
 func.register("unixTime", builtin.unixTime);
+func.register("now", builtin.now);

@@ -54,17 +54,11 @@ describe("Identity Setting Component", () => {
                   default: "something default",
                   type: "string",
                   readOnly: true,
-                  title: "title",
-                  options: {
-                    visible: true
-                  }
+                  title: "title"
                 },
                 prop2: {
                   type: "string",
-                  readOnly: false,
-                  options: {
-                    visible: true
-                  }
+                  readOnly: false
                 }
               }
             }
@@ -142,9 +136,6 @@ describe("Identity Setting Component", () => {
       fixture.detectChanges();
 
       expect(
-        document.body.querySelector("div.mat-menu-item:nth-child(1) mat-checkbox").classList
-      ).toContain("mat-checkbox-checked", "this should be checked if this property is visible");
-      expect(
         document.body.querySelector("div.mat-menu-item:nth-child(2) mat-checkbox").classList
       ).toContain("mat-checkbox-checked", "this should be checked if this property is readonly");
       expect(
@@ -159,10 +150,7 @@ describe("Identity Setting Component", () => {
         default: "something default",
         type: "string",
         readOnly: true,
-        title: "title",
-        options: {
-          visible: true
-        }
+        title: "title"
       });
     });
 
@@ -235,10 +223,7 @@ describe("Identity Setting Component", () => {
           default: "something default",
           type: "string",
           readOnly: true,
-          title: "title",
-          options: {
-            visible: true
-          }
+          title: "title"
         }
       });
     });

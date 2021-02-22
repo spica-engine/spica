@@ -64,8 +64,13 @@ export class StorageService {
   }
 
   async deleteOne(id: ObjectId): Promise<void> {
+    const deletedCount = await this._collection.deleteOne({_id: id}).then(res => res.deletedCount);
+
+    if (!deletedCount) {
+      return;
+    }
+
     await this.service.delete(id.toHexString());
-    return this._collection.deleteOne({_id: id}).then(() => undefined);
   }
 
   async updateOne(

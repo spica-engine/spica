@@ -95,15 +95,20 @@ export class PolicyAddComponent implements OnInit {
     );
 
     if (actionIndex == -1) {
-      const includes = [this.services[statement.module][action].map(() => "*").join("/")];
+      const newStatement: any = {
+        name: action
+      };
 
-      statement.actions.push({
-        name: action,
-        resource: {
+      const acceptResource = this.acceptsResource(statement, action);
+      if (acceptResource) {
+        const includes = [this.services[statement.module][action].map(() => "*").join("/")];
+        newStatement.resource = {
           include: includes,
           exclude: []
-        }
-      });
+        };
+      }
+
+      statement.actions.push(newStatement);
     } else {
       statement.actions.splice(actionIndex, 1);
     }

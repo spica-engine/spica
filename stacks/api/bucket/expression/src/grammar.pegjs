@@ -88,8 +88,8 @@ Atomic
   / "("  expr:Expr  ")" { return expr }
   / "."  primary:CHILDIDENT { return {kind: "operator", type: "fully_qualify", category:"unary", primary}}
 
-ExprList = WHITESPACE left:Expr WHITESPACE right:("," WHITESPACE expr:Expr WHITESPACE {return expr})* {
-	const expressions = [left];
+ExprList = WHITESPACE left:(Expr / "") WHITESPACE right:("," WHITESPACE expr:Expr WHITESPACE {return expr})* {
+	const expressions = left != "" ? [left] : [];
 	if (right) {
 		expressions.push(...right);
 	} 
