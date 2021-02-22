@@ -65,6 +65,7 @@ ts_library(
     ],
     deps = [
         "//packages/core",
+        "//packages/core/schema",
         "//packages/core/testing",
         "//packages/database/testing",
         "//stacks/api/bucket",

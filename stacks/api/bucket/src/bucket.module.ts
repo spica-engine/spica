@@ -27,7 +27,8 @@ export class BucketModule {
           require("./schemas/bucket.schema.json"),
           require("./schemas/buckets.schema.json")
         ],
-        keywords: [bucketSpecificDefault]
+        keywords: [bucketSpecificDefault],
+        customFields: ["options", "bucketId", "relationType", "dependent"]
       }),
       ServicesModule
     ];

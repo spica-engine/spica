@@ -48,12 +48,17 @@ export class Validator {
           return formats;
         }, {}),
       schemas: new Array().concat(local.schemas || []).concat(global.schemas || []),
-      strict: false,
+      strict: true,
       ["defaults" as any]: this._defaults
     });
 
     this.registerKeyword(defaultVocabulary);
     this.registerKeyword(formatVocabulary);
+
+    const customFields = (global.customFields ? global.customFields : []).concat(
+      local.customFields ? local.customFields : []
+    );
+    this._ajv.addVocabulary(customFields);
 
     for (const keyword of new Array<Keyword>()
       .concat(local.keywords || [])
