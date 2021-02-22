@@ -9,6 +9,14 @@ const functions = [
     text: "has(document$0)"
   },
   {
+    label: "now",
+    detail: "(method) now(): number",
+    description: {
+      value: `Returns unix timestamp of the request execution.\n`
+    },
+    text: "now()"
+  },
+  {
     label: "unixTime",
     detail: "(method) unixTime(fieldPath: unknown): number",
     description: {
