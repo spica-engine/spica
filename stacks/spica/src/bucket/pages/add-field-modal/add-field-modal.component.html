@@ -98,11 +98,6 @@
             Primary field
           </mat-checkbox>
         </div>
-        <div *ngIf="visibleTypes.includes(fieldConfig.type)">
-          <mat-checkbox [(ngModel)]="propertyKv.options.visible">
-            Visible on list
-          </mat-checkbox>
-        </div>
         <div
           *ngIf="translatableTypes.includes(fieldConfig.type)"
           matTooltip="You can't change this property after creation."

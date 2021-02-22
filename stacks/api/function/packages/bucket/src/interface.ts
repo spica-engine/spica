@@ -16,7 +16,6 @@ export interface Bucket {
 interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
   options: {
-    visible?: boolean;
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";

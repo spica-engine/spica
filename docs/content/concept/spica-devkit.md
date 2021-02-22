@@ -177,7 +177,7 @@ export default function(req, res) {
       name: {
         type: "string",
         title: "name",
-        options: {position: "left", visible: true}
+        options: {position: "left"}
       },
       surname: {
         type: "string",
@@ -207,7 +207,7 @@ export default function(req, res) {
       name: {
         type: "string",
         title: "name",
-        options: {position: "left", visible: true}
+        options: {position: "left"}
       },
       surname: {
         type: "string",
@@ -261,7 +261,6 @@ Note: Additionally, `Bucket.data.get()` function accepts a third optional `optio
 ```
 
 For more information about `Access Control Rules`, please visit [this page](https://spicaengine.com/docs/guide/bucket#rules).
-
 
 ###### Bucket Data Get with Parameters
 

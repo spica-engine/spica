@@ -20,6 +20,7 @@ import {PreferencesService} from "@spica-client/core";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {FormsModule} from "@angular/forms";
 import {PolicyService} from "../../services/policy.service";
+import {MatDividerModule} from "@angular/material/divider";
 
 @Component({
   template: `
@@ -50,7 +51,8 @@ describe("IdentityIndexComponent", () => {
         NoopAnimationsModule,
         RouterTestingModule,
         MatCheckboxModule,
-        FormsModule
+        FormsModule,
+        MatDividerModule
       ],
       declarations: [IdentityIndexComponent, ToolbarCmp, CanInteractDirectiveTest]
     });
