@@ -46,6 +46,11 @@
     margin: auto;
   }
 
+  .unselected {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+
   mat-grid-list {
     margin: 30px;
     margin-top: -85px;
