@@ -533,7 +533,7 @@ describe("GraphQLController", () => {
                   type: "string",
                   title: "title",
                   description: "Title of the row",
-                  options: {position: "left", translate: true, visible: true}
+                  options: {position: "left", translate: true}
                 },
                 description: {
                   type: "textarea",

@@ -451,7 +451,7 @@ describe("BucketDataController", () => {
                 type: "string",
                 title: "title",
                 description: "Title of the row",
-                options: {position: "left", translate: true, visible: true}
+                options: {position: "left", translate: true}
               },
               description: {
                 type: "textarea",
@@ -661,7 +661,7 @@ describe("BucketDataController", () => {
             properties: {
               achievement: {
                 type: "relation",
-                options: {position: "left", visible: true},
+                options: {position: "left"},
                 bucketId: achievementsBucket._id,
                 relationType: "onetoone"
               },
@@ -1114,7 +1114,7 @@ describe("BucketDataController", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           description: {
             type: "textarea",
@@ -1256,7 +1256,7 @@ describe("BucketDataController", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           description: {
             type: "textarea",

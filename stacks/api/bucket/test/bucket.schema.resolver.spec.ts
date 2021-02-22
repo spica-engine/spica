@@ -50,7 +50,7 @@ describe("Bucket Schema Resolver", () => {
         type: "string",
         title: "title",
         description: "Title of the row",
-        options: {position: "left", visible: true}
+        options: {position: "left"}
       },
       description: {
         type: "textarea",
@@ -62,7 +62,7 @@ describe("Bucket Schema Resolver", () => {
         type: "string",
         title: "translatable text",
         description: "Text of the row",
-        options: {position: "left", visible: true, translate: true}
+        options: {position: "left", translate: true}
       }
     }
   };
