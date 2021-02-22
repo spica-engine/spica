@@ -31,17 +31,11 @@ describe("Identity Add Component", () => {
         properties: {
           prop1: {
             type: "string",
-            readOnly: true,
-            options: {
-              visible: true
-            }
+            readOnly: true
           },
           prop2: {
             type: "string",
-            readOnly: false,
-            options: {
-              visible: true
-            }
+            readOnly: false
           }
         }
       }

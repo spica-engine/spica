@@ -59,7 +59,6 @@ describe("BucketAddComponent", () => {
         description: "description of prop1",
         options: {
           position: "left",
-          visible: true,
           translate: true
         }
       },
@@ -69,7 +68,6 @@ describe("BucketAddComponent", () => {
         description: "description of prop2",
         options: {
           position: "right",
-          visible: false,
           translate: false
         }
       }
@@ -156,7 +154,7 @@ describe("BucketAddComponent", () => {
               type: "string",
               description: "description of prop1",
               title: "title of prop1",
-              options: {position: "left", visible: true, translate: true}
+              options: {position: "left", translate: true}
             }
           }
         ],
@@ -169,7 +167,6 @@ describe("BucketAddComponent", () => {
               title: "title of prop2",
               options: {
                 position: "right",
-                visible: false,
                 translate: false
               }
             }
@@ -177,7 +174,6 @@ describe("BucketAddComponent", () => {
         ],
         bottom: []
       });
-      expect(fixture.componentInstance.isThereVisible).toBe(true);
     });
 
     it("should render component", () => {
@@ -224,7 +220,7 @@ describe("BucketAddComponent", () => {
             type: "string",
             description: "description of prop1",
             title: "title of prop1",
-            options: {position: "left", visible: true, translate: true}
+            options: {position: "left", translate: true}
           }
         }
       ]);
@@ -242,7 +238,6 @@ describe("BucketAddComponent", () => {
             title: "title of prop2",
             options: {
               position: "right",
-              visible: false,
               translate: false
             }
           }
@@ -311,7 +306,6 @@ describe("BucketAddComponent", () => {
             description: "description of prop2",
             options: {
               position: "right",
-              visible: false,
               translate: false
             }
           }
@@ -476,16 +470,6 @@ describe("BucketAddComponent", () => {
           fixture.debugElement.query(By.css("mat-card mat-list span.errors mat-error"))
             .nativeElement.textContent
         ).toBe(" Please select a primary property. ");
-      });
-
-      it("should show visible property error", () => {
-        fixture.componentInstance.bucket.properties.prop1.options.visible = false;
-        fixture.componentInstance.updatePositionProperties();
-        fixture.detectChanges();
-        expect(
-          fixture.debugElement.query(By.css("mat-card mat-list span.errors mat-error"))
-            .nativeElement.textContent
-        ).toBe(" You have to make at least a property visible at the list. ");
       });
     });
   });

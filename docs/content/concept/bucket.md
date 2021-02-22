@@ -28,8 +28,6 @@ You'll see the name of the newly created property is added to the list. Click on
 
 `Primary field`: Primary field is mainly used for building relations between data.
 
-`Visible on the list`: Effects the list view on Spica Client. Defines whether the field will be shown on list view by default.
-
 `Translate`: Marks the field as translatable. For more information please check [Translation and Localization](###translation-and-localization) section.
 
 ### Validations

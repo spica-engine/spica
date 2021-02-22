@@ -77,8 +77,7 @@ export class TutorialComponent implements OnInit, AfterViewInit {
         type: this.inputTypes.indexOf(curr.type) > -1 ? curr.type : "string",
         description: `Description of ${curr.key}`,
         options: {
-          position: "bottom",
-          visible: true
+          position: "bottom"
         }
       };
       return acc;

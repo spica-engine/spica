@@ -46,7 +46,6 @@ describe("Add Field Component", () => {
         description: "description of prop1",
         options: {
           position: "left",
-          visible: true,
           translate: true
         }
       },
@@ -56,7 +55,6 @@ describe("Add Field Component", () => {
         description: "description of prop2",
         options: {
           position: "right",
-          visible: false,
           translate: false
         }
       },
@@ -65,8 +63,7 @@ describe("Add Field Component", () => {
         title: "title of prop3",
         description: "description of prop3",
         options: {
-          position: "right",
-          visible: false
+          position: "right"
         }
       }
     }
