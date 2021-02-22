@@ -269,9 +269,6 @@ const bucketSchema: JSONSchema7 = {
                 options: {
                   type: "object",
                   properties: {
-                    visible: {
-                      type: "boolean"
-                    },
                     translate: {
                       type: "boolean"
                     },
@@ -282,7 +279,8 @@ const bucketSchema: JSONSchema7 = {
                       type: "string",
                       enum: ["left", "right", "bottom"]
                     }
-                  }
+                  },
+                  additionalProperties: false
                 }
               }
             }
