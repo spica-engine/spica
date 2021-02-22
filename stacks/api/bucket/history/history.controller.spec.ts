@@ -59,7 +59,7 @@ describe("History Acceptance", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           description: {
             type: "string",

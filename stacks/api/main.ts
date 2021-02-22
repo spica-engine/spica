@@ -90,9 +90,13 @@ const args = yargs
       default: Number.MAX_SAFE_INTEGER
     },
     "passport-identity-token-expires-in": {
-      string: true,
-      description: "Lifespan of the issued JWT tokens.",
-      default: "2days"
+      number: true,
+      description: "Default lifespan of the issued JWT tokens. Unit: second",
+      default: 60 * 60 * 24 * 2
+    },
+    "passport-identity-token-expiration-seconds-limit": {
+      number: true,
+      description: "Maximum lifespan of the requested JWT token can have. Unit: second"
     },
     "passport-default-identity-identifier": {
       string: true,
@@ -254,12 +258,28 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
   .check(args => {
+    if (!args["passport-identity-token-expiration-seconds-limit"]) {
+      args["passport-identity-token-expiration-seconds-limit"] =
+        args["passport-identity-token-expires-in"];
+    }
+
+    if (
+      args["passport-identity-token-expiration-seconds-limit"] <
+      args["passport-identity-token-expires-in"]
+    ) {
+      throw new TypeError(
+        `--passport-identity-token-expiration-seconds-limit(${args["passport-identity-token-expiration-seconds-limit"]} seconds) can not be less than --passport-identity-token-expires-in(${args["passport-identity-token-expires-in"]} seconds)`
+      );
+    }
+
     if (!args["default-storage-public-url"]) {
       args["default-storage-public-url"] = args["public-url"];
     }
+
     if (!args["function-api-url"]) {
       args["function-api-url"] = args["public-url"];
     }
+
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -268,16 +288,19 @@ Example: http(s)://doomed-d45f1.spica.io/api`
         "--gcloud-service-account-path and --gcloud-bucket-name options must be present when --storage-strategy is set to 'gcloud'."
       );
     }
+
     if (args["storage-strategy"] == "default") {
       if (!args["default-storage-path"]) {
         throw new TypeError(
           "--default-storage-path options must be present when --storage-strategy is set to 'default'."
         );
       }
+
       if (path.isAbsolute(args["default-storage-path"])) {
         throw new TypeError("--default-storage-path must be relative.");
       }
     }
+
     return true;
   })
   .parserConfiguration({
@@ -320,7 +343,7 @@ const modules = [
     secretOrKey: args["passport-secret"],
     issuer: args["public-url"],
     expiresIn: args["passport-identity-token-expires-in"],
-
+    maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
     defaultStrategy: args["passport-default-strategy"],
     identityCountLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],

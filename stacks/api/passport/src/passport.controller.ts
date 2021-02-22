@@ -22,6 +22,8 @@ import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
 import {SamlService} from "./saml.service";
 import {StrategyService} from "./strategy/strategy.service";
+import {NUMBER} from "@spica-server/core";
+import {Schema} from "@spica-server/core/schema";
 
 /**
  * @name passport
@@ -41,7 +43,8 @@ export class PassportController {
     @Query("identifier") identifier: string,
     @Query("password") password: string,
     @Query("state") state: string,
-    @Req() req: any
+    @Req() req: any,
+    @Query("expires", NUMBER) expiresIn?: number
   ) {
     req.res.append(
       "Warning",
@@ -93,11 +96,13 @@ export class PassportController {
       }
     }
 
-    return this.identity.sign(identity);
+    return this.identity.sign(identity, expiresIn);
   }
 
   @Post("identify")
-  async identifyWithPost(@Body() credentials: LoginCredentials) {
+  async identifyWithPost(
+    @Body(Schema.validate("http://spica.internal/login")) credentials: LoginCredentials
+  ) {
     let identity: Identity;
 
     if (!credentials.state) {
@@ -143,7 +148,7 @@ export class PassportController {
       }
     }
 
-    return this.identity.sign(identity);
+    return this.identity.sign(identity, credentials.expires);
   }
 
   @Get("strategies")

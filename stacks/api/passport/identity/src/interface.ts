@@ -11,6 +11,7 @@ export interface LoginCredentials {
   identifier: string;
   password: string;
   state?: string;
+  expires?: number;
 }
 
 export interface Service {

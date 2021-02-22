@@ -89,7 +89,9 @@ describe("Storage/IndexComponent", () => {
         {
           provide: MatDialog,
           useValue: {
-            open: null
+            open: jasmine.createSpy("open").and.returnValue({
+              afterClosed: jasmine.createSpy("afterClosed").and.returnValue(of(null))
+            })
           }
         },
         {
@@ -137,7 +139,6 @@ describe("Storage/IndexComponent", () => {
 
   describe("actions", () => {
     it("show navigate to the edit page", fakeAsync(() => {
-      const openSpy = spyOn(fixture.componentInstance.dialog, "open").and.callThrough();
       fixture.debugElement
         .query(
           By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-actions mat-menu")
@@ -154,8 +155,8 @@ describe("Storage/IndexComponent", () => {
       tick(500);
       fixture.detectChanges();
 
-      expect(openSpy).toHaveBeenCalledTimes(1);
-      expect(openSpy).toHaveBeenCalledWith(ImageEditorComponent, {
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(ImageEditorComponent, {
         maxWidth: "80%",
         maxHeight: "80%",
         panelClass: "edit-object",
@@ -375,7 +376,6 @@ describe("Storage/IndexComponent", () => {
     });
 
     it("should open preview", () => {
-      const openSpy = spyOn(fixture.componentInstance.dialog, "open").and.callThrough();
       fixture.debugElement
         .query(
           By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-content storage-view")
@@ -383,20 +383,23 @@ describe("Storage/IndexComponent", () => {
         .nativeElement.click();
       fixture.detectChanges();
 
-      expect(openSpy).toHaveBeenCalledTimes(1);
-      expect(openSpy).toHaveBeenCalledWith(StorageDialogOverviewDialog, {
-        maxWidth: "80%",
-        maxHeight: "80%",
-        panelClass: "preview-object",
-        data: {
-          _id: "1",
-          name: "test1",
-          content: {
-            type: "image/png"
-          },
-          url: `http://example/test.png`
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(
+        StorageDialogOverviewDialog,
+        {
+          maxWidth: "80%",
+          maxHeight: "80%",
+          panelClass: "preview-object",
+          data: {
+            _id: "1",
+            name: "test1",
+            content: {
+              type: "image/png"
+            },
+            url: `http://example/test.png`
+          }
         }
-      });
+      );
     });
 
     describe("sorts", () => {
