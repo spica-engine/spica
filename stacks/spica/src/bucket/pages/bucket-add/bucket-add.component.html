@@ -171,9 +171,6 @@
             <mat-error *ngIf="bucket.primary == undefined">
               Please select a primary property.
             </mat-error>
-            <mat-error *ngIf="!isThereVisible">
-              You have to make at least a property visible at the list.
-            </mat-error>
           </span>
 
           <mat-list-item class="properties">
@@ -355,7 +352,6 @@
         [disabled]="
           describeForm.invalid ||
           (bucket.properties | keyvalue)?.length < 1 ||
-          !isThereVisible ||
           bucket.primary == undefined ||
           !!state
         "
