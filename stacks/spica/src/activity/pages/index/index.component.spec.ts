@@ -20,7 +20,7 @@ import {ACTIVITY_FACTORY} from "@spica-client/core";
 import {of} from "rxjs";
 import {ActivityService} from "../../services/activity.service";
 import {IndexComponent} from "../index/index.component";
-import {MatDividerModule} from '@angular/material/divider';
+import {MatDividerModule} from "@angular/material/divider";
 
 describe("IndexComponent", () => {
   let component: IndexComponent;

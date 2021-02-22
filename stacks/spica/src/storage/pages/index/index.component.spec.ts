@@ -234,19 +234,22 @@ describe("Storage/IndexComponent", () => {
       fixture.detectChanges();
 
       expect(fixture.componentInstance.dialog.open).toHaveBeenCalledTimes(1);
-      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(StorageDialogOverviewDialog, {
-        maxWidth: "80%",
-        maxHeight: "80%",
-        panelClass: "preview-object",
-        data: {
-          _id: "1",
-          name: "test1",
-          content: {
-            type: "image/png"
-          },
-          url: `http://example/test.png`
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(
+        StorageDialogOverviewDialog,
+        {
+          maxWidth: "80%",
+          maxHeight: "80%",
+          panelClass: "preview-object",
+          data: {
+            _id: "1",
+            name: "test1",
+            content: {
+              type: "image/png"
+            },
+            url: `http://example/test.png`
+          }
         }
-      });
+      );
     });
 
     describe("sorts", () => {
