@@ -254,12 +254,11 @@ describe("Storage/IndexComponent", () => {
             .nativeElement.textContent
         ).toEqual("select_all Select All ");
 
-        expect(cards.map(card => card.nativeElement.style.opacity)).toEqual(["0.5", "0.5", "0.5"]);
-        expect(cards.map(card => card.nativeElement.style.transform)).toEqual([
-          "scale(0.9)",
-          "scale(0.9)",
-          "scale(0.9)"
-        ]);
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([true, true, true]);
 
         // disabling child elements events when selection mode on
         expect(
@@ -282,24 +281,22 @@ describe("Storage/IndexComponent", () => {
 
         expect(fixture.componentInstance.selectedStorageIds).toEqual(["1", "2"]);
 
-        expect(cards.map(card => card.nativeElement.style.opacity)).toEqual(["1", "1", "0.5"]);
-        expect(cards.map(card => card.nativeElement.style.transform)).toEqual([
-          "scale(1)",
-          "scale(1)",
-          "scale(0.9)"
-        ]);
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([false, false, true]);
 
         cards[0].nativeElement.click();
         fixture.detectChanges();
 
         expect(fixture.componentInstance.selectedStorageIds).toEqual(["2"]);
 
-        expect(cards.map(card => card.nativeElement.style.opacity)).toEqual(["0.5", "1", "0.5"]);
-        expect(cards.map(card => card.nativeElement.style.transform)).toEqual([
-          "scale(0.9)",
-          "scale(1)",
-          "scale(0.9)"
-        ]);
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([true, false, true]);
 
         expect(
           cards.map(
@@ -324,12 +321,11 @@ describe("Storage/IndexComponent", () => {
         expect(fixture.componentInstance.selectionActive).toEqual(false);
         expect(fixture.componentInstance.selectedStorageIds).toEqual([]);
 
-        expect(cards.map(card => card.nativeElement.style.opacity)).toEqual(["1", "1", "1"]);
-        expect(cards.map(card => card.nativeElement.style.transform)).toEqual([
-          "scale(1)",
-          "scale(1)",
-          "scale(1)"
-        ]);
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([false, false, false]);
 
         expect(
           cards.map(
@@ -352,12 +348,11 @@ describe("Storage/IndexComponent", () => {
 
         expect(fixture.componentInstance.selectedStorageIds).toEqual(["1", "2", "3"]);
 
-        expect(cards.map(card => card.nativeElement.style.opacity)).toEqual(["1", "1", "1"]);
-        expect(cards.map(card => card.nativeElement.style.transform)).toEqual([
-          "scale(1)",
-          "scale(1)",
-          "scale(1)"
-        ]);
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([false, false, false]);
       });
 
       it("should delete selected objects ", fakeAsync(() => {
