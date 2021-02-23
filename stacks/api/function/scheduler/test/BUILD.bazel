@@ -23,8 +23,7 @@ ts_library(
     ],
 )
 
-# TODO: https://dreamharvesters.atlassian.net/secure/RapidBoard.jspa?rapidView=39&modal=detail&selectedIssue=SP-536
-# jasmine_node_test(
-#     name = "scheduler_test",
-#     srcs = [":scheduler"],
-# )
+jasmine_node_test(
+    name = "scheduler_test",
+    srcs = [":scheduler"],
+)

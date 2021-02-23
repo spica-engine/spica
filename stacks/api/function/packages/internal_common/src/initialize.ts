@@ -1,9 +1,12 @@
 import {ApikeyInitialization, IdentityInitialization, InitializationResult} from "./interface";
+import {Axios} from "./request";
+
+let service: Axios;
 
 export function initialize(
   options: ApikeyInitialization | IdentityInitialization
 ): InitializationResult {
-  let authorization;
+  let authorization: string;
   if ("apikey" in options) {
     authorization = `APIKEY ${options.apikey}`;
   } else if ("identity" in options) {
@@ -17,7 +20,14 @@ export function initialize(
     throw new Error("Public url must be provided.");
   }
 
-  return {authorization, publicUrl};
+  if (!service) {
+    service = new Axios({baseURL: publicUrl, headers: {Authorization: authorization}});
+  } else {
+    service.setBaseUrl(publicUrl);
+    service.setAuthorization(authorization);
+  }
+
+  return {authorization, publicUrl, service};
 }
 
 export function checkInitialized(authorization: string) {

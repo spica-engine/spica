@@ -1,7 +1,8 @@
-import {Component} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 import {BucketService} from "../../services/bucket.service";
+import {NgModel} from "@angular/forms";
 
 @Component({
   selector: "property-language",
@@ -18,6 +19,8 @@ export class PropertyLanguageComponent {
     }[]
   >;
 
+  @Input() model: NgModel;
+
   constructor(bs: BucketService) {
     this.languages$ = bs.getPreferences().pipe(
       map(prefs => {
@@ -25,5 +28,13 @@ export class PropertyLanguageComponent {
         return Object.entries(prefs.language.available).map(([code, name]) => ({code, name}));
       })
     );
+  }
+
+  onLanguageChange() {
+    setTimeout(() => {
+      if (this.model && this.model.value == undefined) {
+        this.model.control.reset();
+      }
+    }, 1);
   }
 }

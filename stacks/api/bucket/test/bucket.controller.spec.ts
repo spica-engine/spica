@@ -4,7 +4,7 @@ import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
-import {OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {OBJECTID_STRING, OBJECT_ID, DATE_TIME} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -45,7 +45,7 @@ describe("BucketController", () => {
     const module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECT_ID, OBJECTID_STRING],
+          formats: [OBJECT_ID, OBJECTID_STRING, DATE_TIME],
           defaults: [CREATED_AT, UPDATED_AT]
         }),
         CoreTestingModule,
@@ -758,20 +758,20 @@ describe("BucketController", () => {
     });
 
     it("should delete users, update scores bucket schema and data when the users bucket deleted", async () => {
-      let deleteResponse = await req.delete(`/bucket/${usersBucket._id}`);
+      const deleteResponse = await req.delete(`/bucket/${usersBucket._id}`);
       expect([deleteResponse.statusCode, deleteResponse.statusText]).toEqual([204, "No Content"]);
       expect(deleteResponse.body).toEqual(undefined);
 
-      let {body: usersBucketResponse} = await req.get(`/bucket/${usersBucket._id}`, {});
+      const {body: usersBucketResponse} = await req.get(`/bucket/${usersBucket._id}`, {});
       expect(usersBucketResponse).toBeUndefined();
 
-      let usersDocumentResponse = await req.get(`/bucket/${usersBucket._id}/data`, {});
+      const usersDocumentResponse = await req.get(`/bucket/${usersBucket._id}/data`, {});
       expect([usersDocumentResponse.statusCode, usersDocumentResponse.statusText]).toEqual([
         404,
         "Not Found"
       ]);
 
-      let {body: scoresBucketResponse} = await req.get(`/bucket/${scoresBucket._id}`, {});
+      const {body: scoresBucketResponse} = await req.get(`/bucket/${scoresBucket._id}`, {});
       expect(scoresBucketResponse.properties).toEqual({
         score: {
           type: "number",
@@ -786,7 +786,8 @@ describe("BucketController", () => {
         }
       });
 
-      let {body: scoresDocumentResponse} = await req.get(`/bucket/${scoresBucket._id}/data`, {});
+      const {body: scoresDocumentResponse} = await req.get(`/bucket/${scoresBucket._id}/data`, {});
+
       expect(scoresDocumentResponse).toEqual([
         {
           _id: score._id,

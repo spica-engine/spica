@@ -41,8 +41,7 @@ export class IdentityModule {
           secret: options.secretOrKey,
           signOptions: {
             audience: options.audience,
-            issuer: options.issuer,
-            expiresIn: options.expiresIn
+            issuer: options.issuer
           }
         }),
         SchemaModule.forChild({
