@@ -3,7 +3,8 @@ import {
   FormatDefinition,
   KeywordDefinition,
   FuncKeywordDefinition,
-  MacroKeywordDefinition
+  MacroKeywordDefinition,
+  Vocabulary
 } from "ajv";
 import {Observable} from "rxjs";
 
@@ -35,4 +36,5 @@ export interface ModuleOptions {
   defaults?: Default[];
   keywords?: Keyword[];
   formats?: Format[];
+  customFields?: Vocabulary;
 }

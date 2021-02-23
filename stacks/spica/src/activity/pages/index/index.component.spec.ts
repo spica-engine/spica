@@ -20,6 +20,7 @@ import {ACTIVITY_FACTORY} from "@spica-client/core";
 import {of} from "rxjs";
 import {ActivityService} from "../../services/activity.service";
 import {IndexComponent} from "../index/index.component";
+import {MatDividerModule} from "@angular/material/divider";
 
 describe("IndexComponent", () => {
   let component: IndexComponent;
@@ -60,7 +61,8 @@ describe("IndexComponent", () => {
         MatListModule,
         MatProgressSpinnerModule,
         RouterTestingModule,
-        MatTooltipModule
+        MatTooltipModule,
+        MatDividerModule
       ],
       declarations: [IndexComponent, BuildLinkPipe],
       providers: [

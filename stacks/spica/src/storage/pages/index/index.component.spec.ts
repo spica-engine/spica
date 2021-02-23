@@ -24,12 +24,13 @@ import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overv
 import {StorageViewComponent} from "../../components/storage-view/storage-view.component";
 import {StorageService} from "../../storage.service";
 import {IndexComponent} from "./index.component";
+import {DebugElement} from "@angular/core";
 
 describe("Storage/IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
   let storageService: jasmine.SpyObj<Partial<StorageService>>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     storageService = {
       getAll: jasmine.createSpy("getAll").and.returnValue(
         of({
@@ -43,15 +44,6 @@ describe("Storage/IndexComponent", () => {
               },
               url: "http://example/test.png"
             },
-
-            {
-              _id: "3",
-              name: "test3",
-              content: {
-                type: "video/mp4"
-              },
-              url: "http://example/test3.mp4"
-            },
             {
               _id: "2",
               name: "test2",
@@ -59,6 +51,14 @@ describe("Storage/IndexComponent", () => {
                 type: "text/txt"
               },
               url: "http://example/test2.txt"
+            },
+            {
+              _id: "3",
+              name: "test3",
+              content: {
+                type: "video/mp4"
+              },
+              url: "http://example/test3.mp4"
             }
           ]
         })
@@ -89,7 +89,9 @@ describe("Storage/IndexComponent", () => {
         {
           provide: MatDialog,
           useValue: {
-            open: null
+            open: jasmine.createSpy("open").and.returnValue({
+              afterClosed: jasmine.createSpy("afterClosed").and.returnValue(of(null))
+            })
           }
         },
         {
@@ -113,6 +115,9 @@ describe("Storage/IndexComponent", () => {
 
     fixture = TestBed.createComponent(IndexComponent);
     fixture.detectChanges(false);
+
+    await fixture.whenStable();
+    fixture.detectChanges(false);
   });
 
   describe("basic behaviours", () => {
@@ -134,7 +139,6 @@ describe("Storage/IndexComponent", () => {
 
   describe("actions", () => {
     it("show navigate to the edit page", fakeAsync(() => {
-      const openSpy = spyOn(fixture.componentInstance.dialog, "open").and.callThrough();
       fixture.debugElement
         .query(
           By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-actions mat-menu")
@@ -151,8 +155,8 @@ describe("Storage/IndexComponent", () => {
       tick(500);
       fixture.detectChanges();
 
-      expect(openSpy).toHaveBeenCalledTimes(1);
-      expect(openSpy).toHaveBeenCalledWith(ImageEditorComponent, {
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(ImageEditorComponent, {
         maxWidth: "80%",
         maxHeight: "80%",
         panelClass: "edit-object",
@@ -224,8 +228,154 @@ describe("Storage/IndexComponent", () => {
       expect(refreshSpy).toHaveBeenCalledTimes(1);
     }));
 
+    describe("selection mode", () => {
+      let cards: DebugElement[] = [];
+      beforeEach(() => {
+        const selectButton = fixture.debugElement.query(
+          By.css("mat-toolbar div.actions button:first-of-type")
+        ).nativeElement;
+
+        selectButton.click();
+        fixture.detectChanges();
+
+        cards = fixture.debugElement.queryAll(By.css("mat-grid-list mat-grid-tile mat-card"));
+      });
+
+      it("should switch selection mode on", () => {
+        expect(fixture.componentInstance.selectionActive).toEqual(true);
+        expect(fixture.componentInstance.selectedStorageIds).toEqual([]);
+
+        expect(
+          fixture.debugElement.query(By.css("mat-toolbar div.actions button:nth-of-type(1)"))
+            .nativeElement.textContent
+        ).toEqual("cancel Cancel ");
+
+        expect(
+          fixture.debugElement.query(By.css("mat-toolbar div.actions button:nth-of-type(2)"))
+            .nativeElement.textContent
+        ).toEqual("select_all Select All ");
+
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([true, true, true]);
+
+        // disabling child elements events when selection mode on
+        expect(
+          cards.map(
+            card => card.query(By.css("mat-card-content")).nativeElement.style["pointer-events"]
+          )
+        ).toEqual(["none", "none", "none"]);
+
+        expect(
+          cards.map(
+            card => card.query(By.css("mat-card-actions")).nativeElement.style["pointer-events"]
+          )
+        ).toEqual(["none", "none", "none"]);
+      });
+
+      it("should select and deselect objects, but keep their pointer-events none", () => {
+        cards[0].nativeElement.click();
+        cards[1].nativeElement.click();
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.selectedStorageIds).toEqual(["1", "2"]);
+
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([false, false, true]);
+
+        cards[0].nativeElement.click();
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.selectedStorageIds).toEqual(["2"]);
+
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([true, false, true]);
+
+        expect(
+          cards.map(
+            card => card.query(By.css("mat-card-content")).nativeElement.style["pointer-events"]
+          )
+        ).toEqual(["none", "none", "none"]);
+
+        expect(
+          cards.map(
+            card => card.query(By.css("mat-card-actions")).nativeElement.style["pointer-events"]
+          )
+        ).toEqual(["none", "none", "none"]);
+      });
+
+      it("should cancel selections and switch selection mode off", () => {
+        cards[0].nativeElement.click();
+        fixture.debugElement
+          .query(By.css("mat-toolbar div.actions button:nth-of-type(1)"))
+          .nativeElement.click();
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.selectionActive).toEqual(false);
+        expect(fixture.componentInstance.selectedStorageIds).toEqual([]);
+
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([false, false, false]);
+
+        expect(
+          cards.map(
+            card => card.query(By.css("mat-card-content")).nativeElement.style["pointer-events"]
+          )
+        ).toEqual(["initial", "initial", "initial"]);
+
+        expect(
+          cards.map(
+            card => card.query(By.css("mat-card-actions")).nativeElement.style["pointer-events"]
+          )
+        ).toEqual(["initial", "initial", "initial"]);
+      });
+
+      it("should select all", () => {
+        fixture.debugElement
+          .query(By.css("mat-toolbar div.actions button:nth-of-type(2)"))
+          .nativeElement.click();
+        fixture.detectChanges();
+
+        expect(fixture.componentInstance.selectedStorageIds).toEqual(["1", "2", "3"]);
+
+        expect(
+          cards.map(card =>
+            (card.nativeElement as HTMLElement).classList.toString().includes("unselected")
+          )
+        ).toEqual([false, false, false]);
+      });
+
+      it("should delete selected objects ", fakeAsync(() => {
+        const deleleteSpy = spyOn(fixture.componentInstance["storage"], "delete").and.returnValue(
+          of(null)
+        );
+        const refreshSpy = spyOn(fixture.componentInstance.refresh, "next");
+
+        fixture.componentInstance.selectedStorageIds = ["1", "2"];
+        fixture.componentInstance.deleteMany();
+
+        tick(500);
+        fixture.detectChanges();
+
+        expect(deleleteSpy).toHaveBeenCalledTimes(2);
+        expect(deleleteSpy.calls.allArgs()).toEqual([["1"], ["2"]]);
+
+        expect(refreshSpy).toHaveBeenCalledTimes(1);
+      }));
+    });
+
     it("should open preview", () => {
-      const openSpy = spyOn(fixture.componentInstance.dialog, "open").and.callThrough();
       fixture.debugElement
         .query(
           By.css("mat-grid-list mat-grid-tile:nth-child(1) mat-card mat-card-content storage-view")
@@ -233,26 +383,29 @@ describe("Storage/IndexComponent", () => {
         .nativeElement.click();
       fixture.detectChanges();
 
-      expect(openSpy).toHaveBeenCalledTimes(1);
-      expect(openSpy).toHaveBeenCalledWith(StorageDialogOverviewDialog, {
-        maxWidth: "80%",
-        maxHeight: "80%",
-        panelClass: "preview-object",
-        data: {
-          _id: "1",
-          name: "test1",
-          content: {
-            type: "image/png"
-          },
-          url: `http://example/test.png`
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledTimes(1);
+      expect(fixture.componentInstance.dialog.open).toHaveBeenCalledWith(
+        StorageDialogOverviewDialog,
+        {
+          maxWidth: "80%",
+          maxHeight: "80%",
+          panelClass: "preview-object",
+          data: {
+            _id: "1",
+            name: "test1",
+            content: {
+              type: "image/png"
+            },
+            url: `http://example/test.png`
+          }
         }
-      });
+      );
     });
 
     describe("sorts", () => {
       beforeEach(() => {
         fixture.debugElement
-          .query(By.css("mat-toolbar button:first-of-type"))
+          .query(By.css("mat-toolbar button:nth-of-type(2)"))
           .nativeElement.click();
         fixture.detectChanges(false);
       });

@@ -1,7 +1,7 @@
 <div>
   <input-schema-placer
     [inputSchemaPlacer]="schema.items['type']"
-    [forbiddenTypes]="['relation', 'object', 'array']"
+    [forbiddenTypes]="['relation', 'array']"
     [(ngModel)]="schema.items"
     (ngModelChange)="getOrigin()"
   ></input-schema-placer>

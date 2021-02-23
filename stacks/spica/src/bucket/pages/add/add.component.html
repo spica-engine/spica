@@ -76,6 +76,7 @@
               #language
               matSuffix
               (click)="$event.stopPropagation()"
+              [model]="translateModel"
             ></property-language>
             <mat-error *ngIf="translateModel?.errors?.requiredTranslate && translateModel.touched">
               {{ language.default }} value is required as it is the default language.

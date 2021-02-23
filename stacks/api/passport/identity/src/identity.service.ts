@@ -12,7 +12,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     database: DatabaseService,
     private validator: Validator,
     private jwt: JwtService,
-    @Inject(IDENTITY_OPTIONS) options: IdentityOptions
+    @Inject(IDENTITY_OPTIONS) private options: IdentityOptions
   ) {
     super(database, options.identityCountLimit);
     this._coll.createIndex({identifier: 1}, {unique: true});
@@ -22,14 +22,24 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     return this.validator.defaults;
   }
 
-  sign(identity: Identity) {
+  sign(identity: Identity, requestedExpires?: number) {
+    let expiresIn = this.options.expiresIn;
+    if (requestedExpires) {
+      if (requestedExpires > this.options.maxExpiresIn) {
+        expiresIn = this.options.maxExpiresIn;
+      } else {
+        expiresIn = requestedExpires;
+      }
+    }
+
     const token = this.jwt.sign(
       {...identity, password: undefined},
       {
         header: {
           identifier: identity.identifier,
           policies: identity.policies
-        }
+        },
+        expiresIn
       }
     );
 

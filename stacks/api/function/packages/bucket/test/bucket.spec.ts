@@ -1,6 +1,6 @@
 import * as Bucket from "@spica-devkit/bucket";
 import * as Operators from "../src/operators";
-import {http} from "@spica-devkit/internal_common";
+import {Axios} from "@spica-devkit/internal_common";
 import {of} from "rxjs";
 
 jasmine.getEnv().allowRespy(true);
@@ -13,13 +13,13 @@ describe("@spica-devkit/bucket", () => {
   let wsSpy: jasmine.SpyObj<any>;
 
   beforeEach(() => {
+    getSpy = spyOn(Axios.prototype, "get").and.returnValue(Promise.resolve());
+    postSpy = spyOn(Axios.prototype, "post").and.returnValue(Promise.resolve());
+    putSpy = spyOn(Axios.prototype, "put").and.returnValue(Promise.resolve());
+    deleteSpy = spyOn(Axios.prototype, "delete").and.returnValue(Promise.resolve());
+
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Bucket.initialize({apikey: "TEST_APIKEY"});
-
-    getSpy = spyOn(http, "get").and.returnValue(Promise.resolve());
-    postSpy = spyOn(http, "post").and.returnValue(Promise.resolve());
-    putSpy = spyOn(http, "put").and.returnValue(Promise.resolve());
-    deleteSpy = spyOn(http, "del").and.returnValue(Promise.resolve());
 
     wsSpy = spyOn(Operators, "getWsObs").and.returnValue(of());
   });
@@ -42,7 +42,7 @@ describe("@spica-devkit/bucket", () => {
         name: {
           type: "string",
           title: "name",
-          options: {position: "left", visible: true}
+          options: {position: "left"}
         },
         surname: {
           type: "string",
@@ -56,10 +56,7 @@ describe("@spica-devkit/bucket", () => {
       Bucket.insert(bucket);
 
       expect(postSpy).toHaveBeenCalledTimes(1);
-      expect(postSpy).toHaveBeenCalledWith("http://test/bucket", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/json"},
-        body: JSON.stringify(bucket)
-      });
+      expect(postSpy).toHaveBeenCalledWith("bucket", bucket);
     });
 
     it("should update bucket", () => {
@@ -67,37 +64,28 @@ describe("@spica-devkit/bucket", () => {
       Bucket.update("bucket_id", updatedBucket);
 
       expect(putSpy).toHaveBeenCalledTimes(1);
-      expect(putSpy).toHaveBeenCalledWith("http://test/bucket/bucket_id", {
-        headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/json"},
-        body: JSON.stringify(updatedBucket)
-      });
+      expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id", updatedBucket);
     });
 
     it("should get all buckets", () => {
       Bucket.getAll();
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("http://test/bucket", {
-        headers: {Authorization: "APIKEY TEST_APIKEY"}
-      });
+      expect(getSpy).toHaveBeenCalledWith("bucket");
     });
 
     it("should get specific bucket", () => {
       Bucket.get("bucket_id");
 
       expect(getSpy).toHaveBeenCalledTimes(1);
-      expect(getSpy).toHaveBeenCalledWith("http://test/bucket/bucket_id", {
-        headers: {Authorization: "APIKEY TEST_APIKEY"}
-      });
+      expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id");
     });
 
     it("should remove bucket", () => {
       Bucket.remove("bucket_id");
 
       expect(deleteSpy).toHaveBeenCalledTimes(1);
-      expect(deleteSpy).toHaveBeenCalledWith("http://test/bucket/bucket_id", {
-        headers: {Authorization: "APIKEY TEST_APIKEY"}
-      });
+      expect(deleteSpy).toHaveBeenCalledWith("bucket/bucket_id");
     });
 
     describe("bucket-data", () => {
@@ -110,30 +98,23 @@ describe("@spica-devkit/bucket", () => {
         Bucket.data.insert("bucket_id", document);
 
         expect(postSpy).toHaveBeenCalledTimes(1);
-        expect(postSpy).toHaveBeenCalledWith("http://test/bucket/bucket_id/data", {
-          headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/json"},
-          body: JSON.stringify(document)
-        });
+        expect(postSpy).toHaveBeenCalledWith("bucket/bucket_id/data", document);
       });
 
       it("should update bucket-data", () => {
         Bucket.data.update("bucket_id", "document_id", document);
 
         expect(putSpy).toHaveBeenCalledTimes(1);
-        expect(putSpy).toHaveBeenCalledWith("http://test/bucket/bucket_id/data/document_id", {
-          headers: {Authorization: "APIKEY TEST_APIKEY", "Content-Type": "application/json"},
-          body: JSON.stringify(document)
-        });
+        expect(putSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", document);
       });
 
       it("should get bucket-data", () => {
         Bucket.data.get("bucket_id", "document_id");
 
-        const url = new URL("http://test/bucket/bucket_id/data/document_id");
-
         expect(getSpy).toHaveBeenCalledTimes(1);
-        expect(getSpy).toHaveBeenCalledWith(url, {
-          headers: {Authorization: "APIKEY TEST_APIKEY"}
+        expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", {
+          params: undefined,
+          headers: undefined
         });
       });
 
@@ -143,24 +124,20 @@ describe("@spica-devkit/bucket", () => {
           queryParams: {relation: true}
         });
 
-        const url = new URL("http://test/bucket/bucket_id/data/document_id?relation=true");
-
         expect(getSpy).toHaveBeenCalledTimes(1);
-        expect(getSpy).toHaveBeenCalledWith(url, {
-          headers: {"accept-language": "TR", Authorization: "APIKEY TEST_APIKEY"}
+        expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id/data/document_id", {
+          headers: {"accept-language": "TR"},
+          params: {relation: true}
         });
       });
 
       it("should get all bucket-data", () => {
         Bucket.data.getAll("bucket_id");
 
-        const url = new URL("http://test/bucket/bucket_id/data");
-
         expect(getSpy).toHaveBeenCalledTimes(1);
-        expect(getSpy).toHaveBeenCalledWith(url, {
-          headers: {
-            Authorization: "APIKEY TEST_APIKEY"
-          }
+        expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id/data", {
+          params: undefined,
+          headers: undefined
         });
       });
 
@@ -170,13 +147,14 @@ describe("@spica-devkit/bucket", () => {
           queryParams: {limit: 1, skip: 2}
         });
 
-        const url = new URL("http://test/bucket/bucket_id/data?limit=1&skip=2");
-
         expect(getSpy).toHaveBeenCalledTimes(1);
-        expect(getSpy).toHaveBeenCalledWith(url, {
+        expect(getSpy).toHaveBeenCalledWith("bucket/bucket_id/data", {
           headers: {
-            Authorization: "APIKEY TEST_APIKEY",
             "accept-language": "TR"
+          },
+          params: {
+            limit: 1,
+            skip: 2
           }
         });
       });
