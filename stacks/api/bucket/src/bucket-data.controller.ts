@@ -304,7 +304,7 @@ export class BucketDataController {
     );
 
     if (!previousDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     const currentDocument = {...document, _id: documentId};
@@ -359,6 +359,10 @@ export class BucketDataController {
 
     const previousDocument = await bkt.findOne({_id: documentId});
 
+    if (!previousDocument) {
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
+    }
+
     const patchedDocument = applyPatch(previousDocument, patch);
 
     await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
@@ -388,7 +392,7 @@ export class BucketDataController {
     );
 
     if (!currentDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
@@ -439,7 +443,7 @@ export class BucketDataController {
     );
 
     if (!deletedDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     if (this.changeEmitter) {
