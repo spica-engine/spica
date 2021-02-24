@@ -7,7 +7,7 @@
       </span>
     </h4>
     <div class="actions">
-      <button mat-button (click)="enableLogView = !enableLogView">
+      <button mat-button canInteract="function:logs:index" (click)="enableLogView = !enableLogView">
         <mat-icon>bug_report</mat-icon>
         {{ enableLogView ? "Disable Log View" : "Enable Log View" }}
       </button>
