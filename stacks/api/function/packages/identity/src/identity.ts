@@ -26,13 +26,18 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   });
 }
 
-export function login(identifier: string, password: string): Promise<string> {
+export function login(
+  identifier: string,
+  password: string,
+  token_expires_in_seconds?: number
+): Promise<string> {
   checkInitialized(authorization);
 
   return service
     .post<{token: string}>("/passport/identify", {
       identifier,
-      password
+      password,
+      expires: token_expires_in_seconds
     })
     .then(response => response.token);
 }
