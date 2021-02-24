@@ -1,8 +1,0 @@
-<h1>APIs</h1>
-
-<ul>
-  <li *ngFor="let doc of ($doc | async)?.docs" [routerLink]="doc.path">
-    {{ doc.name }}
-    <span>{{ doc.docType }} </span>
-  </li>
-</ul>
