@@ -222,13 +222,10 @@ The following is the list of supported scopes:
 - **preference**
 - **storage**
 - **composer**
-- **site**
 
 There are currently a few exceptions to the "use package name" rule:
 
 - **changelog**: used for updating the release notes in CHANGELOG.md
-- **docs-infra**: used for site (spicaengine.com) related changes within the /docs/site directory of the
-  repo
 - none/empty string: useful for `style`, `test` and `refactor` changes that are done across all
   packages (e.g. `style: add missing semicolons`) and for docs changes that are not related to a
   specific package (e.g. `docs: fix typo in tutorial`).
