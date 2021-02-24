@@ -50,6 +50,7 @@
             "if": {
               "properties": {
                 "exclude": {
+                  "type": "array",
                   "minItems": 1
                 }
               },
@@ -59,11 +60,13 @@
               "required": ["include"],
               "properties": {
                 "include": {
-                  "minItems": 1,
-                  "maxItems": 1,
+                  "type": "array",
                   "items": {
+                    "type": "string",
                     "pattern": "\\*$"
-                  }
+                  },
+                  "minItems": 1,
+                  "maxItems": 1
                 }
               }
             }
