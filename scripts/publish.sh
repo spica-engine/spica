@@ -40,7 +40,7 @@ echo $BAZEL
 echo ""
 echo "## Bazel targets to publish"
 # Docker packages
-DOCKER_IMAGE_LABELS=`$BAZEL query --output=label --noshow_progress 'attr("tags", "\[.*release-with-spica.*\]", //stacks/... + //tools/... + //docs/...) intersect kind("container_push", //stacks/... + //tools/... + //docs/...)'`
+DOCKER_IMAGE_LABELS=`$BAZEL query --output=label --noshow_progress 'attr("tags", "\[.*release-with-spica.*\]", //stacks/... + //tools/...) intersect kind("container_push", //stacks/... + //tools/...)'`
 
 # Npm packages
 NPM_PACKAGE_LABELS=`$BAZEL query --output=label --noshow_progress 'attr("tags", "\[.*release-with-spica.*\]", //stacks/...) intersect kind("pkg_.*", //stacks/...)'`
@@ -52,14 +52,6 @@ echo $DOCKER_IMAGE_LABELS $NPM_PACKAGE_LABELS
 echo ""
 echo "## Building spica"
 yarn --cwd=stacks/spica --silent ng build --prod --progress=false
-
-if [ $TAG == "latest" ]; then
-  source ./scripts/publish_site.sh
-else 
-  echo ""
-  echo "WARNING: Skipping publish of spicaengine.com because the provided tag was not 'latest'"
-  echo ""
-fi
 
 echo ""
 echo "## Building bazel generated artifacts in parallel"
