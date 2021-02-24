@@ -1223,6 +1223,38 @@ describe("BucketDataController", () => {
           error: "validation failed"
         });
       });
+
+      it("should throw error when put document does not exist", async () => {
+        const response = await req
+          .patch(`/bucket/${myBucketId}/data/000000000000000000000000`, {
+            title: null
+          })
+          .catch(e => e);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.statusText).toBe("Not Found");
+        expect(response.body).toEqual({
+          statusCode: 404,
+          message: `Could not find the document with id 000000000000000000000000`,
+          error: "Not Found"
+        });
+      });
+
+      it("should throw error when patched document does not exist", async () => {
+        const response = await req
+          .put(`/bucket/${myBucketId}/data/000000000000000000000000`, {
+            title: "test"
+          })
+          .catch(e => e);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.statusText).toBe("Not Found");
+        expect(response.body).toEqual({
+          statusCode: 404,
+          message: `Could not find the document with id 000000000000000000000000`,
+          error: "Not Found"
+        });
+      });
     });
 
     it("should return error if description isnt valid for bucket", async () => {
@@ -1291,6 +1323,20 @@ describe("BucketDataController", () => {
       expect(bucketData.length).toBe(1);
       expect(bucketData[0].title).toBe("first title");
       expect(bucketData[0].description).toBe("first description");
+    });
+
+    it("should throw error when document does not exist", async () => {
+      const response = await req
+        .delete(`/bucket/${myBucketId}/data/000000000000000000000000`)
+        .catch(e => e);
+
+      expect(response.statusCode).toBe(404);
+      expect(response.statusText).toBe("Not Found");
+      expect(response.body).toEqual({
+        statusCode: 404,
+        message: `Could not find the document with id 000000000000000000000000`,
+        error: "Not Found"
+      });
     });
   });
 
