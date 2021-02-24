@@ -26,7 +26,7 @@ function visitArgs(args: unknown[]): unknown[] {
 
     if (Array.isArray(result)) {
       finalResult.push(...result);
-    } else {
+    } else if (result != undefined) {
       finalResult.push(result);
     }
   }
