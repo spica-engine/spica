@@ -37,22 +37,22 @@ steps:
       - yarn config set cache-folder /var/cache/spica/.cache
       - yarn install --frozen-lockfile --network-timeout 1000000
 
-  - label: ":medical_symbol: Lint"
-    key: lint
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    <<: *api_test_docker_plugin
-    commands:
-      - yarn bazel:format -mode=check
-      - yarn code:format-check
+  # - label: ":medical_symbol: Lint"
+  #   key: lint
+  #   if: build.branch != "master"
+  #   depends_on: "install_packages"
+  #   <<: *api_test_docker_plugin
+  #   commands:
+  #     - yarn bazel:format -mode=check
+  #     - yarn code:format-check
 
-  - label: ":angular: + :chrome: Test Spica (Chrome)"
-    key: test_spica
-    if: build.branch != "master"
-    depends_on: "install_packages"
-    <<: *api_test_docker_plugin
-    commands:
-      - yarn --cwd ./stacks/spica ng test --browsers=ChromeHeadlessNoSandbox --watch=false --progress=false --reporters=spec
+  # - label: ":angular: + :chrome: Test Spica (Chrome)"
+  #   key: test_spica
+  #   if: build.branch != "master"
+  #   depends_on: "install_packages"
+  #   <<: *api_test_docker_plugin
+  #   commands:
+  #     - yarn --cwd ./stacks/spica ng test --browsers=ChromeHeadlessNoSandbox --watch=false --progress=false --reporters=spec
 
   - label: ":docker: + :bazel: Test APIs"
     key: test_api
