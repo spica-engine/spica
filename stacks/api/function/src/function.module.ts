@@ -23,7 +23,8 @@ export class FunctionModule {
       imports: [
         LogModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchemaModule.forChild({
-          schemas: [require("./schema/function.json")]
+          schemas: [require("./schema/function.json")],
+          customFields: ["viewEnum"]
         }),
         WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchedulerModule.forRoot({
