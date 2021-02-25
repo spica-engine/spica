@@ -127,6 +127,10 @@ export const some: func.Func = context => {
       const documentValue: unknown[] = parsedArguments[0];
       const includedItems: unknown[] = parsedArguments.splice(1);
 
+      if (!Array.isArray(includedItems) || !Array.isArray(documentValue)) {
+        return false;
+      }
+
       return includedItems.some(included => documentValue.includes(included));
     }
   };
@@ -162,6 +166,10 @@ export const every: func.Func = context => {
 
       const documentValue: unknown[] = parsedArguments[0];
       const includedItems: unknown[] = parsedArguments.splice(1);
+
+      if (!Array.isArray(includedItems) || !Array.isArray(documentValue)) {
+        return false;
+      }
 
       return includedItems.every(included => documentValue.includes(included));
     }
@@ -223,6 +231,10 @@ export const equal: func.Func = context => {
 
       const documentValue: unknown[] = parsedArguments[0];
       const items: unknown[] = parsedArguments.splice(1);
+
+      if (!Array.isArray(documentValue) || !Array.isArray(items)) {
+        return false;
+      }
 
       return (
         documentValue.length == items.length && items.every(item => documentValue.includes(item))
