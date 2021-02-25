@@ -95,9 +95,9 @@ describe("Scheduler", () => {
     scheduler.gotWorker(worker2Id, worker2Schedule);
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     scheduler.kill();
-    await app.close();
+    app.close();
     clock.uninstall();
   });
 
