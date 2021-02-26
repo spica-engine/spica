@@ -60,7 +60,8 @@ const route: Route[] = [
     id: `list_all_functions`,
     icon: "format_list_numbered",
     path: `/function`,
-    display: "Functions"
+    display: "Functions",
+    data: {action: "function:index"}
   },
   {
     category: RouteCategory.Developer_Sub,
@@ -72,7 +73,8 @@ const route: Route[] = [
       begin: new Date(new Date().setHours(0, 0, 0, 0)),
       end: new Date(new Date().setHours(23, 59, 59, 999)),
       showErrors: true
-    }
+    },
+    data: {action: "function:logs:index"}
   }
 ];
 
