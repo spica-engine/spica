@@ -56,23 +56,48 @@ describe("Realtime", () => {
     app.useWebSocketAdapter(new WsAdapter(app));
     await app.listen(wsc.socket);
 
-    const {body: bkt} = await req.post("/bucket", {
-      title: "Realtime",
-      description: "Realtime",
-      properties: {
-        title: {
-          type: "string"
+    const {body: bkt} = await req
+      .post("/bucket", {
+        title: "Realtime",
+        description: "Realtime",
+        properties: {
+          title: {
+            type: "string"
+          }
         }
-      }
-    });
+      })
+      .then(res => {
+        console.dir(res, {depth: Infinity});
+        return res;
+      })
+      .catch(res => {
+        console.dir(res, {depth: Infinity});
+        return res;
+      });
     bucket = bkt;
     rows = [
       await insertRow({
         title: "first"
-      }),
+      })
+        .then(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        })
+        .catch(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        }),
       await insertRow({
         title: "second"
       })
+        .then(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        })
+        .catch(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        })
     ];
   });
 
@@ -86,19 +111,28 @@ describe("Realtime", () => {
       const guardService = app.get(GuardService);
       authGuardCheck = spyOn(guardService, "checkAuthorization");
       actionGuardCheck = spyOn(guardService, "checkAction");
-      const {body: bkt} = await req.post("/bucket", {
-        title: "Realtime",
-        description: "Realtime",
-        properties: {
-          title: {
-            type: "string"
+      const {body: bkt} = await req
+        .post("/bucket", {
+          title: "Realtime",
+          description: "Realtime",
+          properties: {
+            title: {
+              type: "string"
+            }
           }
-        }
-      });
+        })
+        .then(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        })
+        .catch(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        });
       bucket = bkt;
     });
 
-    it("should authorize and do the initial sync", async done => {
+    fit("should authorize and do the initial sync", async done => {
       const ws = wsc.get(`/bucket/${bucket._id}/data`, {
         headers: {
           Authorization: "APIKEY test"
@@ -109,7 +143,15 @@ describe("Realtime", () => {
         expect(e.data).toEqual(`{"kind":1}`);
         done();
       };
-      await ws.connect;
+      await ws.connect
+        .then(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        })
+        .catch(res => {
+          console.dir(res, {depth: Infinity});
+          return res;
+        });
     });
 
     it("should show error messages", done => {
@@ -139,7 +181,7 @@ describe("Realtime", () => {
       ws.onclose = done;
       ws.onmessage = e => {
         expect(e.data).toEqual(
-          `{"code":403,"message":"You do not have sufficient permissions to do this action."}`
+          `{"kind":-1,"code":403,"message":"You do not have sufficient permissions to do this action."}`
         );
       };
     });
