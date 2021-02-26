@@ -1,23 +1,26 @@
 import {getMostLeftSelectIdentifier} from "./ast";
 
 function visit(node) {
+  if (Array.isArray(node)) {
+    return visitItems(node);
+  }
   switch (node.kind) {
     case "operator":
       return visitNode(node);
     case "identifier":
       return visitIdentifier(node);
     case "call":
-      return visitArgs(node.arguments);
+      return visitItems(node.arguments);
     case "unary":
       return visitUnary(node);
   }
 }
 
-function visitArgs(args: unknown[]): unknown[] {
+function visitItems(args: unknown[]): unknown[] {
   const finalResult = [];
   for (const arg of args) {
     if (Array.isArray(arg)) {
-      const extracteds = visitArgs(arg);
+      const extracteds = visitItems(arg);
       finalResult.push(...extracteds);
       continue;
     }
@@ -26,7 +29,7 @@ function visitArgs(args: unknown[]): unknown[] {
 
     if (Array.isArray(result)) {
       finalResult.push(...result);
-    } else {
+    } else if (result != undefined) {
       finalResult.push(result);
     }
   }

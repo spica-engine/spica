@@ -1,8 +1,19 @@
-import {getMostLeftSelectIdentifier, isSelectChain} from "./ast";
+import {getMostLeftSelectIdentifier} from "./ast";
 import {compile} from "./compile";
 import * as func from "./func";
 
 function visit(node) {
+  if (Array.isArray(node)) {
+    const fns = visitItems(node);
+    return ctx => {
+      const results = [];
+      for (const fn of fns) {
+        const result = fn(ctx);
+        results.push(result);
+      }
+      return results;
+    };
+  }
   switch (node.kind) {
     case "operator":
       return visitOperator(node);
@@ -21,6 +32,27 @@ function visit(node) {
     default:
       throw new Error(`invalid kind ${node.kind}`);
   }
+}
+
+function visitItems(args: any[]): any[] {
+  const finalResult = [];
+  for (const arg of args) {
+    if (Array.isArray(arg)) {
+      const extracteds = visitItems(arg);
+      finalResult.push(...extracteds);
+      continue;
+    }
+
+    const result = visit(arg);
+
+    if (Array.isArray(result)) {
+      finalResult.push(...result);
+    } else if (result != undefined) {
+      finalResult.push(result);
+    }
+  }
+
+  return finalResult;
 }
 
 function visitLiteral(node) {

@@ -85,16 +85,18 @@ export class CelLanguageDirective implements OnDestroy {
       );
     } else if (typedText.match(/(^|[^\w.])document\.$/)) {
       suggestions.push(
-        ...Object.entries(this.bucketProperties).map(([name, definition]) => {
-          return {
-            label: name,
-            kind: monaco.languages.CompletionItemKind.Field,
-            documentation: definition.description,
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            insertText: name,
-            range: range
-          };
-        })
+        ...Object.entries({...this.bucketProperties, _id: {description: "Document id"}}).map(
+          ([name, definition]) => {
+            return {
+              label: name,
+              kind: monaco.languages.CompletionItemKind.Field,
+              documentation: definition.description,
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              insertText: name,
+              range: range
+            };
+          }
+        )
       );
     } else if (typedText.match(/(^|[^.])$/)) {
       const {baseFields, functions, examples} = await import("./suggestions");
