@@ -130,7 +130,7 @@ describe("Realtime", () => {
       });
       ws.onclose = done;
       ws.onmessage = e => {
-        expect(e.data).toEqual(`{"code":401,"message":"Unauthorized"}`);
+        expect(e.data).toEqual(`{"kind":-1,"code":401,"message":"Unauthorized"}`);
       };
     });
 
