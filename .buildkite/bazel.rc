@@ -14,7 +14,7 @@ build --announce_rc
 build --verbose_failures=true
 
 # Be more noisy when running under ci
-test --test_output=errors
+test --test_output=all
 
 # Do not run in worker mode
 build --strategy=TypeScriptCompile=standalone
