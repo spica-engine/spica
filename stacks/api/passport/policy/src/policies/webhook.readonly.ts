@@ -5,16 +5,12 @@ export default {
   statement: [
     {
       action: "webhook:index",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "webhook"
     },
     {
       action: "webhook:show",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "webhook"
     },
     {

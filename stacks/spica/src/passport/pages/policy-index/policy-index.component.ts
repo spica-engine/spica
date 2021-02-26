@@ -19,6 +19,10 @@ export class PolicyIndexComponent implements OnInit {
   policies$: Observable<Policy[]>;
   refresh$: Subject<void> = new Subject<void>();
 
+  currentPolicyState: "predefined" | "custom" | "all" = "all";
+
+  filter: {system?: boolean} = {};
+
   displayedColumns = ["id", "name", "description", "actions"];
 
   constructor(private policyService: PolicyService, private router: Router) {}
@@ -27,8 +31,9 @@ export class PolicyIndexComponent implements OnInit {
     this.policies$ = merge(this.paginator.page, of(null), this.refresh$).pipe(
       switchMap(() =>
         this.policyService.find(
-          this.paginator.pageSize || 10,
-          this.paginator.pageSize * this.paginator.pageIndex
+          this.paginator.pageSize || 100,
+          this.paginator.pageSize * this.paginator.pageIndex,
+          this.filter
         )
       ),
       map(response => {
@@ -47,9 +52,26 @@ export class PolicyIndexComponent implements OnInit {
     });
   }
 
-  delete(id): void {
-    this.policyService.deletePolicy(id).subscribe(() => {
-      this.refresh$.next();
-    });
+  async delete(id) {
+    await this.policyService.deletePolicy(id).toPromise();
+    this.refresh$.next();
+  }
+
+  filterPolicies() {
+    switch (this.currentPolicyState) {
+      case "all":
+        this.currentPolicyState = "custom";
+        this.filter = {system: false};
+        break;
+      case "custom":
+        this.currentPolicyState = "predefined";
+        this.filter = {system: true};
+        break;
+      case "predefined":
+        this.currentPolicyState = "all";
+        this.filter = {};
+        break;
+    }
+    this.refresh$.next();
   }
 }

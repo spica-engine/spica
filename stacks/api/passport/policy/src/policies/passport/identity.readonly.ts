@@ -5,22 +5,21 @@ export default {
   statement: [
     {
       action: "passport:identity:index",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "passport:identity"
     },
     {
       action: "passport:identity:show",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "passport:identity"
     },
     {
       action: "preference:show",
       module: "preference",
-      resource: ["passport"]
+      resource: {
+        include: ["passport"],
+        exclude: []
+      }
     }
   ]
 };

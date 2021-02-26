@@ -1,12 +1,12 @@
 import {Component, Inject, OnInit} from "@angular/core";
 import {MatDialogRef, MAT_DIALOG_DATA} from "@angular/material/dialog";
+import {PredefinedDefault} from "@spica-client/bucket/interfaces/predefined-default";
 import {BucketService} from "@spica-client/bucket/services/bucket.service";
 import {InputPlacerWithMetaPlacer} from "@spica-client/common";
 import {InputResolver} from "@spica-client/common/input/input.resolver";
-import {PredefinedDefault} from "@spica-client/passport/interfaces/predefined-default";
-import {Property} from "@spica-client/passport/pages/identity-settings/identity-settings.component";
 import {map} from "rxjs/internal/operators/map";
 import {take} from "rxjs/operators";
+import {NgModel} from "@angular/forms";
 
 @Component({
   selector: "app-add-field-modal",
@@ -22,16 +22,6 @@ export class AddFieldModalComponent implements OnInit {
 
   translatableTypes = ["string", "textarea", "array", "object", "richtext", "storage"];
   basicPropertyTypes = ["string", "textarea", "boolean", "number"];
-  visibleTypes = [
-    "string",
-    "textarea",
-    "boolean",
-    "number",
-    "relation",
-    "date",
-    "color",
-    "storage"
-  ];
   immutableProperties: Array<string> = [];
   predefinedDefaults: {[key: string]: PredefinedDefault[]};
 
@@ -100,5 +90,15 @@ export class AddFieldModalComponent implements OnInit {
     required
       ? this.parentSchema.required.push(key)
       : this.parentSchema.required.splice(this.parentSchema.required.indexOf(key), 1);
+  }
+
+  updatePropertyExistsState(model: NgModel, newProperty: string) {
+    const properties = Object.keys(this.parentSchema.properties);
+
+    if (properties.includes(newProperty)) {
+      model.control.setErrors({
+        propertyExists: true
+      });
+    }
   }
 }

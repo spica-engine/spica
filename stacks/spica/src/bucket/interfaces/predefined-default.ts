@@ -1,4 +1,4 @@
 export interface PredefinedDefault {
-  keyword: string;
+  match: string;
   type: string;
 }

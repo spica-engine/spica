@@ -1,17 +1,22 @@
-import {DynamicModule, Module, Type, Global} from "@nestjs/common";
+import {DynamicModule, Global, Module, Type} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
-import {PreferenceService, BUCKET_LANGUAGE_FINALIZER} from "@spica-server/preference/services";
-import {BucketDataController} from "./bucket-data.controller";
+import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
 import {BucketDataService} from "../services/src/bucket-data.service";
+import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
-import {BucketSchemaResolver, provideBucketSchemaResolver} from "./bucket.schema.resolver";
-import {DocumentScheduler} from "./scheduler";
-import {provideLanguageFinalizer} from "./locale";
+import {
+  BucketSchemaResolver,
+  bucketSpecificDefault,
+  provideBucketSchemaResolver
+} from "./bucket.schema.resolver";
 import {GraphqlController} from "./graphql/graphql";
+import {provideLanguageFinalizer} from "./locale";
+import {registerInformers} from "./machinery";
+import {DocumentScheduler} from "./scheduler";
 
 @Module({})
 export class BucketModule {
@@ -20,9 +25,10 @@ export class BucketModule {
       SchemaModule.forChild({
         schemas: [
           require("./schemas/bucket.schema.json"),
-          require("./schemas/buckets.schema.json"),
-          require("./schemas/property-options.schema.json")
-        ]
+          require("./schemas/buckets.schema.json")
+        ],
+        keywords: [bucketSpecificDefault],
+        customFields: ["options", "bucketId", "relationType", "dependent", "primary"]
       }),
       ServicesModule
     ];
@@ -58,7 +64,7 @@ export class BucketModule {
     };
   }
 
-  constructor(preference: PreferenceService) {
+  constructor(preference: PreferenceService, bs: BucketService) {
     preference.default({
       scope: "bucket",
       language: {
@@ -69,6 +75,8 @@ export class BucketModule {
         default: "en_US"
       }
     });
+
+    registerInformers(bs);
   }
 }
 

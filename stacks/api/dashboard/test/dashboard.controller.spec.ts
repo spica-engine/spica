@@ -15,11 +15,13 @@ describe("DashboardController", () => {
     components: [
       {
         name: "chart1",
-        url: "https://spica.internal"
+        url: "https://spica.internal",
+        type: "line"
       },
       {
         name: "chart2",
-        url: "https://spica.internal"
+        url: "https://spica.internal",
+        type: "pie"
       }
     ]
   };
@@ -29,7 +31,7 @@ describe("DashboardController", () => {
       imports: [
         CoreTestingModule,
         PassportTestingModule.initialize(),
-        DashboardModule,
+        DashboardModule.forRoot(),
         DatabaseTestingModule.standalone()
       ]
     }).compile();
@@ -62,11 +64,13 @@ describe("DashboardController", () => {
       components: [
         {
           name: "chart1",
-          url: "https://spica.internal"
+          url: "https://spica.internal",
+          type: "line"
         },
         {
           name: "chart2",
-          url: "https://spica.internal"
+          url: "https://spica.internal",
+          type: "pie"
         }
       ]
     });
@@ -86,11 +90,13 @@ describe("DashboardController", () => {
         components: [
           {
             name: "chart1",
-            url: "https://spica.internal"
+            url: "https://spica.internal",
+            type: "line"
           },
           {
             name: "chart2",
-            url: "https://spica.internal"
+            url: "https://spica.internal",
+            type: "pie"
           }
         ]
       }
@@ -110,11 +116,13 @@ describe("DashboardController", () => {
       components: [
         {
           name: "chart1",
-          url: "https://spica.internal"
+          url: "https://spica.internal",
+          type: "line"
         },
         {
           name: "chart2",
-          url: "https://spica.internal"
+          url: "https://spica.internal",
+          type: "pie"
         }
       ]
     });
@@ -135,11 +143,13 @@ describe("DashboardController", () => {
       components: [
         {
           name: "chart1",
-          url: "https://spica.internal"
+          url: "https://spica.internal",
+          type: "line"
         },
         {
           name: "chart2",
-          url: "https://spica.internal"
+          url: "https://spica.internal",
+          type: "pie"
         }
       ]
     });

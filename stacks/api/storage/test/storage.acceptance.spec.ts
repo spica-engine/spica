@@ -12,18 +12,32 @@ describe("Storage Acceptance", () => {
   let app: INestApplication;
   let req: Request;
 
-  async function addTextObjects(count: number) {
-    const objects = new Array(count).fill(undefined).map((_, index) => {
-      return {
-        name: `name ${index + 1}.txt`,
-        content: {
-          data: new BSON.Binary(Buffer.from(`content ${index + 1}`)),
-          type: `text/plain`
-        }
-      };
-    });
+  async function addTextObjects() {
+    const first = {
+      name: `first.txt`,
+      content: {
+        data: new BSON.Binary(Buffer.from("first")),
+        type: `text/plain`
+      }
+    };
 
-    return await req.post("/storage", BSON.serialize({content: objects}), {
+    const second = {
+      name: `second.txt`,
+      content: {
+        data: new BSON.Binary(Buffer.from("second")),
+        type: `text/plain`
+      }
+    };
+
+    const third = {
+      name: `third.txt`,
+      content: {
+        data: new BSON.Binary(Buffer.from("third")),
+        type: `text/plain`
+      }
+    };
+
+    return await req.post("/storage", BSON.serialize({content: [first, second, third]}), {
       "Content-Type": "application/bson"
     });
   }
@@ -47,7 +61,8 @@ describe("Storage Acceptance", () => {
     });
     req = module.get(Request);
     await app.listen(req.socket);
-    await addTextObjects(20);
+
+    await addTextObjects();
 
     jasmine.addCustomEqualityTester((actual, expected) => {
       if (expected == "__skip__" && typeof actual == typeof expected) {
@@ -64,43 +79,67 @@ describe("Storage Acceptance", () => {
     it("should work with limit", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {limit: "2", sort: JSON.stringify({_id: -1})});
-      expect(meta.total).toBe(20);
-      expect(data.length).toBe(2);
+      } = await req.get("/storage", {limit: "1", sort: JSON.stringify({_id: -1})});
 
-      for (const [index, object] of data.entries()) {
-        expect(object._id).toBeDefined();
-        expect(object.name).toBe(`name ${data.length - index}.txt`);
-        expect(object.url).toBe(`http://insteadof/storage/${object._id}/view`);
-      }
+      expect(meta.total).toBe(3);
+      expect(data).toEqual([
+        {
+          _id: "__skip__",
+          name: "third.txt",
+          url: `http://insteadof/storage/${data[0]._id}/view`,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        }
+      ]);
     });
 
-    it("should work with skip query", async () => {
+    it("should work with skip", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {skip: "3", sort: JSON.stringify({_id: -1})});
-      expect(meta.total).toBe(20);
-      expect(data.length).toBe(17);
+      } = await req.get("/storage", {skip: "1", sort: JSON.stringify({_id: -1})});
 
-      for (const [index, object] of data.entries()) {
-        expect(object._id).toBeDefined();
-        expect(object.name).toBe(`name ${data.length + 3 - index}.txt`);
-        expect(object.url).toBe(`http://insteadof/storage/${object._id}/view`);
-      }
+      expect(meta.total).toBe(3);
+      expect(data).toEqual([
+        {
+          _id: "__skip__",
+          name: "second.txt",
+          url: `http://insteadof/storage/${data[0]._id}/view`,
+          content: {
+            type: `text/plain`,
+            size: 6
+          }
+        },
+        {
+          _id: "__skip__",
+          name: "first.txt",
+          url: `http://insteadof/storage/${data[1]._id}/view`,
+          content: {
+            type: `text/plain`,
+            size: 5
+          }
+        }
+      ]);
     });
 
     it("should work with skip and limit query", async () => {
       const {
         body: {meta, data}
-      } = await req.get("/storage", {skip: "3", limit: "15", sort: JSON.stringify({_id: -1})});
-      expect(meta.total).toBe(20);
-      expect(data.length).toBe(15);
+      } = await req.get("/storage", {skip: "1", limit: "1", sort: JSON.stringify({_id: -1})});
 
-      for (const [index, object] of data.entries()) {
-        expect(object._id).toBeDefined();
-        expect(object.name).toBe(`name ${data.length + 3 - index}.txt`);
-        expect(object.url).toBe(`http://insteadof/storage/${object._id}/view`);
-      }
+      expect(meta.total).toBe(3);
+      expect(data).toEqual([
+        {
+          _id: "__skip__",
+          name: "second.txt",
+          url: `http://insteadof/storage/${data[0]._id}/view`,
+          content: {
+            type: `text/plain`,
+            size: 6
+          }
+        }
+      ]);
     });
 
     describe("sort", () => {
@@ -108,81 +147,93 @@ describe("Storage Acceptance", () => {
         const {
           body: {meta, data}
         } = await req.get("/storage", {
-          limit: "5",
-          skip: "3",
           sort: JSON.stringify({name: 1})
         });
-        expect(meta.total).toBe(20);
-        expect(data.length).toBe(5);
 
-        for (const [index, object] of data.entries()) {
-          expect(object._id).toBeDefined();
-          expect(object.name).toBe(`name ${index + 1 + 3}.txt`);
-          expect(object.url).toBe(`http://insteadof/storage/${object._id}/view`);
-        }
+        expect(meta.total).toBe(3);
+        expect(data).toEqual([
+          {
+            _id: "__skip__",
+            name: "first.txt",
+            url: `http://insteadof/storage/${data[0]._id}/view`,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          {
+            _id: "__skip__",
+            name: "second.txt",
+            url: `http://insteadof/storage/${data[1]._id}/view`,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          {
+            _id: "__skip__",
+            name: "third.txt",
+            url: `http://insteadof/storage/${data[2]._id}/view`,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          }
+        ]);
       });
 
       it("descend by name", async () => {
         const {
           body: {meta, data}
         } = await req.get("/storage", {
-          limit: "5",
-          skip: "3",
           sort: JSON.stringify({name: -1})
         });
-        expect(meta.total).toBe(20);
-        expect(data.length).toBe(5);
 
-        for (const [index, object] of data.entries()) {
-          expect(object._id).toBeDefined();
-          expect(object.name).toBe(`name ${data.length + 3 - index}.txt`);
-          expect(object.url).toBe(`http://insteadof/storage/${object._id}/view`);
-        }
+        expect(meta.total).toBe(3);
+        expect(data).toEqual([
+          {
+            _id: "__skip__",
+            name: "third.txt",
+            url: `http://insteadof/storage/${data[0]._id}/view`,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          },
+          {
+            _id: "__skip__",
+            name: "second.txt",
+            url: `http://insteadof/storage/${data[1]._id}/view`,
+            content: {
+              type: `text/plain`,
+              size: 6
+            }
+          },
+          {
+            _id: "__skip__",
+            name: "first.txt",
+            url: `http://insteadof/storage/${data[2]._id}/view`,
+            content: {
+              type: `text/plain`,
+              size: 5
+            }
+          }
+        ]);
       });
     });
   });
 
   describe("find", () => {
-    it("should return storage object when metadata is true", async () => {
+    it("should return storage object", async () => {
       const {
         body: {
           data: [row]
         }
       } = await req.get("/storage", {});
-      const {body: response} = await req.get(`/storage/${row._id}`, {metadata: "true"});
+      const {body: response} = await req.get(`/storage/${row._id}`);
       expect(response._id).toEqual(row._id);
       expect(response.url).toEqual(row.url);
       expect(response.name).toEqual(row.name);
-    });
-
-    it("should show deprecation error when metadata is false", async () => {
-      const {
-        body: {
-          data: [row]
-        }
-      } = await req.get("/storage", {});
-      const {body: response} = await req.request({
-        method: "GET",
-        path: `/storage/${row._id}`,
-        followRedirect: false,
-        query: {metadata: "false"}
-      });
-      expect(response).toEqual({
-        error: "Deprecated",
-        message: "Fetching objects via this is deprecated.",
-        url: `http://insteadof/storage/${row._id}/view`
-      });
-    });
-
-    it("should redirect permanently when metadata is false", async () => {
-      const {
-        body: {
-          data: [row]
-        }
-      } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
-      const {body: response, headers} = await req.get(`/storage/${row._id}`, {metadata: "false"});
-      expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
-      expect(response).toBe("content 20");
     });
   });
 
@@ -196,7 +247,8 @@ describe("Storage Acceptance", () => {
       const {statusCode, statusText} = await req.get(
         `/storage/${row._id}/view`,
         {},
-        {"If-None-Match": etag("content 20")}
+
+        {"If-None-Match": etag("third")}
       );
       expect(statusCode).toBe(304);
       expect(statusText).toBe("Not Modified");
@@ -211,11 +263,11 @@ describe("Storage Acceptance", () => {
       const {headers, body} = await req.get(
         `/storage/${row._id}/view`,
         {},
-        {"If-None-Match": etag("content 21")}
+        {"If-None-Match": etag("unexist content")}
       );
       expect(headers["content-type"]).toEqual("text/plain; charset=utf-8");
-      expect(headers["etag"]).toBe(etag("content 20"));
-      expect(body).toBe("content 20");
+      expect(headers["etag"]).toBe(etag("third"));
+      expect(body).toBe("third");
     });
 
     it("should send the ETag", async () => {
@@ -224,9 +276,9 @@ describe("Storage Acceptance", () => {
           data: [row]
         }
       } = await req.get("/storage", {sort: JSON.stringify({_id: -1})});
-      const {headers} = await req.get(`/storage/${row._id}/view`, {metadata: "false"});
+      const {headers} = await req.get(`/storage/${row._id}/view`);
       expect(headers["content-type"]).toBe("text/plain; charset=utf-8");
-      expect(headers["etag"]).toBe(etag("content 20"));
+      expect(headers["etag"]).toBe(etag("third"));
     });
   });
 
@@ -242,7 +294,7 @@ describe("Storage Acceptance", () => {
         "Content-Type": "application/bson"
       });
 
-      const {body} = await req.get(`/storage/${row._id}`);
+      const {body} = await req.get(`/storage/${row._id}/view`);
 
       expect(body).toBe("new data");
     });
@@ -263,8 +315,8 @@ describe("Storage Acceptance", () => {
       expect(statusCode).toEqual(400);
       expect(statusText).toEqual("Bad Request");
 
-      const {body} = await req.get(`/storage/${row._id}`, {withMeta: "false"});
-      expect(body).toBe("content 20");
+      const {body} = await req.get(`/storage/${row._id}/view`);
+      expect(body).toBe("third");
     });
 
     it("should throw an error if the updated data is larger than the object size limit", async () => {
@@ -394,7 +446,7 @@ describe("Storage Acceptance", () => {
       expect(statusText).toBe("Bad Request");
 
       const {body: upstreamObjects} = await req.get("/storage");
-      expect(upstreamObjects.data.length).toBe(20);
+      expect(upstreamObjects.data.length).toBe(3);
     });
 
     it("should throw an error if the inserted data is larger than the object size limit", async () => {
@@ -429,12 +481,13 @@ describe("Storage Acceptance", () => {
       } = await req.get("/storage");
 
       const response = await req.delete(`/storage/${row._id}`);
-      expect(response.statusCode).toBe(200);
-      expect(response.statusText).toBe("OK");
+      expect(response.statusCode).toBe(204);
+      expect(response.statusText).toBe("No Content");
+      expect(response.body).toBe(undefined);
 
       const {body: storageObjects} = await req.get("/storage");
-      expect(storageObjects.meta.total).toBe(19);
-      expect(storageObjects.data.length).toEqual(19);
+      expect(storageObjects.meta.total).toBe(2);
+      expect(storageObjects.data.length).toEqual(2);
 
       const deletedStorageObjectResponse = await req.get(`/storage/${row._id}`);
       expect(deletedStorageObjectResponse.statusCode).toBe(404);
@@ -480,7 +533,7 @@ describe("Storage Acceptance", () => {
       const {
         body,
         headers: {["etag"]: ETag}
-      } = await req.get(`/storage/${row._id}`);
+      } = await req.get(`/storage/${row._id}/view`);
       expect(body).toBe("new data");
       expect(prevETag).not.toBe(ETag);
     });

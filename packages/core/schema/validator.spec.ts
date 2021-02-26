@@ -15,6 +15,17 @@ describe("schema validator", () => {
     await expectAsync(validator.validate(schema, {})).toBeRejected();
   });
 
+  it("should remove additional", async () => {
+    const data: any = {prop_should_be_removed: "i am evil"};
+    const schema: JSONSchema7 = {
+      type: "object",
+      properties: {prop: {type: "string", default: "schema_default"}},
+      additionalProperties: false
+    };
+    await expectAsync(validator.validate(schema, data)).toBeResolved(true);
+    expect(data).toEqual({prop: "schema_default"});
+  });
+
   it("should assign defaults", async () => {
     const data: any = {};
     const schema: JSONSchema7 = {
@@ -27,7 +38,7 @@ describe("schema validator", () => {
 
   it("should assign dynamic default", async () => {
     validator.registerDefault({
-      keyword: "dynamicdefault",
+      match: "dynamicdefault",
       type: "string",
       create: () => "dynamicvalue"
     });
@@ -43,7 +54,7 @@ describe("schema validator", () => {
 
   it("previous value should be passed correctly", async () => {
     const dynamicValueSpy = jasmine.createSpy().and.callFake(() => "dynamicvalue");
-    validator.registerDefault({keyword: "created_at", type: "string", create: dynamicValueSpy});
+    validator.registerDefault({match: "created_at", type: "string", create: dynamicValueSpy});
     const schema: JSONSchema7 = {
       type: "object",
       properties: {prop: {type: "string", default: "created_at"}}
@@ -58,11 +69,14 @@ describe("schema validator", () => {
   it("should call uri resolver", done => {
     const resolver = jasmine.createSpy();
     validator.registerUriResolver(resolver);
-    validator.validate({$ref: "unknown-schema"}).then(done.fail, () => {
-      expect(resolver).toHaveBeenCalledTimes(1);
-      expect(resolver.calls.first().args[0]).toBe("unknown-schema");
-      done();
-    });
+    validator.validate({$ref: "unknown-schema"}, {}).then(
+      () => done.fail(),
+      () => {
+        expect(resolver).toHaveBeenCalledTimes(1);
+        expect(resolver.calls.first().args[0]).toBe("unknown-schema");
+        done();
+      }
+    );
   });
 
   it("should resolve referenced schema and validate and invalidate subsequent schemas", async () => {
@@ -79,7 +93,7 @@ describe("schema validator", () => {
     const resolver = jasmine.createSpy().and.callFake(() => schema);
     validator.registerUriResolver(resolver);
 
-    expect(await validator.validate(validatedSchema, {prop: ""})).toBe(true);
+    await expectAsync(validator.validate(validatedSchema, {prop: ""})).toBeResolved();
 
     schema.next({
       $id: "http://spica.internal/schema",
@@ -96,7 +110,8 @@ describe("schema validator", () => {
     await expectAsync(
       validator.validate(validatedSchema, {prop: "notatextanymore"})
     ).toBeRejected();
-    await expectAsync(validator.validate(validatedSchema, {prop: 1})).toBeResolvedTo(true);
+
+    await expectAsync(validator.validate(validatedSchema, {prop: 2})).toBeResolved();
   });
 
   it("should resolve referenced schema and validate", async () => {
@@ -112,8 +127,7 @@ describe("schema validator", () => {
     const resolver = jasmine.createSpy().and.returnValue(Promise.resolve(subschema));
     validator.registerUriResolver(resolver);
 
-    const valid = await validator.validate(schema, data);
-    expect(valid).toBe(true);
+    await expectAsync(validator.validate(schema, data)).toBeResolved();
     expect(resolver).toHaveBeenCalled();
     expect(resolver.calls.mostRecent().args[0]).toBe("http://spica.internal/schema");
     expect(data.property1).toBe("default");
@@ -121,7 +135,9 @@ describe("schema validator", () => {
   });
 
   it("should fail when trying to resolve unknown schema", async () => {
-    await expectAsync(validator.validate({$ref: "unknown-schema"})).toBeRejected("unknown-schema");
+    await expectAsync(validator.validate({$ref: "unknown-schema"}, {})).toBeRejected(
+      "unknown-schema"
+    );
   });
 
   describe("with format", () => {
@@ -141,12 +157,21 @@ describe("schema validator", () => {
       spy = jasmine.createSpy("validatefn").and.callFake(data => {
         return data == "formatted";
       });
-      const format: Format = {
-        name: "myformat",
-        type: "string",
-        validate: spy
-      };
-      validator = new Validator({formats: [format]});
+
+      validator = new Validator({
+        formats: [
+          {
+            name: "myformat",
+            type: "string",
+            validate: spy
+          },
+          {
+            name: "date-time",
+            type: "string",
+            validate: /^\d\d\d\d-[0-1]\d-[0-3]\d[t\s](?:[0-2]\d:[0-5]\d:[0-5]\d|23:59:60)(?:\.\d+)?(?:z|[+-]\d\d(?::?\d\d)?)$/i
+          }
+        ]
+      });
     });
 
     it("should work with regex formats", () => {

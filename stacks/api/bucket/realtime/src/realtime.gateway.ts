@@ -1,12 +1,17 @@
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
-import {BucketService, getBucketDataCollection} from "@spica-server/bucket/services";
+import {BucketService, getBucketDataCollection, filterReviver} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {FindOptions, RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
+import {
+  FindOptions,
+  RealtimeDatabaseService,
+  StreamChunk,
+  ChunkKind
+} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
-import {fromEvent, Observable} from "rxjs";
-import {takeUntil, tap} from "rxjs/operators";
+import {fromEvent, Observable, of} from "rxjs";
+import {takeUntil, tap, catchError} from "rxjs/operators";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
@@ -35,7 +40,9 @@ export class RealtimeGateway implements OnGatewayConnection {
         options: {resourceFilter: true}
       });
     } catch (e) {
-      client.send(JSON.stringify({code: e.status || 500, message: e.message}));
+      client.send(
+        JSON.stringify({kind: ChunkKind.Error, code: e.status || 500, message: e.message})
+      );
       return client.close(1003);
     }
 
@@ -47,8 +54,28 @@ export class RealtimeGateway implements OnGatewayConnection {
 
     const options: FindOptions<{}> = {};
 
-    if (req.query.has("filter")) {
-      options.filter = {$and: [match, aggregate(req.query.get("filter"), {})]};
+    let filter = req.query.get("filter");
+
+    if (filter) {
+      let parsedFilter = parseFilter((value: string) => JSON.parse(value, filterReviver), filter);
+
+      if (!parsedFilter) {
+        parsedFilter = parseFilter(aggregate, filter, {});
+      }
+
+      if (!parsedFilter) {
+        client.send(
+          JSON.stringify({
+            kind: ChunkKind.Error,
+            code: 400,
+            message:
+              "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression."
+          })
+        );
+        return client.close(1003);
+      }
+
+      options.filter = {$and: [match, parsedFilter]};
     } else {
       options.filter = match;
     }
@@ -69,6 +96,19 @@ export class RealtimeGateway implements OnGatewayConnection {
     let stream = this.streams.get(cursorName);
     if (!stream) {
       stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
+        catchError(error => {
+          // send the error to the client, prevent to api down
+          client.send(
+            JSON.stringify({
+              kind: ChunkKind.Error,
+              code: 500,
+              message: error.toString()
+            })
+          );
+          client.close(1003);
+
+          return of(null);
+        }),
         tap({
           complete: () => this.streams.delete(cursorName)
         })
@@ -78,5 +118,13 @@ export class RealtimeGateway implements OnGatewayConnection {
     stream.pipe(takeUntil(fromEvent(client, "close"))).subscribe(data => {
       client.send(JSON.stringify(data));
     });
+  }
+}
+
+export function parseFilter(method: (...params: any) => any, ...params: any) {
+  try {
+    return method(...params);
+  } catch (e) {
+    return false;
   }
 }

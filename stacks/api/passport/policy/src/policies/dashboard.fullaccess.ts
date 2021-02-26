@@ -12,16 +12,12 @@ export default {
     },
     {
       action: "dashboard:update",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "dashboard"
     },
     {
       action: "dashboard:delete",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "dashboard"
     }
   ]

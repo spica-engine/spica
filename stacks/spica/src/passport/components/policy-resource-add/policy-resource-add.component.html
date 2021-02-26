@@ -1,0 +1,133 @@
+<h3>Edit Action</h3>
+<mat-divider></mat-divider>
+<div class="seperated-content">
+  <div class="includeds">
+    <mat-label>Included Resources</mat-label>
+    <form
+      (keydown.enter)="$event.preventDefault(); !includeForm.invalid && addInclude()"
+      name="includeForm"
+      #includeForm="ngForm"
+    >
+      <div
+        class="included-resource"
+        *ngFor="
+          let included of data.currentAction.resource.include;
+          index as includedResourceIndex;
+          trackBy: trackByFn
+        "
+      >
+        <mat-form-field>
+          <input
+            matInput
+            [disabled]="data.currentAction.resource.exclude.length && resourceParts.length == 1"
+            [name]="includedResourceIndex + '.includedResource'"
+            #includedResource="ngModel"
+            [(ngModel)]="data.currentAction.resource.include[includedResourceIndex]"
+            (ngModelChange)="onIncludeTyping(includedResource)"
+            required
+          />
+          <mat-error *ngIf="includedResource?.errors?.expectedFormat">
+            Expected resource format: "<b>{{ resourceParts.join("/") }}</b
+            >"
+          </mat-error>
+          <mat-error *ngIf="includedResource?.errors?.endsWith">
+            Resource must end with "*" and include {{ resourceParts.length }} part(s)
+          </mat-error>
+        </mat-form-field>
+        <button
+          mat-button
+          [disabled]="includedResourceIndex == 0"
+          color="warn"
+          (click)="data.currentAction.resource.include.splice(includedResourceIndex, 1)"
+        >
+          <mat-icon>
+            delete
+          </mat-icon>
+        </button>
+      </div>
+    </form>
+    <button
+      type="submit"
+      class="add-resource-button"
+      [disabled]="includeForm.invalid"
+      mat-button
+      (click)="addInclude()"
+    >
+      Add resource <mat-icon>add</mat-icon>
+    </button>
+  </div>
+  <div class="excludeds">
+    <mat-label>Excluded Resources</mat-label>
+    <form
+      (keydown.enter)="$event.preventDefault(); !excludeForm.invalid && addExclude()"
+      name="excludeForm"
+      #excludeForm="ngForm"
+    >
+      <div
+        class="excluded-resource"
+        *ngFor="
+          let excluded of data.currentAction.resource.exclude;
+          index as excludedResourceIndex;
+          trackBy: trackByFn2
+        "
+      >
+        <mat-form-field>
+          <input
+            matInput
+            [name]="excludedResourceIndex + '.excludedResource'"
+            #excludedResource="ngModel"
+            [(ngModel)]="data.currentAction.resource.exclude[excludedResourceIndex]"
+            [pattern]="buildPattern('default')"
+            required
+          />
+          <mat-error *ngIf="excludedResource?.errors?.pattern">
+            Expected resource format: "<b>{{ resourceParts.join("/") }}</b
+            >"
+          </mat-error>
+        </mat-form-field>
+        <button
+          mat-button
+          color="warn"
+          (click)="data.currentAction.resource.exclude.splice(excludedResourceIndex, 1)"
+        >
+          <mat-icon>
+            delete
+          </mat-icon>
+        </button>
+      </div>
+    </form>
+    <button
+      class="add-resource-button"
+      [disabled]="excludeForm.invalid"
+      mat-button
+      (click)="addExclude()"
+    >
+      Add resource <mat-icon>add</mat-icon>
+    </button>
+  </div>
+</div>
+<mat-divider></mat-divider>
+<div class="action-buttons">
+  <button
+    mat-button
+    [disabled]="
+      includeForm.invalid ||
+      excludeForm.invalid ||
+      (!data.currentAction.resource.include.length && !data.currentAction.resource.exclude.length)
+    "
+    (click)="copyResources()"
+  >
+    Copy Resources To All Actions
+  </button>
+  <button
+    mat-button
+    [disabled]="
+      includeForm.invalid ||
+      excludeForm.invalid ||
+      (!data.currentAction.resource.include.length && !data.currentAction.resource.exclude.length)
+    "
+    (click)="dialogRef.close()"
+  >
+    Save
+  </button>
+</div>

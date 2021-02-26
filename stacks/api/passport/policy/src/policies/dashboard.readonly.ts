@@ -5,16 +5,12 @@ export default {
   statement: [
     {
       action: "dashboard:index",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "dashboard"
     },
     {
       action: "dashboard:show",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "dashboard"
     }
   ]

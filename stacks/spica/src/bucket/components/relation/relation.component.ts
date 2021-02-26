@@ -107,7 +107,7 @@ export class RelationComponent implements ControlValueAccessor, OnInit {
       this.selectedRows$ = this.schema$.pipe(
         switchMap(schema =>
           this.bds.find(schema._id, {
-            filter: {_id: {$in: ids.map(id => `ObjectId(${id})`)}}
+            filter: {_id: {$in: ids}}
           })
         ),
         map(data => data.data)

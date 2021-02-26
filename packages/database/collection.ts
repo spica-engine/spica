@@ -19,8 +19,17 @@ export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
-  constructor(public readonly db: DatabaseService, public readonly _collection: string) {
+
+  documentCountLimit: number;
+
+  constructor(
+    public readonly db: DatabaseService,
+    public readonly _collection: string,
+    public readonly _documentCountLimit?: number
+  ) {
     this._coll = db.collection(this._collection);
+
+    this.documentCountLimit = this._documentCountLimit;
   }
 
   estimatedDocumentCount(): Promise<number> {
@@ -34,16 +43,42 @@ export class _MixinCollection<T> {
     return this._coll.aggregate(pipeline, options);
   }
 
-  createCollection(name: string, options?: CollectionCreateOptions): Promise<Collection<any>> {
+  createCollection(
+    name: string,
+    options?: CollectionCreateOptions & {ignoreAlreadyExist?: boolean}
+  ): Promise<Collection<any>> {
+    if (options && options.ignoreAlreadyExist) {
+      delete options.ignoreAlreadyExist;
+      return this.db.createCollection(name, options).catch(error => {
+        if (error.codeName == "NamespaceExists") {
+          return this._coll;
+        }
+        throw new Error(error);
+      });
+    }
     return this.db.createCollection(name, options);
   }
 
+  async documentCountLimitValidation(insertedDocumentCount: number) {
+    if (this.documentCountLimit) {
+      const existingDocumentCount = await this._coll.estimatedDocumentCount();
+
+      if (existingDocumentCount + insertedDocumentCount > this.documentCountLimit) {
+        throw new Error("Document count limit exceeded.");
+      }
+    }
+  }
+
   // Insert
-  insertOne(doc: T): Promise<T> {
+  async insertOne(doc: T): Promise<T> {
+    await this.documentCountLimitValidation(1);
+
     return this._coll.insertOne(doc).then(t => t.ops[0]);
   }
 
-  insertMany(docs: Array<T>): Promise<ObjectId[]> {
+  async insertMany(docs: Array<T>): Promise<ObjectId[]> {
+    await this.documentCountLimitValidation(docs.length);
+
     return this._coll.insertMany(docs).then(t => Object.values(t.insertedIds));
   }
 
@@ -109,7 +144,8 @@ export class _MixinCollection<T> {
       .listIndexes()
       .toArray()
       .then(indexes => {
-        let ttlIndex = indexes.find(index => index.name == "created_at_1");
+        const ttlIndex = indexes.find(index => index.name == "created_at_1");
+
         if (!ttlIndex) {
           return this._coll.createIndex({created_at: 1}, {expireAfterSeconds: expireAfterSeconds});
         } else if (ttlIndex && ttlIndex.expireAfterSeconds != expireAfterSeconds) {
@@ -133,8 +169,8 @@ export type BaseCollection<T> = _MixinCollection<T>;
 
 export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
   return class extends _MixinCollection<T> {
-    constructor(db: DatabaseService) {
-      super(db, collection);
+    constructor(db: DatabaseService, _documentCountLimit?: number) {
+      super(db, collection, _documentCountLimit);
     }
   };
 }

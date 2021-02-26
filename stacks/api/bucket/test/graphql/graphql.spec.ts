@@ -1,19 +1,14 @@
-import {Test, TestingModule} from "@nestjs/testing";
-import {SchemaModule} from "@spica-server/core/schema";
-import {
-  DATE_TIME,
-  OBJECTID_STRING,
-  CREATED_AT,
-  UPDATED_AT,
-  OBJECT_ID
-} from "@spica-server/core/schema/defaults";
-import {CoreTestingModule, Request} from "@spica-server/core/testing";
-import {PassportTestingModule} from "@spica-server/passport/testing";
-import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
-import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {BucketModule} from "@spica-server/bucket";
 import {INestApplication} from "@nestjs/common";
+import {Test, TestingModule} from "@nestjs/testing";
 import {ActivityModule} from "@spica-server/activity";
+import {BucketModule} from "@spica-server/bucket";
+import {SchemaModule} from "@spica-server/core/schema";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {CoreTestingModule, Request} from "@spica-server/core/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
+import {PassportTestingModule} from "@spica-server/passport/testing";
+import {PreferenceTestingModule} from "@spica-server/preference/testing";
 
 export function getBucketName(id: string | ObjectId) {
   return `Bucket_${id}`;
@@ -538,7 +533,7 @@ describe("GraphQLController", () => {
                   type: "string",
                   title: "title",
                   description: "Title of the row",
-                  options: {position: "left", translate: true, visible: true}
+                  options: {position: "left", translate: true}
                 },
                 description: {
                   type: "textarea",
@@ -775,7 +770,8 @@ describe("GraphQLController", () => {
               books: {
                 type: "relation",
                 relationType: "onetomany",
-                bucketId: booksBucket._id
+                bucketId: booksBucket._id,
+                dependent: true
               }
             }
           };
@@ -1342,6 +1338,52 @@ describe("GraphQLController", () => {
             }
           });
         });
+
+        it("should remove books when publisher deleted", async () => {
+          const body = {
+            query: `mutation {
+              delete${publishersBucketName}(_id: "${publishers[0]._id}")
+            }`
+          };
+
+          const {body: deleteResponse} = await req.post("/graphql", body);
+
+          expect(deleteResponse).toEqual({
+            data: {[`delete${publishersBucketName}`]: ""}
+          });
+
+          const params = {
+            query: `{
+              Find${booksBucketName}{
+                meta{
+                  total
+                }
+                data{
+                  _id
+                  title
+                }
+              }
+            }`
+          };
+
+          const {body: booksResponse} = await req.get("/graphql", params);
+
+          expect(booksResponse).toEqual({
+            data: {
+              [`Find${booksBucketName}`]: {
+                meta: {
+                  total: 1
+                },
+                data: [
+                  {
+                    _id: books[2]._id,
+                    title: "Forsaking The Forest"
+                  }
+                ]
+              }
+            }
+          });
+        });
       });
 
       describe("schedule", () => {
@@ -1762,10 +1804,10 @@ describe("GraphQLController", () => {
             },
             relation_field: {
               type: "relation",
-              bucketId: "unknown_bucket_id",
-              relationType: "manytomany"
+              bucketId: "000000000000000000000000",
+              relationType: "onetomany"
             },
-            "123asd?qwe*": {
+            "3dmodels": {
               type: "color"
             },
             invalid_enums: {
@@ -1773,7 +1815,7 @@ describe("GraphQLController", () => {
               enum: ["?invalid*", "valid"]
             }
           },
-          required: ["relation_field", "123asd?qwe*", "invalid_enums"]
+          required: ["relation_field", "3dmodels", "invalid_enums"]
         })
         .then(r => r.body);
       bucketName = getBucketName(bucket._id);
@@ -1798,21 +1840,17 @@ describe("GraphQLController", () => {
       expect(JSON.parse(response.headers.warning)).toEqual([
         {
           target: `${bucketName}.relation_field`,
-          reason: "Relation type 'manytomany' is invalid."
+          reason: "Related bucket '000000000000000000000000' does not exist."
         },
         {
-          target: `${bucketName}.relation_field`,
-          reason: "Related bucket 'unknown_bucket_id' does not exist."
-        },
-        {
-          target: `${bucketName}.123asd?qwe*`,
+          target: `${bucketName}.3dmodels`,
           reason:
-            "Name specification must start with an alphabetic character and can not include any non-letter character."
+            "Name specification must start with an alphabetic character and can not include any non-word character."
         },
         {
           target: `${bucketName}.invalid_enums`,
           reason:
-            "Enum values must start with an alphabetic character and can not include any non-letter character."
+            "Enum values must start with an alphabetic character and can not include any non-word character."
         }
       ]);
 

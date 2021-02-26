@@ -6,7 +6,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {merge, Observable} from "rxjs";
 import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
-import {BucketData} from "../../interfaces/bucket-entry";
+import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
@@ -26,6 +26,10 @@ import {DomSanitizer} from "@angular/platform-browser";
 export class IndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
+  dependents = [];
+
+  selectedItemDependents = [];
+
   bucketId: string;
   schema$: Observable<Bucket>;
   data$: Observable<BucketData>;
@@ -43,7 +47,7 @@ export class IndexComponent implements OnInit {
 
   $preferences: Observable<BucketSettings>;
   language: string;
-  selectedItems: Array<string> = [];
+  selectedItems: Array<BucketEntry> = [];
   dataIds: Array<string> = [];
 
   guide: boolean = false;
@@ -113,9 +117,7 @@ export class IndexComponent implements OnInit {
                 .some(schemaProps => schemaProps == dispProps)
             )
           : [
-              ...Object.entries(schema.properties)
-                .filter(([, value]) => value.options.visible)
-                .map(([key]) => key),
+              schema.primary || Object.keys(schema.properties)[0] || "$$spicainternal_id",
               "$$spicainternal_actions"
             ];
       }),
@@ -191,6 +193,37 @@ export class IndexComponent implements OnInit {
         return response.data;
       })
     );
+  }
+
+  getDependents(schema: Bucket, entries: BucketEntry[]) {
+    const dependents = new Set();
+
+    for (const [name, definition] of Object.entries(schema.properties)) {
+      for (const entry of entries) {
+        if (definition.type == "relation" && definition["dependent"] && entry[name]) {
+          const documents = Array.isArray(entry[name]) ? entry[name] : [entry[name]];
+
+          for (const document of documents) {
+            const text = `${definition["bucketId"]}/${document._id}`;
+            dependents.add(text);
+          }
+        }
+      }
+    }
+
+    return Array.from(dependents);
+  }
+
+  onItemSelected(isSelect: boolean, data: BucketEntry) {
+    if (isSelect) {
+      this.selectedItems.push(data);
+    } else {
+      this.selectedItems.splice(this.selectedItems.findIndex(entry => entry._id == data._id), 1);
+    }
+  }
+
+  hasSelected(id: string) {
+    return this.selectedItems.findIndex(item => item._id == id) != -1;
   }
 
   toggleDisplayAll(display: boolean, schema: Bucket) {
@@ -309,10 +342,11 @@ export class IndexComponent implements OnInit {
 
   deleteSelectedItems() {
     this.bds
-      .deleteMany(this.bucketId, this.selectedItems)
+      .deleteMany(this.bucketId, this.selectedItems.map(i => i._id))
       .toPromise()
       .then(() => this.refresh.emit());
   }
+
   guideRequest(url: string, key: string) {
     if (!this.guideResponse[key]) {
       this.bs

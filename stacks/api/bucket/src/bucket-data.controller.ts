@@ -16,13 +16,31 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Inject,
+  Res
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketDataService, BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {ARRAY, BOOLEAN, BooleanCheck, DEFAULT, JSONP, JSONPR, NUMBER, OR} from "@spica-server/core";
+import {
+  BucketDataService,
+  BucketDocument,
+  BucketService,
+  isJSONFilter,
+  filterReviver
+} from "@spica-server/bucket/services";
+import {
+  ARRAY,
+  BOOLEAN,
+  BooleanCheck,
+  DEFAULT,
+  JSONP,
+  JSONPR,
+  NUMBER,
+  OR,
+  EXPRESSION
+} from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
@@ -33,12 +51,12 @@ import {
   findDocuments,
   insertDocument,
   patchDocument,
-  replaceDocument
+  replaceDocument,
+  authIdToString
 } from "./crud";
-import {filterReviver, isJSONExpression} from "./filter";
 import {createHistory} from "./history";
 import {applyPatch} from "./patch";
-import {clearRelations, getRelationPaths} from "./relation";
+import {clearRelations, getRelationPaths, getDependents} from "./relation";
 
 /**
  * All APIs related to bucket documents.
@@ -51,7 +69,8 @@ export class BucketDataController {
     private bds: BucketDataService,
     private validator: Validator,
     @Optional() private changeEmitter: ChangeEmitter,
-    @Optional() private history: HistoryService
+    @Optional() private history: HistoryService,
+    @Optional() @Inject() private activityService: ActivityService
   ) {}
 
   /**
@@ -71,7 +90,7 @@ export class BucketDataController {
    * Example: Descending `{"name": -1}` OR Ascending `{"name": 1}`
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @ResourceFilter() resourceFilter: object,
@@ -82,7 +101,8 @@ export class BucketDataController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("filter", OR(isJSONExpression, JSONPR(filterReviver))) filter?: string | object,
+    @Query("filter", OR(isJSONFilter, JSONPR(filterReviver), EXPRESSION(expression.aggregate)))
+    filter?: string | object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
@@ -96,21 +116,6 @@ export class BucketDataController {
     const relationPaths: string[][] = getRelationPaths(
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
-
-    if (filter) {
-      if (typeof filter == "object") {
-        req.res.append(
-          "Warning",
-          `100 "using MongoDB operators in filter has been deprecated and highly discouraged"`
-        );
-      } else {
-        try {
-          expression.aggregate(filter, {});
-        } catch (e) {
-          throw new BadRequestException(`filter has to be a valid expression.`, e.message);
-        }
-      }
-    }
 
     return findDocuments(
       schema,
@@ -149,7 +154,7 @@ export class BucketDataController {
    * @param localize When true, documents that have translations is localized to `accept-language`.
    */
   @Get(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
@@ -161,6 +166,10 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const relationPaths: string[][] = getRelationPaths(
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
@@ -171,7 +180,7 @@ export class BucketDataController {
         relationPaths,
         language: acceptedLanguage,
         limit: 1,
-        filter: {_id: documentId},
+        documentId: documentId,
         req,
         projectMap: []
       },
@@ -221,6 +230,10 @@ export class BucketDataController {
     @Body(Schema.validate(req => req.params.bucketId)) rawDocument: BucketDocument
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
+
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
 
     const document = await insertDocument(
       schema,
@@ -276,6 +289,10 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const previousDocument = await replaceDocument(
       schema,
       {...document, _id: documentId},
@@ -287,7 +304,7 @@ export class BucketDataController {
     );
 
     if (!previousDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     const currentDocument = {...document, _id: documentId};
@@ -334,15 +351,30 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const bkt = this.bds.children(bucketId);
 
     const previousDocument = await bkt.findOne({_id: documentId});
+
+    if (!previousDocument) {
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
+    }
 
     const patchedDocument = applyPatch(previousDocument, patch);
 
     await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
       throw new BadRequestException(
-        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.errors
+          ? error.errors
+              .map(e => {
+                const dataPath = e.dataPath.replace(/\//g, ".");
+                return `${dataPath} ${e.message}`;
+              })
+              .join("\n")
+          : [],
         error.message
       );
     });
@@ -360,7 +392,7 @@ export class BucketDataController {
     );
 
     if (!currentDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
@@ -396,6 +428,10 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const deletedDocument = await deleteDocument(
       schema,
       documentId,
@@ -407,7 +443,7 @@ export class BucketDataController {
     );
 
     if (!deletedDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     if (this.changeEmitter) {
@@ -429,5 +465,21 @@ export class BucketDataController {
     }
 
     await clearRelations(this.bs, bucketId, documentId);
+
+    const dependents = getDependents(schema, deletedDocument);
+
+    for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+      for (const targetDocId of targetDocIds) {
+        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
+
+        if (this.activityService) {
+          const activities = createActivity(req, {body: []}, createBucketDataActivity);
+
+          if (activities.length) {
+            await this.activityService.insert(activities);
+          }
+        }
+      }
+    }
   }
 }

@@ -8,6 +8,8 @@ import {INestApplication} from "@nestjs/common";
 import {BucketModule, BucketCoreModule} from "@spica-server/bucket";
 import {PolicyModule} from "@spica-server/passport/policy";
 import {PreferenceService} from "@spica-server/preference/services";
+import {SchemaModule} from "@spica-server/core/schema";
+import {OBJECTID_STRING, DATE_TIME} from "@spica-server/core/schema/formats";
 
 describe("Preference Integration", () => {
   let module: TestingModule;
@@ -17,6 +19,9 @@ describe("Preference Integration", () => {
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
+        SchemaModule.forRoot({
+          formats: [OBJECTID_STRING, DATE_TIME]
+        }),
         DatabaseTestingModule.replicaSet(),
         PassportTestingModule.initialize(),
         PreferenceModule,
@@ -58,7 +63,7 @@ describe("Preference Integration", () => {
         }
       }
     };
-    const bucketId = await req.post("/bucket", bucket).then(r => r.body._id);
+    const bucketId = await req.post("/bucket", bucket).then(res => res.body._id);
 
     const document = {
       title: {
@@ -66,7 +71,9 @@ describe("Preference Integration", () => {
         en_US: "new title"
       }
     };
-    const documentId = await req.post(`/bucket/${bucketId}/data`, document).then(r => r.body._id);
+    const documentId = await req
+      .post(`/bucket/${bucketId}/data`, document)
+      .then(res => res.body._id);
 
     await req.put("/preference/bucket", {
       scope: "bucket",
@@ -117,6 +124,7 @@ describe("Preference Integration", () => {
     expect(body).toEqual({
       _id: identityId,
       identifier: "test_user",
+      policies: [],
       attributes: {}
     });
   });

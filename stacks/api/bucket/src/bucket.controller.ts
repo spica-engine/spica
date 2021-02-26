@@ -24,7 +24,7 @@ import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/gua
 import {createBucketActivity} from "./activity.resource";
 import {findRelations} from "./relation";
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
-
+import * as expression from "@spica-server/bucket/expression";
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -92,10 +92,39 @@ export class BucketController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:create"))
   async add(@Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket) {
-    const insertedDocument = await this.bs.insertOne(bucket);
-    await this.bs.createCollection(`bucket_${insertedDocument._id}`);
+    this.ruleValidation(bucket);
+
+    const insertedBucket = await this.bs.insertOne(bucket);
     this.bs.emitSchemaChanges();
-    return insertedDocument;
+
+    return insertedBucket;
+  }
+
+  ruleValidation(schema: Bucket) {
+    try {
+      expression.extractPropertyMap(schema.acl.read);
+      expression.aggregate(schema.acl.read, {
+        auth: {
+          identifier: "",
+          policies: []
+        },
+        document: {}
+      });
+    } catch (error) {
+      throw new BadRequestException("Error occurred while parsing read rule\n" + error.message);
+    }
+
+    try {
+      expression.run(schema.acl.write, {
+        auth: {
+          identifier: "",
+          policies: []
+        },
+        document: {}
+      });
+    } catch (error) {
+      throw new BadRequestException("Error occurred while parsing write rule\n" + error.message);
+    }
   }
 
   /**
@@ -128,8 +157,9 @@ export class BucketController {
     @Param("id", OBJECT_ID) id: ObjectId,
     @Body(Schema.validate("http://spica.internal/bucket/schema")) bucket: Bucket
   ) {
-    const previousSchema = await this.bs.findOne({_id: id});
+    this.ruleValidation(bucket);
 
+    const previousSchema = await this.bs.findOne({_id: id});
     const currentSchema = await this.bs.findOneAndReplace({_id: id}, bucket, {
       returnOriginal: false
     });

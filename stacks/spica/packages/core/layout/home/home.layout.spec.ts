@@ -16,7 +16,7 @@ import {RouteService} from "../../route/route.service";
 import {LAYOUT_ACTIONS, LAYOUT_INITIALIZER} from "../config";
 import {ToolbarActionDirective} from "../toolbar-action";
 import {HomeLayoutComponent} from "./home.layout";
-import {CanInteractDirectiveTest} from "../../../../src/passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatTooltipModule} from "@angular/material/tooltip";
 

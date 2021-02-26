@@ -12,15 +12,13 @@ export default {
     },
     {
       action: "passport:policy:update",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "passport:policy"
     },
     {
       action: "passport:policy:delete",
       resource: {
-        include: "*",
+        include: ["*"],
         exclude: []
       },
       module: "passport:policy"

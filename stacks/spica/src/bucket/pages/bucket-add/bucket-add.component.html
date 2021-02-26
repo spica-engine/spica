@@ -171,9 +171,6 @@
             <mat-error *ngIf="bucket.primary == undefined">
               Please select a primary property.
             </mat-error>
-            <mat-error *ngIf="!isThereVisible">
-              You have to make at least a property visible at the list.
-            </mat-error>
           </span>
 
           <mat-list-item class="properties">
@@ -239,30 +236,36 @@
           <mat-list-item>
             <div class="code-editors">
               <div>
-                <b>
-                  <mat-icon>contact_support</mat-icon>
-                  <span>Reading rules</span>
-                </b>
+                <a target="_blank" href="https://spicaengine.com/docs/concept/bucket#rules">
+                  <b>
+                    <mat-icon>contact_support</mat-icon>
+                    <span>Reading rules</span>
+                  </b>
+                </a>
                 <code-editor
                   *ngIf="configurationState == 'rules'"
                   placeholder="ACL"
                   [(ngModel)]="bucket.acl.read"
                   [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
                   language="cel"
+                  [properties]="bucket.properties"
                 >
                 </code-editor>
               </div>
               <div>
-                <b>
-                  <span>Writing Rules</span>
-                  <mat-icon>contact_support</mat-icon>
-                </b>
+                <a target="_blank" href="https://spicaengine.com/docs/concept/bucket#rules">
+                  <b>
+                    <span>Writing Rules</span>
+                    <mat-icon>contact_support</mat-icon>
+                  </b>
+                </a>
                 <code-editor
                   *ngIf="configurationState == 'rules'"
                   placeholder="ACL"
                   [(ngModel)]="bucket.acl.write"
                   [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false}"
                   language="cel"
+                  [properties]="bucket.properties"
                 >
                 </code-editor>
               </div>
@@ -349,7 +352,6 @@
         [disabled]="
           describeForm.invalid ||
           (bucket.properties | keyvalue)?.length < 1 ||
-          !isThereVisible ||
           bucket.primary == undefined ||
           !!state
         "

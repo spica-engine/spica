@@ -13,7 +13,8 @@ import {
   Query,
   Res,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  HttpCode
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {BOOLEAN, JSONP, NUMBER} from "@spica-server/core";
@@ -85,16 +86,10 @@ export class StorageController {
 
   /**
    * Returns metadata of the object size, content-type and url.
-   * > Deprecated: `metadata` query parameter is deprecated and will be removed soon. this endpoint used to return both objects content and its metadata controlled by the `metadata` query parameter.
    * @param id Identifier of the object
-   * @param metadata When true, it will respond with the metadata instead of object itself.
    */
   @Get(":id")
-  async findOne(
-    @Res() res,
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Query("metadata", BOOLEAN) metadata?: boolean
-  ) {
+  async findOne(@Res() res, @Param("id", OBJECT_ID) id: ObjectId) {
     const object = await this.storage.get(id);
 
     if (!object) {
@@ -102,19 +97,6 @@ export class StorageController {
     }
 
     object.url = await this.storage.getUrl(id.toHexString());
-
-    if (!metadata) {
-      res.statusCode = 301;
-      res.set({
-        Location: object.url
-      });
-
-      return res.send({
-        error: "Deprecated",
-        message: "Fetching objects via this is deprecated.",
-        url: object.url
-      });
-    }
 
     delete object.content.data;
     res.send(object);
@@ -211,6 +193,7 @@ export class StorageController {
    */
   @UseInterceptors(activity(createStorageActivity))
   @Delete(":id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("storage:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
     return this.storage.deleteOne(id);

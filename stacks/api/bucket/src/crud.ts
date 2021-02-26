@@ -1,15 +1,16 @@
-import {ForbiddenException} from "@nestjs/common";
+import {ForbiddenException, BadRequestException} from "@nestjs/common";
 import {BaseCollection, ObjectId} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
 import {Bucket, BucketDocument, BucketPreferences} from "@spica-server/bucket/services";
-import {buildI18nAggregation, findLocale, hasTranslatedProperties} from "./locale";
 import {
   createRelationMap,
   getRelationPipeline,
-  resetNonOverlappingPathsInRelationMap,
-  compareAndUpdateRelations
+  RelationMap,
+  resetNonOverlappingPathsInRelationMap
 } from "./relation";
-import {getUpdateQueryForPatch, deepCopy} from "./patch";
+import {getUpdateQueryForPatch} from "./patch";
+import {iPipelineBuilder, PipelineBuilder} from "./pipeline.builder";
+import {ACLSyntaxException, DatabaseException} from "./exception";
 
 interface CrudOptions<Paginate> {
   schedule?: boolean;
@@ -19,6 +20,7 @@ interface CrudOptions<Paginate> {
 
 interface CrudParams {
   resourceFilter?: object;
+  documentId?: ObjectId;
   filter?: object | string;
   language?: string;
   relationPaths: string[][];
@@ -29,7 +31,7 @@ interface CrudParams {
   projectMap: string[][];
 }
 
-interface CrudFactories<T> {
+export interface CrudFactories<T> {
   collection: (id: string | ObjectId) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket>;
@@ -65,155 +67,78 @@ export async function findDocuments<T>(
   factories: CrudFactories<T>
 ): Promise<unknown> {
   const collection = factories.collection(schema._id);
+  const pipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
+  const seekingPipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
 
-  const pipeline: object[] = [];
+  let rulePropertyMap;
+  let ruleRelationMap: RelationMap[];
 
-  // resourcefilter
-  if (params.resourceFilter) {
-    pipeline.push(params.resourceFilter);
-  }
-
-  // scheduled contents
-  pipeline.push({$match: {_schedule: {$exists: !!options.schedule}}});
-
-  //localization
-  let locale;
-  if (options.localize && hasTranslatedProperties(schema)) {
-    locale = findLocale(params.language, await factories.preference());
-    pipeline.push({
-      $replaceWith: buildI18nAggregation("$$ROOT", locale.best, locale.fallback)
+  const basePipeline = await pipelineBuilder
+    .findOneIfRequested(params.documentId)
+    .filterResources(params.resourceFilter)
+    .filterScheduledData(!!options.schedule)
+    .localize(options.localize, params.language, locale => {
+      params.req.res.header("Content-language", locale.best || locale.fallback);
     });
 
-    params.req.res.header("Content-language", locale.best || locale.fallback);
-  }
-
-  // rules
-  const rulePropertyMap = expression
-    .extractPropertyMap(schema.acl.read)
-    .map(path => path.split("."));
-
-  let ruleRelationMap = await createRelationMap({
-    paths: rulePropertyMap,
-    properties: schema.properties,
-    resolve: factories.schema
-  });
-
-  const usedRelationPaths: string[] = [];
-  ruleRelationMap = compareAndUpdateRelations(ruleRelationMap, usedRelationPaths);
-
-  const ruleRelationStage = getRelationPipeline(ruleRelationMap, locale);
-  pipeline.push(...ruleRelationStage);
-
-  const ruleExpression = expression.aggregate(schema.acl.read, {auth: params.req.user});
-  pipeline.push({$match: ruleExpression});
-
-  let filterPropertyMap: string[][] = [];
-  let filterRelationMap: object[] = [];
-  // filter
-  if (params.filter) {
-    let filterExpression: object;
-
-    if (typeof params.filter == "object" && Object.keys(params.filter).length) {
-      filterPropertyMap = extractFilterPropertyMap(params.filter);
-
-      filterExpression = params.filter;
-    } else if (typeof params.filter == "string") {
-      filterPropertyMap = expression.extractPropertyMap(params.filter).map(path => path.split("."));
-
-      filterExpression = expression.aggregate(params.filter, {});
-    }
-
-    filterRelationMap = await createRelationMap({
-      paths: filterPropertyMap,
-      properties: schema.properties,
-      resolve: factories.schema
+  const rulesAppliedPipeline = await basePipeline
+    .rules(params.req.user, (propertyMap, relationMap) => {
+      rulePropertyMap = propertyMap;
+      ruleRelationMap = relationMap;
+    })
+    .catch(error => {
+      throw new ACLSyntaxException(error.message);
     });
-
-    const updatedFilterRelationMap = compareAndUpdateRelations(
-      deepCopy(filterRelationMap),
-      usedRelationPaths
-    );
-
-    const filterRelationStage = getRelationPipeline(updatedFilterRelationMap, locale);
-    pipeline.push(...filterRelationStage);
-
-    if (filterExpression) {
-      pipeline.push({$match: filterExpression});
-    }
-  }
-
-  // sort,skip and limit
-  const seekingPipeline = [];
-
-  if (params.sort) {
-    seekingPipeline.push({$sort: params.sort});
-  }
-
-  if (params.skip) {
-    seekingPipeline.push({$skip: params.skip});
-  }
-
-  if (params.limit) {
-    seekingPipeline.push({$limit: params.limit});
-  }
-
-  let relationPropertyMap = params.relationPaths || [];
-  let relationMap = [];
-  if (relationPropertyMap.length) {
-    relationMap = await createRelationMap({
-      paths: params.relationPaths,
-      properties: schema.properties,
-      resolve: factories.schema
-    });
-    const updatedRelationMap = compareAndUpdateRelations(deepCopy(relationMap), usedRelationPaths);
-
-    const relationStage = getRelationPipeline(updatedRelationMap, locale);
-    seekingPipeline.push(...relationStage);
-  }
 
   const ruleResetStage = resetNonOverlappingPathsInRelationMap({
-    left: [...relationPropertyMap, ...filterPropertyMap],
+    left: [],
     right: rulePropertyMap,
-    map: [...ruleRelationMap, ...relationMap, ...relationMap]
+    map: ruleRelationMap
   });
+  // Reset those relations which have been requested by acl rules.
+  const filtersAppliedPipeline = await rulesAppliedPipeline
+    .attachToPipeline(!!ruleResetStage, ruleResetStage)
+    .filterByUserRequest(params.filter);
 
-  if (ruleResetStage) {
-    // Reset those relations which have been requested by acl rules.
-    seekingPipeline.push(ruleResetStage);
-  }
+  const seekingPipeline: iPipelineBuilder = seekingPipelineBuilder
+    .sort(params.sort)
+    .skip(params.skip)
+    .limit(params.limit);
+
+  const relationPropertyMap = params.relationPaths || [];
+
+  const relationPathResolvedPipeline = await filtersAppliedPipeline.resolveRelationPath(
+    relationPropertyMap,
+    relationStage => {
+      seekingPipeline.attachToPipeline(true, ...relationStage);
+    }
+  );
 
   // for graphql responses
-  if (params.projectMap.length) {
-    seekingPipeline.push(getProjectAggregation(params.projectMap));
-  }
+  seekingPipeline.attachToPipeline(
+    params.projectMap.length,
+    getProjectAggregation(params.projectMap)
+  );
+
+  const seeking = seekingPipeline.result();
+
+  const pipeline = relationPathResolvedPipeline.paginate(options.paginate, seeking).result();
 
   if (options.paginate) {
-    pipeline.push(
-      {
-        $facet: {
-          meta: [{$count: "total"}],
-          data: seekingPipeline.length ? seekingPipeline : [{$unwind: "$_id"}]
-        }
-      },
-      {$unwind: {path: "$meta", preserveNullAndEmptyArrays: true}}
-    );
-
-    const result = await collection.aggregate<CrudPagination<T>>(pipeline).next();
-
+    const result = await collection
+      .aggregate<CrudPagination<T>>(pipeline)
+      .next()
+      .catch(error => {
+        throw new DatabaseException(error.message);
+      });
     return result.data.length ? result : {meta: {total: 0}, data: []};
   }
-
-  return collection.aggregate<T>([...pipeline, ...seekingPipeline]).toArray();
-}
-
-// it will work on only basic filters => {"user.name" : "John"}
-function extractFilterPropertyMap(filter: any) {
-  const map: string[][] = [];
-  for (const fields of Object.keys(filter)) {
-    const field = fields.split(".");
-    map.push(field);
-  }
-  return map;
+  return collection
+    .aggregate<T>([...pipeline, ...seeking])
+    .toArray()
+    .catch(error => {
+      throw new DatabaseException(error.message);
+    });
 }
 
 export async function insertDocument(
@@ -223,30 +148,23 @@ export async function insertDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   }
 ) {
   const collection = factories.collection(schema._id);
 
-  const ruleAggregation = await getWriteRuleAggregation(schema, factories.schema, document);
-
-  const fullDocument = await collection
+  await executeWriteRule(
+    schema,
+    factories.schema,
+    document,
     // unlike others, we have to run this pipeline against buckets in case the target
     // collection is empty.
-    .collection("buckets")
-    .aggregate(ruleAggregation)
-    .next();
+    collection.collection("buckets"),
+    params.req.user
+  );
 
-  const aclResult = expression.run(schema.acl.write, {
-    auth: params.req.user,
-    document: fullDocument
-  });
-  if (!aclResult) {
-    throw new ForbiddenException("ACL rules has rejected this operation.");
-  }
-
-  return collection.insertOne(document);
+  return collection.insertOne(document).catch(handleWriteErrors);
 }
 
 export async function replaceDocument(
@@ -256,7 +174,7 @@ export async function replaceDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
@@ -265,25 +183,16 @@ export async function replaceDocument(
 ) {
   const collection = factories.collection(schema._id);
 
-  const ruleAggregation = await getWriteRuleAggregation(schema, factories.schema, document);
-
-  const fullDocument = await collection.aggregate(ruleAggregation).next();
-
-  const aclResult = expression.run(schema.acl.write, {
-    auth: params.req.user,
-    document: fullDocument
-  });
-
-  if (!aclResult) {
-    throw new ForbiddenException("ACL rules has rejected this operation.");
-  }
+  await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
 
   const documentId = document._id;
   delete document._id;
 
-  return collection.findOneAndReplace({_id: documentId}, document, {
-    returnOriginal: options.returnOriginal
-  });
+  return collection
+    .findOneAndReplace({_id: documentId}, document, {
+      returnOriginal: options.returnOriginal
+    })
+    .catch(handleWriteErrors);
 }
 
 export async function patchDocument(
@@ -294,7 +203,7 @@ export async function patchDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
@@ -303,79 +212,99 @@ export async function patchDocument(
 ) {
   const collection = factories.collection(schema._id);
 
-  const ruleAggregation = await getWriteRuleAggregation(schema, factories.schema, document);
+  await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
 
-  const fullDocument = await collection.aggregate(ruleAggregation).next();
-
-  const aclResult = expression.run(schema.acl.write, {
-    auth: params.req.user,
-    document: fullDocument
-  });
-
-  if (!aclResult) {
-    throw new ForbiddenException("ACL rules has rejected this operation.");
-  }
+  delete patch._id;
 
   const updateQuery = getUpdateQueryForPatch(patch);
 
-  return collection.findOneAndUpdate({_id: document._id}, updateQuery, {
-    returnOriginal: options.returnOriginal
-  });
+  return collection
+    .findOneAndUpdate({_id: document._id}, updateQuery, {
+      returnOriginal: options.returnOriginal
+    })
+    .catch(handleWriteErrors);
 }
 
 export async function deleteDocument(
   schema: Bucket,
-  documentId: ObjectId,
+  documentId: string | ObjectId,
   params: {
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => any;
+    collection: (id: string | ObjectId) => BaseCollection<BucketDocument>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   }
 ) {
   const collection = factories.collection(schema._id);
 
-  const document = collection.findOne({_id: new ObjectId(documentId)});
+  const document = await collection.findOne({_id: new ObjectId(documentId)});
 
-  const ruleAggregation = await getWriteRuleAggregation(schema, factories.schema, document);
-
-  const fullDocument = await collection.aggregate(ruleAggregation).next();
-
-  const aclResult = expression.run(schema.acl.write, {
-    auth: params.req.user,
-    document: fullDocument
-  });
-
-  if (!aclResult) {
-    throw new ForbiddenException("ACL rules has rejected this operation.");
+  if (!document) {
+    return;
   }
 
-  const deletedCount = await collection.deleteOne({_id: documentId});
+  await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
+
+  const deletedCount = await collection.deleteOne({_id: document._id});
 
   if (deletedCount == 1) {
     return document;
   }
 }
 
-async function getWriteRuleAggregation(schema: Bucket, resolve: any, document: BucketDocument) {
-  const paths = expression.extractPropertyMap(schema.acl.write).map(path => path.split("."));
+async function executeWriteRule(
+  schema: Bucket,
+  resolve: (id: string) => Promise<Bucket>,
+  document: BucketDocument,
+  collection: BaseCollection<unknown>,
+  auth: object
+) {
+  let paths;
+
+  try {
+    paths = expression.extractPropertyMap(schema.acl.write).map(path => path.split("."));
+  } catch (error) {
+    throw new ACLSyntaxException(error.message);
+  }
 
   const relationMap = await createRelationMap({
     properties: schema.properties,
     paths,
-    resolve: resolve
+    resolve
   });
 
   const relationStage = getRelationPipeline(relationMap, undefined);
 
-  return [
+  const aggregation = [
     {$limit: 1},
     {
-      $replaceWith: document
+      $replaceWith: {$literal: document}
     },
     ...relationStage
   ];
+
+  const fullDocument = await collection
+    .aggregate(aggregation)
+    .next()
+    .catch(error => {
+      throw new DatabaseException(error.message);
+    });
+
+  let aclResult;
+
+  try {
+    aclResult = expression.run(schema.acl.write, {
+      auth,
+      document: fullDocument
+    });
+  } catch (error) {
+    throw new ACLSyntaxException(error.message);
+  }
+
+  if (!aclResult) {
+    throw new ForbiddenException("ACL rules has rejected this operation.");
+  }
 }
 
 function getProjectAggregation(fieldMap: string[][]) {
@@ -384,4 +313,21 @@ function getProjectAggregation(fieldMap: string[][]) {
     result[fields.join(".")] = 1;
   }
   return {$project: result};
+}
+
+function handleWriteErrors(error: any) {
+  if (error.code === 11000) {
+    throw new BadRequestException(
+      `Value of the property .${Object.keys(error.keyValue)[0]} should unique across all documents.`
+    );
+  }
+
+  throw new DatabaseException(error.message);
+}
+
+export function authIdToString(req: any) {
+  if (req.user && req.user._id) {
+    req.user._id = req.user._id.toString();
+  }
+  return req;
 }

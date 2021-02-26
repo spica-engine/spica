@@ -35,7 +35,7 @@ import {
 import {createHistory} from "../history";
 import {findLocale} from "../locale";
 import {applyPatch, deepCopy} from "../patch";
-import {clearRelations} from "../relation";
+import {clearRelations, getDependents} from "../relation";
 import {
   createSchema,
   extractAggregationFromQuery,
@@ -68,14 +68,18 @@ export class GraphqlController implements OnModuleInit {
       total: Int
     }
 
-    type Location{
-      latitude: Float
-      longitude: Float
+    enum Point{
+      Point
     }
 
-    input LocationInput{
-      latitude: Float
-      longitude: Float
+    type PointLocation{
+      type: Point
+      coordinates: [ Float ]
+    }
+    
+    input PointLocationInput{
+      type: Point 
+      coordinates: [ Float ]
     }
   `;
 
@@ -296,7 +300,7 @@ export class GraphqlController implements OnModuleInit {
           req: context,
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: new ObjectId(documentId)}
+          documentId: new ObjectId(documentId)
         },
         {localize: true, paginate: false},
         {
@@ -342,7 +346,12 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.POST, bucket._id, insertedDocument._id);
+        const _ = this.insertActivity(
+          context,
+          Action.POST,
+          bucket._id.toString(),
+          insertedDocument._id
+        );
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
@@ -352,7 +361,7 @@ export class GraphqlController implements OnModuleInit {
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: insertedDocument._id},
+          documentId: insertedDocument._id,
           req: context
         },
         {localize: true},
@@ -413,7 +422,7 @@ export class GraphqlController implements OnModuleInit {
       const currentDocument = {...input, _id: documentId};
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+        const _ = this.insertActivity(context, Action.PUT, bucket._id.toString(), documentId);
       }
 
       if (this.history) {
@@ -433,7 +442,7 @@ export class GraphqlController implements OnModuleInit {
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: new ObjectId(documentId)},
+          documentId: new ObjectId(documentId),
           req: context
         },
         {localize: true},
@@ -510,7 +519,7 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.PUT, bucket._id, documentId);
+        const _ = this.insertActivity(context, Action.PUT, bucket._id.toString(), documentId);
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
@@ -520,7 +529,7 @@ export class GraphqlController implements OnModuleInit {
         {
           relationPaths: requestedFields,
           projectMap: requestedFields,
-          filter: {_id: currentDocument._id},
+          documentId: currentDocument._id,
           req: context
         },
         {localize: true},
@@ -547,20 +556,23 @@ export class GraphqlController implements OnModuleInit {
     };
   }
 
-  delete(bucket: Bucket): Function {
+  delete(bucket: Bucket) {
     return async (
       root: any,
       {_id: documentId}: {[arg: string]: any},
       context: any,
-      info: GraphQLResolveInfo
+      info: GraphQLResolveInfo,
+      authentication = true
     ): Promise<string> => {
-      await this.authenticate(
-        context,
-        "/bucket/:bucketId/data/:documentId",
-        {bucketId: bucket._id, documentId: documentId},
-        ["bucket:data:delete"],
-        {resourceFilter: false}
-      );
+      if (authentication) {
+        await this.authenticate(
+          context,
+          "/bucket/:bucketId/data/:documentId",
+          {bucketId: bucket._id, documentId: documentId},
+          ["bucket:data:delete"],
+          {resourceFilter: false}
+        );
+      }
 
       const deletedDocument = await deleteDocument(
         bucket,
@@ -585,7 +597,7 @@ export class GraphqlController implements OnModuleInit {
       }
 
       if (this.activity) {
-        const _ = this.insertActivity(context, Action.DELETE, bucket._id, documentId);
+        const _ = this.insertActivity(context, Action.DELETE, bucket._id.toString(), documentId);
       }
 
       if (this.hookChangeEmitter) {
@@ -600,34 +612,27 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
+      const dependents = getDependents(bucket, deletedDocument);
+      for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+        const schema = this.buckets.find(bucket => bucket._id.toString() == targetBucketId);
+
+        if (!schema) {
+          continue;
+        }
+
+        const deleteFn = this.delete(schema);
+
+        for (const targetDocId of targetDocIds) {
+          await deleteFn(root, {_id: targetDocId}, context, info, false);
+
+          if (this.activity) {
+            const _ = this.insertActivity(context, Action.DELETE, targetBucketId, targetDocId);
+          }
+        }
+      }
+
       return "";
     };
-  }
-
-  insertActivity(
-    request: any,
-    method: Action,
-    bucketId: string | ObjectId,
-    documentId: string | ObjectId
-  ) {
-    request.params.bucketId = bucketId;
-    request.params.documentId = documentId;
-    request.method = Action[method];
-
-    const response = {
-      _id: documentId
-    };
-
-    return createActivity(
-      {
-        switchToHttp: () => ({
-          getRequest: () => request
-        })
-      } as any,
-      response,
-      createBucketDataActivity,
-      this.activity
-    );
   }
 
   validateInput(bucketId: ObjectId, input: BucketDocument): Promise<any> {
@@ -691,6 +696,34 @@ export class GraphqlController implements OnModuleInit {
     const preferences = await this.bs.getPreferences();
     return findLocale(language ? language : preferences.language.default, preferences);
   };
+
+  async insertActivity(req: any, method: Action, bucketId: string, documentId: string) {
+    const request: any = {
+      params: {}
+    };
+
+    request.params.bucketId = bucketId;
+    request.params.documentId = documentId;
+    request.method = Action[method];
+
+    if (req.user) {
+      request.user = deepCopy(req.user);
+    }
+
+    if (req.body) {
+      request.body = deepCopy(req.body);
+    }
+
+    const response = {
+      _id: documentId
+    };
+
+    const activities = createActivity(request, response, createBucketDataActivity);
+
+    if (activities.length) {
+      await this.activity.insert(activities);
+    }
+  }
 }
 
 function throwError(message: string, statusCode: number) {

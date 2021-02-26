@@ -23,7 +23,6 @@ import {MatTableModule} from "@angular/material/table";
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {RouterModule} from "@angular/router";
 import {StoreModule} from "@ngrx/store";
 import {InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
@@ -33,7 +32,6 @@ import {provideActivityFactory} from "@spica-client/function/providers/activity"
 import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
-import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
 import {PassportModule} from "../passport/passport.module";
 import {LanguageDirective} from "./components/editor/dynamic.language";
 import {FunctionRoutingModule} from "./function-routing.module";
@@ -41,7 +39,7 @@ import {FunctionInitializer} from "./function.initializer";
 import {FunctionService} from "./function.service";
 import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
-import {CodeComponent} from "./pages/add/code/code.component";
+import {ExampleComponent} from "@spica-client/common/example";
 import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
@@ -50,15 +48,6 @@ import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
 
 @NgModule({
-  declarations: [
-    AddComponent,
-    IndexComponent,
-    LogViewComponent,
-    WelcomeComponent,
-    LanguageDirective,
-    EnqueuerPipe,
-    CodeComponent
-  ],
   imports: [
     CommonModule,
     FormsModule,
@@ -84,9 +73,7 @@ import {WebhookModule} from "./webhook.module";
     MatTabsModule,
     MatMenuModule,
     MatSliderModule,
-    RouterModule,
-    SatDatepickerModule,
-    SatNativeDateModule,
+    MatDatepickerModule,
     InputModule,
     MatTabsModule,
     StoreModule.forFeature("function", fromFunction.reducer),
@@ -97,6 +84,15 @@ import {WebhookModule} from "./webhook.module";
     ScrollingModule,
     MatClipboardModule,
     EditorModule
+  ],
+  declarations: [
+    AddComponent,
+    IndexComponent,
+    LogViewComponent,
+    WelcomeComponent,
+    LanguageDirective,
+    EnqueuerPipe,
+    ExampleComponent
   ]
 })
 export class FunctionModule {

@@ -136,6 +136,10 @@
         gap: 10px;
         div {
           flex: 1;
+          a {
+            text-decoration: none !important;
+            color: unset !important;
+          }
           b {
             line-height: 2.5rem;
             font-weight: 400;

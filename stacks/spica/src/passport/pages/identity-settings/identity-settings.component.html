@@ -42,11 +42,7 @@
                       role="menuitemcheckbox"
                       disableRipple
                       (click)="$event.stopImmediatePropagation()"
-                    >
-                      <mat-checkbox [(ngModel)]="propertyKv.value.options.visible">
-                        Visible on list
-                      </mat-checkbox>
-                    </div>
+                    ></div>
                     <div
                       mat-menu-item
                       role="menuitemcheckbox"
@@ -98,11 +94,6 @@
           <div>
             <span class="space-between"></span>
 
-            <mat-icon
-              *ngIf="propertyKv.value.options?.visible"
-              matTooltip="This property will be visible on list by default."
-              >visibility</mat-icon
-            >
             <mat-icon *ngIf="propertyKv.value.readOnly" matTooltip="This property is read-only."
               >format_clear</mat-icon
             >
@@ -110,7 +101,7 @@
           <span
             class="input-placer-area"
             [inputSchemaPlacer]="propertyKv.value.type"
-            [forbiddenTypes]="['relation']"
+            [forbiddenTypes]="forbiddenTypes"
             [(ngModel)]="preferences.identity.attributes.properties[propertyKv.key]"
           >
           </span>
@@ -124,8 +115,8 @@
               <mat-select [(ngModel)]="propertyKv.value.default">
                 <mat-option>None</mat-option>
                 <ng-container *ngFor="let predef of predefinedDefaults[propertyKv.value.type]">
-                  <mat-option [value]="predef.keyword">
-                    {{ predef.keyword }}
+                  <mat-option [value]="predef.match">
+                    {{ predef.match }}
                   </mat-option>
                 </ng-container>
               </mat-select>

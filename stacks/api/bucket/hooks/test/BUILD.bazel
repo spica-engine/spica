@@ -7,10 +7,8 @@ ts_library(
     name = "hook_test_lib",
     testonly = True,
     srcs = [
-        "dispatcher.spec.ts",
         "enqueuer.spec.ts",
         "module.spec.ts",
-        "proto/node/review.spec.ts",
     ],
     deps = [
         "//packages/core/schema",

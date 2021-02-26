@@ -117,7 +117,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   workers = new Map<string, (event: event.Event) => void>();
 
   eventQueue = new Map<string, event.Event>();
-  processsingQueue = new Map<string, event.Event>();
+  processingQueue = new Map<string, event.Event>();
 
   batching = new Map<string, Batch>();
 
@@ -213,10 +213,11 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       this.timeouts.set(
         event.id,
         setTimeout(() => {
-          stderr.write(
-            `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
-          );
-
+          if (stderr.writable) {
+            stderr.write(
+              `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
+            );
+          }
           worker.kill();
         }, timeoutInSeconds * 1000)
       );
@@ -224,7 +225,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       schedule(event);
 
       this.eventQueue.delete(event.id);
-      this.processsingQueue.set(event.id, event);
+      this.processingQueue.set(event.id, event);
 
       console.debug(`assigning ${event.id} to ${workerId}`);
     }
@@ -245,8 +246,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     console.debug(
       `an event has been completed ${id} with status ${succedded ? "success" : "fail"}`
     );
-    this.processsingQueue.delete(id);
-    clearTimeout(this.timeouts.get(id));
+    this.processingQueue.delete(id);
+    // async processes keep workers alive even it exceeds timeout
+    //clearTimeout(this.timeouts.get(id));
   }
 
   gotWorker(id: string, schedule: (event: event.Event) => void) {
@@ -263,13 +265,14 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
   }
 
   lostWorker(id: string) {
+    this.pool.delete(id);
+    this.workers.delete(id);
+    this.batching.delete(id);
+
     if (process.env.TEST_TARGET) {
       return console.log(`lost a worker ${id} and skipping auto spawn under testing`);
     }
     console.debug(`lost a worker ${id}`);
-    this.pool.delete(id);
-    this.workers.delete(id);
-    this.batching.delete(id);
     this.spawn();
   }
 

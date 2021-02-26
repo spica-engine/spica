@@ -12,36 +12,31 @@ export default {
     },
     {
       action: "passport:identity:update",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "passport:identity"
     },
     {
       action: "passport:identity:delete",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "passport:identity"
     },
     {
       action: "passport:identity:policy:add",
-      resource: {
-        include: "*/*"
-      },
+      resource: {include: ["*/*"], exclude: []},
       module: "passport:identity:policy"
     },
     {
       action: "passport:identity:policy:remove",
-      resource: {
-        include: "*/*"
-      },
+      resource: {include: ["*/*"], exclude: []},
       module: "passport:identity:policy"
     },
     {
       action: "preference:update",
       module: "preference",
-      resource: ["passport"]
+      resource: {
+        include: ["passport"],
+        exclude: []
+      }
     }
   ]
 };

@@ -28,7 +28,7 @@ import {
   Trigger
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
-import {CodeComponent} from "./code/code.component";
+import {ExampleComponent} from "@spica-client/common/example";
 
 @Component({
   selector: "functions-add",
@@ -64,7 +64,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   $markers = new Subject<unknown[]>();
 
-  triggersEditMode = [];
+  triggersEditMode = [true];
 
   batchingDeadline: number = 0;
 
@@ -87,6 +87,12 @@ export class AddComponent implements OnInit, OnDestroy {
     );
   }
 
+  resetBatchOptions() {
+    this.batching = false;
+    this.maxBatchCount = 0;
+    this.batchingDeadline = 0;
+  }
+
   ngOnInit() {
     this.activatedRoute.params
       .pipe(
@@ -94,6 +100,7 @@ export class AddComponent implements OnInit, OnDestroy {
         tap(params => this.selectedFunctionId.next(params.id)),
         switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
         tap(fn => {
+          this.resetBatchOptions();
           this.dependencyInstallPending = false;
           this.serverError = undefined;
           this.isIndexPending = true;
@@ -139,6 +146,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   deleteTrigger(i: number) {
     this.function.triggers.splice(i, 1);
+    this.triggersEditMode.splice(i, 1);
     this.checkHandlers();
   }
 
@@ -151,8 +159,8 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   showExample(trigger: Trigger) {
-    let code = this.functionService.getExample(trigger);
-    this.dialog.open(CodeComponent, {
+    const code = this.functionService.getExample(trigger);
+    this.dialog.open(ExampleComponent, {
       width: "80%",
       data: {
         code: code

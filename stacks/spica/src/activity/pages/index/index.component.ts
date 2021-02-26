@@ -19,8 +19,6 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
 
   documentIds: string[] = [];
 
-  maxDate = new Date();
-
   isPending = false;
 
   activities: Activity[] = [];
@@ -146,11 +144,11 @@ export class IndexComponent extends DataSource<Activity> implements OnInit, OnDe
     this.filters$.next(this.filters);
   }
 
-  selectionChange(event: MatSelectChange) {
-    let optGroup = (event.source.selected as MatOption).group
+  onModuleSelectionChange(event: MatSelectChange) {
+    const optGroup = (event.source.selected as MatOption).group
       ? (event.source.selected as MatOption).group.label.toLowerCase()
       : "";
-    let selection = event.value;
+    const selection = event.value;
     this.documents$ = this.activityService.getDocumentIds(optGroup, selection);
     this.filters.resource.$all = optGroup ? [optGroup, selection] : [selection];
     this.filters.resource.$in = [];

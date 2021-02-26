@@ -1,170 +1,102 @@
-import fetch from "node-fetch";
-import {Bucket, BucketDocument, IndexResult, GetAllParams} from "./interface";
-import {getWsObs} from "./index";
+import {
+  Bucket,
+  BucketDocument,
+  ApikeyInitialization,
+  IdentityInitialization,
+  IndexResult
+} from "@spica-devkit/bucket";
+import {
+  initialize as _initialize,
+  checkInitialized,
+  buildUrl,
+  HttpService
+} from "@spica-devkit/internal_common";
+import {getWsObs} from "./operators";
 import {Observable} from "rxjs";
 import {map} from "rxjs/operators";
 
-let apikey;
-let url;
+let authorization;
 
 let wsUrl;
 
-export function initialize(options: {apikey: string; publicUrl?: string}) {
-  apikey = `APIKEY ${options.apikey}`;
+let service: HttpService;
 
-  let _publicUrl = options.publicUrl || process.env.__INTERNAL__SPICA__PUBLIC_URL__;
-  if (!_publicUrl) {
-    throw new Error(
-      "The <__INTERNAL__SPICA__PUBLIC_URL__> variable and public url was not given. "
-    );
-  }
+export function initialize(options: ApikeyInitialization | IdentityInitialization) {
+  const {authorization: _authorization, publicUrl, service: _service} = _initialize(options);
 
-  url = `${_publicUrl}/bucket`;
-  wsUrl = _publicUrl.replace("http", "ws");
-}
+  authorization = _authorization;
 
-function checkInitialized() {
-  if (!apikey) {
-    throw new Error("You should call initialize method with apikey before this action.");
-  }
+  service = _service;
+
+  wsUrl = (publicUrl + "/bucket").replace("http", "ws");
+
+  service.setWriteDefaults({
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
 }
 
 export function get(id: string): Promise<Bucket> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
-    method: "get",
-    headers: {
-      Authorization: apikey
-    }
-  };
-
-  return fetch(url + "/" + id, request).then(res => res.json());
+  return service.get<Bucket>(`bucket/${id}`);
 }
 
 export function getAll(): Promise<Bucket[]> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
-    method: "get",
-    headers: {
-      Authorization: apikey
-    }
-  };
-
-  return fetch(url, request).then(res => res.json());
+  return service.get<Bucket[]>("bucket");
 }
 
 export function insert(bucket: Bucket): Promise<Bucket> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
-    method: "post",
-    body: JSON.stringify(bucket),
-    headers: {
-      Authorization: apikey,
-      "Content-Type": "application/json"
-    }
-  };
-  return fetch(url, request).then(res => res.json());
+  return service.post<Bucket>("bucket", bucket);
 }
 
 export function update(id: string, bucket: Bucket): Promise<Bucket> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
-    method: "put",
-    body: JSON.stringify(bucket),
-    headers: {
-      Authorization: apikey,
-      "Content-Type": "application/json"
-    }
-  };
-  return fetch(url + "/" + id, request).then(res => res.json());
+  return service.put<Bucket>(`bucket/${id}`, bucket);
 }
 
 export function remove(id: string): Promise<any> {
-  checkInitialized();
+  checkInitialized(authorization);
 
-  let request = {
-    method: "delete",
-    headers: {
-      Authorization: apikey
-    }
-  };
-  return fetch(url + "/" + id, request);
+  return service.delete(`bucket/${id}`);
 }
 
 export namespace data {
   export function get(
     bucketId: string,
     documentId: string,
-    options?: {headers?: object; queryParams?: object}
+    options: {headers?: object; queryParams?: object} = {}
   ): Promise<BucketDocument> {
-    checkInitialized();
+    checkInitialized(authorization);
 
-    let fullUrl = new URL(`${url}/${bucketId}/data/${documentId}`);
-
-    let headers;
-
-    if (options) {
-      headers = options.headers;
-      Object.entries(options.queryParams).forEach(([key, value]) =>
-        fullUrl.searchParams.append(key, JSON.stringify(value))
-      );
-    }
-
-    let request = {
-      method: "get",
-      headers: {
-        ...headers,
-        Authorization: apikey
-      }
-    };
-
-    return fetch(fullUrl, request).then(res => res.json());
+    return service.get<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, {
+      params: options.queryParams,
+      headers: options.headers
+    });
   }
 
   export function getAll(
     bucketId: string,
-    options?: {headers?: object; queryParams?: object}
+    options: {headers?: object; queryParams?: object} = {}
   ): Promise<BucketDocument[] | IndexResult<BucketDocument>> {
-    checkInitialized();
+    checkInitialized(authorization);
 
-    let fullUrl = new URL(`${url}/${bucketId}/data`);
-
-    let headers;
-
-    if (options) {
-      headers = options.headers;
-      Object.entries(options.queryParams).forEach(([key, value]) =>
-        fullUrl.searchParams.append(key, JSON.stringify(value))
-      );
-    }
-
-    let request = {
-      method: "get",
-      headers: {
-        ...headers,
-        Authorization: apikey
-      }
-    };
-
-    return fetch(fullUrl, request).then(res => res.json());
+    return service.get<BucketDocument[] | IndexResult<BucketDocument>>(`bucket/${bucketId}/data`, {
+      params: options.queryParams,
+      headers: options.headers
+    });
   }
 
   export function insert(bucketId: string, document: BucketDocument): Promise<BucketDocument> {
-    checkInitialized();
+    checkInitialized(authorization);
 
-    let request = {
-      method: "post",
-      body: JSON.stringify(document),
-      headers: {
-        Authorization: apikey,
-        "Content-Type": "application/json"
-      }
-    };
-    return fetch(`${url}/${bucketId}/data`, request).then(res => res.json());
+    return service.post<BucketDocument>(`bucket/${bucketId}/data`, document);
   }
 
   export function update(
@@ -172,68 +104,53 @@ export namespace data {
     documentId: string,
     document: BucketDocument
   ): Promise<BucketDocument> {
-    checkInitialized();
+    checkInitialized(authorization);
 
-    let request = {
-      method: "put",
-      body: JSON.stringify(document),
-      headers: {
-        Authorization: apikey,
-        "Content-Type": "application/json"
-      }
-    };
-    return fetch(`${url}/${bucketId}/data/${documentId}`, request).then(res => res.json());
+    return service.put<BucketDocument>(`bucket/${bucketId}/data/${documentId}`, document);
+  }
+
+  export function patch(
+    bucketId: string,
+    documentId: string,
+    document: Partial<BucketDocument>
+  ): Promise<any> {
+    checkInitialized(authorization);
+
+    return service.patch<any>(`bucket/${bucketId}/data/${documentId}`, document);
   }
 
   export function remove(bucketId: string, documentId: string): Promise<any> {
-    checkInitialized();
+    checkInitialized(authorization);
 
-    let request = {
-      method: "delete",
-      headers: {
-        Authorization: apikey
-      }
-    };
-    return fetch(`${url}/${bucketId}/data/${documentId}`, request);
+    return service.delete(`bucket/${bucketId}/data/${documentId}`);
   }
 
   export namespace realtime {
     export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
-      checkInitialized();
+      checkInitialized(authorization);
 
-      const filter = `_id=="${documentId}"`;
+      const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
+        filter: `_id=="${documentId}"`,
+        Authorization: authorization
+      });
 
-      const url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}&filter=${filter}`;
-
-      return getWsObs<BucketDocument[]>(url).pipe(map(([documents]) => documents));
+      return getWsObs<BucketDocument[]>(fullUrl.toString()).pipe(map(([documents]) => documents));
     }
-    export function getAll(bucketId: string, params?: GetAllParams): Observable<BucketDocument[]> {
-      checkInitialized();
 
-      let url = `${wsUrl}/bucket/${bucketId}/data?Authorization=${apikey}`;
+    export function getAll(
+      bucketId: string,
+      queryParams: object = {}
+    ): Observable<BucketDocument[]> {
+      checkInitialized(authorization);
 
-      let sort;
+      const sort = queryParams["sort"];
 
-      if (params) {
-        if (params.filter) {
-          url += `&filter=${params.filter}`;
-        }
+      const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
+        ...queryParams,
+        Authorization: authorization
+      });
 
-        if (params.sort) {
-          url += `&sort=${JSON.stringify(params.sort)}`;
-          sort = params.sort;
-        }
-
-        if (params.limit) {
-          url += `&limit=${params.limit}`;
-        }
-
-        if (params.skip) {
-          url += `&skip=${params.skip}`;
-        }
-      }
-
-      return getWsObs<BucketDocument[]>(url, sort);
+      return getWsObs<BucketDocument[]>(fullUrl.toString(), sort);
     }
   }
 }

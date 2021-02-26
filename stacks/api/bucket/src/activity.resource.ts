@@ -5,80 +5,26 @@ export function createBucketActivity(
   req: any,
   res: any
 ): ModuleActivity[] {
-  let activities: ModuleActivity[] = [];
+  const bucketId = (preActivity.action == Action.POST ? res._id : req.params.id).toString();
 
-  switch (preActivity.action) {
-    case Action.POST:
-      activities.push({...preActivity, resource: ["bucket", res._id.toString()]});
-      break;
-    case Action.PUT:
-      activities.push({...preActivity, resource: ["bucket", req.params.id]});
-      break;
-    case Action.DELETE:
-      activities.push({...preActivity, resource: ["bucket", req.params.id]});
-      break;
-  }
+  const resource = ["bucket", bucketId];
 
-  return activities;
+  return [{...preActivity, resource}];
 }
 
 export function createBucketDataActivity(
-  preActivity: {identifier: string; action: Action},
+  preActivity: PreActivity,
   req: any,
   res: any
 ): ModuleActivity[] {
-  let activities: ModuleActivity[] = [];
+  const bucketId = req.params.bucketId.toString();
 
-  switch (preActivity.action) {
-    case Action.POST:
-      activities.push({
-        ...preActivity,
-        resource: ["bucket", req.params.bucketId.toString(), "data", res._id.toString()]
-      });
-      break;
-    case Action.PUT:
-      activities.push({
-        ...preActivity,
-        resource: [
-          "bucket",
-          req.params.bucketId.toString(),
-          "data",
-          req.params.documentId.toString()
-        ]
-      });
-      break;
-    case Action.PATCH:
-      activities.push({
-        ...preActivity,
-        resource: [
-          "bucket",
-          req.params.bucketId.toString(),
-          "data",
-          req.params.documentId.toString()
-        ]
-      });
-      break;
-    case Action.DELETE:
-      if (req.params.documentId) {
-        activities.push({
-          ...preActivity,
-          resource: [
-            "bucket",
-            req.params.bucketId.toString(),
-            "data",
-            req.params.documentId.toString()
-          ]
-        });
-      } else {
-        req.body.forEach(id =>
-          activities.push({
-            ...preActivity,
-            resource: ["bucket", req.params.bucketId.toString(), "data", id]
-          })
-        );
-      }
-      break;
-  }
+  const documentId = (preActivity.action == Action.POST
+    ? res._id
+    : req.params.documentId
+  ).toString();
 
-  return activities;
+  const resource = ["bucket", bucketId, "data", documentId];
+
+  return [{...preActivity, resource}];
 }

@@ -73,10 +73,10 @@ Unary
   / "-" "-"* member:Member { return {kind: "unary", type: "negative", member} }
 
 Member
-  = left:(LITERAL / Atomic) right:(MemberOperation)* { return _ltr_(left, right) }
+  = left:(LITERAL / Atomic / IDENT) right:(MemberOperation)* { return _ltr_(left, right) }
 
 MemberOperation
-  =  "."  right:Atomic { return { kind: "operator", type:"select", category:"binary", right } }
+  =  "."  right:(Atomic / CHILDIDENT)  { return { kind: "operator", type:"select", category:"binary", right } }
   /  "["  right:Expr  "]" { return { kind: "operator", type:"index", category:"binary", right } }
   /  "{"  right:FieldInits  "}" { return { kind: "operator", type:"construct", category:"binary", right } }
   /  "("  args:ExprList  ")" { return { kind: "call", arguments: args } }
@@ -86,12 +86,10 @@ Atomic
   = "["  exprList:ExprList  "]" { return exprList }
   / "{"  mapInits:MapInits  "}" { return mapInits }
   / "("  expr:Expr  ")" { return expr }
-  / "."  primary:IDENT { return {kind: "operator", type: "fully_qualify", category:"unary", primary}}
-  / IDENT
+  / "."  primary:CHILDIDENT { return {kind: "operator", type: "fully_qualify", category:"unary", primary}}
 
-
-ExprList = left:Expr right:("," expr:Expr {return expr})* {
-	const expressions = [left];
+ExprList = WHITESPACE left:(Expr / "") WHITESPACE right:("," WHITESPACE expr:Expr WHITESPACE {return expr})* {
+	const expressions = left != "" ? [left] : [];
 	if (right) {
 		expressions.push(...right);
 	} 
@@ -106,6 +104,9 @@ IDENT = !RESERVED [_a-zA-Z][_a-zA-Z0-9]*  {
 	return {kind: "identifier", name: text()} 
 }
 
+CHILDIDENT = [_a-zA-Z][_a-zA-Z0-9]*  { 
+	return {kind: "identifier", name: text()} 
+}
 
 LITERAL = value:FLOAT_LIT { return { kind: "literal", type: "double", value } }
         / value:UINT_LIT { return { kind: "literal", type: "uint", value } }
@@ -182,10 +183,10 @@ ESCAPE = "\\" eskey:$[bfnrt"'\\] {
 NEWLINE        = [\r\n] / [\r] / [\n]
 BOOL_LIT       = "true" / "false"
 NULL_LIT       = "null"
-RESERVED       = BOOL_LIT / NULL_LIT / "in"
+RESERVED       = ( BOOL_LIT / NULL_LIT / "in"
                  / "as" / "break" / "const" / "continue" / "else"
                  / "for" / "function" / "if" / "import" / "let"
                  / "loop" / "package" / "namespace" / "return"
-                 / "var" / "void" / "while"
+                 / "var" / "void" / "while" ) ![_a-zA-Z0-9]
 WHITESPACE     = [\t\n\f\r ]*
 COMMENT        = '//'

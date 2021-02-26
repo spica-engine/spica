@@ -45,6 +45,10 @@ import {TabsComponent} from "./pages/tabs/tabs.component";
 import {PassportRoutingModule} from "./passport-routing.module";
 import {AuthorizationInterceptor} from "./services/authorization.interceptor";
 import {PassportRouteFilter} from "./services/route.filter";
+import {MatResizeHeaderModule} from "@spica-client/material/resize";
+import {MatSortModule} from "@angular/material/sort";
+import {FilterComponent} from "./components/filter/filter.component";
+import {PolicyResourceAddComponent} from "./components/policy-resource-add/policy-resource-add.component";
 
 @NgModule({
   declarations: [
@@ -54,6 +58,7 @@ import {PassportRouteFilter} from "./services/route.filter";
     PolicyAddComponent,
     PolicyIndexComponent,
     IdentitySettingsComponent,
+    FilterComponent,
     IdentityBadgeComponent,
     TabsComponent,
     StrategiesComponent,
@@ -61,7 +66,8 @@ import {PassportRouteFilter} from "./services/route.filter";
     CanInteractDirective,
     ApiKeyIndexComponent,
     ApiKeyAddComponent,
-    StrategyDialogComponent
+    StrategyDialogComponent,
+    PolicyResourceAddComponent
   ],
   imports: [
     CommonModule,
@@ -90,7 +96,9 @@ import {PassportRouteFilter} from "./services/route.filter";
     MatListModule,
     InputModule,
     DragDropModule,
-    SpicaCommon
+    SpicaCommon,
+    MatResizeHeaderModule,
+    MatSortModule
   ],
   exports: [CanInteractDirective],
   entryComponents: [IdentityBadgeComponent, StrategyDialogComponent]

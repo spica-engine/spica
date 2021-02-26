@@ -1,12 +1,19 @@
-import {JSONSchema7} from "json-schema";
+import {JSONSchema7, JSONSchema7Definition} from "json-schema";
 import {Bucket, BucketPreferences} from "./bucket";
+import {BadRequestException} from "@nestjs/common";
 
-export function compile(schema: Bucket, preferences: BucketPreferences): JSONSchema7 {
+export function compile(bucket: Bucket, preferences: BucketPreferences): JSONSchema7 {
   function map(schema: JSONSchema7): JSONSchema7 {
-    if (schema.properties) {
-      Object.keys(schema.properties).forEach(
-        key => (schema.properties[key] = map(schema.properties[key] as JSONSchema7))
-      );
+    schema = {...schema};
+    if (typeof schema.properties == "object") {
+      for (const key in schema.properties) {
+        const spec = schema.properties[key];
+        if (typeof spec == "object") {
+          schema.properties[key] = map(spec);
+        } else {
+          console.debug(`ignoring boolean property at ${key}`);
+        }
+      }
     } else if (schema.items) {
       schema.items = map(schema.items as JSONSchema7);
     } else {
@@ -37,22 +44,47 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
           schema.format = "date-time";
           break;
         case "location":
-          schema.type = "object";
-          schema.required = ["longitude", "latitude"];
-          schema.properties = {
-            longitude: {
-              title: "Longitude",
-              type: "number",
-              minimum: -180,
-              maximum: 180
-            },
-            latitude: {
-              title: "Latitude",
-              type: "number",
-              minimum: -90,
-              maximum: 90
-            }
+          const point: JSONSchema7Definition = {
+            type: "array",
+            items: [
+              {
+                title: "Longitude",
+                type: "number",
+                minimum: -180,
+                maximum: 180
+              },
+              {
+                title: "Latitude",
+                type: "number",
+                minimum: -90,
+                maximum: 90
+              }
+            ],
+            minItems: 2,
+            additionalItems: false
           };
+
+          schema.type = "object";
+          schema.required = ["coordinates"];
+          schema.properties = {
+            type: {
+              type: "string",
+              const: schema["locationType"],
+              default: schema["locationType"]
+            },
+            coordinates: {}
+          };
+
+          switch (schema["locationType"]) {
+            case "Point":
+              schema.properties.coordinates = point;
+              break;
+            default:
+              throw new BadRequestException(
+                `Unknown location type '${schema["locationType"]}' on bucket schema.`
+              );
+          }
+
           break;
         default:
       }
@@ -60,17 +92,22 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
     return schema;
   }
 
-  const bucket = map(schema as unknown) as Bucket;
+  const schema = map({
+    $schema: "http://json-schema.org/draft-07/schema#",
+    required: Array.isArray(bucket.required) ? bucket.required : [],
+    readOnly: bucket.readOnly,
+    title: bucket.title,
+    description: bucket.description,
+    type: "object",
+    properties: bucket.properties,
+    additionalProperties: false
+  });
 
-  delete bucket._id;
-  delete bucket.icon;
-  delete bucket.order;
-  delete bucket.primary;
+  schema.properties = Object.keys(bucket.properties).reduce((accumulator, key) => {
+    let property: any = {...bucket.properties[key]};
 
-  bucket.properties = Object.keys(bucket.properties).reduce((accumulator, key) => {
-    let property = schema.properties[key];
     if (property.options && property.options.translate) {
-      accumulator[key] = {
+      property = {
         type: "object",
         required: [preferences.language.default],
         properties: Object.keys(preferences.language.available).reduce((props, key) => {
@@ -79,11 +116,11 @@ export function compile(schema: Bucket, preferences: BucketPreferences): JSONSch
         }, {}),
         additionalProperties: false
       };
-    } else {
-      accumulator[key] = schema.properties[key];
     }
     delete property.options;
+    accumulator[key] = property;
     return accumulator;
   }, {});
-  return bucket as JSONSchema7;
+
+  return schema;
 }

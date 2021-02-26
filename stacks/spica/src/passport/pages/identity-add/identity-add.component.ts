@@ -7,8 +7,8 @@ import {emptyIdentity, Identity} from "../../interfaces/identity";
 import {Policy} from "../../interfaces/policy";
 import {IdentityService} from "../../services/identity.service";
 import {PolicyService} from "../../services/policy.service";
-import {PassportPreference} from "../identity-settings/identity-settings.component";
 import {PassportService} from "@spica-client/passport/services/passport.service";
+import {PassportPreference} from "@spica-client/passport/interfaces/preferences";
 
 @Component({
   selector: "passport-identity-add",
@@ -72,8 +72,8 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.policyService
       .attachPolicy(policyId, this.identity._id)
       .toPromise()
-      .then(identity => {
-        this.identity = identity;
+      .then(() => {
+        this.identity.policies.push(policyId);
       });
   }
 
@@ -81,8 +81,11 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
     this.policyService
       .detachPolicy(policyId, this.identity._id)
       .toPromise()
-      .then(identity => {
-        this.identity = identity;
+      .then(() => {
+        const detachedPolicyIndex = this.identity.policies.findIndex(policy => policy == policyId);
+        if (detachedPolicyIndex != -1) {
+          this.identity.policies.splice(detachedPolicyIndex, 1);
+        }
       });
   }
 

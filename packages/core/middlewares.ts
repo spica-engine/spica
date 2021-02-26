@@ -4,15 +4,26 @@ import {json} from "body-parser";
 import * as typeis from "type-is";
 
 export namespace Middlewares {
-  export function JsonBodyParser(limit?: number): ReturnType<typeof json> {
+  export function JsonBodyParser({
+    limit,
+    ignoreUrls
+  }: {
+    limit?: number;
+    ignoreUrls: (string | RegExp)[];
+  }): ReturnType<typeof json> {
     if (limit) {
       limit = limit * 1024 * 1024;
+    }
+    if (!ignoreUrls) {
+      ignoreUrls = [];
     }
     const parser = json({
       limit: limit,
       type: req => {
-        // TODO(thesayyn): Find a better way to handle this
-        return typeis(req, "application/json") && !/$\/storage/.test(req.url);
+        return (
+          typeis(req, "application/json") &&
+          ignoreUrls.every(ignore => !new RegExp(ignore).test(req.url))
+        );
       }
     });
     return parser;

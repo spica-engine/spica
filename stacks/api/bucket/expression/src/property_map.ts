@@ -7,10 +7,31 @@ function visit(node) {
     case "identifier":
       return visitIdentifier(node);
     case "call":
-      return visitNode(node.arguments[0]);
+      return visitArgs(node.arguments);
     case "unary":
       return visitUnary(node);
   }
+}
+
+function visitArgs(args: unknown[]): unknown[] {
+  const finalResult = [];
+  for (const arg of args) {
+    if (Array.isArray(arg)) {
+      const extracteds = visitArgs(arg);
+      finalResult.push(...extracteds);
+      continue;
+    }
+
+    const result = visit(arg);
+
+    if (Array.isArray(result)) {
+      finalResult.push(...result);
+    } else {
+      finalResult.push(result);
+    }
+  }
+
+  return finalResult;
 }
 
 function visitIdentifier(node) {

@@ -1,25 +1,26 @@
-import {IndexComponent} from "@spica-client/activity/pages/index/index.component";
+import {ScrollingModule} from "@angular/cdk/scrolling";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
-import {MatOptionModule} from "@angular/material/core";
+import {MatNativeDateModule, MatOptionModule} from "@angular/material/core";
+import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
+import {MatListModule} from "@angular/material/list";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatSelectModule} from "@angular/material/select";
 import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {ScrollingModule} from "@angular/cdk/scrolling";
-import {MatListModule} from "@angular/material/list";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {SatDatepickerModule, SatNativeDateModule} from "saturn-datepicker";
-import {FormsModule} from "@angular/forms";
-import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
-import {ActivityService} from "../../services/activity.service";
-import {ComponentFixture, TestBed, tick, fakeAsync} from "@angular/core/testing";
-import {of} from "rxjs";
-import {BuildLinkPipe} from "@spica-client/common/build_link.pipe";
-import {ACTIVITY_FACTORY} from "@spica-client/core";
 import {RouterTestingModule} from "@angular/router/testing";
+import {BuildLinkPipe} from "@spica-client/common/pipes";
+import {ACTIVITY_FACTORY} from "@spica-client/core";
+import {of} from "rxjs";
+import {ActivityService} from "../../services/activity.service";
+import {IndexComponent} from "../index/index.component";
+import {MatDividerModule} from "@angular/material/divider";
 
 describe("IndexComponent", () => {
   let component: IndexComponent;
@@ -52,15 +53,16 @@ describe("IndexComponent", () => {
         MatOptionModule,
         MatSelectModule,
         MatInputModule,
-        SatDatepickerModule,
-        SatNativeDateModule,
+        MatDatepickerModule,
+        MatNativeDateModule,
         FormsModule,
         MatButtonModule,
         ScrollingModule,
         MatListModule,
         MatProgressSpinnerModule,
         RouterTestingModule,
-        MatTooltipModule
+        MatTooltipModule,
+        MatDividerModule
       ],
       declarations: [IndexComponent, BuildLinkPipe],
       providers: [
@@ -157,7 +159,7 @@ describe("IndexComponent", () => {
     const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
       of(["doc_1", "doc_2"])
     );
-    component.selectionChange({
+    component.onModuleSelectionChange({
       source: {selected: {group: {label: "test_group"}}},
       value: "test_module"
     } as any);
@@ -178,7 +180,7 @@ describe("IndexComponent", () => {
     const getDocumentIds = spyOn(component["activityService"], "getDocumentIds").and.returnValue(
       of(["doc_1", "doc_2"])
     );
-    component.selectionChange({
+    component.onModuleSelectionChange({
       source: {selected: {group: undefined}},
       value: "test_module"
     } as any);

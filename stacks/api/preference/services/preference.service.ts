@@ -3,7 +3,8 @@ import {
   Collection,
   DatabaseService,
   FilterQuery,
-  FindOneAndReplaceOption
+  FindOneAndReplaceOption,
+  OptionalId
 } from "@spica-server/database";
 import {Preference} from "./interface";
 import {Observable} from "rxjs";
@@ -36,7 +37,11 @@ export class PreferenceService {
         ],
         {fullDocument: "updateLookup"}
       );
-      watcher.on("change", change => observer.next(change.fullDocument as T));
+      watcher["on"]("change", change => {
+        if ("fullDocument" in change) {
+          observer.next(change.fullDocument as T);
+        }
+      });
       return () => {
         if (!watcher.isClosed()) {
           watcher.close();
@@ -61,7 +66,7 @@ export class PreferenceService {
       .then(preference => preference.value);
   }
 
-  insertOne<T extends Preference>(preference: T): Promise<Preference> {
+  insertOne<T extends OptionalId<Preference>>(preference: T): Promise<Preference> {
     return this._collection.insertOne(preference).then(result => result.ops[0]);
   }
 
