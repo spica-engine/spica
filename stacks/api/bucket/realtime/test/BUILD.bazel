@@ -10,6 +10,7 @@ ts_library(
         "realtime.spec.ts",
     ],
     deps = [
+        "//packages/core/schema",
         "//packages/core/testing",
         "//packages/core/websocket",
         "//packages/database/realtime",
@@ -27,7 +28,7 @@ ts_library(
 
 jasmine_node_test(
     name = "realtime_e2e_test",
-    tags = ["e2e"],
+    tags = ["special"],
     deps = [
         ":realtime_e2e_specs",
     ],
