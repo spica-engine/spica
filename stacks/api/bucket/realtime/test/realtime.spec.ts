@@ -10,7 +10,8 @@ import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
-import {OBJECTID_STRING} from "@spica-server/core/schema/formats";
+import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
@@ -41,8 +42,8 @@ describe("Realtime", () => {
     const module = await Test.createTestingModule({
       imports: [
         SchemaModule.forRoot({
-          formats: [OBJECTID_STRING],
-          defaults: []
+          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
+          defaults: [CREATED_AT, UPDATED_AT]
         }),
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
