@@ -27,33 +27,48 @@ const functions = [
   },
   {
     label: "some",
-    detail: "(method) some(fieldPath: unknown, ...items: any[]): boolean",
+    detail: "(method) some(target: unknown | any[], compare: unknown | any[]): boolean",
     description: {
-      value: `Returns true if **fieldPath** includes at least one of **items**\n 
-*@param* **fieldPath** - The path that represents the actual value on the document or auth. Actual value must be an array\n
-*@param* **items** - Items that will be compared. Pass them one by one`
+      value: `Returns true if **target** includes at least one of **compare**\n 
+*@param* **target** The array which includes one of **compare** item at least.\n
+- unknown: The path that represents the actual value on the document or auth. Actual value must be an array\n
+- any[]: any type of array.\n
+*@param* **compare** The array which has minimum one item that included by **target**\n 
+- unknown: The path that represents the actual value on the document or auth. Actual value must be an array\n
+- any[]: any type of array.
+`
     },
-    text: "some(document$1, '${0:value1}')"
+    text: "some(document$1, [${0:}])"
   },
   {
     label: "every",
-    detail: "(method) every(fieldPath: unknown, ...items: any[]): boolean",
+    detail: "(method) every(target: unknown | any[], compare: unknown | any[]): boolean",
     description: {
-      value: `Returns true if **fieldPath** includes all of **items**\n
-*@param* **fieldPath** - The path that represents the actual value on the document or auth. Actual value must be an array\n
-*@param* **items** - Items that will be compared. Pass them one by one`
+      value: `Returns true if **target** includes all of **compare**\n 
+*@param* **target** The array which includes all of **compare** items.\n
+- unknown: The path that represents the actual value on the document or auth. Actual value must be an array\n
+- any[]: any type of array.\n
+*@param* **compare** The array which is all of items included by **target**\n 
+- unknown: The path that represents the actual value on the document or auth. Actual value must be an array\n
+- any[]: any type of array.
+`
     },
-    text: "every(document$1, '${0:value1}')"
+    text: "every(document$1, [${0:}])"
   },
   {
     label: "equal",
-    detail: "(method) equal(fieldPath: unknown, ...items: any[]): boolean",
+    detail: "(method) equal(target: unknown | any[], compare: unknown | any[]): boolean",
     description: {
-      value: `Returns true if **fieldPath** equals to **items**. Order of items is not necessary.\n
-*@param* **fieldPath** - The path that represents the actual value on the document or auth. Actual value must be an array\n
-*@param* **items** - Items that will be compared. Pass them one by one`
+      value: `Returns true if **target** equals to **compare**. Order of items is not necessary.\n 
+*@param* **target** The array which equals to **compare**.\n
+- unknown: The path that represents the actual value on the document or auth. Actual value must be an array\n
+- any[]: any type of array.\n
+*@param* **compare** The array which equals to **target**.\n 
+- unknown: The path that represents the actual value on the document or auth. Actual value must be an array\n
+- any[]: any type of array.
+`
     },
-    text: "equal(document$1, '${0:value1}')"
+    text: "equal(document$1, [${0:}])"
   },
   {
     label: "regex",
@@ -84,6 +99,11 @@ const auths = [
     label: "policies",
     description: "Policy ids of the identity, type: string[]",
     text: "policies"
+  },
+  {
+    label: "attributes",
+    description: "Identity custom properties",
+    text: "attributes"
   }
 ];
 
