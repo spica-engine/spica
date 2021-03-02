@@ -26,7 +26,7 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 function waitForCursorInitialization() {
-  return new Promise(resolve => setTimeout(resolve, 100));
+  return new Promise(resolve => setTimeout(resolve, 1000));
 }
 
 describe("Realtime", () => {
@@ -161,6 +161,9 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await waitForCursorInitialization();
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
