@@ -3,21 +3,47 @@ import {convert} from "./convert";
 import {compile} from "./compile";
 
 interface ArgumentValidation {
-  kind: string;
-  type?: string;
+  validator: (node) => boolean;
   mustBe: string;
 }
+
+const PropertyAccesChainValidation: ArgumentValidation = {
+  validator: node => {
+    if (node.kind != "operator" || node.type != "select") {
+      return false;
+    }
+    return true;
+  },
+  mustBe: "property acces chain"
+};
+
+const LiteralValidation: ArgumentValidation = {
+  validator: node => {
+    if (node.kind != "literal") {
+      return false;
+    }
+    return true;
+  },
+  mustBe: "literal"
+};
+
+const ArrayValidation: ArgumentValidation = {
+  validator: node => {
+    if (!Array.isArray(node)) {
+      return false;
+    }
+    return true;
+  },
+  mustBe: "array"
+};
 
 export const has: func.Func = context => {
   const fnName = "has";
 
   validateArgumentsLength(fnName, context.arguments, 1);
 
-  const argValidation: ArgumentValidation = {
-    kind: "operator",
-    type: "select",
-    mustBe: "property acces chain"
-  };
+  const argValidation = PropertyAccesChainValidation;
+
   validateArgumentsOrder(fnName, context.arguments, [argValidation]);
 
   return ctx => {
@@ -44,11 +70,7 @@ export const unixTime: func.Func = context => {
 
   validateArgumentsLength(fnName, context.arguments, 1);
 
-  const argValidation: ArgumentValidation = {
-    kind: "operator",
-    type: "select",
-    mustBe: "property acces chain"
-  };
+  const argValidation = PropertyAccesChainValidation;
   validateArgumentsOrder(fnName, context.arguments, [argValidation]);
 
   return ctx => {
@@ -98,18 +120,23 @@ export const now: func.Func = context => {
 
 export const some: func.Func = context => {
   const fnName = "some";
-  validateArgumentsLength(fnName, context.arguments, undefined, 2);
+
+  validateArgumentsLength(fnName, context.arguments, 2);
 
   const argValidations: ArgumentValidation[] = [
-    {kind: "operator", type: "select", mustBe: "property acces chain"}
+    {
+      validator: node => {
+        return PropertyAccesChainValidation.validator(node) || ArrayValidation.validator(node);
+      },
+      mustBe: "property access chain or array"
+    },
+    {
+      validator: node => {
+        return PropertyAccesChainValidation.validator(node) || ArrayValidation.validator(node);
+      },
+      mustBe: "property access chain or array"
+    }
   ];
-
-  argValidations.push(
-    ...new Array(context.arguments.length - 1).fill({
-      kind: "literal",
-      mustBe: "literal"
-    })
-  );
 
   validateArgumentsOrder(fnName, context.arguments, argValidations);
 
@@ -118,34 +145,42 @@ export const some: func.Func = context => {
       const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
       const propertyName: string = parsedArguments[0];
-      const includedItems: unknown[] = parsedArguments.splice(1);
+      const compare: unknown[] = parsedArguments[1];
 
-      return createInQuery(includedItems, propertyName, "$or");
+      return createInQuery(compare, propertyName, "$or");
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
-      const documentValue: unknown[] = parsedArguments[0];
-      const includedItems: unknown[] = parsedArguments.splice(1);
+      const target: unknown[] = parsedArguments[0];
+      const compare: unknown[] = parsedArguments[1];
 
-      return includedItems.some(included => documentValue.includes(included));
+      if (!Array.isArray(target) || !Array.isArray(compare)) {
+        return false;
+      }
+
+      return compare.some(item => target.includes(item));
     }
   };
 };
 
 export const every: func.Func = context => {
   const fnName = "every";
-  validateArgumentsLength(fnName, context.arguments, undefined, 2);
+  validateArgumentsLength(fnName, context.arguments, 2);
 
   const argValidations: ArgumentValidation[] = [
-    {kind: "operator", type: "select", mustBe: "property acces chain"}
+    {
+      validator: node => {
+        return PropertyAccesChainValidation.validator(node) || ArrayValidation.validator(node);
+      },
+      mustBe: "property access chain or array"
+    },
+    {
+      validator: node => {
+        return PropertyAccesChainValidation.validator(node) || ArrayValidation.validator(node);
+      },
+      mustBe: "property access chain or array"
+    }
   ];
-
-  argValidations.push(
-    ...new Array(context.arguments.length - 1).fill({
-      kind: "literal",
-      mustBe: "literal"
-    })
-  );
 
   validateArgumentsOrder(fnName, context.arguments, argValidations);
 
@@ -154,34 +189,42 @@ export const every: func.Func = context => {
       const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
       const propertyName: string = parsedArguments[0];
-      const includedItems: unknown[] = parsedArguments.splice(1);
+      const compare: unknown[] = parsedArguments[1];
 
-      return createInQuery(includedItems, propertyName, "$and");
+      return createInQuery(compare, propertyName, "$and");
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
-      const documentValue: unknown[] = parsedArguments[0];
-      const includedItems: unknown[] = parsedArguments.splice(1);
+      const target: unknown[] = parsedArguments[0];
+      const compare: unknown[] = parsedArguments[1];
 
-      return includedItems.every(included => documentValue.includes(included));
+      if (!Array.isArray(target) || !Array.isArray(compare)) {
+        return false;
+      }
+
+      return compare.every(item => target.includes(item));
     }
   };
 };
 
 export const equal: func.Func = context => {
   const fnName = "equal";
-  validateArgumentsLength(fnName, context.arguments, undefined, 2);
+  validateArgumentsLength(fnName, context.arguments, 2);
 
   const argValidations: ArgumentValidation[] = [
-    {kind: "operator", type: "select", mustBe: "property acces chain"}
+    {
+      validator: node => {
+        return PropertyAccesChainValidation.validator(node) || ArrayValidation.validator(node);
+      },
+      mustBe: "property access chain or array"
+    },
+    {
+      validator: node => {
+        return PropertyAccesChainValidation.validator(node) || ArrayValidation.validator(node);
+      },
+      mustBe: "property access chain or array"
+    }
   ];
-
-  argValidations.push(
-    ...new Array(context.arguments.length - 1).fill({
-      kind: "literal",
-      mustBe: "literal"
-    })
-  );
 
   validateArgumentsOrder(fnName, context.arguments, argValidations);
 
@@ -190,7 +233,7 @@ export const equal: func.Func = context => {
       const parsedArguments = parseArguments(context.arguments, ctx, convert);
 
       const propertyName: string = parsedArguments[0];
-      const items: unknown[] = parsedArguments.splice(1);
+      const compare: unknown[] = parsedArguments[1];
 
       const match = {
         $expr: {
@@ -202,13 +245,13 @@ export const equal: func.Func = context => {
                     $ifNull: [propertyName, []]
                   }
                 },
-                items.length
+                compare.length
               ]
             },
             {
               $eq: [
                 {
-                  $setDifference: [propertyName, items]
+                  $setDifference: [propertyName, compare]
                 },
                 []
               ]
@@ -221,12 +264,14 @@ export const equal: func.Func = context => {
     } else {
       const parsedArguments = parseArguments(context.arguments, ctx, compile);
 
-      const documentValue: unknown[] = parsedArguments[0];
-      const items: unknown[] = parsedArguments.splice(1);
+      const target: unknown[] = parsedArguments[0];
+      const compare: unknown[] = parsedArguments[1];
 
-      return (
-        documentValue.length == items.length && items.every(item => documentValue.includes(item))
-      );
+      if (!Array.isArray(target) || !Array.isArray(compare)) {
+        return false;
+      }
+
+      return target.length == compare.length && compare.every(item => target.includes(item));
     }
   };
 };
@@ -235,16 +280,9 @@ export const regex: func.Func = context => {
   const fnName = "regex";
   validateArgumentsLength(fnName, context.arguments, undefined, 2, 3);
 
-  const argValidations: ArgumentValidation[] = [
-    {kind: "operator", type: "select", mustBe: "property acces chain"}
-  ];
+  const argValidations = [PropertyAccesChainValidation];
 
-  argValidations.push(
-    ...new Array(context.arguments.length - 1).fill({
-      kind: "literal",
-      mustBe: "literal"
-    })
-  );
+  argValidations.push(...new Array(context.arguments.length - 1).fill(LiteralValidation));
 
   validateArgumentsOrder(fnName, context.arguments, argValidations);
 
@@ -356,10 +394,7 @@ function validateArgumentsLength(
 function validateArgumentsOrder(fnName: string, args: any[], argumentsInfo: ArgumentValidation[]) {
   const messages: string[] = [];
   for (const [index, node] of args.entries()) {
-    if (
-      argumentsInfo[index].kind != node.kind ||
-      (argumentsInfo[index].type && argumentsInfo[index].type != node.type)
-    ) {
+    if (!argumentsInfo[index].validator(node)) {
       messages.push(`Function '${fnName}' arg[${index}] must be a ${argumentsInfo[index].mustBe}.`);
     }
   }
