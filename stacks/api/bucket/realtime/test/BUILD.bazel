@@ -28,7 +28,7 @@ ts_library(
 
 jasmine_node_test(
     name = "realtime_e2e_test",
-    # tags = ["special"],
+    tags = ["e2e"],
     deps = [
         ":realtime_e2e_specs",
     ],
