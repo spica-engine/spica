@@ -62,7 +62,7 @@ steps:
     commands:
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,-e2e
       - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=flaky,-e2e --flaky_test_attempts=5
-      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=special,-flaky,-e2e --flaky_test_attempts=5
+      - yarn --silent bazel query 'tests(//...)' --output label | xargs yarn bazel test --test_tag_filters=-flaky,e2e --flaky_test_attempts=5
 
   - label: ":k8s: + :docker: Deploy"
     key: deploy
