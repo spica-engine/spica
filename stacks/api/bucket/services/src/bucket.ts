@@ -1,4 +1,4 @@
-import {ObjectId} from "@spica-server/database";
+import {ObjectId, LimitExceedBehaviours} from "@spica-server/database";
 import {Preference} from "@spica-server/preference/services";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
@@ -18,6 +18,10 @@ export interface Bucket {
   acl: {
     read: string;
     write: string;
+  };
+  documentSettings?: {
+    countLimit: number;
+    limitExceedBehaviour: LimitExceedBehaviours;
   };
 }
 

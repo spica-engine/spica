@@ -32,7 +32,7 @@ interface CrudParams {
 }
 
 export interface CrudFactories<T> {
-  collection: (id: string | ObjectId) => BaseCollection<T>;
+  collection: (schema: Bucket) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket>;
 }
@@ -66,7 +66,7 @@ export async function findDocuments<T>(
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>
 ): Promise<unknown> {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
   const pipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
   const seekingPipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
 
@@ -148,11 +148,11 @@ export async function insertDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<any>;
+    collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   }
 ) {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
 
   await executeWriteRule(
     schema,
@@ -174,14 +174,14 @@ export async function replaceDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<any>;
+    collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
     returnOriginal: boolean;
   } = {returnOriginal: true}
 ) {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
 
   await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
 
@@ -203,14 +203,14 @@ export async function patchDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<any>;
+    collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
     returnOriginal: boolean;
   } = {returnOriginal: true}
 ) {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
 
   await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
 
@@ -232,11 +232,11 @@ export async function deleteDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<BucketDocument>;
-    schema: (id: string | ObjectId) => Promise<Bucket>;
+    collection: (schema: Bucket) => BaseCollection<BucketDocument>;
+    schema: (schema: string | ObjectId) => Promise<Bucket>;
   }
 ) {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
 
   const document = await collection.findOne({_id: new ObjectId(documentId)});
 

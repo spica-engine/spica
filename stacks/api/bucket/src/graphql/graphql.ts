@@ -268,7 +268,7 @@ export class GraphqlController implements OnModuleInit {
         },
         {localize: true, paginate: true, schedule},
         {
-          collection: (bucketId: string) => this.bds.children(bucketId),
+          collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
@@ -304,7 +304,7 @@ export class GraphqlController implements OnModuleInit {
         },
         {localize: true, paginate: false},
         {
-          collection: (bucketId: string) => this.bds.children(bucketId),
+          collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) =>
             Promise.resolve(this.buckets.find(b => b._id.toString() == bucketId))
@@ -366,7 +366,7 @@ export class GraphqlController implements OnModuleInit {
         },
         {localize: true},
         {
-          collection: (bucketId: string) => this.bds.children(bucketId),
+          collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
@@ -447,7 +447,7 @@ export class GraphqlController implements OnModuleInit {
         },
         {localize: true},
         {
-          collection: (bucketId: string) => this.bds.children(bucketId),
+          collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
@@ -484,7 +484,7 @@ export class GraphqlController implements OnModuleInit {
         {resourceFilter: false}
       );
 
-      const previousDocument = await this.bds.children(bucket._id).findOne({_id: documentId});
+      const previousDocument = await this.bds.children(bucket).findOne({_id: documentId});
 
       const patchedDocument = applyPatch(previousDocument, input);
 
@@ -534,7 +534,7 @@ export class GraphqlController implements OnModuleInit {
         },
         {localize: true},
         {
-          collection: (bucketId: string) => this.bds.children(bucketId),
+          collection: (schema: Bucket) => this.bds.children(schema),
           preference: () => this.bs.getPreferences(),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
@@ -579,7 +579,7 @@ export class GraphqlController implements OnModuleInit {
         documentId,
         {req: context},
         {
-          collection: bucketId => this.bds.children(bucketId),
+          collection: schema => this.bds.children(schema),
           schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));

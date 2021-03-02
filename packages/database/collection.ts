@@ -14,22 +14,44 @@ import {
 } from "mongodb";
 import {DatabaseService} from "./database.service";
 
+export interface InitializeOptions {
+  countLimit: number;
+  limitExceedBehaviour: LimitExceedBehaviours;
+}
+
+export enum LimitExceedBehaviours {
+  PREVENT = "prevent",
+  REMOVE = "remove"
+}
+
 // Rebase: export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
 
-  documentCountLimit: number;
+  options: InitializeOptions;
+
+  readonly limitExceedBehaviours = {
+    prevent: (coll: Collection, count: number) => {
+      throw new Error("Document count limit exceeded.");
+    },
+    remove: async (coll: Collection, count: number) => {
+      const documents = await coll.aggregate([{$sort: {_id: 1}}, {$limit: count}]).toArray();
+      for (const document of documents) {
+        await coll.findOneAndDelete({_id: document._id});
+      }
+    }
+  };
 
   constructor(
     public readonly db: DatabaseService,
     public readonly _collection: string,
-    public readonly _documentCountLimit?: number
+    public readonly _options?: InitializeOptions
   ) {
     this._coll = db.collection(this._collection);
 
-    this.documentCountLimit = this._documentCountLimit;
+    this.options = this._options;
   }
 
   estimatedDocumentCount(): Promise<number> {
@@ -60,11 +82,17 @@ export class _MixinCollection<T> {
   }
 
   async documentCountLimitValidation(insertedDocumentCount: number) {
-    if (this.documentCountLimit) {
+    if (this.options && this.options.countLimit) {
       const existingDocumentCount = await this._coll.estimatedDocumentCount();
 
-      if (existingDocumentCount + insertedDocumentCount > this.documentCountLimit) {
-        throw new Error("Document count limit exceeded.");
+      if (existingDocumentCount + insertedDocumentCount > this.options.countLimit) {
+        const behaviour = this.options.limitExceedBehaviour;
+
+        if (!Object.values(LimitExceedBehaviours).includes(behaviour)) {
+          throw Error(`Unknown behaviour: ${behaviour}`)
+        }
+
+        return this.limitExceedBehaviours[behaviour](this._coll, insertedDocumentCount);
       }
     }
   }
@@ -160,8 +188,8 @@ export class _MixinCollection<T> {
       });
   }
 
-  collection(collection: string) {
-    return new _MixinCollection(this.db, collection);
+  collection(collection: string, options?: InitializeOptions) {
+    return new _MixinCollection(this.db, collection, options);
   }
 }
 
@@ -169,8 +197,8 @@ export type BaseCollection<T> = _MixinCollection<T>;
 
 export function BaseCollection<T extends OptionalId<T>>(collection?: string) {
   return class extends _MixinCollection<T> {
-    constructor(db: DatabaseService, _documentCountLimit?: number) {
-      super(db, collection, _documentCountLimit);
+    constructor(db: DatabaseService, options?: InitializeOptions) {
+      super(db, collection, options);
     }
   };
 }
