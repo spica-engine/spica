@@ -165,7 +165,7 @@ describe("Realtime", () => {
     ]);
   });
 
-  fit("should do the initial sync with filter", async () => {
+  it("should do the initial sync with filter", async () => {
     const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `title == "second"`}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
