@@ -171,7 +171,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -186,7 +186,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -201,7 +201,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -216,7 +216,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -239,7 +239,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -255,7 +255,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
