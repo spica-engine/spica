@@ -25,6 +25,10 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
+function waitForCursor() {
+  return new Promise(resolve => setTimeout(resolve, 10));
+}
+
 describe("Realtime", () => {
   let wsc: Websocket;
   let app: INestApplication;
@@ -171,7 +175,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitForCursor();
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -186,8 +190,6 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
@@ -201,7 +203,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitForCursor();
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -216,7 +218,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitForCursor();
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -239,7 +241,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitForCursor();
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
@@ -255,7 +257,7 @@ describe("Realtime", () => {
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await waitForCursor();
 
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
