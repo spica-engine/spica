@@ -17,10 +17,20 @@ export class IdentitySettingsComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar;
 
   preferences: PassportPreference;
-  public basicPropertyTypes = ["string", "textarea", "boolean", "number"];
+  public basicPropertyTypes = ["string", "boolean", "number"];
   selectedInput: string;
 
-  forbiddenTypes = ["relation", "date", "storage"];
+  forbiddenTypes = [
+    "relation",
+    "date",
+    "storage",
+    "location",
+    "array",
+    "object",
+    "richtext",
+    "color",
+    "textarea"
+  ];
 
   private onDestroy: Subject<void> = new Subject<void>();
 
