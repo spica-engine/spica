@@ -83,7 +83,7 @@ describe("Realtime", () => {
     ];
   });
 
-  afterEach(() => app.close());
+  // afterEach(() => app.close());
 
   describe("authorization", () => {
     let authGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAuthorization>;
@@ -152,8 +152,12 @@ describe("Realtime", () => {
     });
   });
 
-  it("should do the initial sync", async () => {
-    const ws = wsc.get(`/bucket/${bucket._id}/data`);
+  fit("should do the initial sync", async () => {
+    const ws = wsc.get(`/bucket/${bucket._id}/data`,{
+      headers: {
+        Authorization: "APIKEY test"
+      }
+    });
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
