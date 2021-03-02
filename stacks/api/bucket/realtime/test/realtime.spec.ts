@@ -152,12 +152,8 @@ describe("Realtime", () => {
     });
   });
 
-  fit("should do the initial sync", async () => {
-    const ws = wsc.get(`/bucket/${bucket._id}/data`,{
-      headers: {
-        Authorization: "APIKEY test"
-      }
-    });
+  it("should do the initial sync", async () => {
+    const ws = wsc.get(`/bucket/${bucket._id}/data`);
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
@@ -169,11 +165,14 @@ describe("Realtime", () => {
     ]);
   });
 
-  it("should do the initial sync with filter", async () => {
+  fit("should do the initial sync with filter", async () => {
     const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `title == "second"`}));
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
