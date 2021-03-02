@@ -202,4 +202,15 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.onDestroy.next();
   }
+
+  onDocumentSettingsChange() {
+    if (this.bucket.documentSettings) {
+      delete this.bucket.documentSettings;
+    } else {
+      this.bucket.documentSettings = {
+        countLimit: 1,
+        limitExceedBehaviour: "prevent"
+      };
+    }
+  }
 }

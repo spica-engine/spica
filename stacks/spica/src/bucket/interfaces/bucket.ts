@@ -18,6 +18,10 @@ export interface Bucket {
     read: string;
     write: string;
   };
+  documentSettings?: {
+    countLimit: number;
+    limitExceedBehaviour: string;
+  };
 }
 
 export interface PropertyOptions {

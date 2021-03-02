@@ -307,12 +307,17 @@
   }
 
   .toggles {
-    width: 200px;
-
-    div {
+    div:not(.limitations-details) {
       display: flex;
       align-items: center;
       justify-content: space-between;
+    }
+
+    div.limitations-details {
+      margin-left: 10px;
+      > mat-form-field {
+        margin-left: 10px;
+      }
     }
 
     mat-error {
