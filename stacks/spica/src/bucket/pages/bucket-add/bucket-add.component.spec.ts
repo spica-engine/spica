@@ -202,11 +202,15 @@ describe("BucketAddComponent", () => {
       ).toBe("description");
 
       expect(
-        form.query(By.css(".toggles .read-only mat-slide-toggle")).injector.get(NgModel).model
+        fixture.debugElement
+          .query(By.css(".toggles .read-only mat-slide-toggle"))
+          .injector.get(NgModel).model
       ).toBe(false, "should work if readonly value is false");
 
       expect(
-        form.query(By.css(".toggles .history mat-slide-toggle")).injector.get(NgModel).model
+        fixture.debugElement
+          .query(By.css(".toggles .history mat-slide-toggle"))
+          .injector.get(NgModel).model
       ).toBe(true, "should work if history value is true");
 
       expect(
@@ -318,9 +322,7 @@ describe("BucketAddComponent", () => {
       const form = fixture.debugElement.query(By.css("form")).injector.get(NgForm);
       form.setValue({
         title: "new title",
-        description: "new description",
-        readOnly: false,
-        history: false
+        description: "new description"
       });
       fixture.detectChanges();
       await fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
@@ -329,8 +331,6 @@ describe("BucketAddComponent", () => {
         ...myBucket,
         title: "new title",
         description: "new description",
-        readOnly: false,
-        history: false,
         order: 1
       } as Bucket);
     });
