@@ -20,8 +20,13 @@ export interface Bucket {
   };
   documentSettings?: {
     countLimit: number;
-    limitExceedBehaviour: string;
+    limitExceedBehaviour: LimitExceedBehaviour;
   };
+}
+
+export enum LimitExceedBehaviour {
+  PREVENT = "prevent",
+  REMOVE = "remove"
 }
 
 export interface PropertyOptions {

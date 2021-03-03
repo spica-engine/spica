@@ -244,14 +244,14 @@
                   mat-icon-button
                   color="accent"
                   disableRipple
-                  matTooltip="Switch this toggle if you want to specify limitations of this bucket."
+                  matTooltip="Switch this toggle if you want to specify limitations for this bucket."
                 >
                   <mat-icon>info</mat-icon>
                 </button>
               </div>
               <div *ngIf="bucket.documentSettings" class="limitations-details">
-                <mat-form-field >
-                  <mat-label>Count limit</mat-label>
+                <mat-form-field>
+                  <mat-label>Document limit</mat-label>
                   <input
                     matInput
                     type="number"
@@ -262,18 +262,24 @@
                     min="1"
                   />
                 </mat-form-field>
-                <mat-form-field >
-                  <mat-label>Exceed behaviour</mat-label>
+                <mat-form-field>
+                  <mat-label>After reached limit</mat-label>
                   <mat-select
                     name="limitExceedBehaviour"
                     [(ngModel)]="bucket.documentSettings.limitExceedBehaviour"
                     required
                   >
-                    <mat-option value="prevent">
-                      Prevent to insert documents
+                    <mat-option
+                      matTooltip="It will prevent inserting document after the limit reached"
+                      value="prevent"
+                    >
+                      Do not insert
                     </mat-option>
-                    <mat-option value="remove">
-                      Delete from bottom
+                    <mat-option
+                      matTooltip="It will not prevent inserting document, but the oldest document of this bucket will be deleted for each inserted document after the limit exceeded"
+                      value="remove"
+                    >
+                      Insert but delete oldest one
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -404,6 +410,7 @@
           describeForm.invalid ||
           (bucket.properties | keyvalue)?.length < 1 ||
           bucket.primary == undefined ||
+          (bucket.documentSettings && bucket.documentSettings.countLimit < 1) ||
           !!state
         "
         (click)="saveBucket()"
@@ -442,7 +449,7 @@
       >
         <ng-container *ngSwitchDefault>
           <mat-icon>delete</mat-icon>
-          <span>Remove</span>
+          <span>Remove History</span>
         </ng-container>
         <ng-container *ngSwitchCase="'saving'">
           <mat-progress-spinner

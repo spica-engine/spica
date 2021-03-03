@@ -89,7 +89,7 @@ export class _MixinCollection<T> {
         const behaviour = this.options.limitExceedBehaviour;
 
         if (!Object.values(LimitExceedBehaviours).includes(behaviour)) {
-          throw Error(`Unknown behaviour: ${behaviour}`)
+          throw Error(`Unknown behaviour: ${behaviour}`);
         }
 
         return this.limitExceedBehaviours[behaviour](this._coll, insertedDocumentCount);
