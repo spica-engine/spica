@@ -37,11 +37,8 @@ export class DocumentScheduler {
   schedule(bucket: ObjectId, document: ObjectId, time: Date) {
     const key = `${bucket}_${document}`;
 
-    // @TODO: TEST HERE BEFORE SEND CHANGES
-    const publish = async () => {
-      const schema = await this.bs.findOne({_id: bucket});
-      return this.bds.children(schema).updateOne({_id: document}, {$unset: {_schedule: ""}});
-    };
+    const publish = () =>
+      this.bds.children({_id: bucket} as any).updateOne({_id: document}, {$unset: {_schedule: ""}});
 
     if (time.getTime() <= Date.now() + 1) {
       return publish();
