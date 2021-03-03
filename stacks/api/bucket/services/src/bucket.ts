@@ -1,4 +1,4 @@
-import {ObjectId, LimitExceedBehaviours} from "@spica-server/database";
+import {ObjectId} from "@spica-server/database";
 import {Preference} from "@spica-server/preference/services";
 import {JSONSchema7, JSONSchema7TypeName} from "json-schema";
 
@@ -23,6 +23,11 @@ export interface Bucket {
     countLimit: number;
     limitExceedBehaviour: LimitExceedBehaviours;
   };
+}
+
+export enum LimitExceedBehaviours {
+  PREVENT = "prevent",
+  REMOVE = "remove"
 }
 
 interface PropertyOptions {

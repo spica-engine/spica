@@ -241,7 +241,8 @@ export class BucketDataController {
       {req: req},
       {
         collection: schema => this.bds.children(schema),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+        deleteOne: documentId => this.deleteOne(req, bucketId, documentId)
       }
     );
 

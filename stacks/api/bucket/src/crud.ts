@@ -1,7 +1,12 @@
 import {ForbiddenException, BadRequestException} from "@nestjs/common";
 import {BaseCollection, ObjectId} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
-import {Bucket, BucketDocument, BucketPreferences} from "@spica-server/bucket/services";
+import {
+  Bucket,
+  BucketDocument,
+  BucketPreferences,
+  LimitExceedBehaviours
+} from "@spica-server/bucket/services";
 import {
   createRelationMap,
   getRelationPipeline,
@@ -150,10 +155,10 @@ export async function insertDocument(
   factories: {
     collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
+    deleteOne: (documentId: ObjectId) => Promise<void>;
   }
 ) {
   const collection = factories.collection(schema);
-
   await executeWriteRule(
     schema,
     factories.schema,
@@ -163,6 +168,20 @@ export async function insertDocument(
     collection.collection("buckets"),
     params.req.user
   );
+
+  if (
+    schema.documentSettings &&
+    schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.REMOVE
+  ) {
+    const documentCount = await collection.estimatedDocumentCount();
+    const diff = documentCount + 1 - schema.documentSettings.countLimit;
+    for (let i = 0; i < diff; i++) {
+      const oldestDocument = await collection
+        .aggregate<BucketDocument>([{$sort: {_id: 1}}, {$limit: 1}])
+        .next();
+      await factories.deleteOne(oldestDocument._id);
+    }
+  }
 
   return collection.insertOne(document).catch(handleWriteErrors);
 }

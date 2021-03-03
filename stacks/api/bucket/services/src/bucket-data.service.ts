@@ -1,5 +1,5 @@
 import {Injectable} from "@nestjs/common";
-import {BucketDocument, Bucket} from "@spica-server/bucket/services/src";
+import {BucketDocument, Bucket, LimitExceedBehaviours} from "@spica-server/bucket/services/src";
 import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
 
 @Injectable()
@@ -10,8 +10,11 @@ export class BucketDataService {
     const coll = BaseCollection<BucketDocument>(getBucketDataCollection(schema._id));
     let options: any = {};
 
-    if (schema.documentSettings) {
-      options = {...schema.documentSettings};
+    if (
+      schema.documentSettings &&
+      schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.PREVENT
+    ) {
+      options.countLimit = schema.documentSettings.countLimit;
     }
 
     return new coll(this.db, options);

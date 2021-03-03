@@ -16,33 +16,14 @@ import {DatabaseService} from "./database.service";
 
 export interface InitializeOptions {
   countLimit: number;
-  limitExceedBehaviour: LimitExceedBehaviours;
 }
 
-export enum LimitExceedBehaviours {
-  PREVENT = "prevent",
-  REMOVE = "remove"
-}
-
-// Rebase: export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 export type OptionalId<T> = Omit<T, "_id"> & {_id?: ObjectId | string | number};
 
 export class _MixinCollection<T> {
   _coll: Collection<T>;
 
   options: InitializeOptions;
-
-  readonly limitExceedBehaviours = {
-    prevent: (coll: Collection, count: number) => {
-      throw new Error("Document count limit exceeded.");
-    },
-    remove: async (coll: Collection, count: number) => {
-      const documents = await coll.aggregate([{$sort: {_id: 1}}, {$limit: count}]).toArray();
-      for (const document of documents) {
-        await coll.findOneAndDelete({_id: document._id});
-      }
-    }
-  };
 
   constructor(
     public readonly db: DatabaseService,
@@ -86,13 +67,7 @@ export class _MixinCollection<T> {
       const existingDocumentCount = await this._coll.estimatedDocumentCount();
 
       if (existingDocumentCount + insertedDocumentCount > this.options.countLimit) {
-        const behaviour = this.options.limitExceedBehaviour;
-
-        if (!Object.values(LimitExceedBehaviours).includes(behaviour)) {
-          throw Error(`Unknown behaviour: ${behaviour}`);
-        }
-
-        return this.limitExceedBehaviours[behaviour](this._coll, insertedDocumentCount);
+        throw new Error("Document count limit exceeded.");
       }
     }
   }

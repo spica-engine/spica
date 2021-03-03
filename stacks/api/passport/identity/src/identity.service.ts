@@ -1,5 +1,5 @@
 import {Injectable, Inject} from "@nestjs/common";
-import {BaseCollection, DatabaseService, LimitExceedBehaviours} from "@spica-server/database";
+import {BaseCollection, DatabaseService} from "@spica-server/database";
 import {Identity} from "./interface";
 import {Validator, Default} from "@spica-server/core/schema";
 import {hash, compare} from "./hash";
@@ -15,8 +15,7 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions
   ) {
     super(database, {
-      countLimit: identityOptions.identityCountLimit,
-      limitExceedBehaviour: LimitExceedBehaviours.PREVENT
+      countLimit: identityOptions.identityCountLimit
     });
     this._coll.createIndex({identifier: 1}, {unique: true});
   }

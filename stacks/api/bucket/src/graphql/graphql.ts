@@ -338,7 +338,11 @@ export class GraphqlController implements OnModuleInit {
         {req: context},
         {
           collection: bucketId => this.bds.children(bucketId),
-          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+          schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+          deleteOne: async documentId => {
+            const deleteFn = this.delete(bucket, false);
+            await deleteFn(root, {_id: documentId}, context, info);
+          }
         }
       ).catch(error => throwError(error.message, error instanceof ForbiddenException ? 403 : 500));
       if (!insertedDocument) {
@@ -556,13 +560,12 @@ export class GraphqlController implements OnModuleInit {
     };
   }
 
-  delete(bucket: Bucket) {
+  delete(bucket: Bucket, authentication = true) {
     return async (
       root: any,
       {_id: documentId}: {[arg: string]: any},
       context: any,
-      info: GraphQLResolveInfo,
-      authentication = true
+      info: GraphQLResolveInfo
     ): Promise<string> => {
       if (authentication) {
         await this.authenticate(
@@ -620,10 +623,10 @@ export class GraphqlController implements OnModuleInit {
           continue;
         }
 
-        const deleteFn = this.delete(schema);
+        const deleteFn = this.delete(schema, false);
 
         for (const targetDocId of targetDocIds) {
-          await deleteFn(root, {_id: targetDocId}, context, info, false);
+          await deleteFn(root, {_id: targetDocId}, context, info);
 
           if (this.activity) {
             const _ = this.insertActivity(context, Action.DELETE, targetBucketId, targetDocId);
