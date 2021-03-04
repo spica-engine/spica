@@ -45,7 +45,8 @@ export class IdentityModule {
           }
         }),
         SchemaModule.forChild({
-          schemas: [require(`./schemas/identity.json`), require(`./schemas/identity-create.json`)]
+          schemas: [require(`./schemas/identity.json`), require(`./schemas/identity-create.json`)],
+          customFields: ["options"]
         })
       ],
       providers: [

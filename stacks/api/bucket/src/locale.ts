@@ -140,7 +140,7 @@ export function provideLanguageFinalizer(
         }
       }
 
-      return bucketDataService.children(bucket._id).updateMany({}, {$unset: targets});
+      return bucketDataService.children(bucket).updateMany({}, {$unset: targets});
     });
 
     return Promise.all(promises);

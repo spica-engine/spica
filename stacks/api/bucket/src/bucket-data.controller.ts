@@ -136,7 +136,7 @@ export class BucketDataController {
         schedule
       },
       {
-        collection: (bucketId: string) => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
@@ -188,7 +188,7 @@ export class BucketDataController {
         localize
       },
       {
-        collection: (bucketId: string) => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
@@ -240,8 +240,9 @@ export class BucketDataController {
       rawDocument,
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        collection: schema => this.bds.children(schema),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+        deleteOne: documentId => this.deleteOne(req, bucketId, documentId)
       }
     );
 
@@ -298,7 +299,7 @@ export class BucketDataController {
       {...document, _id: documentId},
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     );
@@ -355,7 +356,7 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
     }
 
-    const bkt = this.bds.children(bucketId);
+    const bkt = this.bds.children(schema);
 
     const previousDocument = await bkt.findOne({_id: documentId});
 
@@ -385,7 +386,7 @@ export class BucketDataController {
       patch,
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       {returnOriginal: false}
@@ -437,7 +438,7 @@ export class BucketDataController {
       documentId,
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     );

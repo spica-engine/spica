@@ -11,7 +11,7 @@ export class DocumentScheduler {
     this.bs.find().then(buckets => {
       for (const bucket of buckets) {
         this.bds
-          .children(bucket._id)
+          .children(bucket)
           .updateMany({_schedule: {$lt: new Date()}}, {$unset: {_schedule: ""}});
       }
     });
@@ -38,7 +38,7 @@ export class DocumentScheduler {
     const key = `${bucket}_${document}`;
 
     const publish = () =>
-      this.bds.children(bucket).updateOne({_id: document}, {$unset: {_schedule: ""}});
+      this.bds.children({_id: bucket} as any).updateOne({_id: document}, {$unset: {_schedule: ""}});
 
     if (time.getTime() <= Date.now() + 1) {
       return publish();
