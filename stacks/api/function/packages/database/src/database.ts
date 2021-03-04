@@ -1,6 +1,7 @@
 import * as util from "util";
 import {checkDocument} from "./check";
 import {mongodb, _mongodb} from "./mongo";
+import {ObjectId} from "./objectid";
 
 let connection: _mongodb.MongoClient = globalThis[Symbol.for("kDatabaseDevkitConn")];
 
@@ -64,6 +65,13 @@ export async function database(): Promise<_mongodb.Db> {
       coll.watch,
       `It is not advised to use 'watch' under spica/functions environment. I hope that you know what you are doing.`
     );
+
+    const findById = coll.findOne;
+    coll["findById"] = (id, ...args) => {
+      const objectId = new ObjectId(id);
+      return findById.bind(coll)({_id: objectId}, ...args);
+    };
+
     const findOne = coll.findOne;
     coll.findOne = (filter, ...args) => {
       checkDocument(filter);

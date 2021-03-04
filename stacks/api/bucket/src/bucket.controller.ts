@@ -208,11 +208,11 @@ export class BucketController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const deletedCount = await this.bs.deleteOne({_id: id});
-    if (deletedCount > 0) {
+    const schema = await this.bs.findOneAndDelete({_id: id});
+    if (schema) {
       const promises = [];
       promises.push(
-        this.bds.children(id).deleteMany({}),
+        this.bds.children(schema).deleteMany({}),
         this.clearRelations(this.bs, this.bds, id)
       );
       if (this.history) {
@@ -257,7 +257,7 @@ export class BucketController {
 
       if (Object.keys(unsetFieldsBucketData).length) {
         updatePromises.push(
-          bucketDataService.children(bucket._id).updateMany({}, {$unset: unsetFieldsBucketData})
+          bucketDataService.children(bucket).updateMany({}, {$unset: unsetFieldsBucketData})
         );
       }
     }
@@ -299,6 +299,6 @@ export class BucketController {
       return;
     }
 
-    await bucketDataService.children(previousSchema._id).updateMany({}, {$unset: unsetFields});
+    await bucketDataService.children(previousSchema).updateMany({}, {$unset: unsetFields});
   }
 }

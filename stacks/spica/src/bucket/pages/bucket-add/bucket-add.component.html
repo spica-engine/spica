@@ -117,49 +117,6 @@
                   {{ dm?.errors.maxlength?.requiredLength }} character.
                 </mat-error>
               </mat-form-field>
-
-              <div class="toggles">
-                <div class="read-only">
-                  <mat-slide-toggle
-                    matInput
-                    name="readOnly"
-                    placeholder="Read Only"
-                    [(ngModel)]="bucket.readOnly"
-                  >
-                    Read Only
-                  </mat-slide-toggle>
-                  <button
-                    mat-icon-button
-                    color="accent"
-                    disableRipple
-                    matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
-                  >
-                    <mat-icon>info</mat-icon>
-                  </button>
-                </div>
-                <div class="history">
-                  <mat-slide-toggle
-                    [disabled]="!(isHistoryEndpointEnabled$ | async)"
-                    matInput
-                    name="history"
-                    placeholder="History"
-                    [(ngModel)]="bucket.history"
-                  >
-                    History
-                  </mat-slide-toggle>
-                  <button
-                    mat-icon-button
-                    color="accent"
-                    disableRipple
-                    matTooltip="When enabled, the history of the data inside this bucket will be kept."
-                  >
-                    <mat-icon>info</mat-icon>
-                  </button>
-                </div>
-                <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">
-                  This feature is unavailable.
-                </mat-error>
-              </div>
             </form>
           </mat-list-item>
           <h4 mat-subheader><mat-icon>text_fields</mat-icon> Properties</h4>
@@ -228,6 +185,106 @@
             <button class="add-property" (click)="createNewField()" mat-button>
               <mat-icon>add</mat-icon> Add new property
             </button>
+          </mat-list-item>
+          <h4 mat-subheader><mat-icon>settings</mat-icon>Options</h4>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <div class="toggles">
+              <div class="read-only">
+                <mat-slide-toggle
+                  matInput
+                  name="readOnly"
+                  placeholder="Read Only"
+                  [(ngModel)]="bucket.readOnly"
+                >
+                  Read Only
+                </mat-slide-toggle>
+                <button
+                  mat-icon-button
+                  color="accent"
+                  disableRipple
+                  matTooltip="If you mark this bucket as read only, no one will be able to edit or change any data in this bucket."
+                >
+                  <mat-icon>info</mat-icon>
+                </button>
+              </div>
+              <div class="history">
+                <mat-slide-toggle
+                  [disabled]="!(isHistoryEndpointEnabled$ | async)"
+                  matInput
+                  name="history"
+                  placeholder="History"
+                  [(ngModel)]="bucket.history"
+                >
+                  History
+                </mat-slide-toggle>
+                <button
+                  mat-icon-button
+                  color="accent"
+                  disableRipple
+                  matTooltip="When enabled, the history of the data inside this bucket will be kept."
+                >
+                  <mat-icon>info</mat-icon>
+                </button>
+              </div>
+              <mat-error *ngIf="!(isHistoryEndpointEnabled$ | async)">
+                This feature is unavailable.
+              </mat-error>
+              <div class="limitations">
+                <mat-slide-toggle
+                  matInput
+                  name="limitations"
+                  placeholder="Limitations"
+                  [ngModel]="bucket.documentSettings"
+                  (ngModelChange)="onDocumentSettingsChange()"
+                >
+                  Limitations
+                </mat-slide-toggle>
+                <button
+                  mat-icon-button
+                  color="accent"
+                  disableRipple
+                  matTooltip="Switch this toggle if you want to specify limitations for this bucket."
+                >
+                  <mat-icon>info</mat-icon>
+                </button>
+              </div>
+              <div *ngIf="bucket.documentSettings" class="limitations-details">
+                <mat-form-field>
+                  <mat-label>Maximum number of documents</mat-label>
+                  <input
+                    matInput
+                    type="number"
+                    name="countLimit"
+                    placeholder="Maximum number of documents"
+                    [(ngModel)]="bucket.documentSettings.countLimit"
+                    required
+                    min="1"
+                  />
+                </mat-form-field>
+                <mat-form-field>
+                  <mat-label>After reached limit</mat-label>
+                  <mat-select
+                    name="limitExceedBehaviour"
+                    [(ngModel)]="bucket.documentSettings.limitExceedBehaviour"
+                    required
+                  >
+                    <mat-option
+                      matTooltip="It will prevent inserting document after reached limit"
+                      value="prevent"
+                    >
+                      Do not insert
+                    </mat-option>
+                    <mat-option
+                      matTooltip="It will not prevent inserting document, but the oldest document of this bucket will be deleted for each inserted document after reached limit"
+                      value="remove"
+                    >
+                      Insert but delete oldest one
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
           </mat-list-item>
         </div>
         <div [class.hide]="configurationState != 'rules'">
@@ -353,6 +410,7 @@
           describeForm.invalid ||
           (bucket.properties | keyvalue)?.length < 1 ||
           bucket.primary == undefined ||
+          (bucket.documentSettings && bucket.documentSettings.countLimit < 1) ||
           !!state
         "
         (click)="saveBucket()"
@@ -391,7 +449,7 @@
       >
         <ng-container *ngSwitchDefault>
           <mat-icon>delete</mat-icon>
-          <span>Remove</span>
+          <span>Remove History</span>
         </ng-container>
         <ng-container *ngSwitchCase="'saving'">
           <mat-progress-spinner
