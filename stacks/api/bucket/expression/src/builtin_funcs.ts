@@ -7,17 +7,17 @@ interface ArgumentValidation {
   mustBe: string;
 }
 
-const PropertyAccesChainValidation: ArgumentValidation = {
+export const PropertyAccesChainValidation: ArgumentValidation = {
   validator: node => {
     if (node.kind != "operator" || node.type != "select") {
       return false;
     }
     return true;
   },
-  mustBe: "property acces chain"
+  mustBe: "property access chain"
 };
 
-const LiteralValidation: ArgumentValidation = {
+export const LiteralValidation: ArgumentValidation = {
   validator: node => {
     if (node.kind != "literal") {
       return false;
@@ -27,7 +27,7 @@ const LiteralValidation: ArgumentValidation = {
   mustBe: "literal"
 };
 
-const ArrayValidation: ArgumentValidation = {
+export const ArrayValidation: ArgumentValidation = {
   validator: node => {
     if (!Array.isArray(node)) {
       return false;
@@ -331,7 +331,7 @@ function parseArguments(args: object[], ctx: object, builder: Function) {
   return items;
 }
 
-function createInQuery(items: unknown[], propertyName: string, operator: "$and" | "$or") {
+export function createInQuery(items: unknown[], propertyName: string, operator: "$and" | "$or") {
   const query = {
     [operator]: []
   };
@@ -359,43 +359,41 @@ function createInQuery(items: unknown[], propertyName: string, operator: "$and" 
   return query;
 }
 
-function validateArgumentsLength(
+export function validateArgumentsLength(
   fnName: string,
   args: any[],
   exactLength?: number,
   minLength?: number,
   maxLength?: number
 ) {
-  const messages: string[] = [];
-
   if (exactLength != undefined && args.length != exactLength) {
-    messages.push(
+    throw new TypeError(
       `Function '${fnName}' accepts exactly ${exactLength} argument(s) but found ${args.length}.`
     );
   }
 
   if (minLength != undefined && args.length < minLength) {
-    messages.push(
+    throw new TypeError(
       `Function '${fnName}' accepts minimum ${minLength} argument(s) but found ${args.length}.`
     );
   }
 
   if (maxLength != undefined && args.length > maxLength) {
-    messages.push(
+    throw new TypeError(
       `Function '${fnName}' accepts maximum ${maxLength} argument(s) but found ${args.length}.`
     );
   }
-
-  if (messages.length) {
-    throw new TypeError(messages.join("\n"));
-  }
 }
 
-function validateArgumentsOrder(fnName: string, args: any[], argumentsInfo: ArgumentValidation[]) {
+export function validateArgumentsOrder(
+  fnName: string,
+  args: any[],
+  argumentsInfo: ArgumentValidation[]
+) {
   const messages: string[] = [];
   for (const [index, node] of args.entries()) {
     if (!argumentsInfo[index].validator(node)) {
-      messages.push(`Function '${fnName}' arg[${index}] must be a ${argumentsInfo[index].mustBe}.`);
+      messages.push(`Function '${fnName}' arg[${index}] must be ${argumentsInfo[index].mustBe}.`);
     }
   }
 
