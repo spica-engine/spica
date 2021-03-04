@@ -35,4 +35,25 @@ describe("Database e2e", () => {
     expect(data.length).toBe(1);
     expect(db instanceof Db).toBe(true);
   });
+
+  it("should find by id", async () => {
+    const db = await database();
+    const coll = db.collection("test");
+
+    const {insertedId} = await coll.insertOne({
+      test: 1
+    });
+
+    let data = await coll["findById"](insertedId);
+    expect(data).toEqual({
+      _id: insertedId,
+      test: 1
+    });
+
+    data = await coll["findById"](insertedId.toHexString());
+    expect(data).toEqual({
+      _id: insertedId,
+      test: 1
+    });
+  });
 });
