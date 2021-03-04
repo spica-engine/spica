@@ -12,9 +12,11 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     database: DatabaseService,
     private validator: Validator,
     private jwt: JwtService,
-    @Inject(IDENTITY_OPTIONS) private options: IdentityOptions
+    @Inject(IDENTITY_OPTIONS) private identityOptions: IdentityOptions
   ) {
-    super(database, options.identityCountLimit);
+    super(database, {
+      countLimit: identityOptions.identityCountLimit
+    });
     this._coll.createIndex({identifier: 1}, {unique: true});
   }
 
@@ -23,10 +25,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
   }
 
   sign(identity: Identity, requestedExpires?: number) {
-    let expiresIn = this.options.expiresIn;
+    let expiresIn = this.identityOptions.expiresIn;
     if (requestedExpires) {
-      if (requestedExpires > this.options.maxExpiresIn) {
-        expiresIn = this.options.maxExpiresIn;
+      if (requestedExpires > this.identityOptions.maxExpiresIn) {
+        expiresIn = this.identityOptions.maxExpiresIn;
       } else {
         expiresIn = requestedExpires;
       }

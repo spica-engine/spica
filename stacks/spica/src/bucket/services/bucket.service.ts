@@ -55,7 +55,7 @@ export class BucketService {
   replaceOne(bucket: Bucket): Observable<Bucket> {
     return this.http
       .put<Bucket>(`api:/bucket/${bucket._id}`, bucket)
-      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Update(bucket._id, bucket))));
+      .pipe(tap(bucket => this.store.dispatch(new fromBucket.Replace(bucket))));
   }
 
   patchBucket(id: string, changes: object): Observable<Bucket> {

@@ -212,6 +212,20 @@
     "readOnly": {
       "type": "boolean"
     },
+    "documentSettings": {
+      "type": "object",
+      "properties": {
+        "countLimit": {
+          "type": "number",
+          "minimum": 1
+        },
+        "limitExceedBehaviour": {
+          "type": "string",
+          "enum": ["prevent", "remove"]
+        }
+      },
+      "additionalProperties": false
+    },
     "properties": {
       "type": "object",
       "propertyNames": {
