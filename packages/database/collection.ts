@@ -67,7 +67,7 @@ export class _MixinCollection<T> {
       const existingDocumentCount = await this._coll.estimatedDocumentCount();
 
       if (existingDocumentCount + insertedDocumentCount > this.options.countLimit) {
-        throw new Error("Document count limit exceeded.");
+        throw new Error("Maximum number of documents has been reached");
       }
     }
   }

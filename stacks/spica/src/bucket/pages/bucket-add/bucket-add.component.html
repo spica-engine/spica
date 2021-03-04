@@ -251,12 +251,12 @@
               </div>
               <div *ngIf="bucket.documentSettings" class="limitations-details">
                 <mat-form-field>
-                  <mat-label>Document limit</mat-label>
+                  <mat-label>Maximum number of documents</mat-label>
                   <input
                     matInput
                     type="number"
                     name="countLimit"
-                    placeholder="Count Limit"
+                    placeholder="Maximum number of documents"
                     [(ngModel)]="bucket.documentSettings.countLimit"
                     required
                     min="1"
@@ -270,13 +270,13 @@
                     required
                   >
                     <mat-option
-                      matTooltip="It will prevent inserting document after the limit reached"
+                      matTooltip="It will prevent inserting document after reached limit"
                       value="prevent"
                     >
                       Do not insert
                     </mat-option>
                     <mat-option
-                      matTooltip="It will not prevent inserting document, but the oldest document of this bucket will be deleted for each inserted document after the limit exceeded"
+                      matTooltip="It will not prevent inserting document, but the oldest document of this bucket will be deleted for each inserted document after reached limit"
                       value="remove"
                     >
                       Insert but delete oldest one

@@ -1326,10 +1326,12 @@ describe("BucketDataController", () => {
           .catch(e => e);
 
         expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
-        expect(response.body.message).toEqual("Database error: Document count limit exceeded.");
+        expect(response.body.message).toEqual(
+          "Database error: Maximum number of documents has been reached"
+        );
       });
 
-      it("should remove document count limitation", async () => {
+      it("should disable document count limitation", async () => {
         delete bucket.documentSettings;
         await req.put(`/bucket/${bucketId}`, bucket);
 
@@ -1423,7 +1425,7 @@ describe("BucketDataController", () => {
         ]);
       });
 
-      it("should remove document count limitation", async () => {
+      it("should disable document count limitation", async () => {
         delete bucket.documentSettings;
         await req.put(`/bucket/${bucketId}`, bucket);
 
