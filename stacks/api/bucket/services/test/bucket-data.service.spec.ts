@@ -18,7 +18,9 @@ describe("Bucket Data Service", () => {
 
   it("should create children correctly", () => {
     const id = new ObjectId();
-    const result = bds.children(id);
+    const result = bds.children({
+      _id: id
+    } as any);
     expect(result._collection).toEqual("bucket_" + id);
   });
 });

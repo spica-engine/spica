@@ -1,7 +1,12 @@
 import {ForbiddenException, BadRequestException} from "@nestjs/common";
 import {BaseCollection, ObjectId} from "@spica-server/database";
 import * as expression from "@spica-server/bucket/expression";
-import {Bucket, BucketDocument, BucketPreferences} from "@spica-server/bucket/services";
+import {
+  Bucket,
+  BucketDocument,
+  BucketPreferences,
+  LimitExceedBehaviours
+} from "@spica-server/bucket/services";
 import {
   createRelationMap,
   getRelationPipeline,
@@ -32,7 +37,7 @@ interface CrudParams {
 }
 
 export interface CrudFactories<T> {
-  collection: (id: string | ObjectId) => BaseCollection<T>;
+  collection: (schema: Bucket) => BaseCollection<T>;
   preference: () => Promise<BucketPreferences>;
   schema: (id: string | ObjectId) => Promise<Bucket>;
 }
@@ -66,7 +71,7 @@ export async function findDocuments<T>(
   options: CrudOptions<boolean>,
   factories: CrudFactories<T>
 ): Promise<unknown> {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
   const pipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
   const seekingPipelineBuilder: iPipelineBuilder = new PipelineBuilder(schema, factories);
 
@@ -148,12 +153,12 @@ export async function insertDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<any>;
+    collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
+    deleteOne: (documentId: ObjectId) => Promise<void>;
   }
 ) {
-  const collection = factories.collection(schema._id);
-
+  const collection = factories.collection(schema);
   await executeWriteRule(
     schema,
     factories.schema,
@@ -163,6 +168,20 @@ export async function insertDocument(
     collection.collection("buckets"),
     params.req.user
   );
+
+  if (
+    schema.documentSettings &&
+    schema.documentSettings.limitExceedBehaviour == LimitExceedBehaviours.REMOVE
+  ) {
+    const documentCount = await collection.estimatedDocumentCount();
+    const diff = documentCount + 1 - schema.documentSettings.countLimit;
+    for (let i = 0; i < diff; i++) {
+      const oldestDocument = await collection
+        .aggregate<BucketDocument>([{$sort: {_id: 1}}, {$limit: 1}])
+        .next();
+      await factories.deleteOne(oldestDocument._id);
+    }
+  }
 
   return collection.insertOne(document).catch(handleWriteErrors);
 }
@@ -174,14 +193,14 @@ export async function replaceDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<any>;
+    collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
     returnOriginal: boolean;
   } = {returnOriginal: true}
 ) {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
 
   await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
 
@@ -203,14 +222,14 @@ export async function patchDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<any>;
+    collection: (schema: Bucket) => BaseCollection<any>;
     schema: (id: string | ObjectId) => Promise<Bucket>;
   },
   options: {
     returnOriginal: boolean;
   } = {returnOriginal: true}
 ) {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
 
   await executeWriteRule(schema, factories.schema, document, collection, params.req.user);
 
@@ -232,11 +251,11 @@ export async function deleteDocument(
     req: any;
   },
   factories: {
-    collection: (id: string | ObjectId) => BaseCollection<BucketDocument>;
-    schema: (id: string | ObjectId) => Promise<Bucket>;
+    collection: (schema: Bucket) => BaseCollection<BucketDocument>;
+    schema: (schema: string | ObjectId) => Promise<Bucket>;
   }
 ) {
-  const collection = factories.collection(schema._id);
+  const collection = factories.collection(schema);
 
   const document = await collection.findOne({_id: new ObjectId(documentId)});
 

@@ -7,7 +7,8 @@ export enum BucketActionTypes {
   ADD = "BUCKET_ADD",
   REMOVE = "BUCKET_REMOVE",
   UPDATE = "BUCKET_UPDATE",
-  UPSERT = "BUCKET_UPSERT"
+  UPSERT = "BUCKET_UPSERT",
+  REPLACE = "BUCKET_REPLACE"
 }
 
 export class Add implements Action {
@@ -18,6 +19,11 @@ export class Add implements Action {
 export class Update implements Action {
   readonly type = BucketActionTypes.UPDATE;
   constructor(public id: string, public changes: Partial<Bucket>) {}
+}
+
+export class Replace implements Action {
+  readonly type = BucketActionTypes.REPLACE;
+  constructor(public bucket: Bucket) {}
 }
 
 export class Upsert implements Action {
@@ -35,7 +41,7 @@ export class Retrieve implements Action {
   constructor(public buckets: Bucket[]) {}
 }
 
-export type BucketAction = Retrieve | Add | Update | Remove | Upsert;
+export type BucketAction = Retrieve | Add | Update | Remove | Upsert | Replace;
 
 export interface State extends EntityState<Bucket> {
   loaded: boolean;
@@ -56,6 +62,8 @@ export function reducer(state: State = initialState, action: BucketAction): Stat
       return adapter.addOne(action.bucket, state);
     case BucketActionTypes.REMOVE:
       return adapter.removeOne(action.id, state);
+    case BucketActionTypes.REPLACE:
+      return adapter.setOne(action.bucket, state);
     case BucketActionTypes.UPDATE:
       return adapter.updateOne({id: action.id, changes: action.changes}, state);
     case BucketActionTypes.UPSERT:
