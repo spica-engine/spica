@@ -9,6 +9,9 @@ import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {SchemaModule} from "@spica-server/core/schema";
+import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
@@ -21,6 +24,10 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
+function waitForCursorInitialization() {
+  return new Promise(resolve => setTimeout(resolve, 1000));
+}
 
 describe("Realtime", () => {
   let wsc: Websocket;
@@ -38,6 +45,10 @@ describe("Realtime", () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [
+        SchemaModule.forRoot({
+          formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
+          defaults: [CREATED_AT, UPDATED_AT]
+        }),
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
         RealtimeModule,
@@ -123,7 +134,7 @@ describe("Realtime", () => {
       });
       ws.onclose = done;
       ws.onmessage = e => {
-        expect(e.data).toEqual(`{"code":401,"message":"Unauthorized"}`);
+        expect(e.data).toEqual(`{"kind":-1,"code":401,"message":"Unauthorized"}`);
       };
     });
 
@@ -139,7 +150,7 @@ describe("Realtime", () => {
       ws.onclose = done;
       ws.onmessage = e => {
         expect(e.data).toEqual(
-          `{"code":403,"message":"You do not have sufficient permissions to do this action."}`
+          `{"kind":-1,"code":403,"message":"You do not have sufficient permissions to do this action."}`
         );
       };
     });
@@ -150,6 +161,9 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await waitForCursorInitialization();
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
@@ -163,6 +177,9 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await waitForCursorInitialization();
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
@@ -175,6 +192,7 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
@@ -187,6 +205,9 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await waitForCursorInitialization();
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[0]},
@@ -199,6 +220,9 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await waitForCursorInitialization();
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
@@ -219,6 +243,9 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await waitForCursorInitialization();
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
@@ -232,6 +259,9 @@ describe("Realtime", () => {
     const message = jasmine.createSpy();
     ws.onmessage = e => message(JSON.parse(e.data as string));
     await ws.connect;
+
+    await waitForCursorInitialization();
+
     await ws.close();
     expect(message.calls.allArgs().map(c => c[0])).toEqual([
       {kind: ChunkKind.Initial, document: rows[1]},
