@@ -20,7 +20,7 @@ import {
   mapTo,
   take
 } from "rxjs/operators";
-import {Bucket, emptyBucket} from "../../interfaces/bucket";
+import {Bucket, emptyBucket, LimitExceedBehaviour} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
@@ -201,5 +201,16 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.onDestroy.next();
+  }
+
+  onDocumentSettingsChange() {
+    if (this.bucket.documentSettings) {
+      delete this.bucket.documentSettings;
+    } else {
+      this.bucket.documentSettings = {
+        countLimit: 100,
+        limitExceedBehaviour: LimitExceedBehaviour.PREVENT
+      };
+    }
   }
 }

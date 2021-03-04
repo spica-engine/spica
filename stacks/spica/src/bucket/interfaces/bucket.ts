@@ -18,6 +18,15 @@ export interface Bucket {
     read: string;
     write: string;
   };
+  documentSettings?: {
+    countLimit: number;
+    limitExceedBehaviour: LimitExceedBehaviour;
+  };
+}
+
+export enum LimitExceedBehaviour {
+  PREVENT = "prevent",
+  REMOVE = "remove"
 }
 
 export interface PropertyOptions {
