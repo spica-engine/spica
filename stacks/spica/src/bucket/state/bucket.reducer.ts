@@ -63,8 +63,7 @@ export function reducer(state: State = initialState, action: BucketAction): Stat
     case BucketActionTypes.REMOVE:
       return adapter.removeOne(action.id, state);
     case BucketActionTypes.REPLACE:
-      adapter.removeOne(action.bucket._id, state);
-      return adapter.addOne(action.bucket, state);
+      return adapter.setOne(action.bucket, state);
     case BucketActionTypes.UPDATE:
       return adapter.updateOne({id: action.id, changes: action.changes}, state);
     case BucketActionTypes.UPSERT:
