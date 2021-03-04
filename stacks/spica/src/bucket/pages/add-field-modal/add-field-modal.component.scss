@@ -1,13 +1,13 @@
-::ng-deep {
-  mat-label {
-    margin: 0px !important;
-  }
-  mat-form-field {
-    width: 100%;
-    margin: 0px !important;
-  }
-}
 :host {
+  ::ng-deep {
+    mat-label {
+      margin: 0px !important;
+    }
+    mat-form-field {
+      width: 100%;
+      margin: 0px !important;
+    }
+  }
   .field {
     display: flex;
     width: calc(50% - 5px);
