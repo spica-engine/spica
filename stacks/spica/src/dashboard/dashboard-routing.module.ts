@@ -8,6 +8,7 @@ import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {DashboardIndexGuard} from "./dashboard.guard";
+import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 
 const routes: Routes = [
   {pathMatch: "full", path: "", redirectTo: "dashboard"},
@@ -45,7 +46,8 @@ const routes: Routes = [
         data: {service: "dashboard", action: "show"}
       }
     ]
-  }
+  },
+  {path: "assets", component: AssetStoreComponent}
 ];
 
 const route: Route[] = [
@@ -63,6 +65,14 @@ const route: Route[] = [
     icon: "format_list_numbered",
     path: "/dashboards",
     display: "Custom Dashboards"
+  },
+  {
+    category: RouteCategory.Primary,
+    icon: "shopping_cart",
+    path: "assets",
+    display: "Asset Store",
+    id: "asset_store",
+    index: 3
   }
 ];
 

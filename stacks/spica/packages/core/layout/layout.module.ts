@@ -23,26 +23,8 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {ToolbarActionDirective} from "./toolbar-action";
 import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 import {MatMenuModule} from "@angular/material/menu";
-import {Route} from "../route";
-import {RouteCategory} from "../route/route";
-import {RouteModule} from "../route/route.module";
-import {AssetStoreComponent} from "./asset-store/asset-store.component";
 
-const routes: Routes = [
-  {path: "error", component: ErrorPageComponent, data: {layout: false}},
-  {path: "assets", component: AssetStoreComponent}
-];
-
-const route: Route[] = [
-  {
-    category: RouteCategory.Primary,
-    icon: "shopping_cart",
-    path: "assets",
-    display: "Asset Store",
-    id: "asset_store",
-    index: 3
-  }
-];
+const routes: Routes = [{path: "error", component: ErrorPageComponent, data: {layout: false}}];
 
 @NgModule({
   imports: [
@@ -58,7 +40,6 @@ const route: Route[] = [
     MatSlideToggleModule,
     CdkLayoutModule,
     RouterModule.forChild(routes),
-    RouteModule.forChild(route),
     MatSnackBarModule,
     MatMenuModule
   ],
@@ -69,8 +50,7 @@ const route: Route[] = [
     ErrorPageComponent,
     SchemeSwitcherComponent,
     SnackbarComponent,
-    ToolbarActionDirective,
-    AssetStoreComponent
+    ToolbarActionDirective
   ],
   exports: [LayoutRouterOutlet, RouterModule],
   entryComponents: [HomeLayoutComponent, SchemeSwitcherComponent, SnackbarComponent]
