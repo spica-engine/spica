@@ -19,7 +19,8 @@ const route: Route[] = [
     display: "Storage",
     icon: "filter_drama",
     path: "/storage",
-    data: {action: "storage:index"}
+    data: {action: "storage:index"},
+    index: 1
   }
 ];
 

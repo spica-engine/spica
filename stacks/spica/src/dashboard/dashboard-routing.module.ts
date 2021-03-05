@@ -54,7 +54,8 @@ const route: Route[] = [
     category: RouteCategory.Primary,
     icon: "dashboard",
     path: "/dashboard",
-    display: "Dashboard"
+    display: "Dashboard",
+    index: 0
   },
   {
     id: "list_all_dahsboards",
