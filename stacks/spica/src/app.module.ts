@@ -14,7 +14,7 @@ import {FunctionModule} from "./function/function.module";
 import {PassportModule} from "./passport";
 import {StorageModule} from "./storage/storage.module";
 import {ErrorStateMatcher, ShowOnDirtyErrorStateMatcher} from "@angular/material/core";
-import { OverlayContainer, FullscreenOverlayContainer } from "@angular/cdk/overlay";
+import {OverlayContainer, FullscreenOverlayContainer} from "@angular/cdk/overlay";
 
 @NgModule({
   imports: [
