@@ -6,7 +6,8 @@ import {
   OnInit,
   ViewChild,
   Renderer2,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  RendererStyleFlags2
 } from "@angular/core";
 import {ActivatedRoute, Router} from "@angular/router";
 import {SavingState} from "@spica-client/material";
@@ -81,6 +82,13 @@ export class AddComponent implements OnInit, OnDestroy {
   maxBatchCount: number = 0;
 
   batching: boolean = false;
+
+  browserFullscreenKeywords = {
+    open: "",
+    onChange: "",
+    fullScreenElement: "",
+    exit: ""
+  };
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -299,61 +307,109 @@ export class AddComponent implements OnInit, OnDestroy {
     }
   }
 
-  switchToFullscreen() {
+  async switchToFullscreen() {
     if (!this.onFullScreen) {
       if (!this.enableLogView) {
         this.enableLogView = true;
         this.changeDetector.detectChanges();
       }
 
-      const codeActions = document.getElementsByClassName("code-actions").item(0);
-      const codeEditor = document.getElementsByClassName("editor").item(0);
-      const logs = document.getElementsByClassName("sidecar-log-view").item(0);
-
-      this.renderer.addClass(codeActions, "full-screen-code-actions");
-      this.renderer.addClass(codeEditor, "full-screen-code");
-      this.renderer.addClass(logs, "full-screen-log");
-
       const content = document.getElementsByClassName("mat-sidenav-content").item(0);
 
-      //    if (content.requestFullscreen) {
-      //     content.requestFullscreen();
-      // } else if (content.webkitRequestFullscreen) {
-      //   /* Safari */
-      //   content.webkitRequestFullscreen();
-      // } else if (content.msRequestFullscreen) {
-      //   /* IE11 */
-      //   content.msRequestFullscreen();
-      // }
+      try {
+        this.setBrowserDefaults();
 
-      content.requestFullscreen().then(() => (this.onFullScreen = true));
+        this.applyStyles();
 
-      const fullScreenExitListener = () => {
-        if (!document.fullscreenElement) {
-          this.renderer.removeClass(codeActions, "full-screen-code-actions");
-          this.renderer.removeClass(codeEditor, "full-screen-code");
+        await this.requestFullscreen(content);
 
-          this.renderer.removeClass(logs, "full-screen-log");
+        this.onFullScreen = true;
+      } catch (e) {
+        this.revertStyles();
 
-          this.onFullScreen = false;
-        }
-      };
-
-      document.addEventListener("fullscreenchange", fullScreenExitListener);
+        console.log(e);
+      }
     } else {
-      document.exitFullscreen();
-    }
+      await document[this.browserFullscreenKeywords.exit]();
 
-    // const element = editor.elementRef.nativeElement;
-    // // element.requestFullscreen();
-    // if (element.requestFullscreen) {
-    //   element.requestFullscreen();
-    // } else if (element.webkitRequestFullscreen) {
-    //   /* Safari */
-    //   element.webkitRequestFullscreen();
-    // } else if (element.msRequestFullscreen) {
-    //   /* IE11 */
-    //   element.msRequestFullscreen();
-    // }
+      this.revertStyles();
+
+      this.onFullScreen = false;
+    }
+  }
+
+  getFullscreenElements() {
+    const codeActions = document.getElementsByClassName("code-actions").item(0);
+    const codeEditor = document.getElementsByClassName("editor").item(0);
+    const logs = document.getElementsByClassName("sidecar-log-view").item(0);
+    const content = document.getElementsByClassName("mat-sidenav-content").item(0);
+
+    return {codeActions, codeEditor, logs, content};
+  }
+
+  applyStyles() {
+    const {codeActions, codeEditor, logs, content} = this.getFullscreenElements();
+
+    this.renderer.addClass(codeActions, "full-screen-code-actions");
+    this.renderer.addClass(codeEditor, "full-screen-code");
+    this.renderer.addClass(logs, "full-screen-log");
+    this.renderer.setStyle(content, "margin-left", "0px", RendererStyleFlags2.Important);
+  }
+
+  revertStyles() {
+    const {codeActions, codeEditor, logs, content} = this.getFullscreenElements();
+
+    this.renderer.removeClass(codeActions, "full-screen-code-actions");
+    this.renderer.removeClass(codeEditor, "full-screen-code");
+    this.renderer.removeClass(logs, "full-screen-log");
+    this.renderer.removeStyle(content, "margin-left");
+  }
+
+  setBrowserDefaults() {
+    if (document.exitFullscreen) {
+      this.browserFullscreenKeywords = {
+        open: "requestFullscreen",
+        onChange: "fullscreenchange",
+        fullScreenElement: "fullscreenElement",
+        exit: "exitFullscreen"
+      };
+    } else if (document["webkitExitFullscreen"]) {
+      this.browserFullscreenKeywords = {
+        open: "webkitRequestFullscreen",
+        onChange: "webkitfullscreenchange",
+        fullScreenElement: "webkitFullscreenElement",
+        exit: "webkitExitFullscreen"
+      };
+    } else if (document["msExitFullscreen"]) {
+      this.browserFullscreenKeywords = {
+        open: "msRequestFullscreen",
+        onChange: "msfullscreenchange",
+        fullScreenElement: "msFullscreenElement",
+        exit: "msExitFullscreen"
+      };
+    } else if (document["mozCancelFullScreen"]) {
+      this.browserFullscreenKeywords = {
+        open: "mozRequestFullScreen",
+        onChange: "mozfullscreenchange",
+        fullScreenElement: "mozFullScreenElement",
+        exit: "mozCancelFullScreen"
+      };
+    } else {
+      throw new Error("Unable to detect browser.");
+    }
+  }
+
+  async requestFullscreen(element: Element): Promise<void> {
+    await element[this.browserFullscreenKeywords.open]();
+
+    const escHandler = () => {
+      if (!document[this.browserFullscreenKeywords.fullScreenElement]) {
+        document[this.browserFullscreenKeywords.exit]();
+        this.revertStyles();
+        this.onFullScreen = false;
+      }
+    };
+
+    document.addEventListener(this.browserFullscreenKeywords.onChange, escHandler);
   }
 }
