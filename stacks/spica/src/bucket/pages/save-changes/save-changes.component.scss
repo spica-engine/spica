@@ -1,0 +1,13 @@
+:host {
+  h4[mat-dialog-title] {
+    font-size: inherit;
+    & > * {
+      vertical-align: middle;
+    }
+  }
+
+  div[mat-dialog-actions] {
+    margin-top: 50px;
+    float: right;
+  }
+}

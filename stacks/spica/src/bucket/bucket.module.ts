@@ -63,6 +63,7 @@ import {BucketService} from "./services/bucket.service";
 import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
+import { SaveChangesComponent } from './pages/save-changes/save-changes.component';
 
 @NgModule({
   imports: [
@@ -154,7 +155,8 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
     FilterComponent,
     RequiredTranslate,
     AddFieldModalComponent,
-    CelLanguageDirective
+    CelLanguageDirective,
+    SaveChangesComponent
   ]
 })
 export class BucketModule {

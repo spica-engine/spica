@@ -1,0 +1,12 @@
+<h4 mat-dialog-title>
+  <mat-icon>help</mat-icon>
+  <span>Confirmation</span>
+</h4>
+<div mat-dialog-content>
+  <p>You have unsaved changes. Do you want to save them before leaving?</p>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="emit('cancel')">Cancel</button>
+  <button mat-button (click)="emit('unsave')">Continue without save</button>
+  <button mat-button (click)="emit('save')">Save</button>
+</div>
