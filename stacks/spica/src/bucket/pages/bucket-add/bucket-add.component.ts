@@ -173,7 +173,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       )
     );
 
-    return save;
+    return this.$save;
   }
 
   clearHistories() {
