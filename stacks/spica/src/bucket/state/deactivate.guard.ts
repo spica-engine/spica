@@ -1,7 +1,12 @@
 import {Injectable} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
-import {ActivatedRouteSnapshot, CanDeactivate, RouterStateSnapshot, UrlTree} from "@angular/router";
-import {SaveChangesComponent, SaveChangesDecision} from "@spica-client/common/save-changes";
+import {
+  ActivatedRouteSnapshot,
+  CanDeactivate,
+  Router,
+  RouterStateSnapshot,
+  UrlTree
+} from "@angular/router";
 import {Observable, of} from "rxjs";
 import {first, map, switchMap, tap} from "rxjs/operators";
 import {emptyBucket} from "../interfaces/bucket";
@@ -10,10 +15,34 @@ import {BucketAddComponent} from "../pages/bucket-add/bucket-add.component";
 import {BucketDataService} from "../services/bucket-data.service";
 import {BucketService} from "../services/bucket.service";
 import isEqual from "lodash/isEqual";
+import {MatAwareDialogComponent} from "@spica-client/material";
+
+const awareDialogData = {
+  icon: "help",
+  title: "Confirmation",
+  templateOrDescription:
+    "You have unsaved changes and they will be lost if you continue without save them.",
+  answer: "",
+  confirmText: "Continue without save",
+  cancelText: "Cancel",
+  noAnswer: true
+};
 
 @Injectable()
 export class BucketCanDeactivate implements CanDeactivate<BucketAddComponent> {
-  constructor(private bucketService: BucketService, public matDialog: MatDialog) {}
+  constructor(
+    private router: Router,
+    private bucketService: BucketService,
+    public matDialog: MatDialog
+  ) {}
+
+  openDialog() {
+    return this.matDialog
+      .open(MatAwareDialogComponent, {
+        data: awareDialogData
+      })
+      .afterClosed();
+  }
 
   canDeactivate(
     component: BucketAddComponent,
@@ -21,53 +50,47 @@ export class BucketCanDeactivate implements CanDeactivate<BucketAddComponent> {
     currentState: RouterStateSnapshot,
     nextState: RouterStateSnapshot
   ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    const bucketWithChanges = component.bucket;
-    const initialBucket = emptyBucket();
+    const state = this.router.getCurrentNavigation().extras.state;
 
-    if (equals(bucketWithChanges, initialBucket)) {
+    if (state && state.skipSaveChanges) {
       return true;
     }
 
-    let sourceObs: Observable<SaveChangesDecision>;
+    const bucketWithChanges = component.bucket;
+    const initialBucket = emptyBucket();
 
-    if (!bucketWithChanges._id) {
-      sourceObs = this.matDialog.open(SaveChangesComponent).afterClosed();
-    } else {
-      sourceObs = this.bucketService.getBucket(bucketWithChanges._id).pipe(
-        map(existingBucket => equals(existingBucket, bucketWithChanges)),
-        switchMap(isEqual => {
-          if (isEqual) {
-            return of(SaveChangesDecision.UNSAVE);
-          }
+    if (isEqual(bucketWithChanges, initialBucket)) {
+      return true;
+    }
 
-          return this.matDialog.open(SaveChangesComponent).afterClosed();
-        })
+    if (bucketWithChanges._id) {
+      return this.bucketService.getBucket(bucketWithChanges._id).pipe(
+        first(),
+        switchMap(existingBucket =>
+          isEqual(existingBucket, bucketWithChanges) ? of(true) : this.openDialog()
+        )
       );
     }
 
-    return sourceObs.pipe(
-      switchMap(res => {
-        if (res == SaveChangesDecision.SAVE) {
-          return component
-            .getSaveObservable(false)
-            .toPromise()
-            .then(() => true)
-            .catch(() => false);
-        } else if (res == SaveChangesDecision.UNSAVE) {
-          return of(true);
-        } else if (res == SaveChangesDecision.CANCEL) {
-          return of(false);
-        }
-        // default
-        return of(true);
-      })
-    );
+    return this.openDialog();
   }
 }
 
 @Injectable()
 export class BucketDataCanDeactivate implements CanDeactivate<AddComponent> {
-  constructor(private bucketDataService: BucketDataService, public matDialog: MatDialog) {}
+  constructor(
+    private bucketDataService: BucketDataService,
+    private router: Router,
+    public matDialog: MatDialog
+  ) {}
+
+  openDialog() {
+    return this.matDialog
+      .open(MatAwareDialogComponent, {
+        data: awareDialogData
+      })
+      .afterClosed();
+  }
 
   canDeactivate(
     component: AddComponent,
@@ -75,53 +98,28 @@ export class BucketDataCanDeactivate implements CanDeactivate<AddComponent> {
     currentState: RouterStateSnapshot,
     nextState: RouterStateSnapshot
   ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    const bucketDataWithChanges = component.data;
-    const initialData = {};
+    const state = this.router.getCurrentNavigation().extras.state;
 
-    if (equals(bucketDataWithChanges, initialData)) {
+    if (state && state.skipSaveChanges) {
       return true;
     }
 
-    let sourceObs: Observable<SaveChangesDecision>;
+    const dataWithChanges = component.data;
+    const initialData = {};
 
-    if (!bucketDataWithChanges._id) {
-      sourceObs = this.matDialog.open(SaveChangesComponent).afterClosed();
-    } else {
-      sourceObs = this.bucketDataService
-        .findOne(component.bucketId, bucketDataWithChanges._id)
-        .pipe(
-          first(),
-          map(existingData => equals(existingData, bucketDataWithChanges)),
-          switchMap(isEqual => {
-            if (isEqual) {
-              return of(SaveChangesDecision.UNSAVE);
-            }
-
-            return this.matDialog.open(SaveChangesComponent).afterClosed();
-          })
-        );
+    if (isEqual(dataWithChanges, initialData)) {
+      return true;
     }
 
-    return sourceObs.pipe(
-      switchMap(res => {
-        if (res == SaveChangesDecision.SAVE) {
-          return component
-            .getSaveObservable(false)
-            .toPromise()
-            .then(() => true)
-            .catch(() => false);
-        } else if (res == SaveChangesDecision.UNSAVE) {
-          return of(true);
-        } else if (res == SaveChangesDecision.CANCEL) {
-          return of(false);
-        }
-        // default
-        return of(true);
-      })
-    );
-  }
-}
+    if (dataWithChanges._id) {
+      return this.bucketDataService.findOne(component.bucketId, dataWithChanges._id).pipe(
+        first(),
+        switchMap(existingData =>
+          isEqual(existingData, dataWithChanges) ? of(true) : this.openDialog()
+        )
+      );
+    }
 
-function equals(previous: any, current: any) {
-  return isEqual(previous, current);
+    return this.openDialog();
+  }
 }

@@ -154,34 +154,30 @@ export class BucketAddComponent implements OnInit, OnDestroy {
   }
 
   saveBucket() {
+    const isInsert = !this.bucket._id;
+
     if (!this.bucket.hasOwnProperty("order")) {
       this.bucket.order = this.buckets.length;
     }
 
-    const save = this.getSaveObservable(true);
+    const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
+        tap(
+          bucket =>
+            isInsert &&
+            this.router.navigate(["bucket", bucket._id, "add"], {
+              state: {
+                skipSaveChanges: true
+              }
+            })
+        ),
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))
       )
-    );
-  }
-
-  getSaveObservable(navigateAfterInsert: boolean) {
-    const isInsert = !this.bucket._id;
-    const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
-    return save.pipe(
-      tap(bucket => {
-        if (isInsert) {
-          this.bucket = this.deepCopy(bucket);
-          if (navigateAfterInsert) {
-            this.router.navigate(["bucket", bucket._id, "add"]);
-          }
-        }
-      })
     );
   }
 

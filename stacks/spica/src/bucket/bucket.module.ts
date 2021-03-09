@@ -63,7 +63,6 @@ import {BucketService} from "./services/bucket.service";
 import * as fromBucket from "./state/bucket.reducer";
 import {RequiredTranslate} from "./validators";
 import {MatButtonToggleModule} from "@angular/material/button-toggle";
-import {SaveChangesComponent} from "@spica-client/common/save-changes";
 
 @NgModule({
   imports: [
@@ -156,7 +155,6 @@ import {SaveChangesComponent} from "@spica-client/common/save-changes";
     RequiredTranslate,
     AddFieldModalComponent,
     CelLanguageDirective,
-    SaveChangesComponent
   ]
 })
 export class BucketModule {

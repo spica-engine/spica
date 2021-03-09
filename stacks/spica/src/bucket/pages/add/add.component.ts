@@ -142,32 +142,28 @@ export class AddComponent implements OnInit {
   }
 
   saveBucketRow() {
-    const save = this.getSaveObservable(true);
-
-    this.$save = merge(
-      of(SavingState.Saving),
-      save.pipe(
-        ignoreElements(),
-        endWith(SavingState.Saved),
-        catchError(() => of(SavingState.Failed))
-      )
-    );
-  }
-
-  getSaveObservable(navigateAfterInsert: boolean) {
     const isInsert = !this.data._id;
     const save = isInsert
       ? this.bds.insertOne(this.bucketId, this.data)
       : this.bds.replaceOne(this.bucketId, this.data);
 
-    return save.pipe(
-      tap(data => {
-        this.data = data;
-        this.refreshHistory.next(undefined);
-        if (isInsert && navigateAfterInsert) {
-          this.router.navigate(["bucket", this.bucketId]);
-        }
-      })
+    this.$save = merge(
+      of(SavingState.Saving),
+      save.pipe(
+        tap(() => {
+          this.refreshHistory.next(undefined);
+          if (isInsert) {
+            this.router.navigate(["bucket", this.bucketId], {
+              state: {
+                skipSaveChanges: true
+              }
+            });
+          }
+        }),
+        ignoreElements(),
+        endWith(SavingState.Saved),
+        catchError(() => of(SavingState.Failed))
+      )
     );
   }
 }
