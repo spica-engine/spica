@@ -99,7 +99,10 @@ export class AddComponent implements OnInit {
             )
           );
         }
-        this.data._schedule = this.data._schedule && new Date(this.data._schedule);
+        if (typeof this.data._schedule != "undefined") {
+          this.data._schedule = new Date(this.data._schedule);
+        }
+
         // What we do here is simply coercing the translated data
         Object.keys(schema.properties).forEach(key => {
           const property = schema.properties[key];
@@ -135,29 +138,36 @@ export class AddComponent implements OnInit {
   }
 
   cancelSchedule() {
-    this.data._schedule = undefined;
+    delete this.data._schedule;
   }
 
   saveBucketRow() {
-    const isInsert = !this.data._id;
-
-    const save = isInsert
-      ? this.bds.insertOne(this.bucketId, this.data)
-      : this.bds.replaceOne(this.bucketId, this.data);
+    const save = this.getSaveObservable(true);
 
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(() => {
-          this.refreshHistory.next(undefined);
-          if (isInsert) {
-            return this.router.navigate(["bucket", this.bucketId]);
-          }
-        }),
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))
       )
+    );
+  }
+
+  getSaveObservable(navigateAfterInsert: boolean) {
+    const isInsert = !this.data._id;
+    const save = isInsert
+      ? this.bds.insertOne(this.bucketId, this.data)
+      : this.bds.replaceOne(this.bucketId, this.data);
+
+    return save.pipe(
+      tap(data => {
+        this.data = data;
+        this.refreshHistory.next(undefined);
+        if (isInsert && navigateAfterInsert) {
+          this.router.navigate(["bucket", this.bucketId]);
+        }
+      })
     );
   }
 }

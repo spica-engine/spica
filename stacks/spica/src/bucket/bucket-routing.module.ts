@@ -9,7 +9,7 @@ import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {BucketIndexGuard} from "./state/index.guard";
-import {BucketCanDeactivate} from "./state/deactivate.guard";
+import {BucketCanDeactivate, BucketDataCanDeactivate} from "./state/deactivate.guard";
 
 const routes: Routes = [
   {
@@ -31,14 +31,16 @@ const routes: Routes = [
         component: AddComponent,
         data: {
           action: "create"
-        }
+        },
+        canDeactivate: [BucketDataCanDeactivate]
       },
       {
         path: ":id/:rid",
         component: AddComponent,
         data: {
           action: "show"
-        }
+        },
+        canDeactivate: [BucketDataCanDeactivate]
       }
     ]
   },
@@ -108,6 +110,6 @@ const route: Route[] = [
 @NgModule({
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],
   exports: [RouterModule, RouteModule],
-  providers: [BucketCanDeactivate]
+  providers: [BucketCanDeactivate, BucketDataCanDeactivate]
 })
 export class BucketRoutingModule {}

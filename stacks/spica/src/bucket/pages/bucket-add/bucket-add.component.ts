@@ -153,27 +153,36 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-  saveBucket(navigateToAdd = true) {
-    const isInsert = !this.bucket._id;
-
+  saveBucket() {
     if (!this.bucket.hasOwnProperty("order")) {
       this.bucket.order = this.buckets.length;
     }
-    const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
+
+    const save = this.getSaveObservable(true);
 
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(
-          bucket => isInsert && navigateToAdd && this.router.navigate(["bucket", bucket._id, "add"])
-        ),
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))
       )
     );
+  }
 
-    return this.$save;
+  getSaveObservable(navigateAfterInsert: boolean) {
+    const isInsert = !this.bucket._id;
+    const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
+    return save.pipe(
+      tap(bucket => {
+        if (isInsert) {
+          this.bucket = this.deepCopy(bucket);
+          if (navigateAfterInsert) {
+            this.router.navigate(["bucket", bucket._id, "add"]);
+          }
+        }
+      })
+    );
   }
 
   clearHistories() {
@@ -216,5 +225,9 @@ export class BucketAddComponent implements OnInit, OnDestroy {
         limitExceedBehaviour: LimitExceedBehaviour.PREVENT
       };
     }
+  }
+
+  deepCopy(value: any) {
+    return JSON.parse(JSON.stringify(value));
   }
 }
