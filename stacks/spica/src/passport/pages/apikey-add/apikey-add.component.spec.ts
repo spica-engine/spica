@@ -170,7 +170,9 @@ describe("ApiKeyAddComponent", () => {
       active: true
     });
     expect(routeSpy).toHaveBeenCalledTimes(1);
-    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
+    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"], {
+      state: {skipSaveChanges: true}
+    });
   });
 
   it("should insert apikey and navigate to edit page", async () => {
@@ -200,7 +202,9 @@ describe("ApiKeyAddComponent", () => {
     ]);
 
     expect(routeSpy).toHaveBeenCalledTimes(1);
-    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey", "0", "edit"]);
+    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey", "0", "edit"], {
+      state: {skipSaveChanges: true}
+    });
   });
 
   describe("attach/detach", () => {

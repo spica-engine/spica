@@ -46,10 +46,7 @@ export class PolicyAddComponent implements OnInit {
         take(1),
         tap(policy => {
           this.originalPolicy = policy;
-          const prepareds = this.prepareToShow(this.originalPolicy, this.displayedStatements);
-
-          this.displayedStatements = prepareds.statements;
-          this.originalPolicy = prepareds.policy;
+          this.prepareToShow(this.originalPolicy, this.displayedStatements);
         })
       )
       .subscribe();
@@ -78,8 +75,6 @@ export class PolicyAddComponent implements OnInit {
         });
       }
     });
-
-    return {policy, statements};
   }
 
   isServiceUsed(module: string) {
@@ -169,10 +164,12 @@ export class PolicyAddComponent implements OnInit {
     return isResourceMissing;
   }
 
-  prepareToSave(policy: Policy, statements: DisplayedStatement[]) {
+  prepareToSave(statements: DisplayedStatement[]) {
+    const originalStatements = [];
+
     statements.forEach(statement => {
       statement.actions.forEach(action =>
-        policy.statement.push({
+        originalStatements.push({
           module: statement.module,
           action: action.name,
           resource: action.resource
@@ -180,12 +177,12 @@ export class PolicyAddComponent implements OnInit {
       );
     });
 
-    return policy;
+    return originalStatements;
   }
 
   savePolicy() {
-    let policy: Policy = {...this.originalPolicy, statement: []};
-    policy = this.prepareToSave(policy, this.displayedStatements);
+    const policy: Policy = this.originalPolicy;
+    policy.statement = this.prepareToSave(this.displayedStatements);
 
     (policy._id ? this.policyService.updatePolicy(policy) : this.policyService.createPolicy(policy))
       .toPromise()

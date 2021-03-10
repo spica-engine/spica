@@ -222,8 +222,4 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       };
     }
   }
-
-  deepCopy(value: any) {
-    return JSON.parse(JSON.stringify(value));
-  }
 }

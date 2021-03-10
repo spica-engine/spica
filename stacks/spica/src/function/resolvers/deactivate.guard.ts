@@ -41,7 +41,8 @@ export class FunctionCanDeactivate implements CanDeactivate<AddComponent> {
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
@@ -61,6 +62,7 @@ export class FunctionCanDeactivate implements CanDeactivate<AddComponent> {
 
     if (fnWithChanges._id) {
       return this.functionService.getFunction(fnWithChanges._id).pipe(
+        first(),
         map(existingFn => normalizeFunction(existingFn)),
         switchMap(existingFn =>
           this.functionService.getIndex(existingFn._id).pipe(
@@ -79,6 +81,7 @@ export class FunctionCanDeactivate implements CanDeactivate<AddComponent> {
       const initialFn = emptyFunction();
 
       return this.functionService.information().pipe(
+        first(),
         map(information => {
           initialFn.timeout = initialFn.timeout || information.timeout * 0.7;
 
@@ -110,7 +113,8 @@ export class WebhookCanDeactivate implements CanDeactivate<WebhookAddComponent> 
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(

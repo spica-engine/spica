@@ -8,7 +8,7 @@ import {
   UrlTree
 } from "@angular/router";
 import {select, Store} from "@ngrx/store";
-import {map, switchMap, take} from "rxjs/operators";
+import {first, map, switchMap, take} from "rxjs/operators";
 import {DashboardService} from "./services/dashboard.service";
 import * as fromDashboard from "./state/dashboard.reducer";
 import {AddComponent} from "./pages/add/add.component";
@@ -66,7 +66,8 @@ export class DashboardCanDeactivate implements CanDeactivate<AddComponent> {
       .open(MatAwareDialogComponent, {
         data: this.awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
@@ -89,13 +90,12 @@ export class DashboardCanDeactivate implements CanDeactivate<AddComponent> {
     }
 
     if (dashboardWithChanges._id) {
-      return this.dashboardService
-        .findOne(dashboardWithChanges._id)
-        .pipe(
-          switchMap(existingDashboard =>
-            isEqual(existingDashboard, dashboardWithChanges) ? of(true) : this.openDialog()
-          )
-        );
+      return this.dashboardService.findOne(dashboardWithChanges._id).pipe(
+        first(),
+        switchMap(existingDashboard =>
+          isEqual(existingDashboard, dashboardWithChanges) ? of(true) : this.openDialog()
+        )
+      );
     }
 
     return this.openDialog();

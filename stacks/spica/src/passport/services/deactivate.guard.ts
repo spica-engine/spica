@@ -48,7 +48,8 @@ export class ApiKeyCanDeactivate implements CanDeactivate<ApiKeyAddComponent> {
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
@@ -96,7 +97,8 @@ export class IdentityCanDeactivate implements CanDeactivate<IdentityAddComponent
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
@@ -144,7 +146,8 @@ export class PolicyCanDeactivate implements CanDeactivate<PolicyAddComponent> {
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
@@ -159,11 +162,10 @@ export class PolicyCanDeactivate implements CanDeactivate<PolicyAddComponent> {
       return true;
     }
 
-    let policyWithChanges = deepCopy(component.originalPolicy);
-    policyWithChanges = component.prepareToSave(policyWithChanges, component.displayedStatements);
+    const policyWithChanges = component.originalPolicy;
+    policyWithChanges.statement = component.prepareToSave(component.displayedStatements);
 
-    let initialPolicy = emptyPolicy();
-    initialPolicy = component.prepareToSave(initialPolicy, []);
+    const initialPolicy = emptyPolicy();
 
     if (isEqual(policyWithChanges, initialPolicy)) {
       return true;
@@ -172,9 +174,6 @@ export class PolicyCanDeactivate implements CanDeactivate<PolicyAddComponent> {
     if (policyWithChanges._id) {
       return this.policyService.findOne(policyWithChanges._id).pipe(
         first(),
-        // why we need to do this?
-        map(policy => component.prepareToShow(policy, [])),
-        map(({policy, statements}) => component.prepareToSave(policy, statements)),
         switchMap(existingPolicy =>
           isEqual(existingPolicy, policyWithChanges) ? of(true) : this.openDialog()
         )
@@ -198,7 +197,8 @@ export class SettingsCanDeactivate implements CanDeactivate<IdentitySettingsComp
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(

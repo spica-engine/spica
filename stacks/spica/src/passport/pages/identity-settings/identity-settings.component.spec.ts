@@ -136,10 +136,10 @@ describe("Identity Setting Component", () => {
       fixture.detectChanges();
 
       expect(
-        document.body.querySelector("div.mat-menu-item:nth-child(2) mat-checkbox").classList
+        document.body.querySelector("div.mat-menu-item:nth-child(1) mat-checkbox").classList
       ).toContain("mat-checkbox-checked", "this should be checked if this property is readonly");
       expect(
-        document.body.querySelector("div.mat-menu-item:nth-child(3) mat-checkbox").classList
+        document.body.querySelector("div.mat-menu-item:nth-child(2) mat-checkbox").classList
       ).toContain("mat-checkbox-checked", "this should be checked if this property is required");
     }));
 
@@ -241,7 +241,9 @@ describe("Identity Setting Component", () => {
 
       expect(replaceOneSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledTimes(1);
-      expect(navigateSpy).toHaveBeenCalledWith(["/passport/identity"]);
+      expect(navigateSpy).toHaveBeenCalledWith(["/passport/identity"], {
+        state: {skipSaveChanges: true}
+      });
     }));
   });
 });

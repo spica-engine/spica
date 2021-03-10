@@ -284,7 +284,9 @@ describe("Identity Add Component", () => {
       });
 
       expect(router.navigate).toHaveBeenCalledTimes(1);
-      expect(router.navigate).toHaveBeenCalledWith(["passport", "identity", "1", "edit"]);
+      expect(router.navigate).toHaveBeenCalledWith(["passport", "identity", "1", "edit"], {
+        state: {skipSaveChanges: true}
+      });
     }));
   });
 

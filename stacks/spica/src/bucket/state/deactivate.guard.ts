@@ -44,7 +44,8 @@ export class BucketCanDeactivate implements CanDeactivate<BucketAddComponent> {
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
@@ -92,7 +93,8 @@ export class BucketDataCanDeactivate implements CanDeactivate<AddComponent> {
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
@@ -140,7 +142,8 @@ export class BucketSettingsCanDeactivate implements CanDeactivate<SettingsCompon
       .open(MatAwareDialogComponent, {
         data: awareDialogData
       })
-      .afterClosed();
+      .afterClosed()
+      .pipe(first());
   }
 
   canDeactivate(
