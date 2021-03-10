@@ -66,11 +66,15 @@ export class ApiKeyAddComponent implements OnInit, OnDestroy {
       ? this.apiKeyService
           .replaceOne(this.apiKey)
           .toPromise()
-          .then(() => this.router.navigate(["passport/apikey"]))
+          .then(() => this.router.navigate(["passport/apikey"], {state: {skipSaveChanges: true}}))
       : this.apiKeyService
           .insertOne(this.apiKey)
           .toPromise()
-          .then(apikey => this.router.navigate(["passport/apikey", apikey._id, "edit"]));
+          .then(apikey =>
+            this.router.navigate(["passport/apikey", apikey._id, "edit"], {
+              state: {skipSaveChanges: true}
+            })
+          );
   }
 
   attachPolicy(policyId: string) {

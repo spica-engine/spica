@@ -46,31 +46,40 @@ export class PolicyAddComponent implements OnInit {
         take(1),
         tap(policy => {
           this.originalPolicy = policy;
-          this.originalPolicy.statement.forEach((originalSt: Statement) => {
-            const existingIndex = this.displayedStatements.findIndex(
-              displayedSt => originalSt.module == displayedSt.module
-            );
+          const prepareds = this.prepareToShow(this.originalPolicy, this.displayedStatements);
 
-            if (existingIndex == -1) {
-              this.displayedStatements.push({
-                module: originalSt.module,
-                actions: [
-                  {
-                    name: originalSt.action,
-                    resource: originalSt.resource
-                  }
-                ]
-              });
-            } else {
-              this.displayedStatements[existingIndex].actions.push({
-                name: originalSt.action,
-                resource: originalSt.resource
-              });
-            }
-          });
+          this.displayedStatements = prepareds.statements;
+          this.originalPolicy = prepareds.policy;
         })
       )
       .subscribe();
+  }
+
+  prepareToShow(policy: Policy, statements: DisplayedStatement[]) {
+    policy.statement.forEach((originalSt: Statement) => {
+      const existingIndex = statements.findIndex(
+        displayedSt => originalSt.module == displayedSt.module
+      );
+
+      if (existingIndex == -1) {
+        statements.push({
+          module: originalSt.module,
+          actions: [
+            {
+              name: originalSt.action,
+              resource: originalSt.resource
+            }
+          ]
+        });
+      } else {
+        statements[existingIndex].actions.push({
+          name: originalSt.action,
+          resource: originalSt.resource
+        });
+      }
+    });
+
+    return {policy, statements};
   }
 
   isServiceUsed(module: string) {
@@ -160,9 +169,8 @@ export class PolicyAddComponent implements OnInit {
     return isResourceMissing;
   }
 
-  savePolicy() {
-    const policy: Policy = {...this.originalPolicy, statement: []};
-    this.displayedStatements.forEach(statement => {
+  prepareToSave(policy: Policy, statements: DisplayedStatement[]) {
+    statements.forEach(statement => {
       statement.actions.forEach(action =>
         policy.statement.push({
           module: statement.module,
@@ -171,9 +179,23 @@ export class PolicyAddComponent implements OnInit {
         })
       );
     });
+
+    return policy;
+  }
+
+  savePolicy() {
+    let policy: Policy = {...this.originalPolicy, statement: []};
+    policy = this.prepareToSave(policy, this.displayedStatements);
+
     (policy._id ? this.policyService.updatePolicy(policy) : this.policyService.createPolicy(policy))
       .toPromise()
-      .then(() => this.router.navigate(["passport/policy"]));
+      .then(() =>
+        this.router.navigate(["passport/policy"], {
+          state: {
+            skipSaveChanges: true
+          }
+        })
+      );
   }
 
   addStatement() {

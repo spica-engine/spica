@@ -14,6 +14,12 @@ import {StrategiesComponent} from "./pages/strategies/strategies.component";
 import {StrategiesAddComponent} from "./pages/strategies-add/strategies-add.component";
 import {ApiKeyIndexComponent} from "./pages/apikey-index/apikey-index.component";
 import {ApiKeyAddComponent} from "./pages/apikey-add/apikey-add.component";
+import {
+  ApiKeyCanDeactivate,
+  IdentityCanDeactivate,
+  PolicyCanDeactivate,
+  SettingsCanDeactivate
+} from "./services/deactivate.guard";
 
 const routes: Routes = [
   {path: "passport/identify", component: IdentifyComponent, data: {layout: false}},
@@ -28,8 +34,18 @@ const routes: Routes = [
         data: {service: "passport:identity"},
         children: [
           {path: "", component: IdentityIndexComponent, data: {action: "index"}},
-          {path: "add", component: IdentityAddComponent, data: {action: "create"}},
-          {path: ":id/edit", component: IdentityAddComponent, data: {action: "show"}}
+          {
+            path: "add",
+            component: IdentityAddComponent,
+            data: {action: "create"},
+            canDeactivate: [IdentityCanDeactivate]
+          },
+          {
+            path: ":id/edit",
+            component: IdentityAddComponent,
+            data: {action: "show"},
+            canDeactivate: [IdentityCanDeactivate]
+          }
         ]
       },
       {
@@ -38,8 +54,18 @@ const routes: Routes = [
         data: {service: "passport:policy"},
         children: [
           {path: "", component: PolicyIndexComponent, data: {action: "index"}},
-          {path: "add", component: PolicyAddComponent, data: {action: "create"}},
-          {path: ":id/edit", component: PolicyAddComponent, data: {action: "show"}}
+          {
+            path: "add",
+            component: PolicyAddComponent,
+            data: {action: "create"},
+            canDeactivate: [PolicyCanDeactivate]
+          },
+          {
+            path: ":id/edit",
+            component: PolicyAddComponent,
+            data: {action: "show"},
+            canDeactivate: [PolicyCanDeactivate]
+          }
         ]
       },
       {
@@ -56,7 +82,8 @@ const routes: Routes = [
         path: "settings",
         canActivate: [PolicyGuard],
         data: {serivce: "preference", action: "show", params: {scope: "passport"}},
-        component: IdentitySettingsComponent
+        component: IdentitySettingsComponent,
+        canDeactivate: [SettingsCanDeactivate]
       },
       {
         path: "apikey",
@@ -64,8 +91,18 @@ const routes: Routes = [
         data: {service: "passport:apikey"},
         children: [
           {path: "", component: ApiKeyIndexComponent, data: {action: "index"}},
-          {path: "add", component: ApiKeyAddComponent, data: {action: "create"}},
-          {path: ":id/edit", component: ApiKeyAddComponent, data: {action: "show"}}
+          {
+            path: "add",
+            component: ApiKeyAddComponent,
+            data: {action: "create"},
+            canDeactivate: [ApiKeyCanDeactivate]
+          },
+          {
+            path: ":id/edit",
+            component: ApiKeyAddComponent,
+            data: {action: "show"},
+            canDeactivate: [ApiKeyCanDeactivate]
+          }
         ]
       }
     ]
@@ -117,6 +154,12 @@ const route: Route[] = [
 
 @NgModule({
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],
-  exports: [RouterModule, RouteModule]
+  exports: [RouterModule, RouteModule],
+  providers: [
+    ApiKeyCanDeactivate,
+    IdentityCanDeactivate,
+    PolicyCanDeactivate,
+    SettingsCanDeactivate
+  ]
 })
 export class PassportRoutingModule {}
