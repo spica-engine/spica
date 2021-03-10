@@ -13,7 +13,9 @@ import {AddComponent} from "../pages/add/add.component";
 import isEqual from "lodash/isEqual";
 import {MatAwareDialogComponent} from "@spica-client/material";
 import {FunctionService} from "../function.service";
-import {emptyFunction, normalizeFunction} from "../interface";
+import {emptyFunction, emptyWebhook, normalizeFunction} from "../interface";
+import {WebhookAddComponent} from "../pages/webhook-add/webhook-add.component";
+import {WebhookService} from "../webhook.service";
 
 const awareDialogData = {
   icon: "help",
@@ -71,6 +73,55 @@ export class FunctionCanDeactivate implements CanDeactivate<AddComponent> {
         // map(fn => component.prepareToShow(fn)),
         tap(fn => console.log(fn, fnWithChanges)),
         switchMap(existingFn => (isEqual(existingFn, fnWithChanges) ? of(true) : this.openDialog()))
+      );
+    }
+
+    return this.openDialog();
+  }
+}
+
+@Injectable()
+export class WebhookCanDeactivate implements CanDeactivate<WebhookAddComponent> {
+  constructor(
+    private router: Router,
+    private webhookService: WebhookService,
+    public matDialog: MatDialog
+  ) {}
+
+  openDialog() {
+    return this.matDialog
+      .open(MatAwareDialogComponent, {
+        data: awareDialogData
+      })
+      .afterClosed();
+  }
+
+  canDeactivate(
+    component: WebhookAddComponent,
+    currentRoute: ActivatedRouteSnapshot,
+    currentState: RouterStateSnapshot,
+    nextState: RouterStateSnapshot
+  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    const state = this.router.getCurrentNavigation().extras.state;
+
+    if (state && state.skipSaveChanges) {
+      return true;
+    }
+
+    const webhookWithChanges = component.webhook;
+
+    const initialWebhook = emptyWebhook();
+
+    if (isEqual(webhookWithChanges, initialWebhook)) {
+      return true;
+    }
+
+    if (webhookWithChanges._id) {
+      return this.webhookService.get(webhookWithChanges._id).pipe(
+        first(),
+        switchMap(existingWebhook =>
+          isEqual(existingWebhook, webhookWithChanges) ? of(true) : this.openDialog()
+        )
       );
     }
 
