@@ -7,7 +7,7 @@ import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.comp
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
-import {DashboardIndexGuard} from "./dashboard.guard";
+import {DashboardCanDeactivate, DashboardIndexGuard} from "./dashboard.guard";
 
 const routes: Routes = [
   {pathMatch: "full", path: "", redirectTo: "dashboard"},
@@ -36,13 +36,15 @@ const routes: Routes = [
         path: "add",
         canActivate: [PolicyGuard],
         component: AddComponent,
-        data: {service: "dashboard", action: "create"}
+        data: {service: "dashboard", action: "create"},
+        canDeactivate: [DashboardCanDeactivate]
       },
       {
         path: ":id",
         canActivate: [PolicyGuard],
         component: AddComponent,
-        data: {service: "dashboard", action: "show"}
+        data: {service: "dashboard", action: "show"},
+        canDeactivate: [DashboardCanDeactivate]
       }
     ]
   }
@@ -67,6 +69,7 @@ const route: Route[] = [
 
 @NgModule({
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],
-  exports: [RouterModule, RouteModule]
+  exports: [RouterModule, RouteModule],
+  providers: [DashboardCanDeactivate]
 })
 export class DashboardRoutingModule {}
