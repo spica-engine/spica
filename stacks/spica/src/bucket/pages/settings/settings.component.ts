@@ -37,6 +37,6 @@ export class SettingsComponent implements OnInit {
     this.pref
       .replaceOne(this.settings)
       .toPromise()
-      .then(() => this.router.navigate(["buckets"]));
+      .then(() => this.router.navigate(["buckets"], {state: {skipSaveChanges: true}}));
   }
 }

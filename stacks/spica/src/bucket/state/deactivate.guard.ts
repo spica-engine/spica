@@ -16,6 +16,9 @@ import {BucketDataService} from "../services/bucket-data.service";
 import {BucketService} from "../services/bucket.service";
 import isEqual from "lodash/isEqual";
 import {MatAwareDialogComponent} from "@spica-client/material";
+import {SettingsComponent} from "../pages/settings/settings.component";
+import {PreferencesService} from "@spica-client/core";
+import {BucketSettings} from "../interfaces/bucket-settings";
 
 const awareDialogData = {
   icon: "help",
@@ -121,5 +124,40 @@ export class BucketDataCanDeactivate implements CanDeactivate<AddComponent> {
     }
 
     return this.openDialog();
+  }
+}
+
+@Injectable()
+export class BucketSettingsCanDeactivate implements CanDeactivate<SettingsComponent> {
+  constructor(
+    private preferenceService: PreferencesService,
+    private router: Router,
+    public matDialog: MatDialog
+  ) {}
+
+  openDialog() {
+    return this.matDialog
+      .open(MatAwareDialogComponent, {
+        data: awareDialogData
+      })
+      .afterClosed();
+  }
+
+  canDeactivate(
+    component: SettingsComponent,
+    currentRoute: ActivatedRouteSnapshot,
+    currentState: RouterStateSnapshot,
+    nextState: RouterStateSnapshot
+  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    const state = this.router.getCurrentNavigation().extras.state;
+
+    if (state && state.skipSaveChanges) {
+      return true;
+    }
+
+    return this.preferenceService.get<BucketSettings>("bucket").pipe(
+      first(),
+      switchMap(prefs => (isEqual(prefs, component.settings) ? of(true) : this.openDialog()))
+    );
   }
 }
