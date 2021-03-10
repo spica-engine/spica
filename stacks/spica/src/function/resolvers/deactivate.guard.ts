@@ -8,7 +8,7 @@ import {
   UrlTree
 } from "@angular/router";
 import {Observable, of} from "rxjs";
-import {first, map, switchMap, tap} from "rxjs/operators";
+import {first, map, switchMap} from "rxjs/operators";
 import {AddComponent} from "../pages/add/add.component";
 import isEqual from "lodash/isEqual";
 import {MatAwareDialogComponent} from "@spica-client/material";
@@ -57,26 +57,43 @@ export class FunctionCanDeactivate implements CanDeactivate<AddComponent> {
     }
 
     const fnWithChanges = component.function;
-    // const indexWithChanges = component.index;
-
-    let initialFn = emptyFunction();
-    // initialFn = component.prepareToShow(initialFn);
-    // const initialIndex = undefined;
-
-    if (isEqual(fnWithChanges, initialFn)) {
-      return true;
-    }
+    const indexWithChanges = component.index;
 
     if (fnWithChanges._id) {
       return this.functionService.getFunction(fnWithChanges._id).pipe(
-        first(),
-        // map(fn => component.prepareToShow(fn)),
-        tap(fn => console.log(fn, fnWithChanges)),
-        switchMap(existingFn => (isEqual(existingFn, fnWithChanges) ? of(true) : this.openDialog()))
+        map(existingFn => normalizeFunction(existingFn)),
+        switchMap(existingFn =>
+          this.functionService.getIndex(existingFn._id).pipe(
+            map(existingIndex => {
+              return {existingFn, existingIndex};
+            })
+          )
+        ),
+        map(
+          ({existingFn, existingIndex}) =>
+            isEqual(existingFn, fnWithChanges) && isEqual(existingIndex.index, indexWithChanges)
+        ),
+        switchMap(isEqual => (isEqual ? of(true) : this.openDialog()))
+      );
+    } else {
+      const initialFn = emptyFunction();
+
+      return this.functionService.information().pipe(
+        map(information => {
+          initialFn.timeout = initialFn.timeout || information.timeout * 0.7;
+
+          for (const [key, value] of Object.entries(information.enqueuers[0].options.properties)) {
+            initialFn.triggers[0].options[key] = value["default"];
+          }
+        }),
+        switchMap(() => {
+          return isEqual(initialFn, fnWithChanges) &&
+            (isEqual(indexWithChanges, undefined) || isEqual(indexWithChanges, ""))
+            ? of(true)
+            : this.openDialog();
+        })
       );
     }
-
-    return this.openDialog();
   }
 }
 
