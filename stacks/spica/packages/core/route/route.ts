@@ -21,6 +21,7 @@ export interface Route {
   category: RouteCategory;
   data?: {[key: string]: any};
   queryParams?: {[key: string]: any};
+  index?: number;
 }
 
 export interface RouteFilter {
