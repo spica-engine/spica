@@ -27,9 +27,15 @@ export class FilterComponent implements OnChanges {
 
   constructor(private resolver: InputResolver) {}
 
+  resetPreviousValues() {
+    this.properties = {};
+    this.property = undefined;
+    this.value = undefined;
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.schema && this.schema) {
-      this.property = undefined;
+      this.resetPreviousValues();
       for (const [key, value] of Object.entries(this.schema.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
