@@ -26,7 +26,7 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
 function waitForCursorInitialization() {
-  return new Promise(resolve => setTimeout(resolve, 1000));
+  return new Promise(resolve => setTimeout(resolve, 3000));
 }
 
 describe("Realtime", () => {

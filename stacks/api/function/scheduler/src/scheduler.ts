@@ -168,12 +168,20 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       let schedule: (event: event.Event) => void;
       let workerId: string;
 
+      const [stdout, stderr] = this.output.create({
+        eventId: event.id,
+        functionId: event.target.id
+      });
+
       if (target.context.batch) {
         let batch = this.getBatchForTarget(target);
         if (!batch) {
           const worker = this.takeAWorker();
 
           if (!worker) {
+            stderr.write(
+              `There is no worker left for ${event.target.handler}, it has been added to the queue.`
+            );
             break;
           }
 
@@ -195,6 +203,9 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
         const worker = this.takeAWorker();
 
         if (!worker) {
+          stderr.write(
+            `There is no worker left for (${event.target.handler}), it has been added to the queue and will be executed when a worker available.`
+          );
           break;
         }
 
@@ -203,10 +214,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       }
 
       const worker = this.pool.get(workerId);
-      const [stdout, stderr] = this.output.create({
-        eventId: event.id,
-        functionId: event.target.id
-      });
       worker.attach(stdout, stderr);
 
       const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
