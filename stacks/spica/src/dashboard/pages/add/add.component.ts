@@ -7,6 +7,7 @@ import {Subject} from "rxjs";
 import {ICONS} from "@spica-client/material";
 import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
+import {deepCopy} from "@spica-client/core";
 
 @Component({
   selector: "dashboard-add",
@@ -40,7 +41,7 @@ export class AddComponent implements OnInit, OnDestroy {
           this.dashboardService.findOne(id).pipe(
             tap(dashboard => {
               if (dashboard) {
-                this.dashboard = dashboard;
+                this.dashboard = deepCopy(dashboard);
               }
             })
           )
