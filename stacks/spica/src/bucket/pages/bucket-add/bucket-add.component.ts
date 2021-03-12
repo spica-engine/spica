@@ -1,6 +1,6 @@
 import {animate, style, transition, trigger} from "@angular/animations";
 import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
-import {Component, OnDestroy, OnInit} from "@angular/core";
+import {Component, HostListener, OnDestroy, OnInit} from "@angular/core";
 import {MatCheckboxChange} from "@angular/material/checkbox";
 import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
@@ -153,18 +153,27 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-  saveBucket(): void {
+  saveBucket() {
     const isInsert = !this.bucket._id;
 
     if (!this.bucket.hasOwnProperty("order")) {
       this.bucket.order = this.buckets.length;
     }
+
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(bucket => isInsert && this.router.navigate(["bucket", bucket._id, "add"])),
+        tap(
+          bucket =>
+            isInsert &&
+            this.router.navigate(["bucket", bucket._id, "add"], {
+              state: {
+                skipSaveChanges: true
+              }
+            })
+        ),
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))

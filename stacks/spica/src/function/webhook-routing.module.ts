@@ -5,6 +5,7 @@ import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
 import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
 import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
 import {WebhookWelcomeComponent} from "./pages/webhook-welcome/webhook-welcome.component";
+import {WebhookCanDeactivate} from "./resolvers/deactivate.guard";
 import {WebhookGuard} from "./resolvers/webhook.guard";
 
 const routes: Routes = [
@@ -26,14 +27,25 @@ const routes: Routes = [
         canActivate: [WebhookGuard],
         data: {action: "index"}
       },
-      {path: "add", component: WebhookAddComponent, data: {action: "create"}},
-      {path: ":id", component: WebhookAddComponent, data: {action: "show"}}
+      {
+        path: "add",
+        component: WebhookAddComponent,
+        data: {action: "create"},
+        canDeactivate: [WebhookCanDeactivate]
+      },
+      {
+        path: ":id",
+        component: WebhookAddComponent,
+        data: {action: "show"},
+        canDeactivate: [WebhookCanDeactivate]
+      }
     ]
   }
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
+  providers: [WebhookCanDeactivate]
 })
 export class WebhookRoutingModule {}

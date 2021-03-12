@@ -38,13 +38,6 @@
                   <ng-template matMenuContent let-propertyKv="propertyKv">
                     <div
                       mat-menu-item
-                      *ngIf="basicPropertyTypes.includes(propertyKv.value.type)"
-                      role="menuitemcheckbox"
-                      disableRipple
-                      (click)="$event.stopImmediatePropagation()"
-                    ></div>
-                    <div
-                      mat-menu-item
                       role="menuitemcheckbox"
                       disableRipple
                       (click)="$event.stopImmediatePropagation()"

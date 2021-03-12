@@ -69,7 +69,9 @@ export class AddComponent implements OnInit, OnDestroy {
       ? this.dashboardService.update(this.dashboard)
       : this.dashboardService.insert(this.dashboard);
 
-    upsert.toPromise().then(() => this.router.navigate(["dashboards"]));
+    upsert
+      .toPromise()
+      .then(() => this.router.navigate(["dashboards"], {state: {skipSaveChanges: true}}));
   }
 
   addComponent() {
