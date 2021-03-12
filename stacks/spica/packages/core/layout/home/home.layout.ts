@@ -106,7 +106,8 @@ export class HomeLayoutComponent implements OnInit {
         return this.routeService.routes.pipe(
           map(routes => routes.filter(r => r.category == currentCategory.category))
         );
-      })
+      }),
+      map(routes => routes.sort((a, b) => a.index - b.index))
     );
   }
 

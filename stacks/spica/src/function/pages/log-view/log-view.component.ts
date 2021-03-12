@@ -21,7 +21,7 @@ export class LogViewComponent implements OnInit {
 
   logs$: Observable<Log[]>;
 
-  bufferSize = 500;
+  bufferSize = 750;
 
   @Input() functionId$: BehaviorSubject<string> = new BehaviorSubject(undefined);
 
@@ -110,7 +110,7 @@ export class LogViewComponent implements OnInit {
 
   onExpand(height: number) {
     if (this.bufferSize < height) {
-      this.bufferSize = height + 200;
+      this.bufferSize = height + 300;
     }
   }
 }

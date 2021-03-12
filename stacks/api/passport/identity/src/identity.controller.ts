@@ -149,11 +149,17 @@ export class IdentityController {
     if (identity.password) {
       identity.password = await hash(identity.password);
     }
-    return this.identity.findOneAndUpdate(
-      {_id: id},
-      {$set: identity},
-      {returnOriginal: false, projection: {password: 0}}
-    );
+    return this.identity
+      .findOneAndUpdate(
+        {_id: id},
+        {$set: identity},
+        {returnOriginal: false, projection: {password: 0}}
+      )
+      .catch(exception => {
+        throw new BadRequestException(
+          exception.code === 11000 ? "Identity already exists." : exception.message
+        );
+      });
   }
 
   @UseInterceptors(activity(createIdentityActivity))
