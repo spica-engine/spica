@@ -121,9 +121,16 @@
             </span>
           </mat-list-item>
 
-          <h4 mat-subheader>
+          <h4 mat-subheader class="code-actions">
             <mat-icon>code</mat-icon> Code
             <span></span>
+            <button
+              mat-icon-button
+              (click)="switchToFullscreen()"
+              [matTooltip]="onFullScreen ? 'Disable Fullscreen' : 'Enable Fullscreen'"
+            >
+              <mat-icon>{{ onFullScreen ? "fullscreen_exit" : "fullscreen" }}</mat-icon>
+            </button>
             <button mat-icon-button (click)="language.format()" matTooltip="Format">
               <mat-icon>format_align_center</mat-icon>
             </button>

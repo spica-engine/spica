@@ -292,3 +292,34 @@
     display: none !important;
   }
 }
+
+.full-screen-code-actions {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 70% !important;
+  height: 50px !important;
+  background: var(--background-card) !important;
+  z-index: 1000 !important;
+}
+
+.full-screen-code {
+  position: fixed !important;
+  left: 0 !important;
+  top: 50px !important;
+  width: 70% !important;
+  height: 100% !important;
+  background: var(--background-card) !important;
+  z-index: 1000 !important;
+}
+
+.full-screen-log {
+  position: fixed !important;
+  right: 0 !important;
+  top: 0 !important;
+  width: 30% !important;
+  height: 100% !important;
+  background: var(--background-card) !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+}
