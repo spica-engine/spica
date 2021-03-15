@@ -1,4 +1,4 @@
-import {DynamicModule, Global, Module, Type} from "@nestjs/common";
+import {CacheModule, DynamicModule, Global, Module, Type} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
@@ -13,6 +13,7 @@ import {
   bucketSpecificDefault,
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver";
+import {BucketCacheService} from "./cache";
 import {GraphqlController} from "./graphql/graphql";
 import {provideLanguageFinalizer} from "./locale";
 import {registerInformers} from "./machinery";
@@ -40,7 +41,8 @@ export class BucketModule {
           "locationType"
         ]
       }),
-      ServicesModule
+      ServicesModule,
+      CacheModule.register({ttl: null, max: null})
     ];
 
     if (options.hooks) {
@@ -62,6 +64,7 @@ export class BucketModule {
       controllers: [BucketController, BucketDataController],
       imports: imports,
       providers: [
+        BucketCacheService,
         DocumentScheduler,
         {
           provide: BucketSchemaResolver,
@@ -92,13 +95,20 @@ export class BucketModule {
 
 @Global()
 @Module({
-  imports: [ServicesModule],
+  imports: [
+    ServicesModule
+    //CacheModule.register({max: null, ttl: null})
+  ],
   providers: [
-    BucketDataService,
+    // BucketCacheService,
     {
       provide: BUCKET_LANGUAGE_FINALIZER,
       useFactory: provideLanguageFinalizer,
-      inject: [BucketService, BucketDataService]
+      inject: [
+        BucketService,
+        BucketDataService
+        //BucketCacheService
+      ]
     }
   ],
   exports: [BUCKET_LANGUAGE_FINALIZER]

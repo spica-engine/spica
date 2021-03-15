@@ -40,6 +40,8 @@ ts_library(
         "@npm//json-merge-patch",
         "@npm//locale",
         "@npm//rxjs",
+        "@npm//cache-manager",
+        "@npm//@types/cache-manager",
     ],
 )
 

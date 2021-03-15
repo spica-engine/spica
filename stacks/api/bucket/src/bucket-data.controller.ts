@@ -18,7 +18,6 @@ import {
   UseGuards,
   UseInterceptors,
   Inject,
-  Res
 } from "@nestjs/common";
 import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
@@ -28,7 +27,7 @@ import {
   BucketDocument,
   BucketService,
   isJSONFilter,
-  filterReviver
+  filterReviver,
 } from "@spica-server/bucket/services";
 import {
   ARRAY,
@@ -46,6 +45,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as expression from "../expression";
 import {createBucketDataActivity} from "./activity.resource";
+import {BucketCacheInterceptor, BucketCacheService} from "./cache";
 import {
   deleteDocument,
   findDocuments,
@@ -68,6 +68,7 @@ export class BucketDataController {
     private bs: BucketService,
     private bds: BucketDataService,
     private validator: Validator,
+    private cache: BucketCacheService,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
     @Optional() @Inject() private activityService: ActivityService
@@ -90,6 +91,7 @@ export class BucketDataController {
    * Example: Descending `{"name": -1}` OR Ascending `{"name": 1}`
    */
   @Get()
+  @UseInterceptors(BucketCacheInterceptor)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -154,6 +156,7 @@ export class BucketDataController {
    * @param localize When true, documents that have translations is localized to `accept-language`.
    */
   @Get(":documentId")
+  @UseInterceptors(BucketCacheInterceptor)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
@@ -262,6 +265,8 @@ export class BucketDataController {
       );
     }
 
+    await this.cache.invalidate(bucketId.toHexString());
+
     return document;
   }
 
@@ -323,6 +328,8 @@ export class BucketDataController {
         currentDocument
       );
     }
+
+    await this.cache.invalidate(bucketId.toHexString());
 
     return currentDocument;
   }
@@ -410,6 +417,8 @@ export class BucketDataController {
       );
     }
 
+    await this.cache.invalidate(bucketId.toHexString());
+
     return currentDocument;
   }
 
@@ -464,6 +473,8 @@ export class BucketDataController {
         document_id: documentId
       });
     }
+
+    await this.cache.invalidate(bucketId.toHexString());
 
     await clearRelations(this.bs, bucketId, documentId);
 

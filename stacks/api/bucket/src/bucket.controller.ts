@@ -25,6 +25,7 @@ import {createBucketActivity} from "./activity.resource";
 import {findRelations} from "./relation";
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 import * as expression from "@spica-server/bucket/expression";
+import {BucketCacheService} from "./cache";
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -34,6 +35,7 @@ export class BucketController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
+    private cache: BucketCacheService,
     @Optional() private history: HistoryService
   ) {}
 
@@ -172,6 +174,8 @@ export class BucketController {
       await this.history.updateHistories(previousSchema, currentSchema);
     }
 
+    await this.cache.invalidate(id.toHexString());
+
     return currentSchema;
   }
 
@@ -196,6 +200,9 @@ export class BucketController {
     if (contentType != "application/merge-patch+json") {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
+
+    await this.cache.invalidate(id.toHexString());
+
     return this.bs.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
   }
 
@@ -220,6 +227,8 @@ export class BucketController {
       }
       await Promise.all(promises);
       this.bs.emitSchemaChanges();
+
+      await this.cache.invalidate(id.toHexString());
     }
     return;
   }

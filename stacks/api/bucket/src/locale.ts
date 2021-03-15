@@ -79,7 +79,8 @@ export function hasTranslatedProperties(schema: Bucket) {
 
 export function provideLanguageFinalizer(
   bucketService: BucketService,
-  bucketDataService: BucketDataService
+  bucketDataService: BucketDataService,
+  // bucketCacheService: BucketCacheService
 ) {
   return async (previousSchema: object, currentSchema: object) => {
     const deletedLanguages = diff(previousSchema, currentSchema)
@@ -139,6 +140,8 @@ export function provideLanguageFinalizer(
           targets[target] = "";
         }
       }
+
+      // const _ = bucketCacheService.invalidate(bucket._id.toHexString());
 
       return bucketDataService.children(bucket).updateMany({}, {$unset: targets});
     });
