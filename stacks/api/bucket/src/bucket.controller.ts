@@ -7,6 +7,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Inject,
   Optional,
   Param,
   Patch,
@@ -25,7 +26,7 @@ import {createBucketActivity} from "./activity.resource";
 import {findRelations} from "./relation";
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 import * as expression from "@spica-server/bucket/expression";
-import {BucketCacheService} from "./cache";
+import {BucketCacheService} from "@spica-server/bucket/cache";
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -35,8 +36,8 @@ export class BucketController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    private cache: BucketCacheService,
-    @Optional() private history: HistoryService
+    @Optional() private history: HistoryService,
+    @Optional() @Inject() private cache: BucketCacheService,
   ) {}
 
   /**
@@ -174,7 +175,9 @@ export class BucketController {
       await this.history.updateHistories(previousSchema, currentSchema);
     }
 
-    await this.cache.invalidate(id.toHexString());
+    if (this.cache) {
+      await this.cache.invalidate(id.toHexString());
+    }
 
     return currentSchema;
   }
@@ -201,7 +204,9 @@ export class BucketController {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
 
-    await this.cache.invalidate(id.toHexString());
+    if (this.cache) {
+      await this.cache.invalidate(id.toHexString());
+    }
 
     return this.bs.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
   }
@@ -228,7 +233,9 @@ export class BucketController {
       await Promise.all(promises);
       this.bs.emitSchemaChanges();
 
-      await this.cache.invalidate(id.toHexString());
+      if (this.cache) {
+        await this.cache.invalidate(id.toHexString());
+      }
     }
     return;
   }

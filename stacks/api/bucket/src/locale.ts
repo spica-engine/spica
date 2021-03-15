@@ -6,6 +6,7 @@ import {
 } from "@spica-server/bucket/services";
 import * as locale from "locale";
 import {ChangeKind, diff} from "@spica-server/core/differ";
+import {BucketCacheService} from "@spica-server/bucket/cache";
 
 export function buildI18nAggregation(property: any, locale: string, fallback: string) {
   return {
@@ -80,7 +81,7 @@ export function hasTranslatedProperties(schema: Bucket) {
 export function provideLanguageFinalizer(
   bucketService: BucketService,
   bucketDataService: BucketDataService,
-  // bucketCacheService: BucketCacheService
+  bucketCacheService?: BucketCacheService
 ) {
   return async (previousSchema: object, currentSchema: object) => {
     const deletedLanguages = diff(previousSchema, currentSchema)
@@ -131,7 +132,13 @@ export function provideLanguageFinalizer(
       ])
       .toArray();
 
-    const promises = buckets.map(bucket => {
+    const promises = [];
+
+    for (const bucket of buckets) {
+      if (bucketCacheService) {
+        await bucketCacheService.invalidate(bucket._id.toHexString());
+      }
+
       const targets = {};
 
       for (const fieldName of Object.keys(bucket.properties)) {
@@ -141,10 +148,8 @@ export function provideLanguageFinalizer(
         }
       }
 
-      // const _ = bucketCacheService.invalidate(bucket._id.toHexString());
-
-      return bucketDataService.children(bucket).updateMany({}, {$unset: targets});
-    });
+      promises.push(bucketDataService.children(bucket).updateMany({}, {$unset: targets}));
+    }
 
     return Promise.all(promises);
   };

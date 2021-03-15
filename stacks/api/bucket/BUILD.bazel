@@ -19,6 +19,7 @@ ts_library(
         "//stacks/api/activity/services",
         "//stacks/api/bucket/expression",
         "//stacks/api/bucket/history",
+        "//stacks/api/bucket/cache",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/hooks/proto",
         "//stacks/api/bucket/realtime",
