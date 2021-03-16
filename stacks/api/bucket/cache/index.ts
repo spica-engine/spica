@@ -1,3 +1,4 @@
 export {BucketCacheModule} from "./module";
 export {BucketCacheService} from "./service";
-export {cache} from "./interceptor";
+export {registerCache} from "./interceptor";
+export {invalidateCache} from "./interceptor";

@@ -1,11 +1,11 @@
-import {CacheModule, DynamicModule, Global, Module, Type} from "@nestjs/common";
+import {DynamicModule, Global, Module, Type} from "@nestjs/common";
 import {HistoryModule} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
-import {BucketCacheModule} from "@spica-server/bucket/cache";
+import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket/cache";
 import {BucketDataService} from "../services/src/bucket-data.service";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
@@ -45,12 +45,18 @@ export class BucketModule {
     ];
 
     const BucketCore = BucketCoreModule.initialize();
-    imports.push(BucketCore);
 
     if (options.cache) {
       const BucketCache = BucketCacheModule.register({ttl: options.cacheTtl || 60});
       imports.push(BucketCache);
+
+      BucketCore.imports.push(BucketCache as any);
+
+      BucketCore.providers.unshift(BucketCacheService as any);
+      BucketCore.providers[1].inject.push(BucketCacheService as any);
     }
+
+    imports.push(BucketCore);
 
     if (options.hooks) {
       imports.push(HookModule);

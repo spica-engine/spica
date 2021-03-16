@@ -78,13 +78,17 @@ export async function findDocuments<T>(
   let rulePropertyMap;
   let ruleRelationMap: RelationMap[];
 
-  const basePipeline = await pipelineBuilder
+  let basePipeline = await pipelineBuilder
     .findOneIfRequested(params.documentId)
-    .filterResources(params.resourceFilter)
-    .filterScheduledData(!!options.schedule)
-    .localize(options.localize, params.language, locale => {
-      params.req.res.header("Content-language", locale.best || locale.fallback);
-    });
+    .filterResources(params.resourceFilter);
+
+  if (typeof options.schedule == "boolean") {
+    basePipeline = basePipeline.filterScheduledData(options.schedule);
+  }
+
+  basePipeline = await basePipeline.localize(options.localize, params.language, locale => {
+    params.req.res.header("Content-language", locale.best || locale.fallback);
+  });
 
   const rulesAppliedPipeline = await basePipeline
     .rules(params.req.user, (propertyMap, relationMap) => {

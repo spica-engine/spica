@@ -45,7 +45,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as expression from "../expression";
 import {createBucketDataActivity} from "./activity.resource";
-import {BucketCacheService,cache} from "@spica-server/bucket/cache";
+import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
   deleteDocument,
   findDocuments,
@@ -70,7 +70,6 @@ export class BucketDataController {
     private validator: Validator,
     @Optional() private changeEmitter: ChangeEmitter,
     @Optional() private history: HistoryService,
-    @Optional() @Inject() private cache: BucketCacheService, 
     @Optional() @Inject() private activityService: ActivityService
   ) {}
 
@@ -91,7 +90,7 @@ export class BucketDataController {
    * Example: Descending `{"name": -1}` OR Ascending `{"name": 1}`
    */
   @Get()
-  @UseInterceptors(cache())
+  @UseInterceptors(registerCache())
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -156,7 +155,7 @@ export class BucketDataController {
    * @param localize When true, documents that have translations is localized to `accept-language`.
    */
   @Get(":documentId")
-  // @UseInterceptors(cache())
+  @UseInterceptors(registerCache())
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
@@ -224,7 +223,7 @@ export class BucketDataController {
    * }
    * ```
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async insertOne(
@@ -265,10 +264,6 @@ export class BucketDataController {
       );
     }
 
-    if (this.cache) {
-      await this.cache.invalidate(bucketId.toHexString());
-    }
-
     return document;
   }
 
@@ -286,7 +281,7 @@ export class BucketDataController {
    * }
    * ```
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
   async replace(
@@ -331,10 +326,6 @@ export class BucketDataController {
       );
     }
 
-    if (this.cache) {
-      await this.cache.invalidate(bucketId.toHexString());
-    }
-
     return currentDocument;
   }
 
@@ -351,7 +342,7 @@ export class BucketDataController {
    * }
    * ```
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Patch(":documentId")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
@@ -421,10 +412,6 @@ export class BucketDataController {
       );
     }
 
-    if (this.cache) {
-      await this.cache.invalidate(bucketId.toHexString());
-    }
-
     return currentDocument;
   }
 
@@ -433,7 +420,7 @@ export class BucketDataController {
    * @param bucketId Identifier of the bucket.
    * @param documentId Identifier of the document.
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Delete(":documentId")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))
@@ -478,10 +465,6 @@ export class BucketDataController {
       await this.history.deleteMany({
         document_id: documentId
       });
-    }
-
-    if (this.cache) {
-      await this.cache.invalidate(bucketId.toHexString());
     }
 
     await clearRelations(this.bs, bucketId, documentId);
