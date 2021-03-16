@@ -12,7 +12,7 @@ import {
 import {Reflector} from "@nestjs/core";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
-import {BucketCacheService} from ".";
+import {BucketCacheService} from "./service";
 
 class BucketCacheInterceptor extends CacheInterceptor {
   constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: any, reflector: Reflector) {
