@@ -9,9 +9,9 @@ export class BucketCacheService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache, private db: DatabaseService) {
     if (!this.invalidateJob) {
       this.invalidateJob = new cron.CronJob({
-        cronTime: new Date(2030, 1, 2, 0, 0, 0, 0),
+        cronTime: "0 0 0 * * *",
         start: true,
-        onTick: () => this.cacheManager.reset()
+        onTick: () => this.reset()
       });
     }
   }
@@ -35,6 +35,10 @@ export class BucketCacheService {
       ])
       .toArray()
       .then(buckets => buckets.map(bucket => bucket._id.toString()));
+  }
+
+  reset() {
+    return this.cacheManager.reset();
   }
 
   async invalidate(bucketId: string) {
