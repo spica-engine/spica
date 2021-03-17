@@ -8,6 +8,7 @@ import {
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {Test} from "@nestjs/testing";
 import {Store} from "cache-manager";
+import {DatabaseTestingModule} from "@spica-server/database/testing";
 
 @Controller("bucket/:bucketId/data")
 export class TestController {
@@ -27,6 +28,10 @@ export class TestController {
   }
 }
 
+async function waitForCacheInvalidation() {
+  await new Promise((resolve, _) => setTimeout(resolve, 100));
+}
+
 describe("Bucket Cache Integration", () => {
   describe("with cache module", () => {
     let req: Request;
@@ -37,7 +42,11 @@ describe("Bucket Cache Integration", () => {
 
     beforeEach(async () => {
       const module = await Test.createTestingModule({
-        imports: [CoreTestingModule, BucketCacheModule.register({ttl: 60})],
+        imports: [
+          DatabaseTestingModule.standalone(),
+          CoreTestingModule,
+          BucketCacheModule.register({ttl: 60})
+        ],
         controllers: [TestController],
         providers: []
       }).compile();
@@ -102,7 +111,10 @@ describe("Bucket Cache Integration", () => {
       await req.get("bucket/bucket_id/data");
       await req.post("bucket/bucket_id/data");
 
+      await waitForCacheInvalidation();
+
       let cachedKeys = await store.keys();
+
       expect(cachedKeys).toEqual([]);
 
       await req.get("bucket/bucket_id/data");
@@ -121,7 +133,7 @@ describe("Bucket Cache Integration", () => {
       let cachedKeys = await store.keys();
       expect(cachedKeys.length).toEqual(1);
 
-      const oneMinLater = new Date(Date.now() + 61 * 1000);
+      const oneMinLater = new Date(Date.now() + 60 * 1000);
       jasmine.clock().mockDate(oneMinLater);
 
       // it will clear cache right after same request received

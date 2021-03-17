@@ -9,6 +9,7 @@ ts_library(
     srcs = ["integration.spec.ts"],
     deps = [
         "//packages/core/testing",
+        "//packages/database/testing",
         "//stacks/api/bucket/cache",
         "@npm//@nestjs/common",
         "@npm//@nestjs/testing",
@@ -30,8 +31,9 @@ ts_library(
     testonly = True,
     srcs = ["service.spec.ts"],
     deps = [
-        "//packages/core/testing",
+        "//packages/database/testing",
         "//stacks/api/bucket/cache",
+        "@npm//@nestjs/platform-express",
         "@npm//@nestjs/testing",
         "@npm//@types/cache-manager",
         "@npm//@types/jasmine",

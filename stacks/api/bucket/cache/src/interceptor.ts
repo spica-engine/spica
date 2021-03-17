@@ -9,13 +9,12 @@ import {
   Optional,
   Type
 } from "@nestjs/common";
-import {Reflector} from "@nestjs/core";
 import {Observable} from "rxjs";
 import {tap} from "rxjs/operators";
 import {BucketCacheService} from "./service";
 
 class BucketCacheInterceptor extends CacheInterceptor {
-  constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: any, reflector: Reflector) {
+  constructor(@Optional() @Inject(CACHE_MANAGER) cacheManager: any, reflector: any) {
     super(cacheManager, reflector);
   }
 
@@ -28,7 +27,9 @@ class BucketCacheInterceptor extends CacheInterceptor {
     const path = req.originalUrl;
     const language = req.get("accept-language");
 
-    return path + "&accept-language=" + language;
+    const key = path + "&accept-language=" + language;
+
+    return key;
   }
 }
 

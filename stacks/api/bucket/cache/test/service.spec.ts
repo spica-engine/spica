@@ -1,6 +1,6 @@
 import {Test} from "@nestjs/testing";
 import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket/cache";
-import {CoreTestingModule} from "@spica-server/core/testing";
+import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {Cache} from "cache-manager";
 
 describe("Bucket Cache Service", () => {
@@ -9,7 +9,7 @@ describe("Bucket Cache Service", () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [CoreTestingModule, BucketCacheModule.register({ttl: 60})],
+      imports: [BucketCacheModule.register({ttl: null}), DatabaseTestingModule.standalone()],
       controllers: [],
       providers: []
     }).compile();
@@ -31,5 +31,44 @@ describe("Bucket Cache Service", () => {
 
     const cacheResponses = await cacheManager.get(cacheKeys[0]);
     expect(cacheResponses).toEqual([{title: "test2"}]);
+  });
+
+  it("should clear the bucket2 caches when bucket1 caches deleted because of the relation", async () => {
+    const {insertedId: bucket1} = await service["db"].collection("buckets").insertOne({
+      properties: {
+        title: {
+          type: "string"
+        }
+      }
+    });
+
+    const {insertedId: bucket2} = await service["db"].collection("buckets").insertOne({
+      properties: {
+        rel: {
+          type: "relation",
+          bucketId: bucket1.toHexString()
+        }
+      }
+    });
+
+    const {insertedId: bucket3} = await service["db"].collection("buckets").insertOne({
+      properties: {
+        title: {
+          ttype: "string"
+        }
+      }
+    });
+
+    await cacheManager.set(`/bucket/${bucket1}/data`, [{title: "test1"}]);
+    await cacheManager.set(`/bucket/${bucket2}/data`, [{title: "test2"}]);
+    await cacheManager.set(`/bucket/${bucket3}/data`, [{title: "test3"}]);
+
+    await service.invalidate(bucket1.toHexString());
+
+    const cacheKeys = await cacheManager.store.keys();
+    expect(cacheKeys).toEqual([`/bucket/${bucket3}/data`]);
+
+    const cacheResponses = await cacheManager.get(cacheKeys[0]);
+    expect(cacheResponses).toEqual([{title: "test3"}]);
   });
 });
