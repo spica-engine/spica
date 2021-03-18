@@ -14,6 +14,35 @@ export class FilterComponent implements OnChanges {
 
   readonly filterOrigins = ["string", "boolean", "object"];
 
+  selectedOperator = "";
+
+  operators = {
+    string: {
+      equals: "$eq",
+      not_equal: "$ne",
+      regex: "$regex"
+    },
+    textarea: {
+      equals: "$eq",
+      not_equal: "$ne",
+      regex: "$regex"
+    },
+    number: {
+      equals: "$eq",
+      not_equal: "$ne",
+      less_than: "$lt",
+      greater_than: "$gt",
+      less_than_or_equal: "$lte",
+      greater_than_or_equal: "$gte"
+    },
+    array: {
+      include_one: "$in",
+      not_include: "$nin",
+      include_all: "$all"
+    }
+    //@TODO: object and location that we may need to add
+  };
+
   get active(): boolean {
     return this.filter && Object.keys(this.filter).length > 0;
   }
@@ -42,29 +71,45 @@ export class FilterComponent implements OnChanges {
   }
 
   apply() {
-    if (this.properties[this.property].type == "relation") {
-      this.filter = {
-        [`${this.property}._id`]:
-          this.properties[this.property]["relationType"] == "onetomany"
-            ? {$in: this.value}
-            : this.value
-      };
-    } else if (this.properties[this.property].type == "date") {
-      this.filter = {
-        [this.property]: {
-          $gte: `Date(${new Date(this.value[0]).toISOString()})`,
-          $lt: `Date(${new Date(this.value[1]).toISOString()})`
+    const type = this.properties[this.property].type;
+
+    switch (type) {
+      case "relation":
+        this.filter = {
+          [`${this.property}._id`]:
+            this.properties[this.property]["relationType"] == "onetomany"
+              ? {$in: this.value}
+              : this.value
+        };
+        break;
+
+      case "date":
+        this.filter = {
+          [this.property]: {
+            $gte: `Date(${new Date(this.value[0]).toISOString()})`,
+            $lt: `Date(${new Date(this.value[1]).toISOString()})`
+          }
+        };
+        break;
+
+      default:
+        if (this.selectedOperator) {
+          this.filter = {[this.property]: {[this.selectedOperator]: this.value}};
+        } else {
+          this.filter = {[this.property]: this.value};
         }
-      };
-    } else {
-      const origin = this.resolver.getOriginByType(this.properties[this.property].type);
-      this.filter = {[this.property]: origin == "string" ? {$regex: this.value} : this.value};
+        break;
     }
+
+    console.log(this.filter);
     this.filterChange.emit(this.filter);
   }
 
   clear() {
+    this.property = undefined;
     this.value = undefined;
+    this.selectedOperator = undefined;
+
     this.filter = undefined;
     this.filterChange.emit(this.filter);
   }
