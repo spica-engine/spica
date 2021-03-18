@@ -252,7 +252,11 @@ export class AddComponent implements OnInit, OnDestroy {
               }
               return throwError(error);
             }),
-            tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
+            tap(
+              () =>
+                isInsert &&
+                this.router.navigate([`function/${fn._id}`], {state: {skipSaveChanges: true}})
+            ),
             ignoreElements()
           )
         ),
@@ -326,8 +330,6 @@ export class AddComponent implements OnInit, OnDestroy {
         this.onFullScreen = true;
       } catch (e) {
         this.revertStyles();
-
-        console.log(e);
       }
     } else {
       await document[this.browserFullscreenKeywords.exit]();

@@ -34,7 +34,7 @@
         <mat-header-cell class="action" *matHeaderCellDef>Actions</mat-header-cell>
         <mat-cell class="action" *matCellDef="let function">
           <button
-            canInteract="function:update"
+            canInteract="function:show"
             [resource]="function._id"
             mat-icon-button
             [routerLink]="function._id"
