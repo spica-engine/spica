@@ -2,14 +2,13 @@ import {Global, Module} from "@nestjs/common";
 import {ServicesModule} from "@spica-server/bucket/services";
 import {DatabaseService} from "@spica-server/database";
 import {SCHEMA} from "@spica-server/function";
-import {ENQUEUER} from "@spica-server/function/scheduler";
 import {EventQueue} from "@spica-server/function/queue";
+import {ENQUEUER} from "@spica-server/function/scheduler";
 import {JSONSchema7} from "json-schema";
 import {Observable} from "rxjs";
-import {ReviewDispatcher} from "./dispatcher";
-import {ChangeAndReviewEnqueuer} from "./enqueuer";
-import {ChangeAndReviewQueue} from "./queue";
 import {ChangeEmitter} from "./emitter";
+import {ChangeEnqueuer} from "./enqueuer";
+import {ChangeQueue} from "./queue";
 
 export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
   return new Observable(observer => {
@@ -19,7 +18,7 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
       const schema: JSONSchema7 = {
         $id: "http://spica.internal/function/enqueuer/bucket",
         type: "object",
-        required: ["bucket", "phase", "type"],
+        required: ["bucket", "type"],
         properties: {
           bucket: {
             title: "Bucket",
@@ -28,36 +27,11 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
             // @ts-expect-error
             viewEnum: Array.from(buckets.values())
           },
-          phase: {
-            title: "Phase",
-            type: "string",
-            enum: ["BEFORE", "AFTER"]
-          },
+
           type: {
-            type: "string"
-          }
-        },
-        if: {
-          properties: {
-            phase: {const: "BEFORE"}
-          }
-        },
-        then: {
-          properties: {
-            type: {
-              title: "Operation type",
-              type: "string",
-              enum: ["INSERT", "INDEX", "GET", "UPDATE", "DELETE", "STREAM"]
-            }
-          }
-        },
-        else: {
-          properties: {
-            type: {
-              title: "Operation type",
-              type: "string",
-              enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
-            }
+            title: "Operation type",
+            type: "string",
+            enum: ["ALL", "INSERT", "UPDATE", "DELETE"]
           }
         },
         additionalProperties: false
@@ -112,28 +86,22 @@ export function createSchema(db: DatabaseService): Observable<JSONSchema7> {
 @Global()
 @Module({
   imports: [ServicesModule],
-  exports: [ENQUEUER, SCHEMA, ReviewDispatcher, ChangeEmitter],
+  exports: [ENQUEUER, SCHEMA, ChangeEmitter],
   providers: [
-    ReviewDispatcher,
     ChangeEmitter,
     {
       provide: ENQUEUER,
-      useFactory: (reviewDispatcher: ReviewDispatcher, changeEmitter: ChangeEmitter) => {
+      useFactory: (changeEmitter: ChangeEmitter) => {
         return (queue: EventQueue) => {
-          const changeAndReviewQueue = new ChangeAndReviewQueue();
-          const changeAndReviewEnqueuer = new ChangeAndReviewEnqueuer(
-            queue,
-            changeAndReviewQueue,
-            reviewDispatcher,
-            changeEmitter
-          );
+          const changeQueue = new ChangeQueue();
+          const changeEnqueuer = new ChangeEnqueuer(queue, changeQueue, changeEmitter);
           return {
-            enqueuer: changeAndReviewEnqueuer,
-            queue: changeAndReviewQueue
+            enqueuer: changeEnqueuer,
+            queue: changeQueue
           };
         };
       },
-      inject: [ReviewDispatcher, ChangeEmitter]
+      inject: [ChangeEmitter]
     },
     {
       provide: SCHEMA,

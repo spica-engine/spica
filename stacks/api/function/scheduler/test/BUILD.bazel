@@ -26,4 +26,5 @@ ts_library(
 jasmine_node_test(
     name = "scheduler_test",
     srcs = [":scheduler"],
+    tags = ["flaky"],
 )

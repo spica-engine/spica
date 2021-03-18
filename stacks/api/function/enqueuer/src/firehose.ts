@@ -1,5 +1,5 @@
 import {EventQueue, FirehoseQueue} from "@spica-server/function/queue";
-import {Event, Firehose} from "@spica-server/function/queue/proto";
+import {event, Firehose} from "@spica-server/function/queue/proto";
 import * as url from "url";
 import * as ws from "ws";
 import {Description, Enqueuer} from "./enqueuer";
@@ -19,7 +19,7 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
 
   private wss: ws.Server;
 
-  private eventTargetPairs = new Set<{name: string; target: Event.Target}>();
+  private eventTargetPairs = new Set<{name: string; target: event.Target}>();
 
   constructor(
     private queue: EventQueue,
@@ -102,11 +102,11 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
         pair.name == "*" ||
         (pair.name == "**" && (name == "connection" || name == "close"))
       ) {
-        const event = new Event.Event();
-        event.target = pair.target;
-        event.type = Event.Type.FIREHOSE;
-
-        this.queue.enqueue(event);
+        const ev = new event.Event({
+          target: pair.target,
+          type: event.Type.FIREHOSE
+        });
+        this.queue.enqueue(ev);
 
         const incomingMessage = new Firehose.Message.Incoming({
           client: cl,
@@ -122,19 +122,19 @@ export class FirehoseEnqueuer extends Enqueuer<FirehoseOptions> {
           incomingMessage.message.data = JSON.stringify(data);
         }
 
-        this.firehoseQueue.enqueue(event.id, incomingMessage, ws);
+        this.firehoseQueue.enqueue(ev.id, incomingMessage, ws);
       }
     }
   }
 
-  subscribe(target: Event.Target, options: FirehoseOptions): void {
+  subscribe(target: event.Target, options: FirehoseOptions): void {
     this.eventTargetPairs.add({
       name: options.event,
       target
     });
   }
 
-  unsubscribe(target: Event.Target): void {
+  unsubscribe(target: event.Target): void {
     for (const pair of this.eventTargetPairs) {
       if (
         (!target.handler && pair.target.cwd == target.cwd) ||

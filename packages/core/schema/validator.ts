@@ -1,81 +1,31 @@
 import {Inject, Injectable, Optional} from "@nestjs/common";
-import * as ajv from "ajv";
+import {default as Ajv, ValidateFunction} from "ajv";
+import formats from "ajv-formats";
+import {ValidationError} from "ajv/dist/compile/error_classes";
 import * as request from "request-promise-native";
 import {from, isObservable} from "rxjs";
 import {skip, take} from "rxjs/operators";
+import defaultVocabulary from "./default";
+import formatVocabulary from "./format";
 import {
   Default,
   Format,
   GLOBAL_SCHEMA_MODULE_OPTIONS,
+  Keyword,
   ModuleOptions,
   SCHEMA_MODULE_OPTIONS,
   UriResolver
 } from "./interface";
-export {ValidationError} from "ajv";
+export {CodeKeywordDefinition, ErrorObject, KeywordCxt, _} from "ajv";
+export {ValidationError} from "ajv/dist/compile/error_classes";
 
 @Injectable()
 export class Validator {
-  private _ajv: ajv.Ajv;
+  private _ajv: Ajv;
   private _resolvers = new Set<UriResolver>();
   private _defaults: Map<string, Default>;
 
-  private formatKeywordDefinition = {
-    modifying: true,
-    errors: true,
-    compile: (schema, parentSchema, it) => {
-      return function validateFn(data, dataPath, parentData) {
-        if (!data) {
-          return true;
-        }
-
-        const format = it.formats[schema];
-        if (it.opts.format === "false") {
-          return true;
-        }
-
-        if (!format && it.opts.unknownFormats != "ignore") {
-          throw new Error(`unknown format "${schema}" used in schema at path ${it.schemaPath}`);
-        } else if (!format && it.opts.logger != false && it.opts.unknownFormats == "ignore") {
-          it.opts.logger.warn(
-            `unknown format "${schema}" ignored in schema at path "${it["errSchemaPath"]}"`
-          );
-          return true;
-        }
-
-        if (parentSchema["type"] != ((typeof format == "object" && format.type) || "string")) {
-          return true;
-        }
-
-        let validate: any = format.validate ? format.validate : format;
-
-        if (typeof validate == "string") {
-          validate = new RegExp(validate);
-        }
-
-        let passed = false;
-        if (format instanceof RegExp) {
-          passed = format.test(data);
-        } else if (typeof validate == "function") {
-          passed = validate(data);
-        }
-
-        if (!passed) {
-          validateFn["errors"] = [
-            {
-              keyword: "format",
-              message: `should match format '${schema}'`
-            }
-          ];
-        } else if (typeof format == "object" && format["coerce"]) {
-          const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
-          parentData[propertyName] = (format as Format).coerce(data);
-        }
-        return passed;
-      };
-    }
-  };
-
-  public get defaults(): Array<Default> {
+  get defaults(): Default[] {
     return Array.from(this._defaults.values());
   }
 
@@ -84,41 +34,39 @@ export class Validator {
     @Optional() @Inject(GLOBAL_SCHEMA_MODULE_OPTIONS) global: ModuleOptions = {}
   ) {
     this._defaults = new Map<string, Default>(
-      [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.keyword, def] as any)
+      [...(local.defaults || []), ...(global.defaults || [])].map(def => [def.match, def])
     );
-    this._ajv = new ajv({
-      removeAdditional: true,
-      async: true,
+    this._ajv = new Ajv({
       useDefaults: true,
-      validateSchema: false,
+      removeAdditional: true,
       loadSchema: uri => this._fetch(uri),
-      formats: [...(local.formats || []), ...(global.formats || [])].reduce((formats, format) => {
-        formats[format.name] = format;
-        return formats;
-      }, {}),
-      schemas: [...(local.schemas || []), ...(global.schemas || [])]
-    });
-    [...(local.keywords || []), ...(global.keywords || [])].forEach(keyword =>
-      this.registerKeyword(keyword.name, keyword)
-    );
-    this.registerKeyword("default", {
-      modifying: true,
-      compile: (schema, parentSchema, it) => {
-        return (data, dataPath, parentData) => {
-          const defaultValueHandler = this._defaults.get(schema);
-          // TODO(thesayyn): Check type of the default value handler against schema type;
-          if (defaultValueHandler) {
-            const propertyName = dataPath.split(".").filter(r => !!r)[it.dataLevel - 1];
-            parentData[propertyName] = defaultValueHandler.create(
-              data == defaultValueHandler.keyword ? undefined : data
-            );
-          }
-          return true;
-        };
-      }
+      formats: new Array<Format>()
+        .concat(local.formats || [])
+        .concat(global.formats || [])
+        .reduce((formats, format) => {
+          formats[format.name] = format;
+          return formats;
+        }, {}),
+      schemas: new Array().concat(local.schemas || []).concat(global.schemas || []),
+      strict: true,
+      ["defaults" as any]: this._defaults
     });
 
-    this.registerKeyword("format", this.formatKeywordDefinition);
+    this.registerKeyword(defaultVocabulary);
+    this.registerKeyword(formatVocabulary);
+
+    const customFields = (global.customFields ? global.customFields : []).concat(
+      local.customFields ? local.customFields : []
+    );
+    this._ajv.addVocabulary(customFields);
+
+    for (const keyword of new Array<Keyword>()
+      .concat(local.keywords || [])
+      .concat(global.keywords || [])) {
+      this.registerKeyword(keyword);
+    }
+
+    formats(this._ajv, {formats: ["regex"]});
   }
 
   private _fetch(uri: string): Promise<Object> {
@@ -140,7 +88,7 @@ export class Validator {
       }
     }
     return request({uri, json: true}).catch(() =>
-      Promise.reject(new Error(`Cannot resolve the schema ${uri}`))
+      Promise.reject(new Error(`Could not resolve the schema ${uri}`))
     );
   }
 
@@ -149,22 +97,36 @@ export class Validator {
   }
 
   registerDefault(def: Default) {
-    this._defaults.set(def.keyword, def);
+    this._defaults.set(def.match, def);
   }
 
-  registerKeyword(name: string, def: ajv.KeywordDefinition) {
-    this._ajv.removeKeyword(name);
-    this._ajv.addKeyword(name, def);
+  registerKeyword(def: Keyword): void {
+    this._ajv.removeKeyword(def.keyword as string);
+    this._ajv.addKeyword(def);
   }
 
   removeSchema(schemaUri?: string) {
     this._ajv.removeSchema(schemaUri);
   }
 
-  async validate(schema: object, value?: any) {
-    const validate = await this._ajv.compileAsync(schema);
-    return Promise.resolve(validate(value)).then(valid =>
-      valid ? valid : Promise.reject(new ajv.ValidationError(validate.errors))
-    );
+  async validate<T = unknown>(schemaOrUrl: object | string, value: T): Promise<void> {
+    let schema: object;
+    if (typeof schemaOrUrl == "string") {
+      schema = {$ref: schemaOrUrl};
+    } else if (typeof schemaOrUrl == "object" && schemaOrUrl != null) {
+      schema = schemaOrUrl;
+    } else {
+      throw new TypeError(`invalid schema type received ${typeof schemaOrUrl}`);
+    }
+
+    try {
+      const validate = await this._ajv.compileAsync(schema);
+      const valid = validate(value);
+      if (!valid) {
+        throw new ValidationError(validate.errors);
+      }
+    } catch (e) {
+      throw e;
+    }
   }
 }

@@ -12,7 +12,7 @@
           type="number"
           aria-controls="none"
           [disabled]="_disabled"
-          [(ngModel)]="value.latitude"
+          [(ngModel)]="value.coordinates[1]"
           (ngModelChange)="callOnChange(); applyCoords()"
         />
       </mat-form-field>
@@ -22,7 +22,7 @@
           matInput
           type="number"
           [disabled]="_disabled"
-          [(ngModel)]="value.longitude"
+          [(ngModel)]="value.coordinates[0]"
           (ngModelChange)="callOnChange(); applyCoords()"
         />
       </mat-form-field>

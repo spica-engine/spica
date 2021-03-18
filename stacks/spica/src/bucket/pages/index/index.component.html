@@ -40,8 +40,11 @@
       [matTooltip]="'Delete ' + selectedItems.length + ' entries.'"
       [matAwareDialog]="{
         title: 'Confirmation',
-        templateOrDescription: deleteRowsDialog,
-        answer: 'agree'
+        templateOrDescription: getDependents(schema, selectedItems).length
+          ? deleteRowsWithDependentsDialog
+          : deleteRowsDialog,
+        answer: 'agree',
+        list: getDependents(schema, selectedItems)
       }"
       (confirm)="deleteSelectedItems()"
     >
@@ -145,24 +148,26 @@
 <div class="data-guide">
   <mat-card class="mat-elevation-z25" [class.with-examples]="guide">
     <mat-card-content>
-      <table mat-table [dataSource]="data$ | async" matSort (matSortChange)="onSortChange($event)">
+      <table
+        mat-table
+        #rowtable
+        [dataSource]="data$ | async"
+        matSort
+        (matSortChange)="onSortChange($event)"
+      >
         <ng-container matColumnDef="$$spicainternal_select">
           <th class="select" mat-header-cell *matHeaderCellDef>
             <mat-checkbox
               *ngIf="dataIds?.length > 0"
               [indeterminate]="selectedItems.length < dataIds.length && selectedItems.length > 0"
               [ngModel]="selectedItems.length == dataIds.length"
-              (ngModelChange)="selectedItems = $event ? [].concat(dataIds) : []"
+              (ngModelChange)="selectedItems = $event ? rowtable.dataSource : []"
             ></mat-checkbox>
           </th>
           <td mat-cell *matCellDef="let row">
             <mat-checkbox
-              (ngModelChange)="
-                $event
-                  ? selectedItems.push(row._id)
-                  : selectedItems.splice(selectedItems.indexOf(row._id), 1)
-              "
-              [ngModel]="selectedItems.indexOf(row._id) > -1"
+              (ngModelChange)="onItemSelected($event, row)"
+              [ngModel]="hasSelected(row._id)"
             ></mat-checkbox>
           </td>
         </ng-container>
@@ -213,10 +218,13 @@
               color="warn"
               [matAwareDialog]="{
                 title: 'Confirmation',
-                templateOrDescription: dialogTemplate,
+                templateOrDescription: getDependents(schema, [row]).length
+                  ? deleteWithDependentsDialog
+                  : deleteDialog,
                 answer: row.hasOwnProperty(schema.primary)
                   ? row[schema.primary].toString()
-                  : 'agree'
+                  : 'agree',
+                list: getDependents(schema, [row])
               }"
               (confirm)="delete(row._id)"
             >
@@ -304,8 +312,43 @@
   </p>
 </ng-template>
 
-<ng-template #dialogTemplate let-answer="answer">
+<ng-template #deleteRowsWithDependentsDialog let-answer="answer" let-list="list">
+  <p>WARNING:</p>
+  <p>
+    This action will <b>permanently</b> delete these selected
+    <code>{{ selectedItems.length }}</code> entries, break all relations and delete dependent
+    <code>{{ list.length }}</code> documents below:
+  </p>
+  <ng-container *ngFor="let item of list">
+    <div>
+      {{ item }}
+    </div>
+  </ng-container>
+  <br />
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
+
+<ng-template #deleteDialog let-answer="answer">
   <p>This action will <b>permanently</b> delete this entry and break all relations.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
+
+<ng-template #deleteWithDependentsDialog let-answer="answer" let-list="list">
+  <p>WARNING:</p>
+  <p>
+    This action will <b>permanently</b> delete this entry, break all relations and delete dependent
+    <code>{{ list.length }}</code> documents below:
+  </p>
+  <ng-container *ngFor="let item of list">
+    <div>
+      {{ item }}
+    </div>
+  </ng-container>
+  <br />
   <p>
     Please type in <code>{{ answer }}</code> to confirm.
   </p>

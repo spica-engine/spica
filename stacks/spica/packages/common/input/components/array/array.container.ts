@@ -7,7 +7,6 @@ import {
   AbstractControl,
   ValidationErrors
 } from "@angular/forms";
-import {array} from "yargs";
 
 @Directive({
   selector: "[ngModelArray]",

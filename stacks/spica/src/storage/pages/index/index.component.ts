@@ -3,8 +3,8 @@ import {HttpEventType} from "@angular/common/http";
 import {Component, OnInit, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {MatPaginator} from "@angular/material/paginator";
-import {merge, Observable, of, BehaviorSubject} from "rxjs";
-import {map, switchMap} from "rxjs/operators";
+import {merge, Observable, BehaviorSubject, Subject, of} from "rxjs";
+import {map, switchMap, tap} from "rxjs/operators";
 import {ImageEditorComponent} from "../../components/image-editor/image-editor.component";
 import {StorageDialogOverviewDialog} from "../../components/storage-dialog-overview/storage-dialog-overview";
 import {Storage} from "../../interfaces/storage";
@@ -20,11 +20,19 @@ export class IndexComponent implements OnInit {
 
   storages$: Observable<Storage[]>;
   progress: number;
-  refresh: BehaviorSubject<string> = new BehaviorSubject(undefined);
+  refresh: Subject<string> = new Subject();
   sorter;
-  cols: number = 4;
+  cols: number = 5;
+
+  loading$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+
+  lastUpdates: Map<string, number> = new Map();
 
   isEmpty = true;
+
+  selectedStorageIds = [];
+
+  selectionActive = false;
 
   constructor(
     private storage: StorageService,
@@ -50,29 +58,19 @@ export class IndexComponent implements OnInit {
       });
   }
 
+  selectAll(storages: Storage[]) {
+    this.selectedStorageIds = storages.map(storage => storage._id);
+  }
+
   ngOnInit(): void {
     this.storages$ = merge(this.paginator.page, of(null), this.refresh).pipe(
-      switchMap(updatedId =>
-        this.storage
-          .getAll(
-            this.paginator.pageSize || 12,
-            this.paginator.pageSize * this.paginator.pageIndex,
-            this.sorter
-          )
-          .pipe(
-            map(storages => {
-              if (!updatedId) {
-                return storages;
-              }
-
-              let index = storages.data.findIndex(s => s._id == updatedId);
-              if (index != -1) {
-                storages.data[index].url += "?timestamp=" + new Date().getTime();
-              }
-
-              return storages;
-            })
-          )
+      tap(() => this.loading$.next(true)),
+      switchMap(() =>
+        this.storage.getAll(
+          this.paginator.pageSize || this.cols * 3,
+          this.paginator.pageSize * this.paginator.pageIndex,
+          this.sorter
+        )
       ),
       map(storages => {
         this.paginator.length = 0;
@@ -81,7 +79,8 @@ export class IndexComponent implements OnInit {
         }
         this.isEmpty = !storages.meta.total;
         return storages.data;
-      })
+      }),
+      tap(() => this.loading$.next(false))
     );
   }
 
@@ -93,7 +92,7 @@ export class IndexComponent implements OnInit {
             this.progress = Math.round((100 * event.loaded) / event.total);
           } else if (event.type === HttpEventType.Response) {
             this.progress = undefined;
-            this.refresh.next(undefined);
+            this.refresh.next();
           }
         },
         () => this.uploadDone()
@@ -101,10 +100,15 @@ export class IndexComponent implements OnInit {
     }
   }
 
+  clearLastUpdates() {
+    this.lastUpdates.clear();
+    this.refresh.next();
+  }
+
   uploadDone() {
     this.sortStorage({direction: "desc", name: "_id"});
     this.progress = undefined;
-    this.refresh.next(undefined);
+    this.refresh.next();
   }
 
   delete(id: string): void {
@@ -112,14 +116,19 @@ export class IndexComponent implements OnInit {
       .delete(id)
       .toPromise()
       .catch()
-      .then(() => this.refresh.next(undefined));
+      .then(() => this.refresh.next());
+  }
+
+  deleteMany() {
+    const promises = this.selectedStorageIds.map(id => this.storage.delete(id).toPromise());
+    return Promise.all(promises).then(() => this.refresh.next());
   }
 
   sortStorage({...value}) {
     value.direction = value.direction === "asc" ? 1 : -1;
     this.sorter = {};
     this.sorter[value.name] = value.direction;
-    this.refresh.next(undefined);
+    this.refresh.next();
   }
 
   openPreview(storage: Storage): void {
@@ -141,6 +150,6 @@ export class IndexComponent implements OnInit {
       })
       .afterClosed()
       .toPromise()
-      .then(updatedId => this.refresh.next(updatedId));
+      .then(() => this.refresh.next());
   }
 }

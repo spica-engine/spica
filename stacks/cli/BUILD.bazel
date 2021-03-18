@@ -12,22 +12,28 @@ ts_config(
 
 ts_library(
     name = "cli",
-    srcs = glob(["src/**/*.ts"]),
+    srcs = glob([
+        "src/**/*.ts",
+        "index.ts",
+    ]),
     data = ["bin/spica"],
     module_name = "@spica/cli",
     tsconfig = ":tsconfig",
     deps = [
-        "@npm//@ionic/cli-framework",
+        "@npm//@caporal/core",
         "@npm//@types/dockerode",
+        "@npm//@types/json-schema",
         "@npm//@types/node",
-        "@npm//@types/node-fetch",
-        "@npm//chalk",
+        "@npm//axios",
+        "@npm//colorette",
         "@npm//columnify",
+        "@npm//cosmiconfig",
         "@npm//dockerode",
         "@npm//get-port",
-        "@npm//node-fetch",
+        "@npm//jsonpath",
         "@npm//open",
         "@npm//ora",
+        "@npm//pretty-ms",
         "@npm//yaml",
     ],
 )

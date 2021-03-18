@@ -14,8 +14,6 @@ import {mergeMap, map} from "rxjs/operators";
 export class WebhookLogViewComponent extends DataSource<WebhookLog> implements OnInit, OnDestroy {
   private subscription = new Subscription();
 
-  maxDate = new Date();
-
   statusCodes = [];
 
   webhooks: string[] = [];

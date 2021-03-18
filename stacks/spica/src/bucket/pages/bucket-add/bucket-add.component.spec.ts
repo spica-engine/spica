@@ -28,8 +28,8 @@ import {of} from "rxjs";
 import {Bucket} from "src/bucket/interfaces/bucket";
 import {BucketHistoryService} from "src/bucket/services/bucket-history.service";
 import {BucketService} from "src/bucket/services/bucket.service";
-import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {PropertyKvPipe} from "@spica-client/common/pipes";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {BucketAddComponent} from "./bucket-add.component";
 import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 import {BucketIndexComponent} from "../bucket-index/bucket-index.component";
@@ -59,7 +59,6 @@ describe("BucketAddComponent", () => {
         description: "description of prop1",
         options: {
           position: "left",
-          visible: true,
           translate: true
         }
       },
@@ -69,7 +68,6 @@ describe("BucketAddComponent", () => {
         description: "description of prop2",
         options: {
           position: "right",
-          visible: false,
           translate: false
         }
       }
@@ -113,7 +111,8 @@ describe("BucketAddComponent", () => {
           useValue: {
             params: of({
               id: "id1"
-            })
+            }),
+            url: of(["id1"])
           }
         },
         {
@@ -155,7 +154,7 @@ describe("BucketAddComponent", () => {
               type: "string",
               description: "description of prop1",
               title: "title of prop1",
-              options: {position: "left", visible: true, translate: true}
+              options: {position: "left", translate: true}
             }
           }
         ],
@@ -168,7 +167,6 @@ describe("BucketAddComponent", () => {
               title: "title of prop2",
               options: {
                 position: "right",
-                visible: false,
                 translate: false
               }
             }
@@ -176,7 +174,6 @@ describe("BucketAddComponent", () => {
         ],
         bottom: []
       });
-      expect(fixture.componentInstance.isThereVisible).toBe(true);
     });
 
     it("should render component", () => {
@@ -205,11 +202,15 @@ describe("BucketAddComponent", () => {
       ).toBe("description");
 
       expect(
-        form.query(By.css(".toggles .read-only mat-slide-toggle")).injector.get(NgModel).model
+        fixture.debugElement
+          .query(By.css(".toggles .read-only mat-slide-toggle"))
+          .injector.get(NgModel).model
       ).toBe(false, "should work if readonly value is false");
 
       expect(
-        form.query(By.css(".toggles .history mat-slide-toggle")).injector.get(NgModel).model
+        fixture.debugElement
+          .query(By.css(".toggles .history mat-slide-toggle"))
+          .injector.get(NgModel).model
       ).toBe(true, "should work if history value is true");
 
       expect(
@@ -223,7 +224,7 @@ describe("BucketAddComponent", () => {
             type: "string",
             description: "description of prop1",
             title: "title of prop1",
-            options: {position: "left", visible: true, translate: true}
+            options: {position: "left", translate: true}
           }
         }
       ]);
@@ -241,7 +242,6 @@ describe("BucketAddComponent", () => {
             title: "title of prop2",
             options: {
               position: "right",
-              visible: false,
               translate: false
             }
           }
@@ -310,7 +310,6 @@ describe("BucketAddComponent", () => {
             description: "description of prop2",
             options: {
               position: "right",
-              visible: false,
               translate: false
             }
           }
@@ -323,9 +322,7 @@ describe("BucketAddComponent", () => {
       const form = fixture.debugElement.query(By.css("form")).injector.get(NgForm);
       form.setValue({
         title: "new title",
-        description: "new description",
-        readOnly: false,
-        history: false
+        description: "new description"
       });
       fixture.detectChanges();
       await fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
@@ -334,8 +331,6 @@ describe("BucketAddComponent", () => {
         ...myBucket,
         title: "new title",
         description: "new description",
-        readOnly: false,
-        history: false,
         order: 1
       } as Bucket);
     });
@@ -475,16 +470,6 @@ describe("BucketAddComponent", () => {
           fixture.debugElement.query(By.css("mat-card mat-list span.errors mat-error"))
             .nativeElement.textContent
         ).toBe(" Please select a primary property. ");
-      });
-
-      it("should show visible property error", () => {
-        fixture.componentInstance.bucket.properties.prop1.options.visible = false;
-        fixture.componentInstance.updatePositionProperties();
-        fixture.detectChanges();
-        expect(
-          fixture.debugElement.query(By.css("mat-card mat-list span.errors mat-error"))
-            .nativeElement.textContent
-        ).toBe(" You have to make at least a property visible at the list. ");
       });
     });
   });

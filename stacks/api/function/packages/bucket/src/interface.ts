@@ -16,7 +16,6 @@ export interface Bucket {
 interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
   options: {
-    visible?: boolean;
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";
@@ -26,13 +25,6 @@ interface PropertyOptions {
 export interface BucketDocument {
   _id?: string;
   [key: string]: any | undefined;
-}
-
-export interface IndexResult<T> {
-  meta: {
-    total: number;
-  };
-  data: T[];
 }
 
 export interface Sequence {
@@ -53,6 +45,7 @@ export interface StreamChunk<T = any> {
   sequence?: Sequence[];
 }
 export enum ChunkKind {
+  Error = -1,
   Initial = 0,
   EndOfInitial = 1,
   Insert = 2,
@@ -63,11 +56,26 @@ export enum ChunkKind {
   Order = 7
 }
 
-export interface GetAllParams {
-  filter?: object;
-  sort?: {
-    [key: string]: 1 | -1;
+interface InitializeOptions {
+  publicUrl?: string;
+}
+
+export interface ApikeyInitialization extends InitializeOptions {
+  apikey: string;
+}
+
+export interface IdentityInitialization extends InitializeOptions {
+  identity: string;
+}
+
+export interface InitializationResult {
+  authorization: string;
+  publicUrl: string;
+}
+
+export interface IndexResult<T> {
+  meta: {
+    total: number;
   };
-  limit?: number;
-  skip?: number;
+  data: T[];
 }

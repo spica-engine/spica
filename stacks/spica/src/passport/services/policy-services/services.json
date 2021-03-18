@@ -56,6 +56,7 @@
   "dashboard": {
     "dashboard:index": ["dashboard_id"],
     "dashboard:show": ["dashboard_id"],
+    "dashboard:create": [],
     "dashboard:update": ["dashboard_id"],
     "dashboard:delete": ["dashboard_id"]
   },

@@ -2,7 +2,7 @@ import {Inject, Injectable, Optional, OnModuleDestroy} from "@nestjs/common";
 import {DatabaseService, MongoClient} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
-import {Event} from "@spica-server/function/queue/proto";
+import {event} from "@spica-server/function/queue/proto";
 import * as fs from "fs";
 import {JSONSchema7} from "json-schema";
 import * as path from "path";
@@ -36,7 +36,7 @@ export class FunctionEngine implements OnModuleDestroy {
     private scheduler: Scheduler,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
-    @Optional() @Inject(SCHEMA1) private schema1: SchemaWithName
+    @Optional() @Inject(SCHEMA1) schema1: SchemaWithName
   ) {
     if (schema) {
       this.schemas.set(schema.name, schema.schema);
@@ -46,10 +46,9 @@ export class FunctionEngine implements OnModuleDestroy {
     }
 
     this.fs.find().then(fns => {
-      let targetChanges: TargetChange[] = [];
+      const targetChanges: TargetChange[] = [];
       for (const fn of fns) {
-        let initialChanges = createTargetChanges(fn, ChangeKind.Added);
-        targetChanges.push(...initialChanges);
+        targetChanges.push(...createTargetChanges(fn, ChangeKind.Added));
       }
       this.categorizeChanges(targetChanges);
     });
@@ -100,7 +99,7 @@ export class FunctionEngine implements OnModuleDestroy {
     await fs.promises.mkdir(functionRoot, {recursive: true});
     // See: https://docs.npmjs.com/files/package.json#dependencies
     const packageJson = {
-      name: fn.name,
+      name: fn.name.replace(" ", "-").toLowerCase(),
       description: fn.description || "No description.",
       version: "0.0.1",
       private: true,
@@ -165,14 +164,14 @@ export class FunctionEngine implements OnModuleDestroy {
   private subscribe(change: TargetChange) {
     const enqueuer = this.getEnqueuer(change.type);
     if (enqueuer) {
-      const target = new Event.Target({
+      const target = new event.Target({
         id: change.target.id,
         cwd: path.join(this.options.root, change.target.id),
         handler: change.target.handler,
-        context: new Event.SchedulingContext({
+        context: new event.SchedulingContext({
           env: Object.keys(change.target.context.env).reduce((envs, key) => {
             envs.push(
-              new Event.SchedulingContext.Env({
+              new event.SchedulingContext.Env({
                 key,
                 value: change.target.context.env[key]
               })
@@ -182,6 +181,9 @@ export class FunctionEngine implements OnModuleDestroy {
           timeout: change.target.context.timeout
         })
       });
+      if (change.target.context.batch) {
+        target.context.batch = new event.SchedulingContext.Batch(change.target.context.batch);
+      }
       enqueuer.subscribe(target, change.options);
     } else {
       console.warn(`Couldn't find enqueuer ${change.type}.`);
@@ -190,7 +192,7 @@ export class FunctionEngine implements OnModuleDestroy {
 
   private unsubscribe(change: TargetChange) {
     for (const enqueuer of this.scheduler.enqueuers) {
-      const target = new Event.Target({
+      const target = new event.Target({
         id: change.target.id,
         cwd: path.join(this.options.root, change.target.id),
         handler: change.target.handler

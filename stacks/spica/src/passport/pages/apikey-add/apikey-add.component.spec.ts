@@ -1,5 +1,5 @@
 import {HttpClientTestingModule} from "@angular/common/http/testing";
-import {async, ComponentFixture, TestBed} from "@angular/core/testing";
+import {ComponentFixture, TestBed, waitForAsync} from "@angular/core/testing";
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material/button";
 import {MatCardModule} from "@angular/material/card";
@@ -17,7 +17,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {IndexResult} from "@spica-client/core";
 import {PassportService} from "@spica/client/src/passport/services/passport.service";
 import {of} from "rxjs";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {ApiKey} from "../../interfaces/apikey";
 import {ApiKeyService, MockApiKeyService} from "../../services/apikey.service";
 import {PolicyService} from "../../services/policy.service";
@@ -27,71 +27,78 @@ describe("ApiKeyAddComponent", () => {
   let component: ApiKeyAddComponent;
   let fixture: ComponentFixture<ApiKeyAddComponent>;
 
-  beforeEach(async(async () => {
-    TestBed.configureTestingModule({
-      imports: [
-        MatIconModule,
-        MatToolbarModule,
-        MatTooltipModule,
-        MatListModule,
-        MatCardModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatSlideToggleModule,
-        FormsModule,
-        RouterTestingModule,
-        NoopAnimationsModule,
-        HttpClientTestingModule
-      ],
-      providers: [
-        {
-          provide: ApiKeyService,
-          useValue: new MockApiKeyService()
-        },
-        {
-          provide: PassportService,
-          useValue: {
-            checkAllowed: () => {
-              return of(true);
+  beforeEach(
+    waitForAsync(async () => {
+      TestBed.configureTestingModule({
+        imports: [
+          MatIconModule,
+          MatToolbarModule,
+          MatTooltipModule,
+          MatListModule,
+          MatCardModule,
+          MatFormFieldModule,
+          MatInputModule,
+          MatButtonModule,
+          MatSlideToggleModule,
+          FormsModule,
+          RouterTestingModule,
+          NoopAnimationsModule,
+          HttpClientTestingModule
+        ],
+        providers: [
+          {
+            provide: ApiKeyService,
+            useValue: new MockApiKeyService()
+          },
+          {
+            provide: PassportService,
+            useValue: {
+              checkAllowed: () => {
+                return of(true);
+              }
+            }
+          },
+          {
+            provide: PolicyService,
+            useValue: {
+              find: () => {
+                return of({
+                  meta: 2,
+                  data: [
+                    {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
+                    {
+                      _id: "AnotherPolicy",
+                      name: "another policy",
+                      description: "test",
+                      statement: []
+                    }
+                  ]
+                });
+              }
+            }
+          },
+          {
+            provide: ActivatedRoute,
+            useValue: {
+              params: of({})
+            }
+          },
+          {
+            provide: RouterTestingModule,
+            useValue: {
+              navigate: () => {}
             }
           }
-        },
-        {
-          provide: PolicyService,
-          useValue: {
-            find: () => {
-              return of({
-                meta: 2,
-                data: [
-                  {_id: "TestPolicy", name: "test policy", description: "test", statement: []},
-                  {_id: "AnotherPolicy", name: "another policy", description: "test", statement: []}
-                ]
-              });
-            }
-          }
-        },
-        {
-          provide: ActivatedRoute,
-          useValue: {
-            params: of({})
-          }
-        },
-        {
-          provide: RouterTestingModule,
-          useValue: {
-            navigate: () => {}
-          }
-        }
-      ],
-      declarations: [ApiKeyAddComponent, CanInteractDirectiveTest]
-    }).compileComponents();
+        ],
+        declarations: [ApiKeyAddComponent, CanInteractDirectiveTest]
+      }).compileComponents();
 
-    fixture = TestBed.createComponent(ApiKeyAddComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    await fixture.whenStable();
-  }));
+      fixture = TestBed.createComponent(ApiKeyAddComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      await fixture.whenStable();
+    })
+  );
 
   it("should set apiKey as emptyApiKey when this page navigated from add button", () => {
     expect(component.apiKey).toEqual({
@@ -163,7 +170,9 @@ describe("ApiKeyAddComponent", () => {
       active: true
     });
     expect(routeSpy).toHaveBeenCalledTimes(1);
-    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"]);
+    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey"], {
+      state: {skipSaveChanges: true}
+    });
   });
 
   it("should insert apikey and navigate to edit page", async () => {
@@ -193,7 +202,9 @@ describe("ApiKeyAddComponent", () => {
     ]);
 
     expect(routeSpy).toHaveBeenCalledTimes(1);
-    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey", "0", "edit"]);
+    expect(routeSpy).toHaveBeenCalledWith(["passport/apikey", "0", "edit"], {
+      state: {skipSaveChanges: true}
+    });
   });
 
   describe("attach/detach", () => {

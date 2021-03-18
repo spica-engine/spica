@@ -19,7 +19,7 @@ export class GCloud implements Strategy {
     return this.bucket
       .file(id)
       .download()
-      .then(res => Buffer.from(res[0].buffer));
+      .then(([res]) => Buffer.from(res.buffer));
   }
 
   delete(id: string) {
@@ -30,6 +30,10 @@ export class GCloud implements Strategy {
     return this.bucket
       .file(id)
       .getMetadata()
-      .then(res => res[0].mediaLink);
+      .then(([res]) => {
+        const url = new URL(res.mediaLink);
+        url.searchParams.delete("generation");
+        return url.toString();
+      });
   }
 }

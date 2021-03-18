@@ -75,7 +75,7 @@ describe("Relation Schema Component", () => {
       expect(fixture.componentInstance.schema.bucketId).toBe("bucket2");
     });
 
-    it("should fill with intial value", fakeAsync(() => {
+    it("should fill with initial value", fakeAsync(() => {
       fixture.componentInstance.schema.bucketId = "bucket1";
       fixture.detectChanges();
       tick();

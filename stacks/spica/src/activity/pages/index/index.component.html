@@ -38,7 +38,7 @@
     <mat-label>Select module</mat-label>
     <mat-select
       [ngModel]="filters.resource.$all[filters.resource.$all.length - 1]"
-      (selectionChange)="selectionChange($event)"
+      (selectionChange)="onModuleSelectionChange($event)"
     >
       <mat-optgroup label="Bucket">
         <mat-option
@@ -87,17 +87,22 @@
     </mat-select>
   </mat-form-field>
   <mat-form-field>
-    <input
-      matInput
-      [ngModel]="filters.date"
-      (ngModelChange)="setDate($event.begin, $event.end)"
-      placeholder="Select a date range"
-      [satDatepicker]="picker"
-      [max]="maxDate"
-    />
-    <sat-datepicker #picker [rangeMode]="true"></sat-datepicker>
-    <sat-datepicker-toggle matSuffix [for]="picker"></sat-datepicker-toggle>
+    <mat-label>Enter a date range</mat-label>
+    <mat-date-range-input [rangePicker]="picker">
+      <input
+        matStartDate
+        placeholder="Start date"
+        #begin="ngModel"
+        [ngModel]="filters.date.begin"
+      />
+      <input matEndDate placeholder="End date" #end="ngModel" [ngModel]="filters.date.end" />
+    </mat-date-range-input>
+
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-date-range-picker #picker (closed)="setDate(begin.value, end.value)">
+    </mat-date-range-picker>
   </mat-form-field>
+
   <button mat-button (click)="applyFilters()">
     Apply
   </button>

@@ -1,24 +1,24 @@
-import {TestBed, ComponentFixture, tick, fakeAsync} from "@angular/core/testing";
-import {IdentitySettingsComponent} from "./identity-settings.component";
-import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
-import {of} from "rxjs";
-import {ActivatedRoute, RouterModule} from "@angular/router";
-import {IdentityService} from "../../services/identity.service";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
+import {FormsModule, NgModel} from "@angular/forms";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {MatExpansionModule} from "@angular/material/expansion";
+import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatIconModule} from "@angular/material/icon";
 import {MatInputModule} from "@angular/material/input";
-import {MatMenuModule} from "@angular/material/menu";
-import {MatToolbarModule} from "@angular/material/toolbar";
-import {PropertyKvPipe} from "../../../../packages/common/property_keyvalue.pipe";
-import {FormsModule, NgModel} from "@angular/forms";
-import {InputModule} from "@spica-client/common";
-import {MatFormFieldModule} from "@angular/material/form-field";
-import {MatSelectModule} from "@angular/material/select";
 import {MatListModule} from "@angular/material/list";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatSelectModule} from "@angular/material/select";
+import {MatToolbarModule} from "@angular/material/toolbar";
 import {By} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
+import {ActivatedRoute, RouterModule} from "@angular/router";
+import {InputModule} from "@spica-client/common";
+import {PropertyKvPipe} from "@spica-client/common/pipes";
+import {of} from "rxjs";
+import {PreferencesService} from "../../../../packages/core/preferences/preferences.service";
+import {IdentityService} from "../../services/identity.service";
+import {IdentitySettingsComponent} from "./identity-settings.component";
 
 describe("Identity Setting Component", () => {
   let fixture: ComponentFixture<IdentitySettingsComponent>;
@@ -32,11 +32,11 @@ describe("Identity Setting Component", () => {
         of([
           {
             type: "string",
-            keyword: "keyword1"
+            match: "keyword1"
           },
           {
             type: "number",
-            keyword: "keyword2"
+            match: "keyword2"
           }
         ])
       )
@@ -54,17 +54,11 @@ describe("Identity Setting Component", () => {
                   default: "something default",
                   type: "string",
                   readOnly: true,
-                  title: "title",
-                  options: {
-                    visible: true
-                  }
+                  title: "title"
                 },
                 prop2: {
                   type: "string",
-                  readOnly: false,
-                  options: {
-                    visible: true
-                  }
+                  readOnly: false
                 }
               }
             }
@@ -76,7 +70,7 @@ describe("Identity Setting Component", () => {
     };
     TestBed.configureTestingModule({
       imports: [
-        RouterModule.forRoot([]),
+        RouterModule.forRoot([], {relativeLinkResolution: "legacy"}),
         MatIconModule,
         MatToolbarModule,
         MatMenuModule,
@@ -143,12 +137,9 @@ describe("Identity Setting Component", () => {
 
       expect(
         document.body.querySelector("div.mat-menu-item:nth-child(1) mat-checkbox").classList
-      ).toContain("mat-checkbox-checked", "this should be checked if this property is visible");
-      expect(
-        document.body.querySelector("div.mat-menu-item:nth-child(2) mat-checkbox").classList
       ).toContain("mat-checkbox-checked", "this should be checked if this property is readonly");
       expect(
-        document.body.querySelector("div.mat-menu-item:nth-child(3) mat-checkbox").classList
+        document.body.querySelector("div.mat-menu-item:nth-child(2) mat-checkbox").classList
       ).toContain("mat-checkbox-checked", "this should be checked if this property is required");
     }));
 
@@ -159,10 +150,7 @@ describe("Identity Setting Component", () => {
         default: "something default",
         type: "string",
         readOnly: true,
-        title: "title",
-        options: {
-          visible: true
-        }
+        title: "title"
       });
     });
 
@@ -235,10 +223,7 @@ describe("Identity Setting Component", () => {
           default: "something default",
           type: "string",
           readOnly: true,
-          title: "title",
-          options: {
-            visible: true
-          }
+          title: "title"
         }
       });
     });
@@ -256,7 +241,9 @@ describe("Identity Setting Component", () => {
 
       expect(replaceOneSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledTimes(1);
-      expect(navigateSpy).toHaveBeenCalledWith(["/passport/identity"]);
+      expect(navigateSpy).toHaveBeenCalledWith(["/passport/identity"], {
+        state: {skipSaveChanges: true}
+      });
     }));
   });
 });

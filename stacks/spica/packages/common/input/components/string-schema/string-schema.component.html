@@ -2,7 +2,12 @@
   Default value:
 </mat-label>
 <mat-form-field>
-  <input matInput type="text" [(ngModel)]="schema.default" />
+  <input
+    matInput
+    type="text"
+    [ngModel]="schema.default"
+    (ngModelChange)="onChange($event, 'default')"
+  />
 </mat-form-field>
 <mat-slide-toggle
   #isEnum

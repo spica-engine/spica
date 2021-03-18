@@ -1,15 +1,27 @@
-import {BaseCollection, DatabaseService} from "@spica-server/database";
-import {Activity, ACTIVITY_OPTIONS, ActivityOptions} from "./interface";
+import {BaseCollection, DatabaseService, ObjectId} from "@spica-server/database";
+import {Activity, ACTIVITY_OPTIONS, ActivityOptions, ModuleActivity} from "./interface";
 import {Injectable, Inject} from "@nestjs/common";
 
-const COLLECTION_NAME = "activity";
-
 @Injectable()
-export class ActivityService extends BaseCollection<Activity>(COLLECTION_NAME) {
+export class ActivityService extends BaseCollection<Activity>("activity") {
   constructor(db: DatabaseService, @Inject(ACTIVITY_OPTIONS) options: ActivityOptions) {
     super(db);
-    this.createCollection(COLLECTION_NAME).then(() =>
+    this.createCollection(this._collection, {ignoreAlreadyExist: true}).then(() =>
       this.upsertTTLIndex(options.expireAfterSeconds)
     );
+  }
+
+  insert(activities: ModuleActivity[]) {
+    const preparedActivities = activities.map((activity: Activity) => {
+      if (ObjectId.isValid(activity.identifier)) {
+        activity.identifier = new ObjectId(activity.identifier);
+      }
+
+      activity.created_at = new Date();
+
+      return activity;
+    });
+
+    return this.insertMany(preparedActivities);
   }
 }

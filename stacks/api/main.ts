@@ -4,23 +4,19 @@ import {ActivityModule} from "@spica-server/activity";
 import {BucketModule} from "@spica-server/bucket";
 import {Middlewares} from "@spica-server/core";
 import {SchemaModule} from "@spica-server/core/schema";
-import {
-  CREATED_AT,
-  DATE_TIME,
-  OBJECTID_STRING,
-  OBJECT_ID,
-  UPDATED_AT
-} from "@spica-server/core/schema/defaults";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {DashboardModule} from "@spica-server/dashboard";
 import {DatabaseModule} from "@spica-server/database";
 import {FunctionModule} from "@spica-server/function";
 import {PassportModule} from "@spica-server/passport";
 import {PreferenceModule} from "@spica-server/preference";
+import {ApiMachineryModule} from "@spica-server/machinery";
 import {StorageModule} from "@spica-server/storage";
 import * as fs from "fs";
-import * as path from "path";
 import * as https from "https";
+import * as path from "path";
 import * as yargs from "yargs";
 
 const args = yargs
@@ -94,9 +90,13 @@ const args = yargs
       default: Number.MAX_SAFE_INTEGER
     },
     "passport-identity-token-expires-in": {
-      string: true,
-      description: "Lifespan of the issued JWT tokens.",
-      default: "2days"
+      number: true,
+      description: "Default lifespan of the issued JWT tokens. Unit: second",
+      default: 60 * 60 * 24 * 2
+    },
+    "passport-identity-token-expiration-seconds-limit": {
+      number: true,
+      description: "Maximum lifespan of the requested JWT token can have. Unit: second"
     },
     "passport-default-identity-identifier": {
       string: true,
@@ -131,6 +131,10 @@ const args = yargs
         "WebhookFullAccess",
         "PreferenceFullAccess"
       ]
+    },
+    "passport-identity-limit": {
+      number: true,
+      description: "Maximum number of identity that can be inserted."
     }
   })
   .demandOption("passport-secret")
@@ -141,15 +145,15 @@ const args = yargs
       description: "Number of worker processes to fork at start up.",
       default: 10
     },
-    "function-api-url": {
-      string: true,
-      description:
-        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
-    },
     "function-pool-maximum-size": {
       number: true,
       description: "Maximum number of worker processes to fork.",
       default: 15
+    },
+    "function-api-url": {
+      string: true,
+      description:
+        "Internally or publicly accessible url of the api. This value will be used by various devkit packages such as @spica-devkit/bucket and @spica-devkit/dashboard. Defaults to value of --public-url if not present."
     },
     "function-timeout": {
       number: true,
@@ -254,12 +258,28 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   })
   .demandOption("public-url")
   .check(args => {
+    if (!args["passport-identity-token-expiration-seconds-limit"]) {
+      args["passport-identity-token-expiration-seconds-limit"] =
+        args["passport-identity-token-expires-in"];
+    }
+
+    if (
+      args["passport-identity-token-expiration-seconds-limit"] <
+      args["passport-identity-token-expires-in"]
+    ) {
+      throw new TypeError(
+        `--passport-identity-token-expiration-seconds-limit(${args["passport-identity-token-expiration-seconds-limit"]} seconds) can not be less than --passport-identity-token-expires-in(${args["passport-identity-token-expires-in"]} seconds)`
+      );
+    }
+
     if (!args["default-storage-public-url"]) {
       args["default-storage-public-url"] = args["public-url"];
     }
+
     if (!args["function-api-url"]) {
       args["function-api-url"] = args["public-url"];
     }
+
     if (
       args["storage-strategy"] == "gcloud" &&
       (!args["gcloud-service-account-path"] || !args["gcloud-bucket-name"])
@@ -268,16 +288,19 @@ Example: http(s)://doomed-d45f1.spica.io/api`
         "--gcloud-service-account-path and --gcloud-bucket-name options must be present when --storage-strategy is set to 'gcloud'."
       );
     }
+
     if (args["storage-strategy"] == "default") {
       if (!args["default-storage-path"]) {
         throw new TypeError(
           "--default-storage-path options must be present when --storage-strategy is set to 'default'."
         );
       }
+
       if (path.isAbsolute(args["default-storage-path"])) {
         throw new TypeError("--default-storage-path must be relative.");
       }
     }
+
     return true;
   })
   .parserConfiguration({
@@ -287,12 +310,16 @@ Example: http(s)://doomed-d45f1.spica.io/api`
   .parse();
 
 const modules = [
-  DashboardModule,
+  DashboardModule.forRoot(),
   PreferenceModule,
+  ApiMachineryModule.forRoot(),
   DatabaseModule.withConnection(args["database-uri"], {
     database: args["database-name"],
     replicaSet: args["database-replica-set"],
-    poolSize: args["database-pool-size"]
+    poolSize: args["database-pool-size"],
+    appname: "spica",
+    useNewUrlParser: true,
+    ["useUnifiedTopology" as any]: true
   }),
   SchemaModule.forRoot({
     formats: [OBJECT_ID, DATE_TIME, OBJECTID_STRING],
@@ -316,8 +343,9 @@ const modules = [
     secretOrKey: args["passport-secret"],
     issuer: args["public-url"],
     expiresIn: args["passport-identity-token-expires-in"],
-
+    maxExpiresIn: args["passport-identity-token-expiration-seconds-limit"],
     defaultStrategy: args["passport-default-strategy"],
+    identityCountLimit: args["passport-identity-limit"],
     defaultIdentityPolicies: args["passport-default-identity-policies"],
     defaultIdentityIdentifier: args["passport-default-identity-identifier"],
     defaultIdentityPassword: args["passport-default-identity-password"],
@@ -361,20 +389,29 @@ if (args["cert-file"] && args["key-file"]) {
     cert: fs.readFileSync(args["key-file"])
   };
 }
+
 NestFactory.create(RootModule, {
   httpsOptions,
-  bodyParser: false
-}).then(app => {
-  app.useWebSocketAdapter(new WsAdapter(app));
-  app.use(
-    Middlewares.Preflight({
-      allowedOrigins: args["cors-allowed-origins"],
-      allowedMethods: args["cors-allowed-methods"],
-      allowedHeaders: args["cors-allowed-headers"],
-      allowCredentials: args["cors-allow-credentials"]
-    }),
-    Middlewares.JsonBodyParser(args["payload-size-limit"]),
-    Middlewares.MergePatchJsonParser(args["payload-size-limit"])
-  );
-  app.listen(args.port);
-});
+  bodyParser: false,
+  logger: false
+})
+  .then(app => {
+    app.useWebSocketAdapter(new WsAdapter(app));
+    app.use(
+      Middlewares.Preflight({
+        allowedOrigins: args["cors-allowed-origins"],
+        allowedMethods: args["cors-allowed-methods"],
+        allowedHeaders: args["cors-allowed-headers"],
+        allowCredentials: args["cors-allow-credentials"]
+      }),
+      Middlewares.JsonBodyParser({
+        limit: args["payload-size-limit"],
+        ignoreUrls: [/$\/storage/]
+      }),
+      Middlewares.MergePatchJsonParser(args["payload-size-limit"])
+    );
+    return app.listen(args.port);
+  })
+  .then(() => {
+    console.log(`: APIs are ready on port ${args.port}`);
+  });

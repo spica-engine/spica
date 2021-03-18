@@ -5,21 +5,26 @@ import {WebhookModule} from "@spica-server/function/webhook";
 import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
-import {FUNCTION_OPTIONS} from "./options";
-import {FunctionOptions} from "./options";
-import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
-import {LogModule} from "./log";
 import {FunctionService} from "./function.service";
+import {LogModule} from "./log";
+import {registerInformers} from "./machinery";
+import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
+import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
 
 @Module({})
 export class FunctionModule {
+  constructor(fs: FunctionService, fe: FunctionEngine) {
+    registerInformers(fs, fe);
+  }
+
   static forRoot(options: FunctionOptions): DynamicModule {
     return {
       module: FunctionModule,
       imports: [
         LogModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchemaModule.forChild({
-          schemas: [require("./schema/function.json")]
+          schemas: [require("./schema/function.json")],
+          customFields: ["viewEnum"]
         }),
         WebhookModule.forRoot({expireAfterSeconds: options.logExpireAfterSeconds}),
         SchedulerModule.forRoot({

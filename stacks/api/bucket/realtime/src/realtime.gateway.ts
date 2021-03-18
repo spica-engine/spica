@@ -1,11 +1,17 @@
-import {Optional} from "@nestjs/common";
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
-import {ReviewDispatcher} from "@spica-server/bucket/hooks";
+import * as expression from "@spica-server/bucket/expression";
+import {aggregate} from "@spica-server/bucket/expression";
+import {BucketService, getBucketDataCollection, filterReviver} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
-import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
+import {
+  FindOptions,
+  RealtimeDatabaseService,
+  StreamChunk,
+  ChunkKind
+} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
-import {fromEvent, Observable} from "rxjs";
-import {takeUntil, tap} from "rxjs/operators";
+import {fromEvent, Observable, of} from "rxjs";
+import {takeUntil, tap, catchError} from "rxjs/operators";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
@@ -16,7 +22,7 @@ export class RealtimeGateway implements OnGatewayConnection {
   constructor(
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
-    @Optional() private reviewDispatcher: ReviewDispatcher
+    private bucketService: BucketService
   ) {}
 
   async handleConnection(client: WebSocket, req) {
@@ -34,26 +40,44 @@ export class RealtimeGateway implements OnGatewayConnection {
         options: {resourceFilter: true}
       });
     } catch (e) {
-      client.send(JSON.stringify({code: e.status || 500, message: e.message}));
+      client.send(
+        JSON.stringify({kind: ChunkKind.Error, code: e.status || 500, message: e.message})
+      );
       return client.close(1003);
     }
 
-    const bucketId = req.params.id;
-    const options: any = {};
+    const schemaId = req.params.id;
 
-    if (this.reviewDispatcher && req.strategyType == "APIKEY") {
-      const filter = await this.reviewDispatcher.dispatch(
-        {bucket: bucketId, type: "STREAM"},
-        req.headers
-      );
-      if (typeof filter == "object" && Object.keys(filter).length > 0) {
-        options.filter = options.filter || {};
-        options.filter = {...options.filter, ...filter};
+    const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+
+    const match = expression.aggregate(schema.acl.read, {auth: req.user});
+
+    const options: FindOptions<{}> = {};
+
+    let filter = req.query.get("filter");
+
+    if (filter) {
+      let parsedFilter = parseFilter((value: string) => JSON.parse(value, filterReviver), filter);
+
+      if (!parsedFilter) {
+        parsedFilter = parseFilter(aggregate, filter, {});
       }
-    }
 
-    if (req.query.has("filter")) {
-      options.filter = JSON.parse(req.query.get("filter"));
+      if (!parsedFilter) {
+        client.send(
+          JSON.stringify({
+            kind: ChunkKind.Error,
+            code: 400,
+            message:
+              "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression."
+          })
+        );
+        return client.close(1003);
+      }
+
+      options.filter = {$and: [match, parsedFilter]};
+    } else {
+      options.filter = match;
     }
 
     if (req.query.has("sort")) {
@@ -68,10 +92,23 @@ export class RealtimeGateway implements OnGatewayConnection {
       options.skip = Number(req.query.get("skip"));
     }
 
-    const cursorName = `${bucketId}_${JSON.stringify(options)}`;
+    const cursorName = `${schemaId}_${JSON.stringify(options)}`;
     let stream = this.streams.get(cursorName);
     if (!stream) {
-      stream = this.realtime.find(getBucketDataCollection(bucketId), options).pipe(
+      stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
+        catchError(error => {
+          // send the error to the client, prevent to api down
+          client.send(
+            JSON.stringify({
+              kind: ChunkKind.Error,
+              code: 500,
+              message: error.toString()
+            })
+          );
+          client.close(1003);
+
+          return of(null);
+        }),
         tap({
           complete: () => this.streams.delete(cursorName)
         })
@@ -84,6 +121,10 @@ export class RealtimeGateway implements OnGatewayConnection {
   }
 }
 
-export function getBucketDataCollection(bucketId: string | ObjectId): string {
-  return `bucket_${bucketId}`;
+export function parseFilter(method: (...params: any) => any, ...params: any) {
+  try {
+    return method(...params);
+  } catch (e) {
+    return false;
+  }
 }

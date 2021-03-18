@@ -1,0 +1,46 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  div.seperated-content {
+    display: flex;
+    align-items: baseline;
+    div.includeds,
+    div.excludeds {
+      flex: 1;
+    }
+
+    div.includeds {
+      margin-right: 10px;
+      mat-form-field {
+        width: 100%;
+      }
+    }
+
+    div.included-resource,
+    div.excluded-resource {
+      align-items: baseline;
+      display: flex;
+      > mat-form-field {
+        width: 300px;
+        margin-right: 10px;
+      }
+      button {
+        flex-grow: 1;
+      }
+    }
+  }
+  mat-divider {
+    margin: 15px 0px;
+  }
+  .action-buttons {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .add-resource-button {
+    border: 1px dashed rgba(0, 0, 0, 0.08);
+    width: 90%;
+    padding: 20px;
+    margin-top: 10px;
+  }
+}

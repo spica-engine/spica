@@ -12,16 +12,12 @@ export default {
     },
     {
       action: "webhook:update",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "webhook"
     },
     {
       action: "webhook:delete",
-      resource: {
-        include: "*"
-      },
+      resource: {include: ["*"], exclude: []},
       module: "webhook"
     },
     {

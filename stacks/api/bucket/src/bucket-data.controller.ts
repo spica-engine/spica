@@ -16,27 +16,48 @@ import {
   Query,
   Req,
   UseGuards,
-  UseInterceptors
+  UseInterceptors,
+  Inject,
+  Res
 } from "@nestjs/common";
-import {activity} from "@spica-server/activity/services";
+import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
 import {ChangeEmitter} from "@spica-server/bucket/hooks";
-import {BucketDocument, BucketService} from "@spica-server/bucket/services";
-import {ARRAY, BOOLEAN, BooleanCheck, DEFAULT, JSONP, JSONPR, NUMBER, OR} from "@spica-server/core";
+import {
+  BucketDataService,
+  BucketDocument,
+  BucketService,
+  isJSONFilter,
+  filterReviver
+} from "@spica-server/bucket/services";
+import {
+  ARRAY,
+  BOOLEAN,
+  BooleanCheck,
+  DEFAULT,
+  JSONP,
+  JSONPR,
+  NUMBER,
+  OR,
+  EXPRESSION
+} from "@spica-server/core";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
+import * as expression from "../expression";
 import {createBucketDataActivity} from "./activity.resource";
-import {BucketDataService} from "./bucket-data.service";
-import {applyPatch} from "./patch";
-import {clearRelations, createHistory, filterReviver, getRelationPaths} from "./relation";
 import {
+  deleteDocument,
   findDocuments,
   insertDocument,
-  replaceDocument,
   patchDocument,
-  deleteDocument
+  replaceDocument,
+  authIdToString
 } from "./crud";
+import {createHistory} from "./history";
+import {applyPatch} from "./patch";
+import {clearRelations, getRelationPaths, getDependents} from "./relation";
+
 /**
  * All APIs related to bucket documents.
  * @name data
@@ -48,7 +69,8 @@ export class BucketDataController {
     private bds: BucketDataService,
     private validator: Validator,
     @Optional() private changeEmitter: ChangeEmitter,
-    @Optional() private history: HistoryService
+    @Optional() private history: HistoryService,
+    @Optional() @Inject() private activityService: ActivityService
   ) {}
 
   /**
@@ -60,15 +82,15 @@ export class BucketDataController {
    * @param relation When true, relations in the documents will be replaced with the related document in the response.
    * @param localize When true, documents that have translations is localized to `accept-language`.
    * @param schedule When true, only scheduled documents is present.
-   * @param filter A JSON string that has conditions to filter documents. Example: `{"name": "James"}` OR `{"age": {$gt: 35}}`
-   * @param paginate When true, a meta property that contains the total number of documents are present.
+   * @param filter An expression to filter documents. Example: `name == James" `, `age > 35`, `age > 35 && age < 50`, `gender == "F" && age > 20`
+   * @param paginate When true, a meta property that contains the total number of documents is present.
    * @param limit The maximum amount documents that can be present in the response.
    * @param skip The amount of documents to skip.
    * @param sort A JSON string to sort the documents by its properties.
    * Example: Descending `{"name": -1}` OR Ascending `{"name": 1}`
    */
   @Get()
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
     @ResourceFilter() resourceFilter: object,
@@ -79,7 +101,8 @@ export class BucketDataController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("filter", JSONPR(filterReviver)) filter?: object,
+    @Query("filter", OR(isJSONFilter, JSONPR(filterReviver), EXPRESSION(expression.aggregate)))
+    filter?: string | object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
@@ -113,7 +136,7 @@ export class BucketDataController {
         schedule
       },
       {
-        collection: (bucketId: string) => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
@@ -131,7 +154,7 @@ export class BucketDataController {
    * @param localize When true, documents that have translations is localized to `accept-language`.
    */
   @Get(":documentId")
-  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show"))
+  @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
     @Req() req: any,
@@ -143,6 +166,10 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const relationPaths: string[][] = getRelationPaths(
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
@@ -153,7 +180,7 @@ export class BucketDataController {
         relationPaths,
         language: acceptedLanguage,
         limit: 1,
-        filter: {_id: documentId},
+        documentId: documentId,
         req,
         projectMap: []
       },
@@ -161,7 +188,7 @@ export class BucketDataController {
         localize
       },
       {
-        collection: (bucketId: string) => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
@@ -204,13 +231,18 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const document = await insertDocument(
       schema,
       rawDocument,
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
-        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
+        collection: schema => this.bds.children(schema),
+        schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
+        deleteOne: documentId => this.deleteOne(req, bucketId, documentId)
       }
     );
 
@@ -258,18 +290,22 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const previousDocument = await replaceDocument(
       schema,
       {...document, _id: documentId},
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     );
 
     if (!previousDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     const currentDocument = {...document, _id: documentId};
@@ -316,15 +352,30 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
-    const bkt = this.bds.children(bucketId);
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
+    const bkt = this.bds.children(schema);
 
     const previousDocument = await bkt.findOne({_id: documentId});
+
+    if (!previousDocument) {
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
+    }
 
     const patchedDocument = applyPatch(previousDocument, patch);
 
     await this.validator.validate({$ref: bucketId.toString()}, patchedDocument).catch(error => {
       throw new BadRequestException(
-        (error.errors || []).map(e => `${e.dataPath} ${e.message}`).join("\n"),
+        error.errors
+          ? error.errors
+              .map(e => {
+                const dataPath = e.dataPath.replace(/\//g, ".");
+                return `${dataPath} ${e.message}`;
+              })
+              .join("\n")
+          : [],
         error.message
       );
     });
@@ -335,14 +386,14 @@ export class BucketDataController {
       patch,
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       {returnOriginal: false}
     );
 
     if (!currentDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
@@ -378,18 +429,22 @@ export class BucketDataController {
   ) {
     const schema = await this.bs.findOne({_id: bucketId});
 
+    if (!schema) {
+      throw new NotFoundException(`Could not find the schema with id ${bucketId}`);
+    }
+
     const deletedDocument = await deleteDocument(
       schema,
       documentId,
       {req: req},
       {
-        collection: bucketId => this.bds.children(bucketId),
+        collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
     );
 
     if (!deletedDocument) {
-      return;
+      throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
     if (this.changeEmitter) {
@@ -411,5 +466,21 @@ export class BucketDataController {
     }
 
     await clearRelations(this.bs, bucketId, documentId);
+
+    const dependents = getDependents(schema, deletedDocument);
+
+    for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+      for (const targetDocId of targetDocIds) {
+        await this.deleteOne(req, new ObjectId(targetBucketId), new ObjectId(targetDocId));
+
+        if (this.activityService) {
+          const activities = createActivity(req, {body: []}, createBucketDataActivity);
+
+          if (activities.length) {
+            await this.activityService.insert(activities);
+          }
+        }
+      }
+    }
   }
 }

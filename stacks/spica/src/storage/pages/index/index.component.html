@@ -1,4 +1,4 @@
-<mat-toolbar *ngIf="storages$ | async">
+<mat-toolbar>
   <div>
     <h4 class="mat-h4">
       <mat-icon>filter_drama</mat-icon>
@@ -9,13 +9,48 @@
     </p>
   </div>
   <div class="actions">
+    <ng-container *ngIf="selectionActive">
+      <button mat-button (click)="selectionActive = false; selectedStorageIds = []">
+        <mat-icon>cancel</mat-icon>
+        Cancel
+      </button>
+      <ng-container *ngIf="storages$ | async; let storages">
+        <button
+          *ngIf="storages.length > selectedStorageIds.length"
+          mat-button
+          (click)="selectAll(storages)"
+        >
+          <mat-icon>select_all</mat-icon>
+          Select All
+        </button>
+      </ng-container>
+      <button
+        *ngIf="selectedStorageIds.length"
+        mat-button
+        color="warn"
+        [matAwareDialog]="{
+          title: 'Confirmation',
+          templateOrDescription: multipleDeleteDialogTemplate,
+          answer: 'agree'
+        }"
+        (confirm)="deleteMany(); selectionActive = false; selectedStorageIds = []"
+      >
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </ng-container>
+
+    <button *ngIf="!selectionActive && !isEmpty" mat-button (click)="selectionActive = true">
+      <mat-icon>check_box_outline_blank</mat-icon>
+      Select
+    </button>
     <button
       [style.visibility]="isEmpty ? 'hidden' : 'visible'"
       mat-button
       [matMenuTriggerFor]="menu"
     >
-      <mat-icon>filter_alt</mat-icon>
-      Filter
+      <mat-icon>sort</mat-icon>
+      Sort
       <mat-menu #menu="matMenu" class="storage-filter-menu">
         <button mat-menu-item (click)="sortStorage({direction: 'desc', name: 'name'})">
           Name (Descending)
@@ -32,7 +67,7 @@
       </mat-menu>
     </button>
 
-    <button mat-button>
+    <button mat-button (click)="clearLastUpdates()">
       <mat-icon>refresh</mat-icon>
       Refresh
     </button>
@@ -63,10 +98,29 @@
   </div>
 </mat-toolbar>
 
+<mat-progress-spinner
+  [style.visibility]="(loading$ | async) ? 'visible' : 'hidden'"
+  class="content-spinner"
+  color="accent"
+  [diameter]="40"
+  mode="indeterminate"
+></mat-progress-spinner>
 <mat-grid-list [cols]="cols" rowHeight="1:1" gutterSize="10px">
-  <mat-grid-tile *ngFor="let storage of storages$ | async; let i = index">
-    <mat-card class="mat-elevation-z25">
-      <mat-card-content>
+  <mat-grid-tile
+    [style.visibility]="(loading$ | async) ? 'hidden' : 'visible'"
+    *ngFor="let storage of storages$ | async; let i = index"
+  >
+    <mat-card
+      [class.unselected]="selectionActive && selectedStorageIds.indexOf(storage._id) == -1"
+      class="mat-elevation-z25"
+      (click)="
+        selectionActive &&
+          (selectedStorageIds.indexOf(storage._id) != -1
+            ? selectedStorageIds.splice(selectedStorageIds.indexOf(storage._id), 1)
+            : selectedStorageIds.push(storage._id))
+      "
+    >
+      <mat-card-content [style.pointer-events]="selectionActive ? 'none' : 'initial'">
         <storage-view
           mat-card-image
           matTooltip="View this object"
@@ -75,7 +129,7 @@
         >
         </storage-view>
       </mat-card-content>
-      <mat-card-actions>
+      <mat-card-actions [style.pointer-events]="selectionActive ? 'none' : 'initial'">
         <mat-label [matTooltip]="'Mime type: ' + storage?.content?.type">{{
           storage.name
         }}</mat-label>
@@ -103,7 +157,7 @@
               color="warn"
               [matAwareDialog]="{
                 title: 'Confirmation',
-                templateOrDescription: dialogTemplate,
+                templateOrDescription: deleteDialogTemplate,
                 answer: 'agree'
               }"
               (confirm)="delete(storage._id)"
@@ -119,12 +173,22 @@
 </mat-grid-list>
 <mat-paginator
   [style.visibility]="isEmpty ? 'hidden' : 'visible'"
-  [pageSize]="12"
-  [pageSizeOptions]="[12, 24, 46]"
+  [pageSize]="cols * 3"
+  [pageSizeOptions]="[cols * 3, cols * 6, cols * 9]"
 ></mat-paginator>
 
-<ng-template #dialogTemplate let-answer="answer">
+<ng-template #deleteDialogTemplate let-answer="answer">
   <p>This action will <b>permanently</b> delete this object and break all associations.</p>
+  <p>
+    Please type in <code>{{ answer }}</code> to confirm.
+  </p>
+</ng-template>
+
+<ng-template #multipleDeleteDialogTemplate let-answer="answer">
+  <p>
+    This action will <b>permanently</b> delete these
+    <code>{{ selectedStorageIds.length }}</code> objects and break all associations.
+  </p>
   <p>
     Please type in <code>{{ answer }}</code> to confirm.
   </p>

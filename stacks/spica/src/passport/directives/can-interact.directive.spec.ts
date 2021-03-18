@@ -6,27 +6,33 @@ import {of} from "rxjs";
 
 @Component({
   template: `
-    <button [canInteract]="condition" [resource]="id">Click here.</button>
+    <button [canInteract]="action" (click)="onclick()" [resource]="id">
+      Click here.
+    </button>
   `
 })
 class TestComponent {
   @ViewChild(CanInteractDirective, {static: true}) directive: CanInteractDirective;
-  condition = false;
+  action = "passport:identity:create";
   id = undefined;
+
+  onclick = jasmine.createSpy();
 }
 
 class TestPassportService {
-  checkAllowed = (value: boolean) => {
-    return of(value);
+  checkAllowed = (action: string) => {
+    // custom logic
+    if (action == "bucket:create") {
+      return of(true);
+    }
+
+    return of(false);
   };
 }
 
 describe("CanInteract", () => {
   let component: TestComponent;
   let fixture: ComponentFixture<TestComponent>;
-  let button: HTMLElement;
-  let setVisibleSpy: jasmine.Spy;
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
       declarations: [TestComponent, CanInteractDirective],
@@ -36,48 +42,78 @@ describe("CanInteract", () => {
     fixture = TestBed.createComponent(TestComponent);
     component = fixture.componentInstance;
 
-    setVisibleSpy = spyOn(component.directive, "setVisible").and.callThrough();
-
     fixture.detectChanges();
-
-    //wait until setting initial value from passport service
     await fixture.whenStable();
-    fixture.detectChanges();
-
-    button = fixture.debugElement.nativeElement.querySelector("button");
   });
 
-  it("shouldn't show button if condition is false", () => {
-    expect(setVisibleSpy).toHaveBeenCalledTimes(1);
-    expect(setVisibleSpy).toHaveBeenCalledWith(false, undefined);
-    expect(button.style.visibility).toEqual("hidden");
+  afterEach(() => {
+    component.onclick.calls.reset();
   });
 
-  it("should change visible property of button when condition changed", async () => {
-    setVisibleSpy.calls.reset();
+  it("should set button disable and show tooltip when hovered", () => {
+    const actualButtons = document.body.querySelector("button");
 
-    component.condition = true;
-    component.id = "test_id";
+    expect(actualButtons.style.display).toEqual("none");
+
+    const disabledButtons = document.body.querySelectorAll("button.ng-disabled-button");
+
+    expect(disabledButtons.length).toEqual(1);
+
+    disabledButtons[0].dispatchEvent(new Event("mouseenter"));
     fixture.detectChanges();
 
-    await fixture.whenStable();
+    const tooltips = document.querySelectorAll(".ng-tooltip-show");
+
+    expect(tooltips.length).toEqual(1);
+    expect(tooltips[0].textContent).toEqual(
+      "passport:identity:create is required for this action."
+    );
+
+    (disabledButtons[0] as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    expect(setVisibleSpy).toHaveBeenCalledTimes(1);
-    expect(setVisibleSpy).toHaveBeenCalledWith(true, "test_id");
-    expect(button.style.visibility).toEqual("visible");
+    expect(component.onclick).toHaveBeenCalledTimes(0);
   });
 
-  it("should not change visiblity if condition's previous and current values are equal", async () => {
-    setVisibleSpy.calls.reset();
+  it("should revert actual button", async () => {
+    component.action = "bucket:create";
 
-    component.condition = false;
     fixture.detectChanges();
-
     await fixture.whenStable();
+
+    const actualButton: HTMLElement = fixture.debugElement.nativeElement.querySelector("button");
+
+    (actualButton as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    expect(setVisibleSpy).toHaveBeenCalledTimes(0);
-    expect(button.style.visibility).toEqual("hidden");
+    expect(component.onclick).toHaveBeenCalledTimes(1);
+
+    const disabledButton = fixture.debugElement.nativeElement.querySelector(
+      "button.ng-disabled-button"
+    );
+
+    expect(disabledButton).toBeNull();
+  });
+
+  it("should not add one more disabled button if already exist, but update tooltip message", async () => {
+    component.action = "passport:identity:update";
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const disabledButtons = document.body.querySelectorAll("button.ng-disabled-button");
+
+    expect(disabledButtons.length).toEqual(1);
+
+    disabledButtons[0].dispatchEvent(new Event("mouseenter"));
+    fixture.detectChanges();
+
+    const tooltips = document.querySelectorAll(".ng-tooltip-show");
+
+    expect(tooltips.length).toEqual(1);
+
+    expect(tooltips[0].textContent).toEqual(
+      "passport:identity:update is required for this action."
+    );
   });
 });

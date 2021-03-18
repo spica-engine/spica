@@ -61,7 +61,10 @@ describe("ActionGuard", () => {
         statements: [
           {
             action: "bucket:data:show",
-            resource: ["test/test1/test1"],
+            resource: {
+              include: ["test/test1/test1"],
+              exclude: []
+            },
             module: "bucket:data"
           }
         ]
@@ -85,7 +88,8 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:show",
             resource: {
-              include: "*/*/test1"
+              include: ["*/*/test1"],
+              exclude: []
             },
             module: "bucket:data"
           }
@@ -133,7 +137,7 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:index",
             resource: {
-              include: "*/*",
+              include: ["*/*"],
               exclude: ["test1/*"]
             },
             module: "bucket:data"
@@ -161,7 +165,7 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:show",
             resource: {
-              include: "*/*",
+              include: ["*/*"],
               exclude: ["bucket/*"]
             },
             module: "bucket:data"
@@ -187,7 +191,7 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:index",
             resource: {
-              include: "*/*",
+              include: ["*/*"],
               exclude: ["test1/*"]
             },
             module: "bucket:data"
@@ -195,7 +199,7 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:index",
             resource: {
-              include: "*/*",
+              include: ["*/*"],
               exclude: ["test1/test2", "test1/test3"]
             },
             module: "bucket:data"
@@ -223,7 +227,7 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:show",
             resource: {
-              include: "test/test1",
+              include: ["test/test1"],
               exclude: ["test/test2"]
             },
             module: "bucket:data"
@@ -249,7 +253,7 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:index",
             resource: {
-              include: "*/*",
+              include: ["*/*"],
               exclude: ["test/test1"]
             },
             module: "bucket:data"
@@ -257,7 +261,7 @@ describe("ActionGuard", () => {
           {
             action: "bucket:data:index",
             resource: {
-              include: "*/*",
+              include: ["*/*"],
               exclude: ["test/test2"]
             },
             module: "bucket:data"
@@ -286,7 +290,7 @@ describe("ActionGuard", () => {
           {
             action: "custom",
             resource: {
-              include: "*/*",
+              include: ["*/*"],
               exclude: ["test/row1"]
             },
             module: ""
@@ -310,25 +314,33 @@ describe("ActionGuard", () => {
       statements: [
         {
           action: "bucket:data:index",
-          resource: ["test/test1"],
-          module: "bucket:data"
-        },
-        {
-          action: "bucket:data:index",
-          resource: ["test/test2"],
-          module: "bucket:data"
-        },
-        {
-          action: "bucket:data:index",
           resource: {
-            include: "test/*"
+            include: ["test/test1"],
+            exclude: []
           },
           module: "bucket:data"
         },
         {
           action: "bucket:data:index",
           resource: {
-            include: "test/test3"
+            include: ["test/test2"],
+            exclude: []
+          },
+          module: "bucket:data"
+        },
+        {
+          action: "bucket:data:index",
+          resource: {
+            include: ["test/*"],
+            exclude: []
+          },
+          module: "bucket:data"
+        },
+        {
+          action: "bucket:data:index",
+          resource: {
+            include: ["test/test3"],
+            exclude: []
           },
           module: "bucket:data"
         }
@@ -355,14 +367,16 @@ describe("ActionGuard", () => {
         {
           action: "bucket:data:index",
           resource: {
-            include: "test/*"
+            include: ["test/*"],
+            exclude: []
           },
           module: "bucket:data"
         },
         {
           action: "bucket:data:index",
           resource: {
-            include: "test/test_1"
+            include: ["test/test_1"],
+            exclude: []
           },
           module: "bucket:data"
         }
@@ -388,7 +402,8 @@ describe("ActionGuard", () => {
         {
           action: "bucket:data:index",
           resource: {
-            include: "test/not_evaluated_yet"
+            include: ["test/not_evaluated_yet"],
+            exclude: []
           },
           module: "bucket:data"
         }

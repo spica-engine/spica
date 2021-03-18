@@ -1,15 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {BucketService} from "@spica-server/bucket/services";
+import {BucketSchemaResolver} from "@spica-server/bucket/src/bucket.schema.resolver";
 import {SchemaModule} from "@spica-server/core/schema";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
-import {
-  BucketSchemaResolver,
-  provideBucketSchemaResolver,
-  getCustomKeywords
-} from "@spica-server/bucket/src/bucket.schema.resolver";
-import {Subject, Observable} from "rxjs";
-import {take, bufferCount} from "rxjs/operators";
+import {Observable, Subject} from "rxjs";
+import {bufferCount, take} from "rxjs/operators";
 
 describe("Bucket Schema Resolver", () => {
   class MockBucketService {
@@ -54,7 +50,7 @@ describe("Bucket Schema Resolver", () => {
         type: "string",
         title: "title",
         description: "Title of the row",
-        options: {position: "left", visible: true}
+        options: {position: "left"}
       },
       description: {
         type: "textarea",
@@ -66,7 +62,7 @@ describe("Bucket Schema Resolver", () => {
         type: "string",
         title: "translatable text",
         description: "Text of the row",
-        options: {position: "left", visible: true, translate: true}
+        options: {position: "left", translate: true}
       }
     }
   };
@@ -219,52 +215,5 @@ describe("Bucket Schema Resolver", () => {
       } as any
     ]);
     // IMPORTANT: Do not remove "as any" otherwise the compiler will hang forever.
-  });
-
-  describe("provideBucketSchemaResolver", () => {
-    let validator;
-    let bucketService;
-    beforeEach(() => {
-      validator = {
-        registerUriResolver: jasmine.createSpy("registerUriResolver"),
-        registerKeyword: jasmine.createSpy("registerKeyword"),
-        _defaults: {
-          get: jasmine.createSpy("_defaults.get").and.returnValue(undefined)
-        }
-      };
-      bucketService = {
-        watchPreferences: jasmine.createSpy("watchPreferences"),
-        watch: jasmine.createSpy("watch")
-      };
-    });
-    it("should register uri resolver and keyword", () => {
-      let resolver = provideBucketSchemaResolver(validator as any, bucketService as any);
-
-      expect(resolver).toEqual(jasmine.any(BucketSchemaResolver));
-
-      expect(validator.registerUriResolver).toHaveBeenCalledTimes(1);
-      expect(validator.registerUriResolver).toEqual(jasmine.any(Function));
-
-      expect(validator.registerKeyword).toHaveBeenCalledTimes(2);
-      expect(validator.registerKeyword.calls.first().args[0]).toEqual(
-        "default",
-        "should work when custom default keyword registered "
-      );
-    });
-
-    it("should put default value", () => {
-      let compile = getCustomKeywords(validator)[0].def.compile;
-
-      let defaultValue = "default_value";
-      let bucketProperty = {type: "string", readOnly: true, default: "default_value"};
-      let sendedValue = "new_value";
-      let sendedData = {field: "new_value", field2: "test"};
-
-      let logic = compile(defaultValue, bucketProperty, {dataLevel: 1});
-
-      logic(sendedValue, ".field", sendedData);
-
-      expect(sendedData).toEqual({field: "default_value", field2: "test"});
-    });
   });
 });

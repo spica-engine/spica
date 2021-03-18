@@ -21,14 +21,17 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {OwlDateTimeModule} from "@danielmoncada/angular-datetime-picker";
-import {CommonModule as SpicaCommon, InputModule} from "@spica-client/common";
+import {
+  CommonModule as SpicaCommon,
+  InputModule,
+  PersistHeaderWidthDirective
+} from "@spica-client/common";
 import {MatAwareDialogModule, MatClipboardModule} from "@spica-client/material";
 import {MatResizeHeaderModule} from "@spica-client/material/resize";
 import {of, Subject} from "rxjs";
 import {map} from "rxjs/operators";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {FilterComponent} from "../../components/filter/filter.component";
-import {PersistHeaderWidthDirective} from "../../directives/persist-header-width/persist-header-width.directive";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
@@ -141,7 +144,12 @@ describe("IndexComponent", () => {
         title: "My Bucket",
         description: "My bucket's description.",
         icon: "test",
-        properties: {}
+        primary: "test",
+        properties: {
+          test: {
+            type: "string"
+          }
+        }
       });
       fixture.detectChanges();
       expect(
@@ -164,8 +172,13 @@ describe("IndexComponent", () => {
 
     it("should show readonly badge", () => {
       bucket.next({
+        primary: "test",
         readOnly: true,
-        properties: {}
+        properties: {
+          test: {
+            type: "string"
+          }
+        }
       });
       fixture.detectChanges();
       expect(
@@ -178,8 +191,13 @@ describe("IndexComponent", () => {
 
     it("should remove add button when readonly", () => {
       bucket.next({
+        primary: "test",
         readOnly: true,
-        properties: {}
+        properties: {
+          test: {
+            type: "string"
+          }
+        }
       });
       fixture.detectChanges();
 
@@ -196,6 +214,7 @@ describe("IndexComponent", () => {
     beforeEach(() => {
       bucket.next({
         _id: "1",
+        primary: "test",
         properties: {
           test: {
             title: "test",
@@ -263,16 +282,14 @@ describe("IndexComponent", () => {
               title: "test",
               type: "string",
               options: {
-                position: "bottom",
-                visible: true
+                position: "bottom"
               }
             },
             test2: {
               title: "test2",
               type: "string",
               options: {
-                position: "bottom",
-                visible: true
+                position: "bottom"
               }
             }
           }
@@ -285,14 +302,14 @@ describe("IndexComponent", () => {
       it("should not render select when readonly", () => {
         bucket.next({
           _id: "1",
+          primary: "test",
           readOnly: true,
           properties: {
             test: {
               title: "test",
               type: "string",
               options: {
-                position: "bottom",
-                visible: true
+                position: "bottom"
               }
             }
           }
@@ -309,45 +326,6 @@ describe("IndexComponent", () => {
           )
         ).toEqual(["Display all", "_id", "test", "Scheduled", "Actions"]);
       });
-
-      it("should check visible columns by default", fakeAsync(() => {
-        bucket.next({
-          _id: "1",
-          readOnly: true,
-          properties: {
-            test: {
-              title: "test",
-              type: "string",
-              options: {
-                position: "bottom",
-                visible: true
-              }
-            },
-            test1: {
-              title: "test1",
-              type: "string",
-              options: {
-                position: "bottom"
-              }
-            }
-          }
-        });
-        fixture.detectChanges();
-
-        fixture.debugElement
-          .query(By.css("mat-toolbar > div.actions > button:nth-of-type(3)"))
-          .nativeElement.click();
-        fixture.detectChanges();
-
-        tick(1);
-        fixture.detectChanges();
-
-        const columns = document.body.querySelectorAll<HTMLInputElement>(
-          ".mat-menu-content .mat-menu-item mat-checkbox"
-        );
-        expect(columns.item(2).classList).toContain("mat-checkbox-checked");
-        expect(columns.item(3).classList).not.toContain("mat-checkbox-checked");
-      }));
 
       it("should display later checked properties", fakeAsync(() => {
         fixture.componentInstance.displayedProperties = [];
@@ -422,8 +400,7 @@ describe("IndexComponent", () => {
             title: "test",
             type: "string",
             options: {
-              position: "bottom",
-              visible: true
+              position: "bottom"
             }
           }
         }
@@ -468,7 +445,7 @@ describe("IndexComponent", () => {
         tick();
         fixture.detectChanges();
 
-        expect(fixture.componentInstance.selectedItems).toContain("1");
+        expect(fixture.componentInstance.selectedItems).toContain({_id: "1", test: "123"});
         expect(
           fixture.debugElement.nativeElement.querySelector(
             "table[mat-table] tr[mat-header-row] th[mat-header-cell]:first-of-type mat-checkbox"
@@ -500,11 +477,11 @@ describe("IndexComponent", () => {
           ).classList
         ).toContain("mat-checkbox-checked");
         expect(selectAllCheckbox.classList).toContain("mat-checkbox-checked");
-        expect(fixture.componentInstance.selectedItems).toEqual(["1"]);
+        expect(fixture.componentInstance.selectedItems).toEqual([{_id: "1", test: "123"}]);
       }));
 
       it("should show delete action", () => {
-        fixture.componentInstance.selectedItems.push("1");
+        fixture.componentInstance.selectedItems.push({_id: "1", test: "123"});
         fixture.detectChanges();
         expect(
           fixture.debugElement.nativeElement.querySelector(
@@ -585,14 +562,14 @@ describe("IndexComponent", () => {
   describe("readonly", () => {
     beforeEach(() => {
       bucket.next({
+        primary: "test",
         readOnly: true,
         properties: {
           test: {
             title: "test",
             type: "string",
             options: {
-              position: "bottom",
-              visible: true
+              position: "bottom"
             }
           }
         }
@@ -623,13 +600,13 @@ describe("IndexComponent", () => {
     beforeEach(() => {
       bucket.next({
         _id: "1",
+        primary: "test",
         properties: {
           test: {
             title: "test",
             type: "string",
             options: {
-              position: "bottom",
-              visible: true
+              position: "bottom"
             }
           }
         }

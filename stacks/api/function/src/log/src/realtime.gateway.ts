@@ -46,9 +46,9 @@ export class LogGateway implements OnGatewayConnection {
 
     options.filter = {
       ...options.filter,
-      _id: {
-        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-        $lt: ObjectId.createFromTime(end.getTime() / 1000)
+      created_at: {
+        $gte: begin,
+        $lt: end
       }
     };
 

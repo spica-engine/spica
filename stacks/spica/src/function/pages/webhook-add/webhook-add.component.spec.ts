@@ -19,7 +19,7 @@ import {EditorModule} from "@spica-client/common/code-editor";
 import {LayoutModule} from "@spica-client/core/layout";
 import {MatSaveModule} from "@spica-client/material";
 import {of, Subject} from "rxjs";
-import {CanInteractDirectiveTest} from "../../../passport/directives/can-interact.directive";
+import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {HandlebarsLanguageDirective} from "../../components/editor/handlebars.language";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";

@@ -38,6 +38,23 @@ export function JSONPR(reviver?: (key: string, value: any) => any): PipeTransfor
   };
 }
 
+export function EXPRESSION(
+  aggregate: (value: string, context: unknown) => any
+): PipeTransform<string, string> {
+  return {
+    transform: value => {
+      if (typeof value == "string") {
+        try {
+          aggregate(value, {});
+        } catch (error) {
+          throw new HttpException(error.message, 400);
+        }
+      }
+      return value;
+    }
+  };
+}
+
 export function DEFAULT<T = unknown>(defaultValue: T | (() => T)): PipeTransform<any, T> {
   return {
     transform: value => {
@@ -86,15 +103,16 @@ export function BooleanCheck(value) {
 export function OR(
   condition: (value) => boolean,
   coerceTrue: PipeTransform,
-  coerceFalse: PipeTransform
+  coerceFalse?: PipeTransform
 ): PipeTransform {
   return {
     transform: value => {
       if (condition(value)) {
         return coerceTrue.transform(value, undefined);
-      } else {
+      } else if (coerceFalse) {
         return coerceFalse.transform(value, undefined);
       }
+      return value;
     }
   };
 }

@@ -42,12 +42,22 @@
     }
   }
 
+  mat-progress-spinner.content-spinner {
+    margin: auto;
+  }
+
+  .unselected {
+    opacity: 0.5;
+    transform: scale(0.9);
+  }
+
   mat-grid-list {
     margin: 30px;
     margin-top: -85px;
     overflow: hidden;
 
     mat-card {
+      transition: all 0.4s;
       width: 100%;
       padding-top: 0px;
       overflow: hidden;

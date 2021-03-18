@@ -118,12 +118,7 @@ export class ApiKeyController {
   @UseInterceptors(activity(createApikeyActivity))
   @Put(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:add"))
-  async addPolicy(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId
-  ) {
-    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
-
+  async addPolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.apiKeyService.findOneAndUpdate(
       {
         _id: id
@@ -145,12 +140,7 @@ export class ApiKeyController {
   @UseInterceptors(activity(createApikeyActivity))
   @Delete(":id/policy/:policyId")
   @UseGuards(AuthGuard(), ActionGuard("passport:apikey:policy:remove"))
-  async removePolicy(
-    @Param("id", OBJECT_ID) id: ObjectId,
-    @Param("policyId") policyId: string | ObjectId
-  ) {
-    policyId = ObjectId.isValid(policyId) ? new ObjectId(policyId) : policyId;
-
+  async removePolicy(@Param("id", OBJECT_ID) id: ObjectId, @Param("policyId") policyId: string) {
     return this.apiKeyService.findOneAndUpdate(
       {
         _id: id

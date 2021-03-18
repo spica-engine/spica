@@ -7,6 +7,7 @@ import {IndexComponent} from "./pages/index/index.component";
 import {LogViewComponent} from "./pages/log-view/log-view.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {FunctionIndexGuard} from "./resolvers/function.guard";
+import {FunctionCanDeactivate} from "./resolvers/deactivate.guard";
 
 const routes: Routes = [
   {
@@ -21,7 +22,12 @@ const routes: Routes = [
         component: IndexComponent,
         data: {action: "index"}
       },
-      {path: "add", component: AddComponent, data: {action: "create"}},
+      {
+        path: "add",
+        component: AddComponent,
+        data: {action: "create"},
+        canDeactivate: [FunctionCanDeactivate]
+      },
       {
         canActivate: [FunctionIndexGuard],
         path: "logs",
@@ -32,7 +38,8 @@ const routes: Routes = [
         canActivate: [FunctionIndexGuard],
         path: ":id",
         component: AddComponent,
-        data: {action: "show"}
+        data: {action: "show"},
+        canDeactivate: [FunctionCanDeactivate]
       }
     ]
   }
@@ -60,7 +67,8 @@ const route: Route[] = [
     id: `list_all_functions`,
     icon: "format_list_numbered",
     path: `/function`,
-    display: "Functions"
+    display: "Functions",
+    data: {action: "function:index"}
   },
   {
     category: RouteCategory.Developer_Sub,
@@ -72,12 +80,14 @@ const route: Route[] = [
       begin: new Date(new Date().setHours(0, 0, 0, 0)),
       end: new Date(new Date().setHours(23, 59, 59, 999)),
       showErrors: true
-    }
+    },
+    data: {action: "function:logs:index"}
   }
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],
-  exports: [RouterModule, RouteModule]
+  exports: [RouterModule, RouteModule],
+  providers: [FunctionCanDeactivate]
 })
 export class FunctionRoutingModule {}

@@ -1,53 +1,70 @@
 {  
-  function __cel$ltr__(lhs, rhs)  { 
-    return rhs.reduce( (t,h) => ({...h, lhs: t}), lhs) 
-  }  
+  function _ltr_(left, right)  {
+  
+    const node = right.reduce( (left, head) => {
+      return {...head, left};
+    }, left); 
+
+    if ( node.left ) {
+      node.left.parent = node;
+    } 
+    if ( node.right ) {
+      node.right.parent = node;
+    }
+
+    return node;
+  }
+
 }
 
 
 Expr // "Common Expression"
-  = t:ConditionalOr  "?"  s:Expr  ":"   p:Expr
-	{ return {kind: "operator", type: "conditional", category:"tenary", primary:p, rhs:p, tertiary:t} }    
+  = test:ConditionalOr  WHITESPACE "?" WHITESPACE consequent:Expr WHITESPACE ":" WHITESPACE alternative:Expr
+	{ 
+    return {
+      kind: "operator", type: "conditional", category:"tenary", test, consequent, alternative
+    } 
+  }    
   / ConditionalOr
 
 
-ConditionalOr = lhs:ConditionalAnd rhs:(ConditionalOrOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+ConditionalOr = left:ConditionalAnd right:(ConditionalOrOperation)* { 
+  return _ltr_(left, right) 
 } 
-ConditionalOrOperation = WHITESPACE "||" WHITESPACE rhs:ConditionalAnd { 
-  return {kind: "operator", type:"or", category:"binary", rhs} 
+ConditionalOrOperation = WHITESPACE "||" WHITESPACE right:ConditionalAnd { 
+  return {kind: "operator", type:"or", category:"binary", right} 
 }
 
 
-ConditionalAnd = lhs:Relation rhs:(ConditionalAndOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+ConditionalAnd = left:Relation right:(ConditionalAndOperation)* { 
+  return _ltr_(left, right) 
 } 
-ConditionalAndOperation = WHITESPACE "&&" WHITESPACE rhs:Relation { 
-  return {kind: "operator", type:"and", category:"binary", rhs}
+ConditionalAndOperation = WHITESPACE "&&" WHITESPACE right:Relation { 
+  return {kind: "operator", type:"and", category:"binary", right}
 }
 
 
-Relation = lhs:Addition rhs:(RelationOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+Relation = left:Addition right:(RelationOperation)* { 
+  return _ltr_(left, right) 
 } 
-RelationOperation = WHITESPACE type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in") WHITESPACE  rhs:Addition { 
-  return {kind: "operator", type, category:"binary", rhs} 
+RelationOperation = WHITESPACE type:("<=" / "<" / ">=" / ">" / "==" / "!=" / "in") WHITESPACE  right:Addition { 
+  return {kind: "operator", type, category:"binary", right} 
 }
 
 
-Addition = lhs:Multiplication rhs:(AdditionOperation)* { 
-  return __cel$ltr__(lhs, rhs)
+Addition = left:Multiplication right:(AdditionOperation)* { 
+  return _ltr_(left, right)
 } 
-AdditionOperation = WHITESPACE type:("+" / "-") WHITESPACE rhs:Multiplication { 
-  return {kind: "operator", type, category:"binary", rhs} 
+AdditionOperation = WHITESPACE type:("+" / "-") WHITESPACE right:Multiplication { 
+  return {kind: "operator", type, category:"binary", right} 
 }
 
 
-Multiplication = lhs:Unary rhs:(MultiplicationOperation)* { 
-  return __cel$ltr__(lhs, rhs) 
+Multiplication = left:Unary right:(MultiplicationOperation)* { 
+  return _ltr_(left, right) 
 } 
-MultiplicationOperation = WHITESPACE type:("*" / "/" / "%") WHITESPACE rhs:Unary { 
-  return {kind: "operator", type, category:"binary", rhs} 
+MultiplicationOperation = WHITESPACE type:("*" / "/" / "%") WHITESPACE right:Unary { 
+  return {kind: "operator", type, category:"binary", right} 
 }
 
 Unary      
@@ -56,32 +73,27 @@ Unary
   / "-" "-"* member:Member { return {kind: "unary", type: "negative", member} }
 
 Member
-  = lhs:(LITERAL / Atomic) rhs:(MemberOperation)* { return __cel$ltr__(lhs, rhs) }
+  = left:(LITERAL / Atomic / IDENT) right:(MemberOperation)* { return _ltr_(left, right) }
 
 MemberOperation
-  =  "."  rhs:Atomic { return { kind: "operator", type:"select", category:"binary", rhs } }
-  /  "["  rhs:Expr  "]" { return { kind: "operator", type:"index", category:"binary", rhs } }
-  /  "{"  rhs:FieldInits  "}" { return { kind: "operator", type:"construct", category:"binary", rhs } }
-  /  "("  args:ExprList  ")" { return { kind: "call", arguments: args.expressions } }
+  =  "."  right:(Atomic / CHILDIDENT)  { return { kind: "operator", type:"select", category:"binary", right } }
+  /  "["  right:Expr  "]" { return { kind: "operator", type:"index", category:"binary", right } }
+  /  "{"  right:FieldInits  "}" { return { kind: "operator", type:"construct", category:"binary", right } }
+  /  "("  args:ExprList  ")" { return { kind: "call", arguments: args } }
  
  
 Atomic
   = "["  exprList:ExprList  "]" { return exprList }
   / "{"  mapInits:MapInits  "}" { return mapInits }
   / "("  expr:Expr  ")" { return expr }
-  / "."  primary:IDENT { return {kind: "operator", type: "fully_qualify", category:"unary", primary}}
-  / IDENT
+  / "."  primary:CHILDIDENT { return {kind: "operator", type: "fully_qualify", category:"unary", primary}}
 
-
-ExprList       = lhs:Expr rhs:("," expr:Expr {return expr})* {
-	const expressions = [lhs];
-	if (rhs) {
-		expressions.push(...rhs);
+ExprList = WHITESPACE left:(Expr / "") WHITESPACE right:("," WHITESPACE expr:Expr WHITESPACE {return expr})* {
+	const expressions = left != "" ? [left] : [];
+	if (right) {
+		expressions.push(...right);
 	} 
-	return {
-		kind: "expressionlist",
-		expressions
-	}
+	return expressions;
 }
 FieldInits     = IDENT ":" Expr ("," IDENT ":" Expr)*
 MapInits       = Expr ":" Expr ("," Expr ":" Expr)*
@@ -92,6 +104,9 @@ IDENT = !RESERVED [_a-zA-Z][_a-zA-Z0-9]*  {
 	return {kind: "identifier", name: text()} 
 }
 
+CHILDIDENT = [_a-zA-Z][_a-zA-Z0-9]*  { 
+	return {kind: "identifier", name: text()} 
+}
 
 LITERAL = value:FLOAT_LIT { return { kind: "literal", type: "double", value } }
         / value:UINT_LIT { return { kind: "literal", type: "uint", value } }
@@ -168,10 +183,10 @@ ESCAPE = "\\" eskey:$[bfnrt"'\\] {
 NEWLINE        = [\r\n] / [\r] / [\n]
 BOOL_LIT       = "true" / "false"
 NULL_LIT       = "null"
-RESERVED       = BOOL_LIT / NULL_LIT / "in"
+RESERVED       = ( BOOL_LIT / NULL_LIT / "in"
                  / "as" / "break" / "const" / "continue" / "else"
                  / "for" / "function" / "if" / "import" / "let"
                  / "loop" / "package" / "namespace" / "return"
-                 / "var" / "void" / "while"
+                 / "var" / "void" / "while" ) ![_a-zA-Z0-9]
 WHITESPACE     = [\t\n\f\r ]*
 COMMENT        = '//'

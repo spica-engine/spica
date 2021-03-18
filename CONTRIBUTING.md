@@ -205,6 +205,7 @@ Must be one of the following:
 - **refactor**: A code change that neither fixes a bug nor adds a feature
 - **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - **test**: Adding missing tests or correcting existing tests
+- **deprecate**: Deprecation of some module, feature, package etc
 
 ### Scope
 
@@ -225,8 +226,6 @@ The following is the list of supported scopes:
 There are currently a few exceptions to the "use package name" rule:
 
 - **changelog**: used for updating the release notes in CHANGELOG.md
-- **docs-infra**: used for site (spicaengine.com) related changes within the /docs/site directory of the
-  repo
 - none/empty string: useful for `style`, `test` and `refactor` changes that are done across all
   packages (e.g. `style: add missing semicolons`) and for docs changes that are not related to a
   specific package (e.g. `docs: fix typo in tutorial`).

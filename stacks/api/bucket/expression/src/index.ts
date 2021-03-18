@@ -23,3 +23,14 @@ export function extractPropertyMap(expression: string) {
 }
 
 func.register("has", builtin.has);
+
+// array comparison
+func.register("some", builtin.some);
+func.register("every", builtin.every);
+func.register("equal", builtin.equal);
+
+func.register("regex", builtin.regex);
+
+// date
+func.register("unixTime", builtin.unixTime);
+func.register("now", builtin.now);

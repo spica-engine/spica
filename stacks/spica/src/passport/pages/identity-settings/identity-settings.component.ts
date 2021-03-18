@@ -1,10 +1,9 @@
 import {Component, OnInit, ViewChild} from "@angular/core";
 import {Router, ActivatedRoute} from "@angular/router";
-import {PreferencesMeta, PreferencesService} from "@spica-client/core";
-import {JSONSchema7TypeName} from "json-schema";
-import {InputSchema} from "@spica-client/common";
+import {PreferencesService} from "@spica-client/core";
 import {moveItemInArray, CdkDragDrop} from "@angular/cdk/drag-drop";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
+import {PassportPreference} from "../../interfaces/preferences";
 import {flatMap, map, filter, takeUntil} from "rxjs/operators";
 import {IdentityService} from "../../services/identity.service";
 import {Subject} from "rxjs";
@@ -18,8 +17,20 @@ export class IdentitySettingsComponent implements OnInit {
   @ViewChild("toolbar", {static: true}) toolbar;
 
   preferences: PassportPreference;
-  public basicPropertyTypes = ["string", "textarea", "boolean", "number"];
+  public basicPropertyTypes = ["string", "boolean", "number"];
   selectedInput: string;
+
+  forbiddenTypes = [
+    "relation",
+    "date",
+    "storage",
+    "location",
+    "array",
+    "object",
+    "richtext",
+    "color",
+    "textarea"
+  ];
 
   private onDestroy: Subject<void> = new Subject<void>();
 
@@ -82,7 +93,7 @@ export class IdentitySettingsComponent implements OnInit {
     this.preferencesService
       .replaceOne(this.preferences)
       .toPromise()
-      .then(() => this.router.navigate(["/passport/identity"]));
+      .then(() => this.router.navigate(["/passport/identity"], {state: {skipSaveChanges: true}}));
   }
 
   cardDrop(event: CdkDragDrop<PassportPreference[]>) {
@@ -99,23 +110,3 @@ export class IdentitySettingsComponent implements OnInit {
     );
   }
 }
-
-export interface PassportPreference extends PreferencesMeta {
-  identity: {
-    attributes: {
-      required: string[];
-      properties: {
-        [key: string]: Property;
-      };
-    };
-  };
-}
-
-export interface PropertyOptions {
-  type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
-  options?: {
-    visible?: boolean;
-  };
-}
-
-export type Property = InputSchema & PropertyOptions;

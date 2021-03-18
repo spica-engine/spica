@@ -3,13 +3,8 @@
     <mat-icon>bug_report</mat-icon>
     <span>Function Logs</span>
   </h4>
-  <div matTooltip="You should choose a function filter to clear logs">
-    <button
-      mat-button
-      canInteract="function:logs:delete"
-      (click)="clearLogs()"
-      [disabled]="!(queryParams | async)?.function.length"
-    >
+  <div>
+    <button mat-button canInteract="function:logs:delete" (click)="clearLogs()">
       <mat-icon>clear_all</mat-icon>
       Clear
     </button>
@@ -73,7 +68,7 @@
   <mat-card-content>
     <mat-accordion>
       <cdk-virtual-scroll-viewport
-        itemSize="50"
+        itemSize="75"
         [minBufferPx]="bufferSize"
         [maxBufferPx]="bufferSize * 1.1"
         class="log-viewport"

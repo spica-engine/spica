@@ -1,10 +1,11 @@
 import {Test, TestingModule} from "@nestjs/testing";
-import {BucketDataService, BucketModule} from "@spica-server/bucket";
+import {BucketModule} from "@spica-server/bucket";
+import {BucketDataService} from "@spica-server/bucket/services";
 import {DocumentScheduler} from "@spica-server/bucket/src/scheduler";
 import {
+  DatabaseService,
   DatabaseTestingModule,
   ObjectId,
-  DatabaseService,
   stream
 } from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";

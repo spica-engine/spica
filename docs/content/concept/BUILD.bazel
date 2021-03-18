@@ -1,8 +1,0 @@
-package(default_visibility = ["//visibility:public"])
-
-load("//tools/dgeni:index.bzl", "docs")
-
-docs(
-    name = "concept",
-    srcs = glob(["*.md"]),
-)

@@ -1,16 +1,40 @@
 import {getMostLeftSelectIdentifier} from "./ast";
 
 function visit(node) {
+  if (Array.isArray(node)) {
+    return visitItems(node);
+  }
   switch (node.kind) {
     case "operator":
       return visitNode(node);
     case "identifier":
       return visitIdentifier(node);
     case "call":
-      return visitNode(node.arguments[0]);
+      return visitItems(node.arguments);
     case "unary":
       return visitUnary(node);
   }
+}
+
+function visitItems(args: unknown[]): unknown[] {
+  const finalResult = [];
+  for (const arg of args) {
+    if (Array.isArray(arg)) {
+      const extracteds = visitItems(arg);
+      finalResult.push(...extracteds);
+      continue;
+    }
+
+    const result = visit(arg);
+
+    if (Array.isArray(result)) {
+      finalResult.push(...result);
+    } else if (result != undefined) {
+      finalResult.push(result);
+    }
+  }
+
+  return finalResult;
 }
 
 function visitIdentifier(node) {
@@ -31,7 +55,7 @@ function visitUnaryNot(node) {
 }
 
 function visitBinaryOperatorSelect(node) {
-  const lhs = visit(node.lhs);
+  const left = visit(node.left);
 
   const mostLeft = getMostLeftSelectIdentifier(node);
 
@@ -39,12 +63,12 @@ function visitBinaryOperatorSelect(node) {
     return undefined;
   }
 
-  const rhs = visit(node.rhs);
+  const right = visit(node.right);
 
-  let path = `${lhs}.${rhs}`;
+  let path = `${left}.${right}`;
 
-  if (lhs == "document") {
-    path = rhs;
+  if (left == "document") {
+    path = right;
   }
 
   return path;
@@ -55,23 +79,23 @@ function visitNode(node) {
     const result = visitBinaryOperatorSelect(node);
     return result ? [result] : [];
   }
-  const lhs = visit(node.lhs);
-  const rhs = visit(node.rhs);
+  const left = visit(node.left);
+  const right = visit(node.right);
   const result = [];
 
-  if (lhs) {
-    if (Array.isArray(lhs)) {
-      result.push(...lhs);
+  if (left) {
+    if (Array.isArray(left)) {
+      result.push(...left);
     } else {
-      result.push(lhs);
+      result.push(left);
     }
   }
 
-  if (rhs) {
-    if (Array.isArray(rhs)) {
-      result.push(...rhs);
+  if (right) {
+    if (Array.isArray(right)) {
+      result.push(...right);
     } else {
-      result.push(rhs);
+      result.push(right);
     }
   }
 

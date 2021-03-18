@@ -1,5 +1,5 @@
-import commonjs from "rollup-plugin-commonjs";
-import resolve from "rollup-plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
+import resolve from "@rollup/plugin-node-resolve";
 import json from "@rollup/plugin-json";
 
 module.exports = {
@@ -13,5 +13,5 @@ module.exports = {
     commonjs(),
     json()
   ],
-  external: ["mongodb", "node-fetch", "ws"]
+  external: ["mongodb", "axios", "ws"]
 };

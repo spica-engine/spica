@@ -1,29 +1,27 @@
 <p align="center">
-  <img src="/docs/site/src/assets/images/spica-dark.png">
+  <img height="200px" src="stacks/spica/assets/astro-composer-filled.svg">
 </p>
 
+# Spica - development engine [![Build status](https://badge.buildkite.com/231efc3a5086b0db36206b21f04ee665939ca9186505894312.svg?style=square)](https://buildkite.com/spica/default)
 
-# Spica - Development Engine [![Build status](https://badge.buildkite.com/231efc3a5086b0db36206b21f04ee665939ca9186505894312.svg)](https://buildkite.com/spica/default)
+Spica is not a framework, it's a full-fledged free and open-source development platform. We aim cost-efficient, fast and reliable development. Spica fulfills the needs of development among other things such as:
 
-Spica is not a framework, it's a full-fledged free and open-source development engine. We aim cost-efficient, fast and reliable development. Spica fulfills the needs of development among other things such as:
-
-* Data modeling with **Bucket** module.
-* Custom behavior implementation with **Function** module.
-* Resource based identity management with **Passport** module.
-* Platform agnostic build with API-first approach.
-
+- Data modeling with **Bucket** module and support for GraphQL
+- Custom behavior implementation with **Function** module.
+- Resource based identity management with **Passport** module.
+- Platform agnostic build with API-first approach.
 
 ### Spica is free and always will be! :v:
 
 ## Quick Start
+
 ```bash
 # Install the CLI
 npm install -g @spica/cli
 
 # Start a fresh server
-spica serve my-first-server
+spica project start my-first-server
 ```
-
 
 #### Alternatively, you can check out the example which is already up and running
 
@@ -37,19 +35,19 @@ password: spica
 
 ## Packages
 
-| Project | Package | Version | Size | Downloads |
-|:-:|:-:|:-:|:-:|:-:|
-| APIs | [`spicaengine/api`](https://hub.docker.com/r/spicaengine/api) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/api?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/api?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/api) |
-| Web Client | [`spicaengine/spica`](https://hub.docker.com/r/spicaengine/spica) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/spica?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/spica?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/spica) |
-| Docs - SITE | [`spicaengine/site`](https://hub.docker.com/r/spicaengine/site) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/site?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/site?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/site) |
-| MongoDB Replication Controller | [`spicaengine/mongoreplicationcontroller`](https://hub.docker.com/r/spicaengine/mongoreplicationcontroller) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/mongoreplicationcontroller?sort=semver) | ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/mongoreplicationcontroller?sort=semver) | ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/mongoreplicationcontroller) |
-| CLI | [`@spica/cli`](https://www.npmjs.com/package/@spica/cli) | ![npm (scoped)](https://img.shields.io/npm/v/@spica/cli?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica/cli) |
-| Devkit - Database | [`@spica-devkit/database`](https://www.npmjs.com/package/@spica-devkit/database) | ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/database?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica-devkit/database) |
-| Devkit - Dashboard | [`@spica-devkit/dashboard`](https://www.npmjs.com/package/@spica-devkit/dashboard) | ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/dashboard?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica-devkit/dashboard) |
-| Devkit - Bucket | [`@spica-devkit/bucket`](https://www.npmjs.com/package/@spica-devkit/bucket) | ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/bucket?label=version) |  | ![npm](https://img.shields.io/npm/dm/@spica-devkit/bucket) |
+|                                                  Package                                                  |                                                                                                                                                                                                  Status                                                                                                                                                                                                   |                             Description                              |
+| :-------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------: |
+|                        [spicaengine/api](https://hub.docker.com/r/spicaengine/api)                        |                      ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/api?sort=semver&label=version&color=blue) ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/api?sort=semver&label=size&color=blue) ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/api?label=downloads&color=blue)                       |                         API server of spica                          |
+|                      [spicaengine/spica](https://hub.docker.com/r/spicaengine/spica)                      |                   ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/spica?sort=semver&label=version&color=blue) ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/spica?sort=semver&label=size&color=blue) ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/spica?label=downloads&color=blue)                    |                         Dashboard for spica                          |
+| [spicaengine/mongoreplicationcontroller](https://hub.docker.com/r/spicaengine/mongoreplicationcontroller) | ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/spicaengine/mongoreplicationcontroller?sort=semver&label=version&color=blue) ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/spicaengine/initcontainer?sort=semver&label=size&color=blue) ![Docker Pulls](https://img.shields.io/docker/pulls/spicaengine/initcontainer?label=downloads&color=blue) |            Kubernetes controller for MongoDB replication             |
+|                          [@spica/cli](https://www.npmjs.com/package/@spica/cli)                           |                                                                                                                               ![npm (scoped)](https://img.shields.io/npm/v/@spica/cli?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica/cli?color=blue)                                                                                                                               |                     CLI for controlling the API.                     |
+|              [@spica-devkit/database](https://www.npmjs.com/package/@spica-devkit/database)               |                                                                                                                   ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/database?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica-devkit/database?color=blue)                                                                                                                   | Development package for interacting with the APIs database directly. |
+|             [@spica-devkit/dashboard](https://www.npmjs.com/package/@spica-devkit/dashboard)              |                                                                                                                  ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/dashboard?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica-devkit/dashboard?color=blue)                                                                                                                  |     Development package for interacting with the Dashboard APIs.     |
+|                [@spica-devkit/bucket](https://www.npmjs.com/package/@spica-devkit/bucket)                 |                                                                                                                     ![npm (scoped)](https://img.shields.io/npm/v/@spica-devkit/bucket?label=version&color=blue) ![npm](https://img.shields.io/npm/dm/@spica-devkit/bucket?color=blue)                                                                                                                     |      Development package for interacting with the Bucket APIs.       |
 
 ## Chat
-Join us on [Slack][slack] or [Discord][discord], feel free to request to join our private `#development` channel if you're planning to contribute. 
+
+Join us on [Slack][slack] or [Discord][discord], feel free to request to join our private `#development` channel if you're planning to contribute.
 
 ## Contributing
 

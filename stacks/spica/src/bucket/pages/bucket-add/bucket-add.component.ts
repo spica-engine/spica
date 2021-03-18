@@ -1,6 +1,6 @@
 import {animate, style, transition, trigger} from "@angular/animations";
 import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
-import {Component, OnDestroy, OnInit} from "@angular/core";
+import {Component, HostListener, OnDestroy, OnInit} from "@angular/core";
 import {MatCheckboxChange} from "@angular/material/checkbox";
 import {ActivatedRoute, Router} from "@angular/router";
 import {InputResolver} from "@spica-client/common";
@@ -20,7 +20,7 @@ import {
   mapTo,
   take
 } from "rxjs/operators";
-import {Bucket, emptyBucket} from "../../interfaces/bucket";
+import {Bucket, emptyBucket, LimitExceedBehaviour} from "../../interfaces/bucket";
 import {PredefinedDefault} from "../../interfaces/predefined-default";
 import {BucketService} from "../../services/bucket.service";
 import {BucketHistoryService} from "@spica-client/bucket/services/bucket-history.service";
@@ -45,7 +45,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   configurationState = "meta";
 
-  isThereVisible = true;
   visibleIcons: Array<any> = this.icons.slice(0, this.iconPageSize);
 
   buckets: Bucket[];
@@ -126,9 +125,6 @@ export class BucketAddComponent implements OnInit, OnDestroy {
       },
       {left: [], right: [], bottom: []}
     );
-    this.isThereVisible = Object.values(this.bucket.properties).some(
-      prop => prop.options && prop.options.visible
-    );
   }
 
   setPosition(event: CdkDragDrop<any[]>, position?: string) {
@@ -157,18 +153,27 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.updatePositionProperties();
   }
 
-  saveBucket(): void {
+  saveBucket() {
     const isInsert = !this.bucket._id;
 
     if (!this.bucket.hasOwnProperty("order")) {
       this.bucket.order = this.buckets.length;
     }
+
     const save = isInsert ? this.bs.insertOne(this.bucket) : this.bs.replaceOne(this.bucket);
 
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(bucket => isInsert && this.router.navigate(["bucket", bucket._id, "add"])),
+        tap(
+          bucket =>
+            isInsert &&
+            this.router.navigate(["bucket", bucket._id, "add"], {
+              state: {
+                skipSaveChanges: true
+              }
+            })
+        ),
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))
@@ -205,5 +210,16 @@ export class BucketAddComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.onDestroy.next();
+  }
+
+  onDocumentSettingsChange() {
+    if (this.bucket.documentSettings) {
+      delete this.bucket.documentSettings;
+    } else {
+      this.bucket.documentSettings = {
+        countLimit: 100,
+        limitExceedBehaviour: LimitExceedBehaviour.PREVENT
+      };
+    }
   }
 }

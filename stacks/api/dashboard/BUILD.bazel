@@ -12,6 +12,8 @@ ts_library(
     module_name = "@spica-server/dashboard",
     deps = [
         "//packages/core/schema",
+        "//packages/database",
+        "//stacks/api/machinery",
         "//stacks/api/passport",
         "//stacks/api/passport/guard",
         "@npm//@nestjs/common",

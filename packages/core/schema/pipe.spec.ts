@@ -2,6 +2,31 @@ import {Schema} from "./pipe";
 import {Validator} from "./validator";
 
 describe("schema pipe", () => {
+  it("should remove additional with ref", async () => {
+    const validatorMixin = Schema.validate("test");
+    const pipe = new validatorMixin(
+      new Validator({
+        schemas: [
+          {
+            $id: "ref",
+            type: "object",
+            properties: {test: {type: "string"}},
+            additionalProperties: false
+          },
+          {
+            $id: "test",
+            $ref: "ref"
+          }
+        ]
+      })
+    );
+    const data: object = {evil: "hahah"};
+
+    await pipe.transform(data, undefined);
+
+    expect(data).toEqual({});
+  });
+
   describe("validation with schema", () => {
     let pipe;
     beforeAll(async () => {

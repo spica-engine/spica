@@ -5,14 +5,15 @@ load("@npm//@bazel/jasmine:index.bzl", "jasmine_node_test")
 
 ts_library(
     name = "differ",
-    srcs = [
+    srcs = glob([
+        "src/*.ts",
         "index.ts",
-        "src/differ.ts",
-    ],
+    ]),
     module_name = "@spica-server/core/differ",
     deps = [
         "@npm//@types/deep-diff",
         "@npm//@types/diff-match-patch",
+        "@npm//@types/json-schema",
         "@npm//deep-diff",
         "@npm//diff-match-patch",
     ],
@@ -21,12 +22,13 @@ ts_library(
 ts_library(
     name = "test_lib",
     testonly = True,
-    srcs = [
-        "test/differ.spec.ts",
-    ],
+    srcs = glob([
+        "test/*.spec.ts",
+    ]),
     deps = [
         ":differ",
         "@npm//@types/jasmine",
+        "@npm//@types/json-schema",
     ],
 )
 

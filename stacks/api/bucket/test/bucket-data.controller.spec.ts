@@ -3,13 +3,8 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {BucketModule} from "@spica-server/bucket";
 import {Bucket, BucketDocument} from "@spica-server/bucket/services";
 import {SchemaModule} from "@spica-server/core/schema";
-import {
-  CREATED_AT,
-  DATE_TIME,
-  OBJECTID_STRING,
-  OBJECT_ID,
-  UPDATED_AT
-} from "@spica-server/core/schema/defaults";
+import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {DATE_TIME, OBJECTID_STRING, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CoreTestingModule, Request} from "@spica-server/core/testing";
 import {DatabaseTestingModule, ObjectId} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
@@ -298,9 +293,27 @@ describe("BucketDataController", () => {
         expect(documents).toEqual([{_id: "__skip__", name: "Jim", age: 20}]);
       });
 
+      it("should return the persons whose name is Jim (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `name == "Jim"`
+        });
+
+        expect(documents.length).toBe(1);
+        expect(documents).toEqual([{_id: "__skip__", name: "Jim", age: 20}]);
+      });
+
       it("should return the persons whose age is 38", async () => {
         const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           filter: JSON.stringify({age: 38})
+        });
+
+        expect(documents.length).toBe(1);
+        expect(documents).toEqual([{_id: "__skip__", name: "Dwight", age: 38}]);
+      });
+
+      it("should return the persons whose age is 38 (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `age == 38`
         });
 
         expect(documents.length).toBe(1);
@@ -320,9 +333,34 @@ describe("BucketDataController", () => {
         ]);
       });
 
+      it("should return the persons who is older than 22 (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `age > 22`
+        });
+
+        expect(documents.length).toBe(3);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Kevin", age: 25},
+          {_id: "__skip__", name: "Dwight", age: 38},
+          {_id: "__skip__", name: "Toby", age: 30}
+        ]);
+      });
+
       it("should return the persons who is younger than 25", async () => {
         const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
           filter: JSON.stringify({age: {$lt: 25}})
+        });
+
+        expect(documents.length).toBe(2);
+        expect(documents).toEqual([
+          {_id: "__skip__", name: "Jim", age: 20},
+          {_id: "__skip__", name: "Michael", age: 22}
+        ]);
+      });
+
+      it("should return the persons who is younger than 25 (Expression)", async () => {
+        const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
+          filter: `age < 25`
         });
 
         expect(documents.length).toBe(2);
@@ -353,8 +391,8 @@ describe("BucketDataController", () => {
           const {body: documents} = await req.get(`/bucket/${bucket._id}/data`, {
             filter: JSON.stringify({
               created_at: {
-                $gte: `Date(${new Date("2020-04-20T10:00:00.000Z").toISOString()})`,
-                $lt: `Date(${new Date("2020-05-20T10:00:00.000Z").toISOString()})`
+                $gte: `Date(2020-04-20T10:00:00.000Z)`,
+                $lt: `Date(2020-05-20T10:00:00.000Z)`
               }
             })
           });
@@ -388,7 +426,6 @@ describe("BucketDataController", () => {
               })
             })
             .catch(e => e);
-
           expect(error).toEqual({
             statusCode: 400,
             message:
@@ -414,7 +451,7 @@ describe("BucketDataController", () => {
                 type: "string",
                 title: "title",
                 description: "Title of the row",
-                options: {position: "left", translate: true, visible: true}
+                options: {position: "left", translate: true}
               },
               description: {
                 type: "textarea",
@@ -624,7 +661,7 @@ describe("BucketDataController", () => {
             properties: {
               achievement: {
                 type: "relation",
-                options: {position: "left", visible: true},
+                options: {position: "left"},
                 bucketId: achievementsBucket._id,
                 relationType: "onetoone"
               },
@@ -922,6 +959,85 @@ describe("BucketDataController", () => {
             }
           ]);
         });
+
+        it("should not resolve relation and apply the filter correctly", async () => {
+          const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+            filter: JSON.stringify({user: anotherUser._id})
+          });
+
+          expect(documents).toEqual([
+            {
+              _id: "__skip__",
+              user: anotherUser._id,
+              achievement: achievement._id
+            }
+          ]);
+        });
+
+        describe("Multiple relational request", () => {
+          afterEach(async () => {
+            await req.put(`/bucket/${statisticsBucket._id}`, {
+              ...statisticsBucket,
+              acl: {
+                write: "true==true",
+                read: "true==true"
+              }
+            });
+          });
+
+          it("should run with rule and filter", async () => {
+            await req.put(`/bucket/${statisticsBucket._id}`, {
+              ...statisticsBucket,
+              acl: {
+                write: "true==true",
+                read: `user._id=='${user._id}'`
+              }
+            });
+
+            const filter = JSON.stringify({user: user._id});
+
+            const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+              filter
+            });
+
+            // resolve relation before apply rule, then apply rule
+            // reset resolved relations that comes from rules
+            // apply filter
+
+            expect(documents).toEqual([
+              {
+                _id: "__skip__",
+                user: user._id,
+                achievement: achievement._id
+              }
+            ]);
+          });
+
+          it("should run when filter is a child of requested relation", async () => {
+            const filter = JSON.stringify({"user.name": "wealthy user"});
+            const relation = ["user.wallet", "achievement"];
+
+            const {body: documents} = await req.get(`/bucket/${statisticsBucket._id}/data`, {
+              filter,
+              relation
+            });
+
+            expect(documents).toEqual([
+              {
+                _id: "__skip__",
+                user: {
+                  _id: "__skip__",
+                  name: "wealthy user",
+                  wallet: [{_id: "__skip__", name: "GNB"}, {_id: "__skip__", name: "FNB"}]
+                },
+                achievement: {
+                  _id: "__skip__",
+                  name: "do something until something else happens"
+                }
+              }
+            ]);
+          });
+        });
       });
 
       describe("find", () => {
@@ -985,7 +1101,7 @@ describe("BucketDataController", () => {
   });
 
   describe("post,put,patch requests", () => {
-    let myBucketId: ObjectId;
+    let myBucketId: string;
     beforeEach(async () => {
       const myBucket = {
         title: "New Bucket",
@@ -998,7 +1114,7 @@ describe("BucketDataController", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           description: {
             type: "textarea",
@@ -1008,7 +1124,8 @@ describe("BucketDataController", () => {
           }
         }
       };
-      myBucketId = new ObjectId((await req.post("/bucket", myBucket)).body._id);
+      const {body} = await req.post("/bucket", myBucket);
+      myBucketId = body._id;
     });
 
     describe("post", () => {
@@ -1050,28 +1167,30 @@ describe("BucketDataController", () => {
     describe("put/patch", () => {
       let insertedDocument;
       beforeEach(async () => {
-        insertedDocument = (await req.post(`/bucket/${myBucketId}/data`, {
+        const {body} = await req.post(`/bucket/${myBucketId}/data`, {
           title: "first title",
           description: "first description"
-        })).body;
+        });
+        insertedDocument = body;
       });
 
       it("should update document", async () => {
-        const updatedDocument = (await req.put(
+        const {body: updatedDocument} = await req.put(
           `/bucket/${myBucketId}/data/${insertedDocument._id}`,
           {
             ...insertedDocument,
             title: "updated title"
           }
-        )).body;
-
-        const bucketDocument = (await req.get(`/bucket/${myBucketId}/data/${updatedDocument._id}`))
-          .body;
-
+        );
+        const {body: bucketDocument} = await req.get(
+          `/bucket/${myBucketId}/data/${updatedDocument._id}`
+        );
         expect(bucketDocument).toEqual(updatedDocument);
-
-        delete updatedDocument._id;
-        expect(updatedDocument).toEqual({title: "updated title", description: "first description"});
+        expect(updatedDocument).toEqual({
+          _id: "__skip__",
+          title: "updated title",
+          description: "first description"
+        });
       });
 
       it("should patch document", async () => {
@@ -1104,41 +1223,248 @@ describe("BucketDataController", () => {
           error: "validation failed"
         });
       });
+
+      it("should throw error when put document does not exist", async () => {
+        const response = await req
+          .patch(`/bucket/${myBucketId}/data/000000000000000000000000`, {
+            title: null
+          })
+          .catch(e => e);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.statusText).toBe("Not Found");
+        expect(response.body).toEqual({
+          statusCode: 404,
+          message: `Could not find the document with id 000000000000000000000000`,
+          error: "Not Found"
+        });
+      });
+
+      it("should throw error when patched document does not exist", async () => {
+        const response = await req
+          .put(`/bucket/${myBucketId}/data/000000000000000000000000`, {
+            title: "test"
+          })
+          .catch(e => e);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.statusText).toBe("Not Found");
+        expect(response.body).toEqual({
+          statusCode: 404,
+          message: `Could not find the document with id 000000000000000000000000`,
+          error: "Not Found"
+        });
+      });
     });
 
-    // Flaky: This test fails with a clean run. Probably schema invalidator has a race condition with this it block.
-    // Failures:
-    // 1) Bucket-Data acceptance post requests should return error if description isnt valid for bucket
-    //   Message:
-    // [31m    Expected $[0] = 201 to equal 400.
-    //     Expected $[1] = 'Created' to equal 'Bad Request'.[0m
-    //   Stack:
-    //     Error: Expected $[0] = 201 to equal 400.
-    //     Expected $[1] = 'Created' to equal 'Bad Request'.
-    //         at <Jasmine>
-    //         at UserContext.<anonymous> (stacks/api/bucket/bucket-data.controller.spec.ts:945:58)
-    //         at <Jasmine>
-    //         at processTicksAndRejections (internal/process/task_queues.js:93:5)
-    //   Message:
-    // [31m    Expected $[0] = undefined to equal '.description should be string'.
-    //     Expected $[1] = undefined to equal 'validation failed'.[0m
-    //   Stack:
-    //     Error: Expected $[0] = undefined to equal '.description should be string'.
-    //     Expected $[1] = undefined to equal 'validation failed'.
-    //         at <Jasmine>
-    //         at UserContext.<anonymous> (stacks/api/bucket/bucket-data.controller.spec.ts:946:60)
-    //         at <Jasmine>
-    //         at processTicksAndRejections (internal/process/task_queues.js:93:5)
-    xit("should return error if description isnt valid for bucket", async () => {
-      const response = await req.post(`/bucket/${myBucketId}/data`, {
-        title: "title",
-        description: [1, 2, 3]
-      });
+    it("should return error if description isnt valid for bucket", async () => {
+      const response = await req
+        .post(`/bucket/${myBucketId}/data`, {
+          title: "title",
+          description: [1, 2, 3]
+        })
+        .catch(e => e);
       expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
       expect([response.body.error, response.body.message]).toEqual([
         "validation failed",
         ".description should be string"
       ]);
+    });
+  });
+
+  describe("insert with limitations", () => {
+    describe("prevent inserting", () => {
+      let bucketId: string;
+      let bucket;
+      beforeEach(async () => {
+        bucket = {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left"}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
+            }
+          },
+          documentSettings: {
+            countLimit: 1,
+            limitExceedBehaviour: "prevent"
+          }
+        };
+        const {body} = await req.post("/bucket", bucket);
+        bucketId = body._id;
+      });
+
+      it("should throw error and prevent inserting when limit reached", async () => {
+        const {body: document1} = await req.post(`/bucket/${bucketId}/data`, {
+          title: "first title",
+          description: "first description"
+        });
+
+        expect(document1).toEqual({
+          _id: "__skip__",
+          title: "first title",
+          description: "first description"
+        });
+
+        const response = await req
+          .post(`/bucket/${bucketId}/data`, {
+            title: "second title",
+            description: "second description"
+          })
+          .catch(e => e);
+
+        expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+        expect(response.body.message).toEqual(
+          "Database error: Maximum number of documents has been reached"
+        );
+      });
+
+      it("should disable document count limitation", async () => {
+        delete bucket.documentSettings;
+        await req.put(`/bucket/${bucketId}`, bucket);
+
+        const {body: document1} = await req.post(`/bucket/${bucketId}/data`, {
+          title: "first title",
+          description: "first description"
+        });
+
+        expect(document1).toEqual({
+          _id: "__skip__",
+          title: "first title",
+          description: "first description"
+        });
+
+        const {body: document2} = await req.post(`/bucket/${bucketId}/data`, {
+          title: "second title",
+          description: "second description"
+        });
+
+        expect(document2).toEqual({
+          _id: "__skip__",
+          title: "second title",
+          description: "second description"
+        });
+      });
+    });
+
+    describe("insert and remove oldest document", () => {
+      let bucketId: string;
+      let bucket;
+      beforeEach(async () => {
+        bucket = {
+          title: "New Bucket",
+          description: "Describe your new bucket",
+          icon: "view_stream",
+          primary: "title",
+          readOnly: false,
+          properties: {
+            title: {
+              type: "string",
+              title: "title",
+              description: "Title of the row",
+              options: {position: "left"}
+            },
+            description: {
+              type: "textarea",
+              title: "description",
+              description: "Description of the row",
+              options: {position: "right"}
+            }
+          },
+          documentSettings: {
+            countLimit: 1,
+            limitExceedBehaviour: "remove"
+          }
+        };
+        const {body} = await req.post("/bucket", bucket);
+        bucketId = body._id;
+      });
+
+      it("should insert document but remove the oldest document of bucket", async () => {
+        const {body: document1} = await req.post(`/bucket/${bucketId}/data`, {
+          title: "first title",
+          description: "first description"
+        });
+
+        expect(document1).toEqual({
+          _id: "__skip__",
+          title: "first title",
+          description: "first description"
+        });
+
+        const {body: document2} = await req.post(`/bucket/${bucketId}/data`, {
+          title: "second title",
+          description: "second description"
+        });
+
+        expect(document2).toEqual({
+          _id: "__skip__",
+          title: "second title",
+          description: "second description"
+        });
+
+        const {body: documents} = await req.get(`/bucket/${bucketId}/data`);
+        expect(documents).toEqual([
+          {
+            _id: "__skip__",
+            title: "second title",
+            description: "second description"
+          }
+        ]);
+      });
+
+      it("should disable document count limitation", async () => {
+        delete bucket.documentSettings;
+        await req.put(`/bucket/${bucketId}`, bucket);
+
+        const {body: document1} = await req.post(`/bucket/${bucketId}/data`, {
+          title: "first title",
+          description: "first description"
+        });
+
+        expect(document1).toEqual({
+          _id: "__skip__",
+          title: "first title",
+          description: "first description"
+        });
+
+        const {body: document2} = await req.post(`/bucket/${bucketId}/data`, {
+          title: "second title",
+          description: "second description"
+        });
+
+        expect(document2).toEqual({
+          _id: "__skip__",
+          title: "second title",
+          description: "second description"
+        });
+
+        const {body: documents} = await req.get(`/bucket/${bucketId}/data`);
+        expect(documents).toEqual([
+          {
+            _id: "__skip__",
+            title: "first title",
+            description: "first description"
+          },
+          {
+            _id: "__skip__",
+            title: "second title",
+            description: "second description"
+          }
+        ]);
+      });
     });
   });
 
@@ -1158,7 +1484,7 @@ describe("BucketDataController", () => {
             type: "string",
             title: "title",
             description: "Title of the row",
-            options: {position: "left", visible: true}
+            options: {position: "left"}
           },
           description: {
             type: "textarea",
@@ -1194,126 +1520,243 @@ describe("BucketDataController", () => {
       expect(bucketData[0].title).toBe("first title");
       expect(bucketData[0].description).toBe("first description");
     });
+
+    it("should throw error when document does not exist", async () => {
+      const response = await req
+        .delete(`/bucket/${myBucketId}/data/000000000000000000000000`)
+        .catch(e => e);
+
+      expect(response.statusCode).toBe(404);
+      expect(response.statusText).toBe("Not Found");
+      expect(response.body).toEqual({
+        statusCode: 404,
+        message: `Could not find the document with id 000000000000000000000000`,
+        error: "Not Found"
+      });
+    });
   });
 
-  describe("Relation disposal", () => {
-    let userBucket: string;
-    let ticketBucket: string;
-    let hallBucket: string;
-
-    beforeEach(async () => {
-      hallBucket = await req
-        .post("/bucket", {
-          title: "Halls",
-          description: "Halls",
-          properties: {
-            title: {
-              type: "string",
-              title: "name"
+  describe("relation disposal", () => {
+    describe("clear relations", () => {
+      let userBucket: string;
+      let ticketBucket: string;
+      let hallBucket: string;
+      beforeEach(async () => {
+        hallBucket = await req
+          .post("/bucket", {
+            title: "Halls",
+            description: "Halls",
+            properties: {
+              title: {
+                type: "string",
+                title: "name"
+              }
             }
-          }
-        })
-        .then(r => r.body._id);
+          })
+          .then(r => r.body._id);
 
-      ticketBucket = await req
-        .post("/bucket", {
-          title: "Ticket",
-          description: "Ticket",
-          properties: {
-            place: {
-              type: "object",
-              properties: {
-                hall: {
-                  type: "relation",
-                  bucketId: hallBucket,
-                  relationType: "onetoone"
-                },
-                seat_number: {
-                  type: "number"
+        ticketBucket = await req
+          .post("/bucket", {
+            title: "Ticket",
+            description: "Ticket",
+            properties: {
+              place: {
+                type: "object",
+                properties: {
+                  hall: {
+                    type: "relation",
+                    bucketId: hallBucket,
+                    relationType: "onetoone"
+                  },
+                  seat_number: {
+                    type: "number"
+                  }
                 }
               }
             }
-          }
-        })
-        .then(r => r.body._id);
+          })
+          .then(r => r.body._id);
 
-      userBucket = await req
-        .post("/bucket", {
-          title: "Users",
-          description: "Users",
-          properties: {
-            name: {
-              type: "string",
-              title: "name"
-            },
-            tickets: {
-              type: "relation",
-              bucketId: ticketBucket,
-              relationType: "onetomany"
+        userBucket = await req
+          .post("/bucket", {
+            title: "Users",
+            description: "Users",
+            properties: {
+              name: {
+                type: "string",
+                title: "name"
+              },
+              tickets: {
+                type: "relation",
+                bucketId: ticketBucket,
+                relationType: "onetomany"
+              }
             }
-          }
-        })
+          })
 
-        .then(r => r.body._id);
-    });
-
-    it("should remove tickets from users when deleted", async () => {
-      const {body: firstTicket} = await req.post(`/bucket/${ticketBucket}/data`, {});
-      const {body: secondTicket} = await req.post(`/bucket/${ticketBucket}/data`, {});
-      await req.post(`/bucket/${userBucket}/data`, {name: "first", tickets: [firstTicket._id]});
-      await req.post(`/bucket/${userBucket}/data`, {
-        name: "second",
-        tickets: [firstTicket._id, secondTicket._id]
+          .then(r => r.body._id);
       });
-      await req.delete(`/bucket/${ticketBucket}/data/${firstTicket._id}`);
 
-      let {body: users} = await req.get(`/bucket/${userBucket}/data`);
-
-      expect(users).toEqual([
-        {
-          _id: "__skip__",
-          name: "first",
-          tickets: []
-        },
-        {
-          _id: "__skip__",
+      it("should remove tickets from users when deleted", async () => {
+        const {body: firstTicket} = await req.post(`/bucket/${ticketBucket}/data`, {});
+        const {body: secondTicket} = await req.post(`/bucket/${ticketBucket}/data`, {});
+        await req.post(`/bucket/${userBucket}/data`, {name: "first", tickets: [firstTicket._id]});
+        await req.post(`/bucket/${userBucket}/data`, {
           name: "second",
-          tickets: [secondTicket._id]
-        }
-      ]);
+          tickets: [firstTicket._id, secondTicket._id]
+        });
+        await req.delete(`/bucket/${ticketBucket}/data/${firstTicket._id}`);
+
+        let {body: users} = await req.get(`/bucket/${userBucket}/data`);
+
+        expect(users).toEqual([
+          {
+            _id: "__skip__",
+            name: "first",
+            tickets: []
+          },
+          {
+            _id: "__skip__",
+            name: "second",
+            tickets: [secondTicket._id]
+          }
+        ]);
+      });
+
+      it("should remove halls from ticket when deleted", async () => {
+        const {body: firstHall} = await req.post(`/bucket/${hallBucket}/data`, {
+          name: "first hall"
+        });
+
+        await req.post(`/bucket/${ticketBucket}/data`, {
+          place: {
+            hall: firstHall._id,
+            seat_number: 1
+          }
+        });
+
+        await req.post(`/bucket/${ticketBucket}/data`, {
+          place: {
+            hall: firstHall._id,
+            seat_number: 2
+          }
+        });
+
+        await req.delete(`/bucket/${hallBucket}/data/${firstHall._id}`);
+
+        const {body: tickets} = await req.get(`/bucket/${ticketBucket}/data`);
+
+        expect(tickets).toEqual([
+          {
+            _id: "__skip__",
+            place: {seat_number: 1}
+          },
+          {
+            _id: "__skip__",
+            place: {seat_number: 2}
+          }
+        ]);
+      });
     });
 
-    it("should remove halls from ticket when deleted", async () => {
-      const {body: firstHall} = await req.post(`/bucket/${hallBucket}/data`, {name: "first hall"});
+    describe("dependents", () => {
+      let companyBucket: string;
+      let employeeBucket: string;
+      let addressBucket: string;
 
-      await req.post(`/bucket/${ticketBucket}/data`, {
-        place: {
-          hall: firstHall._id,
-          seat_number: 1
-        }
+      beforeEach(async () => {
+        addressBucket = await req
+          .post("/bucket", {
+            title: "Address",
+            description: "Address",
+            properties: {
+              street: {
+                type: "string"
+              },
+              city: {
+                type: "string"
+              }
+            }
+          })
+          .then(r => r.body._id);
+
+        employeeBucket = await req
+          .post("/bucket", {
+            title: "Employee",
+            description: "Employee",
+            properties: {
+              fullname: {
+                type: "string"
+              },
+              address: {
+                type: "relation",
+                relationType: "onetoone",
+                bucketId: addressBucket,
+                dependent: true
+              }
+            }
+          })
+          .then(r => r.body._id);
+
+        companyBucket = await req
+          .post("/bucket", {
+            title: "Company",
+            description: "Company",
+            properties: {
+              name: {
+                type: "string"
+              },
+              employees: {
+                type: "relation",
+                relationType: "onetomany",
+                bucketId: employeeBucket,
+                dependent: true
+              }
+            }
+          })
+
+          .then(r => r.body._id);
       });
 
-      await req.post(`/bucket/${ticketBucket}/data`, {
-        place: {
-          hall: firstHall._id,
-          seat_number: 2
-        }
+      it("should remove employees and their addresses when company deleted", async () => {
+        const {body: address1} = await req.post(`/bucket/${addressBucket}/data`, {
+          street: "1235",
+          city: "Tallinn"
+        });
+        const {body: address2} = await req.post(`/bucket/${addressBucket}/data`, {
+          street: "3457",
+          city: "Stockholm"
+        });
+
+        const {body: employee1} = await req.post(`/bucket/${employeeBucket}/data`, {
+          fullname: "Stefanos Ardit",
+          address: address1._id
+        });
+        const {body: employee2} = await req.post(`/bucket/${employeeBucket}/data`, {
+          fullname: "Emil Hanna",
+          address: address2._id
+        });
+
+        const {body: company} = await req.post(`/bucket/${companyBucket}/data`, {
+          name: "Frostfire Corp",
+          employees: [employee1._id, employee2._id]
+        });
+
+        const deleteResponse = await req.delete(`/bucket/${companyBucket}/data/${company._id}`);
+
+        expect([deleteResponse.statusCode, deleteResponse.statusText, deleteResponse.body]).toEqual(
+          [204, "No Content", undefined]
+        );
+
+        const {body: companies} = await req.get(`/bucket/${companyBucket}/data`);
+        expect(companies).toEqual([]);
+
+        const {body: employees} = await req.get(`/bucket/${employeeBucket}/data`);
+        expect(employees).toEqual([]);
+
+        const {body: addresses} = await req.get(`/bucket/${addressBucket}/data`);
+        expect(addresses).toEqual([]);
       });
-
-      await req.delete(`/bucket/${hallBucket}/data/${firstHall._id}`);
-
-      const {body: tickets} = await req.get(`/bucket/${ticketBucket}/data`);
-
-      expect(tickets).toEqual([
-        {
-          _id: "__skip__",
-          place: {seat_number: 1}
-        },
-        {
-          _id: "__skip__",
-          place: {seat_number: 2}
-        }
-      ]);
     });
   });
 
@@ -1328,19 +1771,13 @@ describe("BucketDataController", () => {
         readOnly: false,
         properties: {
           //this value is the value of the field on document, if it is not specified, default value will be used.
-          create_date: {
+          created_at: {
             type: "date",
-            title: "registiration_date",
-            description: "Description of the row",
-            options: {position: "right"},
             default: ":created_at"
           },
           //this value always the create date of document. Value of the field on document will be ignored.
-          create_date_readonly: {
+          created_at_readonly: {
             type: "date",
-            title: "registiration_date",
-            description: "Description of the row",
-            options: {position: "right"},
             default: ":created_at",
             readOnly: true
           }
@@ -1352,16 +1789,16 @@ describe("BucketDataController", () => {
     it("should work with default and readonly values", async () => {
       const date = new Date("1980-01-01");
       let document = {
-        create_date: date,
-        create_date_readonly: date
+        created_at: date,
+        created_at_readonly: date
       };
       const insertedDocument = (await req.post(`/bucket/${bucketId}/data`, document)).body;
 
-      expect(new Date(insertedDocument.create_date)).toEqual(
+      expect(new Date(insertedDocument.created_at)).toEqual(
         date,
         "should be equal if document value inserted"
       );
-      expect(new Date(insertedDocument.create_date_readonly)).not.toEqual(
+      expect(new Date(insertedDocument.created_at_readonly)).not.toEqual(
         date,
         "should not be equal if document value ignored"
       );
@@ -1370,8 +1807,112 @@ describe("BucketDataController", () => {
     it("should put default values if field does not exist on document", async () => {
       const insertedDocument = (await req.post(`/bucket/${bucketId}/data`)).body;
 
-      expect(new Date(insertedDocument.create_date)).toEqual(jasmine.any(Date));
-      expect(new Date(insertedDocument.create_date_readonly)).toEqual(jasmine.any(Date));
+      expect(new Date(insertedDocument.created_at)).toEqual(jasmine.any(Date));
+      expect(new Date(insertedDocument.created_at_readonly)).toEqual(jasmine.any(Date));
+    });
+  });
+
+  describe("unique fields", () => {
+    let bucket;
+    beforeEach(async () => {
+      const body = {
+        title: "new bucket",
+        description: "new bucket",
+        properties: {
+          title: {
+            type: "string",
+            options: {
+              position: "right",
+              unique: true
+            }
+          },
+          description: {
+            type: "string",
+            options: {
+              position: "right"
+            }
+          }
+        }
+      };
+
+      bucket = await req.post("/bucket", body).then(r => r.body);
+    });
+
+    it("should insert documents when they have unique values", async () => {
+      let document = {
+        title: "Rat Of The Eternal",
+        description: "Description of book"
+      };
+
+      let response = await req.post(`/bucket/${bucket._id}/data`, document);
+      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+
+      document.title = "Hawk Without Hate";
+
+      response = await req.post(`/bucket/${bucket._id}/data`, document);
+      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+    });
+
+    it("should update document when updated one have unique value", async () => {
+      let document = {
+        _id: undefined,
+        title: "Men Without Faith",
+        description: "Description of book"
+      };
+
+      let response = await req.post(`/bucket/${bucket._id}/data`, document).then(res => {
+        document = res.body;
+        return res;
+      });
+      expect([response.statusCode, response.statusText]).toEqual([201, "Created"]);
+
+      document.title = "Creators Of The Day";
+
+      response = await req.put(`/bucket/${bucket._id}/data/${document._id}`, document);
+      expect([response.statusCode, response.statusText]).toEqual([200, "OK"]);
+    });
+
+    it("should not update document when updated one does not have unique value", async () => {
+      const document = {
+        title: "Fish And Companions",
+        description: "Description of book"
+      };
+
+      let document2 = {
+        _id: undefined,
+        title: "Mice And Enemies",
+        description: "Description of book"
+      };
+
+      await req.post(`/bucket/${bucket._id}/data`, document);
+      document2 = await req.post(`/bucket/${bucket._id}/data`, document2).then(r => r.body);
+
+      document2.title = "Fish And Companions";
+
+      const response = await req
+        .put(`/bucket/${bucket._id}/data/${document2._id}`, document2)
+        .catch(e => e);
+
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect(response.body.message).toEqual(
+        "Value of the property .title should unique across all documents."
+      );
+    });
+
+    it("should not insert documents when they do not have unique values", async () => {
+      const document = {
+        title: "Mice And Enemies",
+        description: "Description of book"
+      };
+
+      await req.post(`/bucket/${bucket._id}/data`, document);
+
+      const response = await req.post(`/bucket/${bucket._id}/data`, document).catch(e => e);
+
+      expect([response.statusCode, response.statusText]).toEqual([400, "Bad Request"]);
+      expect(response.body.message).toEqual(
+        "Value of the property .title should unique across all documents."
+      );
     });
   });
 });

@@ -30,8 +30,8 @@ import {catchError, finalize, last, map, take, tap} from "rxjs/operators";
 import {createFunctionActivity} from "./activity.resource";
 import {FunctionEngine} from "./engine";
 import {FunctionService} from "./function.service";
-import {ChangeKind} from "./change";
-import {Function, Trigger} from "./interface";
+import {ChangeKind, hasContextChange} from "./change";
+import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
 import {changesFromTriggers, createTargetChanges} from "./change";
@@ -115,30 +115,6 @@ export class FunctionController {
     await this.engine.deleteFunction(fn);
   }
 
-  private async hasDuplicatedBucketHandlers(fn: Function): Promise<boolean> {
-    const functions = (await this.fs.find({_id: {$ne: fn._id}})).concat(fn);
-    const triggers = functions.reduce((acc, fn) => {
-      for (const handler in fn.triggers) {
-        if (fn.triggers.hasOwnProperty(handler)) {
-          const trigger = fn.triggers[handler];
-          if (trigger.type == "bucket" && trigger.options["phase"] == "BEFORE") {
-            acc.push(trigger);
-          }
-        }
-      }
-      return acc;
-    }, new Array<Trigger>());
-
-    return triggers.some((trigger, index, triggers) => {
-      const foundIndex = triggers.findIndex(
-        t =>
-          t.options["bucket"] == trigger.options["bucket"] &&
-          t.options["type"] == trigger.options["type"]
-      );
-      return foundIndex != index;
-    });
-  }
-
   /**
    * @description Replaces a function object and returns the latest committed version of function object.<br>
    * Keep in mind that `language` is immutable and ignored silently if present
@@ -152,19 +128,22 @@ export class FunctionController {
     @Body(Schema.validate(generate)) fn: Function
   ) {
     fn._id = id;
-    const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
-    if (hasDuplicatedHandlers) {
-      throw new BadRequestException(
-        "Multiple handlers on same bucket and event type in before phase are not supported."
-      );
-    }
     delete fn._id;
     // Language is immutable
     delete fn.language;
     const previousFn = await this.fs.findOneAndUpdate({_id: id}, {$set: fn});
 
     fn._id = id;
-    const changes = changesFromTriggers(previousFn, fn);
+
+    let changes;
+
+    if (hasContextChange(previousFn, fn)) {
+      // mark all triggers updated
+      changes = createTargetChanges(fn, ChangeKind.Updated);
+    } else {
+      changes = changesFromTriggers(previousFn, fn);
+    }
+
     this.engine.categorizeChanges(changes);
 
     return fn;
@@ -178,12 +157,6 @@ export class FunctionController {
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async insertOne(@Body(Schema.validate(generate)) fn: Function) {
-    const hasDuplicatedHandlers = await this.hasDuplicatedBucketHandlers(fn);
-    if (hasDuplicatedHandlers) {
-      throw new BadRequestException(
-        "Multiple handlers on same bucket and event type in before phase are not supported."
-      );
-    }
     fn = await this.fs.insertOne(fn);
 
     const changes = createTargetChanges(fn, ChangeKind.Added);

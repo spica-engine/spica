@@ -18,12 +18,20 @@ export interface Bucket {
     read: string;
     write: string;
   };
+  documentSettings?: {
+    countLimit: number;
+    limitExceedBehaviour: LimitExceedBehaviour;
+  };
+}
+
+export enum LimitExceedBehaviour {
+  PREVENT = "prevent",
+  REMOVE = "remove"
 }
 
 export interface PropertyOptions {
   type: JSONSchema7TypeName | JSONSchema7TypeName[] | string;
   options?: {
-    visible?: boolean;
     translate?: boolean;
     history?: boolean;
     position: "left" | "right" | "bottom";
@@ -46,8 +54,7 @@ export function emptyBucket(): Bucket {
         title: "title",
         description: "Title of the row",
         options: {
-          position: "left",
-          visible: true
+          position: "left"
         }
       },
       description: {
