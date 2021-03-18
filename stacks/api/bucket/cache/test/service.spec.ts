@@ -71,4 +71,19 @@ describe("Bucket Cache Service", () => {
     const cacheResponses = await cacheManager.get(cacheKeys[0]);
     expect(cacheResponses).toEqual([{title: "test3"}]);
   });
+
+  //@TODO: cron job does not fire the onTick method.
+  xit("should clear cache at the end of day", async () => {
+    await cacheManager.set(`/bucket/bucket1/data`, [{title: "test1"}]);
+    await cacheManager.set(`/bucket/bucket2/data`, [{title: "test2"}]);
+
+    const clock = jasmine.clock();
+    clock.install();
+    clock.mockDate(new Date(2020, 1, 1, 23, 59, 59, 0));
+
+    clock.tick(1000);
+
+    const cacheKeys = await cacheManager.store.keys();
+    expect(cacheKeys).toEqual([]);
+  });
 });

@@ -138,7 +138,7 @@ describe("Bucket Cache Integration", () => {
 
       // it will clear cache right after same request received
       await req.get("bucket/bucket_id/data");
-      // if it calls this spy one more time we can say cached cleared and new cache will be registered
+      // if it calls this spy one more time we can consider old cache cleared and new cache will be registered
       expect(getSpy).toHaveBeenCalledTimes(2);
 
       cachedKeys = await store.keys();
