@@ -32,4 +32,35 @@
       margin: 5px;
     }
   }
+
+  div.tab-content {
+    display: flex;
+    flex-direction: row;
+
+    code-editor {
+      flex: 4;
+    }
+
+    div.history {
+      flex: 1;
+
+      div.title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      h4{
+        margin: 5px 0px;
+      }
+
+      mat-chip-list{
+        margin-top: 15px
+      }
+
+      mat-chip {
+        margin: 5px auto;
+      }
+    }
+  }
 }

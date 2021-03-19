@@ -23,6 +23,9 @@ export class FilterComponent implements OnInit, OnChanges, OnDestroy {
 
   currentTabIndex: number;
 
+  mongodbHistory = [];
+  expressionHistory = [];
+
   readonly filterOrigins = ["string", "boolean", "object"];
 
   selectedOperator = "";
@@ -70,6 +73,7 @@ export class FilterComponent implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.schema && this.schema) {
       this.property = undefined;
+      this.fillHistory();
       for (const [key, value] of Object.entries(this.schema.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
@@ -89,13 +93,18 @@ export class FilterComponent implements OnInit, OnChanges, OnDestroy {
       case 1:
         try {
           this.filter = JSON.parse(this.value as any);
+
+          this.addToHistory(this.mongodbHistory, this.value as string);
+          this.saveHistoryChanges("mongodb", this.mongodbHistory);
         } catch (error) {
           console.log(error);
         }
         break;
       case 2:
-        console.log(typeof this.value);
         this.filter = this.value;
+
+        this.addToHistory(this.expressionHistory, this.value as string);
+        this.saveHistoryChanges("expression", this.expressionHistory);
         break;
       default:
         this.filter = {};
@@ -131,6 +140,36 @@ export class FilterComponent implements OnInit, OnChanges, OnDestroy {
         }
         return {[this.property]: this.value};
     }
+  }
+
+  fillHistory() {
+    this.mongodbHistory = this.getHistory("mongodb");
+    this.expressionHistory = this.getHistory("expression");
+  }
+
+  resetHistories() {
+    this.mongodbHistory = [];
+    this.expressionHistory = [];
+  }
+
+  saveHistoryChanges(filterType: "mongodb" | "expression", history: string[]) {
+    localStorage.setItem(
+      `bucket_${this.schema._id}_${filterType}_filter_history`,
+      JSON.stringify(history)
+    );
+  }
+
+  addToHistory(history: string[], newItem: string) {
+    if (history.length == 10) {
+      history.pop();
+    }
+    history.unshift(newItem);
+  }
+
+  getHistory(filterType: "mongodb" | "expression"): string[] {
+    return JSON.parse(
+      localStorage.getItem(`bucket_${this.schema._id}_${filterType}_filter_history`) || "[]"
+    );
   }
 
   reset() {

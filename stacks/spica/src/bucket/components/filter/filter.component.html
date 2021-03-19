@@ -1,6 +1,6 @@
 <mat-tab-group
   [(selectedIndex)]="currentTabIndex"
-  (selectedTabChange)="reset()"
+  (selectedTabChange)="reset(); fillHistory()"
   (click)="$event.stopPropagation()"
 >
   <mat-tab label="Basic" (click)="$event.stopPropagation()">
@@ -63,25 +63,64 @@
     </span>
   </mat-tab>
   <mat-tab label="MongoDB" (click)="$event.stopPropagation()">
-    <code-editor
-      *ngIf="currentTabIndex == 1"
-      placeholder="MongoDB Filter"
-      [(ngModel)]="value"
-      [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false, value: '{\n\t\n}'}"
-      language="json"
-    >
-    </code-editor>
+    <div class="tab-content">
+      <code-editor
+        *ngIf="currentTabIndex == 1"
+        placeholder="MongoDB Filter"
+        [(ngModel)]="value"
+        [options]="{
+          minimap: {enabled: false},
+          lineNumbers: 'off',
+          contextmenu: false,
+          value: '{\n\t\n}'
+        }"
+        language="json"
+      >
+      </code-editor>
+      <div class="history">
+        <div class="title"><mat-icon>history</mat-icon><h4>History</h4></div>
+        <mat-chip-list>
+          <mat-chip
+            (click)="value = history"
+            [matTooltip]="history"
+            *ngFor="let history of mongodbHistory; index as i"
+            removable
+            (removed)="mongodbHistory.splice(i, 1); saveHistoryChanges('mongodb',mongoHistory)"
+          >
+            {{ history.length > 10 ? history.slice(0, 10) + ".." : history }}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+        </mat-chip-list>
+      </div>
+    </div>
   </mat-tab>
   <mat-tab label="Expression" (click)="$event.stopPropagation()">
-    <code-editor
-    *ngIf="currentTabIndex == 2"
-    placeholder="Expression Filter"
-    [(ngModel)]="value"
-    [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false, value: ''}"
-    language="cel"
-    [properties]="properties"
-  >
-  </code-editor>
+    <div class="tab-content">
+      <code-editor
+        *ngIf="currentTabIndex == 2"
+        placeholder="Expression Filter"
+        [(ngModel)]="value"
+        [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false, value: ''}"
+        language="cel"
+        [properties]="properties"
+      >
+      </code-editor>
+      <div class="history">
+        <div class="title"><mat-icon>history</mat-icon><h4>History</h4></div>
+        <mat-chip-list>
+          <mat-chip
+            (click)="value = history"
+            [matTooltip]="history"
+            *ngFor="let history of expressionHistory; index as j"
+            removable
+            (removed)="expressionHistory.splice(i, 1); saveHistoryChanges('expression',expressionHistory)"
+          >
+            {{ history.length > 5 ? history.slice(0, 5) + ".." : history }}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+        </mat-chip-list>
+      </div>
+    </div>
   </mat-tab>
 </mat-tab-group>
 

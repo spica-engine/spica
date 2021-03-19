@@ -107,8 +107,6 @@ export class BucketDataController {
     @Query("skip", NUMBER) skip?: number,
     @Query("sort", JSONP) sort?: object
   ) {
-    console.log(filter);
-
     const schema = await this.bs.findOne({_id: bucketId});
 
     if (!schema) {
