@@ -1,4 +1,13 @@
-import {Component, EventEmitter, Input, OnChanges, Output, SimpleChanges} from "@angular/core";
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  SimpleChanges
+} from "@angular/core";
 import {InputResolver, InputSchema} from "@spica-client/common";
 import {Bucket, PropertyOptions} from "../../interfaces/bucket";
 
@@ -7,10 +16,12 @@ import {Bucket, PropertyOptions} from "../../interfaces/bucket";
   templateUrl: "./filter.component.html",
   styleUrls: ["./filter.component.scss"]
 })
-export class FilterComponent implements OnChanges {
+export class FilterComponent implements OnInit, OnChanges, OnDestroy {
   @Input() schema: Bucket;
   @Input() filter: any;
   @Output() filterChange = new EventEmitter();
+
+  currentTabIndex: number;
 
   readonly filterOrigins = ["string", "boolean", "object"];
 
@@ -71,46 +82,67 @@ export class FilterComponent implements OnChanges {
   }
 
   apply() {
+    switch (this.currentTabIndex) {
+      case 0:
+        this.filter = this.createBasicFilter();
+        break;
+      case 1:
+        try {
+          this.filter = JSON.parse(this.value as any);
+        } catch (error) {
+          console.log(error);
+        }
+        break;
+      case 2:
+        console.log(typeof this.value);
+        this.filter = this.value;
+        break;
+      default:
+        this.filter = {};
+        break;
+    }
+
+    this.filterChange.emit(this.filter);
+  }
+
+  createBasicFilter() {
     const type = this.properties[this.property].type;
 
     switch (type) {
       case "relation":
-        this.filter = {
+        return {
           [`${this.property}._id`]:
             this.properties[this.property]["relationType"] == "onetomany"
               ? {$in: this.value}
               : this.value
         };
-        break;
 
       case "date":
-        this.filter = {
+        return {
           [this.property]: {
             $gte: `Date(${new Date(this.value[0]).toISOString()})`,
             $lt: `Date(${new Date(this.value[1]).toISOString()})`
           }
         };
-        break;
 
       default:
         if (this.selectedOperator) {
-          this.filter = {[this.property]: {[this.selectedOperator]: this.value}};
-        } else {
-          this.filter = {[this.property]: this.value};
+          return {[this.property]: {[this.selectedOperator]: this.value}};
         }
-        break;
+        return {[this.property]: this.value};
     }
-
-    console.log(this.filter);
-    this.filterChange.emit(this.filter);
   }
 
-  clear() {
+  reset() {
     this.property = undefined;
     this.value = undefined;
     this.selectedOperator = undefined;
-
     this.filter = undefined;
-    this.filterChange.emit(this.filter);
+  }
+
+  onPropertyChange() {
+    this.value = undefined;
+    this.filter = undefined;
+    this.selectedOperator = undefined;
   }
 }

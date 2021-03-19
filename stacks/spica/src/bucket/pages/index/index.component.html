@@ -68,8 +68,9 @@
     <button mat-button [matMenuTriggerFor]="filterMenu" [color]="filterer.active ? 'accent' : ''">
       <mat-icon>filter_alt</mat-icon>
       Filter
-      <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+      <mat-menu  class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
         <bucket-filter
+          (keydown.tab)="$event.stopPropagation()"
           #filterer
           [filter]="filter"
           [schema]="schema"

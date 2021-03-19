@@ -38,14 +38,12 @@ export function JSONPR(reviver?: (key: string, value: any) => any): PipeTransfor
   };
 }
 
-export function EXPRESSION(
-  aggregate: (value: string, context: unknown) => any
-): PipeTransform<string, string> {
+export function EXPRESSION(parse: (value: string) => any): PipeTransform<string, string> {
   return {
     transform: value => {
       if (typeof value == "string") {
         try {
-          aggregate(value, {});
+          return parse(value)
         } catch (error) {
           throw new HttpException(error.message, 400);
         }
