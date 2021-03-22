@@ -1,4 +1,4 @@
-const functions = [
+const macros = [
   {
     label: "has",
     detail: "(method) has(fieldPath: unknown): boolean",
@@ -84,53 +84,54 @@ const functions = [
   }
 ];
 
-const auths = [
-  {
-    label: "_id",
-    description: "Identity id, type: string",
-    text: "_id"
-  },
-  {
-    label: "identifier",
-    description: "Identity identifier, type: string",
-    text: "identifier"
-  },
-  {
-    label: "policies",
-    description: "Policy ids of the identity, type: string[]",
-    text: "policies"
-  },
-  {
-    label: "attributes",
-    description: "Identity custom properties",
-    text: "attributes"
-  }
-];
-
-const baseFields = [
+const fields = [
   {
     label: "document",
     description: "Represents the bucket data. Access fields of bucket data with this keyword",
-    text: "document"
+    text: "document",
+    properties: [],
+    examples: [
+      {
+        label: "example1",
+        detail: "Basic example for writing expression",
+        text: `document.title == '\${0:Hello world}'`
+      }
+    ]
   },
   {
     label: "auth",
     description: "Represents the request's user. Access fields of user with this keyword.",
-    text: "auth"
+    text: "auth",
+    properties: [
+      {
+        label: "_id",
+        description: "Identity id, type: string",
+        text: "_id"
+      },
+      {
+        label: "identifier",
+        description: "Identity identifier, type: string",
+        text: "identifier"
+      },
+      {
+        label: "policies",
+        description: "Policy ids of the identity, type: string[]",
+        text: "policies"
+      },
+      {
+        label: "attributes",
+        description: "Identity custom properties",
+        text: "attributes"
+      }
+    ],
+    examples: [
+      {
+        label: "example2",
+        detail: "Basic example for writing expression",
+        text: `auth.identifier == '\${0:spica}'`
+      }
+    ]
   }
 ];
 
-const examples = [
-  {
-    label: "example1",
-    detail: "Basic example for writing rule",
-    text: `document.title == '\${0:Hello world}'`
-  },
-  {
-    label: "example2",
-    detail: "Basic example for writing rule",
-    text: `auth.identifier == '\${0:spica}'`
-  }
-];
-
-export {baseFields, auths, functions, examples};
+export {fields, macros};
