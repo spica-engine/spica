@@ -16,7 +16,7 @@ import {Bucket, PropertyOptions} from "../../interfaces/bucket";
   templateUrl: "./filter.component.html",
   styleUrls: ["./filter.component.scss"]
 })
-export class FilterComponent implements OnInit, OnChanges, OnDestroy {
+export class FilterComponent implements OnChanges {
   @Input() schema: Bucket;
   @Input() filter: any;
   @Output() filterChange = new EventEmitter();
@@ -167,9 +167,12 @@ export class FilterComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getHistory(filterType: "mongodb" | "expression"): string[] {
-    return JSON.parse(
-      localStorage.getItem(`bucket_${this.schema._id}_${filterType}_filter_history`) || "[]"
-    );
+    const history =
+      localStorage.getItem(`bucket_${this.schema._id}_${filterType}_filter_history`) != "undefined"
+        ? localStorage.getItem(`bucket_${this.schema._id}_${filterType}_filter_history`)
+        : "[]";
+
+    return JSON.parse(history);
   }
 
   reset() {
