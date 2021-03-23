@@ -17,8 +17,7 @@ import {
   Req,
   UseGuards,
   UseInterceptors,
-  Inject,
-  Res
+  Inject
 } from "@nestjs/common";
 import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
@@ -46,6 +45,7 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import * as expression from "../expression";
 import {createBucketDataActivity} from "./activity.resource";
+import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
   deleteDocument,
   findDocuments,
@@ -90,6 +90,7 @@ export class BucketDataController {
    * Example: Descending `{"name": -1}` OR Ascending `{"name": 1}`
    */
   @Get()
+  @UseInterceptors(registerCache())
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:index", undefined, authIdToString))
   async find(
     @Param("bucketId", OBJECT_ID) bucketId: ObjectId,
@@ -154,6 +155,7 @@ export class BucketDataController {
    * @param localize When true, documents that have translations is localized to `accept-language`.
    */
   @Get(":documentId")
+  @UseInterceptors(registerCache())
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:show", undefined, authIdToString))
   async findOne(
     @Headers("accept-language") acceptedLanguage: string,
@@ -221,7 +223,7 @@ export class BucketDataController {
    * }
    * ```
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:create"))
   async insertOne(
@@ -279,7 +281,7 @@ export class BucketDataController {
    * }
    * ```
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Put(":documentId")
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
   async replace(
@@ -340,7 +342,7 @@ export class BucketDataController {
    * }
    * ```
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Patch(":documentId")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:update"))
@@ -418,7 +420,7 @@ export class BucketDataController {
    * @param bucketId Identifier of the bucket.
    * @param documentId Identifier of the document.
    */
-  @UseInterceptors(activity(createBucketDataActivity))
+  @UseInterceptors(activity(createBucketDataActivity), invalidateCache())
   @Delete(":documentId")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:data:delete"))

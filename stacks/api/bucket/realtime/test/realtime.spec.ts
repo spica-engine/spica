@@ -56,7 +56,8 @@ describe("Realtime", () => {
         BucketModule.forRoot({
           history: false,
           hooks: false,
-          realtime: false
+          realtime: false,
+          cache: false
         }),
         PassportTestingModule.initialize()
       ]

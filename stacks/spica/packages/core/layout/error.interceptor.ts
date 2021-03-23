@@ -28,7 +28,8 @@ export class ErrorInterceptor implements HttpInterceptor {
                   message: err.error.message,
                   status: err.status,
                   statusText: err.statusText
-                }
+                },
+                state: {skipSaveChanges: true}
               });
             } else {
               if (this.ingoredCode.indexOf(err.status) == -1) {

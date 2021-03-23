@@ -5,6 +5,7 @@ import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
 import {SchemaModule, Validator} from "@spica-server/core/schema";
 import {BUCKET_LANGUAGE_FINALIZER, PreferenceService} from "@spica-server/preference/services";
+import {BucketCacheModule, BucketCacheService} from "@spica-server/bucket/cache";
 import {BucketDataService} from "../services/src/bucket-data.service";
 import {BucketDataController} from "./bucket-data.controller";
 import {BucketController} from "./bucket.controller";
@@ -43,6 +44,20 @@ export class BucketModule {
       ServicesModule
     ];
 
+    const BucketCore = BucketCoreModule.initialize();
+
+    if (options.cache) {
+      const BucketCache = BucketCacheModule.register({ttl: options.cacheTtl || 60});
+      imports.push(BucketCache);
+
+      BucketCore.imports.push(BucketCache as any);
+
+      BucketCore.providers.unshift(BucketCacheService as any);
+      BucketCore.providers[1].inject.push(BucketCacheService as any);
+    }
+
+    imports.push(BucketCore);
+
     if (options.hooks) {
       imports.push(HookModule);
     }
@@ -54,8 +69,6 @@ export class BucketModule {
     if (options.realtime) {
       imports.push(RealtimeModule);
     }
-
-    imports.push(BucketCoreModule);
 
     return {
       module: BucketModule,
@@ -91,22 +104,28 @@ export class BucketModule {
 }
 
 @Global()
-@Module({
-  imports: [ServicesModule],
-  providers: [
-    BucketDataService,
-    {
-      provide: BUCKET_LANGUAGE_FINALIZER,
-      useFactory: provideLanguageFinalizer,
-      inject: [BucketService, BucketDataService]
-    }
-  ],
-  exports: [BUCKET_LANGUAGE_FINALIZER]
-})
-export class BucketCoreModule {}
+@Module({})
+export class BucketCoreModule {
+  static initialize() {
+    return {
+      module: BucketCoreModule,
+      imports: [ServicesModule],
+      providers: [
+        {
+          provide: BUCKET_LANGUAGE_FINALIZER,
+          useFactory: provideLanguageFinalizer,
+          inject: [BucketService, BucketDataService]
+        }
+      ],
+      exports: [BUCKET_LANGUAGE_FINALIZER]
+    };
+  }
+}
 
 export interface BucketOptions {
   hooks: boolean;
   history: boolean;
   realtime: boolean;
+  cache: boolean;
+  cacheTtl?: number;
 }

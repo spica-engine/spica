@@ -34,7 +34,8 @@ describe("Preference Integration", () => {
         BucketModule.forRoot({
           hooks: false,
           history: false,
-          realtime: false
+          realtime: false,
+          cache: false
         }),
         BucketCoreModule
       ],

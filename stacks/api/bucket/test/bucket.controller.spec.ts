@@ -55,7 +55,8 @@ describe("BucketController", () => {
         BucketModule.forRoot({
           hooks: false,
           history: false,
-          realtime: false
+          realtime: false,
+          cache: false
         })
       ]
     }).compile();
