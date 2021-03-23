@@ -50,7 +50,8 @@ xdescribe("Hooks Integration", () => {
         BucketModule.forRoot({
           hooks: true,
           history: false,
-          realtime: true
+          realtime: true,
+          cache: false
         }),
         FunctionModule.forRoot({
           path: os.tmpdir(),

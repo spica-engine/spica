@@ -44,6 +44,9 @@ describe("Error Interceptor", () => {
         message: "error message",
         status: 403,
         statusText: "Unknown Error"
+      },
+      state: {
+        skipSaveChanges: true
       }
     };
     service

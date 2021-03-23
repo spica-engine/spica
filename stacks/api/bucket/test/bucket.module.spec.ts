@@ -5,6 +5,7 @@ import {HookModule} from "@spica-server/bucket/hooks";
 import {DatabaseTestingModule} from "@spica-server/database/testing";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
+import {BucketCacheModule} from "@spica-server/bucket/cache";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 12000;
 
@@ -18,7 +19,8 @@ describe("Bucket Module", () => {
         BucketModule.forRoot({
           hooks: true,
           realtime: false,
-          history: false
+          history: false,
+          cache: false
         })
       ]
     }).compile();
@@ -36,7 +38,8 @@ describe("Bucket Module", () => {
         BucketModule.forRoot({
           hooks: false,
           realtime: false,
-          history: false
+          history: false,
+          cache: false
         })
       ]
     }).compile();
@@ -59,7 +62,8 @@ describe("Bucket Module", () => {
         BucketModule.forRoot({
           hooks: false,
           realtime: false,
-          history: true
+          history: true,
+          cache: false
         })
       ]
     }).compile();
@@ -77,7 +81,8 @@ describe("Bucket Module", () => {
         BucketModule.forRoot({
           hooks: false,
           realtime: false,
-          history: false
+          history: false,
+          cache: false
         })
       ]
     }).compile();
@@ -87,6 +92,49 @@ describe("Bucket Module", () => {
     }).toThrow(
       new Error(
         "Nest could not find HistoryModule element (this provider does not exist in the current context)"
+      )
+    );
+  });
+
+  it("should import cache module", async () => {
+    const module = await Test.createTestingModule({
+      imports: [
+        PassportTestingModule.initialize(),
+        DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
+        BucketModule.forRoot({
+          hooks: false,
+          realtime: false,
+          history: false,
+          cache: true
+        })
+      ]
+    }).compile();
+
+    expect(module.get(BucketCacheModule)).toBeTruthy();
+    await module.close();
+  });
+
+  it("should not import cache module", async () => {
+    const module = await Test.createTestingModule({
+      imports: [
+        PassportTestingModule.initialize(),
+        DatabaseTestingModule.replicaSet(),
+        PreferenceTestingModule,
+        BucketModule.forRoot({
+          hooks: false,
+          realtime: false,
+          history: false,
+          cache: false
+        })
+      ]
+    }).compile();
+
+    expect(() => {
+      module.get(BucketCacheModule);
+    }).toThrow(
+      new Error(
+        "Nest could not find BucketCacheModule element (this provider does not exist in the current context)"
       )
     );
   });
