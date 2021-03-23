@@ -21,7 +21,9 @@ export class FilterComponent implements OnChanges {
   @Input() filter: any;
   @Output() filterChange = new EventEmitter();
 
-  currentTabIndex: number;
+  errorMessage;
+
+  currentTabIndex: number = 0;
 
   mongodbHistory = [];
   expressionHistory = [];
@@ -97,7 +99,9 @@ export class FilterComponent implements OnChanges {
           this.addToHistory(this.mongodbHistory, this.value as string);
           this.saveHistoryChanges("mongodb", this.mongodbHistory);
         } catch (error) {
-          console.log(error);
+          this.errorMessage = error;
+          
+          setTimeout(() => (this.errorMessage = undefined), 3000);
         }
         break;
       case 2:

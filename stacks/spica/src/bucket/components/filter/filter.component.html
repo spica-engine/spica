@@ -1,9 +1,17 @@
-<mat-tab-group
-  [(selectedIndex)]="currentTabIndex"
-  (selectedTabChange)="reset(); fillHistory()"
-  (click)="$event.stopPropagation()"
->
-  <mat-tab label="Basic" (click)="$event.stopPropagation()">
+<mat-button-toggle-group>
+  <mat-button-toggle (click)="$event.stopPropagation(); currentTabIndex = 0; reset()"
+    >Basic</mat-button-toggle
+  >
+  <mat-button-toggle (click)="$event.stopPropagation(); currentTabIndex = 1; reset()"
+    >MongoDB</mat-button-toggle
+  >
+  <mat-button-toggle (click)="$event.stopPropagation(); currentTabIndex = 2; reset()"
+    >Expression</mat-button-toggle
+  >
+</mat-button-toggle-group>
+
+<div (click)="$event.stopPropagation()">
+  <ng-container *ngIf="currentTabIndex == 0">
     <mat-form-field (click)="$event.stopPropagation()">
       <mat-select
         placeholder="Attribute to Filter"
@@ -61,8 +69,8 @@
         <mat-hint *ngIf="schema.description">{{ properties[property].description }}</mat-hint>
       </mat-form-field>
     </span>
-  </mat-tab>
-  <mat-tab label="MongoDB" (click)="$event.stopPropagation()">
+  </ng-container>
+  <ng-container *ngIf="currentTabIndex == 1">
     <div class="tab-content">
       <code-editor
         *ngIf="currentTabIndex == 1"
@@ -78,23 +86,15 @@
       >
       </code-editor>
       <div class="history">
-        <div class="title"><mat-icon>history</mat-icon><h4>History</h4></div>
-        <mat-chip-list>
-          <mat-chip
-            (click)="value = history"
-            [matTooltip]="history"
-            *ngFor="let history of mongodbHistory; index as i"
-            removable
-            (removed)="mongodbHistory.splice(i, 1); saveHistoryChanges('mongodb',mongoHistory)"
-          >
-            {{ history.length > 10 ? history.slice(0, 10) + ".." : history }}
-            <mat-icon matChipRemove>cancel</mat-icon>
-          </mat-chip>
-        </mat-chip-list>
+        <ng-container
+          [ngTemplateOutlet]="historyTemplate"
+          [ngTemplateOutletContext]="{itemLength: 10, type: 'mongodb', histories: mongodbHistory}"
+        ></ng-container>
       </div>
     </div>
-  </mat-tab>
-  <mat-tab label="Expression" (click)="$event.stopPropagation()">
+    <p class="mat-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </ng-container>
+  <ng-container *ngIf="currentTabIndex == 2">
     <div class="tab-content">
       <code-editor
         *ngIf="currentTabIndex == 2"
@@ -107,29 +107,41 @@
       >
       </code-editor>
       <div class="history">
-        <div class="title"><mat-icon>history</mat-icon><h4>History</h4></div>
-        <mat-chip-list>
-          <mat-chip
-            (click)="value = history"
-            [matTooltip]="history"
-            *ngFor="let history of expressionHistory; index as j"
-            removable
-            (removed)="expressionHistory.splice(i, 1); saveHistoryChanges('expression',expressionHistory)"
-          >
-            {{ history.length > 5 ? history.slice(0, 5) + ".." : history }}
-            <mat-icon matChipRemove>cancel</mat-icon>
-          </mat-chip>
-        </mat-chip-list>
+        <ng-container
+          [ngTemplateOutlet]="historyTemplate"
+          [ngTemplateOutletContext]="{
+            itemLength: 5,
+            type: 'expression',
+            histories: expressionHistory
+          }"
+        ></ng-container>
       </div>
     </div>
-  </mat-tab>
-</mat-tab-group>
+  </ng-container>
+</div>
+
 
 <div class="filter-buttons">
-  <button mat-raised-button (click)="apply()">
+  <button mat-raised-button (click)="apply(); errorMessage && $event.stopPropagation();">
     Apply
   </button>
   <button mat-raised-button color="warn" (click)="reset(); filterChange.emit(filter)">
     Clear
   </button>
 </div>
+
+<ng-template #historyTemplate let-itemLength="itemLength" let-type="type" let-histories="histories">
+  <h4 class="mat-h4"><mat-icon>history</mat-icon><span>History</span></h4>
+  <mat-chip-list>
+    <mat-chip
+      (click)="value = history"
+      [matTooltip]="history"
+      *ngFor="let history of histories; index as i"
+      removable
+      (removed)="histories.splice(i, 1); saveHistoryChanges(type, histories)"
+    >
+      {{ history?.length > itemLength ? history.slice(0, itemLength) + ".." : history }}
+      <mat-icon matChipRemove>cancel</mat-icon>
+    </mat-chip>
+  </mat-chip-list>
+</ng-template>
