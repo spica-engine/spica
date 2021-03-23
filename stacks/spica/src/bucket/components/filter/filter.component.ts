@@ -95,14 +95,14 @@ export class FilterComponent implements OnChanges {
       case 1:
         try {
           this.filter = JSON.parse(this.value as any);
-
-          this.addToHistory(this.mongodbHistory, this.value as string);
-          this.saveHistoryChanges("mongodb", this.mongodbHistory);
         } catch (error) {
           this.errorMessage = error;
-
           setTimeout(() => (this.errorMessage = undefined), 3000);
+          break;
         }
+
+        this.addToHistory(this.mongodbHistory, this.value as string);
+        this.saveHistoryChanges("mongodb", this.mongodbHistory);
         break;
       case 2:
         this.filter = this.value;
@@ -172,9 +172,7 @@ export class FilterComponent implements OnChanges {
 
   getHistory(filterType: "mongodb" | "expression"): string[] {
     const history =
-      localStorage.getItem(`bucket_${this.schema._id}_${filterType}_filter_history`) != "undefined"
-        ? localStorage.getItem(`bucket_${this.schema._id}_${filterType}_filter_history`)
-        : "[]";
+      localStorage.getItem(`bucket_${this.schema._id}_${filterType}_filter_history`) || "[]";
 
     return JSON.parse(history);
   }

@@ -16,13 +16,17 @@
     }
   }
 
-  mat-button-toggle-group {
+  div.labels {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    mat-button-toggle {
+    align-items: baseline;
+    button {
+      border-radius: 0;
       flex: 1;
     }
+  }
+
+  .selected {
+    border-bottom: 1px solid #c0c0c0;
   }
 
   mat-form-field,

@@ -1,14 +1,26 @@
-<mat-button-toggle-group>
-  <mat-button-toggle (click)="$event.stopPropagation(); currentTabIndex = 0; reset()"
-    >Basic</mat-button-toggle
+<div class="labels">
+  <button
+    mat-flat-button
+    [class.selected]="currentTabIndex == 0"
+    (click)="$event.stopPropagation(); currentTabIndex = 0; reset()"
   >
-  <mat-button-toggle (click)="$event.stopPropagation(); currentTabIndex = 1; reset()"
-    >MongoDB</mat-button-toggle
+    Basic
+  </button>
+  <button
+    mat-flat-button
+    [class.selected]="currentTabIndex == 1"
+    (click)="$event.stopPropagation(); currentTabIndex = 1; reset()"
   >
-  <mat-button-toggle (click)="$event.stopPropagation(); currentTabIndex = 2; reset()"
-    >Expression</mat-button-toggle
+    MongoDB
+  </button>
+  <button
+    mat-flat-button
+    [class.selected]="currentTabIndex == 2"
+    (click)="$event.stopPropagation(); currentTabIndex = 2; reset()"
   >
-</mat-button-toggle-group>
+    Expression
+  </button>
+</div>
 
 <div (click)="$event.stopPropagation()">
   <ng-container *ngIf="currentTabIndex == 0">
