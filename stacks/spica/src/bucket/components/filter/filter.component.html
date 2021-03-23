@@ -120,9 +120,8 @@
   </ng-container>
 </div>
 
-
 <div class="filter-buttons">
-  <button mat-raised-button (click)="apply(); errorMessage && $event.stopPropagation();">
+  <button mat-raised-button (click)="apply(); errorMessage && $event.stopPropagation()">
     Apply
   </button>
   <button mat-raised-button color="warn" (click)="reset(); filterChange.emit(filter)">

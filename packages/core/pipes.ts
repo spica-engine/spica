@@ -43,7 +43,7 @@ export function EXPRESSION(parse: (value: string) => any): PipeTransform<string,
     transform: value => {
       if (typeof value == "string") {
         try {
-          return parse(value)
+          return parse(value);
         } catch (error) {
           throw new HttpException(error.message, 400);
         }

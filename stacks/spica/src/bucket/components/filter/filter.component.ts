@@ -100,7 +100,7 @@ export class FilterComponent implements OnChanges {
           this.saveHistoryChanges("mongodb", this.mongodbHistory);
         } catch (error) {
           this.errorMessage = error;
-          
+
           setTimeout(() => (this.errorMessage = undefined), 3000);
         }
         break;

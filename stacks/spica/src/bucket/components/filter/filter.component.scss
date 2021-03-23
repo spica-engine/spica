@@ -16,12 +16,12 @@
     }
   }
 
-  mat-button-toggle-group{
+  mat-button-toggle-group {
     display: flex;
     align-items: center;
     justify-content: center;
-    mat-button-toggle{
-      flex:1
+    mat-button-toggle {
+      flex: 1;
     }
   }
 
@@ -39,7 +39,7 @@
   }
 
   div.tab-content {
-    margin: 10px;
+    margin: 10px 0px;
     display: flex;
     flex-direction: row;
     code-editor {
@@ -64,7 +64,7 @@
     }
   }
 
-  p.mat-error{
+  p.mat-error {
     text-align: center;
   }
 }

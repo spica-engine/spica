@@ -68,7 +68,7 @@
     <button mat-button [matMenuTriggerFor]="filterMenu" [color]="filterer.active ? 'accent' : ''">
       <mat-icon>filter_alt</mat-icon>
       Filter
-      <mat-menu  class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
+      <mat-menu class="filter-menu" #filterMenu="matMenu" (click)="$event.stopPropagation()">
         <bucket-filter
           (keydown.tab)="$event.stopPropagation()"
           #filterer
@@ -275,15 +275,16 @@
       <mat-expansion-panel *ngFor="let guide of guideObjects | keyvalue">
         <mat-expansion-panel-header>
           <mat-panel-description>
-            {{guide.value.title}}
+            {{ guide.value.title }}
           </mat-panel-description>
         </mat-expansion-panel-header>
 
         <p class="guide-link">
-          {{guide.value.description}} <br><br>
+          {{ guide.value.description }} <br /><br />
           <span *ngIf="guide.value.url != ''">{{ rootUrl + "/api" + guide.value.url }}</span>
         </p>
-        <button *ngIf="guide.value.url != ''"
+        <button
+          *ngIf="guide.value.url != ''"
           mat-raised-button
           color="warn"
           (click)="guideRequest(guide.value.url, guide.key)"
@@ -294,9 +295,7 @@
           *ngIf="guideResponse[guide.key]"
           class="guide-response"
           [innerHtml]="
-            guideResponse[guide.key]
-              ? (guideResponse[guide.key] | json)
-              : 'Data does not exist'
+            guideResponse[guide.key] ? (guideResponse[guide.key] | json) : 'Data does not exist'
           "
         ></pre>
       </mat-expansion-panel>
