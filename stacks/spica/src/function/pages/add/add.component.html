@@ -387,6 +387,8 @@
                 type="button"
                 (click)="addDependency(dependencyModel.value); dependencyModel.reset()"
                 [disabled]="dependencyModel.invalid || dependencyInstallPending"
+                canInteract="function:update"
+                [resource]="function._id"
               >
                 <mat-icon>add</mat-icon> Add New Dependency
               </button>
