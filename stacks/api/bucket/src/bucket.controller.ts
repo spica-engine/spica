@@ -25,6 +25,7 @@ import {createBucketActivity} from "./activity.resource";
 import {findRelations} from "./relation";
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 import * as expression from "@spica-server/bucket/expression";
+import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
 /**
  * All APIs related to bucket schemas.
  * @name bucket
@@ -34,7 +35,8 @@ export class BucketController {
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
-    @Optional() private history: HistoryService
+    @Optional() private history: HistoryService,
+    @Optional() private bucketCacheService: BucketCacheService
   ) {}
 
   /**
@@ -150,7 +152,7 @@ export class BucketController {
    * }
    * ```
    */
-  @UseInterceptors(activity(createBucketActivity))
+  @UseInterceptors(activity(createBucketActivity), invalidateCache())
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("bucket:update"))
   async replaceOne(
@@ -196,14 +198,23 @@ export class BucketController {
     if (contentType != "application/merge-patch+json") {
       throw new BadRequestException(`Content type '${contentType}' is not supported.`);
     }
+
     return this.bs.findOneAndUpdate({_id: id}, {$set: changes}, {returnOriginal: false});
+  }
+
+  @Delete("cache")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  clearCache() {
+    if (this.bucketCacheService) {
+      return this.bucketCacheService.reset();
+    }
   }
 
   /**
    * Removes the schema
    * @param id Identifier of the schema
    */
-  @UseInterceptors(activity(createBucketActivity))
+  @UseInterceptors(activity(createBucketActivity), invalidateCache())
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))

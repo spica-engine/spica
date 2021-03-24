@@ -74,8 +74,8 @@ export class FilterComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.schema && this.schema) {
-      this.property = undefined;
       this.fillHistory();
+      this.onSchemaChange();
       for (const [key, value] of Object.entries(this.schema.properties)) {
         if (this.resolver.getOriginByType(value.type)) {
           this.properties[key] = value;
@@ -177,11 +177,14 @@ export class FilterComponent implements OnChanges {
     return JSON.parse(history);
   }
 
-  reset() {
+  onSchemaChange() {
+    this.properties = {};
+    this.resetInputs();
+  }
+
+  resetInputs() {
     this.property = undefined;
-    this.value = undefined;
-    this.selectedOperator = undefined;
-    this.filter = undefined;
+    this.onPropertyChange();
   }
 
   onPropertyChange() {

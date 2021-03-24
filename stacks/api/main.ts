@@ -56,6 +56,16 @@ const args = yargs
   .demandOption("database-uri")
   /* Feature Toggling: Bucket and Activity Stream */
   .options({
+    "bucket-cache": {
+      boolean: true,
+      description: "It will reduce bucket-data response time significantly when enabled.",
+      default: true
+    },
+    "bucket-cache-ttl": {
+      number: true,
+      description: "Lifespan of the bucket-data response caches. Unit: second",
+      default: 60
+    },
     "activity-stream": {
       boolean: true,
       description: "Whether Activity Stream feature is enabled.",
@@ -263,6 +273,10 @@ Example: http(s)://doomed-d45f1.spica.io/api`
         args["passport-identity-token-expires-in"];
     }
 
+    if (args["bucket-cache"] && args["bucket-cache-ttl"] < 1) {
+      throw new TypeError("--bucket-cache-ttl must be a positive number");
+    }
+
     if (
       args["passport-identity-token-expiration-seconds-limit"] <
       args["passport-identity-token-expires-in"]
@@ -328,7 +342,9 @@ const modules = [
   BucketModule.forRoot({
     hooks: args["bucket-hooks"],
     history: args["bucket-history"],
-    realtime: args["experimental-bucket-realtime"]
+    realtime: args["experimental-bucket-realtime"],
+    cache: args["bucket-cache"],
+    cacheTtl: args["bucket-cache-ttl"]
   }),
   StorageModule.forRoot({
     strategy: args["storage-strategy"] as "default" | "gcloud",

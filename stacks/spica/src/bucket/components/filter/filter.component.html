@@ -2,21 +2,21 @@
   <button
     mat-flat-button
     [class.selected]="currentTabIndex == 0"
-    (click)="$event.stopPropagation(); currentTabIndex = 0; reset()"
+    (click)="$event.stopPropagation(); currentTabIndex = 0; resetInputs()"
   >
     Basic
   </button>
   <button
     mat-flat-button
     [class.selected]="currentTabIndex == 1"
-    (click)="$event.stopPropagation(); currentTabIndex = 1; reset()"
+    (click)="$event.stopPropagation(); currentTabIndex = 1; resetInputs()"
   >
     MongoDB
   </button>
   <button
     mat-flat-button
     [class.selected]="currentTabIndex == 2"
-    (click)="$event.stopPropagation(); currentTabIndex = 2; reset()"
+    (click)="$event.stopPropagation(); currentTabIndex = 2; resetInputs()"
   >
     Expression
   </button>
@@ -136,7 +136,7 @@
   <button mat-raised-button (click)="apply(); errorMessage && $event.stopPropagation()">
     Apply
   </button>
-  <button mat-raised-button color="warn" (click)="reset(); filterChange.emit(filter)">
+  <button mat-raised-button color="warn" (click)="resetInputs(); filterChange.emit(filter)">
     Clear
   </button>
 </div>
