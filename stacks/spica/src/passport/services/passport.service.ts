@@ -8,7 +8,6 @@ import {concatMap, map, shareReplay, tap} from "rxjs/operators";
 import {Identity} from "../interfaces/identity";
 import {Statement} from "../interfaces/statement";
 import {Strategy} from "../interfaces/strategy";
-import {DefaultUrlSerializer, Router} from "@angular/router";
 
 export type IdentifyParams = {identifier: string; password: string};
 
@@ -36,22 +35,14 @@ export class PassportService {
     return this.token !== null && !this.expired;
   }
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient) {}
 
   logout(): void {
     localStorage.removeItem("access_token");
   }
 
-  private encodeQueryParams(params: object) {
-    const serializer = new DefaultUrlSerializer();
-    const tree = this.router.createUrlTree([""], {queryParams: params});
-    return serializer.serialize(tree);
-  }
-
   identify(identity: IdentifyParams): Observable<any> {
-    const params = this.encodeQueryParams(identity);
-
-    return this.http.get(`api:/passport/identify${params}`).pipe(
+    return this.http.post("api:/passport/identify", identity).pipe(
       tap(response => {
         this.token = `${response.scheme} ${response.token}`;
         this._statements = undefined;

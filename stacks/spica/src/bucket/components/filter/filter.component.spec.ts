@@ -1,6 +1,6 @@
 import {CommonModule} from "@angular/common";
 import {Component, forwardRef, SimpleChange} from "@angular/core";
-import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {ComponentFixture, fakeAsync, TestBed, tick} from "@angular/core/testing";
 import {ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {MatInputModule} from "@angular/material/input";
 import {MatSelectModule} from "@angular/material/select";
@@ -9,6 +9,10 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {InputModule} from "@spica-client/common";
 import {OwlDateTimeModule, OwlDateTimeInputDirective} from "@danielmoncada/angular-datetime-picker";
 import {FilterComponent} from "./filter.component";
+import {EditorModule} from "@spica-client/common/code-editor";
+import {MatChipsModule} from "@angular/material/chips";
+import {MatIconModule} from "@angular/material/icon";
+import {MatTooltipModule} from "@angular/material/tooltip";
 
 @Component({
   template: `
@@ -33,6 +37,8 @@ class NoopPlacer implements ControlValueAccessor {
 
 describe("FilterComponent", () => {
   let fixture: ComponentFixture<FilterComponent>;
+  const applyButtonSelector = ".filter-buttons > button:first-of-type";
+  const clearButtonSelector = ".filter-buttons > button:last-of-type";
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -65,13 +71,18 @@ describe("FilterComponent", () => {
           }
         ]),
         NoopAnimationsModule,
-        OwlDateTimeModule
+        OwlDateTimeModule,
+        EditorModule,
+        MatChipsModule,
+        MatIconModule,
+        MatTooltipModule
       ],
       declarations: [FilterComponent, NoopPlacer]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FilterComponent);
     fixture.componentInstance.schema = {
+      _id: "objectid",
       primary: undefined,
       properties: {
         test: {
@@ -89,6 +100,11 @@ describe("FilterComponent", () => {
       schema: new SimpleChange(undefined, fixture.componentInstance.schema, true)
     });
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    localStorage.removeItem(`bucket_objectid_mongodb_filter_history`);
+    localStorage.removeItem(`bucket_objectid_expression_filter_history`);
   });
 
   it("should render properties", () => {
@@ -142,31 +158,119 @@ describe("FilterComponent", () => {
       fixture.debugElement.query(By.directive(NoopPlacer)).componentInstance._change("test1");
     });
 
-    it("should generate the filter", () => {
+    it("should generate the basic filter", () => {
       fixture.componentInstance.property = "test";
       fixture.detectChanges();
       fixture.debugElement.query(By.directive(NoopPlacer)).componentInstance._change("test1");
-      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.filter).toEqual({test: "test1"});
+    });
+
+    it("should generate the basic filter with operator", () => {
+      fixture.componentInstance.property = "test";
+      fixture.componentInstance.selectedOperator = "$regex";
+      fixture.detectChanges();
+      fixture.debugElement.query(By.directive(NoopPlacer)).componentInstance._change("test1");
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.componentInstance.filter).toEqual({test: {$regex: "test1"}});
+    });
+
+    it("should generate the mongodb filter, add it to the history", () => {
+      fixture.debugElement
+        .query(By.css("div.labels > button:nth-of-type(2)"))
+        .nativeElement.click();
+
+      fixture.componentInstance.value = '{"test":"value"}';
+
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.filter).toEqual({test: "value"});
+      expect(fixture.componentInstance.mongodbHistory).toEqual(['{"test":"value"}']);
+
+      const mongodbHistory = JSON.parse(
+        localStorage.getItem(`bucket_objectid_mongodb_filter_history`)
+      );
+      expect(mongodbHistory).toEqual(['{"test":"value"}']);
+    });
+
+    it("should generate the expression filter, add it to the history", () => {
+      fixture.debugElement
+        .query(By.css("div.labels > button:nth-of-type(3)"))
+        .nativeElement.click();
+
+      fixture.componentInstance.value = 'document.title == "test"';
+
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.filter).toEqual('document.title == "test"');
+      expect(fixture.componentInstance.expressionHistory).toEqual(['document.title == "test"']);
+
+      const expressionFilter = JSON.parse(
+        localStorage.getItem(`bucket_objectid_expression_filter_history`)
+      );
+      expect(expressionFilter).toEqual(['document.title == "test"']);
+    });
+
+    it("should keep history length 10", () => {
+      const histories = Array.from(new Array(10), (_, index) => (10 - index).toString());
+
+      fixture.componentInstance.addToHistory(histories, "11");
+      expect(histories[0]).toEqual("11");
+      expect(histories[1]).toEqual("10");
+
+      expect(histories[8]).toEqual("3");
+      expect(histories[9]).toEqual("2");
     });
 
     it("should generate the filter with date", () => {
       const dates = [new Date("2020-04-20T10:00:00.000Z"), new Date("2020-05-20T10:00:00.000Z")];
       fixture.componentInstance.property = "test1";
       fixture.componentInstance.value = dates;
-      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.componentInstance.filter).toEqual({
         test1: {$gte: "Date(2020-04-20T10:00:00.000Z)", $lt: "Date(2020-05-20T10:00:00.000Z)"}
       });
     });
 
+    it("should show error of mongodb filter if json.parse fails, and should not write it to the storage", fakeAsync(() => {
+      fixture.debugElement
+        .query(By.css("div.labels > button:nth-of-type(2)"))
+        .nativeElement.click();
+
+      fixture.componentInstance.value = "{";
+
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css("p.mat-error")).nativeElement.textContent).toEqual(
+        "SyntaxError: Unexpected end of JSON input"
+      );
+
+      expect(fixture.componentInstance.filter).toEqual(undefined);
+      expect(fixture.componentInstance.mongodbHistory).toEqual([]);
+
+      const mongodbHistory = JSON.parse(
+        localStorage.getItem(`bucket_objectid_mongodb_filter_history`)
+      );
+      expect(mongodbHistory).toEqual(null);
+
+      // remove the error from UI after 3 seconds
+      tick(3001);
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.css("p.mat-error"))).toEqual(null);
+    }), 10000);
+
     it("should generate the filter for onetoone relation", () => {
       fixture.componentInstance.schema.properties.test2["relationType"] = "onetoone";
       fixture.componentInstance.property = "test2";
       fixture.componentInstance.value = "anobjectid";
-      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.componentInstance.filter).toEqual({
         "test2._id": "anobjectid"
@@ -177,7 +281,7 @@ describe("FilterComponent", () => {
       fixture.componentInstance.schema.properties.test2["relationType"] = "onetomany";
       fixture.componentInstance.property = "test2";
       fixture.componentInstance.value = ["anobjectid"];
-      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.componentInstance.filter).toEqual({
         "test2._id": {
@@ -187,15 +291,15 @@ describe("FilterComponent", () => {
     });
 
     it("should emit filter", () => {
-      fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
+      fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({test: {$regex: "test1"}});
-      expect(changeSpy).toHaveBeenCalledWith({test: {$regex: "test1"}});
+      expect(fixture.componentInstance.filter).toEqual({test: "test1"});
+      expect(changeSpy).toHaveBeenCalledWith({test: "test1"});
     });
 
     it("should clear filter and emit", () => {
       changeSpy.calls.reset();
-      fixture.debugElement.query(By.css("button:last-of-type")).nativeElement.click();
+      fixture.debugElement.query(By.css(clearButtonSelector)).nativeElement.click();
       fixture.detectChanges();
       expect(fixture.componentInstance.filter).toBeUndefined();
       expect(changeSpy).toHaveBeenCalledWith(undefined);

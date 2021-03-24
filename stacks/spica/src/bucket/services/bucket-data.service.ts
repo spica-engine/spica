@@ -1,7 +1,7 @@
 import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {IndexResult} from "@spica-client/core/interfaces";
-import {forkJoin, Observable, zip} from "rxjs";
+import {forkJoin, Observable} from "rxjs";
 import {map} from "rxjs/operators";
 import {BucketEntry, BucketRow} from "../interfaces/bucket-entry";
 

@@ -43,6 +43,7 @@ import {PassportModule, PassportService} from "../passport";
 import {StorageModule} from "../storage";
 import {BucketRoutingModule} from "./bucket-routing.module";
 import {CelLanguageDirective} from "./components/cel-editor/cel.language";
+import {JsonLanguageDirective} from "./components/json-editor/json.language";
 import {FilterComponent} from "./components/filter/filter.component";
 import {PropertyLanguageComponent} from "./components/language/language.component";
 import {createLocation, LocationComponent} from "./components/location/location.component";
@@ -154,7 +155,8 @@ import {MatButtonToggleModule} from "@angular/material/button-toggle";
     FilterComponent,
     RequiredTranslate,
     AddFieldModalComponent,
-    CelLanguageDirective
+    CelLanguageDirective,
+    JsonLanguageDirective
   ]
 })
 export class BucketModule {

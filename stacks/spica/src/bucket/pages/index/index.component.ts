@@ -52,7 +52,8 @@ export class IndexComponent implements OnInit {
 
   guide: boolean = false;
   guideResponse: {[key: string]: string};
-  guideUrls: any;
+  guideObjects: object;
+  rootUrl: string;
 
   readonly defaultPaginatorOptions = {
     pageSize: 10,
@@ -69,6 +70,7 @@ export class IndexComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.rootUrl = window.location.origin;
     this.$preferences = this.bs.getPreferences();
 
     this.schema$ = this.route.params.pipe(
@@ -166,10 +168,10 @@ export class IndexComponent implements OnInit {
         this.paginator.length = (response.meta && response.meta.total) || 0;
         this.dataIds = response.data.map(d => d._id);
         this.loaded = true;
-        let bucketUrl = `/bucket/${this.bucketId}/data?`;
+        const bucketUrl = `/bucket/${this.bucketId}/data?`;
 
         setTimeout(() => {
-          let usableProperties = this.properties.filter(
+          const usableProperties = this.properties.filter(
             prop => !prop.name.startsWith("$$spicainternal_")
           );
 
@@ -179,14 +181,49 @@ export class IndexComponent implements OnInit {
             response.data.length && firstProp ? response.data[0][firstProp] : "";
           const secondPropValue =
             response.data.length && secondProp ? response.data[0][secondProp] : "";
-          this.guideUrls = {
-            getAllWithLimit: `${bucketUrl}limit=3`,
-            getAllWithSort: `${bucketUrl}limit=3&sort={"${firstProp}":1}`,
-            getWithFilter: `${bucketUrl}limit=3&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}`,
-            getWithLike: `${bucketUrl}limit=3&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}`,
-            getWithDoubleFilter: `${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"},"${secondProp}":{"$regex":"${secondPropValue}"}}`,
-            getOnlyScheduled: `${bucketUrl}paginate=true&limit=3&schedule=true`,
-            getDataWithLang: `${bucketUrl}limit=3`
+          this.guideObjects = {
+            getAllWithLimit: {
+              title: "Get Limited Data",
+              description:
+                "To get all data using limits, simply you can add 'limit' [number] parameter as query params. You can try the live demo below.",
+              url: `${bucketUrl}limit=3`
+            },
+            getAllWithSort: {
+              title: "Get Limited Data With Sorting",
+              description:
+                "To sort your dataset, you can add 'sort' [object] parameter as query params. You can try the live demo below. ",
+              url: `${bucketUrl}limit=3&sort={"${firstProp}":1}`
+            },
+            getWithFilterMongoDb: {
+              title: "Get Filtered Data (MongoDB Match Aggregation)",
+              description:
+                "To filter your data, you can use MongoDB match aggregations in 'filter' [object] query parameter. You can try the live demo below.",
+              url: `${bucketUrl}limit=3&filter={"${firstProp}":{"$regex":"${firstPropValue}"}}`
+            },
+            getWithFilterRulesEngine: {
+              title: "Get Filtered Data (Spica Rules Engine) ",
+              description:
+                "To filter your data, you can use built-in 'Spica Rules' engine in 'filter' [string] query parameter. You can try the live demo below.",
+              url: `${bucketUrl}limit=3&filter=${firstProp}=='${firstPropValue}'`
+            },
+            getWithDoubleFilter: {
+              title: "Using Double Filter",
+              description:
+                "You can apply double filter to your requests as well. You can try the live demo below.",
+              url: `${bucketUrl}limit=1&filter={"${firstProp}":{"$regex":"${firstPropValue}"},"${secondProp}":{"$regex":"${secondPropValue}"}}`
+            },
+            getOnlyScheduled: {
+              title: "Get Scheduled Data",
+              description:
+                "You can get all scheduled data with using 'shcedule' [boolean] query parameter. You can try the live demo below.",
+              url: `${bucketUrl}?limit=3&schedule=true`
+            },
+            getDataWithLang: {
+              title: "Get Localized Data",
+              description:
+                "To get localized data, you can use 'Accept-Language' request header. As an example '{Accept-Language: \"en-EN\"}'",
+              url: ``
+            }
           };
         }, 1000);
 
@@ -385,6 +422,8 @@ export class IndexComponent implements OnInit {
         return this.sanitizer.bypassSecurityTrustHtml(
           `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=${value} alt=${value}>`
         );
+      case "location":
+        return [value.coordinates[1], value.coordinates[0]];
       default:
         return value;
     }

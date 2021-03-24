@@ -1,39 +1,158 @@
-<mat-form-field (click)="$event.stopPropagation()">
-  <mat-select placeholder="Attribute to Filter" [(ngModel)]="property">
-    <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
-      {{ propertyKv.value.title || propertyKv.key }}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
-<span
-  *ngIf="property && properties[property].type != 'date'"
-  [inputPlacer]="properties[property]"
-  [(ngModel)]="value"
-  (click)="$event.stopPropagation()"
-></span>
-<span *ngIf="property && properties[property].type == 'date'" (click)="$event.stopPropagation()">
-  <mat-form-field>
-    <mat-label>{{ properties[property].title || properties[property].$name }}</mat-label>
-    <input
-      matInput
-      type="datetime"
+<div class="labels">
+  <button
+    mat-flat-button
+    [class.selected]="currentTabIndex == 0"
+    (click)="$event.stopPropagation(); currentTabIndex = 0; resetInputs()"
+  >
+    Basic
+  </button>
+  <button
+    mat-flat-button
+    [class.selected]="currentTabIndex == 1"
+    (click)="$event.stopPropagation(); currentTabIndex = 1; resetInputs()"
+  >
+    MongoDB
+  </button>
+  <button
+    mat-flat-button
+    [class.selected]="currentTabIndex == 2"
+    (click)="$event.stopPropagation(); currentTabIndex = 2; resetInputs()"
+  >
+    Expression
+  </button>
+</div>
+
+<div (click)="$event.stopPropagation()">
+  <ng-container *ngIf="currentTabIndex == 0">
+    <mat-form-field (click)="$event.stopPropagation()">
+      <mat-select
+        placeholder="Attribute to Filter"
+        [(ngModel)]="property"
+        (ngModelChange)="onPropertyChange()"
+      >
+        <mat-option *ngFor="let propertyKv of properties | keyvalue" [value]="propertyKv.key">
+          {{ propertyKv.value.title || propertyKv.key }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <ng-container *ngIf="properties[property]?.type; let type">
+      <mat-form-field
+        (click)="$event.stopPropagation()"
+        class="operator"
+        *ngIf="operators.hasOwnProperty(type)"
+      >
+        <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator">
+          <mat-option
+            *ngFor="let operatorKv of operators[type] | keyvalue"
+            [value]="operatorKv.value"
+          >
+            {{
+              operatorKv.key
+                .replace(operatorKv.key[0], operatorKv.key[0].toUpperCase())
+                .replaceAll("_", " ")
+            }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </ng-container>
+    <span
+      *ngIf="property && properties[property].type != 'date'"
+      [inputPlacer]="properties[property]"
       [(ngModel)]="value"
-      (focus)="dt1.open()"
-      [owlDateTime]="dt1"
-      [owlDateTimeTrigger]="dt1"
-      placeholder="Date Time"
-      selectMode="range"
-    />
-    <owl-date-time #dt1></owl-date-time>
-    <mat-hint *ngIf="schema.description">{{ properties[property].description }}</mat-hint>
-  </mat-form-field>
-</span>
+      (click)="$event.stopPropagation()"
+    ></span>
+    <span
+      *ngIf="property && properties[property].type == 'date'"
+      (click)="$event.stopPropagation()"
+    >
+      <mat-form-field>
+        <mat-label>{{ properties[property].title || properties[property].$name }}</mat-label>
+        <input
+          matInput
+          type="datetime"
+          [(ngModel)]="value"
+          (focus)="dt1.open()"
+          [owlDateTime]="dt1"
+          [owlDateTimeTrigger]="dt1"
+          placeholder="Date Time"
+          selectMode="range"
+        />
+        <owl-date-time #dt1></owl-date-time>
+        <mat-hint *ngIf="schema.description">{{ properties[property].description }}</mat-hint>
+      </mat-form-field>
+    </span>
+  </ng-container>
+  <ng-container *ngIf="currentTabIndex == 1">
+    <div class="tab-content">
+      <code-editor
+        *ngIf="currentTabIndex == 1"
+        placeholder="MongoDB Filter"
+        [(ngModel)]="value"
+        [options]="{
+          minimap: {enabled: false},
+          lineNumbers: 'off',
+          contextmenu: false,
+          value: '{\n\t\n}'
+        }"
+        language="json"
+      >
+      </code-editor>
+      <div class="history">
+        <ng-container
+          [ngTemplateOutlet]="historyTemplate"
+          [ngTemplateOutletContext]="{itemLength: 10, type: 'mongodb', histories: mongodbHistory}"
+        ></ng-container>
+      </div>
+    </div>
+    <p class="mat-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </ng-container>
+  <ng-container *ngIf="currentTabIndex == 2">
+    <div class="tab-content">
+      <code-editor
+        *ngIf="currentTabIndex == 2"
+        placeholder="Expression Filter"
+        [(ngModel)]="value"
+        [options]="{minimap: {enabled: false}, lineNumbers: 'off', contextmenu: false, value: ''}"
+        language="cel"
+        [properties]="properties"
+        context="filter"
+      >
+      </code-editor>
+      <div class="history">
+        <ng-container
+          [ngTemplateOutlet]="historyTemplate"
+          [ngTemplateOutletContext]="{
+            itemLength: 5,
+            type: 'expression',
+            histories: expressionHistory
+          }"
+        ></ng-container>
+      </div>
+    </div>
+  </ng-container>
+</div>
 
 <div class="filter-buttons">
-  <button mat-raised-button (click)="apply()">
+  <button mat-raised-button (click)="apply(); errorMessage && $event.stopPropagation()">
     Apply
   </button>
-  <button mat-raised-button color="warn" (click)="clear()">
+  <button mat-raised-button color="warn" (click)="resetInputs(); filterChange.emit(filter)">
     Clear
   </button>
 </div>
+
+<ng-template #historyTemplate let-itemLength="itemLength" let-type="type" let-histories="histories">
+  <h4 class="mat-h4"><mat-icon>history</mat-icon><span>History</span></h4>
+  <mat-chip-list>
+    <mat-chip
+      (click)="value = history"
+      [matTooltip]="history"
+      *ngFor="let history of histories; index as i"
+      removable
+      (removed)="histories.splice(i, 1); saveHistoryChanges(type, histories)"
+    >
+      {{ history?.length > itemLength ? history.slice(0, itemLength) + ".." : history }}
+      <mat-icon matChipRemove>cancel</mat-icon>
+    </mat-chip>
+  </mat-chip-list>
+</ng-template>

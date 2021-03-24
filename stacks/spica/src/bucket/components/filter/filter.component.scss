@@ -1,17 +1,34 @@
 :host {
-  ::ng-deep .input-placer-input {
-    display: block;
-    &.boolean,
-    &.storage {
-      padding: 0 10%;
-    }
-    > mat-form-field,
-    section,
-    section ~ mat-hint {
-      width: 80% !important;
-      margin: 0 10%;
+  ::ng-deep {
+    .input-placer-input {
+      display: block;
+      &.boolean,
+      &.storage {
+        padding: 0 10%;
+      }
+
+      > mat-form-field,
+      section,
+      section ~ mat-hint {
+        width: 80% !important;
+        margin: 0 10%;
+      }
     }
   }
+
+  div.labels {
+    display: flex;
+    align-items: baseline;
+    button {
+      border-radius: 0;
+      flex: 1;
+    }
+  }
+
+  .selected {
+    border-bottom: 1px solid #c0c0c0;
+  }
+
   mat-form-field,
   section {
     width: 80% !important;
@@ -23,5 +40,35 @@
     button {
       margin: 5px;
     }
+  }
+
+  div.tab-content {
+    margin: 10px 0px;
+    display: flex;
+    flex-direction: row;
+    code-editor {
+      flex: 4;
+    }
+
+    div.history {
+      flex: 1;
+
+      h4 {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      mat-chip-list {
+        margin-top: 15px;
+      }
+
+      mat-chip {
+        margin: 5px auto;
+      }
+    }
+  }
+
+  p.mat-error {
+    text-align: center;
   }
 }

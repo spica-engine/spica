@@ -43,7 +43,6 @@ import {
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import * as expression from "../expression";
 import {createBucketDataActivity} from "./activity.resource";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
@@ -54,6 +53,7 @@ import {
   replaceDocument,
   authIdToString
 } from "./crud";
+import {expressionFilterParser} from "./filter";
 import {createHistory} from "./history";
 import {applyPatch} from "./patch";
 import {clearRelations, getRelationPaths, getDependents} from "./relation";
@@ -102,7 +102,7 @@ export class BucketDataController {
     @Query("paginate", DEFAULT(false), BOOLEAN) paginate?: boolean,
     @Query("schedule", DEFAULT(false), BOOLEAN) schedule?: boolean,
     @Query("localize", DEFAULT(true), BOOLEAN) localize?: boolean,
-    @Query("filter", OR(isJSONFilter, JSONPR(filterReviver), EXPRESSION(expression.aggregate)))
+    @Query("filter", OR(isJSONFilter, JSONPR(filterReviver), EXPRESSION(expressionFilterParser)))
     filter?: string | object,
     @Query("limit", NUMBER) limit?: number,
     @Query("skip", NUMBER) skip?: number,

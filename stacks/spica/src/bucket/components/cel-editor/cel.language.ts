@@ -15,6 +15,7 @@ let hasRegistered = false;
 export class CelLanguageDirective implements OnDestroy {
   private disposables: Array<any> = [];
   @Input("properties") bucketProperties: object;
+  @Input() context: "rule" | "filter" = "rule";
 
   async onInit() {
     if (hasRegistered) {
@@ -67,82 +68,110 @@ export class CelLanguageDirective implements OnDestroy {
       endColumn: number;
     }
   ) {
-    const suggestions = [];
+    const {fields, macros} = await import("./suggestions").then(suggestions =>
+      this.prepareSuggestions(suggestions, range)
+    );
 
-    if (typedText.match(/(^|[^\w.])auth\.$/)) {
-      const {auths} = await import("./suggestions");
+    const document = fields.find(field => field.label == "document");
 
-      suggestions.push(
-        ...auths.map(suggestion => {
-          return {
-            label: suggestion.label,
-            kind: monaco.languages.CompletionItemKind.Field,
-            documentation: suggestion.description,
-            insertText: suggestion.text,
-            range: range
-          };
-        })
-      );
-    } else if (typedText.match(/(^|[^\w.])document\.$/)) {
-      suggestions.push(
-        ...Object.entries({...this.bucketProperties, _id: {description: "Document id"}}).map(
-          ([name, definition]) => {
-            return {
-              label: name,
-              kind: monaco.languages.CompletionItemKind.Field,
-              documentation: definition.description,
-              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              insertText: name,
-              range: range
-            };
-          }
-        )
-      );
-    } else if (typedText.match(/(^|[^.])$/)) {
-      const {baseFields, functions, examples} = await import("./suggestions");
+    const auth = fields.find(field => field.label == "auth");
 
-      suggestions.push(
-        ...baseFields.map(suggestion => {
-          return {
-            label: suggestion.label,
-            kind: monaco.languages.CompletionItemKind.Field,
-            documentation: suggestion.description,
-            insertText: suggestion.text,
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            range: range
-          };
-        })
-      );
+    const documentTyped = typedText.match(/(^|[^\w.])document\.$/);
+    const authTyped = typedText.match(/(^|[^\w.])auth\.$/);
+    const typedNone = typedText.match(/(^|[^.])$/);
 
-      suggestions.push(
-        ...functions.map(suggestion => {
-          return {
-            label: suggestion.label,
-            kind: monaco.languages.CompletionItemKind.Function,
-            documentation: suggestion.description,
-            detail: suggestion.detail,
-            insertText: suggestion.text,
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            range: range
-          };
-        })
-      );
-
-      suggestions.push(
-        ...examples.map(suggestion => {
-          return {
-            label: suggestion.label,
-            kind: monaco.languages.CompletionItemKind.Snippet,
-            detail: suggestion.detail,
-            insertText: suggestion.text,
-            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-            range: range
-          };
-        })
-      );
+    if (documentTyped) {
+      return document.properties;
     }
 
-    return suggestions;
+    if (authTyped && this.context == "rule") {
+      return auth.properties;
+    }
+
+    if (typedNone) {
+      const suggestions = [];
+
+      suggestions.push(...macros);
+
+      suggestions.push(document);
+      suggestions.push(...document.examples);
+
+      if (this.context == "rule") {
+        suggestions.push(auth);
+        suggestions.push(...auth.examples);
+      }
+
+      return suggestions;
+    }
+
+    return [];
+  }
+
+  prepareSuggestions(suggestions: any, range: any) {
+    const result: any = {};
+
+    result.macros = suggestions.macros.map(macro => {
+      return {
+        label: macro.label,
+        kind: monaco.languages.CompletionItemKind.Function,
+        documentation: macro.description,
+        detail: macro.detail,
+        insertText: macro.text,
+        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        range: range
+      };
+    });
+
+    result.fields = suggestions.fields.map(field => {
+      const mappedExamples = field.examples.map(example => {
+        return {
+          label: example.label,
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          detail: example.detail,
+          insertText: example.text,
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          range: range
+        };
+      });
+
+      if (field.label == "document") {
+        const mappedBucketProperties = Object.entries(this.bucketProperties)
+          .concat([["_id", {description: "Document id"}]])
+          .map(([name, definition]) => {
+            return {
+              label: name,
+              description: definition.description,
+              text: name
+            };
+          });
+        field.properties = mappedBucketProperties;
+      }
+
+      const mappedProperties = field.properties.map(property => {
+        return {
+          label: property.label,
+          kind: monaco.languages.CompletionItemKind.Field,
+          documentation: property.description,
+          insertText: property.text,
+          range: range
+        };
+      });
+
+      const mappedField = {
+        label: field.label,
+        kind: monaco.languages.CompletionItemKind.Field,
+        documentation: field.description,
+        insertText: field.text,
+        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        range: range,
+        properties: mappedProperties,
+        examples: mappedExamples
+      };
+
+      return mappedField;
+    });
+
+    return result;
   }
 
   ngOnDestroy(): void {
