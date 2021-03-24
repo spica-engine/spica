@@ -32,7 +32,8 @@ describe("GraphQLController", () => {
         BucketModule.forRoot({
           hooks: false,
           history: false,
-          realtime: false
+          realtime: false,
+          cache: false
         }),
         ActivityModule.forRoot({expireAfterSeconds: 10})
       ]

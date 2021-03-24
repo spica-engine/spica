@@ -12,8 +12,12 @@
     "url": "https://github.com/spica-engine/spica.git"
   },
   "workspaces": {
-    "packages": ["stacks/*"],
-    "nohoist": ["*"]
+    "packages": [
+      "stacks/*"
+    ],
+    "nohoist": [
+      "*"
+    ]
   },
   "scripts": {
     "bazel:format": "find . -type f \\( -name \"*.bzl\" -or -name WORKSPACE -or -name BUILD -or -name BUILD.bazel \\) ! -path \"*/node_modules/*\" | xargs buildifier -v --warnings=attr-cfg,attr-license,attr-non-empty,attr-output-default,attr-single-file,constant-glob,ctx-args,depset-iteration,depset-union,dict-concatenation,duplicated-name,filetype,git-repository,http-archive,integer-division,load,load-on-top,native-build,native-package,output-group,package-name,package-on-top,positional-args,redefined-variable,repository-name,same-origin-load,string-iteration,unused-variable",
@@ -37,10 +41,16 @@
     "@nestjs/platform-express": "^7.0.13",
     "@nestjs/platform-ws": "^7.0.13",
     "@nestjs/websockets": "^7.0.13",
+    "@types/cache-manager": "^3.4.0",
+    "ajv": "^7.0.0-beta.7",
+    "ajv-formats": "^0.5.0",
+    "axios": "^0.21.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
     "bson": "^4.0.1",
+    "cache-manager": "^3.4.1",
     "color-name-list": "^3.75.0",
+    "cosmiconfig": "^7.0.0",
     "cron": "^1.7.1",
     "css-tree": "^1.0.0-alpha.29",
     "deep-diff": "^1.0.2",
@@ -63,8 +73,6 @@
     "mongodb": "^3.5.8",
     "mongodb-memory-server-core": "^6.9.2",
     "multimatch": "^3.0.0",
-    "cosmiconfig": "^7.0.0",
-    "axios": "^0.21.0",
     "nearest-color": "^0.4.4",
     "node-forge": "^0.9.1",
     "open": "^6.4.0",
@@ -90,9 +98,7 @@
     "url": "^0.11.0",
     "vm2": "^3.6.9",
     "ws": "^7.1.2",
-    "yargs": "15.3.1",
-    "ajv": "^7.0.0-beta.7",
-    "ajv-formats": "^0.5.0"
+    "yargs": "15.3.1"
   },
   "devDependencies": {
     "@bazel/bazelisk": "^1.6.1",
@@ -103,7 +109,9 @@
     "@bazel/typescript": "^2.2.2",
     "@bazel/worker": "^2.2.2",
     "@nestjs/testing": "^7.0.13",
+    "@rollup/plugin-commonjs": "^16.0.0",
     "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
     "@types/css-tree": "^1.0.0",
     "@types/deep-diff": "^1.0.0",
     "@types/diff-match-patch": "^1.0.32",
@@ -134,8 +142,6 @@
     "remark-html": "^9.0.1",
     "remark-slug": "^5.1.2",
     "rollup": "^2.33.3",
-    "@rollup/plugin-commonjs": "^16.0.0",
-    "@rollup/plugin-node-resolve": "^10.0.0",
     "rollup-plugin-terser": "^7.0.2",
     "which": "^2.0.2"
   }
