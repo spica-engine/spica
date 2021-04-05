@@ -121,7 +121,7 @@ export class PipelineBuilder implements iPipelineBuilder {
         Object.keys(filterByUserRequest).length
       ) {
         filterPropertyMap = extractFilterPropertyMap(filterByUserRequest);
-
+        console.dir(filterPropertyMap, {depth: Infinity});
         filterExpression = filterByUserRequest;
       } else if (typeof filterByUserRequest == "string") {
         filterPropertyMap = expression
