@@ -251,7 +251,7 @@
 
             <td
               mat-cell
-              [innerHTML]="buildTemplate(row[property.key], property.value)"
+              [innerHTML]="buildTemplate(row[property.key], property.value, property.key)"
               *matCellDef="let row"
             ></td>
           </ng-container>
