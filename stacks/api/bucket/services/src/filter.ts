@@ -26,14 +26,14 @@ export function isJSONFilter(value: any) {
 
 interface Extractor {
   operators: string[];
-  factory: (...args) => string[][];
+  factory: (expression: Expression) => string[][];
 }
 
 interface Expression {
   [key: string]: any;
 }
 
-const DefaultExtractor: Extractor = {
+export const DefaultExtractor: Extractor = {
   operators: [],
   factory: (expression: Expression) => {
     const map: string[][] = [];
@@ -45,7 +45,7 @@ const DefaultExtractor: Extractor = {
   }
 };
 
-const LogicalExtractor: Extractor = {
+export const LogicalExtractor: Extractor = {
   operators: ["$or", "$and", "$nor"],
   factory: (expression: Expression) => {
     const maps: string[][] = [];
