@@ -38,4 +38,4 @@ echo -e "$CONTENT" >CHANGELOG.md
 
 git tag -d "${VERSION}" >/dev/null 2>&1
 
-echo "Succesfully completed."
+echo "Succesfully completed. Do not forget to push changes."
