@@ -169,12 +169,14 @@ describe("FilterComponent", () => {
 
     it("should generate the basic filter with operator", () => {
       fixture.componentInstance.property = "test";
-      fixture.componentInstance.selectedOperator = "$regex";
+      fixture.componentInstance.properties.test.type = "string";
+
+      fixture.componentInstance.selectedOperator = "contains";
       fixture.detectChanges();
       fixture.debugElement.query(By.directive(NoopPlacer)).componentInstance._change("test1");
       fixture.debugElement.query(By.css(applyButtonSelector)).nativeElement.click();
       fixture.detectChanges();
-      expect(fixture.componentInstance.filter).toEqual({test: {$regex: "test1"}});
+      expect(fixture.componentInstance.filter).toEqual({test: {$regex: "test1", $options: "i"}});
     });
 
     it("should generate the mongodb filter, add it to the history", () => {

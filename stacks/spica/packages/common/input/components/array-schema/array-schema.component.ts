@@ -1,5 +1,5 @@
 import {Component, Inject} from "@angular/core";
-import {EMPTY_INPUT_SCHEMA, InputSchema, INPUT_SCHEMA} from "../../input";
+import {DEFAULT_ARRAY_ITEM, InputSchema, INPUT_SCHEMA} from "../../input";
 import {InputResolver} from "../../input.resolver";
 import {SchemaComponent} from "../schema.component";
 
@@ -12,7 +12,7 @@ export class ArraySchemaComponent extends SchemaComponent {
 
   constructor(@Inject(INPUT_SCHEMA) public schema: InputSchema, private resolver: InputResolver) {
     super(schema);
-    this.schema.items = this.schema.items || {...EMPTY_INPUT_SCHEMA};
+    this.schema.items = this.schema.items || DEFAULT_ARRAY_ITEM;
     this.getOrigin();
   }
 

@@ -40,7 +40,7 @@ export async function preparePutBody(object: File | BufferWithMeta) {
 }
 
 async function getContent(file: File | BufferWithMeta) {
-  let data: string | Buffer | Uint8Array | number[];
+  let data;
   let name: string;
   let type: string;
 
