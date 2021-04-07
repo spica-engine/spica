@@ -44,7 +44,7 @@
         <mat-select placeholder="Select an operator" [(ngModel)]="selectedOperator">
           <mat-option
             *ngFor="let operatorKv of operators[type] | keyvalue"
-            [value]="operatorKv.value"
+            [value]="operatorKv.key"
           >
             {{
               operatorKv.key

@@ -32,31 +32,40 @@ export class FilterComponent implements OnChanges {
 
   selectedOperator = "";
 
+  containsBuilder = (value: string) => {
+    return {
+      // we should escape special characters
+      $regex: value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      $options: "i"
+    };
+  };
+
   operators = {
     string: {
-      equals: "$eq",
-      not_equal: "$ne",
-      regex: "$regex"
+      equals: this.createValueBuilder("$eq"),
+      not_equal: this.createValueBuilder("$neq"),
+      contains: this.createValueBuilder("$regex", this.containsBuilder),
+      regex: this.createValueBuilder("$regex")
     },
     textarea: {
-      equals: "$eq",
-      not_equal: "$ne",
-      regex: "$regex"
+      equals: this.createValueBuilder("$eq"),
+      not_equal: this.createValueBuilder("$neq"),
+      contains: this.createValueBuilder("$regex", this.containsBuilder),
+      regex: this.createValueBuilder("$regex")
     },
     number: {
-      equals: "$eq",
-      not_equal: "$ne",
-      less_than: "$lt",
-      greater_than: "$gt",
-      less_than_or_equal: "$lte",
-      greater_than_or_equal: "$gte"
+      equals: this.createValueBuilder("$eq"),
+      not_equal: this.createValueBuilder("$ne"),
+      less_than: this.createValueBuilder("$lt"),
+      greater_than: this.createValueBuilder("$gt"),
+      less_than_or_equal: this.createValueBuilder("$lte"),
+      greater_than_or_equal: this.createValueBuilder("$gte")
     },
     array: {
-      include_one: "$in",
-      not_include: "$nin",
-      include_all: "$all"
+      include_one: this.createValueBuilder("$in"),
+      not_include: this.createValueBuilder("$nin"),
+      include_all: this.createValueBuilder("$all")
     }
-    //@TODO: object and location that we may need to add
   };
 
   get active(): boolean {
@@ -71,6 +80,15 @@ export class FilterComponent implements OnChanges {
   typeMappings = new Map<string, string>([["richtext", "textarea"]]);
 
   constructor(private resolver: InputResolver) {}
+
+  createValueBuilder(
+    operator: string,
+    builder = value => {
+      return {[operator]: value};
+    }
+  ) {
+    return value => builder(value);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.schema && this.schema) {
@@ -140,7 +158,10 @@ export class FilterComponent implements OnChanges {
 
       default:
         if (this.selectedOperator) {
-          return {[this.property]: {[this.selectedOperator]: this.value}};
+          const valueBuilder = this.operators[type][this.selectedOperator];
+          const preparedValue = valueBuilder(this.value);
+
+          return {[this.property]: preparedValue};
         }
         return {[this.property]: this.value};
     }
