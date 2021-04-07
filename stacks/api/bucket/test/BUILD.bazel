@@ -200,3 +200,22 @@ jasmine_node_test(
         "patch_test_lib",
     ],
 )
+
+ts_library(
+    name = "locale_test_lib",
+    testonly = True,
+    srcs = [
+        "locale.spec.ts",
+    ],
+    deps = [
+        "//stacks/api/bucket",
+        "@npm//@types/jasmine",
+    ],
+)
+
+jasmine_node_test(
+    name = "locale_test",
+    deps = [
+        "locale_test_lib",
+    ],
+)

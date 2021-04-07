@@ -33,7 +33,10 @@ export interface StorageObject {
 }
 
 export interface BufferWithMeta {
-  data: string | Buffer | Uint8Array | number[];
+  /**
+   * string | Buffer | Uint8Array | number[];
+   */
+  data: any;
   name: string;
   contentType: string;
 }

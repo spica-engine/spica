@@ -1,6 +1,7 @@
 import {provideLanguageFinalizer} from "@spica-server/bucket/src/locale";
 
 describe("provideLanguageChangeUpdater", () => {
+  let childrenSpy: jasmine.Spy;
   const translatableBuckets = [
     {_id: "bucket1", properties: {title: {}, description: {}}},
     {_id: "bucket2", properties: {name: {}}}
@@ -8,7 +9,7 @@ describe("provideLanguageChangeUpdater", () => {
 
   const bucketDataService: any = {
     updateMany: jasmine.createSpy("updateMany").and.returnValue(Promise.resolve()),
-    children: () => bucketDataService
+    children: schema => bucketDataService
   };
 
   const bucketService: any = {
@@ -18,6 +19,14 @@ describe("provideLanguageChangeUpdater", () => {
   };
 
   const updaterFactory = provideLanguageFinalizer(bucketService, bucketDataService);
+
+  beforeAll(() => {
+    childrenSpy = spyOn(bucketDataService, "children").and.callThrough();
+  });
+
+  afterEach(() => {
+    childrenSpy.calls.reset();
+  });
 
   it("should return updater function", () => {
     expect(typeof updaterFactory == "function").toBe(true);
@@ -43,7 +52,7 @@ describe("provideLanguageChangeUpdater", () => {
     ).then(result => expect(result).toBeUndefined());
   });
 
-  it("should return update bucket entries when language removed", async () => {
+  it("should update bucket entries when language removed", async () => {
     await updaterFactory(
       {
         language: {
@@ -99,14 +108,16 @@ describe("provideLanguageChangeUpdater", () => {
       }
     ]);
 
+    expect(childrenSpy).toHaveBeenCalledTimes(2);
+    expect(childrenSpy.calls.allArgs()).toEqual([
+      [translatableBuckets[0]],
+      [translatableBuckets[1]]
+    ]);
+
     expect(bucketDataService.updateMany).toHaveBeenCalledTimes(2);
     expect(bucketDataService.updateMany.calls.allArgs()).toEqual([
-      [
-        "bucket1",
-        {},
-        {$unset: {"title.fr": "", "title.de": "", "description.fr": "", "description.de": ""}}
-      ],
-      ["bucket2", {}, {$unset: {"name.fr": "", "name.de": ""}}]
+      [{}, {$unset: {"title.fr": "", "title.de": "", "description.fr": "", "description.de": ""}}],
+      [{}, {$unset: {"name.fr": "", "name.de": ""}}]
     ]);
   });
 });

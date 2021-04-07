@@ -494,25 +494,37 @@ describe("IndexComponent", () => {
 
   describe("row template", () => {
     it("should return when value is undefined or null", () => {
-      let template = fixture.componentInstance.buildTemplate(undefined, {});
+      const template = fixture.componentInstance.buildTemplate(undefined, {}, "title");
       expect(template).toEqual(undefined);
     });
 
     it("should return object", () => {
-      let template = fixture.componentInstance.buildTemplate({test: "value"}, {type: "object"});
+      const template = fixture.componentInstance.buildTemplate(
+        {test: "value"},
+        {type: "object"},
+        "object"
+      );
       expect(template).toEqual('{"test":"value"}');
     });
 
     it("should return date", () => {
-      let now = new Date();
-      let template = fixture.componentInstance.buildTemplate(now, {
-        type: "date"
-      });
+      const now = new Date();
+      const template = fixture.componentInstance.buildTemplate(
+        now,
+        {
+          type: "date"
+        },
+        "dates"
+      );
       expect(template).toEqual(now.toLocaleString());
     });
 
     it("should return color", () => {
-      let template = fixture.componentInstance.buildTemplate("#ffffff", {type: "color"});
+      const template = fixture.componentInstance.buildTemplate(
+        "#ffffff",
+        {type: "color"},
+        "favorite_color"
+      );
       expect(template).toEqual(
         fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
           `<div style='width:20px; height:20px; background-color:#ffffff; border-radius:3px'></div>`
@@ -521,31 +533,37 @@ describe("IndexComponent", () => {
     });
 
     it("should return relation one to one", () => {
-      let template = fixture.componentInstance.buildTemplate(
+      const template = fixture.componentInstance.buildTemplate(
         {test: "value", otherField: "other_value"},
         {
           type: "relation",
           relationType: "onetoone",
           primary: "test"
-        }
+        },
+        "address"
       );
       expect(template).toEqual("value");
     });
 
     it("should return relation one to many", () => {
-      let template = fixture.componentInstance.buildTemplate(
+      const template = fixture.componentInstance.buildTemplate(
         [{test: "value", otherField: "other_value"}, {test: "value2", otherField: "other_value2"}],
         {
           type: "relation",
           relationType: "onetomany",
           primary: "test"
-        }
+        },
+        "users"
       );
       expect(template).toEqual(["value", "value2"]);
     });
 
     it("should return storage", () => {
-      let template = fixture.componentInstance.buildTemplate("test_url", {type: "storage"});
+      const template = fixture.componentInstance.buildTemplate(
+        "test_url",
+        {type: "storage"},
+        "avatar"
+      );
       expect(template).toEqual(
         fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
           `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=test_url alt=test_url>`
@@ -553,8 +571,76 @@ describe("IndexComponent", () => {
       );
     });
 
+    it("should use existing value instead of creating new one", () => {
+      const templateCache = fixture.componentInstance.templateMap;
+      templateCache.clear();
+
+      const createTemplateSpy = spyOn(
+        fixture.componentInstance["sanitizer"],
+        "bypassSecurityTrustHtml"
+      ).and.callThrough();
+
+      const template = fixture.componentInstance.buildTemplate(
+        "test_url",
+        {type: "storage"},
+        "avatar"
+      );
+
+      expect(templateCache.get(`avatar_test_url`)).toEqual(template);
+
+      expect(createTemplateSpy).toHaveBeenCalledTimes(1);
+
+      const sameTemplate = fixture.componentInstance.buildTemplate(
+        "test_url",
+        {type: "storage"},
+        "avatar"
+      );
+
+      expect(sameTemplate).toEqual(template);
+
+      // it should not be two if it uses the cache
+      expect(createTemplateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should create new template for new values", () => {
+      const templateCache = fixture.componentInstance.templateMap;
+      templateCache.clear();
+
+      const createTemplateSpy = spyOn(
+        fixture.componentInstance["sanitizer"],
+        "bypassSecurityTrustHtml"
+      ).and.callThrough();
+
+      const template = fixture.componentInstance.buildTemplate(
+        "test_url",
+        {type: "storage"},
+        "avatar"
+      );
+
+      expect(templateCache.get(`avatar_test_url`)).toEqual(template);
+
+      expect(createTemplateSpy).toHaveBeenCalledTimes(1);
+
+      const differentTemplate = fixture.componentInstance.buildTemplate(
+        "test_url2",
+        {type: "storage"},
+        "avatar"
+      );
+
+      expect(differentTemplate).not.toEqual(template);
+
+      expect(templateCache.get(`avatar_test_url2`)).toEqual(differentTemplate);
+
+      // it should be 2 if it does not use cache
+      expect(createTemplateSpy).toHaveBeenCalledTimes(2);
+    });
+
     it("should return default", () => {
-      let template = fixture.componentInstance.buildTemplate("default_value", {type: "string"});
+      const template = fixture.componentInstance.buildTemplate(
+        "default_value",
+        {type: "string"},
+        "def"
+      );
       expect(template).toEqual("default_value");
     });
   });
