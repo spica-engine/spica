@@ -51,6 +51,8 @@ describe("FirehoseQueue", () => {
 
   it("should send message to socket", done => {
     const socket = jasmine.createSpyObj("Websocket", ["send"]);
+    socket.readyState = 1;
+
     const client = new Firehose.ClientDescription({
       id: "1"
     });
