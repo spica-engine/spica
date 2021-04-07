@@ -26,6 +26,8 @@ import {DomSanitizer} from "@angular/platform-browser";
 export class IndexComponent implements OnInit {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
 
+  templateMap = new Map<string, any>();
+
   dependents = [];
 
   selectedItemDependents = [];
@@ -397,35 +399,54 @@ export class IndexComponent implements OnInit {
     }
   }
 
-  buildTemplate(value, property) {
+  buildTemplate(value, property, name) {
+    let result;
+
+    const key = `${name}_${value}`;
+
+    if (this.templateMap.has(key)) {
+      return this.templateMap.get(key);
+    }
+
     if (value == undefined || value == null) {
-      return value;
+      result = value;
     }
     switch (property.type) {
       case "object":
-        return JSON.stringify(value);
+        result = JSON.stringify(value);
+        break;
       case "date":
-        return new Date(value).toLocaleString();
+        result = new Date(value).toLocaleString();
+        break;
       case "color":
-        return this.sanitizer.bypassSecurityTrustHtml(
+        result = this.sanitizer.bypassSecurityTrustHtml(
           `<div style='width:20px; height:20px; background-color:${value}; border-radius:3px'></div>`
         );
+        break;
       case "relation":
         if (property["relationType"] == "onetomany") {
-          return value.map(val =>
+          result = value.map(val =>
             val.hasOwnProperty(property.primary) ? val[property.primary] : val
           );
         } else {
-          return value.hasOwnProperty(property.primary) ? value[property.primary] : value;
+          result = value.hasOwnProperty(property.primary) ? value[property.primary] : value;
         }
+        break;
       case "storage":
-        return this.sanitizer.bypassSecurityTrustHtml(
+        result = this.sanitizer.bypassSecurityTrustHtml(
           `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=${value} alt=${value}>`
         );
+        break;
       case "location":
-        return [value.coordinates[1], value.coordinates[0]];
+        result = [value.coordinates[1], value.coordinates[0]];
+        break;
       default:
-        return value;
+        result = value;
+        break;
     }
+
+    this.templateMap.set(key, result);
+
+    return result;
   }
 }
