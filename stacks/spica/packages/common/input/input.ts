@@ -28,3 +28,8 @@ export const EMPTY_INPUT_SCHEMA: InputSchema = {
   title: undefined,
   type: undefined
 };
+
+export const DEFAULT_ARRAY_ITEM: InputSchema = {
+  title: "Title of the items",
+  type: "string"
+};

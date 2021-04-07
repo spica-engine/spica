@@ -54,7 +54,7 @@
     <mat-card-content>
       <mat-table [dataSource]="data$" (click)="$event.stopPropagation()">
         <ng-container
-          *ngFor="let property of (schema$ | async).properties | keyvalue"
+          *ngFor="let property of (schema$ | async)?.properties | keyvalue"
           [matColumnDef]="property.key"
         >
           <mat-header-cell *matHeaderCellDef>

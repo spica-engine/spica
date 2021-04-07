@@ -62,6 +62,9 @@ export function get(id: string) {
   return service.get<StorageObject>(`storage/${id}`);
 }
 
+/**
+ * Returns Blob for browser environment, ReadableStream for Nodejs environment
+ */
 export function download(
   id: string,
   headers?: any,
@@ -69,7 +72,7 @@ export function download(
 ) {
   checkInitialized(authorization);
 
-  return service.get<Blob | NodeJS.ReadableStream>(`storage/${id}/view`, {
+  return service.get(`storage/${id}/view`, {
     headers,
     onDownloadProgress,
     responseType: isPlatformBrowser() ? "blob" : "stream"

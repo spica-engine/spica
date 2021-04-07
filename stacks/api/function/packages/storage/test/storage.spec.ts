@@ -111,7 +111,7 @@ describe("@spica-devkit/Storage", () => {
       expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id");
     });
 
-    it("should download storage object for non-browser env", () => {
+    it("should download storage object for nodejs env", () => {
       Storage.download("storage_object_id", undefined, onDownloadProgress);
 
       expect(getSpy).toHaveBeenCalledTimes(1);
