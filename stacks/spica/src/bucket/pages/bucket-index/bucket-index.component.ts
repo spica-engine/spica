@@ -10,7 +10,7 @@ import {
   CdkDragMove,
   CdkDrag
 } from "@angular/cdk/drag-drop";
-import {take} from "rxjs/operators";
+import {takeUntil} from "rxjs/operators";
 import {ActivatedRoute, Router} from "@angular/router";
 
 @Component({
@@ -43,10 +43,10 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
   }
 
   ngOnInit() {
-    this.activatedRoute.url.pipe(take(1)).subscribe(segments => {
+    this.activatedRoute.url.pipe(takeUntil(this.dispose)).subscribe(segments => {
       if (!segments.length) {
         const target = this.buckets.length ? this.buckets[0]._id : "add";
-        this.router.navigate([target], {relativeTo: this.activatedRoute});
+        this.router.navigate(["buckets", target]);
       }
     });
   }
@@ -137,8 +137,28 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
     };
   }
 
-  delete(bucket: Bucket): void {
-    this.bs.delete(bucket._id).toPromise();
+  delete(bucket: Bucket) {
+    const index = this.buckets.findIndex(b => b._id == bucket._id);
+
+    const lastSegment = this.activatedRoute.snapshot.url[
+      this.activatedRoute.snapshot.url.length - 1
+    ].toString();
+
+    let target = lastSegment;
+
+    if (lastSegment == bucket._id) {
+      if (this.buckets.length > 1) {
+        const nextIndex = index == 0 ? index + 1 : index - 1;
+        target = this.buckets[nextIndex]._id;
+      } else {
+        target = "welcome";
+      }
+    }
+
+    this.bs
+      .delete(bucket._id)
+      .toPromise()
+      .then(() => this.router.navigate(["buckets", target], {state: {skipSaveChanges: true}}));
   }
 
   ngOnDestroy(): void {
