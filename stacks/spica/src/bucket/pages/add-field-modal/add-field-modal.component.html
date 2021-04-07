@@ -29,6 +29,7 @@
         [(ngModel)]="parentSchema.properties[propertyKey].title"
         required
       />
+      <mat-error *ngIf="pnm?.errors?.required">This field is required.</mat-error>
     </mat-form-field>
     <mat-form-field>
       <textarea
@@ -141,12 +142,18 @@
         </mat-checkbox>
       </div>
     </div>
-    <button mat-button *ngIf="parentSchema.properties[propertyKey]" (click)="save()">
+    <button
+      mat-button
+      *ngIf="parentSchema.properties[propertyKey]"
+      [disabled]="pnm.invalid || dm.invalid"
+      (click)="save()"
+    >
       Save
     </button>
     <button
       mat-button
       *ngIf="parentSchema.properties[propertyKey]"
+      [disabled]="pnm.invalid || dm.invalid"
       (click)="step = 0; field = null; propertyKey = ''"
     >
       Add Another Field
