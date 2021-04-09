@@ -74,7 +74,7 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
     if (!socket) {
       callback(new Error(`Can not find socket with id ${call.request.client.id}`), undefined);
     } else {
-      if (socket.readyState != socket.OPEN) {
+      if (socket.readyState != Websocket.OPEN) {
         callback(new Error(`Socket ${call.request.client.id} is not open.`), undefined);
       } else {
         socket.send(JSON.stringify(parseMessage(call.request.message)));
@@ -91,7 +91,7 @@ export class FirehoseQueue extends Queue<typeof Firehose.Queue> {
     if (!socket) {
       callback(new Error(`Can not find socket with id ${call.request.client.id}`), undefined);
     } else {
-      if (socket.readyState == socket.OPEN) {
+      if (socket.readyState != Websocket.OPEN) {
         callback(new Error(`Socket ${call.request.client.id} is not open.`), undefined);
       } else {
         socket.close();

@@ -19,9 +19,9 @@ const examples = {
 \tconsole.log(change.kind + " action has been performed on document with id " + change.documentKey + " of collection " + change.collection);
 }`
   },
-  firehose: `export default function(message, { socket, pool }) {
-\tconsole.log(message.name);
-\tconsole.log(message.data.url);
+  firehose: `export default function({ socket, pool }, message) {
+\tconsole.log(message.name); // name is the event name that has been triggered
+\tconsole.log(message.data); // use this field for passing data from client to server
 \tconst isAuthorized = false;
 \tif (isAuthorized) {
 \t\tsocket.send("authorization", { state: true });
