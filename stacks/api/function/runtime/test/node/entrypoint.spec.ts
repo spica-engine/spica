@@ -662,6 +662,7 @@ describe("Entrypoint", () => {
       queue.enqueue(ev);
 
       const socketSpy = jasmine.createSpyObj("Socket", ["send"]);
+      socketSpy.readyState = 1;
 
       firehoseQueue.enqueue(
         ev.id,
