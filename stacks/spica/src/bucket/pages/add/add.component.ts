@@ -142,6 +142,8 @@ export class AddComponent implements OnInit {
   }
 
   saveBucketRow() {
+    this.data = this.removeNulls(this.data);
+
     const isInsert = !this.data._id;
     const save = isInsert
       ? this.bds.insertOne(this.bucketId, this.data)
@@ -165,5 +167,25 @@ export class AddComponent implements OnInit {
         catchError(() => of(SavingState.Failed))
       )
     );
+  }
+
+  removeNulls(data) {
+    for (const [key, value] of Object.entries(data)) {
+      if (this.isNullish(value)) {
+        delete data[key];
+      } else if (this.isObject(value)) {
+        this.removeNulls(value);
+      }
+    }
+
+    return data;
+  }
+
+  isNullish(value) {
+    return value === null || value === undefined || value === "";
+  }
+
+  isObject(value) {
+    return typeof value == "object" && !Array.isArray(value);
   }
 }
