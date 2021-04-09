@@ -509,4 +509,27 @@ describe("AddComponent", () => {
       ).toBe(true);
     }));
   });
+
+  describe("deletion of null values", () => {
+    it("should remove null values", () => {
+      const data = {
+        valid_field: "test",
+        remove_this: null,
+        remove_this_also: undefined,
+        nested_object: {
+          nested_remove_this: null,
+          keep_this: "test"
+        },
+        keep_array: []
+      };
+
+      expect(fixture.componentInstance.removeNulls(data)).toEqual({
+        valid_field: "test",
+        nested_object: {
+          keep_this: "test"
+        },
+        keep_array: []
+      });
+    });
+  });
 });
