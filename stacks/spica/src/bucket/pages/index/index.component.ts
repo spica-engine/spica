@@ -402,7 +402,7 @@ export class IndexComponent implements OnInit {
   buildTemplate(value, property, name) {
     let result;
 
-    const key = `${name}_${value}`;
+    const key = `${name}_${typeof value == "object" ? JSON.stringify(value) : value}`;
 
     if (this.templateMap.has(key)) {
       return this.templateMap.get(key);
