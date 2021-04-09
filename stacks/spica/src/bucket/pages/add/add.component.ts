@@ -142,12 +142,12 @@ export class AddComponent implements OnInit {
   }
 
   saveBucketRow() {
+    this.data = this.removeNulls(this.data);
+
     const isInsert = !this.data._id;
     const save = isInsert
       ? this.bds.insertOne(this.bucketId, this.data)
       : this.bds.replaceOne(this.bucketId, this.data);
-
-    this.data = this.removeNulls(this.data);
 
     this.$save = merge(
       of(SavingState.Saving),
