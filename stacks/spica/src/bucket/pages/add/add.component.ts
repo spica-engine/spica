@@ -147,6 +147,8 @@ export class AddComponent implements OnInit {
       ? this.bds.insertOne(this.bucketId, this.data)
       : this.bds.replaceOne(this.bucketId, this.data);
 
+    this.data = this.removeNulls(this.data);
+
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
@@ -165,5 +167,25 @@ export class AddComponent implements OnInit {
         catchError(() => of(SavingState.Failed))
       )
     );
+  }
+
+  removeNulls(data) {
+    for (const [key, value] of Object.entries(data)) {
+      if (this.isNullish(value)) {
+        delete data[key];
+      } else if (this.isObject(value)) {
+        this.removeNulls(value);
+      }
+    }
+
+    return data;
+  }
+
+  isNullish(value) {
+    return value === null || value === undefined || value === "";
+  }
+
+  isObject(value) {
+    return typeof value == "object" && !Array.isArray(value);
   }
 }
