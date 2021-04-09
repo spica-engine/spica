@@ -1,4 +1,23 @@
-## v0.8.6 (2021-03-02)
+## v0.8.7 (2021-04-09)
+
+* fix(bucket): remove null values before sending bucket-data ([cf550b630](https://github.com/spica-engine/spica/commit/cf550b630))
+* fix(function): some fixes for firehose trigger ([ef6e4b9e0](https://github.com/spica-engine/spica/commit/ef6e4b9e0))
+* fix(bucket): set string as default array item schema on bucket schema ([7d219ba64](https://github.com/spica-engine/spica/commit/7d219ba64))
+* fix(bucket): contains operator for bucket-data filter ([ceeb84d18](https://github.com/spica-engine/spica/commit/ceeb84d18))
+* fix(bucket): navigate to the 403 page if user has no access for related documents ([710e0fde5](https://github.com/spica-engine/spica/commit/710e0fde5))
+* fix(function): remove some type definitions of @spica-devkit/storage ([25310441a](https://github.com/spica-engine/spica/commit/25310441a))
+* fix(bucket): navigation after bucket schema deleted ([9cb256f3c](https://github.com/spica-engine/spica/commit/9cb256f3c))
+* fix(bucket): resolve more relation from filter for bucket data ([456cdc28b](https://github.com/spica-engine/spica/commit/456cdc28b))
+* docs(changelog): update the script that creates changelog ([3288478a6](https://github.com/spica-engine/spica/commit/3288478a6))
+* fix(bucket): set save button disabled when some inputs are invalid ([15cbe37ca](https://github.com/spica-engine/spica/commit/15cbe37ca))
+* fix(bucket): prevent re-rendering templates on bucket data index ([32813eab6](https://github.com/spica-engine/spica/commit/32813eab6))
+* refactor(bucket): new bucket-data filter types and improve existing filter functionality ([bca1ff3cf](https://github.com/spica-engine/spica/commit/bca1ff3cf))
+* fix(function): function show action should allow to display the content of function ([3238345fb](https://github.com/spica-engine/spica/commit/3238345fb))
+* fix(bucket): filter should show only individual bucket fields ([ce0646b6a](https://github.com/spica-engine/spica/commit/ce0646b6a))
+* feat(bucket): bucket-data response caching ([a7ba33bb7](https://github.com/spica-engine/spica/commit/a7ba33bb7))
+* docs: generate change logs with script ([cd1ed3111](https://github.com/spica-engine/spica/commit/cd1ed3111))
+
+## v0.8.6 (2021-03-12)
 
 * fix(dashboard): warn user about unsaved changes ([1a2ae8ee0](https://github.com/spica-engine/spica/commit/1a2ae8ee0))
 * feat(core): warn user about unsaved changes before leave page ([f6d5523fb](https://github.com/spica-engine/spica/commit/f6d5523fb))
@@ -13,12 +32,12 @@
 * fix(function): wider environment variable area on function add/edit page ([b577f44c2](https://github.com/spica-engine/spica/commit/b577f44c2))
 * feat(bucket): implement limiting document count and limit exceeding behaviours ([c3eaff256](https://github.com/spica-engine/spica/commit/c3eaff256))
 
-## v0.8.5 (2021-02-26)
+## v0.8.5 (2021-03-02)
 
 * fix(passport): update allowed types on identity custom attributes ([972b118bc](https://github.com/spica-engine/spica/commit/972b118bc))
 * fix(bucket): add 'locationType' keyword to schema validations ([833dc9a0e](https://github.com/spica-engine/spica/commit/833dc9a0e))
 
-## v0.8.4 (2021-02-08)
+## v0.8.4 (2021-02-26)
 
 * fix(bucket): update for creating property map on bucket expressions ([f9892eb49](https://github.com/spica-engine/spica/commit/f9892eb49))
 * fix(function): remove developer section if user has no access for function or webhook list ([14d6e7035](https://github.com/spica-engine/spica/commit/14d6e7035))
@@ -43,7 +62,7 @@
 * test(storage): gcloud strategy tests ([dfeb5b7ac](https://github.com/spica-engine/spica/commit/dfeb5b7ac))
 * fix(bucket): clear input when new element added to array ([71ae1999b](https://github.com/spica-engine/spica/commit/71ae1999b))
 
-## v0.8.3 (2021-01-22)
+## v0.8.3 (2021-02-08)
 
 * feat(bucket): unix timestamp macro for expressions ([1f6f6d037](https://github.com/spica-engine/spica/commit/1f6f6d037))
 * fix(bucket): parse filter special constructors on realtime ([154666e55](https://github.com/spica-engine/spica/commit/154666e55))
@@ -57,7 +76,7 @@
 * feat(passport): pass the identity limit as an argument ([0fee2c163](https://github.com/spica-engine/spica/commit/0fee2c163))
 * feat(bucket): return more descriptive error message if rule has invalid syntax ([83583b581](https://github.com/spica-engine/spica/commit/83583b581))
 
-## v0.8.2 (2021-01-05)
+## v0.8.2 (2021-01-22)
 
 * fix(passport): policy UI fixes ([095c0432e](https://github.com/spica-engine/spica/commit/095c0432e))
 * refactor(common): validation error behavior ([2496316e1](https://github.com/spica-engine/spica/commit/2496316e1))
@@ -79,7 +98,7 @@
 * refactor(bucket): pipeline builder integrated ([c40137f5f](https://github.com/spica-engine/spica/commit/c40137f5f))
 * fix(cli): compatibility of creating a project on windows ([e511f8ef1](https://github.com/spica-engine/spica/commit/e511f8ef1))
 
-## v0.8.1 (2021-01-04)
+## v0.8.1 (2021-01-05)
 
 * fix(function): update @spica-devkit/identity dependencies ([32337dc06](https://github.com/spica-engine/spica/commit/32337dc06))
 * fix(bucket): re-enable mongodb filters for realtime ([7862c9c45](https://github.com/spica-engine/spica/commit/7862c9c45))
@@ -89,12 +108,12 @@
 * feat(function): introduce @spica-devkit/identity ([3f0c653ca](https://github.com/spica-engine/spica/commit/3f0c653ca))
 * feat(bucket): unique field option ([56aad06e8](https://github.com/spica-engine/spica/commit/56aad06e8))
 
-## v0.8.0 (2020-12-31)
+## v0.8.0 (2021-01-04)
 
 * fix(function): update @spica-devkit dependencies ([32bf29bc5](https://github.com/spica-engine/spica/commit/32bf29bc5))
 * feat(machinery): initial work for machinery ([ee2dd8101](https://github.com/spica-engine/spica/commit/ee2dd8101))
 
-## v0.7.3 (2020-12-30)
+## v0.7.3 (2020-12-31)
 
 * fix(bucket): update default and min max values on bucket schema ([4952014b5](https://github.com/spica-engine/spica/commit/4952014b5))
 * fix(function): listen environment variable changes ([fbc872045](https://github.com/spica-engine/spica/commit/fbc872045))
@@ -102,7 +121,7 @@
 * fix(bucket): do not allow to send empty string for date and relation ([2106f4dc3](https://github.com/spica-engine/spica/commit/2106f4dc3))
 * fix(bucket): add literal keyword for running rules with document that has value starts with '$'(dollar) ([d38e3d1ee](https://github.com/spica-engine/spica/commit/d38e3d1ee))
 
-## v0.7.2 (2020-12-15)
+## v0.7.2 (2020-12-30)
 
 * deprecate(function): deprecate @spica-devkit/dashboard ([18161e548](https://github.com/spica-engine/spica/commit/18161e548))
 * refactor(site): heading sliders changed, all texts has been changed ([eac66b051](https://github.com/spica-engine/spica/commit/eac66b051))
@@ -125,7 +144,7 @@
 * refactor(functions): copyright changed ([9f150bf5f](https://github.com/spica-engine/spica/commit/9f150bf5f))
 * fix(storage): disable scrolling on storage edit content ([07ca15574](https://github.com/spica-engine/spica/commit/07ca15574))
 
-## v0.7.1 (2020-12-11)
+## v0.7.1 (2020-12-15)
 
 * fix(bucket): update aggregation stages to work with _id filter ([aa82b3a3a](https://github.com/spica-engine/spica/commit/aa82b3a3a))
 * fix(function): show/hide batching options ([a7e6841ef](https://github.com/spica-engine/spica/commit/a7e6841ef))
@@ -135,7 +154,7 @@
 * fix(passport): update apikey and identity policies ([c5d4ea01b](https://github.com/spica-engine/spica/commit/c5d4ea01b))
 * fix(function): terminate the formatter only if it exists ([7984cf051](https://github.com/spica-engine/spica/commit/7984cf051))
 
-## v0.7.0 (2020-10-22)
+## v0.7.0 (2020-12-11)
 
 * fix(bucket): update filter expressions ([3d2bfd2da](https://github.com/spica-engine/spica/commit/3d2bfd2da))
 * fix(bucket): update relation picker request ([93770ec7e](https://github.com/spica-engine/spica/commit/93770ec7e))
@@ -198,7 +217,7 @@
 * refactor(bucket): redesign the bucket creation page ([d610e4d44](https://github.com/spica-engine/spica/commit/d610e4d44))
 * refactor(site): some marketing changes ([da7524157](https://github.com/spica-engine/spica/commit/da7524157))
 
-## v0.6.0 (2020-09-09)
+## v0.6.0 (2020-10-22)
 
 * test: fix some tests and reenable client tests ([01e661624](https://github.com/spica-engine/spica/commit/01e661624))
 * fix(function): pass the handler to unsubscribe when a trigger is disabled ([b4be0f868](https://github.com/spica-engine/spica/commit/b4be0f868))
@@ -221,7 +240,7 @@
 * fix(passport): do not set authorization header if base url collection does not include request ur ([984863222](https://github.com/spica-engine/spica/commit/984863222))
 * feat(bucket): keep pagination, filter, language and sort last states on query params ([48501166b](https://github.com/spica-engine/spica/commit/48501166b))
 
-## v0.5.3 (2020-09-07)
+## v0.5.3 (2020-09-09)
 
 * refactor(site): add free-tier to the pricing page and layout changes for fast onboarding ([6bb6833cd](https://github.com/spica-engine/spica/commit/6bb6833cd))
 * fix(function): progress spinner stucks on screen when try to clear function logs ([1a619107f](https://github.com/spica-engine/spica/commit/1a619107f))
@@ -230,7 +249,7 @@
 * feat(bucket): allow to user to define custom regex validation for properties in add page ([b74f4ab03](https://github.com/spica-engine/spica/commit/b74f4ab03))
 * refactor: design changes for side menu and contents ([38e91cc3d](https://github.com/spica-engine/spica/commit/38e91cc3d))
 
-## v0.5.2 (2020-08-10)
+## v0.5.2 (2020-09-07)
 
 * fix(bucket): make event names uppercase ([76358ae88](https://github.com/spica-engine/spica/commit/76358ae88))
 * fix(bucket): correct the typo in bucket trigger types ([96402f41b](https://github.com/spica-engine/spica/commit/96402f41b))
@@ -244,7 +263,7 @@
 * fix(bucket): propagate changes in clear action ([acb370f58](https://github.com/spica-engine/spica/commit/acb370f58))
 * fix(site): some fixes on responsive design and animations ([67402c7b6](https://github.com/spica-engine/spica/commit/67402c7b6))
 
-## v0.5.1 (2020-07-28)
+## v0.5.1 (2020-08-10)
 
 * fix(bucket): update one to many related entries when related data deleted ([45d68bba6](https://github.com/spica-engine/spica/commit/45d68bba6))
 * fix(function): dequeue events when request is cancelled ([17d3793aa](https://github.com/spica-engine/spica/commit/17d3793aa))
@@ -270,7 +289,7 @@
 * build: fetch tags before releasing ([0e3c0a247](https://github.com/spica-engine/spica/commit/0e3c0a247))
 * fix(function): do not specify cache and remove symlinking of @internal packages ([ac0a976df](https://github.com/spica-engine/spica/commit/ac0a976df))
 
-## v0.5.0 (2020-07-06)
+## v0.5.0 (2020-07-28)
 
 * docs: fix storage controller path([f015b5674](https://github.com/spica-engine/spica/commit/f015b5674))
 * fix(bucket): set boolean default value as false on bucket-edit page ([0dbe9f815](https://github.com/spica-engine/spica/commit/0dbe9f815))
@@ -296,7 +315,7 @@
 * build(ci): migrate to buildkite ([177ff24a0](https://github.com/spica-engine/spica/commit/177ff24a0))
 * feat(function): support for function live logs ([16d671d3c](https://github.com/spica-engine/spica/commit/16d671d3c))
 
-## v0.4.2 (2020-07-03)
+## v0.4.2 (2020-07-06)
 
 * feat(charts): add image variant support for spica ([8ea1f83cd](https://github.com/spica-engine/spica/commit/8ea1f83cd))
 
@@ -305,7 +324,7 @@
 * fix(function): add node_modules suffix ([77373fbff](https://github.com/spica-engine/spica/commit/77373fbff))
 * fix(function): look up for packages in externals ([aa14baae4](https://github.com/spica-engine/spica/commit/aa14baae4))
 
-## v0.4.0 (2020-05-01)
+## v0.4.0 (2020-07-03)
 
 * perf(function): implement caching for @spica-devkit/database ([a1fc192ba](https://github.com/spica-engine/spica/commit/a1fc192ba))
 * perf(function): load path cache from fs ([f344760b3](https://github.com/spica-engine/spica/commit/f344760b3))
@@ -401,7 +420,7 @@
 * fix: bootstrap with https options ([f5c048d7c](https://github.com/spica-engine/spica/commit/f5c048d7c))
 * build(ci): change next to latest ([8b21ebb2d](https://github.com/spica-engine/spica/commit/8b21ebb2d))
 
-## v0.3.0 (2020-02-14)
+## v0.3.0 (2020-05-01)
 
 * build(ci): install required utilites before releasing ([892ae7a9d](https://github.com/spica-engine/spica/commit/892ae7a9d))
 * fix(bucket): finalize the resizing when the mouse has been released out of resize area ([b3f51f3d5](https://github.com/spica-engine/spica/commit/b3f51f3d5))
@@ -515,7 +534,7 @@
 * chore(infra): stamping fails under CI ([2a86fc099](https://github.com/spica-engine/spica/commit/2a86fc099))
 * refactor: enable dependency endpoints ([152a5b385](https://github.com/spica-engine/spica/commit/152a5b385))
 
-## v0.2.0 (2020-03-30)
+## v0.2.0 (2020-02-14)
 
 * build: automate build process on release branches([eadb93fd1](https://github.com/spica-engine/spica/commit/eadb93fd1))
 * fix(function): handle semantic errors gracefully ([129de444f](https://github.com/spica-engine/spica/commit/129de444f))
