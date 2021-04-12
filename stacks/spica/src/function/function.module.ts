@@ -46,6 +46,7 @@ import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
+import {FunctionCodeEditorComponent} from "./components/function-code-editor/function-code-editor.component";
 
 @NgModule({
   imports: [
@@ -92,7 +93,8 @@ import {WebhookModule} from "./webhook.module";
     WelcomeComponent,
     LanguageDirective,
     EnqueuerPipe,
-    ExampleComponent
+    ExampleComponent,
+    FunctionCodeEditorComponent
   ]
 })
 export class FunctionModule {

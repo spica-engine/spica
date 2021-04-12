@@ -19,6 +19,16 @@
             "assets": [
               {
                 "glob": "**/*",
+                "input": "../../node_modules/monaco-editor/min",
+                "output": "./assets/monaco/min/"
+              },
+              {
+                "glob": "**/*",
+                "input": "../../node_modules/monaco-editor/min-maps",
+                "output": "./assets/monaco/min-maps/"
+              },
+              {
+                "glob": "**/*",
                 "input": "assets",
                 "output": "assets/"
               }
@@ -30,9 +40,7 @@
               "../../node_modules/@danielmoncada/angular-datetime-picker/assets/style/picker.min.css",
               "../../node_modules/monaco-editor-core/dev/vs/editor/editor.main.css"
             ],
-            "scripts": [
-              "../../node_modules/cropperjs/dist/cropper.js"
-            ],
+            "scripts": ["../../node_modules/cropperjs/dist/cropper.js"],
             "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
