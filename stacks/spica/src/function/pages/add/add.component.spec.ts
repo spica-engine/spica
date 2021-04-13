@@ -36,7 +36,7 @@ import {LogViewComponent} from "../log-view/log-view.component";
 import {MatDividerModule} from "@angular/material/divider";
 
 @Directive({
-  selector: "code-editor[language]",
+  selector: "function-code-editor[language]",
   exportAs: "language"
 })
 class MockLanguageDirective {

@@ -91,9 +91,9 @@ export class FunctionCodeEditorComponent implements ControlValueAccessor {
     window["MonacoEnvironment"] = {
       getWorker: function(_, label) {
         if (label === "typescript" || label === "javascript") {
-          return new Worker("./workers/ts.worker", {type: "module", name: "js/ts-worker"});
+          return new Worker("../../workers/ts.worker", {type: "module", name: "js/ts-worker"});
         }
-        return new Worker("./workers/editor.worker", {type: "module", name: "editor-worker"});
+        return new Worker("../../workers/editor.worker", {type: "module", name: "editor-worker"});
       }
     };
   }

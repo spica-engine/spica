@@ -33,7 +33,7 @@ import {provideWsInterceptor} from "@spica-client/function/providers/websocket";
 import {MatAwareDialogModule, MatClipboardModule, MatSaveModule} from "@spica-client/material";
 import {PassportService} from "@spica-client/passport";
 import {PassportModule} from "../passport/passport.module";
-import {LanguageDirective} from "./components/editor/dynamic.language";
+import {LanguageDirective} from "./directives/dynamic.language";
 import {FunctionRoutingModule} from "./function-routing.module";
 import {FunctionInitializer} from "./function.initializer";
 import {FunctionService} from "./function.service";

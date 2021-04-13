@@ -1,4 +1,4 @@
-/// <reference path="../../../../../../node_modules/monaco-editor/monaco.d.ts" />
+/// <reference path="../../../../../node_modules/monaco-editor/monaco.d.ts" />
 import {Directive, Input, OnChanges, OnDestroy, SimpleChanges} from "@angular/core";
 import {fromEvent} from "rxjs";
 import {map, take} from "rxjs/operators";
@@ -25,7 +25,10 @@ export class LanguageDirective implements OnChanges, OnDestroy {
 
     this.updateLanguage();
 
-    this.formatter = new Worker("./format.worker", {type: "module", name: "format-worker"});
+    this.formatter = new Worker("../workers/format.worker", {
+      type: "module",
+      name: "format-worker"
+    });
     const format = fromEvent<MessageEvent>(this.formatter, "message").pipe(
       map(event => event.data as string)
     );
@@ -68,7 +71,7 @@ export class LanguageDirective implements OnChanges, OnDestroy {
 
     const snippetProvider = {
       provideCompletionItems: () => {
-        return import("./snippets").then(({suggestions}) => {
+        return import("../statics/snippets").then(({suggestions}) => {
           return {
             suggestions: suggestions.map(suggestion => {
               return {
