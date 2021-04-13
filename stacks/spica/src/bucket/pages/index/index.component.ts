@@ -424,11 +424,11 @@ export class IndexComponent implements OnInit {
         );
         break;
       case "relation":
-        if (property["relationType"] == "onetomany") {
+        if (this.isValidOnetoMany(property, value)) {
           result = value.map(val =>
             val.hasOwnProperty(property.primary) ? val[property.primary] : val
           );
-        } else {
+        } else if (this.isValidOnetoOne(property, value)) {
           result = value.hasOwnProperty(property.primary) ? value[property.primary] : value;
         }
         break;
@@ -448,5 +448,13 @@ export class IndexComponent implements OnInit {
     this.templateMap.set(key, result);
 
     return result;
+  }
+
+  isValidOnetoMany(property, value) {
+    return property.relationType == "onetomany" && Array.isArray(value);
+  }
+
+  isValidOnetoOne(property, value) {
+    return property.relationType == "onetoone" && typeof value == "object";
   }
 }
