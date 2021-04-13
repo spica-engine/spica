@@ -66,7 +66,7 @@ export class AddComponent implements OnInit, OnDestroy {
   private dispose = new EventEmitter();
 
   editorOptions = {
-    language: "typescript",
+    language: "javascript",
     minimap: {enabled: false},
     automaticLayout: true,
     scrollbar: {alwaysConsumeMouseWheel: false}
