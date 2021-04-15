@@ -8,7 +8,6 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
-  NotFoundException,
   Param,
   Post,
   Query,
@@ -25,13 +24,12 @@ import {StrategyService} from "./strategy/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 
+const assertObservers = new Map<string, Subject<any>>();
 /**
  * @name passport
  */
 @Controller("passport")
 export class PassportController {
-  assertObservers = new Map<string, Subject<any>>();
-
   constructor(
     private identity: IdentityService,
     private saml: SamlService,
@@ -59,18 +57,18 @@ export class PassportController {
         throw new UnauthorizedException("Identifier or password was incorrect.");
       }
     } else {
-      if (!this.assertObservers.has(state)) {
+      if (!assertObservers.has(state)) {
         throw new BadRequestException("Authentication has failed due to invalid state.");
       }
 
-      const observer = this.assertObservers.get(state);
+      const observer = assertObservers.get(state);
 
       const {user} = await observer
         .pipe(
           timeout(60000),
           take(1),
           catchError(error => {
-            this.assertObservers.delete(state);
+            assertObservers.delete(state);
             return throwError(
               error && error.name == "TimeoutError"
                 ? new GatewayTimeoutException("Operation did not complete within one minute.")
@@ -79,17 +77,19 @@ export class PassportController {
           })
         )
         .toPromise();
-      this.assertObservers.delete(state);
+      assertObservers.delete(state);
 
-      if (!user || (user && !user.upn)) {
+      const idenfitifer = user ? user.upn || user.name_id : undefined;
+
+      if (!idenfitifer) {
         throw new InternalServerErrorException("Authentication has failed.");
       }
 
-      identity = await this.identity.findOne({identifier: user.upn});
+      identity = await this.identity.findOne({identifier: idenfitifer});
 
       if (!identity) {
         identity = await this.identity.insertOne({
-          identifier: user.upn,
+          identifier: idenfitifer,
           password: undefined,
           policies: []
         });
@@ -111,18 +111,18 @@ export class PassportController {
         throw new UnauthorizedException("Identifier or password was incorrect.");
       }
     } else {
-      if (!this.assertObservers.has(credentials.state)) {
+      if (!assertObservers.has(credentials.state)) {
         throw new BadRequestException("Authentication has failed due to invalid state.");
       }
 
-      const observer = this.assertObservers.get(credentials.state);
+      const observer = assertObservers.get(credentials.state);
 
       const {user} = await observer
         .pipe(
           timeout(60000),
           take(1),
           catchError(error => {
-            this.assertObservers.delete(credentials.state);
+            assertObservers.delete(credentials.state);
             return throwError(
               error && error.name == "TimeoutError"
                 ? new GatewayTimeoutException("Operation did not complete within one minute.")
@@ -131,17 +131,19 @@ export class PassportController {
           })
         )
         .toPromise();
-      this.assertObservers.delete(credentials.state);
+      assertObservers.delete(credentials.state);
 
-      if (!user || (user && !user.upn)) {
+      const idenfitifer = user ? user.upn || user.name_id : undefined;
+
+      if (!idenfitifer) {
         throw new InternalServerErrorException("Authentication has failed.");
       }
 
-      identity = await this.identity.findOne({identifier: user.upn});
+      identity = await this.identity.findOne({identifier: idenfitifer});
 
       if (!identity) {
         identity = await this.identity.insertOne({
-          identifier: user.upn,
+          identifier: idenfitifer,
           password: undefined,
           policies: []
         });
@@ -170,7 +172,7 @@ export class PassportController {
     }
 
     const observer = new Subject();
-    this.assertObservers.set(login.state, observer);
+    assertObservers.set(login.state, observer);
     return login;
   }
 
@@ -191,10 +193,11 @@ export class PassportController {
     if (!stateId) {
       throw new BadRequestException("state query parameter is required.");
     }
-    if (!this.assertObservers.has(stateId)) {
+
+    if (!assertObservers.has(stateId)) {
       throw new BadRequestException("Authentication has failed due to invalid state.");
     }
-    const observer = this.assertObservers.get(stateId);
+    const observer = assertObservers.get(stateId);
     try {
       const identity = await this.saml.assert(name, body);
       return observer.next(identity);
