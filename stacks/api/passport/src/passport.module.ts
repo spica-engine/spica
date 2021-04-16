@@ -11,6 +11,7 @@ import {SamlService} from "./saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
 import {StrategyService} from "./strategy/strategy.service";
 import {SchemaModule} from "@spica-server/core/schema";
+import {OAuthService} from "./oauth.service";
 const LoginSchema = require("./schemas/login.json");
 
 @Global()
@@ -60,7 +61,12 @@ export class PassportModule {
         PolicyModule.forRoot(),
         ApiKeyModule.forRoot()
       ],
-      providers: [StrategyService, SamlService, {provide: PASSPORT_OPTIONS, useValue: options}]
+      providers: [
+        StrategyService,
+        SamlService,
+        OAuthService,
+        {provide: PASSPORT_OPTIONS, useValue: options}
+      ]
     };
   }
 }

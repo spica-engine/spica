@@ -13,7 +13,8 @@ import {
   Query,
   UnauthorizedException,
   UseInterceptors,
-  Req
+  Req,
+  All
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
@@ -23,6 +24,7 @@ import {SamlService} from "./saml.service";
 import {StrategyService} from "./strategy/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
+import {OAuthService} from "./oauth.service";
 
 const assertObservers = new Map<string, Subject<any>>();
 /**
@@ -33,6 +35,7 @@ export class PassportController {
   constructor(
     private identity: IdentityService,
     private saml: SamlService,
+    private oauth: OAuthService,
     private strategy: StrategyService
   ) {}
 
@@ -157,6 +160,13 @@ export class PassportController {
   async strategies() {
     const strategies = await this.strategy.find();
     return strategies.map(({name, icon, type, title}) => ({name, icon, type, title}));
+  }
+
+  @All("strategy/:id/redirect")
+  async redirect(@Param("id") id: string, @Query("code") code: string) {
+    const res = await this.oauth.exhangeCodeForAccesToken(id, code);
+    console.log(res);
+    return;
   }
 
   @Get("strategy/:name/url")

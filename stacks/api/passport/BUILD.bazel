@@ -30,6 +30,7 @@ ts_library(
         "@npm//rxjs",
         "@npm//saml2-js",
         "@npm//uuid",
+        "@npm//axios"
     ],
 )
 

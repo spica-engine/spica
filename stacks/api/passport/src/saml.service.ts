@@ -1,12 +1,13 @@
 import {Inject, Injectable} from "@nestjs/common";
 import * as saml2 from "saml2-js";
 import * as uuid from "uuid/v4";
-import {SamlStrategy} from "./strategy/interface";
+import {SamlStrategy, StrategyTypeService} from "./strategy/interface";
 import {PassportOptions, PASSPORT_OPTIONS} from "./options";
 import {StrategyService} from "./strategy/strategy.service";
+import * as forge from "node-forge";
 
 @Injectable()
-export class SamlService {
+export class SamlService implements StrategyTypeService {
   constructor(
     private strategy: StrategyService,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
@@ -80,5 +81,46 @@ export class SamlService {
     });
 
     return {idp, sp};
+  }
+
+  prepareToInsert(strategy: SamlStrategy) {
+    try {
+      forge.pki.certificateFromPem(strategy.options.ip.certificate);
+    } catch (error) {
+      throw Error(error);
+    }
+
+    if (strategy.options.sp) {
+      try {
+        const {validity} = forge.pki.certificateFromPem(strategy.options.sp.certificate);
+        if (validity.notAfter < new Date()) {
+          strategy.options.sp = undefined;
+        }
+      } catch {
+        strategy.options.sp = undefined;
+      }
+    } else {
+      const keys = forge.pki.rsa.generateKeyPair(2048);
+      const cert = forge.pki.createCertificate();
+      const attrs: forge.pki.CertificateField[] = [
+        {name: "commonName", value: "spica.io"},
+        {name: "organizationName", value: "spica"}
+      ];
+
+      cert.publicKey = keys.publicKey;
+      cert.validity.notBefore = new Date();
+      cert.validity.notAfter = new Date();
+      cert.validity.notAfter.setSeconds(
+        cert.validity.notBefore.getSeconds() + this.options.samlCertificateTTL
+      );
+
+      cert.setSubject(attrs);
+      cert.setIssuer(attrs);
+      cert.sign(keys.privateKey);
+      strategy.options.sp = {
+        certificate: forge.pki.certificateToPem(cert),
+        private_key: forge.pki.privateKeyToPem(keys.privateKey)
+      };
+    }
   }
 }

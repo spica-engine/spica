@@ -12,15 +12,18 @@ import {
 } from "@nestjs/common";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import * as forge from "node-forge";
+import {OAuthService} from "../oauth.service";
 import {PassportOptions, PASSPORT_OPTIONS} from "../options";
-import {Strategy} from "./interface";
+import {SamlService} from "../saml.service";
+import {Strategy, StrategyTypeService} from "./interface";
 import {StrategyService} from "./strategy.service";
 
 @Controller("passport/strategy")
 export class StrategyController {
   constructor(
     private strategy: StrategyService,
+    private saml: SamlService,
+    private oauth: OAuthService,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
@@ -52,15 +55,19 @@ export class StrategyController {
   insertOne(@Body() strategy: Strategy) {
     delete strategy._id;
 
+    const desiredStrategy = this.getStrategyByType(strategy.type);
+
     try {
-      forge.pki.certificateFromPem(strategy.options.ip.certificate);
+      desiredStrategy.prepareToInsert(strategy);
     } catch (error) {
-      throw new BadRequestException(error.message, "Invalid Certificate");
+      throw new BadRequestException(error.message);
     }
 
-    generateCertificatesIfNeeded(strategy, this.options.samlCertificateTTL);
-
-    return this.strategy.insertOne(strategy);
+    return this.strategy.insertOne(strategy).then(s => {
+      if (typeof desiredStrategy.afterInsert == "function") {
+        return desiredStrategy.afterInsert(s);
+      }
+    });
   }
 
   @Put(":id")
@@ -68,49 +75,25 @@ export class StrategyController {
   replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() strategy: Strategy) {
     delete strategy._id;
 
-    try {
-      forge.pki.certificateFromPem(strategy.options.ip.certificate);
-    } catch (error) {
-      throw new BadRequestException(error.message, "Invalid Certificate");
-    }
+    const desiredStrategy = this.getStrategyByType(strategy.type);
 
-    generateCertificatesIfNeeded(strategy, this.options.samlCertificateTTL);
+    try {
+      desiredStrategy.prepareToInsert(strategy);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
 
     return this.strategy.findOneAndReplace({_id: id}, strategy);
   }
-}
 
-function generateCertificatesIfNeeded(strategy: Strategy, ttl: number) {
-  if (strategy.options.sp) {
-    try {
-      const {validity} = forge.pki.certificateFromPem(strategy.options.sp.certificate);
-      if (validity.notAfter < new Date()) {
-        strategy.options.sp = undefined;
-      }
-    } catch {
-      strategy.options.sp = undefined;
+  getStrategyByType(type: string): StrategyTypeService {
+    switch (type) {
+      case "saml":
+        return this.saml;
+      case "oauth":
+        return this.oauth;
+      default:
+        throw new BadRequestException("Unknown strategy. Available options are saml and oauth.");
     }
-  }
-
-  if (!strategy.options.sp) {
-    const keys = forge.pki.rsa.generateKeyPair(2048);
-    const cert = forge.pki.createCertificate();
-    const attrs: forge.pki.CertificateField[] = [
-      {name: "commonName", value: "spica.io"},
-      {name: "organizationName", value: "spica"}
-    ];
-
-    cert.publicKey = keys.publicKey;
-    cert.validity.notBefore = new Date();
-    cert.validity.notAfter = new Date();
-    cert.validity.notAfter.setSeconds(cert.validity.notBefore.getSeconds() + ttl);
-
-    cert.setSubject(attrs);
-    cert.setIssuer(attrs);
-    cert.sign(keys.privateKey);
-    strategy.options.sp = {
-      certificate: forge.pki.certificateToPem(cert),
-      private_key: forge.pki.privateKeyToPem(keys.privateKey)
-    };
   }
 }
