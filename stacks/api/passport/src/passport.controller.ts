@@ -20,11 +20,11 @@ import {Identity, IdentityService, LoginCredentials} from "@spica-server/passpor
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
-import {SamlService} from "./saml.service";
-import {StrategyService} from "./strategy/strategy.service";
+import {SamlService} from "./strategy/services/saml.service";
+import {StrategyService} from "./strategy/services/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
-import {OAuthService} from "./oauth.service";
+import {OAuthService} from "./strategy/services/oauth.service";
 import {getStrategyService} from "./utilities";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 

@@ -7,11 +7,11 @@ import {PreferenceService} from "@spica-server/preference/services";
 import {GuardService} from "./guard.service";
 import {PassportOptions, PASSPORT_OPTIONS} from "./options";
 import {PassportController} from "./passport.controller";
-import {SamlService} from "./saml.service";
+import {SamlService} from "./strategy/services/saml.service";
 import {StrategyController} from "./strategy/strategy.controller";
-import {StrategyService} from "./strategy/strategy.service";
+import {StrategyService} from "./strategy/services/strategy.service";
 import {SchemaModule} from "@spica-server/core/schema";
-import {OAuthService} from "./oauth.service";
+import {OAuthService} from "./strategy/services/oauth.service";
 const LoginSchema = require("./schemas/login.json");
 const StrategySchema = require("./schemas/strategy.json");
 

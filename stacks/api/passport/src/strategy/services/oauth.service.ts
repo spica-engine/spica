@@ -5,10 +5,10 @@ import {
   OAuthStrategy,
   Strategy,
   StrategyTypeService
-} from "./strategy/interface";
-import {StrategyService} from "./strategy/strategy.service";
+} from "../interface";
+import {StrategyService} from "./strategy.service";
 import axios from "axios";
-import {PassportOptions, PASSPORT_OPTIONS} from "./options";
+import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
 import * as uuid from "uuid";
 
 @Injectable()

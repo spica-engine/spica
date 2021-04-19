@@ -13,12 +13,12 @@ import {
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {OAuthService} from "../oauth.service";
+import {OAuthService} from "./services/oauth.service";
 import {PassportOptions, PASSPORT_OPTIONS} from "../options";
-import {SamlService} from "../saml.service";
+import {SamlService} from "./services/saml.service";
 import {getStrategyService} from "../utilities";
 import {Strategy} from "./interface";
-import {StrategyService} from "./strategy.service";
+import {StrategyService} from "./services/strategy.service";
 
 @Controller("passport/strategy")
 export class StrategyController {
