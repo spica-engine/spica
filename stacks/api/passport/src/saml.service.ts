@@ -1,20 +1,23 @@
 import {Inject, Injectable} from "@nestjs/common";
 import * as saml2 from "saml2-js";
 import * as uuid from "uuid/v4";
-import {SamlStrategy, StrategyTypeService} from "./strategy/interface";
+import {SamlStrategy, Strategy, StrategyTypeService} from "./strategy/interface";
 import {PassportOptions, PASSPORT_OPTIONS} from "./options";
 import {StrategyService} from "./strategy/strategy.service";
 import * as forge from "node-forge";
+import {ObjectId} from "@spica-server/database";
 
 @Injectable()
 export class SamlService implements StrategyTypeService {
+  readonly type = "saml";
+
   constructor(
     private strategy: StrategyService,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
-  async createMetadata(name: string): Promise<string | null> {
-    const strategy = await this.getStrategy(name);
+  async createMetadata(id: string): Promise<string | null> {
+    const strategy = await this.getStrategy(id);
     if (!strategy) {
       return null;
     }
@@ -22,16 +25,11 @@ export class SamlService implements StrategyTypeService {
     return providers.sp.create_metadata();
   }
 
-  getStrategy(name: string): Promise<SamlStrategy | null> {
-    return this.strategy.findOne({name, type: "saml"}) as Promise<SamlStrategy>;
+  getStrategy(id: string): Promise<SamlStrategy> {
+    return this.strategy.findOne({_id: new ObjectId(id)}) as Promise<SamlStrategy>;
   }
 
-  async getLoginUrl(name: string): Promise<{url: string; state: string}> {
-    const strategy = await this.getStrategy(name);
-    if (!strategy) {
-      return null;
-    }
-
+  getLoginUrl(strategy: SamlStrategy): Promise<{url: string; state: string}> {
     const stateId = uuid();
     const providers = this.getProviders(strategy, stateId);
 
@@ -42,12 +40,7 @@ export class SamlService implements StrategyTypeService {
     );
   }
 
-  async assert(name: string, body: unknown) {
-    const strategy = await this.getStrategy(name);
-    if (!strategy) {
-      return null;
-    }
-
+  assert(strategy: SamlStrategy, body: unknown) {
     const providers = this.getProviders(strategy);
 
     return new Promise((resolve, reject) =>
@@ -69,10 +62,10 @@ export class SamlService implements StrategyTypeService {
     });
 
     const sp = new saml2.ServiceProvider({
-      entity_id: `${this.options.publicUrl}/passport/strategy/${strategy.name}`,
+      entity_id: `${this.options.publicUrl}/passport/strategy/${strategy._id}`,
       assert_endpoint: state
-        ? `${this.options.publicUrl}/passport/strategy/${strategy.name}/complete?state=${state}`
-        : `${this.options.publicUrl}/passport/strategy/${strategy.name}/complete`,
+        ? `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete?state=${state}`
+        : `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`,
       certificate: strategy.options.sp.certificate,
       private_key: strategy.options.sp.private_key,
       force_authn: true,

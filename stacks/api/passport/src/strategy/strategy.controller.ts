@@ -10,12 +10,14 @@ import {
   Put,
   UseGuards
 } from "@nestjs/common";
+import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
 import {OAuthService} from "../oauth.service";
 import {PassportOptions, PASSPORT_OPTIONS} from "../options";
 import {SamlService} from "../saml.service";
-import {Strategy, StrategyTypeService} from "./interface";
+import {getStrategyService} from "../utilities";
+import {Strategy} from "./interface";
 import {StrategyService} from "./strategy.service";
 
 @Controller("passport/strategy")
@@ -52,48 +54,48 @@ export class StrategyController {
 
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:insert"))
-  insertOne(@Body() strategy: Strategy) {
+  async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
     delete strategy._id;
 
-    const desiredStrategy = this.getStrategyByType(strategy.type);
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
 
     try {
-      desiredStrategy.prepareToInsert(strategy);
+      service.prepareToInsert(strategy);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
 
-    return this.strategy.insertOne(strategy).then(s => {
-      if (typeof desiredStrategy.afterInsert == "function") {
-        return desiredStrategy.afterInsert(s);
-      }
-    });
+    let insertedStrategy = await this.strategy.insertOne(strategy);
+
+    if (service.afterInsert) {
+      insertedStrategy = await service.afterInsert(insertedStrategy);
+    }
+
+    return insertedStrategy;
   }
 
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:update"))
-  replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() strategy: Strategy) {
+  async replaceOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy
+  ) {
     delete strategy._id;
 
-    const desiredStrategy = this.getStrategyByType(strategy.type);
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
 
     try {
-      desiredStrategy.prepareToInsert(strategy);
+      service.prepareToInsert(strategy);
     } catch (error) {
       throw new BadRequestException(error);
     }
 
-    return this.strategy.findOneAndReplace({_id: id}, strategy);
-  }
+    let insertedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy);
 
-  getStrategyByType(type: string): StrategyTypeService {
-    switch (type) {
-      case "saml":
-        return this.saml;
-      case "oauth":
-        return this.oauth;
-      default:
-        throw new BadRequestException("Unknown strategy. Available options are saml and oauth.");
+    if (service.afterInsert) {
+      insertedStrategy = await service.afterInsert(insertedStrategy);
     }
+
+    return insertedStrategy;
   }
 }

@@ -13,6 +13,7 @@ import {StrategyService} from "./strategy/strategy.service";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OAuthService} from "./oauth.service";
 const LoginSchema = require("./schemas/login.json");
+const StrategySchema = require("./schemas/strategy.json");
 
 @Global()
 @Module({})
@@ -44,7 +45,7 @@ export class PassportModule {
       controllers: [PassportController, StrategyController],
       imports: [
         SchemaModule.forChild({
-          schemas: [LoginSchema]
+          schemas: [LoginSchema, StrategySchema]
         }),
         PassportCoreModule.initialize(options),
         IdentityModule.forRoot({

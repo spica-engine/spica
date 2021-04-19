@@ -25,6 +25,8 @@ import {StrategyService} from "./strategy/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
 import {OAuthService} from "./oauth.service";
+import {getStrategyService} from "./utilities";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
 
 const assertObservers = new Map<string, Subject<any>>();
 /**
@@ -161,45 +163,27 @@ export class PassportController {
     return this.strategy.aggregate([{$project: {options: 0}}]).toArray();
   }
 
-  @All("strategy/:id/redirect")
-  async redirect(@Param("id") id: string, @Query("code") code: string) {
-    try {
-      const user = await this.oauth.getUserEmail(id, code);
-      if (!user.email) {
-        throw new BadRequestException(
-          `This strategy did not send email address.
-Probably you reject sharing your email address with spica.
-Please give this permission from your login service and try again.`
-        );
-      }
-      const observer = assertObservers.get("test");
-      return observer.next({user});
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   @Get("strategy/:id/url")
-  async getUrl(@Param("id") id: string) {
-    const url = await this.oauth.getCodeRequest(id);
+  async getUrl(@Param("id", OBJECT_ID) id: ObjectId) {
+    const strategy = await this.strategy.findOne({_id: id});
+
+    if (!strategy) {
+      throw new BadRequestException("Strategy does not exist.");
+    }
+
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+
+    const login = await service.getLoginUrl(strategy);
+
+    if (!login) {
+      throw new InternalServerErrorException("Cannot generate login url.");
+    }
+
     const observer = new Subject();
-    assertObservers.set("test", observer);
 
-    return {state: "test", url};
+    assertObservers.set(login.state, observer);
 
-    // const login = await this.saml.getLoginUrl(name);
-
-    // if (!name) {
-    //   throw new BadRequestException("strategy parameter is required.");
-    // }
-
-    // if (!login) {
-    //   throw new InternalServerErrorException("Cannot generate login url.");
-    // }
-
-    // const observer = new Subject();
-    // assertObservers.set(login.state, observer);
-    // return login;
+    return login;
   }
 
   @Get("strategy/:name/metadata")
@@ -208,13 +192,14 @@ Please give this permission from your login service and try again.`
     return this.saml.createMetadata(name);
   }
 
-  @Post("strategy/:name/complete")
+  @All("strategy/:id/complete")
   @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
   async complete(
-    @Param("name") name: string,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body() body: unknown,
-    @Query("state") stateId: string
+    @Query("state") stateId: string,
+    @Query("code") code: string
   ) {
     if (!stateId) {
       throw new BadRequestException("state query parameter is required.");
@@ -223,9 +208,19 @@ Please give this permission from your login service and try again.`
     if (!assertObservers.has(stateId)) {
       throw new BadRequestException("Authentication has failed due to invalid state.");
     }
+
+    const strategy = await this.strategy.findOne({_id: id});
+
+    if (!strategy) {
+      throw new BadRequestException("Strategy does not exist.");
+    }
+
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+
     const observer = assertObservers.get(stateId);
     try {
-      const identity = await this.saml.assert(name, body);
+      const identity = await service.assert(strategy, body, code);
+      console.log(identity);
       return observer.next(identity);
     } catch (error) {
       return observer.error(error);
