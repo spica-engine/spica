@@ -82,7 +82,7 @@ export class PassportController {
         .toPromise();
       assertObservers.delete(state);
 
-      const idenfitifer = user ? user.upn || user.name_id : undefined;
+      const idenfitifer = user ? user.upn || user.name_id || user.email : undefined;
 
       if (!idenfitifer) {
         throw new InternalServerErrorException("Authentication has failed.");
@@ -136,7 +136,7 @@ export class PassportController {
         .toPromise();
       assertObservers.delete(credentials.state);
 
-      const idenfitifer = user ? user.upn || user.name_id : undefined;
+      const idenfitifer = user ? user.upn || user.name_id || user.email : undefined;
 
       if (!idenfitifer) {
         throw new InternalServerErrorException("Authentication has failed.");
@@ -158,32 +158,48 @@ export class PassportController {
 
   @Get("strategies")
   async strategies() {
-    const strategies = await this.strategy.find();
-    return strategies.map(({name, icon, type, title}) => ({name, icon, type, title}));
+    return this.strategy.aggregate([{$project: {options: 0}}]).toArray();
   }
 
   @All("strategy/:id/redirect")
   async redirect(@Param("id") id: string, @Query("code") code: string) {
-    const res = await this.oauth.exhangeCodeForAccesToken(id, code);
-    console.log(res);
-    return;
+    try {
+      const user = await this.oauth.getUserEmail(id, code);
+      if (!user.email) {
+        throw new BadRequestException(
+          `This strategy did not send email address.
+Probably you reject sharing your email address with spica.
+Please give this permission from your login service and try again.`
+        );
+      }
+      const observer = assertObservers.get("test");
+      return observer.next({user});
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  @Get("strategy/:name/url")
-  async getUrl(@Param("name") name: string) {
-    const login = await this.saml.getLoginUrl(name);
-
-    if (!name) {
-      throw new BadRequestException("strategy parameter is required.");
-    }
-
-    if (!login) {
-      throw new InternalServerErrorException("Cannot generate login url.");
-    }
-
+  @Get("strategy/:id/url")
+  async getUrl(@Param("id") id: string) {
+    const url = await this.oauth.getCodeRequest(id);
     const observer = new Subject();
-    assertObservers.set(login.state, observer);
-    return login;
+    assertObservers.set("test", observer);
+
+    return {state: "test", url};
+
+    // const login = await this.saml.getLoginUrl(name);
+
+    // if (!name) {
+    //   throw new BadRequestException("strategy parameter is required.");
+    // }
+
+    // if (!login) {
+    //   throw new InternalServerErrorException("Cannot generate login url.");
+    // }
+
+    // const observer = new Subject();
+    // assertObservers.set(login.state, observer);
+    // return login;
   }
 
   @Get("strategy/:name/metadata")
