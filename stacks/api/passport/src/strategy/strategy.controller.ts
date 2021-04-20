@@ -41,7 +41,7 @@ export class StrategyController {
     return this.strategy.findOne({_id: id}).then(strategy => {
       strategy[
         "callbackUrl"
-      ] = `${this.options.publicUrl}/passport/strategy/${strategy.name}/complete`;
+      ] = `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
       return strategy;
     });
   }
