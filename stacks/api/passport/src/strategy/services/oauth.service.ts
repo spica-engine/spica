@@ -1,11 +1,6 @@
 import {Inject, Injectable} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
-import {
-  OAuthRequestDetails,
-  OAuthStrategy,
-  Strategy,
-  StrategyTypeService
-} from "../interface";
+import {OAuthRequestDetails, OAuthStrategy, Strategy, StrategyTypeService} from "../interface";
 import {StrategyService} from "./strategy.service";
 import axios from "axios";
 import {PassportOptions, PASSPORT_OPTIONS} from "../../options";
@@ -26,20 +21,20 @@ export class OAuthService implements StrategyTypeService {
       code
     };
 
-    const {access_token} = await this.sendRequest(strategy.options.access_token);
+    const tokenResponse = await this.sendRequest(strategy.options.access_token);
 
-    if (!access_token) {
+    if (!tokenResponse.access_token) {
       throw Error("Access token could not find.");
     }
 
     strategy.options.identifier.params = {
       ...(strategy.options.identifier.params || {}),
-      access_token
+      access_token: tokenResponse.access_token
     };
 
-    // some services accept token on Authorization header
+    // some services only accept token on Authorization header
     strategy.options.identifier.headers = {
-      Authorization: `token ${access_token}`
+      Authorization: `token ${tokenResponse.access_token}`
     };
 
     return this.sendRequest(strategy.options.identifier).then(user => {
@@ -88,14 +83,16 @@ export class OAuthService implements StrategyTypeService {
   }
 
   sendRequest(requestDetails: OAuthRequestDetails): Promise<any> {
-    return axios({
-      url: requestDetails.base_url,
-      params: requestDetails.params,
-      method: requestDetails.method as any,
-      headers: requestDetails.headers,
-      responseType: "json"
-    })
-      .then(res => res.data)
-      .catch(error => error.response.data);
+    return new Promise((resolve, reject) => {
+      axios({
+        url: requestDetails.base_url,
+        params: requestDetails.params,
+        method: requestDetails.method as any,
+        headers: requestDetails.headers,
+        responseType: "json"
+      })
+        .then(res => resolve(res.data))
+        .catch(error => reject(error.response.data));
+    });
   }
 }

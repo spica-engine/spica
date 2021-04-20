@@ -77,7 +77,7 @@ export class PassportController {
             return throwError(
               error && error.name == "TimeoutError"
                 ? new GatewayTimeoutException("Operation did not complete within one minute.")
-                : new UnauthorizedException(String(error))
+                : new UnauthorizedException(JSON.stringify(error))
             );
           })
         )
@@ -131,7 +131,7 @@ export class PassportController {
             return throwError(
               error && error.name == "TimeoutError"
                 ? new GatewayTimeoutException("Operation did not complete within one minute.")
-                : new UnauthorizedException(String(error))
+                : new UnauthorizedException(JSON.stringify(error))
             );
           })
         )
@@ -218,12 +218,12 @@ export class PassportController {
     const service = getStrategyService([this.saml, this.oauth], strategy.type);
 
     const observer = assertObservers.get(stateId);
-    try {
-      const identity = await service.assert(strategy, body, code);
-      console.log(identity);
-      return observer.next(identity);
-    } catch (error) {
-      return observer.error(error);
-    }
+
+    return service
+      .assert(strategy, body, code)
+      .then(identity => {
+        observer.next(identity);
+      })
+      .catch(e => observer.error(e));
   }
 }
