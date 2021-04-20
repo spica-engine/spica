@@ -25,11 +25,15 @@
         }
       }
     }
-    mat-card-actions {
-      display: flex;
-      .space-between {
-        flex: 1 1 auto;
-      }
+  }
+
+  button{
+    width: 100%;
+    margin: 5px 0px;
+    overflow-x: hidden;
+    &:first-of-type {
+      margin-bottom: 10px;
     }
+
   }
 }
