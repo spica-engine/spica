@@ -148,17 +148,18 @@
             </span>
           </h4>
           <mat-divider></mat-divider>
-          <mat-list-item class="editor">
-            <code-editor
+
+          <mat-list-item>
+            <function-code-editor
+              class="editor"
               (save)="updateIndex()"
-              [(ngModel)]="index"
-              name="code"
-              [options]="editorOptions"
-              [language]="function.language"
-              [marker]="$markers | async"
               #language="language"
+              name="code"
+              [language]="function.language"
+              [(ngModel)]="index"
+              [options]="editorOptions"
             >
-            </code-editor>
+            </function-code-editor>
           </mat-list-item>
 
           <h4 mat-subheader>

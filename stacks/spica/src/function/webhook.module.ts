@@ -19,7 +19,7 @@ import {InputModule} from "@spica-client/common";
 import {EditorModule} from "@spica-client/common/code-editor";
 import {MatAwareDialogModule, MatSaveModule} from "@spica-client/material";
 import {PassportModule} from "@spica-client/passport";
-import {HandlebarsLanguageDirective} from "./components/editor/handlebars.language";
+import {HandlebarsLanguageDirective} from "./directives/handlebars.language";
 import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
 import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
 import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
