@@ -117,24 +117,6 @@
             }
           }
 
-          &.editor {
-            ::ng-deep .mat-list-item-content {
-              padding-left: 4px;
-              padding-right: 4px;
-            }
-            code-editor {
-              height: calc(100vh - 100px);
-              ::ng-deep {
-                .decorationsOverviewRuler {
-                  display: none;
-                }
-                .overflow-guard {
-                  border: 2px solid #0000000f;
-                }
-              }
-            }
-          }
-
           &.dependency {
             ::ng-deep .mat-list-item-content {
               display: flex !important;

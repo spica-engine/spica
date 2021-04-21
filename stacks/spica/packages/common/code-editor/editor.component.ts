@@ -15,8 +15,7 @@ import {
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core/layout";
 import {Subject} from "rxjs";
-import {takeUntil, map, take} from "rxjs/operators";
-import {fromEvent} from "rxjs";
+import {takeUntil} from "rxjs/operators";
 
 @Component({
   selector: "code-editor",
@@ -65,7 +64,7 @@ export class EditorComponent
   ) {
     window["MonacoEnvironment"] = {
       getWorker: () => {
-        return new Worker("./editor.worker", {type: "module"});
+        return new Worker("./editor.worker", {type: "module", name: "custom-editor-worker"});
       }
     };
   }
