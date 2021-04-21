@@ -493,6 +493,12 @@ describe("IndexComponent", () => {
   });
 
   describe("row template", () => {
+    let templateCache;
+    beforeEach(() => {
+      templateCache = fixture.componentInstance.templateMap;
+      templateCache.clear();
+    });
+
     it("should return when value is undefined or null", () => {
       const template = fixture.componentInstance.buildTemplate(undefined, {}, "title");
       expect(template).toEqual(undefined);
@@ -572,9 +578,6 @@ describe("IndexComponent", () => {
     });
 
     it("should use existing value instead of creating new one", () => {
-      const templateCache = fixture.componentInstance.templateMap;
-      templateCache.clear();
-
       const createTemplateSpy = spyOn(
         fixture.componentInstance["sanitizer"],
         "bypassSecurityTrustHtml"
@@ -603,9 +606,6 @@ describe("IndexComponent", () => {
     });
 
     it("should create new template for new values", () => {
-      const templateCache = fixture.componentInstance.templateMap;
-      templateCache.clear();
-
       const createTemplateSpy = spyOn(
         fixture.componentInstance["sanitizer"],
         "bypassSecurityTrustHtml"
@@ -633,6 +633,42 @@ describe("IndexComponent", () => {
 
       // it should be 2 if it does not use cache
       expect(createTemplateSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it("should create new template for arrays", () => {
+      const template = fixture.componentInstance.buildTemplate(["test"], {type: "array"}, "items");
+
+      expect(templateCache.get(`items_["test"]`)).toEqual(template);
+
+      const differentTemplate = fixture.componentInstance.buildTemplate(
+        ["test2"],
+        {type: "array"},
+        "items"
+      );
+
+      expect(differentTemplate).not.toEqual(template);
+
+      expect(templateCache.get(`items_["test2"]`)).toEqual(differentTemplate);
+    });
+
+    it("should create new template for objects", () => {
+      const template = fixture.componentInstance.buildTemplate(
+        {field1: "test"},
+        {type: "object"},
+        "address"
+      );
+
+      expect(templateCache.get(`address_{"field1":"test"}`)).toEqual(template);
+
+      const differentTemplate = fixture.componentInstance.buildTemplate(
+        {field1: "test2"},
+        {type: "object"},
+        "address"
+      );
+
+      expect(differentTemplate).not.toEqual(template);
+
+      expect(templateCache.get(`address_{"field1":"test2"}`)).toEqual(differentTemplate);
     });
 
     it("should return default", () => {
