@@ -57,6 +57,9 @@ class NodeWorker extends Worker {
   }
 
   attach(stdout?: Writable, stderr?: Writable): void {
+    this._process.stdout.unpipe();
+    this._process.stderr.unpipe();
+
     this._process.stdout.pipe(stdout);
     this._process.stderr.pipe(new FilterExperimentalWarnings()).pipe(stderr);
   }
