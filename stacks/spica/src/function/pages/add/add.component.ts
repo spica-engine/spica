@@ -258,11 +258,7 @@ export class AddComponent implements OnInit, OnDestroy {
               }
               return throwError(error);
             }),
-            tap(
-              () =>
-                isInsert &&
-                this.router.navigate([`function/${fn._id}`], {state: {skipSaveChanges: true}})
-            ),
+            tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
             ignoreElements()
           )
         ),

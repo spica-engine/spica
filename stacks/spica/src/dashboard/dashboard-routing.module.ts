@@ -7,7 +7,7 @@ import {DashboardViewComponent} from "./pages/dashboard-view/dashboard-view.comp
 import {AddComponent} from "./pages/add/add.component";
 import {IndexComponent} from "./pages/index/index.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
-import {DashboardCanDeactivate, DashboardIndexGuard} from "./dashboard.guard";
+import {DashboardIndexGuard} from "./dashboard.guard";
 import {AssetStoreComponent} from "./pages/asset-store/asset-store.component";
 
 const routes: Routes = [
@@ -37,15 +37,13 @@ const routes: Routes = [
         path: "add",
         canActivate: [PolicyGuard],
         component: AddComponent,
-        data: {service: "dashboard", action: "create"},
-        canDeactivate: [DashboardCanDeactivate]
+        data: {service: "dashboard", action: "create"}
       },
       {
         path: ":id",
         canActivate: [PolicyGuard],
         component: AddComponent,
-        data: {service: "dashboard", action: "show"},
-        canDeactivate: [DashboardCanDeactivate]
+        data: {service: "dashboard", action: "show"}
       }
     ]
   },
@@ -80,7 +78,6 @@ const route: Route[] = [
 
 @NgModule({
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],
-  exports: [RouterModule, RouteModule],
-  providers: [DashboardCanDeactivate]
+  exports: [RouterModule, RouteModule]
 })
 export class DashboardRoutingModule {}

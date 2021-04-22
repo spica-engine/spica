@@ -155,11 +155,7 @@ export class AddComponent implements OnInit {
         tap(() => {
           this.refreshHistory.next(undefined);
           if (isInsert) {
-            this.router.navigate(["bucket", this.bucketId], {
-              state: {
-                skipSaveChanges: true
-              }
-            });
+            this.router.navigate(["bucket", this.bucketId]);
           }
         }),
         ignoreElements(),
