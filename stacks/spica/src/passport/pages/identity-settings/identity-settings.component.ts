@@ -93,7 +93,7 @@ export class IdentitySettingsComponent implements OnInit {
     this.preferencesService
       .replaceOne(this.preferences)
       .toPromise()
-      .then(() => this.router.navigate(["/passport/identity"], {state: {skipSaveChanges: true}}));
+      .then(() => this.router.navigate(["/passport/identity"]));
   }
 
   cardDrop(event: CdkDragDrop<PassportPreference[]>) {

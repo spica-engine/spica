@@ -9,11 +9,6 @@ import {IndexComponent} from "./pages/index/index.component";
 import {SettingsComponent} from "./pages/settings/settings.component";
 import {WelcomeComponent} from "./pages/welcome/welcome.component";
 import {BucketIndexGuard} from "./state/index.guard";
-import {
-  BucketCanDeactivate,
-  BucketDataCanDeactivate,
-  BucketSettingsCanDeactivate
-} from "./state/deactivate.guard";
 
 const routes: Routes = [
   {
@@ -35,16 +30,14 @@ const routes: Routes = [
         component: AddComponent,
         data: {
           action: "create"
-        },
-        canDeactivate: [BucketDataCanDeactivate]
+        }
       },
       {
         path: ":id/:rid",
         component: AddComponent,
         data: {
           action: "show"
-        },
-        canDeactivate: [BucketDataCanDeactivate]
+        }
       }
     ]
   },
@@ -68,8 +61,7 @@ const routes: Routes = [
           params: {
             scope: "bucket"
           }
-        },
-        canDeactivate: [BucketSettingsCanDeactivate]
+        }
       },
       {
         canActivate: [BucketIndexGuard],
@@ -84,16 +76,14 @@ const routes: Routes = [
         component: BucketAddComponent,
         data: {
           action: "create"
-        },
-        canDeactivate: [BucketCanDeactivate]
+        }
       },
       {
         path: ":id",
         component: BucketAddComponent,
         data: {
           action: "show"
-        },
-        canDeactivate: [BucketCanDeactivate]
+        }
       }
     ]
   }
@@ -114,7 +104,6 @@ const route: Route[] = [
 
 @NgModule({
   imports: [RouterModule.forChild(routes), RouteModule.forChild(route)],
-  exports: [RouterModule, RouteModule],
-  providers: [BucketCanDeactivate, BucketDataCanDeactivate, BucketSettingsCanDeactivate]
+  exports: [RouterModule, RouteModule]
 })
 export class BucketRoutingModule {}
