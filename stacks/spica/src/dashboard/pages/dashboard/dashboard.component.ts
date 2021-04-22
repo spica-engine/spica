@@ -1,6 +1,6 @@
 import {Component, OnInit} from "@angular/core";
 import {BucketService} from "@spica-client/bucket";
-import {map, switchMap, tap} from "rxjs/operators";
+import {map, switchMap} from "rxjs/operators";
 import {Observable, BehaviorSubject, of, combineLatest} from "rxjs";
 import {PassportService} from "@spica-client/passport";
 
