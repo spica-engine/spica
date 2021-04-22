@@ -24,7 +24,7 @@ export class FunctionInitializer {
       funcs.forEach(func => {
         Promise.all([
           this.passport.checkAllowed("function:show", func._id).toPromise(),
-          this.passport.checkAllowed("function:update", func._id).toPromise()
+          this.passport.checkAllowed("function:index", func._id).toPromise()
         ]).then(permissions => {
           if (permissions.every(p => p == true)) {
             this.routeService.dispatch(
