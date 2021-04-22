@@ -165,15 +165,7 @@ export class BucketAddComponent implements OnInit, OnDestroy {
     this.$save = merge(
       of(SavingState.Saving),
       save.pipe(
-        tap(
-          bucket =>
-            isInsert &&
-            this.router.navigate(["bucket", bucket._id, "add"], {
-              state: {
-                skipSaveChanges: true
-              }
-            })
-        ),
+        tap(bucket => isInsert && this.router.navigate(["bucket", bucket._id, "add"])),
         ignoreElements(),
         endWith(SavingState.Saved),
         catchError(() => of(SavingState.Failed))

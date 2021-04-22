@@ -241,9 +241,7 @@ describe("Identity Setting Component", () => {
 
       expect(replaceOneSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledTimes(1);
-      expect(navigateSpy).toHaveBeenCalledWith(["/passport/identity"], {
-        state: {skipSaveChanges: true}
-      });
+      expect(navigateSpy).toHaveBeenCalledWith(["/passport/identity"]);
     }));
   });
 });
