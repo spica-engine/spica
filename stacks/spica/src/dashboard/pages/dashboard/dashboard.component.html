@@ -5,7 +5,7 @@
     </span>
   </h4>
 </mat-toolbar>
-<mat-card *ngIf="!(isTutorialEnabled$ | async)" class="mat-elevation-z25">
+<mat-card class="mat-elevation-z25">
   <mat-card-content>
     <mat-list role="list">
       <h1 mat-subheader>Quicklinks</h1>
@@ -15,6 +15,10 @@
       </a>
       <a mat-list-item target="_blank" href="//github.com/spica-engine/spica">
         Github
+        <mat-icon>open_in_new</mat-icon>
+      </a>
+      <a mat-list-item target="_blank" href="//youtube.com/playlist?list=UUCfDC3-r1tIeYfylt_9QVJg">
+        Youtube
         <mat-icon>open_in_new</mat-icon>
       </a>
       <a mat-list-item target="_blank" href="//github.com/spica-engine/spica/releases">
@@ -32,6 +36,24 @@
     </mat-list>
   </mat-card-content>
 </mat-card>
-<mat-card *ngIf="!!(isTutorialEnabled$ | async)" class="mat-elevation-z25">
-  <tutorial (onDisable)="onDisable()"></tutorial>
+<mat-card class="tutorial-videos" *ngIf="!!(isTutorialEnabled$ | async)">
+  <mat-card-content>
+    <mat-list>
+      <h1 mat-subheader>Tutorials</h1>
+      <mat-list-item>
+        <iframe
+          src="https://www.youtube.com/embed/videoseries?list=UUCfDC3-r1tIeYfylt_9QVJg"
+          title="Spica Tutorials"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </mat-list-item>
+    </mat-list>
+  </mat-card-content>
+  <mat-card-actions>
+    <button color="warn" mat-flat-button (click)="onDisable()">
+      Don't show this again
+    </button>
+  </mat-card-actions>
 </mat-card>
