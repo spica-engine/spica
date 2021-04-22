@@ -1,6 +1,6 @@
 import {Component, OnInit} from "@angular/core";
 import {BucketService} from "@spica-client/bucket";
-import {map, switchMap} from "rxjs/operators";
+import {map, switchMap, tap} from "rxjs/operators";
 import {Observable, BehaviorSubject, of, combineLatest} from "rxjs";
 import {PassportService} from "@spica-client/passport";
 
@@ -16,27 +16,7 @@ export class DashboardComponent implements OnInit {
   refresh$: BehaviorSubject<any> = new BehaviorSubject("");
 
   ngOnInit() {
-    this.isTutorialEnabled$ = combineLatest(
-      this.passport.checkAllowed("bucket:index", "*"),
-      this.passport.checkAllowed("bucket:create"),
-      this.passport.checkAllowed("bucket:data:create", "*"),
-      this.passport.checkAllowed("passport:apikey:create", "*"),
-      this.passport.checkAllowed("passport:apikey:policy:add", "*/BucketFullAccess")
-    ).pipe(
-      switchMap(results =>
-        results.every(isAllowed => isAllowed)
-          ? this.refresh$.pipe(
-              switchMap(() =>
-                this.bucketService
-                  .retrieve()
-                  .pipe(
-                    map(buckets => buckets.length == 0 && !localStorage.getItem("hide-tutorial"))
-                  )
-              )
-            )
-          : of(false)
-      )
-    );
+    this.isTutorialEnabled$ = this.refresh$.pipe(map(() => !localStorage.getItem("hide-tutorial")));
   }
 
   onDisable() {
