@@ -5,7 +5,6 @@ import {WebhookAddComponent} from "./pages/webhook-add/webhook-add.component";
 import {WebhookIndexComponent} from "./pages/webhook-index/webhook-index.component";
 import {WebhookLogViewComponent} from "./pages/webhook-log-view/webhook-log-view.component";
 import {WebhookWelcomeComponent} from "./pages/webhook-welcome/webhook-welcome.component";
-import {WebhookCanDeactivate} from "./resolvers/deactivate.guard";
 import {WebhookGuard} from "./resolvers/webhook.guard";
 
 const routes: Routes = [
@@ -30,14 +29,12 @@ const routes: Routes = [
       {
         path: "add",
         component: WebhookAddComponent,
-        data: {action: "create"},
-        canDeactivate: [WebhookCanDeactivate]
+        data: {action: "create"}
       },
       {
         path: ":id",
         component: WebhookAddComponent,
-        data: {action: "show"},
-        canDeactivate: [WebhookCanDeactivate]
+        data: {action: "show"}
       }
     ]
   }
@@ -45,7 +42,6 @@ const routes: Routes = [
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-  providers: [WebhookCanDeactivate]
+  exports: [RouterModule]
 })
 export class WebhookRoutingModule {}

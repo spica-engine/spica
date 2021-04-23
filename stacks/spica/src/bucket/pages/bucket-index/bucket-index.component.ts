@@ -158,7 +158,7 @@ export class BucketIndexComponent implements OnDestroy, OnInit {
     this.bs
       .delete(bucket._id)
       .toPromise()
-      .then(() => this.router.navigate(["buckets", target], {state: {skipSaveChanges: true}}));
+      .then(() => this.router.navigate(["buckets", target]));
   }
 
   ngOnDestroy(): void {
