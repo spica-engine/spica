@@ -15,7 +15,7 @@ import {
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver";
 import {GraphqlController} from "./graphql/graphql";
-import {provideLanguageFinalizer} from "./locale";
+import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
 

@@ -23,19 +23,23 @@ import {
   ValueNode
 } from "graphql";
 import {makeExecutableSchema, mergeResolvers, mergeTypeDefs} from "graphql-tools";
-import {BucketDataService} from "../../services/src/bucket-data.service";
+import {BucketDataService} from "@spica-server/bucket/services";
 import {createBucketDataActivity} from "../activity.resource";
 import {
   deleteDocument,
   findDocuments,
   insertDocument,
   patchDocument,
-  replaceDocument
-} from "../crud";
+  replaceDocument,
+  applyPatch,
+  deepCopy,
+  clearRelations,
+  getDependents
+} from "@spica-server/bucket/common";
+
 import {createHistory} from "../history";
-import {findLocale} from "../locale";
-import {applyPatch, deepCopy} from "../patch";
-import {clearRelations, getDependents} from "../relation";
+import {findLocale} from "@spica-server/bucket/common";
+
 import {
   createSchema,
   extractAggregationFromQuery,

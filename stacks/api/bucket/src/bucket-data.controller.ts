@@ -17,7 +17,8 @@ import {
   Req,
   UseGuards,
   UseInterceptors,
-  Inject
+  Inject,
+  HttpException
 } from "@nestjs/common";
 import {activity, ActivityService, createActivity} from "@spica-server/activity/services";
 import {HistoryService} from "@spica-server/bucket/history";
@@ -51,12 +52,12 @@ import {
   insertDocument,
   patchDocument,
   replaceDocument,
-  authIdToString
-} from "./crud";
+  authIdToString,
+  applyPatch
+} from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
 import {createHistory} from "./history";
-import {applyPatch} from "./patch";
-import {clearRelations, getRelationPaths, getDependents} from "./relation";
+import {clearRelations, getRelationPaths, getDependents} from "@spica-server/bucket/common";
 
 /**
  * All APIs related to bucket documents.
@@ -141,7 +142,7 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    );
+    ).catch(this.errorHandler);
   }
 
   /**
@@ -176,7 +177,7 @@ export class BucketDataController {
       relation == true ? schema : Array.isArray(relation) ? relation : []
     );
 
-    const [document] = await findDocuments(
+    const [document]: any = await findDocuments(
       schema,
       {
         relationPaths,
@@ -194,7 +195,7 @@ export class BucketDataController {
         preference: () => this.bs.getPreferences(),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    );
+    ).catch(this.errorHandler);
 
     return document;
   }
@@ -246,7 +247,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)}),
         deleteOne: documentId => this.deleteOne(req, bucketId, documentId)
       }
-    );
+    ).catch(this.errorHandler);
 
     if (!document) {
       return;
@@ -304,7 +305,7 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    );
+    ).catch(this.errorHandler);
 
     if (!previousDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -392,7 +393,7 @@ export class BucketDataController {
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       },
       {returnOriginal: false}
-    );
+    ).catch(this.errorHandler);
 
     if (!currentDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -443,7 +444,7 @@ export class BucketDataController {
         collection: schema => this.bds.children(schema),
         schema: (bucketId: string) => this.bs.findOne({_id: new ObjectId(bucketId)})
       }
-    );
+    ).catch(this.errorHandler);
 
     if (!deletedDocument) {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
@@ -484,5 +485,9 @@ export class BucketDataController {
         }
       }
     }
+  }
+
+  errorHandler(error: {status: number; message: string}) {
+    throw new HttpException(error.message, error.status);
   }
 }
