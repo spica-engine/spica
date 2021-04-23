@@ -22,27 +22,22 @@ import {DocumentScheduler} from "./scheduler";
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
-    const imports: (Type<any> | DynamicModule)[] = [
-      SchemaModule.forChild({
-        schemas: [
-          require("./schemas/bucket.schema.json"),
-          require("./schemas/buckets.schema.json")
-        ],
-        keywords: [bucketSpecificDefault],
-        customFields: [
-          // common,
-          "primary",
-          "options",
-          // relation
-          "bucketId",
-          "relationType",
-          "dependent",
-          // location
-          "locationType"
-        ]
-      }),
-      ServicesModule
-    ];
+    const schemaModule = SchemaModule.forChild({
+      schemas: [require("./schemas/bucket.schema.json"), require("./schemas/buckets.schema.json")],
+      keywords: [bucketSpecificDefault],
+      customFields: [
+        // common,
+        "primary",
+        "options",
+        // relation
+        "bucketId",
+        "relationType",
+        "dependent",
+        // location
+        "locationType"
+      ]
+    });
+    const imports: (Type<any> | DynamicModule)[] = [schemaModule, ServicesModule];
 
     const BucketCore = BucketCoreModule.initialize();
 
@@ -67,7 +62,20 @@ export class BucketModule {
     }
 
     if (options.realtime) {
-      imports.push(RealtimeModule);
+      const realtime = RealtimeModule.register();
+      const gateway = realtime.providers.shift();
+
+      const gatewayWithValidator = {
+        provide: gateway,
+        useClass: gateway,
+        inject: [Validator]
+      };
+
+      realtime.providers.unshift(gatewayWithValidator as any);
+
+      realtime.imports.push(schemaModule as any);
+
+      imports.push(realtime);
     }
 
     return {

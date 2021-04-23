@@ -10,8 +10,10 @@ ts_library(
     ]),
     module_name = "@spica-server/bucket/realtime",
     deps = [
+        "//packages/core/schema",
         "//packages/database",
         "//packages/database/realtime",
+        "//stacks/api/bucket/common",
         "//stacks/api/bucket/expression",
         "//stacks/api/bucket/hooks",
         "//stacks/api/bucket/services",

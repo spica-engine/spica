@@ -1,10 +1,5 @@
-import {
-  ConnectedSocket,
-  MessageBody,
-  OnGatewayConnection,
-  SubscribeMessage,
-  WebSocketGateway
-} from "@nestjs/websockets";
+import {OnGatewayConnection, SubscribeMessage, WebSocketGateway} from "@nestjs/websockets";
+import {insertDocument} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
 import {
@@ -13,6 +8,7 @@ import {
   filterReviver,
   BucketDataService
 } from "@spica-server/bucket/services";
+import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
 import {
   FindOptions,
@@ -31,40 +27,53 @@ export class RealtimeGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
 
   // @TODO: try to simplize clients instead of use whole websocket object
-  clients = new Map<WebSocket, {user: any; schema: any}>();
+  clients = new Map<WebSocket, any>();
 
   constructor(
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
     private bucketService: BucketService,
-    private bucketDataService: BucketDataService
+    private bucketDataService: BucketDataService,
+    private validator: Validator
   ) {}
 
-  async handleConnection(client: WebSocket, req) {
-    req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
+  async authorize(req, client) {
     try {
       await this.guardService.checkAuthorization({
         request: req,
         response: client
       });
+
       await this.guardService.checkAction({
         request: req,
         response: client,
         actions: "bucket:data:stream",
         options: {resourceFilter: true}
       });
-    } catch (e) {
+    } catch (error) {
       client.send(
-        JSON.stringify({kind: ChunkKind.Error, code: e.status || 500, message: e.message})
+        JSON.stringify({kind: ChunkKind.Error, code: error.status || 500, message: error.message})
       );
-      return client.close(1003);
+      client.close(1003);
+
+      throw new Error(error);
+    }
+  }
+
+  async handleConnection(client: WebSocket, req) {
+    req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
+
+    try {
+      await this.authorize(req, client);
+    } catch (error) {
+      return;
     }
 
     const schemaId = req.params.id;
 
     const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
 
-    this.clients.set(client, {user: req.user, schema});
+    this.clients.set(client, req);
 
     const match = expression.aggregate(schema.acl.read, {auth: req.user});
 
@@ -142,16 +151,72 @@ export class RealtimeGateway implements OnGatewayConnection {
     });
   }
 
-  // @TODO:seperate endpoints
-  @SubscribeMessage("events")
-  handleEvent(client: any, data: any): any {
-    /* @TODO: authenticate and authorize for each message 
-    so we can detect expired tokens or changed policies */
-    if (this.clients.has(client)) {
-      const clientInfo = this.clients.get(client);
-      // @TODO: find a way to prevent the circular dependency to use crud.ts methods
-      this.bucketDataService.children(clientInfo.schema).insertOne(data);
+  @SubscribeMessage("message")
+  async insert(
+    client: any,
+    message: {kind: "insert" | "update" | "patch" | "delete"; document: any}
+  ) {
+    // connection may lost before send message
+    if (!this.clients.has(client)) {
+      this.clients.delete(client);
+      return {
+        kind: ChunkKind.Error,
+        code: 400,
+        message: "Connection has been already lost."
+      };
     }
+
+    const req = this.clients.get(client);
+
+    // authorization
+    try {
+      await this.authorize(req, client);
+    } catch (error) {
+      return;
+    }
+
+    const schemaId = req.params.id;
+
+    // we need to schema validation step if kind except delete
+    let validatorMixin;
+    let pipe;
+    if (message.kind != "delete") {
+      validatorMixin = Schema.validate(schemaId);
+      pipe = new validatorMixin(this.validator);
+    }
+
+    switch (message.kind) {
+      case "insert":
+        try {
+          await pipe.transform(message.document);
+        } catch (error) {
+          return {
+            kind: ChunkKind.Error,
+            code: 400,
+            message: error.message
+          };
+        }
+
+        const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+
+        await insertDocument(
+          schema,
+          message.document,
+          {req},
+          {
+            collection: schema => this.bucketDataService.children(schema),
+            schema: _ => Promise.resolve(schema),
+            //@TODO: create delete one method to track activity, recursive deletion etc
+            deleteOne: id =>
+              this.bucketDataService
+                .children(schema)
+                .deleteOne({_id: id})
+                .then()
+          }
+        );
+    }
+
+    return;
   }
 }
 
