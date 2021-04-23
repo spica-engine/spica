@@ -1,7 +1,18 @@
-import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  SubscribeMessage,
+  WebSocketGateway
+} from "@nestjs/websockets";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
-import {BucketService, getBucketDataCollection, filterReviver} from "@spica-server/bucket/services";
+import {
+  BucketService,
+  getBucketDataCollection,
+  filterReviver,
+  BucketDataService
+} from "@spica-server/bucket/services";
 import {ObjectId} from "@spica-server/database";
 import {
   FindOptions,
@@ -19,15 +30,18 @@ import {takeUntil, tap, catchError} from "rxjs/operators";
 export class RealtimeGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
 
+  // @TODO: try to simplize clients instead of use whole websocket object
+  clients = new Map<WebSocket, {user: any; schema: any}>();
+
   constructor(
     private realtime: RealtimeDatabaseService,
     private guardService: GuardService,
-    private bucketService: BucketService
+    private bucketService: BucketService,
+    private bucketDataService: BucketDataService
   ) {}
 
   async handleConnection(client: WebSocket, req) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
-
     try {
       await this.guardService.checkAuthorization({
         request: req,
@@ -49,6 +63,8 @@ export class RealtimeGateway implements OnGatewayConnection {
     const schemaId = req.params.id;
 
     const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+
+    this.clients.set(client, {user: req.user, schema});
 
     const match = expression.aggregate(schema.acl.read, {auth: req.user});
 
@@ -72,6 +88,9 @@ export class RealtimeGateway implements OnGatewayConnection {
               "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression."
           })
         );
+
+        this.clients.delete(client);
+
         return client.close(1003);
       }
 
@@ -106,11 +125,14 @@ export class RealtimeGateway implements OnGatewayConnection {
             })
           );
           client.close(1003);
-
+          this.clients.delete(client);
           return of(null);
         }),
         tap({
-          complete: () => this.streams.delete(cursorName)
+          complete: () => {
+            this.streams.delete(cursorName);
+            this.clients.delete(client);
+          }
         })
       );
       this.streams.set(cursorName, stream);
@@ -118,6 +140,18 @@ export class RealtimeGateway implements OnGatewayConnection {
     stream.pipe(takeUntil(fromEvent(client, "close"))).subscribe(data => {
       client.send(JSON.stringify(data));
     });
+  }
+
+  // @TODO:seperate endpoints
+  @SubscribeMessage("events")
+  handleEvent(client: any, data: any): any {
+    /* @TODO: authenticate and authorize for each message 
+    so we can detect expired tokens or changed policies */
+    if (this.clients.has(client)) {
+      const clientInfo = this.clients.get(client);
+      // @TODO: find a way to prevent the circular dependency to use crud.ts methods
+      this.bucketDataService.children(clientInfo.schema).insertOne(data);
+    }
   }
 }
 
