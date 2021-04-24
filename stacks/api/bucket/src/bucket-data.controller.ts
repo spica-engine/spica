@@ -44,7 +44,6 @@ import {
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {createBucketDataActivity} from "./activity.resource";
 import {invalidateCache, registerCache} from "@spica-server/bucket/cache";
 import {
   deleteDocument,
@@ -57,7 +56,12 @@ import {
 } from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
 import {createHistory} from "./history";
-import {clearRelations, getRelationPaths, getDependents} from "@spica-server/bucket/common";
+import {
+  clearRelations,
+  getRelationPaths,
+  getDependents,
+  createBucketDataActivity
+} from "@spica-server/bucket/common";
 
 /**
  * All APIs related to bucket documents.

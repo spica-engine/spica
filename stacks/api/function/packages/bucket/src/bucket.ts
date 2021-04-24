@@ -126,7 +126,7 @@ export namespace data {
   }
 
   export namespace realtime {
-    export function get(bucketId: string, documentId: string): Observable<BucketDocument> {
+    export function get(bucketId: string, documentId: string) {
       checkInitialized(authorization);
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
@@ -134,13 +134,10 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(fullUrl.toString()).pipe(map(([documents]) => documents));
+      return getWsObs<BucketDocument[]>(fullUrl.toString(), undefined, true);
     }
 
-    export function getAll(
-      bucketId: string,
-      queryParams: object = {}
-    ): Observable<BucketDocument[]> {
+    export function getAll(bucketId: string, queryParams: object = {}) {
       checkInitialized(authorization);
 
       const sort = queryParams["sort"];

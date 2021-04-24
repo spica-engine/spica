@@ -56,6 +56,13 @@ export enum ChunkKind {
   Order = 7
 }
 
+export enum OperationKind {
+  INSERT = 0,
+  REPLACE = 1,
+  PATCH = 2,
+  DELETE = 3
+}
+
 interface InitializeOptions {
   publicUrl?: string;
 }

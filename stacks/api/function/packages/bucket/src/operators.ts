@@ -1,9 +1,9 @@
-import {Sequence, SequenceKind, ChunkKind} from "@spica-devkit/bucket";
+import {Sequence, SequenceKind, ChunkKind, OperationKind} from "@spica-devkit/bucket";
 //@ts-ignore
 import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
-import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
-import {timer, of, Observable} from "rxjs";
+import {webSocket, WebSocketSubject, WebSocketSubjectConfig} from "rxjs/webSocket";
+import {timer, of, Observable, OperatorFunction} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
 
 export class IterableSet<T> implements Iterable<T> {
@@ -62,7 +62,19 @@ export class IterableSet<T> implements Iterable<T> {
   }
 }
 
-export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
+export function getWsObs<T>(
+  url: string,
+  sort?: object,
+  findOne?: boolean
+): Observable<T[]> & {
+  /**
+  * INSERT = 0,
+  * REPLACE = 1,
+  * PATCH = 2,
+  * DELETE = 3
+  */
+  next: (kind: OperationKind, document: any) => void;
+} {
   const data = new IterableSet<T>();
 
   let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
@@ -74,7 +86,12 @@ export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
     };
   }
 
-  return webSocket<any>(urlConfigOrSource).pipe(
+  const subject = webSocket<any>(urlConfigOrSource);
+
+  const next = (kind: OperationKind, document: any) =>
+    subject.next({event: "message", data: {kind, document}});
+
+  const observable = subject.pipe(
     retryWhen(errors => errors.pipe(filter(error => error.code == 1006))),
     tap(chunk => {
       switch (chunk.kind) {
@@ -103,6 +120,10 @@ export function getWsObs<T>(url: string, sort?: object): Observable<T[]> {
       return of(null);
     }),
     debounceTime(1),
-    map(() => Array.from(data))
+    map(() => (findOne ? Array.from(data)[0] : Array.from(data)))
   );
+
+  observable["next"] = next;
+
+  return observable as any;
 }
