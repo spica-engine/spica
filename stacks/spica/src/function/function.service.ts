@@ -13,7 +13,7 @@ import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} f
 import * as fromFunction from "./reducers/function.reducer";
 import {PassportService} from "@spica-client/passport";
 import {getWsObs} from "@spica-client/common";
-import {examples} from "./examples/examples";
+import {examples} from "./statics/examples";
 
 @Injectable({providedIn: "root"})
 export class FunctionService {

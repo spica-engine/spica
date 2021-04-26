@@ -94,7 +94,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
       this.identityService
         .updateOne(this.identity)
         .toPromise()
-        .then(() => this.router.navigate(["passport/identity"], {state: {skipSaveChanges: true}}));
+        .then(() => this.router.navigate(["passport/identity"]));
     } else {
       this.identityService
         .insertOne(this.identity)
@@ -103,9 +103,7 @@ export class IdentityAddComponent implements OnInit, OnDestroy {
           delete identity.password;
           this.error = undefined;
           this.identity = identity;
-          this.router.navigate(["passport", "identity", identity._id, "edit"], {
-            state: {skipSaveChanges: true}
-          });
+          this.router.navigate(["passport", "identity", identity._id, "edit"]);
         })
         .catch(err => (this.error = err.error.message));
     }

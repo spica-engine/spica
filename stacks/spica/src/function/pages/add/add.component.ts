@@ -64,7 +64,13 @@ export class AddComponent implements OnInit, OnDestroy {
   onFullScreen: boolean = false;
 
   private dispose = new EventEmitter();
-  editorOptions = {language: "typescript", minimap: {enabled: false}, automaticLayout: true};
+
+  editorOptions = {
+    language: "javascript",
+    minimap: {enabled: false},
+    automaticLayout: true,
+    scrollbar: {alwaysConsumeMouseWheel: false}
+  };
 
   isIndexPending = false;
 
@@ -252,11 +258,7 @@ export class AddComponent implements OnInit, OnDestroy {
               }
               return throwError(error);
             }),
-            tap(
-              () =>
-                isInsert &&
-                this.router.navigate([`function/${fn._id}`], {state: {skipSaveChanges: true}})
-            ),
+            tap(() => isInsert && this.router.navigate([`function/${fn._id}`])),
             ignoreElements()
           )
         ),
@@ -406,7 +408,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
     const escHandler = () => {
       if (!document[this.browserFullscreenKeywords.fullScreenElement]) {
-        document[this.browserFullscreenKeywords.exit]();
+        document[this.browserFullscreenKeywords.exit]().catch(e => console.log(e));
         this.revertStyles();
         this.onFullScreen = false;
       }

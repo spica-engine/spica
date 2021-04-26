@@ -20,7 +20,7 @@ import {LayoutModule} from "@spica-client/core/layout";
 import {MatSaveModule} from "@spica-client/material";
 import {of, Subject} from "rxjs";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {HandlebarsLanguageDirective} from "../../components/editor/handlebars.language";
+import {HandlebarsLanguageDirective} from "../../directives/handlebars.language";
 import {Webhook} from "../../interface";
 import {WebhookService} from "../../webhook.service";
 import {WebhookAddComponent} from "./webhook-add.component";

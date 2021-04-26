@@ -29,14 +29,14 @@ import {MatSaveModule} from "@spica/client/packages/material";
 import {of} from "rxjs";
 import {AddComponent} from "../../../function/pages/add/add.component";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
-import {examples} from "../../examples/examples";
+import {examples} from "../../statics/examples";
 import {emptyTrigger, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "../../interface";
 import {EnqueuerPipe} from "../../pipes/enqueuer";
 import {LogViewComponent} from "../log-view/log-view.component";
 import {MatDividerModule} from "@angular/material/divider";
 
 @Directive({
-  selector: "code-editor[language]",
+  selector: "function-code-editor[language]",
   exportAs: "language"
 })
 class MockLanguageDirective {
