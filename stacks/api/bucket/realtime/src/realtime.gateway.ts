@@ -8,7 +8,11 @@ import {
   replaceDocument,
   createHistory,
   applyPatch,
-  patchDocument
+  patchDocument,
+  deleteDocument,
+  clearRelations,
+  getDependents,
+  deepCopy
 } from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
@@ -193,12 +197,7 @@ export class RealtimeGateway implements OnGatewayConnection {
         {
           collection: schema => this.bucketDataService.children(schema),
           schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
-          //@TODO: create delete one method to track activity, recursive deletion etc
-          deleteOne: id =>
-            this.bucketDataService
-              .children(schema)
-              .deleteOne({_id: id})
-              .then()
+          deleteOne: id => this.delete(client, {_id: id})
         }
       );
     } catch (error) {
@@ -328,7 +327,9 @@ export class RealtimeGateway implements OnGatewayConnection {
 
     const documentId = new ObjectId(document._id);
 
-    const previousDocument = await  this.bucketDataService.children(schema).findOne({_id: documentId});
+    const previousDocument = await this.bucketDataService
+      .children(schema)
+      .findOne({_id: documentId});
 
     if (!previousDocument) {
       return this.send(
@@ -413,6 +414,106 @@ export class RealtimeGateway implements OnGatewayConnection {
     return;
   }
 
+  @SubscribeMessage(MessageKind.DELETE)
+  async delete(client: any, document: any) {
+    let schema;
+
+    try {
+      schema = await this.extractSchema(client);
+    } catch (error) {
+      return;
+    }
+
+    if (!ObjectId.isValid(document._id)) {
+      return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
+    }
+
+    const {req} = this.clients.get(client);
+
+    let deletedDocument;
+
+    try {
+      deletedDocument = await deleteDocument(
+        schema,
+        document._id,
+        {req},
+        {
+          collection: schema => this.bucketDataService.children(schema),
+          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)})
+        }
+      );
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, 500, error.message);
+    }
+
+    if (!deletedDocument) {
+      return this.send(
+        client,
+        ChunkKind.Response,
+        404,
+        `Could not find the document with id ${document._id.toHexString()}`
+      );
+    }
+
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.DELETE,
+        schema._id.toString(),
+        document._id.toString(),
+        this.activity
+      );
+    }
+
+    if (this.hookEmitter) {
+      this.hookEmitter.emitChange(
+        {
+          bucket: schema._id.toString(),
+          type: "delete"
+        },
+        document._id.toString(),
+        deletedDocument,
+        undefined
+      );
+    }
+
+    if (this.history) {
+      await this.history.deleteMany({
+        document_id: new ObjectId(document._id)
+      });
+    }
+
+    if (this.bucketCacheService) {
+      await this.bucketCacheService.invalidate(schema._id.toString());
+    }
+
+    await clearRelations(this.bucketService, schema._id, document._id);
+
+    const dependents = getDependents(schema, deletedDocument);
+
+    for (const [targetBucketId, targetDocIds] of dependents.entries()) {
+      for (const targetDocId of targetDocIds) {
+        const targetClient = deepCopy(client);
+        targetClient.__mock_client__ = true;
+
+        const targetReq = deepCopy(this.clients.get(client).req);
+
+        targetReq.params.id = targetBucketId;
+
+        const targetDoc = {
+          _id: targetDocId
+        };
+
+        // add mock client which is listening related bucket bucket documents(we will not listen db, it is just required for delete action), delete related documents and remove the mock client
+        this.clients.set(targetClient, {req: targetReq, cursorName: undefined});
+        await this.delete(targetClient, targetDoc);
+        this.clients.delete(targetClient);
+      }
+    }
+
+    return;
+  }
+
   validateDocument(schemaId: string, document: any): Promise<void> {
     const ValidatorMixin = Schema.validate(schemaId);
     const validationPipe: any = new ValidatorMixin(this.validator);
@@ -422,17 +523,17 @@ export class RealtimeGateway implements OnGatewayConnection {
 
   extractSchema(client: any): Promise<any> {
     return new Promise(async (resolve, reject) => {
-      // //@TODO: test case => try to send message before subscription
-      if (!this.clients.has(client)) {
-        this.send(
-          client,
-          ChunkKind.Error,
-          400,
-          "Connection has been already lost. Be sure about connection has still alive before sending message."
-        );
-        client.close(1003);
-        reject();
-      }
+      // // //@TODO: test case => try to send message before subscription
+      // if (!this.clients.has(client)) {
+      //   this.send(
+      //     client,
+      //     ChunkKind.Error,
+      //     400,
+      //     "Connection has been already lost. Be sure about connection has still alive before sending message."
+      //   );
+      //   client.close(1003);
+      //   reject();
+      // }
 
       const {req, cursorName} = this.clients.get(client);
 
