@@ -68,14 +68,14 @@ export function getWsObs<T>(
   findOne?: boolean
 ): Observable<T[]> & {
   /**
-  * INSERT = 0,
-  * REPLACE = 1,
-  * PATCH = 2,
-  * DELETE = 3
-  */
+   * INSERT
+   * REPLACE
+   * PATCH
+   * DELETE
+   */
   next: (kind: OperationKind, document: any) => void;
 } {
-  const data = new IterableSet<T>();
+  let data = new IterableSet<T>();
 
   let urlConfigOrSource: string | WebSocketSubjectConfig<any> = url;
 
@@ -88,8 +88,7 @@ export function getWsObs<T>(
 
   const subject = webSocket<any>(urlConfigOrSource);
 
-  const next = (kind: OperationKind, document: any) =>
-    subject.next({event: "message", data: {kind, document}});
+  const next = (kind: OperationKind, document: any) => subject.next({event: kind, data: document});
 
   const observable = subject.pipe(
     retryWhen(errors => errors.pipe(filter(error => error.code == 1006))),

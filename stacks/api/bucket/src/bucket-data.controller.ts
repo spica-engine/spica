@@ -55,12 +55,12 @@ import {
   applyPatch
 } from "@spica-server/bucket/common";
 import {expressionFilterParser} from "./filter";
-import {createHistory} from "./history";
 import {
   clearRelations,
   getRelationPaths,
   getDependents,
-  createBucketDataActivity
+  createBucketDataActivity,
+  createHistory
 } from "@spica-server/bucket/common";
 
 /**
@@ -492,6 +492,6 @@ export class BucketDataController {
   }
 
   errorHandler(error: {status: number; message: string}) {
-    throw new HttpException(error.message, error.status);
+    throw new HttpException(error.message, error.status || 500);
   }
 }

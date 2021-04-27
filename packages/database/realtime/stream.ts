@@ -15,5 +15,6 @@ export enum ChunkKind {
   Expunge = 4,
   Update = 5,
   Replace = 6,
-  Order = 7
+  Order = 7,
+  Response = 8
 }

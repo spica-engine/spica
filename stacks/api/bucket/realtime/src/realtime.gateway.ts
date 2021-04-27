@@ -1,8 +1,15 @@
-import {Optional} from "@nestjs/common";
+import {Inject, Injectable, Optional} from "@nestjs/common";
 import {OnGatewayConnection, SubscribeMessage, WebSocketGateway} from "@nestjs/websockets";
 import {Action, ActivityService} from "@spica-server/activity/services";
 import {BucketCacheService} from "@spica-server/bucket/cache";
-import {HttpException, insertDocument, insertActivity} from "@spica-server/bucket/common";
+import {
+  insertDocument,
+  insertActivity,
+  replaceDocument,
+  createHistory,
+  applyPatch,
+  patchDocument
+} from "@spica-server/bucket/common";
 import * as expression from "@spica-server/bucket/expression";
 import {aggregate} from "@spica-server/bucket/expression";
 import {HistoryService} from "@spica-server/bucket/history";
@@ -25,6 +32,13 @@ import {GuardService} from "@spica-server/passport";
 import {fromEvent, Observable, of} from "rxjs";
 import {takeUntil, tap, catchError} from "rxjs/operators";
 
+enum MessageKind {
+  INSERT = "insert",
+  REPLACE = "replace",
+  PATCH = "patch",
+  DELETE = "delete"
+}
+
 @WebSocketGateway({
   path: "/bucket/:id/data"
 })
@@ -32,7 +46,7 @@ export class RealtimeGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
 
   // @TODO: try to simplize clients instead of use whole websocket object
-  clients = new Map<WebSocket, any>();
+  clients = new Map<WebSocket, {req: any; cursorName: string}>();
 
   constructor(
     private realtime: RealtimeDatabaseService,
@@ -60,24 +74,24 @@ export class RealtimeGateway implements OnGatewayConnection {
     });
   }
 
-  async handleConnection(client: WebSocket, req) {
+  async handleConnection(client: any, req) {
     req.headers.authorization = req.headers.authorization || req.query.get("Authorization");
 
     try {
       await this.authorize(req, client);
     } catch (error) {
-      client.send(
-        JSON.stringify({kind: ChunkKind.Error, code: error.status || 500, message: error.message})
-      );
-      client.close(1003);
-      return;
+      this.send(client, ChunkKind.Error, error.status, error.message);
+      return client.close(1003);
     }
 
     const schemaId = req.params.id;
 
-    const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+    if (!ObjectId.isValid(schemaId)) {
+      this.send(client, ChunkKind.Error, 400, `${schemaId} is not a valid object id.`);
+      return client.close(1003);
+    }
 
-    this.clients.set(client, req);
+    const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
 
     const match = expression.aggregate(schema.acl.read, {auth: req.user});
 
@@ -93,16 +107,12 @@ export class RealtimeGateway implements OnGatewayConnection {
       }
 
       if (!parsedFilter) {
-        client.send(
-          JSON.stringify({
-            kind: ChunkKind.Error,
-            code: 400,
-            message:
-              "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression."
-          })
+        this.send(
+          client,
+          ChunkKind.Error,
+          400,
+          "Error occured while parsing the filter. Please ensure that filter is a valid JSON or expression."
         );
-
-        this.clients.delete(client);
 
         return client.close(1003);
       }
@@ -125,20 +135,20 @@ export class RealtimeGateway implements OnGatewayConnection {
     }
 
     const cursorName = `${schemaId}_${JSON.stringify(options)}`;
+
+    this.clients.set(client, {req, cursorName});
+
     let stream = this.streams.get(cursorName);
     if (!stream) {
       stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
         catchError(error => {
           // send the error to the client, prevent to api down
-          client.send(
-            JSON.stringify({
-              kind: ChunkKind.Error,
-              code: 500,
-              message: error.toString()
-            })
-          );
+          this.send(client, ChunkKind.Error, 500, error.toString());
+
           client.close(1003);
+
           this.clients.delete(client);
+
           return of(null);
         }),
         tap({
@@ -155,96 +165,249 @@ export class RealtimeGateway implements OnGatewayConnection {
     });
   }
 
-  @SubscribeMessage("message")
-  async insert(client: any, {kind, document}: {kind: OperationKind; document: any}) {
-    // connection may lost before send message
-    if (!this.clients.has(client)) {
-      this.clients.delete(client);
-      return {
-        code: 400,
-        message:
-          "Connection has been already lost. Be sure about connection has still alive before sending message."
-      };
-    }
+  @SubscribeMessage(MessageKind.INSERT)
+  async insert(client: any, document: any) {
+    let schema;
 
-    const req = this.clients.get(client);
-
-    // authorization
     try {
-      await this.authorize(req, client);
+      schema = await this.extractSchema(client);
     } catch (error) {
-      return {code: error.status || 500, message: error.message};
+      return;
     }
 
-    const schemaId = req.params.id;
+    try {
+      await this.validateDocument(schema._id.toString(), document);
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, 400, error.message);
+    }
 
-    switch (kind) {
-      case OperationKind.INSERT:
-        try {
-          await this.validateDocument(schemaId, document);
-        } catch (error) {
-          return {
-            code: 400,
-            message: error.message
-          };
+    const {req} = this.clients.get(client);
+
+    let insertedDoc;
+
+    try {
+      insertedDoc = await insertDocument(
+        schema,
+        document,
+        {req},
+        {
+          collection: schema => this.bucketDataService.children(schema),
+          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)}),
+          //@TODO: create delete one method to track activity, recursive deletion etc
+          deleteOne: id =>
+            this.bucketDataService
+              .children(schema)
+              .deleteOne({_id: id})
+              .then()
         }
+      );
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, error.status || 500, error.message);
+    }
 
-        const schema = await this.bucketService.findOne({_id: new ObjectId(schemaId)});
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.POST,
+        schema._id.toString(),
+        insertedDoc._id.toString(),
+        this.activity
+      );
+    }
 
-        let insertedDoc;
+    if (this.hookEmitter) {
+      this.hookEmitter.emitChange(
+        {
+          bucket: schema._id.toString(),
+          type: "insert"
+        },
+        insertedDoc._id.toHexString(),
+        undefined,
+        insertedDoc
+      );
+    }
 
-        try {
-          insertedDoc = await insertDocument(
-            schema,
-            document,
-            {req},
-            {
-              collection: schema => this.bucketDataService.children(schema),
-              schema: _ => Promise.resolve(schema),
-              //@TODO: create delete one method to track activity, recursive deletion etc
-              deleteOne: id =>
-                this.bucketDataService
-                  .children(schema)
-                  .deleteOne({_id: id})
-                  .then()
-            }
-          );
-        } catch (error) {
-          return {
-            status: error.status,
-            message: error.message
-          };
+    if (this.bucketCacheService) {
+      await this.bucketCacheService.invalidate(schema._id.toString());
+    }
+
+    return;
+  }
+
+  @SubscribeMessage(MessageKind.REPLACE)
+  async replace(client: any, document: any) {
+    let schema;
+
+    try {
+      schema = await this.extractSchema(client);
+    } catch (error) {
+      return;
+    }
+
+    if (!ObjectId.isValid(document._id)) {
+      return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
+    }
+
+    const documentId = new ObjectId(document._id);
+
+    try {
+      await this.validateDocument(schema._id.toString(), document);
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, 400, error.message);
+    }
+
+    const {req} = this.clients.get(client);
+
+    let previousDocument;
+
+    try {
+      previousDocument = await replaceDocument(
+        schema,
+        {...document, _id: documentId},
+        {req},
+        {
+          collection: schema => this.bucketDataService.children(schema),
+          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)})
         }
+      );
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, error.status || 500, error.message);
+    }
 
-        if (this.activity) {
-          await insertActivity(
-            req,
-            Action.POST,
-            schema._id.toString(),
-            insertedDoc._id.toString(),
-            this.activity
-          );
-        }
+    if (!previousDocument) {
+      return this.send(
+        client,
+        ChunkKind.Response,
+        404,
+        `Could not find the document with id ${documentId.toHexString()}`
+      );
+    }
 
-        if (this.hookEmitter) {
-          this.hookEmitter.emitChange(
-            {
-              bucket: schemaId.toString(),
-              type: "insert"
-            },
-            insertedDoc._id.toHexString(),
-            undefined,
-            insertedDoc
-          );
-        }
+    await createHistory(this.bucketService, this.history, schema._id, previousDocument, document);
 
-        if (this.bucketCacheService) {
-          await this.bucketCacheService.invalidate(schema._id.toString());
-        }
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.PUT,
+        schema._id.toString(),
+        documentId.toHexString(),
+        this.activity
+      );
+    }
 
-        return;
+    if (this.hookEmitter) {
+      this.hookEmitter.emitChange(
+        {
+          bucket: schema._id.toString(),
+          type: "insert"
+        },
+        documentId.toHexString(),
+        previousDocument,
+        document
+      );
+    }
 
-      case OperationKind.REPLACE:
+    if (this.bucketCacheService) {
+      await this.bucketCacheService.invalidate(schema._id.toString());
+    }
+  }
+
+  @SubscribeMessage(MessageKind.PATCH)
+  async patch(client: any, document: any) {
+    let schema;
+
+    try {
+      schema = await this.extractSchema(client);
+    } catch (error) {
+      return;
+    }
+
+    if (!ObjectId.isValid(document._id)) {
+      return this.send(client, ChunkKind.Response, 400, `${document._id} is an invalid object id`);
+    }
+
+    const documentId = new ObjectId(document._id);
+
+    const previousDocument = await  this.bucketDataService.children(schema).findOne({_id: documentId});
+
+    if (!previousDocument) {
+      return this.send(
+        client,
+        ChunkKind.Response,
+        404,
+        `Could not find the document with id ${documentId}`
+      );
+    }
+
+    const patchedDocument = applyPatch(previousDocument, document);
+
+    try {
+      await this.validateDocument(schema._id.toString(), patchedDocument);
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, 400, error.message);
+    }
+
+    const {req} = this.clients.get(client);
+
+    let currentDocument;
+
+    try {
+      currentDocument = await patchDocument(
+        schema,
+        {...patchedDocument, _id: documentId},
+        document,
+        {req},
+        {
+          collection: schema => this.bucketDataService.children(schema),
+          schema: (bucketId: string) => this.bucketService.findOne({_id: new ObjectId(bucketId)})
+        },
+        {returnOriginal: false}
+      );
+    } catch (error) {
+      return this.send(client, ChunkKind.Response, error.status || 500, error.message);
+    }
+
+    if (!currentDocument) {
+      return this.send(
+        client,
+        ChunkKind.Response,
+        404,
+        `Could not find the document with id ${documentId.toHexString()}`
+      );
+    }
+
+    await createHistory(
+      this.bucketService,
+      this.history,
+      schema._id,
+      previousDocument,
+      currentDocument
+    );
+
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.PUT,
+        schema._id.toString(),
+        documentId.toHexString(),
+        this.activity
+      );
+    }
+
+    if (this.hookEmitter) {
+      this.hookEmitter.emitChange(
+        {
+          bucket: schema._id.toString(),
+          type: "insert"
+        },
+        documentId.toHexString(),
+        previousDocument,
+        currentDocument
+      );
+    }
+
+    if (this.bucketCacheService) {
+      await this.bucketCacheService.invalidate(schema._id.toString());
     }
 
     return;
@@ -256,13 +419,67 @@ export class RealtimeGateway implements OnGatewayConnection {
 
     return validationPipe.transform(document);
   }
-}
 
-export enum OperationKind {
-  INSERT = 0,
-  REPLACE = 1,
-  PATCH = 2,
-  DELETE = 3
+  extractSchema(client: any): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      // //@TODO: test case => try to send message before subscription
+      if (!this.clients.has(client)) {
+        this.send(
+          client,
+          ChunkKind.Error,
+          400,
+          "Connection has been already lost. Be sure about connection has still alive before sending message."
+        );
+        client.close(1003);
+        reject();
+      }
+
+      const {req, cursorName} = this.clients.get(client);
+
+      try {
+        await this.authorize(req, client);
+      } catch (error) {
+        this.clients.delete(client);
+        this.streams.delete(cursorName);
+
+        this.send(client, ChunkKind.Error, error.status, error.message);
+        client.close(1003);
+        reject();
+      }
+
+      if (!ObjectId.isValid(req.params.id)) {
+        this.clients.delete(client);
+        this.streams.delete(cursorName);
+
+        this.send(client, ChunkKind.Error, 400, `${req.params.id} is an invalid object id.`);
+        client.close(1003);
+      }
+
+      const schemaId = new ObjectId(req.params.id);
+
+      const schema = await this.bucketService.findOne({_id: schemaId});
+
+      if (!schema) {
+        this.clients.delete(client);
+        this.streams.delete(cursorName);
+
+        this.send(
+          client,
+          ChunkKind.Error,
+          400,
+          `Could not find the schema with id ${schemaId.toString()}`
+        );
+        client.close(1003);
+        reject();
+      }
+
+      resolve(schema);
+    });
+  }
+
+  send(client, kind: ChunkKind, status: number, message: string) {
+    client.send(JSON.stringify({kind, status, message}));
+  }
 }
 
 export function parseFilter(method: (...params: any) => any, ...params: any) {

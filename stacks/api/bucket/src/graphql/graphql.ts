@@ -36,8 +36,7 @@ import {
   getDependents
 } from "@spica-server/bucket/common";
 
-import {createHistory} from "../history";
-import {findLocale, insertActivity} from "@spica-server/bucket/common";
+import {findLocale, insertActivity, createHistory} from "@spica-server/bucket/common";
 
 import {
   createSchema,
