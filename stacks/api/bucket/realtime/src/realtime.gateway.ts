@@ -1,5 +1,9 @@
-import {Inject, Injectable, Optional} from "@nestjs/common";
-import {OnGatewayConnection, SubscribeMessage, WebSocketGateway} from "@nestjs/websockets";
+import {Optional} from "@nestjs/common";
+import {
+  OnGatewayConnection,
+  SubscribeMessage,
+  WebSocketGateway,
+} from "@nestjs/websockets";
 import {Action, ActivityService} from "@spica-server/activity/services";
 import {BucketCacheService} from "@spica-server/bucket/cache";
 import {
@@ -21,7 +25,8 @@ import {
   BucketService,
   getBucketDataCollection,
   filterReviver,
-  BucketDataService
+  BucketDataService,
+  BucketDocument
 } from "@spica-server/bucket/services";
 import {Schema, Validator} from "@spica-server/core/schema";
 import {ObjectId} from "@spica-server/database";
@@ -145,9 +150,7 @@ export class RealtimeGateway implements OnGatewayConnection {
     if (!stream) {
       stream = this.realtime.find(getBucketDataCollection(schemaId), options).pipe(
         catchError(error => {
-          // send the error to the client, prevent to api down
           this.send(client, ChunkKind.Error, 500, error.toString());
-
           client.close(1003);
 
           this.clients.delete(client);
@@ -209,7 +212,7 @@ export class RealtimeGateway implements OnGatewayConnection {
           bucket: schema._id.toString(),
           type: "insert"
         },
-        insertedDoc._id.toHexString(),
+        insertedDoc._id.toString(),
         undefined,
         insertedDoc
       );
@@ -231,7 +234,7 @@ export class RealtimeGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage(MessageKind.REPLACE)
-  async replace(client: any, document: any) {
+  async replace(client: any, document: BucketDocument) {
     let schema;
 
     try {
@@ -375,7 +378,7 @@ export class RealtimeGateway implements OnGatewayConnection {
         client,
         ChunkKind.Response,
         404,
-        `Could not find the document with id ${documentId.toHexString()}`
+        `Could not find the document with id ${documentId.toString()}`
       );
     }
 
@@ -385,7 +388,7 @@ export class RealtimeGateway implements OnGatewayConnection {
           bucket: schema._id.toString(),
           type: "update"
         },
-        documentId.toHexString(),
+        documentId.toString(),
         previousDocument,
         currentDocument
       );
@@ -404,7 +407,7 @@ export class RealtimeGateway implements OnGatewayConnection {
         req,
         Action.PUT,
         schema._id.toString(),
-        documentId.toHexString(),
+        documentId.toString(),
         this.activity
       );
     }
@@ -447,7 +450,7 @@ export class RealtimeGateway implements OnGatewayConnection {
         client,
         ChunkKind.Response,
         404,
-        `Could not find the document with id ${document._id.toHexString()}`
+        `Could not find the document with id ${document._id.toString()}`
       );
     }
 
