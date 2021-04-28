@@ -21,7 +21,7 @@ describe("@spica-devkit/bucket", () => {
     process.env.__INTERNAL__SPICA__PUBLIC_URL__ = "http://test";
     Bucket.initialize({apikey: "TEST_APIKEY"});
 
-    wsSpy = spyOn(Operators, "getWsObs").and.returnValue(of());
+    wsSpy = spyOn(Operators, "getWsObs").and.returnValue(of() as any);
   });
 
   describe("errors", () => {
