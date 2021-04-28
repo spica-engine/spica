@@ -59,8 +59,7 @@ import {
   clearRelations,
   getRelationPaths,
   getDependents,
-  createBucketDataActivity,
-  createHistory
+  createBucketDataActivity
 } from "@spica-server/bucket/common";
 
 /**
@@ -317,7 +316,9 @@ export class BucketDataController {
 
     const currentDocument = {...document, _id: documentId};
 
-    await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
+    if (this.history && schema.history) {
+      await this.history.createHistory(bucketId, previousDocument, currentDocument);
+    }
 
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(
@@ -403,7 +404,9 @@ export class BucketDataController {
       throw new NotFoundException(`Could not find the document with id ${documentId}`);
     }
 
-    await createHistory(this.bs, this.history, bucketId, previousDocument, currentDocument);
+    if (this.history && schema.history) {
+      await this.history.createHistory(bucketId, previousDocument, currentDocument);
+    }
 
     if (this.changeEmitter) {
       this.changeEmitter.emitChange(

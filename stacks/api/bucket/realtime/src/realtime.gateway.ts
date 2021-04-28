@@ -6,7 +6,6 @@ import {
   insertDocument,
   insertActivity,
   replaceDocument,
-  createHistory,
   applyPatch,
   patchDocument,
   deleteDocument,
@@ -204,16 +203,6 @@ export class RealtimeGateway implements OnGatewayConnection {
       return this.send(client, ChunkKind.Response, error.status || 500, error.message);
     }
 
-    if (this.activity) {
-      await insertActivity(
-        req,
-        Action.POST,
-        schema._id.toString(),
-        insertedDoc._id.toString(),
-        this.activity
-      );
-    }
-
     if (this.hookEmitter) {
       this.hookEmitter.emitChange(
         {
@@ -230,7 +219,15 @@ export class RealtimeGateway implements OnGatewayConnection {
       await this.bucketCacheService.invalidate(schema._id.toString());
     }
 
-    return;
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.POST,
+        schema._id.toString(),
+        insertedDoc._id.toString(),
+        this.activity
+      );
+    }
   }
 
   @SubscribeMessage(MessageKind.REPLACE)
@@ -278,19 +275,7 @@ export class RealtimeGateway implements OnGatewayConnection {
         client,
         ChunkKind.Response,
         404,
-        `Could not find the document with id ${documentId.toHexString()}`
-      );
-    }
-
-    await createHistory(this.bucketService, this.history, schema._id, previousDocument, document);
-
-    if (this.activity) {
-      await insertActivity(
-        req,
-        Action.PUT,
-        schema._id.toString(),
-        documentId.toHexString(),
-        this.activity
+        `Could not find the document with id ${documentId.toString()}`
       );
     }
 
@@ -298,9 +283,9 @@ export class RealtimeGateway implements OnGatewayConnection {
       this.hookEmitter.emitChange(
         {
           bucket: schema._id.toString(),
-          type: "insert"
+          type: "update"
         },
-        documentId.toHexString(),
+        documentId.toString(),
         previousDocument,
         document
       );
@@ -308,6 +293,23 @@ export class RealtimeGateway implements OnGatewayConnection {
 
     if (this.bucketCacheService) {
       await this.bucketCacheService.invalidate(schema._id.toString());
+    }
+
+    if (this.history && schema.history) {
+      await this.history.createHistory(schema._id, previousDocument, {
+        ...document,
+        _id: documentId
+      });
+    }
+
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.PUT,
+        schema._id.toString(),
+        documentId.toString(),
+        this.activity
+      );
     }
   }
 
@@ -377,29 +379,11 @@ export class RealtimeGateway implements OnGatewayConnection {
       );
     }
 
-    await createHistory(
-      this.bucketService,
-      this.history,
-      schema._id,
-      previousDocument,
-      currentDocument
-    );
-
-    if (this.activity) {
-      await insertActivity(
-        req,
-        Action.PUT,
-        schema._id.toString(),
-        documentId.toHexString(),
-        this.activity
-      );
-    }
-
     if (this.hookEmitter) {
       this.hookEmitter.emitChange(
         {
           bucket: schema._id.toString(),
-          type: "insert"
+          type: "update"
         },
         documentId.toHexString(),
         previousDocument,
@@ -411,7 +395,19 @@ export class RealtimeGateway implements OnGatewayConnection {
       await this.bucketCacheService.invalidate(schema._id.toString());
     }
 
-    return;
+    if (this.history && schema.history) {
+      await this.history.createHistory(schema._id, previousDocument, currentDocument);
+    }
+
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.PUT,
+        schema._id.toString(),
+        documentId.toHexString(),
+        this.activity
+      );
+    }
   }
 
   @SubscribeMessage(MessageKind.DELETE)
@@ -455,16 +451,6 @@ export class RealtimeGateway implements OnGatewayConnection {
       );
     }
 
-    if (this.activity) {
-      await insertActivity(
-        req,
-        Action.DELETE,
-        schema._id.toString(),
-        document._id.toString(),
-        this.activity
-      );
-    }
-
     if (this.hookEmitter) {
       this.hookEmitter.emitChange(
         {
@@ -477,14 +463,24 @@ export class RealtimeGateway implements OnGatewayConnection {
       );
     }
 
+    if (this.bucketCacheService) {
+      await this.bucketCacheService.invalidate(schema._id.toString());
+    }
+
     if (this.history) {
       await this.history.deleteMany({
         document_id: new ObjectId(document._id)
       });
     }
 
-    if (this.bucketCacheService) {
-      await this.bucketCacheService.invalidate(schema._id.toString());
+    if (this.activity) {
+      await insertActivity(
+        req,
+        Action.DELETE,
+        schema._id.toString(),
+        document._id.toString(),
+        this.activity
+      );
     }
 
     await clearRelations(this.bucketService, schema._id, document._id);
@@ -504,14 +500,12 @@ export class RealtimeGateway implements OnGatewayConnection {
           _id: targetDocId
         };
 
-        // add mock client which is listening related bucket bucket documents(we will not listen db, it is just required for delete action), delete related documents and remove the mock client
+        // add mock client which is listening related bucket documents(we will not listen db, it is just required for delete action), delete related documents and remove the mock client
         this.clients.set(targetClient, {req: targetReq, cursorName: undefined});
         await this.delete(targetClient, targetDoc);
         this.clients.delete(targetClient);
       }
     }
-
-    return;
   }
 
   validateDocument(schemaId: string, document: any): Promise<void> {
@@ -523,18 +517,6 @@ export class RealtimeGateway implements OnGatewayConnection {
 
   extractSchema(client: any): Promise<any> {
     return new Promise(async (resolve, reject) => {
-      // // //@TODO: test case => try to send message before subscription
-      // if (!this.clients.has(client)) {
-      //   this.send(
-      //     client,
-      //     ChunkKind.Error,
-      //     400,
-      //     "Connection has been already lost. Be sure about connection has still alive before sending message."
-      //   );
-      //   client.close(1003);
-      //   reject();
-      // }
-
       const {req, cursorName} = this.clients.get(client);
 
       try {

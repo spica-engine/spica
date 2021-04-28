@@ -11,7 +11,6 @@ ts_library(
     deps = [
         "//packages/core/differ",
         "//packages/database",
-        "//stacks/api/bucket/history",
         "//stacks/api/bucket/cache",
         "//stacks/api/bucket/expression",
         "//stacks/api/bucket/services",

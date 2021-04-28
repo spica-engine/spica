@@ -36,7 +36,7 @@ import {
   getDependents
 } from "@spica-server/bucket/common";
 
-import {findLocale, insertActivity, createHistory} from "@spica-server/bucket/common";
+import {findLocale, insertActivity} from "@spica-server/bucket/common";
 
 import {
   createSchema,
@@ -438,14 +438,8 @@ export class GraphqlController implements OnModuleInit {
         );
       }
 
-      if (this.history) {
-        const promise = createHistory(
-          this.bs,
-          this.history,
-          bucket._id,
-          previousDocument,
-          currentDocument
-        );
+      if (this.history && bucket.history) {
+        const promise = this.history.createHistory(bucket._id, previousDocument, currentDocument);
       }
 
       const requestedFields = requestedFieldsFromInfo(info);
@@ -521,14 +515,8 @@ export class GraphqlController implements OnModuleInit {
         return;
       }
 
-      if (this.history) {
-        const promise = createHistory(
-          this.bs,
-          this.history,
-          bucket._id,
-          previousDocument,
-          currentDocument
-        );
+      if (this.history && bucket.history) {
+        const promise = this.history.createHistory(bucket._id, previousDocument, currentDocument);
       }
 
       if (this.activity) {
