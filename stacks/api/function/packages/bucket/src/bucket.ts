@@ -126,7 +126,11 @@ export namespace data {
   }
 
   export namespace realtime {
-    export function get(bucketId: string, documentId: string) {
+    export function get(
+      bucketId: string,
+      documentId: string,
+      messageCallback?: (res: {status: number; message: string}) => any
+    ) {
       checkInitialized(authorization);
 
       const fullUrl = buildUrl(`${wsUrl}/${bucketId}/data`, {
@@ -134,10 +138,14 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(fullUrl.toString(), undefined, true);
+      return getWsObs<BucketDocument[]>(fullUrl.toString(), undefined, true, messageCallback);
     }
 
-    export function getAll(bucketId: string, queryParams: object = {}) {
+    export function getAll(
+      bucketId: string,
+      queryParams: object = {},
+      messageCallback?: (res: {status: number; message: string}) => any
+    ) {
       checkInitialized(authorization);
 
       const sort = queryParams["sort"];
@@ -147,7 +155,7 @@ export namespace data {
         Authorization: authorization
       });
 
-      return getWsObs<BucketDocument[]>(fullUrl.toString(), sort);
+      return getWsObs<BucketDocument[]>(fullUrl.toString(), sort, false, messageCallback);
     }
   }
 }

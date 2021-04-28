@@ -1,9 +1,5 @@
 import {Optional} from "@nestjs/common";
-import {
-  OnGatewayConnection,
-  SubscribeMessage,
-  WebSocketGateway,
-} from "@nestjs/websockets";
+import {OnGatewayConnection, SubscribeMessage, WebSocketGateway} from "@nestjs/websockets";
 import {Action, ActivityService} from "@spica-server/activity/services";
 import {BucketCacheService} from "@spica-server/bucket/cache";
 import {
@@ -231,6 +227,8 @@ export class RealtimeGateway implements OnGatewayConnection {
         this.activity
       );
     }
+
+    return this.send(client, ChunkKind.Response, 201, "Created");
   }
 
   @SubscribeMessage(MessageKind.REPLACE)
@@ -314,6 +312,8 @@ export class RealtimeGateway implements OnGatewayConnection {
         this.activity
       );
     }
+
+    return this.send(client, ChunkKind.Response, 200, "OK");
   }
 
   @SubscribeMessage(MessageKind.PATCH)
@@ -411,6 +411,8 @@ export class RealtimeGateway implements OnGatewayConnection {
         this.activity
       );
     }
+
+    return this.send(client, ChunkKind.Response, 204, "No Content");
   }
 
   @SubscribeMessage(MessageKind.DELETE)
@@ -509,6 +511,7 @@ export class RealtimeGateway implements OnGatewayConnection {
         this.clients.delete(targetClient);
       }
     }
+    return this.send(client, ChunkKind.Response, 204, "No Content");
   }
 
   validateDocument(schemaId: string, document: any): Promise<void> {

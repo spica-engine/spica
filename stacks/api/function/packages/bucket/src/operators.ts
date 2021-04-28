@@ -2,8 +2,8 @@ import {Sequence, SequenceKind, ChunkKind, OperationKind} from "@spica-devkit/bu
 //@ts-ignore
 import WebSocket from "ws";
 import {tap, delayWhen, map, debounceTime, retryWhen, filter} from "rxjs/operators";
-import {webSocket, WebSocketSubject, WebSocketSubjectConfig} from "rxjs/webSocket";
-import {timer, of, Observable, OperatorFunction} from "rxjs";
+import {webSocket, WebSocketSubjectConfig} from "rxjs/webSocket";
+import {timer, of, Observable} from "rxjs";
 import {isPlatformBrowser} from "@spica-devkit/internal_common";
 
 export class IterableSet<T> implements Iterable<T> {
@@ -65,14 +65,13 @@ export class IterableSet<T> implements Iterable<T> {
 export function getWsObs<T>(
   url: string,
   sort?: object,
-  findOne?: boolean
+  findOne?: boolean,
+  messageCallback: (res: {status: number; message: string}) => any = res => {
+    if (res.status >= 400 && res.status < 600) {
+      return console.error(res.message);
+    }
+  }
 ): Observable<T[]> & {
-  /**
-   * INSERT
-   * REPLACE
-   * PATCH
-   * DELETE
-   */
   next: (kind: OperationKind, document: any) => void;
 } {
   let data = new IterableSet<T>();
@@ -91,6 +90,12 @@ export function getWsObs<T>(
   const next = (kind: OperationKind, document: any) => subject.next({event: kind, data: document});
 
   const observable = subject.pipe(
+    tap(chunk => {
+      if (chunk.kind == ChunkKind.Response) {
+        messageCallback({status: chunk.status, message: chunk.message});
+      }
+    }),
+    filter(chunk => chunk.kind != ChunkKind.Response),
     retryWhen(errors => errors.pipe(filter(error => error.code == 1006))),
     tap(chunk => {
       switch (chunk.kind) {

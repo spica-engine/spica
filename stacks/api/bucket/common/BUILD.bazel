@@ -11,10 +11,10 @@ ts_library(
     deps = [
         "//packages/core/differ",
         "//packages/database",
+        "//stacks/api/activity/services",
         "//stacks/api/bucket/cache",
         "//stacks/api/bucket/expression",
         "//stacks/api/bucket/services",
-        "//stacks/api/activity/services",
         "@npm//json-merge-patch",
         "@npm//locale",
     ],
