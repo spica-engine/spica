@@ -150,6 +150,7 @@ ts_library(
     deps = [
         "//stacks/api/activity/services",
         "//stacks/api/bucket",
+        "//stacks/api/bucket/common",
         "@npm//@types/jasmine",
     ],
 )
