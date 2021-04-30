@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse } from "@angular/common/http";
+import {HttpClient, HttpErrorResponse} from "@angular/common/http";
 import {
   Component,
   EventEmitter,
@@ -9,9 +9,9 @@ import {
   ChangeDetectorRef,
   RendererStyleFlags2
 } from "@angular/core";
-import { ActivatedRoute, Router } from "@angular/router";
-import { SavingState } from "@spica-client/material";
-import { merge, Observable, of, Subject, throwError, BehaviorSubject } from "rxjs";
+import {ActivatedRoute, Router} from "@angular/router";
+import {SavingState} from "@spica-client/material";
+import {merge, Observable, of, Subject, throwError, BehaviorSubject} from "rxjs";
 import {
   catchError,
   delay,
@@ -26,7 +26,7 @@ import {
   takeUntil,
   tap
 } from "rxjs/operators";
-import { FunctionService } from "../../function.service";
+import {FunctionService} from "../../function.service";
 import {
   denormalizeFunction,
   emptyFunction,
@@ -36,8 +36,8 @@ import {
   normalizeFunction,
   Trigger
 } from "../../interface";
-import { MatDialog } from "@angular/material/dialog";
-import { ExampleComponent } from "@spica-client/common/example";
+import {MatDialog} from "@angular/material/dialog";
+import {ExampleComponent} from "@spica-client/common/example";
 
 @Component({
   selector: "functions-add",
@@ -45,7 +45,7 @@ import { ExampleComponent } from "@spica-client/common/example";
   styleUrls: ["./add.component.scss"]
 })
 export class AddComponent implements OnInit, OnDestroy {
-  @ViewChild("toolbar", { static: true }) toolbar;
+  @ViewChild("toolbar", {static: true}) toolbar;
 
   function: NormalizedFunction = emptyFunction();
 
@@ -67,9 +67,9 @@ export class AddComponent implements OnInit, OnDestroy {
 
   editorOptions = {
     language: "javascript",
-    minimap: { enabled: false },
+    minimap: {enabled: false},
     automaticLayout: true,
-    scrollbar: { alwaysConsumeMouseWheel: false }
+    scrollbar: {alwaysConsumeMouseWheel: false}
   };
 
   isIndexPending = false;
@@ -99,9 +99,9 @@ export class AddComponent implements OnInit, OnDestroy {
   sections = {
     triggers: true,
     dependencies: false,
-    envs: false, 
+    envs: false,
     optionals: false
-  }
+  };
   editName = false;
   editDescription = false;
 
@@ -186,7 +186,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   addVariable() {
-    this.function.env.push({ value: undefined, key: undefined });
+    this.function.env.push({value: undefined, key: undefined});
   }
 
   removeVariable(index: number) {
@@ -287,7 +287,7 @@ export class AddComponent implements OnInit, OnDestroy {
   addDependency(name: string) {
     this.dependencyInstallPending = true;
     this.http
-      .post(`api:/function/${this.function._id}/dependencies`, { name })
+      .post(`api:/function/${this.function._id}/dependencies`, {name})
       .toPromise()
       .then(() => {
         this.getDependencies();
@@ -357,11 +357,11 @@ export class AddComponent implements OnInit, OnDestroy {
     const logs = document.getElementsByClassName("sidecar-log-view").item(0);
     const content = document.getElementsByClassName("mat-sidenav-content").item(0);
 
-    return { codeActions, codeEditor, logs, content };
+    return {codeActions, codeEditor, logs, content};
   }
 
   applyStyles() {
-    const { codeActions, codeEditor, logs, content } = this.getFullscreenElements();
+    const {codeActions, codeEditor, logs, content} = this.getFullscreenElements();
 
     this.renderer.addClass(codeActions, "full-screen-code-actions");
     this.renderer.addClass(codeEditor, "full-screen-code");
@@ -370,7 +370,7 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   revertStyles() {
-    const { codeActions, codeEditor, logs, content } = this.getFullscreenElements();
+    const {codeActions, codeEditor, logs, content} = this.getFullscreenElements();
 
     this.renderer.removeClass(codeActions, "full-screen-code-actions");
     this.renderer.removeClass(codeEditor, "full-screen-code");

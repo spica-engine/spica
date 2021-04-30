@@ -2,36 +2,36 @@
   .hidden {
     display: none !important;
   }
-  .with-sidecar{
-    .footer-bar{
+  .with-sidecar {
+    .footer-bar {
       align-items: flex-start !important;
       height: 400px !important;
     }
   }
-  function-code-editor{
+  function-code-editor {
     flex: 1;
   }
-  .container{
+  .container {
     display: flex;
     height: calc(100vh - 64px);
     overflow: hidden;
-    .info{
+    .info {
       width: 400px;
       height: calc(100vh - 64px);
       overflow: auto;
     }
-    .code{
+    .code {
       flex: 1;
       position: relative;
       display: flex;
       flex-direction: column;
       max-width: calc(100% - 400px);
-      .code-actions{
+      .code-actions {
         padding: 5px 0px 5px 20px;
         margin: 0px;
         align-items: center;
         display: flex;
-        span{
+        span {
           flex: 1;
         }
         .actions {
@@ -39,14 +39,14 @@
         }
       }
     }
-    .footer-bar{
+    .footer-bar {
       height: 40px;
       display: flex;
       align-items: center;
       border-top: 1px solid rgba(var(--foreground-base-rgb), 0.1);
       padding-top: 2px;
       position: relative;
-      button{
+      button {
         z-index: 10;
       }
     }
@@ -110,31 +110,32 @@
       &.describe {
         display: flex;
         flex-direction: column;
-        .name{
+        .name {
           margin-top: 0px;
         }
-        .description, .name{
+        .description,
+        .name {
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          mat-icon{
+          mat-icon {
             margin-right: 8px;
             font-size: 1.25rem;
             width: 1.25rem;
             height: 1.25rem;
           }
-          b{
+          b {
             margin-right: 5px;
           }
         }
-        mat-form-field{
+        mat-form-field {
           width: 100%;
           margin-bottom: 20px;
         }
-        .timeout{
+        .timeout {
           width: 100%;
-          mat-slider{
+          mat-slider {
             width: 100%;
           }
         }
@@ -150,7 +151,7 @@
           }
         }
       }
-      
+
       &.dependency {
         ::ng-deep .mat-list-item-content {
           display: flex !important;
@@ -164,13 +165,12 @@
         }
       }
 
-      &.add-dependency{
+      &.add-dependency {
         ::ng-deep .mat-list-item-content {
-
           padding-top: 0px !important;
           padding-bottom: 0px !important;
         }
-        mat-form-field{
+        mat-form-field {
           width: 100%;
         }
       }
@@ -182,7 +182,7 @@
         padding: 0px;
         margin: 24px 10px 10px 10px;
         width: calc(100% - 20px);
-        ::ng-deep .input-placer-input{
+        ::ng-deep .input-placer-input {
           width: 100%;
         }
         mat-form-field {
@@ -242,10 +242,10 @@
           margin-bottom: 15px;
         }
         .setting {
-          mat-slide-toggle{
+          mat-slide-toggle {
             margin-bottom: 20px;
           }
-          mat-form-field{
+          mat-form-field {
             width: 100%;
           }
         }
@@ -256,16 +256,16 @@
       padding: 5px 16px 5px 26px;
       display: flex;
       justify-content: space-between;
-      span{
+      span {
         cursor: pointer;
         display: flex;
         align-items: center;
       }
-      .actions{
+      .actions {
         cursor: pointer;
         display: flex;
         align-items: center;
-        mat-icon{
+        mat-icon {
           margin-left: 5px;
         }
       }
@@ -294,11 +294,11 @@
     overflow: auto;
     background: var(--background-background);
     ::ng-deep {
-      mat-toolbar{
-        h4{
+      mat-toolbar {
+        h4 {
           display: none;
         }
-        >div{
+        > div {
           margin-top: unset !important;
         }
         height: 40px;
@@ -306,13 +306,13 @@
         min-height: unset;
         justify-content: flex-start;
       }
-      .mat-form-field-wrapper{
+      .mat-form-field-wrapper {
         margin-bottom: -1.25em;
-     }
-     .log-viewport{
-       height: 290px;
-     }
-      mat-card{
+      }
+      .log-viewport {
+        height: 290px;
+      }
+      mat-card {
         margin: unset;
         width: 100% !important;
         padding: 6px 16px;
@@ -352,8 +352,7 @@
     }
   }
 
-
-  .save-button{
+  .save-button {
     width: 100%;
   }
 }
