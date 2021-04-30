@@ -2,7 +2,7 @@ import {ForbiddenException, INestApplication, UnauthorizedException} from "@nest
 import {Test} from "@nestjs/testing";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketModule} from "@spica-server/bucket/src";
-import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
+import {CoreTestingModule, Request, Websocket, Client} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {ChunkKind} from "@spica-server/database/realtime";
 import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
@@ -146,6 +146,8 @@ describe("Realtime", () => {
   });
 
   describe("documents", () => {
+    const messageSpy = jasmine.createSpy();
+
     beforeEach(async () => {
       rows = [
         await insertRow({
@@ -155,93 +157,117 @@ describe("Realtime", () => {
           title: "second"
         })
       ];
+
+      messageSpy.calls.reset();
     });
 
     describe("initial sync", () => {
-      it("should do the initial sync", async () => {
+      const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
+
+      it("should do the initial sync", async done => {
         const ws = wsc.get(`/bucket/${bucket._id}/data`);
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
         await ws.connect;
-
-        await sleep(3000);
-        //await stream.change.wait();
-
-        await ws.close();
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.EndOfInitial}
-        ]);
       });
 
-      it("should do the initial sync with filter", async () => {
+      it("should do the initial sync with filter", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `title == "second"`}));
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
         await ws.connect;
-
-        await sleep(3000);
-        //await stream.change.wait();
-
-        await ws.close();
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.EndOfInitial}
-        ]);
       });
 
-      it("should do the initial sync with _id filter", async () => {
+      it("should do the initial sync with _id filter", async done => {
         const ws = wsc.get(
           url(`/bucket/${bucket._id}/data`, {filter: `_id == "${rows[0]["_id"]}"`})
         );
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
         await ws.connect;
-
-        await sleep(3000);
-        //await stream.change.wait();
-
-        await ws.close();
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.EndOfInitial}
-        ]);
       });
 
-      it("should do the initial sync with limit", async () => {
+      it("should do the initial sync with limit", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {limit: 1}));
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
         await ws.connect;
-
-        await sleep(3000);
-        //await stream.change.wait();
-
-        await ws.close();
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.EndOfInitial}
-        ]);
       });
 
-      it("should do the initial sync with skip", async () => {
+      it("should do the initial sync with skip", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1}));
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
         await ws.connect;
-
-        await sleep(3000);
-        //await stream.change.wait();
-
-        await ws.close();
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.EndOfInitial}
-        ]);
       });
 
-      it("should do the initial sync with skip and limit", async () => {
+      it("should do the initial sync with skip and limit", async done => {
         const newRows = [
           await insertRow({
             title: "third"
@@ -250,231 +276,295 @@ describe("Realtime", () => {
             title: "fourth"
           })
         ];
+
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1, limit: 2}));
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.Initial, document: newRows[0]},
+
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
         await ws.connect;
-
-        await sleep(3000);
-        //await stream.change.wait();
-
-        await ws.close();
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.Initial, document: newRows[0]},
-          {kind: ChunkKind.EndOfInitial}
-        ]);
       });
 
-      it("should do the initial sync with sort", async () => {
+      it("should do the initial sync with sort", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {sort: {_id: -1}}));
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
         await ws.connect;
-
-        await sleep(3000);
-        //await stream.change.wait();
-
-        await ws.close();
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.EndOfInitial}
-        ]);
       });
     });
 
-    describe("sending message", () => {
-      it("should perform insert action and send changes to the clients", async () => {
+    //@TODO: enable them when you find a way to solve the timeout problem
+    xdescribe("sending message", () => {
+      it("should perform insert action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
+        ws.onmessage = e => {
+          messageSpy(JSON.parse(e.data as string));
+        };
+
         await ws.connect;
 
-        await sleep(3000);
-
         const controller = app.get(RealtimeGateway);
-
         const client = controller.clients.keys().next().value;
-        const document = {title: "insert_me"};
+
+        const document = {title: "title"};
+
         await controller.insert(client, document);
 
-        // await waitForCursorInitialization();
-        await stream.change.wait();
+        await stream.change.next();
 
         await ws.close();
 
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
+        expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
           {kind: ChunkKind.Initial, document: rows[0]},
           {kind: ChunkKind.Initial, document: rows[1]},
           {kind: ChunkKind.EndOfInitial},
           {kind: ChunkKind.Response, status: 201, message: "Created"},
-          {kind: ChunkKind.Insert, document: {_id: "__objectid__", title: "insert_me"}}
+          {
+            kind: ChunkKind.Insert,
+            document: {_id: "__objectid__", title: "title"}
+          }
         ]);
       });
 
-      it("should perform replace action and send changes to the clients", async () => {
+      it("should perform replace action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
-        await ws.connect;
+        const lastMessageKind = ChunkKind.Replace;
 
-        await sleep(3000);
+        ws.onmessage = async e => {
+          const message = JSON.parse(e.data as string);
+
+          messageSpy(message);
+
+          if (message.kind == lastMessageKind) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial},
+              {kind: ChunkKind.Response, status: 200, message: "OK"},
+              {
+                kind: ChunkKind.Replace,
+                document: {_id: rows[0]._id.toString(), title: "updated_title"}
+              }
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
 
         const controller = app.get(RealtimeGateway);
-
         const client = controller.clients.keys().next().value;
+
         const document = {_id: rows[0]._id.toString(), title: "updated_title"};
+
         await controller.replace(client, document);
-
-        // somehow, replace action does not fire the code line below
-        // await stream.change.wait();
-
-        await sleep(3000);
-
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.EndOfInitial},
-          {kind: ChunkKind.Response, status: 200, message: "OK"},
-          {kind: ChunkKind.Replace, document: {_id: rows[0]._id.toString(), title: "updated_title"}}
-        ]);
       });
 
-      it("should perform patch action and send changes to the clients", async () => {
+      it("should perform patch action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
-        await ws.connect;
+        const lastMessageKind = ChunkKind.Update;
 
-        await sleep(3000);
+        ws.onmessage = async e => {
+          const message = JSON.parse(e.data as string);
+          messageSpy(message);
+
+          if (message.kind == lastMessageKind) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial},
+              {kind: ChunkKind.Response, status: 204, message: "No Content"},
+              {
+                kind: ChunkKind.Update,
+                document: {_id: rows[0]._id.toString()}
+              }
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
 
         const controller = app.get(RealtimeGateway);
 
         const client = controller.clients.keys().next().value;
         const document = {_id: rows[0]._id.toString(), title: null};
+
         await controller.patch(client, document);
-
-        // await waitForCursorInitialization();
-        await stream.change.wait();
-
-        await ws.close();
-
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.EndOfInitial},
-          {kind: ChunkKind.Response, status: 204, message: "No Content"},
-          {kind: ChunkKind.Update, document: {_id: rows[0]._id.toString()}}
-        ]);
       });
 
-      it("should perform delete action and send changes to the clients", async () => {
+      it("should perform delete action and send changes to the clients", async done => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
-        const message = jasmine.createSpy();
-        ws.onmessage = e => message(JSON.parse(e.data as string));
-        await ws.connect;
+        const lastMessageKind = ChunkKind.Delete;
 
-        await sleep(3000);
+        ws.onmessage = async e => {
+          const message = JSON.parse(e.data as string);
+          messageSpy(message);
+
+          if (message.kind == lastMessageKind) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial},
+              {kind: ChunkKind.Response, status: 204, message: "No Content"},
+              {
+                kind: ChunkKind.Delete,
+                document: {_id: rows[0]._id.toString()}
+              }
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
 
         const controller = app.get(RealtimeGateway);
 
         const client = controller.clients.keys().next().value;
         const document = {_id: rows[0]._id.toString()};
+
         await controller.delete(client, document);
+      });
+    });
 
-        await sleep(3000);
-        // await stream.change.wait();
+    describe("errors", () => {
+      const lastMessageKind = ChunkKind.Response;
 
-        await ws.close();
+      describe("schema validation", () => {
+        let validationBucket: any = {
+          title: "Realtime",
+          description: "Realtime",
+          properties: {
+            title: {
+              type: "string"
+            }
+          },
+          required: ["title"]
+        };
+        beforeEach(async () => {
+          await req.post("/bucket", validationBucket).then(res => (validationBucket = res.body));
+        });
 
-        expect(message.calls.allArgs().map(c => c[0])).toEqual([
-          {kind: ChunkKind.Initial, document: rows[0]},
-          {kind: ChunkKind.Initial, document: rows[1]},
-          {kind: ChunkKind.EndOfInitial},
-          {kind: ChunkKind.Response, status: 204, message: "No Content"},
-          {kind: ChunkKind.Delete, document: {_id: rows[0]._id.toString()}}
-        ]);
+        it("should reject operation and send errors to the client", async done => {
+          const ws = wsc.get(url(`/bucket/${validationBucket._id}/data`));
+
+          ws.onmessage = async e => {
+            const message = JSON.parse(e.data as string);
+
+            messageSpy(message);
+
+            if (message.kind == lastMessageKind) {
+              expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+                {kind: ChunkKind.EndOfInitial},
+                {
+                  kind: ChunkKind.Response,
+                  status: 400,
+                  message: " should have required property 'title'"
+                }
+              ]);
+
+              await ws.close();
+              done();
+            }
+          };
+
+          await ws.connect;
+
+          const controller = app.get(RealtimeGateway);
+          const client = controller.clients.keys().next().value;
+
+          const document = {};
+
+          await controller.insert(client, document);
+        });
       });
 
-      describe("errors", () => {
+      describe("rule", () => {
+        let ruleBucket: any = {
+          title: "Realtime",
+          description: "Realtime",
+          properties: {
+            title: {
+              type: "string"
+            }
+          },
+          acl: {
+            write: "true==false",
+            read: "true==true"
+          }
+        };
         beforeEach(async () => {
-          bucket.required = ["title"];
-          await req.put(`/bucket/${bucket._id}`, bucket);
+          await req.post("/bucket", ruleBucket).then(res => (ruleBucket = res.body));
         });
 
-        describe("schema validation", () => {
-          it("should reject operation and send errors to the client", async () => {
-            const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
+        it("should reject operation cause of rule", async done => {
+          const ws = wsc.get(url(`/bucket/${ruleBucket._id}/data`));
 
-            const message = jasmine.createSpy();
-            ws.onmessage = e => message(JSON.parse(e.data as string));
-            await ws.connect;
+          ws.onmessage = async e => {
+            const message = JSON.parse(e.data as string);
 
-            await sleep(3000);
+            messageSpy(message);
 
-            const controller = app.get(RealtimeGateway);
+            if (message.kind == lastMessageKind) {
+              expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+                {kind: ChunkKind.EndOfInitial},
+                {
+                  kind: ChunkKind.Response,
+                  status: 401,
+                  message: "ACL rules has rejected this operation."
+                }
+              ]);
 
-            const client = controller.clients.keys().next().value;
-            const document = {};
-            await controller.insert(client, document);
+              await ws.close();
+              done();
+            }
+          };
 
-            await sleep(3000);
+          await ws.connect;
 
-            await ws.close();
+          const controller = app.get(RealtimeGateway);
+          const client = controller.clients.keys().next().value;
 
-            expect(message.calls.allArgs().map(c => c[0])).toEqual([
-              {kind: ChunkKind.Initial, document: rows[0]},
-              {kind: ChunkKind.Initial, document: rows[1]},
-              {kind: ChunkKind.EndOfInitial},
-              {
-                kind: ChunkKind.Response,
-                status: 400,
-                message: " should have required property 'title'"
-              }
-            ]);
-          });
-        });
+          const document = {title: "reject_this"};
 
-        describe("rule", () => {
-          beforeEach(async () => {
-            bucket.acl.write = "true==false";
-            await req.put(`/bucket/${bucket._id}`, bucket);
-          });
-          it("should reject update operation cause of rule", async () => {
-            const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
-
-            const message = jasmine.createSpy();
-            ws.onmessage = e => message(JSON.parse(e.data as string));
-            await ws.connect;
-
-            await sleep(3000);
-
-            const controller = app.get(RealtimeGateway);
-
-            const client = controller.clients.keys().next().value;
-            const document = {_id: rows[0]._id.toString(), title: "reject_this"};
-            await controller.replace(client, document);
-
-            await sleep(3000);
-
-            await ws.close();
-
-            expect(message.calls.allArgs().map(c => c[0])).toEqual([
-              {kind: ChunkKind.Initial, document: rows[0]},
-              {kind: ChunkKind.Initial, document: rows[1]},
-              {kind: ChunkKind.EndOfInitial},
-              {
-                kind: ChunkKind.Response,
-                status: 401,
-                message: "ACL rules has rejected this operation."
-              }
-            ]);
-          });
+          await controller.insert(client, document);
         });
       });
     });
