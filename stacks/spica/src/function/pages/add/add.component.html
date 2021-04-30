@@ -1,49 +1,48 @@
-<form #form="ngForm">
-  <div class="container" [class.with-sidecar]="enableLogView">
+<div class="container" [class.with-sidecar]="enableLogView">
 
-    <div class="code">
-      <h4 class="code-actions">
-        <mat-icon>code</mat-icon> Code
-        <span></span>
-        <div class="actions">
-          <button mat-icon-button (click)="switchToFullscreen()"
-            [matTooltip]="onFullScreen ? 'Disable Fullscreen' : 'Enable Fullscreen'">
-            <mat-icon>{{ onFullScreen ? "fullscreen_exit" : "fullscreen" }}</mat-icon>
-          </button>
-          <button mat-icon-button (click)="language.format()" matTooltip="Format">
-            <mat-icon>format_align_center</mat-icon>
-          </button>
-          <span class="last-saved" *ngIf="$indexSave | async; let lastSaved">
-            <mat-label *ngIf="lastSaved != 'inprogress'">
-              Last saved: {{ lastSaved | date: "mediumTime" }}
-            </mat-label>
-            <mat-progress-spinner [style.opacity]="lastSaved == 'inprogress' ? 1 : 0" color="primary"
-              mode="indeterminate" [diameter]="18">
-            </mat-progress-spinner>
-          </span>
-        </div>
-      </h4>
-      <mat-divider></mat-divider>
-      <function-code-editor class="editor" (save)="updateIndex()" #language="language" name="code"
-        [language]="function.language" [(ngModel)]="index" [options]="editorOptions">
-      </function-code-editor>
-      <div class="footer-bar">
-        <button mat-button canInteract="function:logs:index" (click)="enableLogView = !enableLogView">
-          <mat-icon>bug_report</mat-icon>
-          {{ enableLogView ? "Disable Log View" : "Enable Log View" }}
+  <div class="code">
+    <h4 class="code-actions">
+      <mat-icon>code</mat-icon> Code
+      <span></span>
+      <div class="actions">
+        <button mat-icon-button (click)="switchToFullscreen()"
+          [matTooltip]="onFullScreen ? 'Disable Fullscreen' : 'Enable Fullscreen'">
+          <mat-icon>{{ onFullScreen ? "fullscreen_exit" : "fullscreen" }}</mat-icon>
         </button>
+        <button mat-icon-button (click)="language.format()" matTooltip="Format">
+          <mat-icon>format_align_center</mat-icon>
+        </button>
+        <span class="last-saved" *ngIf="$indexSave | async; let lastSaved">
+          <mat-label *ngIf="lastSaved != 'inprogress'">
+            Last saved: {{ lastSaved | date: "mediumTime" }}
+          </mat-label>
+          <mat-progress-spinner [style.opacity]="lastSaved == 'inprogress' ? 1 : 0" color="primary" mode="indeterminate"
+            [diameter]="18">
+          </mat-progress-spinner>
+        </span>
+      </div>
+    </h4>
+    <mat-divider></mat-divider>
+    <function-code-editor class="editor" (save)="updateIndex()" #language="language" name="code"
+      [language]="function.language" [(ngModel)]="index" [options]="editorOptions">
+    </function-code-editor>
+    <div class="footer-bar">
+      <button mat-button canInteract="function:logs:index" (click)="enableLogView = !enableLogView">
+        <mat-icon>bug_report</mat-icon>
+        {{ enableLogView ? "Disable Log View" : "Enable Log View" }}
+      </button>
 
-        <div class="sidecar-log-view" *ngIf="enableLogView">
-          <log-view [functionId$]="selectedFunctionId"></log-view>
-        </div>
+      <div class="sidecar-log-view" *ngIf="enableLogView">
+        <log-view [functionId$]="selectedFunctionId"></log-view>
       </div>
     </div>
-
+  </div>
+  <form #form="ngForm" (keydown.enter)="$event.preventDefault()">
     <div class="info">
       <mat-list>
         <mat-list-item class="describe">
           <h4 class="name" *ngIf="!editName && function._id" (click)="editName = true">
-            <mat-icon>edit</mat-icon>{{ function._id ? function.name : "New Function" }}
+            {{ function._id ? function.name : "New Function" }}<mat-icon>edit</mat-icon>
           </h4>
           <mat-form-field *ngIf="editName || !function._id">
             <mat-label>Name</mat-label>
@@ -59,7 +58,7 @@
             </mat-error>
           </mat-form-field>
           <p class="description" *ngIf="!editDescription && function._id" (click)="editDescription = true">
-            <mat-icon>edit</mat-icon>{{ function._id ? function.description : "No description added" }}
+            {{ function._id ? function.description : "No description added" }}<mat-icon>edit</mat-icon>
           </p>
           <mat-form-field *ngIf="editDescription || !function._id">
             <mat-label>Description</mat-label>
@@ -78,7 +77,7 @@
           </mat-form-field>
 
           <p class="description" *ngIf="function._id" (click)="editDescription = true">
-            <b>{{ function.language | titlecase }}</b> Engine
+            <b>{{ function.language + " Engine" | titlecase }}</b>
           </p>
           <mat-form-field *ngIf="!function._id">
             <mat-label>Language</mat-label>
@@ -302,5 +301,5 @@
         <span>{{ (!state ? "save" : state) | titlecase }}</span>
       </button>
     </div>
-  </div>
-</form>
+  </form>
+</div>

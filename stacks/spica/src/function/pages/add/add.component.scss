@@ -25,6 +25,7 @@
       position: relative;
       display: flex;
       flex-direction: column;
+      max-width: calc(100% - 400px);
       .code-actions{
         padding: 5px 0px 5px 20px;
         margin: 0px;
@@ -116,6 +117,7 @@
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: space-between;
           mat-icon{
             margin-right: 8px;
             font-size: 1.25rem;
@@ -208,7 +210,7 @@
           border-top: 1px solid rgba(var(--foreground-base-rgb), 0.1);
           border-left: 1px solid rgba(var(--foreground-base-rgb), 0.1);
           transform: rotateZ(45deg);
-          background: var(--background-card);
+          background: var(--background-background);
         }
       }
 

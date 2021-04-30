@@ -1,5 +1,15 @@
+## v0.8.8 (2021-04-22)
+
+* fix(function): check show and index accesses for listing functions ([7e223c1ee](https://github.com/spica-engine/spica/commit/7e223c1ee))
+* fix(common): disable save changes feature ([97b7a241b](https://github.com/spica-engine/spica/commit/97b7a241b))
+* feat(dashboard): tutorial videos ([5338fc4c2](https://github.com/spica-engine/spica/commit/5338fc4c2))
+* fix(function):unregister writable streams before register new one ([b534ece16](https://github.com/spica-engine/spica/commit/b534ece16))
+* fix(bucket): update the method that builds template on bucket data ([da24c9a74](https://github.com/spica-engine/spica/commit/da24c9a74))
+* feat(function): improve code writing experience on function code editor ([49ee2b1c6](https://github.com/spica-engine/spica/commit/49ee2b1c6))
+
 ## v0.8.7 (2021-04-09)
 
+* docs(changelog): update changelog for v0.8.7 ([ab428c297](https://github.com/spica-engine/spica/commit/ab428c297))
 * fix(bucket): remove null values before sending bucket-data ([cf550b630](https://github.com/spica-engine/spica/commit/cf550b630))
 * fix(function): some fixes for firehose trigger ([ef6e4b9e0](https://github.com/spica-engine/spica/commit/ef6e4b9e0))
 * fix(bucket): set string as default array item schema on bucket schema ([7d219ba64](https://github.com/spica-engine/spica/commit/7d219ba64))

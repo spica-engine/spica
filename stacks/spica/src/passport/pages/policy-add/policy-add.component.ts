@@ -186,13 +186,7 @@ export class PolicyAddComponent implements OnInit {
 
     (policy._id ? this.policyService.updatePolicy(policy) : this.policyService.createPolicy(policy))
       .toPromise()
-      .then(() =>
-        this.router.navigate(["passport/policy"], {
-          state: {
-            skipSaveChanges: true
-          }
-        })
-      );
+      .then(() => this.router.navigate(["passport/policy"]));
   }
 
   addStatement() {

@@ -15,6 +15,7 @@
       mat-card-content {
         mat-list {
           a {
+            width: max-content;
             text-decoration: none;
             color: unset;
             font-size: 14px;
@@ -33,5 +34,30 @@
         }
       }
     }
+  }
+
+  mat-card.tutorial-videos {
+    mat-list-item {
+      position: relative !important;
+      width: 100% !important;
+      height: 90% !important;
+      padding-top: 56.25% !important; /* 16:9 Aspect Ratio */
+
+      ::ng-deep .mat-list-item-content {
+        position: unset !important;
+      }
+
+      iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  mat-card-actions > button {
+    float: right;
   }
 }
