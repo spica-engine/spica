@@ -1,9 +1,9 @@
 import {Identity, IdentityInitialization, ApikeyInitialization, IndexResult} from "./interface";
-
 import {
   initialize as _initialize,
   checkInitialized,
-  HttpService
+  HttpService,
+  Axios
 } from "@spica-devkit/internal_common";
 
 let authorization;
@@ -26,10 +26,22 @@ export function initialize(options: ApikeyInitialization | IdentityInitializatio
   });
 }
 
+export function verifyToken(token: string, baseUrl?: string) {
+  const _baseUrl = baseUrl ? baseUrl : service ? service.baseUrl : undefined;
+
+  if (!_baseUrl) {
+    throw new Error("You should pass the base url of the server or call the initialize method.");
+  }
+
+  const req = new Axios({baseURL: _baseUrl});
+
+  return req.get(`${identitySegment}/verify`, {headers: {Authorization: token}});
+}
+
 export function login(
   identifier: string,
   password: string,
-  token_expires_in_seconds?: number
+  tokenLifeSpan?: number
 ): Promise<string> {
   checkInitialized(authorization);
 
@@ -37,7 +49,7 @@ export function login(
     .post<{token: string}>("/passport/identify", {
       identifier,
       password,
-      expires: token_expires_in_seconds
+      expires: tokenLifeSpan
     })
     .then(response => response.token);
 }

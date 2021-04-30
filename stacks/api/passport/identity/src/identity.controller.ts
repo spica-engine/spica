@@ -13,7 +13,8 @@ import {
   UseGuards,
   UseInterceptors,
   HttpStatus,
-  HttpCode
+  HttpCode,
+  Headers
 } from "@nestjs/common";
 import {activity} from "@spica-server/activity/services";
 import {DEFAULT, NUMBER, JSONP, BOOLEAN} from "@spica-server/core";
@@ -30,6 +31,17 @@ import {attachIdentityAccess} from "./utility";
 @Controller("passport/identity")
 export class IdentityController {
   constructor(private identity: IdentityService, private policy: PolicyService) {}
+
+  @Get("verify")
+  verify(@Headers("Authorization") token: string) {
+    if (!token) {
+      throw new BadRequestException("Authorization header is missing.");
+    }
+
+    return this.identity.verify(token).catch(e => {
+      throw new BadRequestException(e.message);
+    });
+  }
 
   // TODO: try to drop direct dependency on policy service
   @Get("statements")
