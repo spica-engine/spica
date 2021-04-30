@@ -35,16 +35,16 @@
         margin: 0px;
         align-items: center;
         display: flex;
-        >span {
+        > span {
           flex: 1;
         }
         .actions {
           max-width: 100%;
           align-items: center;
           display: flex;
-          span{
+          span {
             align-items: center;
-          display: flex;
+            display: flex;
           }
         }
       }
@@ -367,7 +367,7 @@
     text-align: center;
     justify-content: center;
     align-content: center;
-    span{
+    span {
       margin-left: 10px;
     }
   }
