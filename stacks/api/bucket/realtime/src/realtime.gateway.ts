@@ -35,13 +35,7 @@ import {
 import {GuardService} from "@spica-server/passport";
 import {fromEvent, Observable, of} from "rxjs";
 import {takeUntil, tap, catchError} from "rxjs/operators";
-
-enum MessageKind {
-  INSERT = "insert",
-  REPLACE = "replace",
-  PATCH = "patch",
-  DELETE = "delete"
-}
+import {MessageKind} from "./interface";
 
 @WebSocketGateway({
   path: "/bucket/:id/data"
