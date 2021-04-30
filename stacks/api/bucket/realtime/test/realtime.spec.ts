@@ -284,7 +284,7 @@ describe("Realtime", () => {
       });
     });
 
-    fdescribe("sending message", () => {
+    describe("sending message", () => {
       it("should perform insert action and send changes to the clients", async () => {
         const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
 
@@ -401,7 +401,7 @@ describe("Realtime", () => {
         ]);
       });
 
-      fdescribe("errors", () => {
+      describe("errors", () => {
         beforeEach(async () => {
           bucket.required = ["title"];
           await req.put(`/bucket/${bucket._id}`, bucket);
