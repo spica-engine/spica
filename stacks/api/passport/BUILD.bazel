@@ -25,6 +25,7 @@ ts_library(
         "@npm//@types/body-parser",
         "@npm//@types/node-forge",
         "@npm//@types/saml2-js",
+        "@npm//axios",
         "@npm//body-parser",
         "@npm//node-forge",
         "@npm//rxjs",

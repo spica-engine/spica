@@ -21,12 +21,14 @@ describe("Identify Component", () => {
 
   const strategies = [
     {
+      _id: "id1",
       icon: "icon",
       name: "name",
       title: "title",
       type: "type"
     },
     {
+      _id: "id2",
       icon: "icon2",
       name: "name2",
       title: "title2",
@@ -69,8 +71,8 @@ describe("Identify Component", () => {
 
     spyOn(fixture.componentInstance.passport, "getStrategies").and.returnValue(of(strategies));
     identifyWithSpy = spyOn(fixture.componentInstance.passport, "identifyWith").and.callFake(
-      (name: string) => {
-        return name == "name2" ? throwError({error: {message: "Here is the error."}}) : of(null);
+      (id: string) => {
+        return id == "id2" ? throwError({error: {message: "Here is the error."}}) : of(null);
       }
     );
     spyOn(fixture.componentInstance.passport, "identify").and.returnValue(of({}));
@@ -129,21 +131,16 @@ describe("Identify Component", () => {
       expect(passwordModel.model).toBe(undefined);
 
       expect(
-        fixture.debugElement.query(By.css("mat-card-actions button:nth-child(1)")).nativeElement
-          .textContent
-      ).toBe("icon title ");
-
-      expect(
-        fixture.debugElement.query(By.css("mat-card-actions button:nth-child(2)")).nativeElement
-          .textContent
-      ).toBe("icon2 title2 ");
+        fixture.debugElement
+          .queryAll(By.css("button:not(:first-of-type)"))
+          .map(e => e.nativeElement.textContent)
+      ).toEqual(["icon title ", "icon2 title2 "]);
 
       await fixture.whenStable();
       fixture.detectChanges();
 
       expect(
-        fixture.debugElement.query(By.css("mat-card-actions button:last-of-type")).nativeElement
-          .disabled
+        fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.disabled
       ).toBe(true);
     });
   });
@@ -153,9 +150,7 @@ describe("Identify Component", () => {
       routerSpy.calls.reset();
     });
     it("should identify successfully when clicked first strategy", fakeAsync(() => {
-      fixture.debugElement
-        .query(By.css("mat-card-actions button:nth-child(1)"))
-        .nativeElement.click();
+      fixture.debugElement.query(By.css("button:nth-of-type(2)")).nativeElement.click();
 
       tick();
       fixture.detectChanges();
@@ -173,9 +168,7 @@ describe("Identify Component", () => {
           identifier: "identifier",
           password: "password"
         });
-      await fixture.debugElement
-        .queryAll(By.css("mat-card-actions button"))[2]
-        .nativeElement.click();
+      await fixture.debugElement.query(By.css("button:first-of-type")).nativeElement.click();
 
       expect(fixture.componentInstance.identity).toEqual({
         identifier: "identifier",
@@ -191,9 +184,7 @@ describe("Identify Component", () => {
       routerSpy.calls.reset();
     });
     it("should show error", fakeAsync(() => {
-      fixture.debugElement
-        .query(By.css("mat-card-actions button:nth-child(2)"))
-        .nativeElement.click();
+      fixture.debugElement.query(By.css("button:last-of-type")).nativeElement.click();
       tick();
       fixture.detectChanges();
       expect(fixture.debugElement.query(By.css("form mat-error")).nativeElement.textContent).toBe(
