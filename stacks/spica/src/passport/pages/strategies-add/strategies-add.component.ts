@@ -4,7 +4,12 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {ICONS} from "@spica-client/material";
 import {Subject} from "rxjs";
 import {filter, switchMap, takeUntil} from "rxjs/operators";
-import {emptyStrategy, Strategy} from "../../interfaces/strategy";
+import {
+  emptyOAuthOptions,
+  emptySamlOptions,
+  emptyStrategy,
+  Strategy
+} from "../../interfaces/strategy";
 import {StrategyService} from "../../services/strategy.service";
 
 @Component({
@@ -38,23 +43,37 @@ export class StrategiesAddComponent implements OnInit, OnDestroy {
         switchMap(params => this.strategyService.getStrategy(params.id))
       )
       .subscribe(strategy => {
-        this.callbackUrl = strategy.callbackUrl;
-        delete strategy.callbackUrl;
-        this.strategy = strategy;
+        if (strategy.callbackUrl) {
+          this.callbackUrl = strategy.callbackUrl;
+          delete strategy.callbackUrl;
+          this.strategy = strategy;
+        }
       });
   }
 
-  submitForm(certificate: NgModel) {
+  submitForm() {
     (this.strategy._id
       ? this.strategyService.updateStrategy(this.strategy._id, this.strategy)
       : this.strategyService.addStrategy(this.strategy)
     )
       .toPromise()
-      .then(() => this.router.navigate(["passport/strategies"]))
-      .catch(() => {
-        certificate.control.setErrors({invalid: true});
-        certificate.control.markAsTouched();
-      });
+      .then(() => this.router.navigate(["passport/strategies"]));
+  }
+
+  onTypeChange(type: "saml" | "oauth") {
+    if (type == "saml") {
+      this.strategy.options = emptySamlOptions;
+    } else if (type == "oauth") {
+      this.strategy.options = emptyOAuthOptions;
+    }
+  }
+
+  removeProperty(property: object, key: string) {
+    delete property[key];
+  }
+
+  addNewProperty(property: object, key: string, value: string) {
+    property[key] = value;
   }
 
   ngOnDestroy() {

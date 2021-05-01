@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spica.internal/strategy",
+  "type": "object",
+  "title": "The strategy schema",
+  "definitions": {
+    "samlOptions": {
+      "type": "object",
+      "title": "The saml options",
+      "properties": {
+        "ip": {
+          "type": "object",
+          "properties": {
+            "login_url": {
+              "type": "string",
+              "title": "Login url of the identity provider"
+            },
+            "logout_url": {
+              "type": "string",
+              "title": "Logout url of the identity provider"
+            },
+            "certificate": {
+              "type": "string",
+              "title": "Certificate of the identity provider that encrypted in SHA-1 signature algorithm."
+            }
+          },
+          "required": ["login_url", "certificate"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["ip"],
+      "additionalProperties": false
+    },
+    "oauthOptions": {
+      "type": "object",
+      "title": "The oauth options",
+      "properties": {
+        "code": {
+          "$ref": "#/definitions/requestDetails"
+        },
+        "access_token": {
+          "$ref": "#/definitions/requestDetails"
+        },
+        "identifier": {
+          "$ref": "#/definitions/requestDetails"
+        }
+      },
+      "additionalProperties": false
+    },
+    "requestDetails": {
+      "type": "object",
+      "title": "Request details of steps on OAuth flow",
+      "properties": {
+        "base_url": {
+          "type": "string",
+          "title": "Base url of the endpoint"
+        },
+        "params": {
+          "type": "object",
+          "title": "Query params of the request",
+          "properties": {
+            "": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        },
+        "method": {
+          "type": "string",
+          "title": "Request method type",
+          "enum": ["get", "post"],
+          "default": "get"
+        },
+        "headers": {
+          "type": "object",
+          "title": "Headers of the request",
+          "properties": {
+            "": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        }
+      },
+      "required": ["base_url"],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "icon": {
+      "type": "string",
+      "default": "login"
+    },
+    "name": {
+      "type": "string",
+      "title": "Name of the strategy"
+    },
+    "title": {
+      "type": "string",
+      "title": "Title of the strategy"
+    },
+    "type": {
+      "type": "string",
+      "title": "Type of the strategy",
+      "enum": ["saml", "oauth"]
+    },
+    "options": {
+      "type": "object"
+    }
+  },
+  "required": ["name", "type", "options"],
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "type": {
+        "const": "saml"
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "options": {
+        "$ref": "#/definitions/samlOptions"
+      }
+    }
+  },
+  "else": {
+    "properties": {
+      "options": {
+        "$ref": "#/definitions/oauthOptions"
+      }
+    }
+  }
+}

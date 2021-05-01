@@ -8,33 +8,36 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
-  NotFoundException,
   Param,
   Post,
   Query,
   UnauthorizedException,
   UseInterceptors,
-  Req
+  Req,
+  All
 } from "@nestjs/common";
 import {Identity, IdentityService, LoginCredentials} from "@spica-server/passport/identity";
 import {Subject, throwError} from "rxjs";
 import {catchError, take, timeout} from "rxjs/operators";
 import {UrlEncodedBodyParser} from "./body";
-import {SamlService} from "./saml.service";
-import {StrategyService} from "./strategy/strategy.service";
+import {SamlService} from "./strategy/services/saml.service";
+import {StrategyService} from "./strategy/services/strategy.service";
 import {NUMBER} from "@spica-server/core";
 import {Schema} from "@spica-server/core/schema";
+import {OAuthService} from "./strategy/services/oauth.service";
+import {getStrategyService} from "./utilities";
+import {ObjectId, OBJECT_ID} from "@spica-server/database";
 
+const assertObservers = new Map<string, Subject<any>>();
 /**
  * @name passport
  */
 @Controller("passport")
 export class PassportController {
-  assertObservers = new Map<string, Subject<any>>();
-
   constructor(
     private identity: IdentityService,
     private saml: SamlService,
+    private oauth: OAuthService,
     private strategy: StrategyService
   ) {}
 
@@ -59,37 +62,39 @@ export class PassportController {
         throw new UnauthorizedException("Identifier or password was incorrect.");
       }
     } else {
-      if (!this.assertObservers.has(state)) {
+      if (!assertObservers.has(state)) {
         throw new BadRequestException("Authentication has failed due to invalid state.");
       }
 
-      const observer = this.assertObservers.get(state);
+      const observer = assertObservers.get(state);
 
       const {user} = await observer
         .pipe(
           timeout(60000),
           take(1),
           catchError(error => {
-            this.assertObservers.delete(state);
+            assertObservers.delete(state);
             return throwError(
               error && error.name == "TimeoutError"
                 ? new GatewayTimeoutException("Operation did not complete within one minute.")
-                : new UnauthorizedException(String(error))
+                : new UnauthorizedException(JSON.stringify(error))
             );
           })
         )
         .toPromise();
-      this.assertObservers.delete(state);
+      assertObservers.delete(state);
 
-      if (!user || (user && !user.upn)) {
+      const idenfitifer = user ? user.upn || user.name_id || user.email : undefined;
+
+      if (!idenfitifer) {
         throw new InternalServerErrorException("Authentication has failed.");
       }
 
-      identity = await this.identity.findOne({identifier: user.upn});
+      identity = await this.identity.findOne({identifier: idenfitifer});
 
       if (!identity) {
         identity = await this.identity.insertOne({
-          identifier: user.upn,
+          identifier: idenfitifer,
           password: undefined,
           policies: []
         });
@@ -111,37 +116,39 @@ export class PassportController {
         throw new UnauthorizedException("Identifier or password was incorrect.");
       }
     } else {
-      if (!this.assertObservers.has(credentials.state)) {
+      if (!assertObservers.has(credentials.state)) {
         throw new BadRequestException("Authentication has failed due to invalid state.");
       }
 
-      const observer = this.assertObservers.get(credentials.state);
+      const observer = assertObservers.get(credentials.state);
 
       const {user} = await observer
         .pipe(
           timeout(60000),
           take(1),
           catchError(error => {
-            this.assertObservers.delete(credentials.state);
+            assertObservers.delete(credentials.state);
             return throwError(
               error && error.name == "TimeoutError"
                 ? new GatewayTimeoutException("Operation did not complete within one minute.")
-                : new UnauthorizedException(String(error))
+                : new UnauthorizedException(JSON.stringify(error))
             );
           })
         )
         .toPromise();
-      this.assertObservers.delete(credentials.state);
+      assertObservers.delete(credentials.state);
 
-      if (!user || (user && !user.upn)) {
+      const idenfitifer = user ? user.upn || user.name_id || user.email : undefined;
+
+      if (!idenfitifer) {
         throw new InternalServerErrorException("Authentication has failed.");
       }
 
-      identity = await this.identity.findOne({identifier: user.upn});
+      identity = await this.identity.findOne({identifier: idenfitifer});
 
       if (!identity) {
         identity = await this.identity.insertOne({
-          identifier: user.upn,
+          identifier: idenfitifer,
           password: undefined,
           policies: []
         });
@@ -153,24 +160,29 @@ export class PassportController {
 
   @Get("strategies")
   async strategies() {
-    const strategies = await this.strategy.find();
-    return strategies.map(({name, icon, type, title}) => ({name, icon, type, title}));
+    return this.strategy.aggregate([{$project: {options: 0}}]).toArray();
   }
 
-  @Get("strategy/:name/url")
-  async getUrl(@Param("name") name: string) {
-    const login = await this.saml.getLoginUrl(name);
+  @Get("strategy/:id/url")
+  async getUrl(@Param("id", OBJECT_ID) id: ObjectId) {
+    const strategy = await this.strategy.findOne({_id: id});
 
-    if (!name) {
-      throw new BadRequestException("strategy parameter is required.");
+    if (!strategy) {
+      throw new BadRequestException("Strategy does not exist.");
     }
+
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+
+    const login = await service.getLoginUrl(strategy);
 
     if (!login) {
       throw new InternalServerErrorException("Cannot generate login url.");
     }
 
     const observer = new Subject();
-    this.assertObservers.set(login.state, observer);
+
+    assertObservers.set(login.state, observer);
+
     return login;
   }
 
@@ -180,26 +192,38 @@ export class PassportController {
     return this.saml.createMetadata(name);
   }
 
-  @Post("strategy/:name/complete")
+  @All("strategy/:id/complete")
   @UseInterceptors(UrlEncodedBodyParser())
   @HttpCode(HttpStatus.NO_CONTENT)
   async complete(
-    @Param("name") name: string,
+    @Param("id", OBJECT_ID) id: ObjectId,
     @Body() body: unknown,
-    @Query("state") stateId: string
+    @Query("state") stateId: string,
+    @Query("code") code: string
   ) {
     if (!stateId) {
       throw new BadRequestException("state query parameter is required.");
     }
-    if (!this.assertObservers.has(stateId)) {
+
+    if (!assertObservers.has(stateId)) {
       throw new BadRequestException("Authentication has failed due to invalid state.");
     }
-    const observer = this.assertObservers.get(stateId);
-    try {
-      const identity = await this.saml.assert(name, body);
-      return observer.next(identity);
-    } catch (error) {
-      return observer.error(error);
+
+    const strategy = await this.strategy.findOne({_id: id});
+
+    if (!strategy) {
+      throw new BadRequestException("Strategy does not exist.");
     }
+
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+
+    const observer = assertObservers.get(stateId);
+
+    return service
+      .assert(strategy, body, code)
+      .then(identity => {
+        observer.next(identity);
+      })
+      .catch(e => observer.error(e));
   }
 }
