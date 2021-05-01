@@ -16,6 +16,7 @@ import {RouterTestingModule} from "@angular/router/testing";
 import {of, throwError} from "rxjs";
 import {StrategyService} from "../../services/strategy.service";
 import {StrategiesAddComponent} from "./strategies-add.component";
+import {MatSelectModule} from "@angular/material/select";
 
 describe("Strategies Add Component", () => {
   let fixture: ComponentFixture<StrategiesAddComponent>;
@@ -27,7 +28,7 @@ describe("Strategies Add Component", () => {
       getStrategy: jasmine.createSpy("getStrategies").and.returnValue(
         of({
           _id: "1",
-          type: "strategy type",
+          type: "saml",
           name: "strategy name",
           title: "strategy title",
           icon: "strategy icon",
@@ -61,7 +62,8 @@ describe("Strategies Add Component", () => {
         FormsModule,
         MatExpansionModule,
         MatInputModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        MatSelectModule
       ],
       providers: [
         {
@@ -106,9 +108,9 @@ describe("Strategies Add Component", () => {
 
       expect(
         fixture.debugElement
-          .query(By.css("mat-card-content mat-form-field:nth-child(4) input"))
+          .query(By.css("mat-card-content mat-form-field:nth-child(4) mat-select"))
           .injector.get(NgModel).value
-      ).toBe("strategy type", "should show strategy type value");
+      ).toBe("saml", "should show strategy type value");
 
       expect(
         fixture.debugElement
@@ -182,7 +184,7 @@ describe("Strategies Add Component", () => {
       expect(updateSpy).toHaveBeenCalledTimes(1);
       expect(updateSpy).toHaveBeenCalledWith("1", {
         _id: "1",
-        type: "strategy type",
+        type: "saml",
         name: "new name",
         title: "new title",
         icon: "strategy icon",
@@ -201,23 +203,6 @@ describe("Strategies Add Component", () => {
 
       expect(navigateSpy).toHaveBeenCalledTimes(1);
       expect(navigateSpy).toHaveBeenCalledWith(["passport/strategies"]);
-    }));
-  });
-
-  describe("errors", () => {
-    it("should show certificate error", fakeAsync(() => {
-      spyOn(fixture.componentInstance["strategyService"], "updateStrategy").and.returnValue(
-        throwError(null)
-      );
-
-      fixture.debugElement.query(By.css("mat-card-actions button")).nativeElement.click();
-      tick();
-      fixture.detectChanges();
-
-      expect(
-        fixture.debugElement.query(By.css("mat-card-content mat-form-field:nth-child(7) mat-error"))
-          .nativeElement.textContent
-      ).toBe(" Certificate must match Pem format. ");
     }));
   });
 });

@@ -10,17 +10,22 @@ import {
   Put,
   UseGuards
 } from "@nestjs/common";
+import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import * as forge from "node-forge";
+import {OAuthService} from "./services/oauth.service";
 import {PassportOptions, PASSPORT_OPTIONS} from "../options";
+import {SamlService} from "./services/saml.service";
+import {getStrategyService} from "../utilities";
 import {Strategy} from "./interface";
-import {StrategyService} from "./strategy.service";
+import {StrategyService} from "./services/strategy.service";
 
 @Controller("passport/strategy")
 export class StrategyController {
   constructor(
     private strategy: StrategyService,
+    private saml: SamlService,
+    private oauth: OAuthService,
     @Inject(PASSPORT_OPTIONS) private options: PassportOptions
   ) {}
 
@@ -36,7 +41,7 @@ export class StrategyController {
     return this.strategy.findOne({_id: id}).then(strategy => {
       strategy[
         "callbackUrl"
-      ] = `${this.options.publicUrl}/passport/strategy/${strategy.name}/complete`;
+      ] = `${this.options.publicUrl}/passport/strategy/${strategy._id}/complete`;
       return strategy;
     });
   }
@@ -49,68 +54,48 @@ export class StrategyController {
 
   @Post()
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:insert"))
-  insertOne(@Body() strategy: Strategy) {
+  async insertOne(@Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy) {
     delete strategy._id;
 
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+
     try {
-      forge.pki.certificateFromPem(strategy.options.ip.certificate);
+      service.prepareToInsert(strategy);
     } catch (error) {
-      throw new BadRequestException(error.message, "Invalid Certificate");
+      throw new BadRequestException(error.message);
     }
 
-    generateCertificatesIfNeeded(strategy, this.options.samlCertificateTTL);
+    let insertedStrategy = await this.strategy.insertOne(strategy);
 
-    return this.strategy.insertOne(strategy);
+    if (service.afterInsert) {
+      insertedStrategy = await service.afterInsert(insertedStrategy);
+    }
+
+    return insertedStrategy;
   }
 
   @Put(":id")
   @UseGuards(AuthGuard(), ActionGuard("passport:strategy:update"))
-  replaceOne(@Param("id", OBJECT_ID) id: ObjectId, @Body() strategy: Strategy) {
+  async replaceOne(
+    @Param("id", OBJECT_ID) id: ObjectId,
+    @Body(Schema.validate("http://spica.internal/strategy")) strategy: Strategy
+  ) {
     delete strategy._id;
 
+    const service = getStrategyService([this.saml, this.oauth], strategy.type);
+
     try {
-      forge.pki.certificateFromPem(strategy.options.ip.certificate);
+      service.prepareToInsert(strategy);
     } catch (error) {
-      throw new BadRequestException(error.message, "Invalid Certificate");
+      throw new BadRequestException(error);
     }
 
-    generateCertificatesIfNeeded(strategy, this.options.samlCertificateTTL);
+    let insertedStrategy = await this.strategy.findOneAndReplace({_id: id}, strategy);
 
-    return this.strategy.findOneAndReplace({_id: id}, strategy);
-  }
-}
-
-function generateCertificatesIfNeeded(strategy: Strategy, ttl: number) {
-  if (strategy.options.sp) {
-    try {
-      const {validity} = forge.pki.certificateFromPem(strategy.options.sp.certificate);
-      if (validity.notAfter < new Date()) {
-        strategy.options.sp = undefined;
-      }
-    } catch {
-      strategy.options.sp = undefined;
+    if (service.afterInsert) {
+      insertedStrategy = await service.afterInsert(insertedStrategy);
     }
-  }
 
-  if (!strategy.options.sp) {
-    const keys = forge.pki.rsa.generateKeyPair(2048);
-    const cert = forge.pki.createCertificate();
-    const attrs: forge.pki.CertificateField[] = [
-      {name: "commonName", value: "spica.io"},
-      {name: "organizationName", value: "spica"}
-    ];
-
-    cert.publicKey = keys.publicKey;
-    cert.validity.notBefore = new Date();
-    cert.validity.notAfter = new Date();
-    cert.validity.notAfter.setSeconds(cert.validity.notBefore.getSeconds() + ttl);
-
-    cert.setSubject(attrs);
-    cert.setIssuer(attrs);
-    cert.sign(keys.privateKey);
-    strategy.options.sp = {
-      certificate: forge.pki.certificateToPem(cert),
-      private_key: forge.pki.privateKeyToPem(keys.privateKey)
-    };
+    return insertedStrategy;
   }
 }

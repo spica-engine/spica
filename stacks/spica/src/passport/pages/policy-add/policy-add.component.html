@@ -53,7 +53,7 @@
             <mat-form-field>
               <mat-select
                 placeholder="Module"
-                name="statement.module + 'name'"
+                [name]="statement.module + 'name'"
                 (ngModelChange)="onModuleChange(statement)"
                 [(ngModel)]="statement.module"
                 required
