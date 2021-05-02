@@ -81,7 +81,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
   $markers = new Subject<unknown[]>();
 
-  triggersEditMode = [true];
+  triggersEditMode = [];
 
   batchingDeadline: number = 0;
 
@@ -95,6 +95,15 @@ export class AddComponent implements OnInit, OnDestroy {
     fullScreenElement: "",
     exit: ""
   };
+
+  sections = {
+    triggers: true,
+    dependencies: false,
+    envs: false,
+    optionals: false
+  };
+  editName = false;
+  editDescription = false;
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -133,7 +142,7 @@ export class AddComponent implements OnInit, OnDestroy {
           this.$save = of(SavingState.Pristine);
           this.function = normalizeFunction(fn);
           for (const [index, trigger] of this.function.triggers.entries()) {
-            this.triggersEditMode[index] = true;
+            this.triggersEditMode[index] = false;
             if (trigger.batch) {
               this.batching = true;
               this.maxBatchCount = Math.max(this.maxBatchCount, trigger.batch.limit);

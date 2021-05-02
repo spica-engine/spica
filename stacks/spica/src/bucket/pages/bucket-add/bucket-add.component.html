@@ -43,15 +43,27 @@
       </h4>
     </span>
     <div class="actions">
-      <button mat-button (click)="configurationState = 'meta'">
+      <button
+        mat-button
+        (click)="configurationState = 'meta'"
+        [class.mat-flat-button]="configurationState == 'meta'"
+      >
         <mat-icon>view_module</mat-icon>
         Configure the meta
       </button>
-      <button mat-button (click)="configurationState = 'view'">
+      <button
+        mat-button
+        (click)="configurationState = 'view'"
+        [class.mat-flat-button]="configurationState == 'view'"
+      >
         <mat-icon>text_fields</mat-icon>
         Configure the view
       </button>
-      <button mat-button (click)="configurationState = 'rules'">
+      <button
+        mat-button
+        (click)="configurationState = 'rules'"
+        [class.mat-flat-button]="configurationState == 'rules'"
+      >
         <mat-icon>gavel</mat-icon>
         Configure rules
       </button>

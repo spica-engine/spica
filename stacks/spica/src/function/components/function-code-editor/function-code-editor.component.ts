@@ -25,12 +25,11 @@ declare const require: any;
     `
       :host {
         display: block;
-        height: calc(100vh - 100px);
       }
 
       .editor-container {
         width: 100%;
-        height: 98%;
+        height: 100%;
       }
     `
   ],
