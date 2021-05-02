@@ -27,9 +27,7 @@
           pnm.control.markAsUntouched()
         "
         [(ngModel)]="parentSchema.properties[propertyKey].title"
-        required
       />
-      <mat-error *ngIf="pnm?.errors?.required">This field is required.</mat-error>
     </mat-form-field>
     <mat-form-field>
       <textarea
@@ -38,21 +36,9 @@
         placeholder="Description"
         #dm="ngModel"
         [(ngModel)]="parentSchema.properties[propertyKey].description"
-        required
-        minlength="5"
-        maxlength="250"
         rows="3"
       ></textarea>
       <mat-hint align="end"> {{ dm.value?.length || 0 }} / 250 </mat-hint>
-      <mat-error *ngIf="dm?.errors?.required">This field is required.</mat-error>
-      <mat-error *ngIf="dm?.errors?.minlength">
-        Length of the description must be greater than
-        {{ dm?.errors.minlength?.requiredLength }} character.
-      </mat-error>
-      <mat-error *ngIf="dm?.errors?.maxlength">
-        Length of the description must be less than
-        {{ dm?.errors.maxlength?.requiredLength }} character.
-      </mat-error>
     </mat-form-field>
     <div class="advanced-settings">
       <span

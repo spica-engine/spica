@@ -5,6 +5,7 @@ import WebhookFullAccess from "./webhook.fullaccess";
 import WebhookReadOnlyAccess from "./webhook.readonly";
 
 import FunctionFullAccess from "./function.fullaccess";
+import FunctionReadOnlyAccess from "./function.readonly";
 
 import DashboardFullAccess from "./dashboard.fullaccess";
 import DashboardReadOnlyAccess from "./dashboard.readonly";
@@ -59,6 +60,7 @@ export default [
   WebhookReadOnlyAccess,
 
   FunctionFullAccess,
+  FunctionReadOnlyAccess,
 
   DashboardFullAccess,
   DashboardReadOnlyAccess,
