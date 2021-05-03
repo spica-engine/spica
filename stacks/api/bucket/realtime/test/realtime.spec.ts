@@ -2,16 +2,17 @@ import {ForbiddenException, INestApplication, UnauthorizedException} from "@nest
 import {Test} from "@nestjs/testing";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketModule} from "@spica-server/bucket/src";
-import {CoreTestingModule, Request, Websocket} from "@spica-server/core/testing";
+import {CoreTestingModule, Request, Websocket, Client} from "@spica-server/core/testing";
 import {WsAdapter} from "@spica-server/core/websocket";
 import {ChunkKind} from "@spica-server/database/realtime";
-import {DatabaseTestingModule} from "@spica-server/database/testing";
+import {DatabaseTestingModule, stream} from "@spica-server/database/testing";
 import {GuardService} from "@spica-server/passport";
 import {PassportTestingModule} from "@spica-server/passport/testing";
 import {PreferenceTestingModule} from "@spica-server/preference/testing";
 import {SchemaModule} from "@spica-server/core/schema";
 import {OBJECTID_STRING, DATE_TIME, OBJECT_ID} from "@spica-server/core/schema/formats";
 import {CREATED_AT, UPDATED_AT} from "@spica-server/core/schema/defaults";
+import {RealtimeGateway} from "../src/realtime.gateway";
 
 function url(path: string, query?: {[k: string]: string | number | boolean | object}) {
   const url = new URL(path, "ws://insteadof");
@@ -25,8 +26,8 @@ function url(path: string, query?: {[k: string]: string | number | boolean | obj
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
 
-function waitForCursorInitialization() {
-  return new Promise(resolve => setTimeout(resolve, 3000));
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 describe("Realtime", () => {
@@ -51,12 +52,11 @@ describe("Realtime", () => {
         }),
         DatabaseTestingModule.replicaSet(),
         CoreTestingModule,
-        RealtimeModule,
         PreferenceTestingModule,
         BucketModule.forRoot({
           history: false,
           hooks: false,
-          realtime: false,
+          realtime: true,
           cache: false
         }),
         PassportTestingModule.initialize()
@@ -78,36 +78,24 @@ describe("Realtime", () => {
       }
     });
     bucket = bkt;
-    rows = [
-      await insertRow({
-        title: "first"
-      }),
-      await insertRow({
-        title: "second"
-      })
-    ];
+
+    jasmine.addCustomEqualityTester((actual, expected) => {
+      if (expected == "__objectid__" && typeof actual == typeof expected) {
+        return true;
+      }
+    });
   });
 
-  afterEach(() => app.close());
+  afterEach(async () => await app.close());
 
   describe("authorization", () => {
     let authGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAuthorization>;
     let actionGuardCheck: jasmine.Spy<typeof GuardService.prototype.checkAction>;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       const guardService = app.get(GuardService);
       authGuardCheck = spyOn(guardService, "checkAuthorization");
       actionGuardCheck = spyOn(guardService, "checkAction");
-      const {body: bkt} = await req.post("/bucket", {
-        title: "Realtime",
-        description: "Realtime",
-        properties: {
-          title: {
-            type: "string"
-          }
-        }
-      });
-      bucket = bkt;
     });
 
     it("should authorize and do the initial sync", async done => {
@@ -135,7 +123,7 @@ describe("Realtime", () => {
       });
       ws.onclose = done;
       ws.onmessage = e => {
-        expect(e.data).toEqual(`{"kind":-1,"code":401,"message":"Unauthorized"}`);
+        expect(e.data).toEqual(`{"kind":-1,"status":401,"message":"Unauthorized"}`);
       };
     });
 
@@ -151,123 +139,434 @@ describe("Realtime", () => {
       ws.onclose = done;
       ws.onmessage = e => {
         expect(e.data).toEqual(
-          `{"kind":-1,"code":403,"message":"You do not have sufficient permissions to do this action."}`
+          `{"kind":-1,"status":403,"message":"You do not have sufficient permissions to do this action."}`
         );
       };
     });
   });
 
-  it("should do the initial sync", async () => {
-    const ws = wsc.get(`/bucket/${bucket._id}/data`);
-    const message = jasmine.createSpy();
-    ws.onmessage = e => message(JSON.parse(e.data as string));
-    await ws.connect;
+  describe("documents", () => {
+    const messageSpy = jasmine.createSpy();
 
-    await waitForCursorInitialization();
+    beforeEach(async () => {
+      rows = [
+        await insertRow({
+          title: "first"
+        }),
+        await insertRow({
+          title: "second"
+        })
+      ];
 
-    await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
-      {kind: ChunkKind.Initial, document: rows[0]},
-      {kind: ChunkKind.Initial, document: rows[1]},
-      {kind: ChunkKind.EndOfInitial}
-    ]);
-  });
+      messageSpy.calls.reset();
+    });
 
-  it("should do the initial sync with filter", async () => {
-    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `title == "second"`}));
-    const message = jasmine.createSpy();
-    ws.onmessage = e => message(JSON.parse(e.data as string));
-    await ws.connect;
+    describe("initial sync", () => {
+      const lastMessage = JSON.stringify({kind: ChunkKind.EndOfInitial});
 
-    await waitForCursorInitialization();
+      it("should do the initial sync", async done => {
+        const ws = wsc.get(`/bucket/${bucket._id}/data`);
 
-    await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
-      {kind: ChunkKind.Initial, document: rows[1]},
-      {kind: ChunkKind.EndOfInitial}
-    ]);
-  });
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
 
-  it("should do the initial sync with _id filter", async () => {
-    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `_id == "${rows[0]["_id"]}"`}));
-    const message = jasmine.createSpy();
-    ws.onmessage = e => message(JSON.parse(e.data as string));
-    await ws.connect;
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
 
-    await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
-      {kind: ChunkKind.Initial, document: rows[0]},
-      {kind: ChunkKind.EndOfInitial}
-    ]);
-  });
+            await ws.close();
+            done();
+          }
+        };
 
-  it("should do the initial sync with limit", async () => {
-    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {limit: 1}));
-    const message = jasmine.createSpy();
-    ws.onmessage = e => message(JSON.parse(e.data as string));
-    await ws.connect;
+        await ws.connect;
+      });
 
-    await waitForCursorInitialization();
+      it("should do the initial sync with filter", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {filter: `title == "second"`}));
 
-    await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
-      {kind: ChunkKind.Initial, document: rows[0]},
-      {kind: ChunkKind.EndOfInitial}
-    ]);
-  });
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
 
-  it("should do the initial sync with skip", async () => {
-    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1}));
-    const message = jasmine.createSpy();
-    ws.onmessage = e => message(JSON.parse(e.data as string));
-    await ws.connect;
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
 
-    await waitForCursorInitialization();
+            await ws.close();
+            done();
+          }
+        };
 
-    await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
-      {kind: ChunkKind.Initial, document: rows[1]},
-      {kind: ChunkKind.EndOfInitial}
-    ]);
-  });
+        await ws.connect;
+      });
 
-  it("should do the initial sync with skip and limit", async () => {
-    const newRows = [
-      await insertRow({
-        title: "third"
-      }),
-      await insertRow({
-        title: "fourth"
-      })
-    ];
-    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1, limit: 2}));
-    const message = jasmine.createSpy();
-    ws.onmessage = e => message(JSON.parse(e.data as string));
-    await ws.connect;
+      it("should do the initial sync with _id filter", async done => {
+        const ws = wsc.get(
+          url(`/bucket/${bucket._id}/data`, {filter: `_id == "${rows[0]["_id"]}"`})
+        );
 
-    await waitForCursorInitialization();
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
 
-    await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
-      {kind: ChunkKind.Initial, document: rows[1]},
-      {kind: ChunkKind.Initial, document: newRows[0]},
-      {kind: ChunkKind.EndOfInitial}
-    ]);
-  });
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
 
-  it("should do the initial sync with sort", async () => {
-    const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {sort: {_id: -1}}));
-    const message = jasmine.createSpy();
-    ws.onmessage = e => message(JSON.parse(e.data as string));
-    await ws.connect;
+            await ws.close();
+            done();
+          }
+        };
 
-    await waitForCursorInitialization();
+        await ws.connect;
+      });
 
-    await ws.close();
-    expect(message.calls.allArgs().map(c => c[0])).toEqual([
-      {kind: ChunkKind.Initial, document: rows[1]},
-      {kind: ChunkKind.Initial, document: rows[0]},
-      {kind: ChunkKind.EndOfInitial}
-    ]);
+      it("should do the initial sync with limit", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {limit: 1}));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
+      });
+
+      it("should do the initial sync with skip", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1}));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
+      });
+
+      it("should do the initial sync with skip and limit", async done => {
+        const newRows = [
+          await insertRow({
+            title: "third"
+          }),
+          await insertRow({
+            title: "fourth"
+          })
+        ];
+
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {skip: 1, limit: 2}));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.Initial, document: newRows[0]},
+
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
+      });
+
+      it("should do the initial sync with sort", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`, {sort: {_id: -1}}));
+
+        ws.onmessage = async e => {
+          messageSpy(JSON.parse(e.data as string));
+
+          if (e.data == lastMessage) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.EndOfInitial}
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
+      });
+    });
+
+    //@TODO: enable them when you find a way to solve the timeout problem
+    xdescribe("sending message", () => {
+      it("should perform insert action and send changes to the clients", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
+
+        ws.onmessage = e => {
+          messageSpy(JSON.parse(e.data as string));
+        };
+
+        await ws.connect;
+
+        const controller = app.get(RealtimeGateway);
+        const client = controller.clients.keys().next().value;
+
+        const document = {title: "title"};
+
+        await controller.insert(client, document);
+
+        await stream.change.next();
+
+        await ws.close();
+
+        expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+          {kind: ChunkKind.Initial, document: rows[0]},
+          {kind: ChunkKind.Initial, document: rows[1]},
+          {kind: ChunkKind.EndOfInitial},
+          {kind: ChunkKind.Response, status: 201, message: "Created"},
+          {
+            kind: ChunkKind.Insert,
+            document: {_id: "__objectid__", title: "title"}
+          }
+        ]);
+      });
+
+      it("should perform replace action and send changes to the clients", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
+
+        const lastMessageKind = ChunkKind.Replace;
+
+        ws.onmessage = async e => {
+          const message = JSON.parse(e.data as string);
+
+          messageSpy(message);
+
+          if (message.kind == lastMessageKind) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial},
+              {kind: ChunkKind.Response, status: 200, message: "OK"},
+              {
+                kind: ChunkKind.Replace,
+                document: {_id: rows[0]._id.toString(), title: "updated_title"}
+              }
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
+
+        const controller = app.get(RealtimeGateway);
+        const client = controller.clients.keys().next().value;
+
+        const document = {_id: rows[0]._id.toString(), title: "updated_title"};
+
+        await controller.replace(client, document);
+      });
+
+      it("should perform patch action and send changes to the clients", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
+
+        const lastMessageKind = ChunkKind.Update;
+
+        ws.onmessage = async e => {
+          const message = JSON.parse(e.data as string);
+          messageSpy(message);
+
+          if (message.kind == lastMessageKind) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial},
+              {kind: ChunkKind.Response, status: 204, message: "No Content"},
+              {
+                kind: ChunkKind.Update,
+                document: {_id: rows[0]._id.toString()}
+              }
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
+
+        const controller = app.get(RealtimeGateway);
+
+        const client = controller.clients.keys().next().value;
+        const document = {_id: rows[0]._id.toString(), title: null};
+
+        await controller.patch(client, document);
+      });
+
+      it("should perform delete action and send changes to the clients", async done => {
+        const ws = wsc.get(url(`/bucket/${bucket._id}/data`));
+
+        const lastMessageKind = ChunkKind.Delete;
+
+        ws.onmessage = async e => {
+          const message = JSON.parse(e.data as string);
+          messageSpy(message);
+
+          if (message.kind == lastMessageKind) {
+            expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+              {kind: ChunkKind.Initial, document: rows[0]},
+              {kind: ChunkKind.Initial, document: rows[1]},
+              {kind: ChunkKind.EndOfInitial},
+              {kind: ChunkKind.Response, status: 204, message: "No Content"},
+              {
+                kind: ChunkKind.Delete,
+                document: {_id: rows[0]._id.toString()}
+              }
+            ]);
+
+            await ws.close();
+            done();
+          }
+        };
+
+        await ws.connect;
+
+        const controller = app.get(RealtimeGateway);
+
+        const client = controller.clients.keys().next().value;
+        const document = {_id: rows[0]._id.toString()};
+
+        await controller.delete(client, document);
+      });
+    });
+
+    describe("errors", () => {
+      const lastMessageKind = ChunkKind.Response;
+
+      describe("schema validation", () => {
+        let validationBucket: any = {
+          title: "Realtime",
+          description: "Realtime",
+          properties: {
+            title: {
+              type: "string"
+            }
+          },
+          required: ["title"]
+        };
+        beforeEach(async () => {
+          await req.post("/bucket", validationBucket).then(res => (validationBucket = res.body));
+        });
+
+        it("should reject operation and send errors to the client", async done => {
+          const ws = wsc.get(url(`/bucket/${validationBucket._id}/data`));
+
+          ws.onmessage = async e => {
+            const message = JSON.parse(e.data as string);
+
+            messageSpy(message);
+
+            if (message.kind == lastMessageKind) {
+              expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+                {kind: ChunkKind.EndOfInitial},
+                {
+                  kind: ChunkKind.Response,
+                  status: 400,
+                  message: " should have required property 'title'"
+                }
+              ]);
+
+              await ws.close();
+              done();
+            }
+          };
+
+          await ws.connect;
+
+          const controller = app.get(RealtimeGateway);
+          const client = controller.clients.keys().next().value;
+
+          const document = {};
+
+          await controller.insert(client, document);
+        });
+      });
+
+      describe("rule", () => {
+        let ruleBucket: any = {
+          title: "Realtime",
+          description: "Realtime",
+          properties: {
+            title: {
+              type: "string"
+            }
+          },
+          acl: {
+            write: "true==false",
+            read: "true==true"
+          }
+        };
+        beforeEach(async () => {
+          await req.post("/bucket", ruleBucket).then(res => (ruleBucket = res.body));
+        });
+
+        it("should reject operation cause of rule", async done => {
+          const ws = wsc.get(url(`/bucket/${ruleBucket._id}/data`));
+
+          ws.onmessage = async e => {
+            const message = JSON.parse(e.data as string);
+
+            messageSpy(message);
+
+            if (message.kind == lastMessageKind) {
+              expect(messageSpy.calls.allArgs().map(c => c[0])).toEqual([
+                {kind: ChunkKind.EndOfInitial},
+                {
+                  kind: ChunkKind.Response,
+                  status: 401,
+                  message: "ACL rules has rejected this operation."
+                }
+              ]);
+
+              await ws.close();
+              done();
+            }
+          };
+
+          await ws.connect;
+
+          const controller = app.get(RealtimeGateway);
+          const client = controller.clients.keys().next().value;
+
+          const document = {title: "reject_this"};
+
+          await controller.insert(client, document);
+        });
+      });
+    });
   });
 });

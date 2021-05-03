@@ -1,6 +1,7 @@
 import axios, {AxiosRequestConfig, AxiosInstance, AxiosResponse} from "axios";
 
 export interface HttpService {
+  baseUrl: string;
   setBaseUrl(url: string): void;
   setAuthorization(authorization: string): void;
   setWriteDefaults(writeDefaults: {headers: {[key: string]: string}}): void;
@@ -21,6 +22,7 @@ export function logWarning(response: any) {
 
 export class Axios implements HttpService {
   private instance: AxiosInstance;
+  baseUrl: string;
 
   private readonly interceptors = {
     request: {
@@ -54,10 +56,13 @@ export class Axios implements HttpService {
       this.interceptors.request.onFulfilled,
       this.interceptors.request.onRejected
     );
+
     this.instance.interceptors.response.use(
       this.interceptors.response.onFulfilled,
       this.interceptors.response.onRejected
     );
+
+    this.baseUrl = this.instance.defaults.baseURL;
   }
 
   setBaseUrl(url: string) {
