@@ -18,6 +18,7 @@ ts_library(
         "//packages/database",
         "//stacks/api/activity/services",
         "//stacks/api/bucket/cache",
+        "//stacks/api/bucket/common",
         "//stacks/api/bucket/expression",
         "//stacks/api/bucket/history",
         "//stacks/api/bucket/hooks",
@@ -38,8 +39,6 @@ ts_library(
         "@npm//express-graphql",
         "@npm//graphql",
         "@npm//graphql-tools",
-        "@npm//json-merge-patch",
-        "@npm//locale",
         "@npm//rxjs",
     ],
 )
