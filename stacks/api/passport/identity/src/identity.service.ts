@@ -52,6 +52,10 @@ export class IdentityService extends BaseCollection<Identity>("identity") {
     };
   }
 
+  verify(token: string) {
+    return this.jwt.verifyAsync(token);
+  }
+
   async identify(identifier: string, password: string): Promise<Identity | null> {
     if (!password) {
       return null;
