@@ -1,4 +1,4 @@
-import {provideLanguageFinalizer} from "@spica-server/bucket/src/locale";
+import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 
 describe("provideLanguageChangeUpdater", () => {
   let childrenSpy: jasmine.Spy;

@@ -5,7 +5,7 @@ import {
   isObject,
   isDesiredRelation,
   RelationType
-} from "@spica-server/bucket/src/relation";
+} from "@spica-server/bucket/common";
 
 describe("Relation", () => {
   it("should check whether schema is object or not", () => {

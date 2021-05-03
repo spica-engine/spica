@@ -21,8 +21,7 @@ import {Bucket, BucketDataService, BucketService} from "@spica-server/bucket/ser
 import {Schema} from "@spica-server/core/schema";
 import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard, ResourceFilter} from "@spica-server/passport/guard";
-import {createBucketActivity} from "./activity.resource";
-import {findRelations} from "./relation";
+import {findRelations, createBucketActivity} from "@spica-server/bucket/common";
 import {schemaDiff, ChangeKind} from "@spica-server/core/differ";
 import * as expression from "@spica-server/bucket/expression";
 import {BucketCacheService, invalidateCache} from "@spica-server/bucket/cache";
