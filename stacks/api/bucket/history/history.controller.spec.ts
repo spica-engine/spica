@@ -37,7 +37,7 @@ describe("History Acceptance", () => {
         DatabaseTestingModule.create(),
         PreferenceTestingModule,
         ServicesModule,
-        HistoryModule
+        HistoryModule.register()
       ]
     }).compile();
     app = module.createNestApplication();
@@ -67,7 +67,8 @@ describe("History Acceptance", () => {
             description: "Description of the row",
             options: {position: "right"}
           }
-        }
+        },
+        history: true
       });
 
     await app

@@ -1,5 +1,5 @@
 import {DynamicModule, Global, Module, Type} from "@nestjs/common";
-import {HistoryModule} from "@spica-server/bucket/history";
+import {HistoryModule, HistoryService} from "@spica-server/bucket/history";
 import {HookModule} from "@spica-server/bucket/hooks";
 import {RealtimeModule} from "@spica-server/bucket/realtime";
 import {BucketService, ServicesModule} from "@spica-server/bucket/services";
@@ -15,39 +15,36 @@ import {
   provideBucketSchemaResolver
 } from "./bucket.schema.resolver";
 import {GraphqlController} from "./graphql/graphql";
-import {provideLanguageFinalizer} from "./locale";
+import {provideLanguageFinalizer} from "@spica-server/bucket/common";
 import {registerInformers} from "./machinery";
 import {DocumentScheduler} from "./scheduler";
 
 @Module({})
 export class BucketModule {
   static forRoot(options: BucketOptions): DynamicModule {
-    const imports: (Type<any> | DynamicModule)[] = [
-      SchemaModule.forChild({
-        schemas: [
-          require("./schemas/bucket.schema.json"),
-          require("./schemas/buckets.schema.json")
-        ],
-        keywords: [bucketSpecificDefault],
-        customFields: [
-          // common,
-          "primary",
-          "options",
-          // relation
-          "bucketId",
-          "relationType",
-          "dependent",
-          // location
-          "locationType"
-        ]
-      }),
-      ServicesModule
-    ];
+    const schemaModule = SchemaModule.forChild({
+      schemas: [require("./schemas/bucket.schema.json"), require("./schemas/buckets.schema.json")],
+      keywords: [bucketSpecificDefault],
+      customFields: [
+        // common,
+        "primary",
+        "options",
+        // relation
+        "bucketId",
+        "relationType",
+        "dependent",
+        // location
+        "locationType"
+      ]
+    });
+    const imports: (Type<any> | DynamicModule)[] = [schemaModule, ServicesModule];
 
     const BucketCore = BucketCoreModule.initialize();
 
+    let BucketCache;
+
     if (options.cache) {
-      const BucketCache = BucketCacheModule.register({ttl: options.cacheTtl || 60});
+      BucketCache = BucketCacheModule.register({ttl: options.cacheTtl || 60});
       imports.push(BucketCache);
 
       BucketCore.imports.push(BucketCache as any);
@@ -62,12 +59,38 @@ export class BucketModule {
       imports.push(HookModule);
     }
 
+    let History;
+
     if (options.history) {
-      imports.push(HistoryModule);
+      History = HistoryModule.register();
+      imports.push(History);
     }
 
     if (options.realtime) {
-      imports.push(RealtimeModule);
+      const realtime = RealtimeModule.register();
+      const gateway = realtime.providers.shift();
+
+      const gatewayWithDependents = {
+        provide: gateway,
+        useClass: gateway,
+        inject: [Validator]
+      };
+
+      if (options.history) {
+        realtime.imports.push(History);
+        gatewayWithDependents.inject.push(HistoryService as any);
+      }
+
+      if (options.cache) {
+        realtime.imports.push(BucketCache);
+        gatewayWithDependents.inject.push(BucketCacheService as any);
+      }
+
+      realtime.providers.unshift(gatewayWithDependents as any);
+
+      realtime.imports.push(schemaModule as any);
+
+      imports.push(realtime);
     }
 
     return {

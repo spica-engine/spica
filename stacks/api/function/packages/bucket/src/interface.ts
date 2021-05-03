@@ -53,7 +53,15 @@ export enum ChunkKind {
   Expunge = 4,
   Update = 5,
   Replace = 6,
-  Order = 7
+  Order = 7,
+  Response = 8
+}
+
+export enum OperationKind {
+  INSERT = "insert",
+  REPLACE = "replace",
+  PATCH = "patch",
+  DELETE = "delete"
 }
 
 interface InitializeOptions {
