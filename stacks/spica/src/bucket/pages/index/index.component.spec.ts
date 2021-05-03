@@ -37,6 +37,7 @@ import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
+import {LayoutModule} from "@spica-client/core/layout";
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -98,7 +99,8 @@ describe("IndexComponent", () => {
         FormsModule,
         SpicaCommon,
         OwlDateTimeModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        LayoutModule
       ],
 
       providers: [
@@ -564,7 +566,10 @@ describe("IndexComponent", () => {
       expect(template).toEqual(["value", "value2"]);
     });
 
-    it("should return storage", () => {
+    fit("should return storage", () => {
+      // it will be hard to check
+      fixture.componentInstance.onImageError = undefined;
+
       const template = fixture.componentInstance.buildTemplate(
         "test_url",
         {type: "storage"},
@@ -572,8 +577,26 @@ describe("IndexComponent", () => {
       );
       expect(template).toEqual(
         fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
-          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=test_url alt=test_url>`
+          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=test_url alt=test_url onerror=undefined>`
         )
+      );
+    });
+
+    it("should change color of not supported image", () => {
+      fixture.componentInstance.refreshOnImageErrorStyle(true);
+
+      let invert = "invert(100%)";
+
+      expect(fixture.componentInstance.onImageError).toEqual(
+        `this.src='assets/image_not_supported.svg';this.style.width='30px';this.style.height='30px';this.style.marginLeft='45px';this.style.marginRight='45px';this.style.marginTop='10px';this.style.marginBottom='10px';this.style.filter='${invert}';`
+      );
+
+      fixture.componentInstance.refreshOnImageErrorStyle(false);
+
+      invert = "invert(0%)";
+
+      expect(fixture.componentInstance.onImageError).toEqual(
+        `this.src='assets/image_not_supported.svg';this.style.width='30px';this.style.height='30px';this.style.marginLeft='45px';this.style.marginRight='45px';this.style.marginTop='10px';this.style.marginBottom='10px';this.style.filter='${invert}';`
       );
     });
 

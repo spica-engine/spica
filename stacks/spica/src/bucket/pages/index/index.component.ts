@@ -460,9 +460,9 @@ export class IndexComponent implements OnInit, OnDestroy {
         }
         break;
       case "storage":
-        const imageStyle = "width:100px;height:100px;margin:10px;border-radius:3px";
+        const imageStyle = "width:100px; height:100px; margin:10px; border-radius:3px";
         result = this.sanitizer.bypassSecurityTrustHtml(
-          `<img id="storage-image" style=${imageStyle} src=${value} alt=${value} onerror=${this.onImageError} >`
+          `<img style='${imageStyle}' src=${value} alt=${value} onerror=${this.onImageError}>`
         );
         break;
       case "location":
