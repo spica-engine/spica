@@ -112,12 +112,13 @@ describe("@spica-devkit/Storage", () => {
     });
 
     it("should download storage object for nodejs env", () => {
-      Storage.download("storage_object_id", undefined, onDownloadProgress);
+      Storage.download("storage_object_id", {
+        onDownloadProgress
+      });
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id/view", {
-        headers: undefined,
-        onDownloadProgress: onDownloadProgress,
+        onDownloadProgress,
         responseType: "stream"
       });
     });
@@ -125,12 +126,14 @@ describe("@spica-devkit/Storage", () => {
     it("should download storage object for browser env", () => {
       global.window = {} as any;
 
-      Storage.download("storage_object_id", undefined, onDownloadProgress);
+      Storage.download("storage_object_id", {
+        onDownloadProgress
+      });
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id/view", {
         headers: undefined,
-        onDownloadProgress: onDownloadProgress,
+        onDownloadProgress,
         responseType: "blob"
       });
 
