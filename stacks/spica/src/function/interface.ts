@@ -59,7 +59,7 @@ export function emptyFunction(): NormalizedFunction {
   return {
     name: undefined,
     description: undefined,
-    triggers: [emptyTrigger("default")],
+    triggers: [],
     env: [],
     language: "javascript"
   };

@@ -75,7 +75,9 @@
       align-self: flex-end;
       overflow-x: scroll;
       margin-top: 56px;
-
+      .mat-flat-button {
+        border-bottom: 1px solid rgba(var(--foreground-base-rgb), 0.1);
+      }
       -ms-overflow-style: none; /* Internet Explorer 10+ */
       scrollbar-width: none; /* Firefox */
       &::-webkit-scrollbar {

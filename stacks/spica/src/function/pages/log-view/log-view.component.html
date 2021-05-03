@@ -68,12 +68,12 @@
   <mat-card-content>
     <mat-accordion>
       <cdk-virtual-scroll-viewport
-        itemSize="75"
+        itemSize="26"
         [minBufferPx]="bufferSize"
         [maxBufferPx]="bufferSize * 1.1"
         class="log-viewport"
       >
-        <div>
+        <div class="header">
           <span>Timestamp</span>
           <span>Name</span>
           <span>Content</span>

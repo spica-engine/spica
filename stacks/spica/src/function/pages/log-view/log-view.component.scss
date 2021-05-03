@@ -52,15 +52,15 @@
         }
         span:nth-child(1) {
           width: 15%;
-          margin: 10px 5px 10px 0px;
+          margin: 0px 5px 0px 0px;
         }
         span:nth-child(2) {
           width: 15%;
-          margin: 10px 5px;
+          margin: 0px 5px;
         }
         span:last-of-type {
           width: 70%;
-          margin: 10px 0px 10px 5px;
+          margin: 0px 0px 0px 5px;
         }
       }
 
@@ -73,9 +73,13 @@
         pre {
           white-space: pre-wrap;
           word-break: break-word;
+          font-size: 0.8rem !important;
+          line-height: 1rem;
+          margin: 0px;
         }
         .mat-expansion-panel-header {
-          height: 50px !important;
+          height: 26px !important;
+          font-size: 0.9rem !important;
         }
         .mat-expansion-panel-header {
           span {
@@ -85,18 +89,21 @@
           span:nth-child(1) {
             width: 15%;
             word-break: break-word;
-            margin: 10px 5px 10px 0px;
+            margin: 0px 5px 0px 0px;
           }
           span:nth-child(2) {
             width: 15%;
             word-break: break-word;
-            margin: 10px 5px;
+            margin: 0px 5px;
             outline: none;
             mat-icon {
               opacity: 0;
               will-change: opacity;
               transition: opacity 0.1s ease-in;
               margin-left: 15px;
+              width: 18px;
+              height: 18px;
+              font-size: 18px;
             }
             &:hover  {
               mat-icon {
@@ -111,12 +118,12 @@
             word-break: break-all;
             overflow: hidden;
             width: 70%;
-            margin: 10px 0px 10px 5px;
+            margin: 0px 0px 0px 5px;
             span {
               display: inline-block;
               width: 100%;
-              height: 30px;
-              line-height: 30px;
+              height: 26px;
+              line-height: 26px;
             }
           }
         }
