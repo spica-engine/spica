@@ -14,9 +14,12 @@ async function v1_trigger_to_internal(object: any) {
   const triggerRaw: Trigger = {
     active: true,
     type: object.spec.type,
-    batch: object.spec.batch,
     options: {}
   };
+
+  if (object.spec.batch) {
+    triggerRaw.batch = object.spec.batch;
+  }
 
   if (object.spec.type == "http") {
     triggerRaw.options = object.spec.httpOptions;
@@ -44,6 +47,8 @@ async function v1_trigger_to_internal(object: any) {
     };
   } else if (object.spec.type == "system") {
     triggerRaw.options = object.spec.systemOptions;
+  } else if (object.spec.type == "database") {
+    triggerRaw.options = object.spec.databaseOptions;
   }
 
   return triggerRaw;

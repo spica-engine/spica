@@ -14,7 +14,7 @@ const TriggerV1: JSONSchema7 = {
     },
     type: {
       type: "string",
-      enum: ["http", "bucket", "schedule", "firehose", "system"]
+      enum: ["http", "bucket", "schedule", "firehose", "system", "database"]
     },
     batch: {
       type: "object",
@@ -79,6 +79,20 @@ const TriggerV1: JSONSchema7 = {
         event: {
           type: "string",
           enum: ["READY"]
+        }
+      }
+    },
+    databaseOptions: {
+      type: "object",
+      required: ["collection", "type"],
+      additionalProperties: false,
+      properties: {
+        collection: {
+          type: "string"
+        },
+        type: {
+          type: "string",
+          enum: ["INSERT", "UPDATE", "REPLACE", "DELETE"]
         }
       }
     },
