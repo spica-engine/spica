@@ -118,6 +118,7 @@ describe("@spica-devkit/Storage", () => {
 
       expect(getSpy).toHaveBeenCalledTimes(1);
       expect(getSpy).toHaveBeenCalledWith("storage/storage_object_id/view", {
+        headers: undefined,
         onDownloadProgress,
         responseType: "stream"
       });
