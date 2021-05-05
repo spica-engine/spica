@@ -49,6 +49,17 @@ export class FunctionController {
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
+  //@TODO: think about the needed action
+  @Get("github")
+  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  async pull(@Query("repo-name") repo: string, @Query("branch-name") branch: string) {
+    const access_token = "";
+
+    return this.engine.pullCommit(repo, branch, access_token).catch(e => {
+      throw new BadRequestException(e);
+    });
+  }
+
   /**
    * @description Returns all available enqueuers, runtimes, and the timeout information.
    * @param id Identifier of the function
@@ -113,6 +124,29 @@ export class FunctionController {
     this.engine.categorizeChanges(changes);
 
     await this.engine.deleteFunction(fn);
+  }
+
+  //@TODO: think about the needed action
+  @Post("github")
+  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  async create(@Body() options: any) {
+    //assume we have access token and we want to push changes to the new repo
+    const access_token = "";
+
+    return this.engine.createRepo(options.repo_name, access_token).catch(e => {
+      throw new BadRequestException(e);
+    });
+  }
+
+  //@TODO: think about the needed action
+  @Put("github")
+  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  async push(@Body() options: any) {
+    const access_token = "";
+
+    return this.engine.pushCommit(options.branch_name, options.message, access_token).catch(e => {
+      throw new BadRequestException(e.message ? e.message : e.toString());
+    });
   }
 
   /**

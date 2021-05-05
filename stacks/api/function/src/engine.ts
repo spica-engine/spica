@@ -1,5 +1,5 @@
 import {Inject, Injectable, Optional, OnModuleDestroy} from "@nestjs/common";
-import {DatabaseService, MongoClient} from "@spica-server/database";
+import {DatabaseService, MongoClient, ObjectId} from "@spica-server/database";
 import {Scheduler} from "@spica-server/function/scheduler";
 import {Package, PackageManager} from "@spica-server/function/pkgmanager";
 import {event} from "@spica-server/function/queue/proto";
@@ -15,6 +15,7 @@ import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
 import {createTargetChanges} from "./change";
+import {GithubService} from "./github";
 
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
@@ -34,6 +35,7 @@ export class FunctionEngine implements OnModuleDestroy {
     private db: DatabaseService,
     private mongo: MongoClient,
     private scheduler: Scheduler,
+    private github: GithubService,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(SCHEMA1) schema1: SchemaWithName
@@ -92,6 +94,54 @@ export class FunctionEngine implements OnModuleDestroy {
   removePackage(fn: Function, name: string): Promise<void> {
     const functionRoot = path.join(this.options.root, fn._id.toString());
     return this.getDefaultPackageManager().uninstall(functionRoot, name);
+  }
+
+  private async extractCommitFiles() {
+    const fns = await this.fs.find({});
+
+    const files: {name: string; content: string}[] = [];
+
+    for (const fn of fns) {
+      const extension = fn.language == "typescript" ? ".ts" : ".js";
+
+      const indexPath = path.join(this.options.root, fn._id.toString(), `index${extension}`);
+      const indexName = `${fn._id}/index${extension}`;
+      const indexContent = await fs.promises.readFile(indexPath, {encoding: "utf8"});
+
+      files.push({name: indexName, content: indexContent});
+
+      const packageJsonPath = path.join(this.options.root, fn._id.toString(), "package.json");
+      const packageJsonName = `${fn._id}/package.json`;
+      const packageJsonContent = await fs.promises.readFile(packageJsonPath, {encoding: "utf8"});
+
+      files.push({name: packageJsonName, content: packageJsonContent});
+    }
+
+    return files;
+  }
+
+  async createRepo(repo: string, token: string) {
+    await this.github.createRepo(repo, token);
+
+    return this.pushCommit("main", "Initial commit from spica", token);
+  }
+
+  async pushCommit(branch: string, message: string, token: string) {
+    const files = await this.extractCommitFiles();
+
+    return this.github.pushCommit(files, branch, message, token);
+  }
+
+  async pullCommit(repo: string, branch: string, token: string) {
+    const changes = await this.github.pullCommit(repo, branch, token);
+    for (const change of changes) {
+      const functionRoot = path.join(this.options.root, change.function);
+
+      for (const file of change.files) {
+        await fs.promises.writeFile(path.join(functionRoot, file.name), file.content);
+        await fs.promises.writeFile(path.join(functionRoot, file.name), file.content);
+      }
+    }
   }
 
   async createFunction(fn: Function) {

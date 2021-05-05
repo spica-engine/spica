@@ -35,6 +35,7 @@ ts_library(
         "@npm//rimraf",
         "@npm//rxjs",
         "@npm//typescript",
+        "@npm//axios",
     ],
 )
 

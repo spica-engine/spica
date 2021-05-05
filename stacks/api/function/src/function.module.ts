@@ -6,6 +6,7 @@ import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {FunctionService} from "./function.service";
+import {GithubService} from "./github";
 import {LogModule} from "./log";
 import {registerInformers} from "./machinery";
 import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
@@ -54,7 +55,8 @@ export class FunctionModule {
           provide: EnqueuerSchemaResolver,
           useFactory: provideEnqueuerSchemaResolver,
           inject: [Validator, FunctionEngine]
-        }
+        },
+        GithubService
       ]
     };
   }
