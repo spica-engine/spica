@@ -49,14 +49,65 @@ export class FunctionController {
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
+  // @Get("github/repos")
+  // // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  // async listRepos() {
+  //   const access_token = "";
+  //   return this.engine.listRepos(access_token).catch(e => {
+  //     throw new BadRequestException(e.message ? e.message : e.toString());
+  //   });
+  // }
+
+  // @Get("github/repos/:repo/branches")
+  // // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  // async listBranches(@Param("repo") repo: string) {
+  //   const access_token = "";
+  //   return this.engine.listBranches(repo, access_token).catch(e => {
+  //     throw new BadRequestException(e.message ? e.message : e.toString());
+  //   });
+  // }
+
   //@TODO: think about the needed action
-  @Get("github")
+  @Put("github/repos/:repo/branches/:branch/commits/:commit")
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  async pull(@Query("repo-name") repo: string, @Query("branch-name") branch: string) {
+  async pull(
+    @Param("repo") repo: string,
+    @Param("branch") branch: string,
+    @Param("commit") commit: string = "latest"
+  ) {
     const access_token = "";
 
+    if (commit != "latest") {
+      throw new BadRequestException(
+        "Pulling the specific commit is still in development progress. You can use 'latest' for pulling the latest commit for now."
+      );
+    }
+
     return this.engine.pullCommit(repo, branch, access_token).catch(e => {
-      throw new BadRequestException(e);
+      throw new BadRequestException(e.message ? e.message : e.toString());
+    });
+  }
+
+  //@TODO: think about the needed action
+  @Post("github/repos/:repo/branches/:branch/commits")
+  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  async push(@Param("repo") repo: string, @Param("branch") branch: string, @Body() options: any) {
+    const access_token = "";
+
+    return this.engine.pushCommit(repo, branch, options.message, access_token).catch(e => {
+      throw new BadRequestException(e.message ? e.message : e.toString());
+    });
+  }
+
+  //@TODO: think about the needed action
+  @Post("github/repos")
+  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  async create(@Body() options: any) {
+    //assume we have access token and we want to push changes to the new repo
+    const access_token = "";
+
+    return this.engine.createRepo(options.repo, access_token).catch(e => {
+      throw new BadRequestException(e.message ? e.message : e.toString());
     });
   }
 
@@ -124,29 +175,6 @@ export class FunctionController {
     this.engine.categorizeChanges(changes);
 
     await this.engine.deleteFunction(fn);
-  }
-
-  //@TODO: think about the needed action
-  @Post("github")
-  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  async create(@Body() options: any) {
-    //assume we have access token and we want to push changes to the new repo
-    const access_token = "";
-
-    return this.engine.createRepo(options.repo_name, access_token).catch(e => {
-      throw new BadRequestException(e);
-    });
-  }
-
-  //@TODO: think about the needed action
-  @Put("github")
-  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  async push(@Body() options: any) {
-    const access_token = "";
-
-    return this.engine.pushCommit(options.branch_name, options.message, access_token).catch(e => {
-      throw new BadRequestException(e.message ? e.message : e.toString());
-    });
   }
 
   /**

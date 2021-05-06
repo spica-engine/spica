@@ -123,17 +123,17 @@ export class FunctionEngine implements OnModuleDestroy {
   async createRepo(repo: string, token: string) {
     await this.github.createRepo(repo, token);
 
-    return this.pushCommit("main", "Initial commit from spica", token);
+    return this.pushCommit(repo, "main", "Initial commit from spica", token);
   }
 
-  async pushCommit(branch: string, message: string, token: string) {
+  async pushCommit(repo: string, branch: string, message: string, token: string) {
     const files = await this.extractCommitFiles();
 
-    return this.github.pushCommit(files, branch, message, token);
+    return this.github.pushCommit(files, repo, branch, message, token);
   }
 
   async pullCommit(repo: string, branch: string, token: string) {
-    const changes = await this.github.pullCommit(repo, branch, token);
+    const changes = await this.github.pullLatestCommit(repo, branch, token);
     for (const change of changes) {
       const functionRoot = path.join(this.options.root, change.function);
 
@@ -143,6 +143,16 @@ export class FunctionEngine implements OnModuleDestroy {
       }
     }
   }
+
+  // async listRepos(token:string){
+  //   const username = await this.github.extractUsername(token);
+  //   return this.github.listRepos(username)
+  // }
+
+  // async listBranches(repo: string, token: string) {
+  //   const username = await this.github.extractUsername(token);
+  //   return this.github.listBranches(repo, username);
+  // }
 
   async createFunction(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());
