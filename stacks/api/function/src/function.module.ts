@@ -6,11 +6,13 @@ import * as path from "path";
 import {FunctionEngine} from "./engine";
 import {FunctionController} from "./function.controller";
 import {FunctionService} from "./function.service";
-import {GithubService} from "./github";
+import {Github} from "./services/github";
 import {LogModule} from "./log";
 import {registerInformers} from "./machinery";
 import {FunctionOptions, FUNCTION_OPTIONS} from "./options";
 import {EnqueuerSchemaResolver, provideEnqueuerSchemaResolver} from "./schema/enqueuer.resolver";
+import {Http, RepoStrategies} from "./services/interface";
+import {Axios} from "./services/axios";
 
 @Module({})
 export class FunctionModule {
@@ -56,7 +58,19 @@ export class FunctionModule {
           useFactory: provideEnqueuerSchemaResolver,
           inject: [Validator, FunctionEngine]
         },
-        GithubService
+        {
+          provide: Http,
+          useClass: Axios
+        },
+        {
+          provide: RepoStrategies,
+          useFactory: http => {
+            const strategies = [];
+            strategies.push(new Github(http));
+            return new RepoStrategies(strategies);
+          },
+          inject: [Http]
+        }
       ]
     };
   }

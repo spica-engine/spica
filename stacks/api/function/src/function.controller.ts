@@ -68,9 +68,10 @@ export class FunctionController {
   // }
 
   //@TODO: think about the needed action
-  @Put("github/repos/:repo/branches/:branch/commits/:commit")
+  @Put("integrations/:integration/repos/:repo/branches/:branch/commits/:commit")
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async pull(
+    @Param("integration") integration: string,
     @Param("repo") repo: string,
     @Param("branch") branch: string,
     @Param("commit") commit: string = "latest"
@@ -83,30 +84,33 @@ export class FunctionController {
       );
     }
 
-    return this.engine.pullCommit(repo, branch, access_token).catch(e => {
+    return this.engine.pullCommit(integration, repo, branch, access_token).catch(e => {
       throw new BadRequestException(e.message ? e.message : e.toString());
     });
   }
 
   //@TODO: think about the needed action
-  @Post("github/repos/:repo/branches/:branch/commits")
+  @Post("integrations/:integration/repos/:repo/branches/:branch/commits")
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  async push(@Param("repo") repo: string, @Param("branch") branch: string, @Body() options: any) {
-    const access_token = "";
-
-    return this.engine.pushCommit(repo, branch, options.message, access_token).catch(e => {
+  async push(
+    @Param("integration") integration: string,
+    @Param("repo") repo: string,
+    @Param("branch") branch: string,
+    @Body() options: any
+  ) {
+    return this.engine.pushCommit(integration, repo, branch, options.message).catch(e => {
       throw new BadRequestException(e.message ? e.message : e.toString());
     });
   }
 
   //@TODO: think about the needed action
-  @Post("github/repos")
+  @Post("integrations/:integration/repos")
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  async create(@Body() options: any) {
+  async create(@Param("integration") integration: string, @Body() options: any) {
     //assume we have access token and we want to push changes to the new repo
     const access_token = "";
 
-    return this.engine.createRepo(options.repo, access_token).catch(e => {
+    return this.engine.createRepo(integration, options.repo, access_token).catch(e => {
       throw new BadRequestException(e.message ? e.message : e.toString());
     });
   }

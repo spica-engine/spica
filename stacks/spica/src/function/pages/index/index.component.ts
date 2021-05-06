@@ -21,4 +21,6 @@ export class IndexComponent implements OnInit {
   delete(id: string): void {
     this.functionService.delete(id).toPromise();
   }
+
+  connectGithub() {}
 }

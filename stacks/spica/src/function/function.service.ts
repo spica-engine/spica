@@ -28,6 +28,8 @@ export class FunctionService {
     return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
   }
 
+  connectGithub() {}
+
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {
       if (!trigger.options.type) {

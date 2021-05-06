@@ -3,10 +3,16 @@
     <mat-icon>memory</mat-icon>
     <span>Functions</span>
   </h4>
-  <button canInteract="function:create" mat-button routerLink="add">
-    <mat-icon>add</mat-icon>
-    Add New
-  </button>
+  <div class="buttons">
+    <button canInteract="function:create" mat-button routerLink="add">
+      <mat-icon>add</mat-icon>
+      Add New
+    </button>
+    <button mat-button (click)="connectGithub()">
+      <mat-icon>power</mat-icon>
+      Connect Github
+    </button>
+  </div>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25">
   <mat-card-content>

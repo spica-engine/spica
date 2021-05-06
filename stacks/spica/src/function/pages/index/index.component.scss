@@ -13,9 +13,11 @@
       }
     }
 
-    button:last-of-type {
+    div.buttons {
       align-self: flex-end;
       margin-top: 60px;
+      display: flex;
+      flex-direction: row-reverse;
     }
   }
 

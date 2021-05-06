@@ -15,7 +15,7 @@ import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {Schema, SCHEMA, SchemaWithName, SCHEMA1} from "./schema/schema";
 import {createTargetChanges} from "./change";
-import {GithubService} from "./github";
+import {RepoStrategies} from "./services/interface";
 
 @Injectable()
 export class FunctionEngine implements OnModuleDestroy {
@@ -35,7 +35,7 @@ export class FunctionEngine implements OnModuleDestroy {
     private db: DatabaseService,
     private mongo: MongoClient,
     private scheduler: Scheduler,
-    private github: GithubService,
+    private repos: RepoStrategies,
     @Inject(FUNCTION_OPTIONS) private options: Options,
     @Optional() @Inject(SCHEMA) schema: SchemaWithName,
     @Optional() @Inject(SCHEMA1) schema1: SchemaWithName
@@ -120,20 +120,20 @@ export class FunctionEngine implements OnModuleDestroy {
     return files;
   }
 
-  async createRepo(repo: string, token: string) {
-    await this.github.createRepo(repo, token);
+  async createRepo(strategy: string, repo: string, token: string) {
+    await this.repos.find(strategy).createRepo(repo, token);
 
-    return this.pushCommit(repo, "main", "Initial commit from spica", token);
+    return this.pushCommit(strategy, repo, "main", "Initial commit from spica");
   }
 
-  async pushCommit(repo: string, branch: string, message: string, token: string) {
+  async pushCommit(strategy: string, repo: string, branch: string, message: string) {
     const files = await this.extractCommitFiles();
 
-    return this.github.pushCommit(files, repo, branch, message, token);
+    return this.repos.find(strategy).pushCommit(files, repo, branch, message);
   }
 
-  async pullCommit(repo: string, branch: string, token: string) {
-    const changes = await this.github.pullLatestCommit(repo, branch, token);
+  async pullCommit(strategy: string, repo: string, branch: string, token: string) {
+    const changes = await this.repos.find(strategy).pullCommit(repo, branch, token);
     for (const change of changes) {
       const functionRoot = path.join(this.options.root, change.function);
 

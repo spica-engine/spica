@@ -1,29 +1,21 @@
-import {Injectable} from "@nestjs/common";
 import {ObjectId} from "@spica-server/database";
-import axios, {AxiosInstance, AxiosResponse} from "axios";
+import {Http, RepoStrategy} from "./interface";
 
-@Injectable()
-export class GithubService {
+export class Github implements RepoStrategy {
   repoBaseUrl = "https://api.github.com/repos";
-  instance: AxiosInstance;
-
   username: string;
   repo: string;
   token: string;
 
+  name: string;
   private activeBranch: {name: string; head: string};
 
-  constructor() {
-    this.instance = axios.create();
-
-    this.instance.interceptors.response.use(
-      (response: AxiosResponse) => response.data,
-      error => Promise.reject(error.response ? error.response.data : error)
-    );
+  constructor(private http: Http) {
+    this.name = "github";
   }
 
   async createRepo(name: string, token: string) {
-    const {name: repo}: any = await this.instance.post(
+    const {name: repo}: any = await this.http.post(
       "https://api.github.com/user/repos",
       {name, auto_init: true},
       {headers: this.headers(token)}
@@ -47,18 +39,18 @@ export class GithubService {
 
   async listBranches(repo: string, username: string): Promise<{name: string}[]> {
     const url = `${this.repoBaseUrl}/${username}/${repo}/branches`;
-    return this.instance.get(url);
+    return this.http.get<{name: string}[]>(url);
   }
 
-  async switchBranch(branch?: string) {
+  async switchBranch(branch?: string): Promise<void> {
     if (!branch) {
       const url = `${this.repoBaseUrl}/${this.username}/${this.repo}`;
-      const {default_branch}: any = await this.instance.get(url);
+      const {default_branch}: any = await this.http.get(url);
       branch = default_branch;
     }
 
     const url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/refs/heads/${branch}`;
-    const head: any = await this.instance.get(url, {headers: this.headers(this.token)});
+    const head: any = await this.http.get(url, {headers: this.headers(this.token)});
 
     this.activeBranch = {name: branch, head: head.object.sha};
   }
@@ -67,8 +59,7 @@ export class GithubService {
     files: {name: string; content: string}[],
     repo: string,
     branch: string,
-    message: string,
-    token: string
+    message: string
   ) {
     if (this.repo != repo) {
       throw new Error(`Please connect the repository ${repo} to the spica before this action.`);
@@ -87,10 +78,10 @@ export class GithubService {
     // 1) Upload file to github
     let url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/blobs`;
     for (const file of files) {
-      const {sha: uploadedFile}: any = await this.instance.post(
+      const {sha: uploadedFile}: any = await this.http.post(
         url,
         {content: file.content},
-        {headers: this.headers(token)}
+        {headers: this.headers(this.token)}
       );
 
       tree.push({
@@ -103,23 +94,23 @@ export class GithubService {
 
     // 2) Upload new tree that includes files
     url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/trees`;
-    const {sha: uploadedTree}: any = await this.instance.post(
+    const {sha: uploadedTree}: any = await this.http.post(
       url,
       {tree},
-      {headers: this.headers(token)}
+      {headers: this.headers(this.token)}
     );
 
     // 3) Upload new commit that includes tree
     url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/commits`;
 
-    const {sha: uploadedCommit}: any = await this.instance.post(
+    const {sha: uploadedCommit}: any = await this.http.post(
       url,
       {
         message,
         tree: uploadedTree,
         parents: [this.activeBranch.head]
       },
-      {headers: this.headers(token)}
+      {headers: this.headers(this.token)}
     );
 
     // 4) Update head as it will show the new commit
@@ -129,22 +120,22 @@ export class GithubService {
     if (this.activeBranch.name != branch) {
       url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/refs`;
 
-      request = this.instance.post(
+      request = this.http.post(
         url,
         {ref: `refs/heads/${branch}`, sha: uploadedCommit},
-        {headers: this.headers(token)}
+        {headers: this.headers(this.token)}
       );
     } else {
       // update branch
       url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/refs/heads/${branch}`;
 
-      request = this.instance.patch(url, {sha: uploadedCommit}, {headers: this.headers(token)});
+      request = this.http.patch(url, {sha: uploadedCommit}, {headers: this.headers(this.token)});
     }
 
     await request;
   }
 
-  async pullLatestCommit(
+  async pullCommit(
     repo: string,
     branch: string,
     token: string
@@ -156,9 +147,9 @@ export class GithubService {
     }
 
     const url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/commits/${this.activeBranch.head}`;
-    const lastCommit: any = await this.instance.get(url);
+    const lastCommit: any = await this.http.get(url);
 
-    const {tree}: any = await this.instance.get(lastCommit.tree.url);
+    const {tree}: any = await this.http.get(lastCommit.tree.url);
 
     const changes = [];
     for (const node of tree) {
@@ -171,10 +162,10 @@ export class GithubService {
       change.function = node.path;
       change.files = [];
 
-      const {tree: files}: any = await this.instance.get(node.url);
+      const {tree: files}: any = await this.http.get(node.url);
 
       for (const file of files) {
-        const fileDetails: any = await this.instance.get(file.url);
+        const fileDetails: any = await this.http.get(file.url);
 
         let content = fileDetails.content;
         if (fileDetails.encoding == "base64") {
@@ -195,7 +186,7 @@ export class GithubService {
   }
 
   async extractUsername(token: string) {
-    return this.instance
+    return this.http
       .get("https://api.github.com/user", {
         headers: this.headers(token)
       })
