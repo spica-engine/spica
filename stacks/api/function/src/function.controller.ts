@@ -49,24 +49,6 @@ export class FunctionController {
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
-  // @Get("github/repos")
-  // // @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  // async listRepos() {
-  //   const access_token = "";
-  //   return this.engine.listRepos(access_token).catch(e => {
-  //     throw new BadRequestException(e.message ? e.message : e.toString());
-  //   });
-  // }
-
-  // @Get("github/repos/:repo/branches")
-  // // @UseGuards(AuthGuard(), ActionGuard("function:create"))
-  // async listBranches(@Param("repo") repo: string) {
-  //   const access_token = "";
-  //   return this.engine.listBranches(repo, access_token).catch(e => {
-  //     throw new BadRequestException(e.message ? e.message : e.toString());
-  //   });
-  // }
-
   //@TODO: think about the needed action
   @Put("integrations/:integration/repos/:repo/branches/:branch/commits/:commit")
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))

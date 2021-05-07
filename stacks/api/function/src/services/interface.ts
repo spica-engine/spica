@@ -9,7 +9,7 @@ export abstract class RepoStrategy {
 
   abstract switchBranch(branch: string): Promise<any>;
 
-  abstract listBranches(repo: string, username: string): Promise<any>;
+  abstract listBranches(repo: string, username: string,token:string): Promise<any>;
 
   abstract pushCommit(
     files: {name: string; content: string}[],

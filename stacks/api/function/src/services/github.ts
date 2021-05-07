@@ -15,13 +15,13 @@ export class Github implements RepoStrategy {
   }
 
   async createRepo(name: string, token: string) {
-    const {name: repo}: any = await this.http.post(
+    const {name: repo, default_branch}: any = await this.http.post(
       "https://api.github.com/user/repos",
       {name, auto_init: true},
       {headers: this.headers(token)}
     );
 
-    await this.initializeRepo(repo, token, "main");
+    await this.initializeRepo(repo, token, default_branch);
   }
 
   async initializeRepo(repo: string, token: string, branch?: string) {
@@ -37,22 +37,25 @@ export class Github implements RepoStrategy {
   //   return this.instance.get(url);
   // }
 
-  async listBranches(repo: string, username: string): Promise<{name: string}[]> {
+  async listBranches(repo: string, username: string, token: string): Promise<{name: string}[]> {
     const url = `${this.repoBaseUrl}/${username}/${repo}/branches`;
-    return this.http.get<{name: string}[]>(url);
+    return this.http.get<{name: string}[]>(url, {headers: this.headers(token)});
   }
 
-  async switchBranch(branch?: string): Promise<void> {
+  async switchBranch(branch?: string, commit?: string): Promise<void> {
     if (!branch) {
       const url = `${this.repoBaseUrl}/${this.username}/${this.repo}`;
-      const {default_branch}: any = await this.http.get(url);
+      const {default_branch}: any = await this.http.get(url, {headers: this.headers(this.token)});
       branch = default_branch;
     }
 
-    const url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/refs/heads/${branch}`;
-    const head: any = await this.http.get(url, {headers: this.headers(this.token)});
+    if (!commit) {
+      const url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/refs/heads/${branch}`;
+      const head: any = await this.http.get(url, {headers: this.headers(this.token)});
+      commit = head.object.sha;
+    }
 
-    this.activeBranch = {name: branch, head: head.object.sha};
+    this.activeBranch = {name: branch, head: commit};
   }
 
   async pushCommit(
@@ -65,12 +68,14 @@ export class Github implements RepoStrategy {
       throw new Error(`Please connect the repository ${repo} to the spica before this action.`);
     }
 
-    const existingBranches: any[] = await this.listBranches(repo, this.username);
+    if (this.activeBranch.name != branch) {
+      const existingBranches: any[] = await this.listBranches(repo, this.username, this.token);
 
-    if (existingBranches.findIndex(b => b.name == branch) != -1) {
-      throw new Error(
-        `The branch named ${branch} already exists. Please provide a non-exist branch name or switch to the branch named ${branch}. Keep in mind that your current changes will be lost if you switch to the branch named ${branch}`
-      );
+      if (existingBranches.findIndex(b => b.name == branch) != -1) {
+        throw new Error(
+          `The branch ${branch} already exists. Please provide a non-exist branch name or switch to the branch ${branch}. Keep in mind that your current changes will be lost if you switch to the branch ${branch}`
+        );
+      }
     }
 
     const tree = [];
@@ -133,6 +138,8 @@ export class Github implements RepoStrategy {
     }
 
     await request;
+
+    await this.switchBranch(branch, uploadedCommit);
   }
 
   async pullCommit(
@@ -142,14 +149,16 @@ export class Github implements RepoStrategy {
   ): Promise<{function: string; files: {name: string; content: string}[]}[]> {
     if (this.repo != repo) {
       await this.initializeRepo(repo, token, branch);
-    } else if (this.activeBranch.name != branch) {
+    } else {
       await this.switchBranch(branch);
     }
 
     const url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/commits/${this.activeBranch.head}`;
-    const lastCommit: any = await this.http.get(url);
+    const lastCommit: any = await this.http.get(url, {headers: this.headers(this.token)});
 
-    const {tree}: any = await this.http.get(lastCommit.tree.url);
+    const {tree}: any = await this.http.get(lastCommit.tree.url, {
+      headers: this.headers(this.token)
+    });
 
     const changes = [];
     for (const node of tree) {
@@ -162,10 +171,10 @@ export class Github implements RepoStrategy {
       change.function = node.path;
       change.files = [];
 
-      const {tree: files}: any = await this.http.get(node.url);
+      const {tree: files}: any = await this.http.get(node.url, {headers: this.headers(this.token)});
 
       for (const file of files) {
-        const fileDetails: any = await this.http.get(file.url);
+        const fileDetails: any = await this.http.get(file.url, {headers: this.headers(this.token)});
 
         let content = fileDetails.content;
         if (fileDetails.encoding == "base64") {
