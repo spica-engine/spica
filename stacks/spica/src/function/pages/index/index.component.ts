@@ -49,7 +49,11 @@ export class IndexComponent implements OnInit {
         return;
       }
 
-      this.onRepoSelection(this.selectedRepo);
+      this.onRepoSelection(this.selectedRepo).then(() => {
+        if (!this.selectedBranch) {
+          return;
+        }
+      });
     });
   }
 
@@ -64,14 +68,13 @@ export class IndexComponent implements OnInit {
   connectGithub() {
     // remove line below before pushing
     this.token = "";
-    localStorage.setItem("repo_token", this.token);
 
     return this.functionService
       .listRepos(this.token)
       .toPromise()
       .then(res => {
         this.repoUsername = res.username;
-        this.repos = res.branches.map(r => r.name);
+        this.repos = res.repos.map(r => r.name);
         this.accountConnected = true;
       })
       .catch(e => {
@@ -93,8 +96,6 @@ export class IndexComponent implements OnInit {
   }
 
   onRepoSelection(repo: string) {
-    this.selectedBranch = undefined;
-
     return this.functionService
       .listBranches(repo, this.repoUsername, this.token)
       .toPromise()

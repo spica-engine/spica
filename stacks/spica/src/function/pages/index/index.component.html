@@ -16,7 +16,11 @@
           {{ selectedRepo ? selectedRepo : "Select a repository" }}
         </button>
         <mat-menu #repoMenu="matMenu">
-          <button mat-menu-item *ngFor="let repo of repos" (click)="onRepoSelection(repo)">
+          <button
+            mat-menu-item
+            *ngFor="let repo of repos"
+            (click)="onRepoSelection(repo); selectedRepo = undefined"
+          >
             {{ repo }}
           </button>
         </mat-menu>

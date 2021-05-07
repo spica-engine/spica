@@ -36,10 +36,10 @@ export class FunctionService {
     return this.http.get(url, {headers}).pipe(
       switchMap((res: any) =>
         this.http.get(`https://api.github.com/users/${res.login}/repos`, {headers}).pipe(
-          map((branches: any[]) => {
+          map((repos: any[]) => {
             return {
               username: res.login,
-              branches
+              repos
             };
           })
         )
