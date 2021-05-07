@@ -165,7 +165,7 @@ export class Github implements RepoStrategy {
       const change: any = {};
 
       if (node.type != "tree" || !ObjectId.isValid(node.path)) {
-        return;
+        continue;
       }
 
       change.function = node.path;

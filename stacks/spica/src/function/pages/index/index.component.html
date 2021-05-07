@@ -4,14 +4,113 @@
     <span>Functions</span>
   </h4>
   <div class="buttons">
-    <button canInteract="function:create" mat-button routerLink="add">
-      <mat-icon>add</mat-icon>
-      Add New
-    </button>
-    <button mat-button (click)="connectGithub()">
-      <mat-icon>power</mat-icon>
-      Connect Github
-    </button>
+    <div class="github">
+      <button class="connect" *ngIf="!accountConnected" mat-button (click)="connectGithub()">
+        <mat-icon>power</mat-icon>
+        Connect Github
+      </button>
+
+      <ng-container *ngIf="accountConnected">
+        <button mat-button [matMenuTriggerFor]="repoMenu">
+          <mat-icon>book</mat-icon>
+          {{ selectedRepo ? selectedRepo : "Select a repository" }}
+        </button>
+        <mat-menu #repoMenu="matMenu">
+          <button mat-menu-item *ngFor="let repo of repos" (click)="onRepoSelection(repo)">
+            {{ repo }}
+          </button>
+        </mat-menu>
+        <ng-container *ngIf="selectedRepo">
+          <button mat-button [matMenuTriggerFor]="branchMenu">
+            <mat-icon>account_tree</mat-icon>
+            {{ selectedBranch ? selectedBranch : "Select a branch" }}
+          </button>
+          <mat-menu #branchMenu="matMenu">
+            <button
+              mat-menu-item
+              *ngFor="let branch of branches"
+              (click)="onBranchSelection(branch)"
+            >
+              {{ branch }}
+            </button>
+          </mat-menu>
+        </ng-container>
+
+        <button mat-button [matMenuTriggerFor]="pushCommitMenu">
+          <mat-icon>send</mat-icon>
+          Push Commit
+        </button>
+        <mat-menu #pushCommitMenu="matMenu">
+          <button mat-menu-item [matMenuTriggerFor]="newRepoMenu">
+            Create a new repo and push
+          </button>
+          <mat-menu class="new-repo-menu" #newRepoMenu="matMenu">
+            <mat-form-field (click)="$event.stopPropagation()">
+              <input
+                matInput
+                placeholder="Repo name"
+                name="newRepoName"
+                ngModel
+                #newRepo="ngModel"
+              />
+            </mat-form-field>
+            <button mat-flat-button (click)="createRepo(newRepo.value)">
+              Confirm
+            </button>
+          </mat-menu>
+
+          <ng-container *ngIf="selectedRepo">
+            <button mat-menu-item [matMenuTriggerFor]="newBranchMenu">
+              Create a new branch and push
+            </button>
+            <mat-menu class="new-branch-menu" #newBranchMenu="matMenu">
+              <mat-form-field (click)="$event.stopPropagation()">
+                <input
+                  placeholder="Branch name"
+                  matInput
+                  name="newBranchName"
+                  ngModel
+                  #newBranch="ngModel"
+                />
+              </mat-form-field>
+              <button mat-flat-button (click)="pushCommit(newBranch.value, newBranch.value)">
+                Confirm
+              </button>
+            </mat-menu>
+          </ng-container>
+
+          <ng-container *ngIf="selectedRepo && selectedBranch">
+            <button mat-menu-item [matMenuTriggerFor]="newCommitMenu">
+              Push to the current repo and branch
+            </button>
+            <mat-menu class="new-commit-menu" #newCommitMenu="matMenu">
+              <mat-form-field (click)="$event.stopPropagation()">
+                <input
+                  matInput
+                  placeholder="Commit message"
+                  name="newCommitMenu"
+                  ngModel
+                  #newCommit="ngModel"
+                />
+              </mat-form-field>
+              <button mat-flat-button (click)="pushCommit(newCommit.value)">
+                Confirm
+              </button>
+            </mat-menu>
+          </ng-container>
+        </mat-menu>
+      </ng-container>
+
+      <button mat-button *ngIf="accountConnected" (click)="disConnectGithub()">
+        <mat-icon>power_off</mat-icon> Disconnect Github
+      </button>
+    </div>
+    <div class="actions">
+      <button canInteract="function:create" mat-button routerLink="add">
+        <mat-icon>add</mat-icon>
+        Add New
+      </button>
+    </div>
   </div>
 </mat-toolbar>
 <mat-card class="mat-elevation-z25">

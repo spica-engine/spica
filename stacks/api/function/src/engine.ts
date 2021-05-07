@@ -142,17 +142,8 @@ export class FunctionEngine implements OnModuleDestroy {
         await fs.promises.writeFile(path.join(functionRoot, file.name), file.content);
       }
     }
+    return changes.length;
   }
-
-  // async listRepos(token:string){
-  //   const username = await this.github.extractUsername(token);
-  //   return this.github.listRepos(username)
-  // }
-
-  // async listBranches(repo: string, token: string) {
-  //   const username = await this.github.extractUsername(token);
-  //   return this.github.listBranches(repo, username);
-  // }
 
   async createFunction(fn: Function) {
     const functionRoot = path.join(this.options.root, fn._id.toString());

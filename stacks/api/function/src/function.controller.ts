@@ -56,19 +56,25 @@ export class FunctionController {
     @Param("integration") integration: string,
     @Param("repo") repo: string,
     @Param("branch") branch: string,
-    @Param("commit") commit: string = "latest"
+    @Param("commit") commit: string = "latest",
+    @Body() options: any
   ) {
-    const access_token = "";
-
     if (commit != "latest") {
       throw new BadRequestException(
         "Pulling the specific commit is still in development progress. You can use 'latest' for pulling the latest commit for now."
       );
     }
 
-    return this.engine.pullCommit(integration, repo, branch, access_token).catch(e => {
-      throw new BadRequestException(e.message ? e.message : e.toString());
-    });
+    return this.engine
+      .pullCommit(integration, repo, branch, options.token)
+      .then(count => {
+        return {
+          message: `${count} function updated.`
+        };
+      })
+      .catch(e => {
+        throw new BadRequestException(e.message ? e.message : e.toString());
+      });
   }
 
   //@TODO: think about the needed action
@@ -90,9 +96,8 @@ export class FunctionController {
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async create(@Param("integration") integration: string, @Body() options: any) {
     //assume we have access token and we want to push changes to the new repo
-    const access_token = "";
 
-    return this.engine.createRepo(integration, options.repo, access_token).catch(e => {
+    return this.engine.createRepo(integration, options.repo, options.token).catch(e => {
       throw new BadRequestException(e.message ? e.message : e.toString());
     });
   }

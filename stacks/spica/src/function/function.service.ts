@@ -2,7 +2,7 @@ import {HttpClient} from "@angular/common/http";
 import {Injectable, Inject} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
-import {map, tap} from "rxjs/operators";
+import {map, switchMap, tap} from "rxjs/operators";
 import {
   DeleteFunction,
   LoadFunctions,
@@ -28,7 +28,49 @@ export class FunctionService {
     return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
   }
 
-  connectGithub() {}
+  listRepos(token: string) {
+    //@TODO: put here more flexible code
+    const url = "https://api.github.com/user";
+    const headers = {Authorization: `token ${token}`};
+
+    return this.http.get(url, {headers}).pipe(
+      switchMap((res: any) =>
+        this.http.get(`https://api.github.com/users/${res.login}/repos`, {headers}).pipe(
+          map((branches: any[]) => {
+            return {
+              username: res.login,
+              branches
+            };
+          })
+        )
+      )
+    );
+  }
+
+  listBranches(repo: string, username: string, token: string) {
+    //@TODO: put here more flexible code
+    const url = `https://api.github.com/repos/${username}/${repo}/branches`;
+    const headers = {Authorization: `token ${token}`};
+
+    return this.http.get(url, {headers});
+  }
+
+  applyCommit(repo: string, branch: string, token: string, commit: string = "latest") {
+    //@TODO: put here more flexible code
+    const url = `api:/function/integrations/github/repos/${repo}/branches/${branch}/commits/${commit}`;
+    return this.http.put(url, {token});
+  }
+
+  pushCommit(repo: string, branch: string, message: string) {
+    //@TODO: put here more flexible code
+    const url = `api:/function/integrations/github/repos/${repo}/branches/${branch}/commits`;
+    return this.http.post(url, {message});
+  }
+
+  createRepo(repo: string, token: string) {
+    const url = "api:/function/integrations/github/repos";
+    return this.http.post(url, {repo, token});
+  }
 
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {
