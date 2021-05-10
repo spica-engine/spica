@@ -137,10 +137,16 @@ export class FunctionEngine implements OnModuleDestroy {
     for (const change of changes) {
       const functionRoot = path.join(this.options.root, change.function);
 
-      for (const file of change.files) {
-        await fs.promises.writeFile(path.join(functionRoot, file.name), file.content);
-        await fs.promises.writeFile(path.join(functionRoot, file.name), file.content);
-      }
+      await Promise.all(
+        change.files.map(file =>
+          fs.promises.writeFile(path.join(functionRoot, file.name), file.content).catch(e => {
+            // @TODO: update this line after we decide pull and push function with metadata
+            if (e.code == "ENOENT") {
+              return;
+            }
+          })
+        )
+      );
     }
     return changes.length;
   }

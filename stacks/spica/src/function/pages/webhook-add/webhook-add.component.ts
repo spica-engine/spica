@@ -11,7 +11,7 @@ import {
   ignoreElements
 } from "rxjs/operators";
 import {emptyWebhook, Webhook} from "../../interface";
-import {WebhookService} from "../../webhook.service";
+import {WebhookService} from "../../services";
 import {SavingState} from "@spica-client/material";
 
 @Component({

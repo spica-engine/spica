@@ -2,18 +2,18 @@ import {HttpClient} from "@angular/common/http";
 import {Injectable, Inject} from "@angular/core";
 import {select, Store} from "@ngrx/store";
 import {Observable} from "rxjs";
-import {map, switchMap, tap} from "rxjs/operators";
+import {map, tap} from "rxjs/operators";
 import {
   DeleteFunction,
   LoadFunctions,
   UpsertFunction,
   UpdateFunction
-} from "./actions/function.actions";
-import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} from "./interface";
-import * as fromFunction from "./reducers/function.reducer";
+} from "../actions/function.actions";
+import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} from "../interface";
+import * as fromFunction from "../reducers/function.reducer";
 import {PassportService} from "@spica-client/passport";
 import {getWsObs} from "@spica-client/common";
-import {examples} from "./statics/examples";
+import {examples} from "../statics/examples";
 
 @Injectable({providedIn: "root"})
 export class FunctionService {
@@ -28,49 +28,6 @@ export class FunctionService {
     return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
   }
 
-  listRepos(token: string) {
-    //@TODO: put here more flexible code
-    const url = "https://api.github.com/user";
-    const headers = {Authorization: `token ${token}`};
-
-    return this.http.get(url, {headers}).pipe(
-      switchMap((res: any) =>
-        this.http.get(`https://api.github.com/users/${res.login}/repos`, {headers}).pipe(
-          map((repos: any[]) => {
-            return {
-              username: res.login,
-              repos
-            };
-          })
-        )
-      )
-    );
-  }
-
-  listBranches(repo: string, username: string, token: string) {
-    //@TODO: put here more flexible code
-    const url = `https://api.github.com/repos/${username}/${repo}/branches`;
-    const headers = {Authorization: `token ${token}`};
-
-    return this.http.get(url, {headers});
-  }
-
-  applyCommit(repo: string, branch: string, token: string, commit: string = "latest") {
-    //@TODO: put here more flexible code
-    const url = `api:/function/integrations/github/repos/${repo}/branches/${branch}/commits/${commit}`;
-    return this.http.put(url, {token});
-  }
-
-  pushCommit(repo: string, branch: string, message: string) {
-    //@TODO: put here more flexible code
-    const url = `api:/function/integrations/github/repos/${repo}/branches/${branch}/commits`;
-    return this.http.post(url, {message});
-  }
-
-  createRepo(repo: string, token: string) {
-    const url = "api:/function/integrations/github/repos";
-    return this.http.post(url, {repo, token});
-  }
 
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {

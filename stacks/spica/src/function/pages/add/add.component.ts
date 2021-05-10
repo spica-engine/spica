@@ -19,6 +19,7 @@ import {
   filter,
   flatMap,
   ignoreElements,
+  map,
   share,
   startWith,
   switchMap,
@@ -26,7 +27,7 @@ import {
   takeUntil,
   tap
 } from "rxjs/operators";
-import {FunctionService} from "../../function.service";
+import {FunctionService} from "../../services/function.service";
 import {
   denormalizeFunction,
   emptyFunction,
@@ -38,6 +39,8 @@ import {
 } from "../../interface";
 import {MatDialog} from "@angular/material/dialog";
 import {ExampleComponent} from "@spica-client/common/example";
+import {GithubService} from "@spica-client/function/services";
+import {RepositoryComponent} from "../../components/repository/repository.component";
 
 @Component({
   selector: "functions-add",
@@ -105,6 +108,90 @@ export class AddComponent implements OnInit, OnDestroy {
   editName = false;
   editDescription = false;
 
+  repos: {repo: string; branches: string[]}[] = [];
+
+  selectedRepoBranch: {repo: string; branch: string} = {repo: undefined, branch: undefined};
+
+  pushStrategy: {
+    target: "repo" | "branch" | "commit";
+    repo: string;
+    branch?: string;
+    message?: string;
+  } = {target: undefined, repo: undefined};
+
+  username: string;
+
+  async initGithub(token: string = "") {
+    this.username = await this.github.initialize(token);
+
+    this.repos = await this.listRepos();
+
+    this.selectedRepoBranch = this.github.selectedRepoBranch;
+  }
+
+  async listRepos() {
+    const rps = await this.github
+      .listRepos()
+      .pipe(map(repos => repos.map(r => r.name)))
+      .toPromise();
+
+    return Promise.all(
+      rps.map(repo =>
+        this.github
+          .listBranches(repo)
+          .pipe(
+            map(branches => {
+              return {
+                repo: repo,
+                branches: branches.map(b => b.name)
+              };
+            })
+          )
+          .toPromise()
+      )
+    );
+  }
+
+  openRepoBranchDialog() {
+    this.dialog
+      .open(RepositoryComponent, {
+        width: "50%",
+        data: {
+          selectedRepo: this.selectedRepoBranch,
+          availableRepos: this.repos,
+          pushStrategy: this.pushStrategy
+        }
+      })
+      .afterClosed()
+      .toPromise()
+      .then(async (action: "pull" | "push") => {
+        if (action == "pull") {
+          this.github
+            .pullCommit(this.selectedRepoBranch.repo, this.selectedRepoBranch.branch)
+            .toPromise();
+          this.github.selectedRepoBranch = this.selectedRepoBranch;
+        } else if (action == "push") {
+          if (this.pushStrategy.target == "repo") {
+            this.github.createRepo(this.pushStrategy.repo).toPromise();
+          } else if (this.pushStrategy.target == "branch" || this.pushStrategy.target == "commit") {
+            this.github
+              .pushCommit(
+                this.pushStrategy.repo,
+                this.pushStrategy.branch,
+                this.pushStrategy.message
+              )
+              .toPromise();
+          }
+          this.github.selectedRepoBranch = {
+            repo: this.pushStrategy.repo,
+            branch: this.pushStrategy.branch
+          };
+
+          this.repos = await this.listRepos();
+        }
+      });
+  }
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
@@ -112,7 +199,8 @@ export class AddComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     public dialog: MatDialog,
     public renderer: Renderer2,
-    public changeDetector: ChangeDetectorRef
+    public changeDetector: ChangeDetectorRef,
+    private github: GithubService
   ) {
     this.information = this.functionService.information().pipe(
       share(),
@@ -129,6 +217,8 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.initGithub();
+
     this.activatedRoute.params
       .pipe(
         filter(params => params.id),

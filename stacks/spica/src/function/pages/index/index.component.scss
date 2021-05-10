@@ -13,11 +13,9 @@
       }
     }
 
-    div.buttons {
+    button {
       margin-top: 60px;
-      display: flex;
-      width: 100%;
-      justify-content: space-between;
+      align-self: flex-end;
     }
   }
 

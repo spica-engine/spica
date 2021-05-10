@@ -36,7 +36,7 @@ import {PassportModule} from "../passport/passport.module";
 import {LanguageDirective} from "./directives/dynamic.language";
 import {FunctionRoutingModule} from "./function-routing.module";
 import {FunctionInitializer} from "./function.initializer";
-import {FunctionService} from "./function.service";
+import {FunctionService} from "./services/function.service";
 import {FunctionOptions, FUNCTION_OPTIONS, WEBSOCKET_INTERCEPTOR} from "./interface";
 import {AddComponent} from "./pages/add/add.component";
 import {ExampleComponent} from "@spica-client/common/example";
@@ -47,6 +47,7 @@ import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
 import {FunctionCodeEditorComponent} from "./components/function-code-editor/function-code-editor.component";
+import { RepositoryComponent } from "./components/repository/repository.component";
 
 @NgModule({
   imports: [
@@ -87,6 +88,7 @@ import {FunctionCodeEditorComponent} from "./components/function-code-editor/fun
     EditorModule
   ],
   declarations: [
+    RepositoryComponent,
     AddComponent,
     IndexComponent,
     LogViewComponent,

@@ -3,7 +3,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, forkJoin, BehaviorSubject, combineLatest, zip} from "rxjs";
 import {switchMap, tap, map, flatMap} from "rxjs/operators";
 import {Function, Log} from "../../../function/interface";
-import {FunctionService} from "../../function.service";
+import {FunctionService} from "../../services/function.service";
 
 @Component({
   selector: "log-view",

@@ -4,6 +4,19 @@
       <mat-icon>code</mat-icon> Code
       <span></span>
       <div class="actions">
+        <button mat-button *ngIf="!username" (click)="initGithub()">
+          Connect Github Account
+        </button>
+        <button mat-button *ngIf="username" (click)="openRepoBranchDialog()">
+          <mat-icon>
+            book
+          </mat-icon>
+          {{
+            selectedRepoBranch && selectedRepoBranch.repo && selectedRepoBranch.branch
+              ? selectedRepoBranch.repo + "-" + selectedRepoBranch.branch
+              : "Select repo and branch"
+          }}
+        </button>
         <button
           mat-icon-button
           (click)="switchToFullscreen()"
