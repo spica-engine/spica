@@ -1,0 +1,72 @@
+<div *ngIf="context == 'pull'" class="pull">
+  <mat-form-field>
+    <mat-label>Repository</mat-label>
+    <mat-select [(ngModel)]="selectedRepo.repo" (ngModelChange)="selectedRepo.branch = undefined">
+      <mat-option *ngFor="let repo of availableRepos" [value]="repo.repo">
+        {{ repo.repo }}
+      </mat-option>
+      <mat-option (click)="switchToPush('repo')">
+        <mat-icon>add</mat-icon>
+        New Branch
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Branch</mat-label>
+    <mat-select [disabled]="!selectedRepo.repo" [(ngModel)]="selectedRepo.branch">
+      <mat-option *ngFor="let branch of filterBranches(selectedRepo.repo)" [value]="branch">
+        {{ branch }}
+      </mat-option>
+      <mat-option (click)="switchToPush('branch')">
+        <mat-icon>add</mat-icon>
+        New Branch
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button [disabled]="!selectedRepo.repo || !selectedRepo.branch" mat-button (click)="import()">
+    <mat-icon>
+      download
+    </mat-icon>
+    Pull
+  </button>
+  <button
+    [disabled]="!selectedRepo.repo || !selectedRepo.branch"
+    mat-button
+    (click)="switchToPush('commit')"
+  >
+    <mat-icon>
+      upload
+    </mat-icon>
+    Push
+  </button>
+</div>
+
+<div *ngIf="context == 'push'" class="push">
+  <button mat-icon-button (click)="context = 'pull'">
+    <mat-icon>
+      arrow_back
+    </mat-icon>
+  </button>
+  <ng-container [ngSwitch]="pushStrategy.target">
+    <mat-form-field *ngSwitchCase="'commit'">
+      <mat-label>Commit message</mat-label>
+      <textarea matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
+    </mat-form-field>
+
+    <mat-form-field *ngSwitchCase="'branch'">
+      <mat-label>Branch name</mat-label>
+      <input matInput name="branch" [(ngModel)]="pushStrategy.branch" />
+    </mat-form-field>
+
+    <mat-form-field *ngSwitchCase="'repo'">
+      <mat-label>Repository name</mat-label>
+      <input matInput name="repo" [(ngModel)]="pushStrategy.repo" />
+    </mat-form-field>
+  </ng-container>
+  <button mat-button (click)="confirmChanges()">
+    <mat-icon>
+      done
+    </mat-icon>
+    Confirm
+  </button>
+</div>
