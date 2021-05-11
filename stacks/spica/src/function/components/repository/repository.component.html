@@ -7,7 +7,7 @@
       </mat-option>
       <mat-option (click)="switchToPush('repo')">
         <mat-icon>add</mat-icon>
-        New Branch
+        New Repository
       </mat-option>
     </mat-select>
   </mat-form-field>
@@ -23,7 +23,7 @@
       </mat-option>
     </mat-select>
   </mat-form-field>
-  <button [disabled]="!selectedRepo.repo || !selectedRepo.branch" mat-button (click)="import()">
+  <button [disabled]="!selectedRepo.repo || !selectedRepo.branch" mat-button (click)="complete()">
     <mat-icon>
       download
     </mat-icon>
@@ -63,7 +63,7 @@
       <input matInput name="repo" [(ngModel)]="pushStrategy.repo" />
     </mat-form-field>
   </ng-container>
-  <button mat-button (click)="confirmChanges()">
+  <button mat-button (click)="complete()">
     <mat-icon>
       done
     </mat-icon>

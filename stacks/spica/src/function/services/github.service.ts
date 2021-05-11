@@ -1,6 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {map} from "rxjs/operators";
+import {map, tap} from "rxjs/operators";
 import {RepositoryService} from "../interface";
 
 @Injectable({providedIn: "root"})
@@ -24,6 +24,8 @@ export class GithubService implements RepositoryService {
     localStorage.setItem("github_username", value || "");
   }
 
+  headers = {};
+
   public get selectedRepoBranch() {
     const cachedSelected = localStorage.getItem("github_repo_branch");
 
@@ -42,6 +44,8 @@ export class GithubService implements RepositoryService {
   async initialize(token?: string) {
     this.token = token;
 
+    this.headers = {Authorization: `token ${token}`};
+
     this.username = await this.getUserName().toPromise();
 
     return this.username;
@@ -49,23 +53,21 @@ export class GithubService implements RepositoryService {
 
   getUserName() {
     const url = "https://api.github.com/user";
-    const headers = {Authorization: `token ${this.token}`};
-    return this.http.get<{login: string}>(url, {headers}).pipe(map(res => res.login));
+    return this.http.get<{login: string}>(url, {headers: this.headers}).pipe(map(res => res.login));
   }
 
   listRepos() {
-    const headers = {Authorization: `token ${this.token}`};
+    const url = `https://api.github.com/users/${this.username}/repos`;
 
-    return this.http.get<{name: string}[]>(`https://api.github.com/users/${this.username}/repos`, {
-      headers
+    return this.http.get<{name: string}[]>(url, {
+      headers: this.headers
     });
   }
 
   listBranches(repo: string) {
     const url = `https://api.github.com/repos/${this.username}/${repo}/branches`;
-    const headers = {Authorization: `token ${this.token}`};
 
-    return this.http.get<{name: string}[]>(url, {headers});
+    return this.http.get<{name: string}[]>(url, {headers: this.headers});
   }
 
   pullCommit(repo: string, branch: string, commit: string = "latest") {

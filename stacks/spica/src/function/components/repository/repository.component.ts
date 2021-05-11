@@ -17,16 +17,16 @@ export class RepositoryComponent {
     repo: string;
     branch?: string;
     message?: string;
-  };
+  } = {target: undefined, repo: undefined};
 
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: any,
     public dialogRef: MatDialogRef<RepositoryComponent>
   ) {
-    this.availableRepos = this.data ? this.data.availableRepos : [];
-    this.selectedRepo = this.data ? this.data.selectedRepo : {repo: undefined, branch: undefined};
-    this.pushStrategy = this.data ? this.data.pushStrategy : {target: undefined, repo: undefined};
+    this.availableRepos = this.data.availableRepos;
+    this.selectedRepo = this.data.selectedRepo;
+    this.pushStrategy = this.data.pushStrategy;
   }
 
   filterBranches(repo: string) {
@@ -39,8 +39,8 @@ export class RepositoryComponent {
     return this.availableRepos[index].branches;
   }
 
-  import() {
-    this.dialogRef.close("pull");
+  complete(){
+    this.dialogRef.close(this.context)
   }
 
   switchToPush(strategy: "repo" | "branch" | "commit") {
@@ -66,7 +66,5 @@ export class RepositoryComponent {
     }
   }
 
-  confirmChanges() {
-    this.dialogRef.close("push");
-  }
+
 }

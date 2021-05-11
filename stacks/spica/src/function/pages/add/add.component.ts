@@ -119,17 +119,26 @@ export class AddComponent implements OnInit, OnDestroy {
     message?: string;
   } = {target: undefined, repo: undefined};
 
-  username: string;
+  integratedUser: string;
+
+  repoPending = false;
 
   async initGithub(token: string = "") {
-    this.username = await this.github.initialize(token);
+    this.integratedUser = await this.github.initialize(token);
 
     this.repos = await this.listRepos();
 
     this.selectedRepoBranch = this.github.selectedRepoBranch;
   }
 
+  disconnectGithub() {
+    this.integratedUser = undefined;
+    this.repos = [];
+    this.selectedRepoBranch = {repo: undefined, branch: undefined};
+  }
+
   async listRepos() {
+    this.repoPending = true;
     const rps = await this.github
       .listRepos()
       .pipe(map(repos => repos.map(r => r.name)))
@@ -148,6 +157,7 @@ export class AddComponent implements OnInit, OnDestroy {
             })
           )
           .toPromise()
+          .finally(() => (this.repoPending = false))
       )
     );
   }
@@ -166,30 +176,63 @@ export class AddComponent implements OnInit, OnDestroy {
       .toPromise()
       .then(async (action: "pull" | "push") => {
         if (action == "pull") {
-          this.github
-            .pullCommit(this.selectedRepoBranch.repo, this.selectedRepoBranch.branch)
-            .toPromise();
-          this.github.selectedRepoBranch = this.selectedRepoBranch;
+          this.pull();
         } else if (action == "push") {
-          if (this.pushStrategy.target == "repo") {
-            this.github.createRepo(this.pushStrategy.repo).toPromise();
-          } else if (this.pushStrategy.target == "branch" || this.pushStrategy.target == "commit") {
-            this.github
-              .pushCommit(
-                this.pushStrategy.repo,
-                this.pushStrategy.branch,
-                this.pushStrategy.message
-              )
-              .toPromise();
-          }
-          this.github.selectedRepoBranch = {
+          await this.push();
+
+          this.addRepoBranch({
             repo: this.pushStrategy.repo,
             branch: this.pushStrategy.branch
-          };
-
-          this.repos = await this.listRepos();
+          });
         }
       });
+  }
+
+  async pull() {
+    this.repoPending = true;
+
+    await this.github
+      .pullCommit(this.selectedRepoBranch.repo, this.selectedRepoBranch.branch)
+      .toPromise()
+      .finally(() => (this.repoPending = false));
+
+    this.github.selectedRepoBranch = this.selectedRepoBranch;
+  }
+
+  // we prefer adding a new repo or branch manually cause of the github response caches
+  addRepoBranch(repoBranch: {repo: string; branch: string}) {
+    const repoIndex = this.repos.findIndex(r => r.repo == repoBranch.repo);
+
+    if (repoIndex == -1) {
+      return this.repos.push({repo: repoBranch.repo, branches: [repoBranch.branch]});
+    }
+
+    const branchIndex = this.repos[repoIndex].branches.indexOf(repoBranch.branch);
+
+    if (branchIndex == -1) {
+      return this.repos[repoIndex].branches.push(repoBranch.branch);
+    }
+  }
+
+  async push() {
+    this.repoPending = true;
+
+    if (this.pushStrategy.target == "repo") {
+      await this.github
+        .createRepo(this.pushStrategy.repo)
+        .toPromise()
+        .finally(() => (this.repoPending = false));
+    } else if (this.pushStrategy.target == "branch" || this.pushStrategy.target == "commit") {
+      await this.github
+        .pushCommit(this.pushStrategy.repo, this.pushStrategy.branch, this.pushStrategy.message)
+        .toPromise()
+        .finally(() => (this.repoPending = false));
+    }
+
+    this.selectedRepoBranch = this.github.selectedRepoBranch = {
+      repo: this.pushStrategy.repo,
+      branch: this.pushStrategy.branch
+    };
   }
 
   constructor(
