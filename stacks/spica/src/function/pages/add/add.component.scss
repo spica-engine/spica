@@ -35,37 +35,38 @@
         margin: 0px;
         align-items: center;
         display: flex;
-        > span {
+        > span.seperator {
           flex: 1;
         }
+
+        span.repo-response {
+          font-size: 13px !important;
+          font-weight: normal !important;
+        }
+
+        mat-spinner {
+          display: inline-block;
+        }
+
+        button.repo-branch {
+          &:hover + button.disconnect {
+            display: inline-block;
+          }
+        }
+
+        button.disconnect {
+          margin-left: -10px !important;
+          display: none;
+        }
+
+        button.disconnect:hover {
+          display: inline-block;
+        }
+
         .actions {
           max-width: 100%;
           align-items: center;
           display: flex;
-
-          span.repo-response {
-            font-size: 13px !important;
-            font-weight: normal !important;
-          }
-
-          button.repo-branch {
-            mat-spinner {
-              display: inline-block;
-            }
-
-            &:hover + button.disconnect {
-              display: inline-block;
-            }
-          }
-
-          button.disconnect {
-            margin-left: -10px !important;
-            display: none;
-          }
-
-          button.disconnect:hover {
-            display: inline-block;
-          }
 
           span {
             align-items: center;

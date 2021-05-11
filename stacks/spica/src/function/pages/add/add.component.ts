@@ -119,13 +119,40 @@ export class AddComponent implements OnInit, OnDestroy {
     message?: string;
   } = {target: undefined, repo: undefined};
 
-  integratedUser: string;
+  integratedUser: {
+    username: string;
+    avatar_url: string;
+  };
 
   repoPending = false;
 
   repoResponse;
 
-  async initGithub(token: string = "") {
+  async initGithub() {
+    let token = this.github.token;
+
+    if (!token) {
+      this.repoPending = true;
+
+      const loginPage = await this.github.getLoginPage().toPromise();
+      const tab = window.open(loginPage);
+
+      token = await this.github
+        .startPolling()
+        .toPromise()
+        .catch(e => {
+          console.error(e);
+          return undefined;
+        });
+
+      tab.close();
+
+      this.repoPending = false;
+      if (!token) {
+        return console.error("Token could not be founded.");
+      }
+    }
+
     this.integratedUser = await this.github.initialize(token);
 
     this.repos = await this.listRepos();
@@ -137,6 +164,7 @@ export class AddComponent implements OnInit, OnDestroy {
     this.integratedUser = undefined;
     this.repos = [];
     this.github.selectedRepoBranch = this.selectedRepoBranch = {repo: undefined, branch: undefined};
+    this.github.token = undefined;
   }
 
   async listRepos() {
@@ -167,11 +195,12 @@ export class AddComponent implements OnInit, OnDestroy {
   openRepoBranchDialog() {
     this.dialog
       .open(RepositoryComponent, {
-        width: "50%",
+        width: "40%",
         data: {
           selectedRepo: this.selectedRepoBranch,
           availableRepos: this.repos,
-          pushStrategy: this.pushStrategy
+          pushStrategy: this.pushStrategy,
+          user: this.integratedUser
         }
       })
       .afterClosed()
@@ -199,7 +228,7 @@ export class AddComponent implements OnInit, OnDestroy {
       .then((res: any) => {
         this.showRepoResponse(res.message);
       })
-      .finally(() => (this.repoPending = false));
+      .finally(() => (this.repoPending = true));
 
     this.github.selectedRepoBranch = this.selectedRepoBranch;
   }
@@ -272,7 +301,9 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.initGithub();
+    if (this.github.token) {
+      this.initGithub();
+    }
 
     this.activatedRoute.params
       .pipe(

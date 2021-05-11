@@ -120,7 +120,7 @@ export interface RepositoryService {
 
   selectedRepoBranch: {repo: string; branch: string; commit?: string};
 
-  initialize(token: string): Promise<string>;
+  initialize(token: string): Promise<any>;
 
   listRepos(): Observable<{name: string}[]>;
 

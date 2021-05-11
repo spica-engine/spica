@@ -1,7 +1,8 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {map, tap} from "rxjs/operators";
+import {delay, filter, map, retryWhen, take} from "rxjs/operators";
 import {RepositoryService} from "../interface";
+import uuid from "uuid";
 
 @Injectable({providedIn: "root"})
 export class GithubService implements RepositoryService {
@@ -24,8 +25,6 @@ export class GithubService implements RepositoryService {
     localStorage.setItem("github_username", value || "");
   }
 
-  headers = {};
-
   public get selectedRepoBranch() {
     const cachedSelected = localStorage.getItem("github_repo_branch");
 
@@ -41,19 +40,48 @@ export class GithubService implements RepositoryService {
     localStorage.setItem("github_repo_branch", JSON.stringify(value));
   }
 
+  state: string;
+
+  headers = {};
+
+  startPolling() {
+    const url = `https://hq.spicaengine.com/api/fn-execute/github-token?state=${this.state}`;
+    return this.http.get<{token: string}>(url).pipe(
+      retryWhen(errors =>
+        errors.pipe(
+          filter(error => error.status == 404),
+          delay(10000),
+          take(6)
+        )
+      ),
+      map(res => res.token)
+    );
+  }
+
+  getLoginPage() {
+    this.state = uuid();
+    const url = `https://hq.spicaengine.com/api/fn-execute/github-oauth?state=${this.state}`;
+    return this.http.get<{url: string}>(url).pipe(map(res => res.url));
+  }
+
   async initialize(token?: string) {
     this.token = token;
 
     this.headers = {Authorization: `token ${token}`};
 
-    this.username = await this.getUserName().toPromise();
+    const {login, avatar_url} = await this.getUser().toPromise();
 
-    return this.username;
+    this.username = login;
+
+    return {
+      username: this.username,
+      avatar_url
+    };
   }
 
-  getUserName() {
+  getUser() {
     const url = "https://api.github.com/user";
-    return this.http.get<{login: string}>(url, {headers: this.headers}).pipe(map(res => res.login));
+    return this.http.get<{login: string; avatar_url: string}>(url, {headers: this.headers});
   }
 
   listRepos() {

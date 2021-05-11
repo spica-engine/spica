@@ -2,41 +2,47 @@
   <div class="code">
     <h4 class="code-actions">
       <mat-icon>code</mat-icon> Code
-      <span></span>
-      <div class="actions">
-        <button mat-button *ngIf="!integratedUser" (click)="initGithub()">
-          Connect Github Account
+
+      <button mat-button [disabled]="repoPending" *ngIf="!integratedUser" (click)="initGithub()">
+        <mat-spinner *ngIf="repoPending" diameter="20"></mat-spinner>
+        <mat-icon *ngIf="!repoPending">
+          link
+        </mat-icon>
+        Connect Github
+      </button>
+      <ng-container *ngIf="integratedUser">
+        <button
+          class="repo-branch"
+          [disabled]="repoPending"
+          mat-button
+          (click)="openRepoBranchDialog()"
+        >
+          <mat-spinner *ngIf="repoPending" diameter="20"></mat-spinner>
+          <mat-icon *ngIf="!repoPending">
+            book
+          </mat-icon>
+          {{
+            selectedRepoBranch && selectedRepoBranch.repo && selectedRepoBranch.branch
+              ? selectedRepoBranch.repo + "-" + selectedRepoBranch.branch
+              : "Select repo and branch"
+          }}
         </button>
-        <ng-container *ngIf="integratedUser">
-          <span class="repo-response">
-            {{repoResponse}}
-          </span>
-          <button
-            class="repo-branch"
-            [disabled]="repoPending"
-            mat-button
-            (click)="openRepoBranchDialog()"
-          >
-            <mat-icon *ngIf="!repoPending">
-              book
-            </mat-icon>
-            <mat-spinner *ngIf="repoPending" diameter="20"></mat-spinner>
-            {{
-              selectedRepoBranch && selectedRepoBranch.repo && selectedRepoBranch.branch
-                ? selectedRepoBranch.repo + "-" + selectedRepoBranch.branch
-                : "Select repo and branch"
-            }}
-          </button>
-          <button
-            class="disconnect"
-            matTooltip="Disconnect Account"
-            mat-icon-button
-            color="warn"
-            (click)="disconnectGithub()"
-          >
-            <mat-icon>clear</mat-icon>
-          </button>
-        </ng-container>
+        <button
+          *ngIf="!repoPending"
+          class="disconnect"
+          matTooltip="Disconnect Account"
+          mat-icon-button
+          color="warn"
+          (click)="disconnectGithub()"
+        >
+          <mat-icon>clear</mat-icon>
+        </button>
+        <span class="repo-response">
+          {{ repoResponse }}
+        </span>
+      </ng-container>
+      <span class="seperator"></span>
+      <div class="actions">
         <button
           mat-icon-button
           (click)="switchToFullscreen()"

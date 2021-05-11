@@ -1,8 +1,64 @@
 :host {
+
+  overflow-x: hidden;
+
+  div.user {
+    display: flex;
+    align-items: center;
+
+    img {
+      width: 25px;
+      height: 25px;
+      margin-right: 5px;
+      border-radius: 10px;
+    }
+  }
+
+  mat-divider {
+    margin: 20px 0px;
+  }
+
   div.pull,
   div.push {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: baseline;
+
+    flex-wrap: wrap;
+
+    div.content {
+      flex: 3;
+      display: flex;
+      align-items: center;
+      mat-form-field {
+        flex: 1;
+
+        max-width: 400px;
+
+        margin: 0px 5px;
+
+        &:first-of-type {
+          margin-left: 0px;
+        }
+      }
+    }
+
+    div.actions {
+      flex: 1;
+      display: flex;
+      align-items: center;
+
+      button {
+        flex: 1;
+
+        margin: 0px 5px;
+
+        &:last-of-type {
+          margin-right: 0px;
+        }
+      }
+    }
   }
 }
+
+

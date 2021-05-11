@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from "@angular/core";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {MAT_DIALOG_DATA, MatDialogRef, MatDialog} from "@angular/material/dialog";
 
 @Component({
   selector: "repository",
@@ -19,14 +19,21 @@ export class RepositoryComponent {
     message?: string;
   } = {target: undefined, repo: undefined};
 
+  user: {
+    username: string;
+    avatar_url: string;
+  };
+
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public data: any,
-    public dialogRef: MatDialogRef<RepositoryComponent>
+    public dialogRef: MatDialogRef<RepositoryComponent>,
+    public dialog: MatDialog
   ) {
     this.availableRepos = this.data.availableRepos;
     this.selectedRepo = this.data.selectedRepo;
     this.pushStrategy = this.data.pushStrategy;
+    this.user = this.data.user;
   }
 
   filterBranches(repo: string) {
@@ -39,8 +46,8 @@ export class RepositoryComponent {
     return this.availableRepos[index].branches;
   }
 
-  complete(){
-    this.dialogRef.close(this.context)
+  complete() {
+    this.dialogRef.close(this.context);
   }
 
   switchToPush(strategy: "repo" | "branch" | "commit") {
@@ -54,8 +61,6 @@ export class RepositoryComponent {
       case "branch":
         this.pushStrategy.target = "branch";
         this.pushStrategy.repo = this.selectedRepo.repo;
-
-        this.pushStrategy.message = "initial commit";
         break;
       case "repo":
         this.pushStrategy.target = "repo";
@@ -65,6 +70,4 @@ export class RepositoryComponent {
         break;
     }
   }
-
-
 }
