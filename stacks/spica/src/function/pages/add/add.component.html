@@ -8,6 +8,9 @@
           Connect Github Account
         </button>
         <ng-container *ngIf="integratedUser">
+          <span class="repo-response">
+            {{repoResponse}}
+          </span>
           <button
             class="repo-branch"
             [disabled]="repoPending"

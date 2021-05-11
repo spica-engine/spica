@@ -72,9 +72,7 @@ export class Github implements RepoStrategy {
       const existingBranches: any[] = await this.listBranches(repo, this.username, this.token);
 
       if (existingBranches.findIndex(b => b.name == branch) != -1) {
-        throw new Error(
-          `The branch ${branch} already exists. Please provide a non-exist branch name or switch to the branch ${branch}. Keep in mind that your current changes will be lost if you switch to the branch ${branch}`
-        );
+        throw new Error(`Branch ${branch} already exists.`);
       }
     }
 

@@ -95,8 +95,6 @@ export class FunctionController {
   @Post("integrations/:integration/repos")
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async create(@Param("integration") integration: string, @Body() options: any) {
-    //assume we have access token and we want to push changes to the new repo
-
     return this.engine.createRepo(integration, options.repo, options.token).catch(e => {
       throw new BadRequestException(e.message ? e.message : e.toString());
     });

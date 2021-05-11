@@ -123,6 +123,8 @@ export class AddComponent implements OnInit, OnDestroy {
 
   repoPending = false;
 
+  repoResponse;
+
   async initGithub(token: string = "") {
     this.integratedUser = await this.github.initialize(token);
 
@@ -134,7 +136,7 @@ export class AddComponent implements OnInit, OnDestroy {
   disconnectGithub() {
     this.integratedUser = undefined;
     this.repos = [];
-    this.selectedRepoBranch = {repo: undefined, branch: undefined};
+    this.github.selectedRepoBranch = this.selectedRepoBranch = {repo: undefined, branch: undefined};
   }
 
   async listRepos() {
@@ -194,9 +196,19 @@ export class AddComponent implements OnInit, OnDestroy {
     await this.github
       .pullCommit(this.selectedRepoBranch.repo, this.selectedRepoBranch.branch)
       .toPromise()
+      .then((res: any) => {
+        this.showRepoResponse(res.message);
+      })
       .finally(() => (this.repoPending = false));
 
     this.github.selectedRepoBranch = this.selectedRepoBranch;
+  }
+
+  showRepoResponse(message: string) {
+    this.repoResponse = message;
+    setTimeout(() => {
+      this.repoResponse = "";
+    }, 3000);
   }
 
   // we prefer adding a new repo or branch manually cause of the github response caches

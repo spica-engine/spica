@@ -43,6 +43,11 @@
           align-items: center;
           display: flex;
 
+          span.repo-response {
+            font-size: 13px !important;
+            font-weight: normal !important;
+          }
+
           button.repo-branch {
             mat-spinner {
               display: inline-block;
