@@ -4,7 +4,7 @@
       <mat-icon>code</mat-icon> Code
 
       <button mat-button [disabled]="repoPending" *ngIf="!integratedUser" (click)="initGithub()">
-        <mat-spinner *ngIf="repoPending" diameter="20"></mat-spinner>
+        <mat-spinner *ngIf="repoPending" diameter="20" color="accent"></mat-spinner>
         <mat-icon *ngIf="!repoPending">
           link
         </mat-icon>
@@ -17,7 +17,7 @@
           mat-button
           (click)="openRepoBranchDialog()"
         >
-          <mat-spinner *ngIf="repoPending" diameter="20"></mat-spinner>
+          <mat-spinner *ngIf="repoPending" diameter="20" color="accent"></mat-spinner>
           <mat-icon *ngIf="!repoPending">
             book
           </mat-icon>
@@ -62,6 +62,7 @@
             color="primary"
             mode="indeterminate"
             [diameter]="18"
+            color="accent"
           >
           </mat-progress-spinner>
         </span>

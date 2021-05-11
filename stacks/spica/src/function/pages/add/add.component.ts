@@ -20,6 +20,7 @@ import {
   flatMap,
   ignoreElements,
   map,
+  mergeMap,
   share,
   startWith,
   switchMap,
@@ -49,6 +50,8 @@ import {RepositoryComponent} from "../../components/repository/repository.compon
 })
 export class AddComponent implements OnInit, OnDestroy {
   @ViewChild("toolbar", {static: true}) toolbar;
+
+  $refresh = new Subject();
 
   function: NormalizedFunction = emptyFunction();
 
@@ -193,9 +196,12 @@ export class AddComponent implements OnInit, OnDestroy {
   }
 
   openRepoBranchDialog() {
+    this.clearPushStrategy();
+
     this.dialog
       .open(RepositoryComponent, {
-        width: "40%",
+        width: "400px",
+        maxWidth: "100%",
         data: {
           selectedRepo: this.selectedRepoBranch,
           availableRepos: this.repos,
@@ -219,6 +225,13 @@ export class AddComponent implements OnInit, OnDestroy {
       });
   }
 
+  clearPushStrategy() {
+    this.pushStrategy.target = undefined;
+    this.pushStrategy.repo = undefined;
+    this.pushStrategy.branch = undefined;
+    this.pushStrategy.message = undefined;
+  }
+
   async pull() {
     this.repoPending = true;
 
@@ -228,9 +241,11 @@ export class AddComponent implements OnInit, OnDestroy {
       .then((res: any) => {
         this.showRepoResponse(res.message);
       })
-      .finally(() => (this.repoPending = true));
+      .finally(() => (this.repoPending = false));
 
     this.github.selectedRepoBranch = this.selectedRepoBranch;
+
+    this.$refresh.next(this.function._id);
   }
 
   showRepoResponse(message: string) {
@@ -305,11 +320,16 @@ export class AddComponent implements OnInit, OnDestroy {
       this.initGithub();
     }
 
-    this.activatedRoute.params
-      .pipe(
+    merge(
+      this.$refresh,
+      this.activatedRoute.params.pipe(
         filter(params => params.id),
-        tap(params => this.selectedFunctionId.next(params.id)),
-        switchMap(params => this.functionService.getFunction(params.id).pipe(take(1))),
+        map(params => params.id)
+      )
+    )
+      .pipe(
+        tap(id => this.selectedFunctionId.next(id)),
+        switchMap(id => this.functionService.getFunction(id).pipe(take(1))),
         tap(fn => {
           this.resetBatchOptions();
           this.dependencyInstallPending = false;

@@ -3,33 +3,31 @@
   <span> {{ user.username }} </span>
 </div>
 <mat-divider></mat-divider>
-<div *ngIf="context == 'pull'" class="pull">
-  <div class="content">
-    <mat-form-field>
-      <mat-label>Repository</mat-label>
-      <mat-select [(ngModel)]="selectedRepo.repo" (ngModelChange)="selectedRepo.branch = undefined">
-        <mat-option *ngFor="let repo of availableRepos" [value]="repo.repo">
-          {{ repo.repo }}
-        </mat-option>
-        <mat-option (click)="switchToPush('repo')">
-          <mat-icon>add</mat-icon>
-          New Repository
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>Branch</mat-label>
-      <mat-select [disabled]="!selectedRepo.repo" [(ngModel)]="selectedRepo.branch">
-        <mat-option *ngFor="let branch of filterBranches(selectedRepo.repo)" [value]="branch">
-          {{ branch }}
-        </mat-option>
-        <mat-option (click)="switchToPush('branch')">
-          <mat-icon>add</mat-icon>
-          New Branch
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
+<ng-container *ngIf="context == 'pull'">
+  <mat-form-field>
+    <mat-label>Repository</mat-label>
+    <mat-select [(ngModel)]="selectedRepo.repo" (ngModelChange)="selectedRepo.branch = undefined">
+      <mat-option *ngFor="let repo of availableRepos" [value]="repo.repo">
+        {{ repo.repo }}
+      </mat-option>
+      <mat-option (click)="switchToPush('repo')">
+        <mat-icon>add</mat-icon>
+        New Repository
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Branch</mat-label>
+    <mat-select [disabled]="!selectedRepo.repo" [(ngModel)]="selectedRepo.branch">
+      <mat-option *ngFor="let branch of filterBranches(selectedRepo.repo)" [value]="branch">
+        {{ branch }}
+      </mat-option>
+      <mat-option (click)="switchToPush('branch')">
+        <mat-icon>add</mat-icon>
+        New Branch
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
   <div class="actions">
     <button
       (confirm)="complete()"
@@ -58,35 +56,33 @@
       Push
     </button>
   </div>
-</div>
+</ng-container>
 
-<div *ngIf="context == 'push'" class="push">
-  <div class="content">
-    <ng-container [ngSwitch]="pushStrategy.target">
-      <mat-form-field *ngSwitchCase="'commit'">
+<ng-container *ngIf="context == 'push'" class="push">
+  <ng-container [ngSwitch]="pushStrategy.target">
+    <mat-form-field *ngSwitchCase="'commit'">
+      <mat-label>Commit message</mat-label>
+      <textarea matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
+    </mat-form-field>
+
+    <ng-container *ngSwitchCase="'branch'">
+      <mat-form-field>
+        <mat-label>Branch name</mat-label>
+        <input matInput name="branch" [(ngModel)]="pushStrategy.branch" />
+      </mat-form-field>
+      <mat-form-field>
         <mat-label>Commit message</mat-label>
         <textarea matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
       </mat-form-field>
-
-      <ng-container *ngSwitchCase="'branch'">
-        <mat-form-field>
-          <mat-label>Branch name</mat-label>
-          <input matInput name="branch" [(ngModel)]="pushStrategy.branch" />
-        </mat-form-field>
-        <mat-form-field>
-          <mat-label>Commit message</mat-label>
-          <textarea matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
-        </mat-form-field>
-      </ng-container>
-
-      <mat-form-field *ngSwitchCase="'repo'">
-        <mat-label>Repository name</mat-label>
-        <input matInput name="repo" [(ngModel)]="pushStrategy.repo" />
-      </mat-form-field>
     </ng-container>
-  </div>
+
+    <mat-form-field *ngSwitchCase="'repo'">
+      <mat-label>Repository name</mat-label>
+      <input matInput name="repo" [(ngModel)]="pushStrategy.repo" />
+    </mat-form-field>
+  </ng-container>
   <div class="actions">
-    <button mat-button (click)="context = 'pull'">
+    <button mat-button (click)="context = 'pull'; clearPushStrategy()">
       <mat-icon>
         clear
       </mat-icon>
@@ -99,7 +95,7 @@
       Confirm
     </button>
   </div>
-</div>
+</ng-container>
 
 <ng-template #pullDialogTemplate let-answer="answer">
   <p>

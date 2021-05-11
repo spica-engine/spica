@@ -1,6 +1,6 @@
 import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {delay, filter, map, retryWhen, take} from "rxjs/operators";
+import {delay, filter, map, retryWhen, take, tap} from "rxjs/operators";
 import {RepositoryService} from "../interface";
 import uuid from "uuid";
 
@@ -49,7 +49,6 @@ export class GithubService implements RepositoryService {
     return this.http.get<{token: string}>(url).pipe(
       retryWhen(errors =>
         errors.pipe(
-          filter(error => error.status == 404),
           delay(10000),
           take(6)
         )

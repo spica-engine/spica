@@ -69,11 +69,14 @@ export class FunctionController {
       .pullCommit(integration, repo, branch, options.token)
       .then(count => {
         return {
-          message: `${count} function updated.`
+          message: `${count} function(s) updated.`
         };
       })
       .catch(e => {
-        throw new BadRequestException(e.message ? e.message : e.toString());
+        if (e.documentation_url) {
+          e.message = `Github reject this operation: ${e.message}`;
+        }
+        throw new HttpException(e.message, 400);
       });
   }
 
@@ -87,7 +90,10 @@ export class FunctionController {
     @Body() options: any
   ) {
     return this.engine.pushCommit(integration, repo, branch, options.message).catch(e => {
-      throw new BadRequestException(e.message ? e.message : e.toString());
+      if (e.documentation_url) {
+        e.message = `Github reject this operation: ${e.message}`;
+      }
+      throw new HttpException(e.message, 400);
     });
   }
 
@@ -96,7 +102,10 @@ export class FunctionController {
   // @UseGuards(AuthGuard(), ActionGuard("function:create"))
   async create(@Param("integration") integration: string, @Body() options: any) {
     return this.engine.createRepo(integration, options.repo, options.token).catch(e => {
-      throw new BadRequestException(e.message ? e.message : e.toString());
+      if (e.documentation_url) {
+        e.message = `Github reject this operation: ${e.message}`;
+      }
+      throw new HttpException(e.message, 400);
     });
   }
 

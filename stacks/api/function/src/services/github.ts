@@ -32,11 +32,6 @@ export class Github implements RepoStrategy {
     await this.switchBranch(branch);
   }
 
-  // async listRepos(username: string): Promise<any[]> {
-  //   const url = `https://api.github.com/users/${username}/repos`;
-  //   return this.instance.get(url);
-  // }
-
   async listBranches(repo: string, username: string, token: string): Promise<{name: string}[]> {
     const url = `${this.repoBaseUrl}/${username}/${repo}/branches`;
     return this.http.get<{name: string}[]>(url, {headers: this.headers(token)});
