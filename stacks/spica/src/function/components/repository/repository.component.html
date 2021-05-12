@@ -59,28 +59,30 @@
 </ng-container>
 
 <ng-container *ngIf="context == 'push'" class="push">
-  <ng-container [ngSwitch]="pushStrategy.target">
-    <mat-form-field *ngSwitchCase="'commit'">
-      <mat-label>Commit message</mat-label>
-      <textarea matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
-    </mat-form-field>
-
-    <ng-container *ngSwitchCase="'branch'">
-      <mat-form-field>
-        <mat-label>Branch name</mat-label>
-        <input matInput name="branch" [(ngModel)]="pushStrategy.branch" />
-      </mat-form-field>
-      <mat-form-field>
+  <form #form="ngForm" (keydown.enter)="!form.invalid && complete()">
+    <ng-container [ngSwitch]="pushStrategy.target">
+      <mat-form-field *ngSwitchCase="'commit'">
         <mat-label>Commit message</mat-label>
-        <textarea matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
+        <textarea required matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
+      </mat-form-field>
+
+      <ng-container *ngSwitchCase="'branch'">
+        <mat-form-field>
+          <mat-label>Branch name</mat-label>
+          <input required matInput name="branch" [(ngModel)]="pushStrategy.branch" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Commit message</mat-label>
+          <textarea required matInput name="commit" [(ngModel)]="pushStrategy.message"></textarea>
+        </mat-form-field>
+      </ng-container>
+
+      <mat-form-field *ngSwitchCase="'repo'">
+        <mat-label>Repository name</mat-label>
+        <input required matInput name="repo" [(ngModel)]="pushStrategy.repo" />
       </mat-form-field>
     </ng-container>
-
-    <mat-form-field *ngSwitchCase="'repo'">
-      <mat-label>Repository name</mat-label>
-      <input matInput name="repo" [(ngModel)]="pushStrategy.repo" />
-    </mat-form-field>
-  </ng-container>
+  </form>
   <div class="actions">
     <button mat-button (click)="context = 'pull'; clearPushStrategy()">
       <mat-icon>
@@ -88,7 +90,7 @@
       </mat-icon>
       Cancel
     </button>
-    <button mat-button (click)="complete()">
+    <button [disabled]="form.invalid" mat-button (click)="complete()">
       <mat-icon>
         done
       </mat-icon>
