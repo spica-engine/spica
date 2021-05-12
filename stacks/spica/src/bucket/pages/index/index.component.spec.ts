@@ -566,8 +566,7 @@ describe("IndexComponent", () => {
       expect(template).toEqual(["value", "value2"]);
     });
 
-    fit("should return storage", () => {
-      // it will be hard to check
+    it("should return storage", () => {
       fixture.componentInstance.onImageError = undefined;
 
       const template = fixture.componentInstance.buildTemplate(
