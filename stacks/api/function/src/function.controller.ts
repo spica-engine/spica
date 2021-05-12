@@ -49,9 +49,8 @@ export class FunctionController {
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
-  //@TODO: think about the needed action
   @Put("integrations/:integration/repos/:repo/branches/:branch/commits/:commit")
-  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  @UseGuards(AuthGuard(), ActionGuard("function:integrations", "function"))
   async pull(
     @Param("integration") integration: string,
     @Param("repo") repo: string,
@@ -77,9 +76,8 @@ export class FunctionController {
       });
   }
 
-  //@TODO: think about the needed action
   @Post("integrations/:integration/repos/:repo/branches/:branch/commits")
-  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  @UseGuards(AuthGuard(), ActionGuard("function:integrations", "function"))
   async push(
     @Param("integration") integration: string,
     @Param("repo") repo: string,
@@ -91,9 +89,8 @@ export class FunctionController {
     });
   }
 
-  //@TODO: think about the needed action
   @Post("integrations/:integration/repos")
-  // @UseGuards(AuthGuard(), ActionGuard("function:create"))
+  @UseGuards(AuthGuard(), ActionGuard("function:integrations", "function"))
   async create(@Param("integration") integration: string, @Body() options: any) {
     return this.engine.createRepo(integration, options.repo, options.token).catch(e => {
       throw new BadRequestException(e.toString());
