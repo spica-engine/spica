@@ -30,7 +30,7 @@ export class RepoStrategies {
   find(strategy: string) {
     let index = this.strategies.findIndex(s => s.name == strategy);
     if (index == -1) {
-      throw new Error(`Strategy ${strategy} does not provided.`);
+      throw new Error(`Unknown strategy: ${strategy}.`);
     }
 
     return this.strategies[index];
