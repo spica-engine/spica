@@ -16,7 +16,7 @@ import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
 import {of} from "rxjs";
 import {take} from "rxjs/operators";
-import {FunctionService} from "../../function.service";
+import {FunctionService} from "../../services";
 import {LogViewComponent} from "./log-view.component";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 

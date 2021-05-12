@@ -11,7 +11,7 @@ import {IndexResult} from "@spica-client/core/interfaces";
 import {MatAwareDialogModule} from "@spica-client/material/aware-dialog";
 import {of} from "rxjs";
 import {Webhook} from "../../interface";
-import {WebhookService} from "../../webhook.service";
+import {WebhookService} from "../../services";
 import {WebhookIndexComponent} from "../webhook-index/webhook-index.component";
 import {MatButtonModule} from "@angular/material/button";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
