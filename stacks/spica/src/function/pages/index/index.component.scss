@@ -53,18 +53,3 @@
     justify-content: flex-end;
   }
 }
-
-::ng-deep {
-  .new-repo-menu,
-  .new-branch-menu,
-  .new-commit-menu {
-    .mat-menu-content {
-      display: flex !important;
-      flex-direction: column !important;
-
-      > * {
-        margin: 0px 10px;
-      }
-    }
-  }
-}
