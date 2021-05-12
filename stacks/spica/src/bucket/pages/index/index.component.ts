@@ -63,6 +63,8 @@ export class IndexComponent implements OnInit {
     length: 0
   };
 
+  editModes = new Map<string, Set<string>>();
+
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
@@ -70,6 +72,32 @@ export class IndexComponent implements OnInit {
     private router: Router,
     private sanitizer: DomSanitizer
   ) {}
+
+  openEditMode(id: string, key: string) {
+    const editedFields = this.editModes.has(id) ? this.editModes.get(id) : new Set<string>();
+
+    editedFields.add(key);
+
+    this.editModes.set(id, editedFields);
+  }
+
+  onEditMode(id: string, key: string) {
+    return this.editModes.has(id)
+      ? Array.from(this.editModes.get(id).values()).findIndex(f => f == key) != -1
+      : false;
+  }
+
+  blurEditMode(id: string, key: string) {
+    const fields = this.editModes.get(id);
+
+    if (!fields) {
+      return;
+    }
+
+    fields.delete(key);
+
+    this.editModes.set(id, fields);
+  }
 
   ngOnInit(): void {
     this.rootUrl = window.location.origin;
@@ -370,6 +398,10 @@ export class IndexComponent implements OnInit {
         language: language
       }
     });
+  }
+
+  saveBucketDocument(document:BucketEntry){
+    console.log(document)
   }
 
   delete(id: string): void {
