@@ -76,6 +76,5 @@ export class RepositoryComponent {
     this.pushStrategy.repo = undefined;
     this.pushStrategy.branch = undefined;
     this.pushStrategy.message = undefined;
-    console.log(this.pushStrategy);
   }
 }
