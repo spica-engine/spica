@@ -134,21 +134,29 @@ export class FunctionEngine implements OnModuleDestroy {
 
   async pullCommit(strategy: string, repo: string, branch: string, token: string) {
     const changes = await this.repos.find(strategy).pullCommit(repo, branch, token);
+    let updates = 0;
     for (const change of changes) {
       const functionRoot = path.join(this.options.root, change.function);
 
-      await Promise.all(
+      const results = await Promise.all(
         change.files.map(file =>
-          fs.promises.writeFile(path.join(functionRoot, file.name), file.content).catch(e => {
-            // @TODO: update this line after we decide to pull and push functions with metadata
-            if (e.code == "ENOENT") {
-              return;
-            }
-          })
+          fs.promises
+            .writeFile(path.join(functionRoot, file.name), file.content)
+            .then(() => true)
+            .catch(e => {
+              // @TODO: update this line after we decide to pull and push functions with metadata
+              if (e.code == "ENOENT") {
+                return false;
+              }
+            })
         )
       );
+
+      if (results.every(r => r == true)) {
+        updates++;
+      }
     }
-    return changes.length;
+    return updates;
   }
 
   async createFunction(fn: Function) {

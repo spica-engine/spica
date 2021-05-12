@@ -15,11 +15,13 @@ export class Github implements RepoStrategy {
   }
 
   async createRepo(name: string, token: string) {
-    const {name: repo, default_branch}: any = await this.http.post(
-      "https://api.github.com/user/repos",
-      {name, auto_init: true},
-      {headers: this.headers(token)}
-    );
+    const {name: repo, default_branch}: any = await this.http
+      .post(
+        "https://api.github.com/user/repos",
+        {name, auto_init: true},
+        {headers: this.headers(token)}
+      )
+      .catch(this.errorHandler);
 
     await this.initializeRepo(repo, token, default_branch);
   }
@@ -40,13 +42,17 @@ export class Github implements RepoStrategy {
   async switchBranch(branch?: string, commit?: string): Promise<void> {
     if (!branch) {
       const url = `${this.repoBaseUrl}/${this.username}/${this.repo}`;
-      const {default_branch}: any = await this.http.get(url, {headers: this.headers(this.token)});
+      const {default_branch}: any = await this.http
+        .get(url, {headers: this.headers(this.token)})
+        .catch(this.errorHandler);
       branch = default_branch;
     }
 
     if (!commit) {
       const url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/refs/heads/${branch}`;
-      const head: any = await this.http.get(url, {headers: this.headers(this.token)});
+      const head: any = await this.http
+        .get(url, {headers: this.headers(this.token)})
+        .catch(this.errorHandler);
       commit = head.object.sha;
     }
 
@@ -64,10 +70,12 @@ export class Github implements RepoStrategy {
     }
 
     if (this.activeBranch.name != branch) {
-      const existingBranches: any[] = await this.listBranches(repo, this.username, this.token);
+      const existingBranches: any = await this.listBranches(repo, this.username, this.token).catch(
+        this.errorHandler
+      );
 
       if (existingBranches.findIndex(b => b.name == branch) != -1) {
-        throw new Error(`Branch ${branch} already exists.`);
+        throw new Error(`Branch ${branch} has already exist.`);
       }
     }
 
@@ -76,11 +84,9 @@ export class Github implements RepoStrategy {
     // 1) Upload file to github
     let url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/blobs`;
     for (const file of files) {
-      const {sha: uploadedFile}: any = await this.http.post(
-        url,
-        {content: file.content},
-        {headers: this.headers(this.token)}
-      );
+      const {sha: uploadedFile}: any = await this.http
+        .post(url, {content: file.content}, {headers: this.headers(this.token)})
+        .catch(this.errorHandler);
 
       tree.push({
         path: file.name,
@@ -92,24 +98,24 @@ export class Github implements RepoStrategy {
 
     // 2) Upload new tree that includes files
     url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/trees`;
-    const {sha: uploadedTree}: any = await this.http.post(
-      url,
-      {tree},
-      {headers: this.headers(this.token)}
-    );
+    const {sha: uploadedTree}: any = await this.http
+      .post(url, {tree}, {headers: this.headers(this.token)})
+      .catch(this.errorHandler);
 
     // 3) Upload new commit that includes tree
     url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/commits`;
 
-    const {sha: uploadedCommit}: any = await this.http.post(
-      url,
-      {
-        message,
-        tree: uploadedTree,
-        parents: [this.activeBranch.head]
-      },
-      {headers: this.headers(this.token)}
-    );
+    const {sha: uploadedCommit}: any = await this.http
+      .post(
+        url,
+        {
+          message,
+          tree: uploadedTree,
+          parents: [this.activeBranch.head]
+        },
+        {headers: this.headers(this.token)}
+      )
+      .catch(this.errorHandler);
 
     // 4) Update head as it will show the new commit
     let request;
@@ -130,7 +136,7 @@ export class Github implements RepoStrategy {
       request = this.http.patch(url, {sha: uploadedCommit}, {headers: this.headers(this.token)});
     }
 
-    await request;
+    await request.catch(this.errorHandler);
 
     await this.switchBranch(branch, uploadedCommit);
   }
@@ -147,11 +153,15 @@ export class Github implements RepoStrategy {
     }
 
     const url = `${this.repoBaseUrl}/${this.username}/${this.repo}/git/commits/${this.activeBranch.head}`;
-    const lastCommit: any = await this.http.get(url, {headers: this.headers(this.token)});
+    const lastCommit: any = await this.http
+      .get(url, {headers: this.headers(this.token)})
+      .catch(this.errorHandler);
 
-    const {tree}: any = await this.http.get(lastCommit.tree.url, {
-      headers: this.headers(this.token)
-    });
+    const {tree}: any = await this.http
+      .get(lastCommit.tree.url, {
+        headers: this.headers(this.token)
+      })
+      .catch(this.errorHandler);
 
     const changes = [];
     for (const node of tree) {
@@ -164,10 +174,14 @@ export class Github implements RepoStrategy {
       change.function = node.path;
       change.files = [];
 
-      const {tree: files}: any = await this.http.get(node.url, {headers: this.headers(this.token)});
+      const {tree: files}: any = await this.http
+        .get(node.url, {headers: this.headers(this.token)})
+        .catch(this.errorHandler);
 
       for (const file of files) {
-        const fileDetails: any = await this.http.get(file.url, {headers: this.headers(this.token)});
+        const fileDetails: any = await this.http
+          .get(file.url, {headers: this.headers(this.token)})
+          .catch(this.errorHandler);
 
         let content = fileDetails.content;
         if (fileDetails.encoding == "base64") {
@@ -192,6 +206,26 @@ export class Github implements RepoStrategy {
       .get("https://api.github.com/user", {
         headers: this.headers(token)
       })
-      .then((res: any) => res.login);
+      .then((res: any) => res.login)
+      .catch(this.errorHandler);
+  }
+
+  errorHandler(e: any) {
+    let message = `Github rejected this operation with '${e.message}'`;
+
+    const messages = [];
+
+    if (e.errors) {
+      for (const err of e.errors) {
+        messages.push(err.message);
+      }
+    }
+
+    message += messages.join(",");
+
+    if (e.documentation_url) {
+      message = `${message} See the link for more details: ${e.documentation_url}`;
+    }
+    throw Error(message);
   }
 }
