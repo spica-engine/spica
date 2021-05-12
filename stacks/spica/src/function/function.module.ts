@@ -47,7 +47,7 @@ import {EnqueuerPipe} from "./pipes/enqueuer";
 import * as fromFunction from "./reducers/function.reducer";
 import {WebhookModule} from "./webhook.module";
 import {FunctionCodeEditorComponent} from "./components/function-code-editor/function-code-editor.component";
-import { RepositoryComponent } from "./components/repository/repository.component";
+import {RepositoryComponent} from "./components/repository/repository.component";
 
 @NgModule({
   imports: [

@@ -32,10 +32,10 @@ ts_library(
         "@npm//@types/json-schema",
         "@npm//@types/mongodb",
         "@npm//@types/node",
+        "@npm//axios",
         "@npm//rimraf",
         "@npm//rxjs",
         "@npm//typescript",
-        "@npm//axios",
     ],
 )
 

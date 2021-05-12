@@ -71,12 +71,11 @@ export class RepositoryComponent {
     }
   }
 
-  clearPushStrategy(){
+  clearPushStrategy() {
     this.pushStrategy.target = undefined;
     this.pushStrategy.repo = undefined;
     this.pushStrategy.branch = undefined;
     this.pushStrategy.message = undefined;
-    console.log(this.pushStrategy)
+    console.log(this.pushStrategy);
   }
-
 }
