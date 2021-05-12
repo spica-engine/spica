@@ -14,7 +14,7 @@ export class IndexComponent implements OnInit {
 
   constructor(private functionService: FunctionService) {}
 
-  async ngOnInit() {
+  ngOnInit() {
     this.$data = this.functionService.getFunctions();
   }
 
