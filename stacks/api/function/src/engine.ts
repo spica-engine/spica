@@ -148,6 +148,8 @@ export class FunctionEngine implements OnModuleDestroy {
               if (e.code == "ENOENT") {
                 return false;
               }
+
+              throw Error(e);
             })
         )
       );
