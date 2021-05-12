@@ -75,7 +75,7 @@ export class Github implements RepoStrategy {
       );
 
       if (existingBranches.findIndex(b => b.name == branch) != -1) {
-        throw new Error(`Branch ${branch} has already exist.`);
+        throw new Error(`Branch ${branch} already exists.`);
       }
     }
 
