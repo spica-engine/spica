@@ -11,6 +11,7 @@ import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
+import {NgModel} from "@angular/forms";
 
 @Component({
   selector: "bucket-data-index",
@@ -63,7 +64,8 @@ export class IndexComponent implements OnInit {
     length: 0
   };
 
-  editModes = new Map<string, Set<string>>();
+  // id_field => previousValue
+  editModes = new Map<string, any>();
 
   constructor(
     private bs: BucketService,
@@ -73,30 +75,29 @@ export class IndexComponent implements OnInit {
     private sanitizer: DomSanitizer
   ) {}
 
-  openEditMode(id: string, key: string) {
-    const editedFields = this.editModes.has(id) ? this.editModes.get(id) : new Set<string>();
+  getEditModeId(id: string, key: string) {
+    return `${id}_${key};`;
+  }
 
-    editedFields.add(key);
+  openEditMode(id: string, key: string, value: any) {
+    const editModeId = this.getEditModeId(id, key);
 
-    this.editModes.set(id, editedFields);
+    this.editModes.set(editModeId, value);
   }
 
   onEditMode(id: string, key: string) {
-    return this.editModes.has(id)
-      ? Array.from(this.editModes.get(id).values()).findIndex(f => f == key) != -1
-      : false;
+    const editModeId = this.getEditModeId(id, key);
+    return this.editModes.get(editModeId);
   }
 
-  blurEditMode(id: string, key: string) {
-    const fields = this.editModes.get(id);
+  closeEditMode(id: string, key: string, model: NgModel) {
+    const editModeId = this.getEditModeId(id, key);
 
-    if (!fields) {
-      return;
-    }
+    const previousValue = this.editModes.get(editModeId);
 
-    fields.delete(key);
+    model.control.setValue(previousValue);
 
-    this.editModes.set(id, fields);
+    this.editModes.delete(editModeId);
   }
 
   ngOnInit(): void {
@@ -400,8 +401,13 @@ export class IndexComponent implements OnInit {
     });
   }
 
-  saveBucketDocument(document:BucketEntry){
-    console.log(document)
+  saveBucketData(bucketid: string, document: BucketEntry) {
+    this.bds
+      .replaceOne(bucketid, document)
+      .toPromise()
+      .finally(() => {
+        this.refresh.next();
+      });
   }
 
   delete(id: string): void {

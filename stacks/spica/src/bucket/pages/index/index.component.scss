@@ -150,10 +150,10 @@
             margin-bottom: 0px !important;
             margin-top: 0px !important;
 
-            .mat-form-field-hint-wrapper, .mat-form-field-label{
+            .mat-form-field-hint-wrapper,
+            .mat-form-field-label {
               display: none;
             }
-
           }
 
           button.inline-edit {
@@ -164,7 +164,7 @@
             display: inline-block;
           }
 
-          > span:hover + button.inline-edit {
+          span.cell:hover + button.inline-edit {
             display: inline-block;
           }
         }
