@@ -249,32 +249,38 @@
               {{ property.value.title }}
             </th>
             <td mat-cell *matCellDef="let row">
-              <ng-container *ngIf="!onEditMode(row._id, property.key)">
-                <span
-                  class="cell"
-                  [innerHTML]="buildTemplate(row[property.key], property.value, property.key)"
-                >
-                </span>
-                <button
-                  canInteract="bucket:data:update"
-                  [resource]="schema._id + '/' + row._id"
-                  class="inline-edit"
-                  mat-icon-button
-                  (click)="openEditMode(row._id, property.key, row[property.key])"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
-              </ng-container>
               <span
+                *ngIf="!isEditModeEnabled(row._id, property.key)"
+                class="cell"
+                [innerHTML]="buildTemplate(row[property.key], property.value, property.key)"
+              ></span>
+              <span
+                [attr.id]="row._id + '_' + property.key"
                 #model="ngModel"
-                *ngIf="onEditMode(row._id, property.key)"
+                *ngIf="isEditModeEnabled(row._id, property.key)"
                 class="input-placer"
                 [inputPlacer]="property.value"
                 [(ngModel)]="row[property.key]"
-                (focusout)="closeEditMode(row._id, property.key, model)"
-                (keyup.enter)="saveBucketData(schema._id, row)"
+                (keyup.enter)="
+                  patchBucketData(schema._id, row._id, property.key, row[property.key])
+                "
+                (keyup.esc)="revertEditModeChanges(row._id, property.key, model)"
+                (keydown.tab)="
+                  patchBucketData(schema._id, row._id, property.key, row[property.key]);
+                  editNext(property.key, row)
+                "
               >
               </span>
+              <button
+                *ngIf="!isEditModeEnabled(row._id, property.key)"
+                canInteract="bucket:data:update"
+                [resource]="schema._id + '/' + row._id"
+                class="inline-edit"
+                mat-icon-button
+                (click)="enableEditMode(row._id, property.key, row[property.key])"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
             </td>
           </ng-container>
         </ng-container>

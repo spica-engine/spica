@@ -79,24 +79,49 @@ export class IndexComponent implements OnInit {
     return `${id}_${key};`;
   }
 
-  openEditMode(id: string, key: string, value: any) {
+  enableEditMode(id: string, key: string, value: any) {
     const editModeId = this.getEditModeId(id, key);
-
     this.editModes.set(editModeId, value);
   }
 
-  onEditMode(id: string, key: string) {
+  isEditModeEnabled(id: string, key: string) {
     const editModeId = this.getEditModeId(id, key);
-    return this.editModes.get(editModeId);
+    return this.editModes.has(editModeId);
   }
 
-  closeEditMode(id: string, key: string, model: NgModel) {
+  editNext(key: string, data: any) {
+    const editableKeys = this.displayedProperties.filter(
+      k => !(k.startsWith("$$spicainternal") || k == "_id")
+    );
+
+    const nextKey = editableKeys[editableKeys.indexOf(key) + 1];
+
+    // end of cells for this row
+    if (!nextKey) {
+      return;
+    }
+
+    this.enableEditMode(data._id, nextKey, data[nextKey]);
+
+    // temporary fix
+    setTimeout(() => {
+      const el = document.getElementById(`${data._id}_${nextKey};`);
+      (el.querySelector(".mat-input-element") as HTMLElement).focus();
+    }, 1000);
+  }
+
+  revertEditModeChanges(id: string, key: string, model: NgModel) {
     const editModeId = this.getEditModeId(id, key);
 
     const previousValue = this.editModes.get(editModeId);
 
     model.control.setValue(previousValue);
 
+    this.disableEditMode(id, key);
+  }
+
+  disableEditMode(id: string, key: string) {
+    const editModeId = this.getEditModeId(id, key);
     this.editModes.delete(editModeId);
   }
 
@@ -401,11 +426,12 @@ export class IndexComponent implements OnInit {
     });
   }
 
-  saveBucketData(bucketid: string, document: BucketEntry) {
-    this.bds
-      .replaceOne(bucketid, document)
+  patchBucketData(bucketid: string, documentid: string, key: string, value: any) {
+    return this.bds
+      .patchOne(bucketid, documentid, {[key]: value})
       .toPromise()
       .finally(() => {
+        this.disableEditMode(documentid, key);
         this.refresh.next();
       });
   }
@@ -446,9 +472,6 @@ export class IndexComponent implements OnInit {
       return this.templateMap.get(key);
     }
 
-    if (value == undefined || value == null) {
-      result = value;
-    }
     switch (property.type) {
       case "object":
         result = JSON.stringify(value);
@@ -479,13 +502,22 @@ export class IndexComponent implements OnInit {
         result = [value.coordinates[1], value.coordinates[0]];
         break;
       default:
-        result = value;
+        result = this.sanitizer.bypassSecurityTrustHtml(
+          `<span style='display:inline-block; min-width:20px'>${
+            this.isValidValue(value) ? value : ""
+          }</span>`
+        );
+
         break;
     }
 
     this.templateMap.set(key, result);
 
     return result;
+  }
+
+  isValidValue(val) {
+    return val != undefined && val != null;
   }
 
   isValidOnetoMany(property, value) {
