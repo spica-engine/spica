@@ -2,7 +2,7 @@ import {HttpClient} from "@angular/common/http";
 import {Injectable} from "@angular/core";
 import {delay, filter, map, retryWhen, take, tap} from "rxjs/operators";
 import {RepositoryService} from "../interface";
-import uuid from "uuid";
+import {v4 as uuidv4} from "uuid";
 
 @Injectable({providedIn: "root"})
 export class GithubService implements RepositoryService {
@@ -58,7 +58,7 @@ export class GithubService implements RepositoryService {
   }
 
   getLoginPage() {
-    this.state = uuid();
+    this.state = uuidv4();
     const url = `https://hq.spicaengine.com/api/fn-execute/github-oauth?state=${this.state}`;
     return this.http.get<{url: string}>(url).pipe(map(res => res.url));
   }
