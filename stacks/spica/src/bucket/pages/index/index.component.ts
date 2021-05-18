@@ -71,7 +71,7 @@ export class IndexComponent implements OnInit {
   // id => keys
   enabledEditsMap = new Map<string, string[]>();
 
-  nonEditableTypes = ["storage", "relation","richtext"];
+  nonEditableTypes = ["storage", "relation", "richtext"];
 
   constructor(
     private bs: BucketService,
@@ -466,8 +466,7 @@ export class IndexComponent implements OnInit {
 
         result = this.buildHtml({
           name: "div",
-          style,
-          noEndTag: true
+          style
         });
 
         break;
@@ -517,7 +516,6 @@ export class IndexComponent implements OnInit {
         defs = this.getDefaulHtmlDefs(value);
 
         result = this.buildHtml(defs);
-
         break;
     }
 
@@ -533,7 +531,7 @@ export class IndexComponent implements OnInit {
         display: "inline-block",
         "min-width": "20px"
       },
-      value: this.isValidValue(value) ? value : ""
+      value
     };
   }
 
@@ -554,7 +552,9 @@ export class IndexComponent implements OnInit {
 
     const html = options.noEndTag
       ? `<${options.name} style='${style}' ${props}>`
-      : `<${options.name} style='${style}' ${props}>${options.value}</${options.name}>`;
+      : `<${options.name} style='${style}' ${props}>${
+          this.isValidValue(options.value) ? options.value : ""
+        }</${options.name}>`;
 
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
