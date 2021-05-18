@@ -264,7 +264,7 @@
                 [(ngModel)]="row[property.key]"
                 (keyup.enter)="
                   patchBucketData(schema._id, row._id, property.key, row[property.key]);
-                  disableEditMode(row._id, property.key);
+                  disableEditMode(row._id, property.key)
                 "
                 (keyup.esc)="revertEditModeChanges(row._id, property.key, model)"
                 (keydown.tab)="

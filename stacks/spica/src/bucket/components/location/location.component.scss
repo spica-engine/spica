@@ -48,7 +48,7 @@
     }
   }
 
-  &.minimal-input-placer{
+  &.minimal-input-placer {
     width: 250px !important;
     height: 250px !important;
 
@@ -65,19 +65,17 @@
           display: none;
         }
 
-        button:nth-of-type(2){
+        button:nth-of-type(2) {
           position: absolute;
           right: 10px;
-          top:10px;
+          top: 10px;
           z-index: 1000;
         }
-
       }
     }
 
-    section.content{
+    section.content {
       height: 100%;
     }
-
   }
 }
