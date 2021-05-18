@@ -263,11 +263,13 @@
                 [minimal]="true"
                 [(ngModel)]="row[property.key]"
                 (keyup.enter)="
-                  patchBucketData(schema._id, row._id, property.key, row[property.key])
+                  patchBucketData(schema._id, row._id, property.key, row[property.key]);
+                  disableEditMode(row._id, property.key);
                 "
                 (keyup.esc)="revertEditModeChanges(row._id, property.key, model)"
                 (keydown.tab)="
                   patchBucketData(schema._id, row._id, property.key, row[property.key]);
+                  disableEditMode(row._id, property.key);
                   editNext(row._id, property.key)
                 "
               >

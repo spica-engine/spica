@@ -71,7 +71,7 @@ export class IndexComponent implements OnInit {
   // id => keys
   enabledEditsMap = new Map<string, string[]>();
 
-  nonEditableTypes = ["storage", "relation"];
+  nonEditableTypes = ["storage", "relation","richtext"];
 
   constructor(
     private bs: BucketService,
@@ -585,8 +585,6 @@ export class IndexComponent implements OnInit {
   }
 
   editNext(id: string, key: string) {
-    this.disableEditMode(id, key);
-
     const fields = this.editableProps.filter(p => this.displayedProperties.includes(p));
 
     let nextDataId = id;

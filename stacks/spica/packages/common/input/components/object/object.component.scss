@@ -23,4 +23,19 @@
       }
     }
   }
+
+  &.minimal-input-placer {
+    section:first-of-type {
+      display: none;
+    }
+
+    ::ng-deep .mat-form-field-wrapper {
+      padding: 0px !important;
+      margin: 0px !important;
+
+      .mat-form-field-hint-wrapper{
+        display: none;
+      }
+    }
+  }
 }
