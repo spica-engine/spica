@@ -41,6 +41,7 @@ import {InputResolver} from "./input.resolver";
 export class InputPlacerComponent
   implements ControlValueAccessor, OnDestroy, OnChanges, AfterContentInit {
   @Input("inputPlacer") schema: InputSchema;
+  @Input("minimal") minimalStyle: boolean;
   @Input() class: string;
   @Input() name: string;
   @Input() required: boolean;
@@ -138,6 +139,10 @@ export class InputPlacerComponent
 
       this._renderer.addClass(this._placerRef.location.nativeElement, this.schema.type);
       this._renderer.addClass(this._placerRef.location.nativeElement, "input-placer-input");
+
+      if (this.minimalStyle) {
+        this._renderer.addClass(this._placerRef.location.nativeElement, "minimal-input-placer");
+      }
     } else if (changes.schema && !this.schema && this._placerRef) {
       this._viewContainerRef.remove(this._viewContainerRef.indexOf(this._placerRef.hostView));
     }

@@ -151,3 +151,17 @@ $custom-typography: mat-typography-config(
 .ng-disabled-button:hover {
   cursor: not-allowed;
 }
+
+.minimal-input-placer {
+  > mat-form-field {
+    .mat-form-field-wrapper {
+      padding: 0px !important;
+      margin: 0px !important;
+
+      .mat-form-field-hint-wrapper,
+      .mat-form-field-label {
+        display: none;
+      }
+    }
+  }
+}

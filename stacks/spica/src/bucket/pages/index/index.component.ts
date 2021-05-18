@@ -3,7 +3,7 @@ import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";
-import {merge, Observable} from "rxjs";
+import {merge, Observable, Subject} from "rxjs";
 import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
@@ -36,7 +36,7 @@ export class IndexComponent implements OnInit {
   bucketId: string;
   schema$: Observable<Bucket>;
   data$: Observable<BucketData>;
-  refresh = new EventEmitter();
+  refresh = new Subject();
   loaded: boolean;
 
   filter: {[key: string]: any} = {};
@@ -64,8 +64,14 @@ export class IndexComponent implements OnInit {
     length: 0
   };
 
-  // id_field => previousValue
-  editModes = new Map<string, any>();
+  editableProps = [];
+
+  copyEntries = [];
+
+  // id => keys
+  enabledEditsMap = new Map<string, string[]>();
+
+  nonEditableTypes = ["storage", "relation"];
 
   constructor(
     private bs: BucketService,
@@ -74,56 +80,6 @@ export class IndexComponent implements OnInit {
     private router: Router,
     private sanitizer: DomSanitizer
   ) {}
-
-  getEditModeId(id: string, key: string) {
-    return `${id}_${key};`;
-  }
-
-  enableEditMode(id: string, key: string, value: any) {
-    const editModeId = this.getEditModeId(id, key);
-    this.editModes.set(editModeId, value);
-  }
-
-  isEditModeEnabled(id: string, key: string) {
-    const editModeId = this.getEditModeId(id, key);
-    return this.editModes.has(editModeId);
-  }
-
-  editNext(key: string, data: any) {
-    const editableKeys = this.displayedProperties.filter(
-      k => !(k.startsWith("$$spicainternal") || k == "_id")
-    );
-
-    const nextKey = editableKeys[editableKeys.indexOf(key) + 1];
-
-    // end of cells for this row
-    if (!nextKey) {
-      return;
-    }
-
-    this.enableEditMode(data._id, nextKey, data[nextKey]);
-
-    // temporary fix
-    setTimeout(() => {
-      const el = document.getElementById(`${data._id}_${nextKey};`);
-      (el.querySelector(".mat-input-element") as HTMLElement).focus();
-    }, 1000);
-  }
-
-  revertEditModeChanges(id: string, key: string, model: NgModel) {
-    const editModeId = this.getEditModeId(id, key);
-
-    const previousValue = this.editModes.get(editModeId);
-
-    model.control.setValue(previousValue);
-
-    this.disableEditMode(id, key);
-  }
-
-  disableEditMode(id: string, key: string) {
-    const editModeId = this.getEditModeId(id, key);
-    this.editModes.delete(editModeId);
-  }
 
   ngOnInit(): void {
     this.rootUrl = window.location.origin;
@@ -153,6 +109,10 @@ export class IndexComponent implements OnInit {
           {name: "$$spicainternal_schedule", title: "Scheduled"},
           {name: "$$spicainternal_actions", title: "Actions"}
         ];
+
+        this.editableProps = Object.entries(schema.properties)
+          .filter(([k, v]) => !this.nonEditableTypes.includes(v.type))
+          .map(([k, v]) => k);
 
         if (!schema.readOnly) {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
@@ -284,7 +244,8 @@ export class IndexComponent implements OnInit {
         }, 1000);
 
         return response.data;
-      })
+      }),
+      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries))))
     );
   }
 
@@ -427,27 +388,26 @@ export class IndexComponent implements OnInit {
   }
 
   patchBucketData(bucketid: string, documentid: string, key: string, value: any) {
+    const patch = {[key]: value == undefined ? null : value};
+
     return this.bds
-      .patchOne(bucketid, documentid, {[key]: value})
+      .patchOne(bucketid, documentid, patch)
       .toPromise()
-      .finally(() => {
-        this.disableEditMode(documentid, key);
-        this.refresh.next();
-      });
+      .finally(() => this.refresh.next());
   }
 
   delete(id: string): void {
     this.bds
       .delete(this.bucketId, id)
       .toPromise()
-      .then(() => this.refresh.emit());
+      .then(() => this.refresh.next());
   }
 
   deleteSelectedItems() {
     this.bds
       .deleteMany(this.bucketId, this.selectedItems.map(i => i._id))
       .toPromise()
-      .then(() => this.refresh.emit());
+      .then(() => this.refresh.next());
   }
 
   guideRequest(url: string, key: string) {
@@ -464,49 +424,99 @@ export class IndexComponent implements OnInit {
   }
 
   buildTemplate(value, property, name) {
-    let result;
-
     const key = `${name}_${typeof value == "object" ? JSON.stringify(value) : value}`;
 
     if (this.templateMap.has(key)) {
       return this.templateMap.get(key);
     }
 
+    let result;
+    let defs;
+    let newValue;
+    let style;
+    let props;
+
     switch (property.type) {
       case "object":
-        result = JSON.stringify(value);
+        newValue = JSON.stringify(value);
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       case "date":
-        result = new Date(value).toLocaleString();
+        newValue = new Date(value).toLocaleString();
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       case "color":
-        result = this.sanitizer.bypassSecurityTrustHtml(
-          `<div style='width:20px; height:20px; background-color:${value}; border-radius:3px'></div>`
-        );
+        style = {
+          display: "inline-block",
+          width: "20px",
+          height: "20px",
+          "background-color": value,
+          "border-radius": "3px"
+        };
+
+        result = this.buildHtml({
+          name: "div",
+          style,
+          noEndTag: true
+        });
+
         break;
+
       case "relation":
         if (this.isValidOnetoMany(property, value)) {
-          result = value.map(val =>
+          newValue = value.map(val =>
             val.hasOwnProperty(property.primary) ? val[property.primary] : val
           );
         } else if (this.isValidOnetoOne(property, value)) {
-          result = value.hasOwnProperty(property.primary) ? value[property.primary] : value;
+          newValue = value.hasOwnProperty(property.primary) ? value[property.primary] : value;
         }
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       case "storage":
-        result = this.sanitizer.bypassSecurityTrustHtml(
-          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=${value} alt=${value}>`
-        );
+        style = {
+          width: "100px",
+          height: "100px",
+          margin: "10px",
+          "border-radius": "3px"
+        };
+
+        props = {
+          src: value,
+          alt: value
+        };
+
+        result = this.buildHtml({name: "img", style, props, noEndTag: true});
+
         break;
+
       case "location":
-        result = [value.coordinates[1], value.coordinates[0]];
+        newValue = value ? [value.coordinates[1], value.coordinates[0]] : [];
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       default:
-        result = this.sanitizer.bypassSecurityTrustHtml(
-          `<span style='display:inline-block; min-width:20px'>${
-            this.isValidValue(value) ? value : ""
-          }</span>`
-        );
+        defs = this.getDefaulHtmlDefs(value);
+
+        result = this.buildHtml(defs);
 
         break;
     }
@@ -514,6 +524,39 @@ export class IndexComponent implements OnInit {
     this.templateMap.set(key, result);
 
     return result;
+  }
+
+  getDefaulHtmlDefs(value: any) {
+    return {
+      name: "div",
+      style: {
+        display: "inline-block",
+        "min-width": "20px"
+      },
+      value: this.isValidValue(value) ? value : ""
+    };
+  }
+
+  buildHtml(options: {
+    name: string;
+    style: object;
+    props?: object;
+    noEndTag?: boolean;
+    value?: string;
+  }) {
+    const style = Object.entries(options.style)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(";");
+
+    const props = Object.entries(options.props || {})
+      .map(([key, value]) => `${key}=${value}`)
+      .join(" ");
+
+    const html = options.noEndTag
+      ? `<${options.name} style='${style}' ${props}>`
+      : `<${options.name} style='${style}' ${props}>${options.value}</${options.name}>`;
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   isValidValue(val) {
@@ -526,5 +569,68 @@ export class IndexComponent implements OnInit {
 
   isValidOnetoOne(property, value) {
     return property.relationType == "onetoone" && typeof value == "object";
+  }
+
+  // inline editing
+  enableEditMode(id: string, key: string) {
+    const fields = this.enabledEditsMap.has(id) ? this.enabledEditsMap.get(id) : [];
+
+    fields.push(key);
+
+    this.enabledEditsMap.set(id, fields);
+  }
+
+  isEditModeEnabled(id: string, key: string) {
+    return this.enabledEditsMap.has(id) && this.enabledEditsMap.get(id).includes(key);
+  }
+
+  editNext(id: string, key: string) {
+    this.disableEditMode(id, key);
+
+    const fields = this.editableProps.filter(p => this.displayedProperties.includes(p));
+
+    let nextDataId = id;
+    let nextField = fields[fields.indexOf(key) + 1];
+
+    if (!nextField) {
+      const dataIds = this.copyEntries.map(v => v._id);
+
+      nextDataId = dataIds[dataIds.indexOf(id) + 1];
+
+      if (!nextDataId) {
+        return;
+      }
+
+      nextField = this.editableProps[0];
+    }
+
+    this.enableEditMode(nextDataId, nextField);
+
+    // temporary fix
+    setTimeout(() => {
+      const el = document.getElementById(`${nextDataId}_${nextField}`);
+      if (el) {
+        const input = el.querySelector(".mat-input-element") as HTMLElement;
+        if (input) {
+          input.focus();
+        }
+      }
+    }, 1000);
+  }
+
+  revertEditModeChanges(id: string, key: string, model: NgModel) {
+    const previousValue = this.copyEntries.find(v => id == v._id)[key];
+
+    model.control.setValue(previousValue);
+
+    this.disableEditMode(id, key);
+  }
+
+  disableEditMode(id: string, key: string) {
+    const fields = this.enabledEditsMap.get(id);
+
+    fields.splice(fields.indexOf(key), 1);
+
+    this.enabledEditsMap.set(id, fields);
   }
 }

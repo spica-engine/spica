@@ -223,7 +223,7 @@
                   ? deleteWithDependentsDialog
                   : deleteDialog,
                 answer: row.hasOwnProperty(schema.primary)
-                  ? row[schema.primary].toString()
+                  ? row[schema.primary]?.toString()
                   : 'agree',
                 list: getDependents(schema, [row])
               }"
@@ -260,6 +260,7 @@
                 *ngIf="isEditModeEnabled(row._id, property.key)"
                 class="input-placer"
                 [inputPlacer]="property.value"
+                [minimal]="true"
                 [(ngModel)]="row[property.key]"
                 (keyup.enter)="
                   patchBucketData(schema._id, row._id, property.key, row[property.key])
@@ -267,17 +268,20 @@
                 (keyup.esc)="revertEditModeChanges(row._id, property.key, model)"
                 (keydown.tab)="
                   patchBucketData(schema._id, row._id, property.key, row[property.key]);
-                  editNext(property.key, row)
+                  editNext(row._id, property.key)
                 "
               >
               </span>
               <button
-                *ngIf="!isEditModeEnabled(row._id, property.key)"
+                *ngIf="
+                  nonEditableTypes.indexOf(property.value.type) == -1 &&
+                  !isEditModeEnabled(row._id, property.key)
+                "
                 canInteract="bucket:data:update"
                 [resource]="schema._id + '/' + row._id"
                 class="inline-edit"
                 mat-icon-button
-                (click)="enableEditMode(row._id, property.key, row[property.key])"
+                (click)="enableEditMode(row._id, property.key)"
               >
                 <mat-icon>edit</mat-icon>
               </button>
