@@ -8,12 +8,12 @@ import {
   LoadFunctions,
   UpsertFunction,
   UpdateFunction
-} from "./actions/function.actions";
-import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} from "./interface";
-import * as fromFunction from "./reducers/function.reducer";
+} from "../actions/function.actions";
+import {Function, Information, Log, LogFilter, WEBSOCKET_INTERCEPTOR, Trigger} from "../interface";
+import * as fromFunction from "../reducers/function.reducer";
 import {PassportService} from "@spica-client/passport";
 import {getWsObs} from "@spica-client/common";
-import {examples} from "./statics/examples";
+import {examples} from "../statics/examples";
 
 @Injectable({providedIn: "root"})
 export class FunctionService {

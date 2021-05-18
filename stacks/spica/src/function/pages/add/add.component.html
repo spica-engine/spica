@@ -2,7 +2,56 @@
   <div class="code">
     <h4 class="code-actions">
       <mat-icon>code</mat-icon> Code
-      <span></span>
+
+      <div>
+        <button
+          mat-button
+          canInteract="function:integrations"
+          [disabled]="repoPending"
+          *ngIf="!integratedUser"
+          (click)="initGithub()"
+        >
+          <mat-spinner *ngIf="repoPending" diameter="20" color="accent"></mat-spinner>
+          <mat-icon *ngIf="!repoPending">
+            link
+          </mat-icon>
+          Connect Github
+        </button>
+        <ng-container *ngIf="integratedUser">
+          <button
+            class="repo-branch"
+            [disabled]="repoPending"
+            mat-button
+            (click)="openRepoBranchDialog()"
+          >
+            <mat-spinner *ngIf="repoPending" diameter="20" color="accent"></mat-spinner>
+            <mat-icon *ngIf="!repoPending">
+              book
+            </mat-icon>
+            {{
+              selectedRepoBranch && selectedRepoBranch.repo && selectedRepoBranch.branch
+                ? selectedRepoBranch.repo + "-" + selectedRepoBranch.branch
+                : "Select repo and branch"
+            }}
+          </button>
+          <button
+            *ngIf="!repoPending"
+            class="disconnect"
+            matTooltip="Disconnect Account"
+            mat-icon-button
+            color="warn"
+            (click)="disconnectGithub()"
+          >
+            <mat-icon>clear</mat-icon>
+          </button>
+          <span class="repo-response">
+            {{ repoResponse }}
+          </span>
+        </ng-container>
+      </div>
+
+      <span class="seperator"></span>
+
       <div class="actions">
         <button
           mat-icon-button
@@ -23,6 +72,7 @@
             color="primary"
             mode="indeterminate"
             [diameter]="18"
+            color="accent"
           >
           </mat-progress-spinner>
         </span>

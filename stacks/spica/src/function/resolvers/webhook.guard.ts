@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {WebhookService} from "../webhook.service";
+import {WebhookService} from "../services/webhook.service";
 import {Router} from "@angular/router";
 import {take, map} from "rxjs/operators";
 
