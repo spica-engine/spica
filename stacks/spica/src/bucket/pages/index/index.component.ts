@@ -658,7 +658,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     this.enabledEditsMap.set(id, fields);
   }
-  
+
   refreshOnImageErrorStyle(isDark: boolean) {
     const src = "assets/image_not_supported.svg";
 
