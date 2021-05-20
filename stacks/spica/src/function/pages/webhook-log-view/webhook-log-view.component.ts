@@ -1,6 +1,6 @@
 import {Component, OnInit, OnDestroy} from "@angular/core";
 import {WebhookLogFilter, WebhookLog} from "@spica-client/function/interface";
-import {WebhookService} from "@spica-client/function/webhook.service";
+import {WebhookService} from "@spica-client/function/services/webhook.service";
 import {DataSource} from "@angular/cdk/table";
 import {Subscription, BehaviorSubject, Observable} from "rxjs";
 import {CollectionViewer} from "@angular/cdk/collections";

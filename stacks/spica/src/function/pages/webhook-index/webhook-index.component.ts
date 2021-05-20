@@ -3,7 +3,7 @@ import {MatPaginator} from "@angular/material/paginator";
 import {merge, Observable, of, Subject} from "rxjs";
 import {map, switchMap} from "rxjs/operators";
 import {Webhook} from "../../interface";
-import {WebhookService} from "../../webhook.service";
+import {WebhookService} from "../../services/webhook.service";
 
 @Component({
   selector: "webhook-index",

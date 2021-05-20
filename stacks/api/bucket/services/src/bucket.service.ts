@@ -37,6 +37,23 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     return insertedBucket;
   }
 
+  async updateUniqueFields(id: string | ObjectId, newSchema: Bucket) {
+    const collection = this.db.collection(getBucketDataCollection(id));
+
+    const indexes = await collection
+      .listIndexes()
+      .toArray()
+      .then(indexes => indexes.filter(i => i.unique).map(i => Object.keys(i.key)[0]));
+
+    const newIndexes = this.getUniqueFields(newSchema);
+
+    for (const index of indexes) {
+      if (newIndexes.indexOf(index) == -1) {
+        await collection.dropIndex({[index]: 1} as any);
+      }
+    }
+  }
+
   watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
     return new Observable(observer => {
       if (propagateOnStart) {
@@ -72,12 +89,20 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
   }
 
   createUniqueIndexDefs(bucket: Bucket) {
-    const indexDefinitions = [];
+    return this.getUniqueFields(bucket).map(field => {
+      return {
+        [field]: 1
+      };
+    });
+  }
+
+  getUniqueFields(bucket: Bucket) {
+    const fields = [];
     for (const [name, definition] of Object.entries(bucket.properties)) {
       if (definition.options && definition.options.unique) {
-        indexDefinitions.push({[name]: 1});
+        fields.push(name);
       }
     }
-    return indexDefinitions;
+    return fields;
   }
 }
