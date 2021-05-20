@@ -35,6 +35,7 @@ import {Function} from "./interface";
 import {FUNCTION_OPTIONS, Options} from "./options";
 import {generate} from "./schema/enqueuer.resolver";
 import {changesFromTriggers, createTargetChanges} from "./change";
+import {LogService} from "./log/src/log.service";
 
 /**
  * @name Function
@@ -46,6 +47,7 @@ export class FunctionController {
     private fs: FunctionService,
     private engine: FunctionEngine,
     private scheduler: Scheduler,
+    private log: LogService,
     @Inject(FUNCTION_OPTIONS) private options: Options
   ) {}
 
@@ -108,6 +110,8 @@ export class FunctionController {
     if (!fn) {
       throw new NotFoundException("Couldn't find the function.");
     }
+
+    this.log.deleteMany({function: id.toString()});
 
     const changes = createTargetChanges(fn, ChangeKind.Removed);
     this.engine.categorizeChanges(changes);
