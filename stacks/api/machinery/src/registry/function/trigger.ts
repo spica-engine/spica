@@ -88,7 +88,25 @@ const TriggerV1: JSONSchema7 = {
       additionalProperties: false,
       properties: {
         collection: {
-          type: "string"
+          anyOf: [
+            {
+              type: "string",
+              enum: ["identity", "function", "buckets", "webhook"]
+            },
+            {
+              type: "object",
+              properties: {
+                resourceFieldRef: {
+                  type: "object",
+                  properties: {
+                    schemaName: {
+                      type: "string"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         },
         type: {
           type: "string",
