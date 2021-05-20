@@ -65,7 +65,8 @@
     "function:show": ["function_id"],
     "function:create": [],
     "function:update": ["function_id"],
-    "function:delete": ["function_id"]
+    "function:delete": ["function_id"],
+    "function:integrations": []
   },
   "function:logs": {
     "function:logs:index": [],

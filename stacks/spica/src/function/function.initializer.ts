@@ -7,7 +7,7 @@ import {
   Upsert
 } from "@spica-client/core/route";
 import {PassportService} from "@spica-client/passport";
-import {FunctionService} from "./function.service";
+import {FunctionService} from "./services/function.service";
 
 @Injectable()
 export class FunctionInitializer {

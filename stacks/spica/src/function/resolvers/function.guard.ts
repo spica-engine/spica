@@ -2,7 +2,7 @@ import {Injectable} from "@angular/core";
 import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot} from "@angular/router";
 import {select, Store} from "@ngrx/store";
 import {map, switchMap, take} from "rxjs/operators";
-import {FunctionService} from "../function.service";
+import {FunctionService} from "../services/function.service";
 import * as fromFunction from "../reducers/function.reducer";
 
 @Injectable({providedIn: "root"})
