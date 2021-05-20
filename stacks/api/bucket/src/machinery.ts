@@ -50,6 +50,10 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
 
       const relatedBucket = await bucketStore.get(schemaName);
 
+      if (!relatedBucket.metadata.uid) {
+        throw new Error("Related bucket could not be created yet.");
+      }
+
       raw.properties[propertyName] = {
         ...property,
         bucketId: relatedBucket.metadata.uid
