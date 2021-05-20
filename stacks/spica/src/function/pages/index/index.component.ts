@@ -1,6 +1,6 @@
 import {Component, OnInit} from "@angular/core";
 import {Observable} from "rxjs";
-import {FunctionService} from "../../function.service";
+import {FunctionService} from "../../services";
 import {Function} from "../../interface";
 
 @Component({

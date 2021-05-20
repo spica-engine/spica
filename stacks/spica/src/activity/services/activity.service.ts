@@ -5,7 +5,7 @@ import {BucketService, BucketDataService} from "@spica-client/bucket";
 import {ApiKeyService} from "@spica-client/passport/services/apikey.service";
 import {IdentityService, PolicyService, PassportService} from "@spica-client/passport";
 import {map} from "rxjs/operators";
-import {FunctionService} from "@spica-client/function/function.service";
+import {FunctionService} from "@spica-client/function/services/function.service";
 import {StorageService} from "@spica-client/storage";
 import {of} from "rxjs";
 

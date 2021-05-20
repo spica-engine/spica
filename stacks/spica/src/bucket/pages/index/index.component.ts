@@ -1,10 +1,19 @@
 import {animate, style, transition, trigger} from "@angular/animations";
-import {Component, EventEmitter, OnInit, ViewChild} from "@angular/core";
+import {Component, EventEmitter, OnDestroy, OnInit, ViewChild} from "@angular/core";
 import {MatPaginator, PageEvent} from "@angular/material/paginator";
 import {Sort} from "@angular/material/sort";
 import {ActivatedRoute, Router} from "@angular/router";
 import {merge, Observable, Subject} from "rxjs";
-import {flatMap, map, publishReplay, refCount, switchMap, take, tap} from "rxjs/operators";
+import {
+  flatMap,
+  map,
+  publishReplay,
+  refCount,
+  switchMap,
+  take,
+  tap,
+  takeUntil
+} from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
 import {BucketSettings} from "../../interfaces/bucket-settings";
@@ -12,6 +21,7 @@ import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {NgModel} from "@angular/forms";
+import {Scheme, SchemeObserver} from "@spica-client/core";
 
 @Component({
   selector: "bucket-data-index",
@@ -24,8 +34,10 @@ import {NgModel} from "@angular/forms";
     ])
   ]
 })
-export class IndexComponent implements OnInit {
+export class IndexComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator, {static: true}) paginator: MatPaginator;
+
+  onImageError;
 
   templateMap = new Map<string, any>();
 
@@ -72,14 +84,24 @@ export class IndexComponent implements OnInit {
   enabledEditsMap = new Map<string, string[]>();
 
   nonEditableTypes = ["storage", "relation", "richtext"];
+  dispose = new Subject();
 
   constructor(
     private bs: BucketService,
     private bds: BucketDataService,
     private route: ActivatedRoute,
     private router: Router,
-    private sanitizer: DomSanitizer
-  ) {}
+    private sanitizer: DomSanitizer,
+    private scheme: SchemeObserver
+  ) {
+    this.scheme
+      .observe(Scheme.Dark)
+      .pipe(takeUntil(this.dispose))
+      .subscribe(isDark => {
+        this.refreshOnImageErrorStyle(isDark);
+        this.templateMap.clear();
+      });
+  }
 
   ngOnInit(): void {
     this.rootUrl = window.location.origin;
@@ -247,6 +269,10 @@ export class IndexComponent implements OnInit {
       }),
       tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries))))
     );
+  }
+
+  ngOnDestroy() {
+    this.dispose.next();
   }
 
   getDependents(schema: Bucket, entries: BucketEntry[]) {
@@ -496,7 +522,8 @@ export class IndexComponent implements OnInit {
 
         props = {
           src: value,
-          alt: value
+          alt: value,
+          onerror: this.onImageError
         };
 
         result = this.buildHtml({name: "img", style, props, noEndTag: true});
@@ -630,5 +657,19 @@ export class IndexComponent implements OnInit {
     fields.splice(fields.indexOf(key), 1);
 
     this.enabledEditsMap.set(id, fields);
+  }
+  
+  refreshOnImageErrorStyle(isDark: boolean) {
+    const src = "assets/image_not_supported.svg";
+
+    const width = "30px";
+    const height = "30px";
+
+    const marginVertical = "10px";
+    const marginHorizontal = "45px";
+
+    const filter = `invert(${isDark ? 100 : 0}%)`;
+
+    this.onImageError = `this.src='${src}';this.style.width='${width}';this.style.height='${height}';this.style.marginLeft='${marginHorizontal}';this.style.marginRight='${marginHorizontal}';this.style.marginTop='${marginVertical}';this.style.marginBottom='${marginVertical}';this.style.filter='${filter}';`;
   }
 }
