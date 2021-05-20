@@ -23,6 +23,10 @@ export default {
     {
       action: "function:logs:delete",
       module: "function:logs"
+    },
+    {
+      action: "function:integrations",
+      module: "function"
     }
   ]
 };

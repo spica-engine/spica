@@ -22,7 +22,7 @@ import {of, Subject} from "rxjs";
 import {CanInteractDirectiveTest} from "@spica-client/passport/directives/can-interact.directive";
 import {HandlebarsLanguageDirective} from "../../directives/handlebars.language";
 import {Webhook} from "../../interface";
-import {WebhookService} from "../../webhook.service";
+import {WebhookService} from "../../services";
 import {WebhookAddComponent} from "./webhook-add.component";
 
 describe("Webhook", () => {
