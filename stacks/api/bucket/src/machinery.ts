@@ -45,25 +45,39 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
 
     raw.properties[propertyName] = property;
 
-    if (property.type == "relation" && typeof property.bucket == "object") {
-      const schemaName = property.bucket.resourceFieldRef.schemaName;
-
-      const relatedBucket = await bucketStore.get(schemaName);
-
-      if (!relatedBucket.metadata.uid) {
-        throw new Error("Related bucket could not be created yet.");
-      }
-
-      raw.properties[propertyName] = {
-        ...property,
-        bucketId: relatedBucket.metadata.uid
-      };
-
-      delete raw.properties[propertyName].bucket;
-    }
+    await normalizeRelations(raw,property,propertyName,bucketStore)
   }
 
   return raw;
+}
+
+async function normalizeRelations(raw,property,propertyName,bucketStore,){
+
+  if(property.type == "object"){
+    for(const [key,value] of Object.entries(property.properties)){
+      await normalizeRelations(raw.properties[propertyName],value,key,bucketStore)
+    }
+  }else if(property.type == "array"){
+    // will be handled
+    // @TODO: retrying count never increments
+  }else if (property.type == "relation" && typeof property.bucket == "object") {
+    const schemaName = property.bucket.resourceFieldRef.schemaName;
+
+    const relatedBucket = await bucketStore.get(schemaName);
+
+    if (!relatedBucket.metadata.uid) {
+      throw new Error("Related bucket could not be created yet.");
+    }
+
+    raw.properties[propertyName] = {
+      ...property,
+      bucketId: relatedBucket.metadata.uid
+    };
+
+    delete raw.properties[propertyName].bucket;
+  }
+
+  
 }
 
 export function registerInformers(bs: BucketService) {
