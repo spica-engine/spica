@@ -11,8 +11,8 @@ import {
   refCount,
   switchMap,
   take,
-  takeUntil,
-  tap
+  tap,
+  takeUntil
 } from "rxjs/operators";
 import {Bucket} from "../../interfaces/bucket";
 import {BucketData, BucketEntry} from "../../interfaces/bucket-entry";
@@ -20,6 +20,7 @@ import {BucketSettings} from "../../interfaces/bucket-settings";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {DomSanitizer} from "@angular/platform-browser";
+import {NgModel} from "@angular/forms";
 import {Scheme, SchemeObserver} from "@spica-client/core";
 
 @Component({
@@ -47,7 +48,7 @@ export class IndexComponent implements OnInit, OnDestroy {
   bucketId: string;
   schema$: Observable<Bucket>;
   data$: Observable<BucketData>;
-  refresh = new EventEmitter();
+  refresh = new Subject();
   loaded: boolean;
 
   filter: {[key: string]: any} = {};
@@ -75,6 +76,14 @@ export class IndexComponent implements OnInit, OnDestroy {
     length: 0
   };
 
+  editableProps = [];
+
+  copyEntries = [];
+
+  // id => keys
+  enabledEditsMap = new Map<string, string[]>();
+
+  nonEditableTypes = ["storage", "relation", "richtext"];
   dispose = new Subject();
 
   constructor(
@@ -122,6 +131,10 @@ export class IndexComponent implements OnInit, OnDestroy {
           {name: "$$spicainternal_schedule", title: "Scheduled"},
           {name: "$$spicainternal_actions", title: "Actions"}
         ];
+
+        this.editableProps = Object.entries(schema.properties)
+          .filter(([k, v]) => !this.nonEditableTypes.includes(v.type))
+          .map(([k, v]) => k);
 
         if (!schema.readOnly) {
           this.properties.unshift({name: "$$spicainternal_select", title: "Select"});
@@ -253,7 +266,8 @@ export class IndexComponent implements OnInit, OnDestroy {
         }, 1000);
 
         return response.data;
-      })
+      }),
+      tap(entries => (this.copyEntries = JSON.parse(JSON.stringify(entries))))
     );
   }
 
@@ -399,18 +413,27 @@ export class IndexComponent implements OnInit, OnDestroy {
     });
   }
 
+  patchBucketData(bucketid: string, documentid: string, key: string, value: any) {
+    const patch = {[key]: value == undefined ? null : value};
+
+    return this.bds
+      .patchOne(bucketid, documentid, patch)
+      .toPromise()
+      .finally(() => this.refresh.next());
+  }
+
   delete(id: string): void {
     this.bds
       .delete(this.bucketId, id)
       .toPromise()
-      .then(() => this.refresh.emit());
+      .then(() => this.refresh.next());
   }
 
   deleteSelectedItems() {
     this.bds
       .deleteMany(this.bucketId, this.selectedItems.map(i => i._id))
       .toPromise()
-      .then(() => this.refresh.emit());
+      .then(() => this.refresh.next());
   }
 
   guideRequest(url: string, key: string) {
@@ -427,49 +450,99 @@ export class IndexComponent implements OnInit, OnDestroy {
   }
 
   buildTemplate(value, property, name) {
-    let result;
-
     const key = `${name}_${typeof value == "object" ? JSON.stringify(value) : value}`;
 
     if (this.templateMap.has(key)) {
       return this.templateMap.get(key);
     }
 
-    if (value == undefined || value == null) {
-      result = value;
-    }
+    let result;
+    let defs;
+    let newValue;
+    let style;
+    let props;
+
     switch (property.type) {
       case "object":
-        result = JSON.stringify(value);
+        newValue = JSON.stringify(value);
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       case "date":
-        result = new Date(value).toLocaleString();
+        newValue = new Date(value).toLocaleString();
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       case "color":
-        result = this.sanitizer.bypassSecurityTrustHtml(
-          `<div style='width:20px; height:20px; background-color:${value}; border-radius:3px'></div>`
-        );
+        style = {
+          display: "inline-block",
+          width: "20px",
+          height: "20px",
+          "background-color": value,
+          "border-radius": "3px"
+        };
+
+        result = this.buildHtml({
+          name: "div",
+          style
+        });
+
         break;
+
       case "relation":
         if (this.isValidOnetoMany(property, value)) {
-          result = value.map(val =>
+          newValue = value.map(val =>
             val.hasOwnProperty(property.primary) ? val[property.primary] : val
           );
         } else if (this.isValidOnetoOne(property, value)) {
-          result = value.hasOwnProperty(property.primary) ? value[property.primary] : value;
+          newValue = value.hasOwnProperty(property.primary) ? value[property.primary] : value;
         }
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       case "storage":
-        const imageStyle = "width:100px; height:100px; margin:10px; border-radius:3px";
-        result = this.sanitizer.bypassSecurityTrustHtml(
-          `<img style='${imageStyle}' src=${value} alt=${value} onerror=${this.onImageError}>`
-        );
+        style = {
+          width: "100px",
+          height: "100px",
+          margin: "10px",
+          "border-radius": "3px"
+        };
+
+        props = {
+          src: value,
+          alt: value,
+          onerror: this.onImageError
+        };
+
+        result = this.buildHtml({name: "img", style, props, noEndTag: true});
+
         break;
+
       case "location":
-        result = [value.coordinates[1], value.coordinates[0]];
+        newValue = value ? [value.coordinates[1], value.coordinates[0]] : [];
+
+        defs = this.getDefaulHtmlDefs(newValue);
+
+        result = this.buildHtml(defs);
+
         break;
+
       default:
-        result = value;
+        defs = this.getDefaulHtmlDefs(value);
+
+        result = this.buildHtml(defs);
         break;
     }
 
@@ -478,12 +551,112 @@ export class IndexComponent implements OnInit, OnDestroy {
     return result;
   }
 
+  getDefaulHtmlDefs(value: any) {
+    return {
+      name: "div",
+      style: {
+        display: "inline-block",
+        "min-width": "20px"
+      },
+      value
+    };
+  }
+
+  buildHtml(options: {
+    name: string;
+    style: object;
+    props?: object;
+    noEndTag?: boolean;
+    value?: string;
+  }) {
+    const style = Object.entries(options.style)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(";");
+
+    const props = Object.entries(options.props || {})
+      .map(([key, value]) => `${key}=${value}`)
+      .join(" ");
+
+    const html = options.noEndTag
+      ? `<${options.name} style='${style}' ${props}>`
+      : `<${options.name} style='${style}' ${props}>${
+          this.isValidValue(options.value) ? options.value : ""
+        }</${options.name}>`;
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  isValidValue(val) {
+    return val != undefined && val != null;
+  }
+
   isValidOnetoMany(property, value) {
     return property.relationType == "onetomany" && Array.isArray(value);
   }
 
   isValidOnetoOne(property, value) {
     return property.relationType == "onetoone" && typeof value == "object";
+  }
+
+  // inline editing
+  enableEditMode(id: string, key: string) {
+    const fields = this.enabledEditsMap.has(id) ? this.enabledEditsMap.get(id) : [];
+
+    fields.push(key);
+
+    this.enabledEditsMap.set(id, fields);
+  }
+
+  isEditModeEnabled(id: string, key: string) {
+    return this.enabledEditsMap.has(id) && this.enabledEditsMap.get(id).includes(key);
+  }
+
+  editNext(id: string, key: string) {
+    const fields = this.editableProps.filter(p => this.displayedProperties.includes(p));
+
+    let nextDataId = id;
+    let nextField = fields[fields.indexOf(key) + 1];
+
+    if (!nextField) {
+      const dataIds = this.copyEntries.map(v => v._id);
+
+      nextDataId = dataIds[dataIds.indexOf(id) + 1];
+
+      if (!nextDataId) {
+        return;
+      }
+
+      nextField = this.editableProps[0];
+    }
+
+    this.enableEditMode(nextDataId, nextField);
+
+    // temporary fix
+    setTimeout(() => {
+      const el = document.getElementById(`${nextDataId}_${nextField}`);
+      if (el) {
+        const input = el.querySelector(".mat-input-element") as HTMLElement;
+        if (input) {
+          input.focus();
+        }
+      }
+    }, 1000);
+  }
+
+  revertEditModeChanges(id: string, key: string, model: NgModel) {
+    const previousValue = this.copyEntries.find(v => id == v._id)[key];
+
+    model.control.setValue(previousValue);
+
+    this.disableEditMode(id, key);
+  }
+
+  disableEditMode(id: string, key: string) {
+    const fields = this.enabledEditsMap.get(id);
+
+    fields.splice(fields.indexOf(key), 1);
+
+    this.enabledEditsMap.set(id, fields);
   }
 
   refreshOnImageErrorStyle(isDark: boolean) {

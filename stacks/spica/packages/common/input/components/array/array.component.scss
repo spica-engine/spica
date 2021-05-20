@@ -90,4 +90,10 @@
       }
     }
   }
+
+  &.minimal-input-placer {
+    mat-card-header {
+      display: none;
+    }
+  }
 }

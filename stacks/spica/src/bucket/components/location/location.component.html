@@ -1,9 +1,9 @@
-<section (click)="_onTouchedFn()">
-  <span>
+<section class="header" (click)="_onTouchedFn()">
+  <span class="title">
     <h5 class="mat-h5 mat-hint">{{ schema.title }}</h5>
     <small class="mat-hint" *ngIf="schema.description">{{ schema.description }}</small>
   </span>
-  <span>
+  <span class="buttons">
     <ng-container *ngIf="showLatLng">
       <mat-form-field>
         <mat-label>Latitude</mat-label>
@@ -48,6 +48,7 @@
   </span>
 </section>
 <section
+  class="content"
   leaflet
   (leafletClick)="applyCoords($event.latlng); callOnChange()"
   [leafletCenter]="_center"
