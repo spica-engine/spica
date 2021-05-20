@@ -56,6 +56,7 @@ describe("Engine", () => {
       database,
       mongo,
       scheduler,
+      {} as any,
       {
         root: "test_root",
         timeout: 1
