@@ -67,14 +67,16 @@ export function get(id: string) {
  */
 export function download(
   id: string,
-  headers?: any,
-  onDownloadProgress?: (progress: ProgressEvent) => void
+  options: {
+    headers?: any;
+    onDownloadProgress?: (progress: ProgressEvent) => void;
+  } = {}
 ) {
   checkInitialized(authorization);
 
   return service.get(`storage/${id}/view`, {
-    headers,
-    onDownloadProgress,
+    headers: options.headers,
+    onDownloadProgress: options.onDownloadProgress,
     responseType: isPlatformBrowser() ? "blob" : "stream"
   });
 }

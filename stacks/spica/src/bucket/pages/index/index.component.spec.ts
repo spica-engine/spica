@@ -16,7 +16,7 @@ import {MatSortModule} from "@angular/material/sort";
 import {MatTableModule} from "@angular/material/table";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatTooltipModule} from "@angular/material/tooltip";
-import {By} from "@angular/platform-browser";
+import {By, DomSanitizer} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {ActivatedRoute} from "@angular/router";
 import {RouterTestingModule} from "@angular/router/testing";
@@ -37,6 +37,7 @@ import {BucketRow} from "../../interfaces/bucket-entry";
 import {BucketDataService} from "../../services/bucket-data.service";
 import {BucketService} from "../../services/bucket.service";
 import {IndexComponent} from "./index.component";
+import {LayoutModule} from "@spica-client/core/layout";
 
 describe("IndexComponent", () => {
   let fixture: ComponentFixture<IndexComponent>;
@@ -98,7 +99,8 @@ describe("IndexComponent", () => {
         FormsModule,
         SpicaCommon,
         OwlDateTimeModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        LayoutModule
       ],
 
       providers: [
@@ -113,6 +115,12 @@ describe("IndexComponent", () => {
         {
           provide: ActivatedRoute,
           useValue: activatedRoute
+        },
+        {
+          provide: DomSanitizer,
+          useValue: {
+            bypassSecurityTrustHtml: val => val
+          }
         }
       ],
       declarations: [
@@ -413,7 +421,7 @@ describe("IndexComponent", () => {
         "table[mat-table] tr[mat-header-row] th[mat-header-cell]"
       );
       const cell = fixture.debugElement.nativeElement.querySelector(
-        "table[mat-table] tr[mat-row] td[mat-cell]"
+        "table[mat-table] tr[mat-row] td[mat-cell] span:first-of-type"
       );
       expect(headerCells[0].textContent).toBe(" test ");
       expect(headerCells[1].textContent).toBe("Actions");
@@ -494,14 +502,20 @@ describe("IndexComponent", () => {
 
   describe("row template", () => {
     let templateCache;
+    const defaultDiv = val => `<div style='display:inline-block;min-width:20px' >${val}</div>`;
+
     beforeEach(() => {
       templateCache = fixture.componentInstance.templateMap;
       templateCache.clear();
     });
 
-    it("should return when value is undefined or null", () => {
-      const template = fixture.componentInstance.buildTemplate(undefined, {}, "title");
-      expect(template).toEqual(undefined);
+    it("should return defult div when value is undefined or null", () => {
+      const template = fixture.componentInstance.buildTemplate(
+        undefined,
+        {type: "string"},
+        "title"
+      );
+      expect(template).toEqual(defaultDiv(""));
     });
 
     it("should return object", () => {
@@ -510,7 +524,7 @@ describe("IndexComponent", () => {
         {type: "object"},
         "object"
       );
-      expect(template).toEqual('{"test":"value"}');
+      expect(template).toEqual(defaultDiv(JSON.stringify({test: "value"})));
     });
 
     it("should return date", () => {
@@ -520,9 +534,9 @@ describe("IndexComponent", () => {
         {
           type: "date"
         },
-        "dates"
+        "created_at"
       );
-      expect(template).toEqual(now.toLocaleString());
+      expect(template).toEqual(defaultDiv(now.toLocaleString()));
     });
 
     it("should return color", () => {
@@ -532,15 +546,13 @@ describe("IndexComponent", () => {
         "favorite_color"
       );
       expect(template).toEqual(
-        fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
-          `<div style='width:20px; height:20px; background-color:#ffffff; border-radius:3px'></div>`
-        )
+        "<div style='display:inline-block;width:20px;height:20px;background-color:#ffffff;border-radius:3px' ></div>"
       );
     });
 
     it("should return relation one to one", () => {
       const template = fixture.componentInstance.buildTemplate(
-        {test: "value", otherField: "other_value"},
+        {test: "test", otherField: "other_value"},
         {
           type: "relation",
           relationType: "onetoone",
@@ -548,12 +560,12 @@ describe("IndexComponent", () => {
         },
         "address"
       );
-      expect(template).toEqual("value");
+      expect(template).toEqual(defaultDiv("test"));
     });
 
     it("should return relation one to many", () => {
       const template = fixture.componentInstance.buildTemplate(
-        [{test: "value", otherField: "other_value"}, {test: "value2", otherField: "other_value2"}],
+        [{test: "val1", otherField: "other_value"}, {test: "val2", otherField: "other_value2"}],
         {
           type: "relation",
           relationType: "onetomany",
@@ -561,19 +573,37 @@ describe("IndexComponent", () => {
         },
         "users"
       );
-      expect(template).toEqual(["value", "value2"]);
+      expect(template).toEqual(defaultDiv(["val1", "val2"]));
     });
 
     it("should return storage", () => {
+      fixture.componentInstance.onImageError = undefined;
+
       const template = fixture.componentInstance.buildTemplate(
         "test_url",
         {type: "storage"},
         "avatar"
       );
       expect(template).toEqual(
-        fixture.componentInstance["sanitizer"].bypassSecurityTrustHtml(
-          `<img style='width:100px; height:100px; margin:10px; border-radius:3px' src=test_url alt=test_url>`
-        )
+        "<img style='width:100px;height:100px;margin:10px;border-radius:3px' src=test_url alt=test_url onerror=undefined>"
+      );
+    });
+
+    it("should change color of not supported image", () => {
+      fixture.componentInstance.refreshOnImageErrorStyle(true);
+
+      let invert = "invert(100%)";
+
+      expect(fixture.componentInstance.onImageError).toEqual(
+        `this.src='assets/image_not_supported.svg';this.style.width='30px';this.style.height='30px';this.style.marginLeft='45px';this.style.marginRight='45px';this.style.marginTop='10px';this.style.marginBottom='10px';this.style.filter='${invert}';`
+      );
+
+      fixture.componentInstance.refreshOnImageErrorStyle(false);
+
+      invert = "invert(0%)";
+
+      expect(fixture.componentInstance.onImageError).toEqual(
+        `this.src='assets/image_not_supported.svg';this.style.width='30px';this.style.height='30px';this.style.marginLeft='45px';this.style.marginRight='45px';this.style.marginTop='10px';this.style.marginBottom='10px';this.style.filter='${invert}';`
       );
     });
 
@@ -669,15 +699,6 @@ describe("IndexComponent", () => {
       expect(differentTemplate).not.toEqual(template);
 
       expect(templateCache.get(`address_{"field1":"test2"}`)).toEqual(differentTemplate);
-    });
-
-    it("should return default", () => {
-      const template = fixture.componentInstance.buildTemplate(
-        "default_value",
-        {type: "string"},
-        "def"
-      );
-      expect(template).toEqual("default_value");
     });
   });
 

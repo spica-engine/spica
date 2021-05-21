@@ -10,4 +10,10 @@
       top: 15px;
     }
   }
+
+  &.minimal-input-placer {
+    textarea {
+      height: 4em !important;
+    }
+  }
 }

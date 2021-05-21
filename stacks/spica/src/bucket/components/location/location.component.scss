@@ -47,4 +47,35 @@
       height: 270px;
     }
   }
+
+  &.minimal-input-placer {
+    width: 250px !important;
+    height: 250px !important;
+
+    position: relative;
+
+    section.header {
+      padding: 0px !important;
+      span.title {
+        display: none;
+      }
+
+      span.buttons {
+        button:nth-of-type(1) {
+          display: none;
+        }
+
+        button:nth-of-type(2) {
+          position: absolute;
+          right: 10px;
+          top: 10px;
+          z-index: 1000;
+        }
+      }
+    }
+
+    section.content {
+      height: 100%;
+    }
+  }
 }

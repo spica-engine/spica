@@ -85,4 +85,8 @@ export class BucketDataService {
   replaceOne(bucketId: string, data: any): Observable<any> {
     return this.http.put(`api:/bucket/${bucketId}/data/${data._id}`, data);
   }
+
+  patchOne(bucketId: string, documentId: string, patch: any): Observable<any> {
+    return this.http.patch(`api:/bucket/${bucketId}/data/${documentId}`, patch);
+  }
 }
