@@ -45,39 +45,62 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
 
     raw.properties[propertyName] = property;
 
-    await normalizeRelations(raw,property,propertyName,bucketStore)
+    await convertRefToRelation(raw, propertyName, property, bucketStore, "object");
   }
 
   return raw;
 }
 
-async function normalizeRelations(raw,property,propertyName,bucketStore,){
-
-  if(property.type == "object"){
-    for(const [key,value] of Object.entries(property.properties)){
-      await normalizeRelations(raw.properties[propertyName],value,key,bucketStore)
+async function convertRefToRelation(
+  raw,
+  propertyName,
+  property,
+  bucketStore,
+  parent: "object" | "array"
+) {
+  if (property.type == "object") {
+    for (const [key, value] of Object.entries(property.properties)) {
+      await convertRefToRelation(
+        parent == "object" ? raw.properties[propertyName] : raw.items,
+        key,
+        value,
+        bucketStore,
+        "object"
+      );
     }
-  }else if(property.type == "array"){
-    // will be handled
-    // @TODO: retrying count never increments
-  }else if (property.type == "relation" && typeof property.bucket == "object") {
+  } else if (property.type == "array") {
+    await convertRefToRelation(
+      parent == "object" ? raw.properties[propertyName] : raw.items,
+      propertyName,
+      property.items,
+      bucketStore,
+      "array"
+    );
+  } else if (property.type == "relation" && typeof property.bucket == "object") {
     const schemaName = property.bucket.resourceFieldRef.schemaName;
 
     const relatedBucket = await bucketStore.get(schemaName);
 
     if (!relatedBucket.metadata.uid) {
-      throw new Error("Related bucket could not be created yet.");
+      throw new Error("Related bucket is not ready.");
     }
 
-    raw.properties[propertyName] = {
-      ...property,
-      bucketId: relatedBucket.metadata.uid
-    };
+    if (parent == "object") {
+      raw.properties[propertyName] = {
+        ...property,
+        bucketId: relatedBucket.metadata.uid
+      };
 
-    delete raw.properties[propertyName].bucket;
+      delete raw.properties[propertyName].bucket;
+    } else if (parent == "array") {
+      raw.items = {
+        ...property,
+        bucketId: relatedBucket.metadata.uid
+      };
+
+      delete raw.items.bucket;
+    }
   }
-
-  
 }
 
 export function registerInformers(bs: BucketService) {
