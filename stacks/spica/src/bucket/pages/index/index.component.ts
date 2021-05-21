@@ -513,20 +513,26 @@ export class IndexComponent implements OnInit, OnDestroy {
         break;
 
       case "storage":
-        style = {
-          width: "100px",
-          height: "100px",
-          margin: "10px",
-          "border-radius": "3px"
-        };
+        if (!this.isValidValue(value)) {
+          defs = this.getDefaulHtmlDefs(value);
 
-        props = {
-          src: value,
-          alt: value,
-          onerror: this.onImageError
-        };
+          result = this.buildHtml(defs);
+        } else {
+          style = {
+            width: "100px",
+            height: "100px",
+            margin: "10px",
+            "border-radius": "3px"
+          };
 
-        result = this.buildHtml({name: "img", style, props, noEndTag: true});
+          props = {
+            src: value,
+            alt: value,
+            onerror: this.onImageError
+          };
+
+          result = this.buildHtml({name: "img", style, props, noEndTag: true});
+        }
 
         break;
 
