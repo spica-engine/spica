@@ -127,14 +127,6 @@ describe("Common#array", () => {
   });
 
   describe("basic behavior", () => {
-    it("should show name as title if title is undefined", () => {
-      fixture.componentInstance.schema.title = undefined;
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("mat-card-title")).nativeElement.textContent).toBe(
-        "test"
-      );
-    });
-
     it("should show title", () => {
       const title = (fixture.componentInstance.schema.title = "my title");
       fixture.detectChanges();
