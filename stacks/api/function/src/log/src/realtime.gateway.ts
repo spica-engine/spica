@@ -6,7 +6,7 @@ import {fromEvent, Observable} from "rxjs";
 import {takeUntil, tap} from "rxjs/operators";
 
 @WebSocketGateway(31, {
-  path: "/function/logs"
+  path: "/function-logs"
 })
 export class LogGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
@@ -72,7 +72,7 @@ export class LogGateway implements OnGatewayConnection {
     let stream = this.streams.get(cursorName);
 
     if (!stream) {
-      stream = this.realtime.find("function_logs", options).pipe(
+      stream = this.realtime.find("function_logs", options, true).pipe(
         tap({
           complete: () => this.streams.delete(cursorName)
         })

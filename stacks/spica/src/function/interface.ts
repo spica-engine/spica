@@ -141,6 +141,7 @@ export interface LogFilter {
   end?: Date;
   limit: number;
   sort: {[key: string]: 1 | -1};
+  realtime: boolean;
 }
 
 export interface Log {

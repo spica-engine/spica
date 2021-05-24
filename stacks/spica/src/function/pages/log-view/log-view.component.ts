@@ -31,9 +31,15 @@ export class LogViewComponent implements OnInit {
     this.queryParams = combineLatest(this.functionId$, this.route.queryParams).pipe(
       map(([functionId, filter]) => {
         filter = {...filter};
+        
         if (filter.showErrors) {
           filter.showErrors = JSON.parse(filter.showErrors);
         }
+
+        if (filter.realtime) {
+          filter.realtime = JSON.parse(filter.realtime);
+        }
+        
         if (!Array.isArray(filter.function)) {
           if (!filter.function) {
             filter.function = [functionId].filter(Boolean);
@@ -42,12 +48,16 @@ export class LogViewComponent implements OnInit {
           }
         }
 
-        if (filter.begin) {
-          filter.begin = new Date(filter.begin);
+        if (filter.realtime) {
+          filter.begin = new Date();
+          filter.end = undefined;
+
+          return filter;
         }
-        if (filter.end) {
-          filter.end = new Date(filter.end);
-        }
+
+        filter.begin = new Date(filter.begin ? filter.begin : new Date().setHours(0, 0, 0, 0));
+        filter.end = new Date(filter.end ? filter.end : new Date().setHours(23, 59, 59, 999));
+
         return filter;
       })
     );
@@ -69,7 +79,7 @@ export class LogViewComponent implements OnInit {
 
   mapLogs(logs: Log[], fns: Function[]): Log[] {
     return logs.map(log => {
-      const fn = fns.find(fn => fn._id == log.function);
+      const fn = fns.find(fn => fn._id == log.function || fn.name == log.function);
       log.function = fn ? fn : log.function;
       log.created_at = this.objectIdToDate(log._id).toString();
       return log;

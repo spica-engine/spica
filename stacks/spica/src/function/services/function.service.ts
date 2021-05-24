@@ -60,7 +60,11 @@ export class FunctionService {
   }
 
   getLogs(filter: LogFilter): Observable<Log[]> {
-    let url = new URL(`${this.wsInterceptor}/function/logs`);
+    let url = new URL("api:/function-logs");
+
+    if (filter.realtime) {
+      url = new URL(`${this.wsInterceptor}/function-logs`);
+    }
 
     if (filter.function.length > 0) {
       filter.function.forEach(fn => url.searchParams.append("functions", fn));
@@ -79,9 +83,12 @@ export class FunctionService {
     }
     url.searchParams.set("sort", JSON.stringify(filter.sort));
 
-    url.searchParams.set("Authorization", this.passport.token);
+    if (filter.realtime) {
+      url.searchParams.set("Authorization", this.passport.token);
+      return getWsObs<Log>(url.toString(), filter.sort);
+    }
 
-    return getWsObs<Log>(url.toString(), filter.sort);
+    return this.http.get<Log[]>(url.toString());
   }
 
   clearLogs(id: string) {

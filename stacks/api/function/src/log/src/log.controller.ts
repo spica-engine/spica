@@ -13,29 +13,34 @@ import {ObjectId, OBJECT_ID} from "@spica-server/database";
 import {ActionGuard, AuthGuard} from "@spica-server/passport";
 import {LogService} from "./log.service";
 
-@Controller("function")
+@Controller("function-logs")
 export class LogController {
   constructor(private logService: LogService) {}
 
-  @Get("logs")
+  @Get()
   @UseGuards(AuthGuard())
   logs(
     @Query("begin", DEFAULT(() => new Date().setUTCHours(0, 0, 0, 0)), DATE) begin: Date,
     @Query("end", DEFAULT(() => new Date().setUTCHours(23, 59, 59, 999)), DATE) end: Date,
     @Query("functions", ARRAY(String)) functions: string[]
   ) {
+    const match: any = {
+      _id: {
+        $gte: ObjectId.createFromTime(begin.getTime() / 1000),
+        $lt: ObjectId.createFromTime(end.getTime() / 1000)
+      }
+    };
+
+    if (functions && functions.length) {
+      match.function = {
+        $in: functions
+      };
+    }
+
     return this.logService
       .aggregate([
         {
-          $match: {
-            function: {
-              $in: functions
-            },
-            _id: {
-              $gte: ObjectId.createFromTime(begin.getTime() / 1000),
-              $lt: ObjectId.createFromTime(end.getTime() / 1000)
-            }
-          }
+          $match: match
         },
         {$sort: {_id: -1}},
         {
@@ -53,7 +58,7 @@ export class LogController {
       .toArray();
   }
 
-  @Delete(":id/logs")
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("function:update", "function/:id"))
   clearLogs(@Param("id", OBJECT_ID) id: ObjectId) {
