@@ -12,15 +12,14 @@
 </mat-toolbar>
 
 <mat-card class="mat-elevation-z25">
-  <div>
-    <mat-slide-toggle
-      #realtimeToggle
-      [checked]="(queryParams | async)?.realtime"
-      (change)="next({realtime: $event.checked ? true : false})"
-    >
-      Live Logs
-    </mat-slide-toggle>
-  </div>
+  <mat-slide-toggle
+    #realtimeToggle
+    [checked]="(queryParams | async)?.realtime"
+    (change)="next({realtime: $event.checked ? true : false})"
+  >
+    Live Logs
+  </mat-slide-toggle>
+
   <mat-form-field *ngIf="!realtimeToggle.checked">
     <mat-label>Select a date range</mat-label>
     <mat-date-range-input [max]="maxDate" [rangePicker]="picker">
@@ -77,19 +76,17 @@
   <mat-card-content>
     <mat-accordion>
       <cdk-virtual-scroll-viewport
-        itemSize="26"
+        [itemSize]="itemSize"
         [minBufferPx]="bufferSize"
         [maxBufferPx]="bufferSize * 1.1"
         class="log-viewport"
+        (scrolledIndexChange)="!realtimeToggle.checked && onScroll($event)"
       >
         <div class="header">
           <span>Timestamp</span>
           <span>Name</span>
           <span>Content</span>
         </div>
-        <span class="empty-list" *ngIf="!(logs$ | async)?.length && !isPending">
-          Couldn't find any log to show.
-        </span>
         <mat-expansion-panel
           (opened)="onExpand(content.offsetHeight)"
           *cdkVirtualFor="let log of logs$"

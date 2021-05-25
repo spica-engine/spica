@@ -140,8 +140,10 @@ export interface LogFilter {
   begin?: Date;
   end?: Date;
   limit: number;
+  skip: number;
   sort: {[key: string]: 1 | -1};
   realtime: boolean;
+  showErrors: boolean;
 }
 
 export interface Log {

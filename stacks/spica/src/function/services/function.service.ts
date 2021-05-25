@@ -60,12 +60,26 @@ export class FunctionService {
   }
 
   getLogs(filter: LogFilter): Observable<Log[]> {
-    let url = new URL("api:/function-logs");
+    const url = new URL(`${filter.realtime ? this.wsInterceptor : "api:"}/function-logs`);
+
+    this.setCommonParams(url, filter);
 
     if (filter.realtime) {
-      url = new URL(`${this.wsInterceptor}/function-logs`);
+      url.searchParams.set("Authorization", this.passport.token);
+      return getWsObs<Log>(url.toString(), filter.sort);
     }
 
+    url.searchParams.set("skip", filter.skip.toString());
+    url.searchParams.set("limit", filter.limit.toString());
+
+    if (!filter.showErrors) {
+      url.searchParams.set("channel", "stdout");
+    }
+
+    return this.http.get<Log[]>(url.toString());
+  }
+
+  setCommonParams(url: URL, filter: LogFilter) {
     if (filter.function.length > 0) {
       filter.function.forEach(fn => url.searchParams.append("functions", fn));
     }
@@ -81,18 +95,12 @@ export class FunctionService {
     if (!filter.sort) {
       filter.sort = {_id: -1};
     }
+
     url.searchParams.set("sort", JSON.stringify(filter.sort));
-
-    if (filter.realtime) {
-      url.searchParams.set("Authorization", this.passport.token);
-      return getWsObs<Log>(url.toString(), filter.sort);
-    }
-
-    return this.http.get<Log[]>(url.toString());
   }
 
   clearLogs(id: string) {
-    return this.http.delete<any[]>(`api:/function/${id}/logs`);
+    return this.http.delete<any[]>(`api:/function-logs/${id}`);
   }
 
   getIndex(id): Observable<any> {
