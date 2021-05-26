@@ -30,7 +30,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
 
   queryParams: Observable<any>;
 
-  logs: Set<Log> = new Set();
+  cachedLogs: Set<Log> = new Set();
 
   logs$: Observable<Log[]>;
 
@@ -51,6 +51,8 @@ export class LogViewComponent implements OnInit, OnDestroy {
   @ViewChild(CdkVirtualScrollViewport)
   viewport: CdkVirtualScrollViewport;
 
+  realtimeConnectionTime: Date;
+
   dispose = new Subject();
 
   constructor(private route: ActivatedRoute, private fs: FunctionService, public router: Router) {}
@@ -58,7 +60,7 @@ export class LogViewComponent implements OnInit, OnDestroy {
   resetScroll() {
     this.pageIndex = 0;
     this.skip = 0;
-    this.logs.clear();
+    this.cachedLogs.clear();
   }
 
   onScroll(itemIndex: number) {
@@ -94,7 +96,10 @@ export class LogViewComponent implements OnInit, OnDestroy {
         }
 
         if (filter.realtime) {
-          filter.begin = new Date();
+          this.realtimeConnectionTime = this.realtimeConnectionTime
+            ? this.realtimeConnectionTime
+            : new Date();
+          filter.begin = this.realtimeConnectionTime;
           filter.end = undefined;
 
           return filter;
@@ -145,9 +150,9 @@ export class LogViewComponent implements OnInit, OnDestroy {
           return of(logs);
         }
 
-        logs.forEach(l => this.logs.add(l));
+        logs.forEach(l => this.cachedLogs.add(l));
 
-        return of(Array.from(this.logs));
+        return of(Array.from(this.cachedLogs));
       }),
       tap(() => (this.isPending = false))
     );

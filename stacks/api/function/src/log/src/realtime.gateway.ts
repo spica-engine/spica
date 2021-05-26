@@ -1,12 +1,11 @@
 import {OnGatewayConnection, WebSocketGateway} from "@nestjs/websockets";
-import {ObjectId} from "@spica-server/database";
 import {RealtimeDatabaseService, StreamChunk} from "@spica-server/database/realtime";
 import {GuardService} from "@spica-server/passport";
-import {fromEvent, Observable} from "rxjs";
-import {takeUntil, tap} from "rxjs/operators";
+import {fromEvent, Observable, of} from "rxjs";
+import {catchError, takeUntil, tap} from "rxjs/operators";
 
 @WebSocketGateway(31, {
-  path: "/function-logs"
+  path: "/function/logs"
 })
 export class LogGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();
@@ -36,27 +35,20 @@ export class LogGateway implements OnGatewayConnection {
       };
     }
 
-    let begin = new Date(new Date().setUTCHours(0, 0, 0, 0));
-    let end = new Date(new Date().setUTCHours(23, 59, 59, 999));
-
-    if (req.query.has("begin") && req.query.has("end")) {
-      begin = new Date(req.query.get("begin"));
-      end = new Date(req.query.get("end"));
-    }
+    const begin = req.query.has("begin") ? new Date(req.query.get("begin")) : new Date();
 
     options.filter = {
       ...options.filter,
       created_at: {
-        $gte: begin,
-        $lt: end
+        $gte: begin
       }
     };
 
     if (req.query.has("sort")) {
       try {
         options.sort = JSON.parse(req.query.get("sort"));
-      } catch (error) {
-        console.log(error);
+      } catch (e) {
+        client.send(JSON.stringify({code: 400, message: e.message}));
       }
     }
 
@@ -73,8 +65,18 @@ export class LogGateway implements OnGatewayConnection {
 
     if (!stream) {
       stream = this.realtime.find("function_logs", options, true).pipe(
+        catchError(e => {
+          client.send(JSON.stringify({code: e.status || 500, message: e.message}));
+          client.close(1003);
+
+          this.streams.delete(cursorName);
+
+          return of(null);
+        }),
         tap({
-          complete: () => this.streams.delete(cursorName)
+          complete: () => {
+            this.streams.delete(cursorName);
+          }
         })
       );
 

@@ -24,10 +24,6 @@ export class FunctionService {
     private passport: PassportService
   ) {}
 
-  private resetTimezoneOffset(date: Date) {
-    return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
-  }
-
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {
       if (!trigger.options.type) {
@@ -60,7 +56,9 @@ export class FunctionService {
   }
 
   getLogs(filter: LogFilter): Observable<Log[]> {
-    const url = new URL(`${filter.realtime ? this.wsInterceptor : "api:"}/function-logs`);
+    const realtimeUrl = `${this.wsInterceptor}/function/logs`;
+    const httpUrl = "api:/function-logs";
+    const url = new URL(filter.realtime ? realtimeUrl : httpUrl);
 
     this.setCommonParams(url, filter);
 
@@ -85,11 +83,11 @@ export class FunctionService {
     }
 
     if (filter.begin instanceof Date) {
-      url.searchParams.set("begin", this.resetTimezoneOffset(filter.begin).toISOString());
+      url.searchParams.set("begin", filter.begin.toISOString());
     }
 
     if (filter.end instanceof Date) {
-      url.searchParams.set("end", this.resetTimezoneOffset(filter.end).toISOString());
+      url.searchParams.set("end", filter.end.toISOString());
     }
 
     if (!filter.sort) {
