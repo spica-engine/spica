@@ -80,8 +80,7 @@ export class IndexComponent implements OnInit, OnDestroy {
 
   copyEntries = [];
 
-  // id => keys
-  enabledEditsMap = new Map<string, string[]>();
+  editingCellId;
 
   nonEditableTypes = ["storage", "relation", "richtext"];
   dispose = new Subject();
@@ -604,17 +603,13 @@ export class IndexComponent implements OnInit, OnDestroy {
     return property.relationType == "onetoone" && typeof value == "object";
   }
 
-  // inline editing
-  enableEditMode(id: string, key: string) {
-    const fields = this.enabledEditsMap.has(id) ? this.enabledEditsMap.get(id) : [];
-
-    fields.push(key);
-
-    this.enabledEditsMap.set(id, fields);
+  // inline editing methods
+  getEditingCellId(id: string, key: string) {
+    return `${id}_${key}`;
   }
 
-  isEditModeEnabled(id: string, key: string) {
-    return this.enabledEditsMap.has(id) && this.enabledEditsMap.get(id).includes(key);
+  enableEditMode(id: string, key: string) {
+    this.editingCellId = this.getEditingCellId(id, key);
   }
 
   editNext(id: string, key: string) {
@@ -637,9 +632,13 @@ export class IndexComponent implements OnInit, OnDestroy {
 
     this.enableEditMode(nextDataId, nextField);
 
+    this.focusManually(nextDataId, nextField);
+  }
+
+  focusManually(id: string, key: string) {
     // temporary fix
     setTimeout(() => {
-      const el = document.getElementById(`${nextDataId}_${nextField}`);
+      const el = document.getElementById(this.getEditingCellId(id, key));
       if (el) {
         const input = el.querySelector(".mat-input-element") as HTMLElement;
         if (input) {
@@ -653,16 +652,6 @@ export class IndexComponent implements OnInit, OnDestroy {
     const previousValue = this.copyEntries.find(v => id == v._id)[key];
 
     model.control.setValue(previousValue);
-
-    this.disableEditMode(id, key);
-  }
-
-  disableEditMode(id: string, key: string) {
-    const fields = this.enabledEditsMap.get(id);
-
-    fields.splice(fields.indexOf(key), 1);
-
-    this.enabledEditsMap.set(id, fields);
   }
 
   refreshOnImageErrorStyle(isDark: boolean) {
