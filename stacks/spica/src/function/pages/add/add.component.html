@@ -200,7 +200,7 @@
               thumbLabel
               [displayWith]="formatTimeout"
               tickInterval="auto"
-              min="1"
+              min="2"
               [max]="timeout"
               [ngModel]="function.timeout || timeout"
               (ngModelChange)="function.timeout = $event"
@@ -448,47 +448,17 @@
                 [matAwareDialog]="{
                   title: 'IMPORTANT CONFIRMATION! PLEASE READ CAREFULLY',
                   templateOrDescription:
-                    'You can enable batching to run multiple process in the same worker. This action will
-                share memory in each process. To enable batching, you have to set \'Deadline\' (seconds
-                to wait after each process) and \'Maximum batch amount\' (total process count for
-                batching). We recommend \'Deadline\' to be less than 10 seconds and \'Maximum batch
-                amount\' to be less than 100 generally.',
+                    'By default, each process is running on the fresh workers parallelly. You can enable batching to run multiple processes in the same worker. This action will share memory in each process but keep in mind that will may cause to long process queue.',
                   answer: '',
                   noAnswer: true
                 }"
+                [matAwareDialogDisabled]="batching"
                 (cancel)="batching = false"
                 [(ngModel)]="batching"
                 name="batching"
                 labelPosition="before"
                 >Batching
               </mat-slide-toggle>
-
-              <mat-form-field *ngIf="batching">
-                <mat-label>Deadline (s)</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  placeholder="Deadline"
-                  #nameModel="ngModel"
-                  [min]="batching ? 1 : 0"
-                  [(ngModel)]="batchingDeadline"
-                  name="deadline"
-                  [required]="batching"
-                />
-              </mat-form-field>
-              <mat-form-field *ngIf="batching">
-                <mat-label>Maximum batch amount</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  placeholder="Amount"
-                  #nameModel="ngModel"
-                  [min]="batching ? 2 : 0"
-                  [(ngModel)]="maxBatchCount"
-                  name="limit"
-                  [required]="batching"
-                />
-              </mat-form-field>
             </div>
           </mat-list-item>
         </div>
