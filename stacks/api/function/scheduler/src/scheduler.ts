@@ -217,6 +217,17 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.attach(stdout, stderr);
 
       const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
+
+      if (target.context.batch && !this.timeouts.has(workerId)) {
+        this.timeouts.set(
+          workerId,
+          setTimeout(() => {
+            console.log(`worker ${workerId} is shutting down..`);
+            this.batching.delete(workerId);
+          }, timeoutInSeconds * 1000 - 1000)
+        );
+      }
+
       this.timeouts.set(
         event.id,
         setTimeout(() => {
@@ -300,6 +311,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           : ""
       }
     });
+
     worker.once("exit", () => this.lostWorker(id));
     this.pool.set(id, worker);
   }
