@@ -105,7 +105,8 @@ export class RealtimeDatabaseService {
 
   find<T extends Document = any>(
     name: string,
-    options: FindOptions<T> = {}
+    options: FindOptions<T> = {},
+    immutableDocuments = false
   ): Observable<StreamChunk<T>> {
     options = options || {};
 
@@ -159,7 +160,7 @@ export class RealtimeDatabaseService {
           .subscribe();
       }
 
-      if (options.filter) {
+      if (options.filter && !immutableDocuments) {
         streams.add(
           this.database
             .collection(name)
@@ -204,13 +205,22 @@ export class RealtimeDatabaseService {
       let pipeline = [];
 
       if (options.filter) {
+        const exceptDeletedsExpression = [
+          {"__changeStream__.operationType": {$not: {$eq: "delete"}}},
+          options.filter
+        ];
+
+        if (immutableDocuments) {
+          exceptDeletedsExpression.push({"__changeStream__.operationType": "insert"});
+        }
+
         pipeline = generateMatchingPipeline({
           $or: [
             {
               "__changeStream__.operationType": "delete"
             },
             {
-              $and: [{"__changeStream__.operationType": {$not: {$eq: "delete"}}}, options.filter]
+              $and: exceptDeletedsExpression
             }
           ]
         });
