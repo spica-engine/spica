@@ -9,4 +9,7 @@
       }
     }
   }
+  &.minimal-input-placer > mat-form-field {
+    width: 200px !important;
+  }
 }

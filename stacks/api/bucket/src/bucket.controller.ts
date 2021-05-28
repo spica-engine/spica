@@ -220,13 +220,10 @@ export class BucketController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard(), ActionGuard("bucket:delete"))
   async deleteOne(@Param("id", OBJECT_ID) id: ObjectId) {
-    const schema = await this.bs.findOneAndDelete({_id: id});
+    const schema = await this.bs.drop(id);
     if (schema) {
       const promises = [];
-      promises.push(
-        this.bds.children(schema).deleteMany({}),
-        this.clearRelations(this.bs, this.bds, id)
-      );
+      promises.push(this.clearRelations(this.bs, this.bds, id));
       if (this.history) {
         promises.push(this.history.deleteMany({bucket_id: id}));
       }

@@ -121,7 +121,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
 
   batching = new Map<string, Batch>();
 
-  timeouts = new Map<string, NodeJS.Timeout>();
+  timeouts = new Map<string, NodeJS.Timeout[]>();
 
   getBatchForTarget(target: event.Target) {
     for (const batch of this.batching.values()) {
@@ -217,17 +217,29 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
       worker.attach(stdout, stderr);
 
       const timeoutInSeconds = Math.min(this.options.timeout, event.target.context.timeout);
-      this.timeouts.set(
-        event.id,
-        setTimeout(() => {
+
+      if (!this.timeouts.has(workerId)) {
+        const beforeAbortedSeconds = timeoutInSeconds - 1;
+
+        const beforeAborted = setTimeout(() => {
+          console.debug(`worker ${workerId} is about to be shutted down.`);
+
+          if (this.batching.has(workerId)) {
+            this.batching.delete(workerId);
+          }
+        }, beforeAbortedSeconds * 1000);
+
+        const aborting = setTimeout(() => {
           if (stderr.writable) {
             stderr.write(
               `Function (${event.target.handler}) did not finish within ${timeoutInSeconds} seconds. Aborting.`
             );
           }
           worker.kill();
-        }, timeoutInSeconds * 1000)
-      );
+        }, timeoutInSeconds * 1000);
+
+        this.timeouts.set(workerId, [beforeAborted, aborting]);
+      }
 
       schedule(event);
 
@@ -248,7 +260,6 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
     this.eventQueue.delete(id);
     this.complete(id, false);
   }
-
   complete(id: string, succedded: boolean) {
     console.debug(
       `an event has been completed ${id} with status ${succedded ? "success" : "fail"}`
@@ -300,6 +311,7 @@ export class Scheduler implements OnModuleInit, OnModuleDestroy {
           : ""
       }
     });
+
     worker.once("exit", () => this.lostWorker(id));
     this.pool.set(id, worker);
   }

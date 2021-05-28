@@ -158,7 +158,7 @@ export const some: func.Func = context => {
         return false;
       }
 
-      return compare.some(item => target.includes(item));
+      return compare.some(c => target.some(t => JSON.stringify(t) == JSON.stringify(c)));
     }
   };
 };
@@ -202,7 +202,7 @@ export const every: func.Func = context => {
         return false;
       }
 
-      return compare.every(item => target.includes(item));
+      return compare.every(c => target.some(t => JSON.stringify(t) == JSON.stringify(c)));
     }
   };
 };
@@ -271,7 +271,10 @@ export const equal: func.Func = context => {
         return false;
       }
 
-      return target.length == compare.length && compare.every(item => target.includes(item));
+      return (
+        JSON.stringify(target).length == JSON.stringify(compare).length &&
+        compare.every(c => target.some(t => JSON.stringify(t) == JSON.stringify(c)))
+      );
     }
   };
 };
