@@ -37,7 +37,7 @@ describe("Realtime Authorization", () => {
   });
 
   it("should authorize and do the initial sync", async done => {
-    const ws = wsc.get("/function/logs", {
+    const ws = wsc.get("/function-logs", {
       headers: {
         Authorization: "JWT test"
       }
@@ -55,7 +55,7 @@ describe("Realtime Authorization", () => {
     authGuardCheck.and.callFake(() => {
       throw new UnauthorizedException();
     });
-    const ws = wsc.get("/function/logs", {
+    const ws = wsc.get("/function-logs", {
       headers: {
         Authorization: "JWT test"
       }

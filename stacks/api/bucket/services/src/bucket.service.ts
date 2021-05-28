@@ -54,6 +54,12 @@ export class BucketService extends BaseCollection<Bucket>("buckets") {
     }
   }
 
+  async drop(id: string | ObjectId) {
+    const schema = await super.findOneAndDelete({_id: new ObjectId(id)});
+    await this.db.dropCollection(getBucketDataCollection(id));
+    return schema;
+  }
+
   watch(bucketId: string, propagateOnStart: boolean): Observable<Bucket> {
     return new Observable(observer => {
       if (propagateOnStart) {
