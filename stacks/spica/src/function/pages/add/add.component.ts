@@ -89,10 +89,6 @@ export class AddComponent implements OnInit, OnDestroy {
 
   triggersEditMode = [];
 
-  batchingDeadline: number = 0;
-
-  maxBatchCount: number = 0;
-
   batching: boolean = false;
 
   browserFullscreenKeywords = {
@@ -311,8 +307,6 @@ export class AddComponent implements OnInit, OnDestroy {
 
   resetBatchOptions() {
     this.batching = false;
-    this.maxBatchCount = 0;
-    this.batchingDeadline = 0;
   }
 
   ngOnInit() {
@@ -341,8 +335,6 @@ export class AddComponent implements OnInit, OnDestroy {
             this.triggersEditMode[index] = false;
             if (trigger.batch) {
               this.batching = true;
-              this.maxBatchCount = Math.max(this.maxBatchCount, trigger.batch.limit);
-              this.batchingDeadline = Math.max(this.batchingDeadline, trigger.batch.deadline);
             }
           }
           this.getDependencies();
@@ -435,10 +427,7 @@ export class AddComponent implements OnInit, OnDestroy {
 
     for (const trigger of this.function.triggers) {
       if (this.batching) {
-        trigger.batch = {
-          deadline: this.batchingDeadline,
-          limit: this.maxBatchCount
-        };
+        trigger.batch = {};
       } else {
         delete trigger.batch;
       }
