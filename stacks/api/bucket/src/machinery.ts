@@ -45,21 +45,62 @@ async function v1_schema_to_internal(obj): Promise<Bucket> {
 
     raw.properties[propertyName] = property;
 
-    if (property.type == "relation" && typeof property.bucket == "object") {
-      const schemaName = property.bucket.resourceFieldRef.schemaName;
+    await convertRefToRelation(raw, propertyName, property, bucketStore, "object");
+  }
 
-      const relatedBucket = await bucketStore.get(schemaName);
+  return raw;
+}
 
+async function convertRefToRelation(
+  raw,
+  propertyName,
+  property,
+  bucketStore,
+  parent: "object" | "array"
+) {
+  if (property.type == "object") {
+    for (const [key, value] of Object.entries(property.properties)) {
+      await convertRefToRelation(
+        parent == "object" ? raw.properties[propertyName] : raw.items,
+        key,
+        value,
+        bucketStore,
+        "object"
+      );
+    }
+  } else if (property.type == "array") {
+    await convertRefToRelation(
+      parent == "object" ? raw.properties[propertyName] : raw.items,
+      propertyName,
+      property.items,
+      bucketStore,
+      "array"
+    );
+  } else if (property.type == "relation" && typeof property.bucket == "object") {
+    const schemaName = property.bucket.resourceFieldRef.schemaName;
+
+    const relatedBucket = await bucketStore.get(schemaName);
+
+    if (!relatedBucket.metadata.uid) {
+      throw new Error("Related bucket is not ready.");
+    }
+
+    if (parent == "object") {
       raw.properties[propertyName] = {
         ...property,
         bucketId: relatedBucket.metadata.uid
       };
 
       delete raw.properties[propertyName].bucket;
+    } else if (parent == "array") {
+      raw.items = {
+        ...property,
+        bucketId: relatedBucket.metadata.uid
+      };
+
+      delete raw.items.bucket;
     }
   }
-
-  return raw;
 }
 
 export function registerInformers(bs: BucketService) {
