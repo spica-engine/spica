@@ -5,7 +5,7 @@ import {fromEvent, Observable, of} from "rxjs";
 import {catchError, takeUntil, tap} from "rxjs/operators";
 
 @WebSocketGateway(31, {
-  path: "/function/logs"
+  path: "/function-logs"
 })
 export class LogGateway implements OnGatewayConnection {
   streams = new Map<string, Observable<StreamChunk<any>>>();

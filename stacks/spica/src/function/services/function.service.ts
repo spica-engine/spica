@@ -56,7 +56,7 @@ export class FunctionService {
   }
 
   getLogs(filter: LogFilter): Observable<Log[]> {
-    const realtimeUrl = `${this.wsInterceptor}/function/logs`;
+    const realtimeUrl = `${this.wsInterceptor}/function-logs`;
     const httpUrl = "api:/function-logs";
     const url = new URL(filter.realtime ? realtimeUrl : httpUrl);
 
