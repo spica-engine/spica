@@ -39,10 +39,7 @@ export interface Trigger extends TriggerDescription {
 export interface TriggerDescription<T = any> {
   type: string;
   active?: boolean;
-  batch?: {
-    deadline: number;
-    limit: number;
-  };
+  batch?: any;
   options: T;
 }
 
@@ -140,7 +137,10 @@ export interface LogFilter {
   begin?: Date;
   end?: Date;
   limit: number;
+  skip: number;
   sort: {[key: string]: 1 | -1};
+  realtime: boolean;
+  showErrors: boolean;
 }
 
 export interface Log {

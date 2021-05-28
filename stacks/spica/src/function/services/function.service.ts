@@ -24,10 +24,6 @@ export class FunctionService {
     private passport: PassportService
   ) {}
 
-  private resetTimezoneOffset(date: Date) {
-    return new Date(date.setMinutes(date.getMinutes() - date.getTimezoneOffset()));
-  }
-
   getExample(trigger: Trigger) {
     if (trigger.type == "bucket") {
       if (!trigger.options.type) {
@@ -60,32 +56,49 @@ export class FunctionService {
   }
 
   getLogs(filter: LogFilter): Observable<Log[]> {
-    let url = new URL(`${this.wsInterceptor}/function/logs`);
+    const realtimeUrl = `${this.wsInterceptor}/function-logs`;
+    const httpUrl = "api:/function-logs";
+    const url = new URL(filter.realtime ? realtimeUrl : httpUrl);
 
+    this.setCommonParams(url, filter);
+
+    if (filter.realtime) {
+      url.searchParams.set("Authorization", this.passport.token);
+      return getWsObs<Log>(url.toString(), filter.sort);
+    }
+
+    url.searchParams.set("skip", filter.skip.toString());
+    url.searchParams.set("limit", filter.limit.toString());
+
+    if (!filter.showErrors) {
+      url.searchParams.set("channel", "stdout");
+    }
+
+    return this.http.get<Log[]>(url.toString());
+  }
+
+  setCommonParams(url: URL, filter: LogFilter) {
     if (filter.function.length > 0) {
       filter.function.forEach(fn => url.searchParams.append("functions", fn));
     }
 
     if (filter.begin instanceof Date) {
-      url.searchParams.set("begin", this.resetTimezoneOffset(filter.begin).toISOString());
+      url.searchParams.set("begin", filter.begin.toISOString());
     }
 
     if (filter.end instanceof Date) {
-      url.searchParams.set("end", this.resetTimezoneOffset(filter.end).toISOString());
+      url.searchParams.set("end", filter.end.toISOString());
     }
 
     if (!filter.sort) {
       filter.sort = {_id: -1};
     }
+
     url.searchParams.set("sort", JSON.stringify(filter.sort));
-
-    url.searchParams.set("Authorization", this.passport.token);
-
-    return getWsObs<Log>(url.toString(), filter.sort);
   }
 
   clearLogs(id: string) {
-    return this.http.delete<any[]>(`api:/function/${id}/logs`);
+    return this.http.delete<any[]>(`api:/function-logs/${id}`);
   }
 
   getIndex(id): Observable<any> {
