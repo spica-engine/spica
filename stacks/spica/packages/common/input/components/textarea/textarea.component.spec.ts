@@ -36,14 +36,6 @@ describe("Common#textarea", () => {
       expect(input.path).toEqual(["test"]);
     });
 
-    it("should show name as title if title is undefined", () => {
-      fixture.componentInstance.schema.title = undefined;
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("mat-label")).nativeElement.textContent).toBe(
-        "test"
-      );
-    });
-
     it("should show title", () => {
       const title = (fixture.componentInstance.schema.title = "my title");
       fixture.detectChanges();

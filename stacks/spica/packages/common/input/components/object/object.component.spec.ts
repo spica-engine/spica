@@ -91,12 +91,6 @@ describe("Common#object", () => {
   });
 
   describe("basic behavior", () => {
-    it("should show name as title if title is undefined", () => {
-      fixture.componentInstance.schema.title = undefined;
-      fixture.detectChanges();
-      expect(fixture.debugElement.query(By.css("h4")).nativeElement.textContent).toBe("test");
-    });
-
     it("should show title", () => {
       const title = (fixture.componentInstance.schema.title = "my title");
       fixture.detectChanges();

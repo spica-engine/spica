@@ -1,6 +1,6 @@
 <mat-card class="mat-elevation-z0">
   <mat-card-header>
-    <mat-card-title>{{ schema.title || schema.$name }}</mat-card-title>
+    <mat-card-title>{{ schema.title }}</mat-card-title>
     <mat-card-subtitle *ngIf="schema.description">{{ schema.description }}</mat-card-subtitle>
     <span class="fill"></span>
     <mat-error *ngIf="model?.errors?.minItems && _values.length == 0">
